@@ -1,0 +1,39 @@
+<!--
+  Displays Git change log.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:set var="browser" value="${it.build.parent.scm.effectiveBrowser}"/>
+
+  <h2>Summary</h2>
+  <ol>
+    <j:forEach var="cs" items="${it.logs}">
+      <li><st:out value="${cs.msg}"/></li>
+    </j:forEach>
+  </ol>
+  <table class="pane" style="border:none">
+    <j:forEach var="cs" items="${it.logs}" varStatus="loop">
+      <tr class="pane">
+        <td colspan="2" class="changeset">
+          <a name="detail${loop.index}"></a>
+          <div class="changeset-message">
+            <b>
+              Changeset 
+              <a href="${browser.getChangeSetLink(cs)}">${cs.rev}:${cs.shortNode}</a>
+              by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>:
+            </b><br/>
+            ${cs.msgAnnotated}
+          </div>
+        </td>
+      </tr>
+
+      <j:forEach var="k" items="${cs.editTypes}">
+        <j:forEach var="p" items="${cs.getPaths(k)}">
+          <tr>
+            <td width="20"><t:editTypeIcon type="${k}" /></td>
+            <td>${p}</td>
+          </tr>
+        </j:forEach>
+      </j:forEach>
+    </j:forEach>
+  </table>
+</j:jelly>
