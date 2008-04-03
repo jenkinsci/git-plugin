@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.202</version>
+    <version>1.203</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
