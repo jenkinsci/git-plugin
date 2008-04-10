@@ -39,10 +39,15 @@ public class GitSCM extends SCM implements Serializable {
      */
     private final String branch;
 
+    /**
+     * Does this project need submodule support?
+     */
+    private boolean hasSubmodules;
+    
     private GitWeb browser;
 
     @DataBoundConstructor
-    public GitSCM(String source, String branch, GitWeb browser) {
+    public GitSCM(String source, String branch, boolean submodules, GitWeb browser) {
         this.source = source;
 
         // normalization
@@ -50,7 +55,7 @@ public class GitSCM extends SCM implements Serializable {
         if(branch!=null && branch.equals("master"))
             branch = null;
         this.branch = branch;
-
+        this.hasSubmodules = submodules;
         this.browser = browser;
     }
 
@@ -73,9 +78,11 @@ public class GitSCM extends SCM implements Serializable {
     public GitWeb getBrowser() {
         return browser;
     }
-
+    
     @Override
     public boolean pollChanges(AbstractProject project, Launcher launcher, FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
+    	
+    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
     	listener.getLogger().println("Poll for changes");
     	
@@ -88,212 +95,105 @@ public class GitSCM extends SCM implements Serializable {
             }
         });
     	
-    	if(canUpdate)
+    	if(git.hasGitRepo())
     	{
+    		// Repo is there - do a fetch
     		listener.getLogger().println("Update repository");
 	    	// return true if there are changes, false if not
-	    	if(!fetch(launcher,workspace,listener))
-	        	return false;
+	    	git.fetch();
+	    	
+	    	// Find out if there are any changes from there to now
+	    	return anyChanges(launcher, workspace, listener);
     	}
     	else
     	{
     		listener.getLogger().println("Clone entire repository");
-    		clone(launcher,workspace,listener);
+    		git.clone(source);
+    	
+    		if( git.hasGitModules())
+    		{
+    			git.submoduleInit();
+    			git.submoduleUpdate();
+    		}
+    		
+    		// Yes, there are changes as it is a clone
     		return true;
     		
     	}
     	
-        return anyChanges(launcher, workspace, listener);
+       
     }
 
     @Override
     public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile) throws IOException, InterruptedException {
         
+    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
-    	
-    	boolean canUpdate = workspace.act(new FileCallable<Boolean>() {
-            public Boolean invoke(File ws, VirtualChannel channel) throws IOException {
-                
-            	File dotGit = new File(ws, ".git");
-            	
-            	return dotGit.exists();
-            }
-        });
-    	
-        if(canUpdate)
+        if(git.hasGitRepo())
         {
+        	// It's an update
+        	
         	listener.getLogger().println("Checkout (update)");
         	
-            if(!fetch(launcher,workspace,listener))            
-            	return false;
-            
+            git.fetch();            
+            	
             // Fetch the diffs into the changelog file
-            diff(launcher, workspace, listener, changelogFile);
+            putChangelogDiffsIntoFile(launcher, workspace, listener, changelogFile);
             
-            return merge(launcher, workspace, listener);
-            
+            git.merge();
+            if( git.hasGitModules())
+    		{	
+            	git.submoduleUpdate();
+    		}     
         }
         else
         {
         	listener.getLogger().println("Checkout (clone)");
-            return clone(launcher,workspace,listener);
+            git.clone(source);
+            if( git.hasGitModules())
+    		{	
+	            git.submoduleInit();
+	            git.submoduleUpdate();
+    		}
         }
+        
+        return true;
     }
     
     /**
      * Check if there are any changes to be merged / checked out.
      * @return true or false
+     * @throws IOException 
      * @throws InterruptedException 
      */
-    private boolean anyChanges(Launcher launcher, FilePath workspace, TaskListener listener) throws InterruptedException
+    private boolean anyChanges(Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
     {
-    	
+    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
     	listener.getLogger().println("Diff against original");
-    	
-    	ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getDescriptor().getGitExe(),"diff","--shortstat", "origin");
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
         
-        try {
-        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        	
-            if(launcher.launch(args.toCommandArray(),
-            		createEnvVarMap(),
-            		baos,workspace).join()!=0) {
-                listener.error("Failed to diff "+source);
-                return false;
-            }
-            
-            baos.close();
-            String result = baos.toString();
-            
-            // Output is nothing if no changes, or something of the format
-            //  1 files changed, 1 insertions(+), 1 deletions(-)
+    	git.diff(baos);
+    	
+        baos.close();
+        String result = baos.toString();
+        
+        // Output is nothing if no changes, or something of the format
+        //  1 files changed, 1 insertions(+), 1 deletions(-)
 
-            return ( result.contains("changed") );
-            	
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to diff "+source));
-            return false;
-        }
+        return ( result.contains("changed") );
+
     }
     
-    private boolean diff(Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile) throws InterruptedException
+    private void putChangelogDiffsIntoFile(Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile) throws IOException 
     {
+    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
+    	
     	// Delete it to prevent confusion
     	changelogFile.delete();
-    	
-    	listener.getLogger().println("Diff against original");
-    	// git log --numstat -M --summary --pretty=raw HEAD..origin
-
-    	// Find the changes between our current working copy and now
-    	ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getDescriptor().getGitExe(),"log","--numstat", "-M", "--summary", "--pretty=raw", "HEAD..origin");
-        
-        try {
-        	FileOutputStream fos = new FileOutputStream(changelogFile);
-        	
-            if(launcher.launch(args.toCommandArray(),
-            		createEnvVarMap(),
-            		fos,workspace).join()!=0) {
-                listener.error("Failed to diff "+source);
-                return false;
-            }
-            
-            fos.close();
-            
-            return true;
-            	
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to diff "+source));
-            return false;
-        }
-    }
-
-    /**
-     * Fetch any updates to the local repository from the remote.
-     */
-    private boolean fetch(Launcher launcher, FilePath workspace, TaskListener listener) throws InterruptedException {
-      
-    	listener.getLogger().println("Fetching upstream changes");
-    	
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getDescriptor().getGitExe(),"fetch");
-        
-        try {
-            if(launcher.launch(args.toCommandArray(),
-            		createEnvVarMap(),
-            		listener.getLogger(),workspace).join()!=0) {
-                listener.error("Failed to fetch "+source);
-                return false;
-            }
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to fetch "+source));
-            return false;
-        }
-
-        return true;
-    }
-    
-    /**
-     * Merge any changes into the head.
-     */
-    private boolean merge(Launcher launcher, FilePath workspace, TaskListener listener) throws InterruptedException {
-      
-    	listener.getLogger().println("Merging changes changes");
-    	
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getDescriptor().getGitExe(),"merge","origin");
-        
-        try {
-            if(launcher.launch(args.toCommandArray(),createEnvVarMap(),listener.getLogger(),workspace).join()!=0) {
-                listener.error("Failed to merge "+source);
-                return false;
-            }
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to merge "+source));
-            return false;
-        }
-
-        return true;
-    }
-    
-    /**
-     * Start from scratch and clone the whole repository.
-     */
-    private boolean clone(Launcher launcher, FilePath workspace, TaskListener listener) throws InterruptedException {
-    	listener.getLogger().println("Cloning repository " + source);
-    	
-    	try {
-            workspace.deleteRecursive();                    
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to clean the workspace"));
-            return false;
-        }
-
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getDescriptor().getGitExe(),"clone");
-        
-        args.add(source,workspace.getRemote());
-        try {
-            if(launcher.launch(args.toCommandArray(),createEnvVarMap(),listener.getLogger(),null).join()!=0) {
-                listener.error("Clone returned an error result");
-                return false;
-            }
-        } catch (IOException e) {
-            e.printStackTrace(listener.error("Failed to clone "+source));
-            return false;
-        }
-        
-        // createEmptyChangeLog(changelogFile, listener, "changelog");
-
-        return true; 
-    }
-
-    protected final Map<String,String> createEnvVarMap() {
-        Map<String,String> env = new HashMap<String,String>();
-    
-        return env;
+    	FileOutputStream fos = new FileOutputStream(changelogFile);
+    	git.log(fos);
+    	fos.close();
     }
     
     @Override
@@ -336,6 +236,7 @@ public class GitSCM extends SCM implements Serializable {
             return new GitSCM(
                     req.getParameter("git.source"),
                     req.getParameter("git.branch"),
+                    req.getParameter("git.submodules")!= null,
                     RepositoryBrowsers.createInstance(GitWeb.class, req, "git.browser"));
         }
 
@@ -371,4 +272,12 @@ public class GitSCM extends SCM implements Serializable {
 
 
     private static final long serialVersionUID = 1L;
+
+	public boolean getHasSubmodules() {
+		return hasSubmodules;
+	}
+
+	public void setHasSubmodules(boolean hasSubmodules) {
+		this.hasSubmodules = hasSubmodules;
+	}
 }

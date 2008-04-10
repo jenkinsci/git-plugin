@@ -1,10 +1,14 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="Repository URL" help="/plugin/mercurial/help.html">
+  <f:entry title="Repository URL" help="/plugin/git/help.html">
     <f:textbox name="git.source" value="${scm.source}" />
   </f:entry>
-  <f:entry title="Branch" help="/plugin/mercurial/branch.html">
+  <f:entry title="Branch" help="/plugin/git/branch.html">
     <f:textbox name="git.branch" value="${scm.branch}" />
   </f:entry>
-
+  
+  <f:entry title="Use Submodules" help="/plugin/git/branch.html">
+    <f:checkbox name="git.submodules" checked="${scm.hasSubmodules}" />
+  </f:entry>
+  
   <t:listScmBrowsers name="git.browser" />
 </j:jelly>
