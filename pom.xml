@@ -8,15 +8,9 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>0.1</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson GIT plugin</name>
   <description>Integrates Hudson to GIT SCM</description>
   <url>http://hudson.gotdns.com/wiki/display/HUDSON/Git+Plugin</url>
-
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/git-0.1</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/git-0.1</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/git/tags/git-0.1</url>
-  </scm>
 </project>
