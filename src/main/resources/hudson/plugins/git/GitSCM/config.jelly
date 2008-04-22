@@ -6,9 +6,5 @@
     <f:textbox name="git.branch" value="${scm.branch}" />
   </f:entry>
   
-  <f:entry title="Use Submodules" help="/plugin/git/branch.html">
-    <f:checkbox name="git.submodules" checked="${scm.hasSubmodules}" />
-  </f:entry>
-  
   <t:listScmBrowsers name="git.browser" />
 </j:jelly>
