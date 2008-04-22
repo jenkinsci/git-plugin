@@ -18,8 +18,11 @@ import javax.servlet.ServletException;
 import javax.sound.midi.MidiDevice.Info;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -38,24 +41,17 @@ public class GitSCM extends SCM implements Serializable {
      * In-repository branch to follow. Null indicates "master". 
      */
     private final String branch;
-
-    /**
-     * Does this project need submodule support?
-     */
-    private boolean hasSubmodules;
     
     private GitWeb browser;
 
     @DataBoundConstructor
-    public GitSCM(String source, String branch, boolean submodules, GitWeb browser) {
+    public GitSCM(String source, String branch, GitWeb browser) {
         this.source = source;
 
         // normalization
         branch = Util.fixEmpty(branch);
-        if(branch!=null && branch.equals("master"))
-            branch = null;
+        
         this.branch = branch;
-        this.hasSubmodules = submodules;
         this.browser = browser;
     }
 
@@ -71,7 +67,7 @@ public class GitSCM extends SCM implements Serializable {
      * In-repository branch to follow. Null indicates "default".
      */
     public String getBranch() {
-        return branch==null?"master":branch;
+        return branch==null?"":branch;
     }
 
     @Override
@@ -86,15 +82,6 @@ public class GitSCM extends SCM implements Serializable {
     	
     	listener.getLogger().println("Poll for changes");
     	
-    	boolean canUpdate = workspace.act(new FileCallable<Boolean>() {
-            public Boolean invoke(File ws, VirtualChannel channel) throws IOException {
-                
-            	File dotGit = new File(ws, ".git");
-            	
-            	return dotGit.exists();
-            }
-        });
-    	
     	if(git.hasGitRepo())
     	{
     		// Repo is there - do a fetch
@@ -103,25 +90,28 @@ public class GitSCM extends SCM implements Serializable {
 	    	git.fetch();
 	    	
 	    	// Find out if there are any changes from there to now
-	    	return anyChanges(launcher, workspace, listener);
+	    	return branchesThatNeedBuilding(launcher, workspace, listener).size() > 0;
     	}
     	else
     	{
-    		listener.getLogger().println("Clone entire repository");
-    		git.clone(source);
-    	
-    		if( git.hasGitModules())
-    		{
-    			git.submoduleInit();
-    			git.submoduleUpdate();
-    		}
-    		
-    		// Yes, there are changes as it is a clone
     		return true;
     		
     	}
     	
        
+    }
+    
+    private Collection<Branch> filterBranches(Collection<Branch> branches)
+    {
+    	if( this.branch == null || this.branch.length() == 0 )
+    		return branches;
+    	Set<Branch> interesting = new HashSet<Branch>(branches);
+    	for(Branch b : branches)
+    	{
+    		if( !b.getName().equals(this.branch) )
+    			interesting.remove(b);
+    	}
+    	return interesting;
     }
 
     @Override
@@ -137,14 +127,11 @@ public class GitSCM extends SCM implements Serializable {
         	
             git.fetch();            
             	
-            // Fetch the diffs into the changelog file
-            putChangelogDiffsIntoFile(launcher, workspace, listener, changelogFile);
-            
-            git.merge();
             if( git.hasGitModules())
     		{	
             	git.submoduleUpdate();
     		}     
+           
         }
         else
         {
@@ -157,48 +144,109 @@ public class GitSCM extends SCM implements Serializable {
     		}
         }
         
+        Set<Branch> toBeBuilt = branchesThatNeedBuilding(launcher, workspace, listener);
+        String revToBuild = null;
+        
+        if( toBeBuilt.size() == 0 )
+        {
+        	listener.getLogger().println("Nothing to do (no unbuilt branches)");
+        	revToBuild = git.revParse("HEAD");
+        }
+        else
+        {
+        	revToBuild = toBeBuilt.iterator().next().getSHA1();
+        }
+        
+        git.checkout(revToBuild);
+        
+        String lastRevWas = whenWasBranchLastBuilt(revToBuild, launcher, workspace, listener);
+        
+        // Fetch the diffs into the changelog file
+        putChangelogDiffsIntoFile(lastRevWas, revToBuild, launcher, workspace, listener, changelogFile);
+        
+        String buildnumber = "hudson-" + build.getProject().getName() + "-" + build.getNumber();
+        git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+        
         return true;
     }
     
+    
+    
     /**
-     * Check if there are any changes to be merged / checked out.
-     * @return true or false
+     * Are there any branches that haven't been built?
+     * 
+     * @return SHA1 id of the branch that requires building, or NULL if none
+     * are found.
      * @throws IOException 
      * @throws InterruptedException 
      */
-    private boolean anyChanges(Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
+    private Set<Branch> branchesThatNeedBuilding(Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
     {
     	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
-    	listener.getLogger().println("Diff against original");
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        
-    	git.diff(baos);
+    	// These are the set of things tagged that we have tried to build
+    	Set<String> setOfThingsBuilt = new HashSet<String>();
+    	Set<Branch> branchesThatNeedBuilding = new HashSet<Branch>();
     	
-        baos.close();
-        String result = baos.toString();
-        
-        // Output is nothing if no changes, or something of the format
-        //  1 files changed, 1 insertions(+), 1 deletions(-)
-
-        return ( result.contains("changed") );
-
+    	for(Tag tag : git.getTags() )
+    	{
+    		if( tag.getName().startsWith("hudson") )
+    			setOfThingsBuilt.add(tag.getCommitSHA1());
+    	}
+    	
+    	for(Branch branch : filterBranches(git.getBranches()))
+    	{
+    		if( branch.getName().startsWith("origin/") && !setOfThingsBuilt.contains(branch.getSHA1()) )
+    			branchesThatNeedBuilding.add(branch);
+    	}
+    	
+    	return (branchesThatNeedBuilding);
     }
     
-    private void putChangelogDiffsIntoFile(Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile) throws IOException 
+    private String whenWasBranchLastBuilt(String branchId, Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
+    {
+    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
+    	
+    	Set<String> setOfThingsBuilt = new HashSet<String>();
+    	
+    	for(Tag tag : git.getTags() )
+    	{
+    		if( tag.getName().startsWith("hudson") )
+    			setOfThingsBuilt.add(tag.getCommitSHA1());
+    	}
+    	
+    	while(true)
+    	{
+    		try
+    		{
+	    		String rev = git.revParse(branchId);
+	    		if( setOfThingsBuilt.contains(rev) )
+	    			return rev;
+	    		branchId += "^";
+    		}
+    		catch(GitException ex)
+    		{
+    			// It's never been built.
+    			return null;
+    		}
+    	}
+    	
+    	
+    }
+    
+    private void putChangelogDiffsIntoFile(String revFrom, String revTo, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile) throws IOException 
     {
     	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
     	// Delete it to prevent confusion
     	changelogFile.delete();
     	FileOutputStream fos = new FileOutputStream(changelogFile);
-    	git.log(fos);
+    	//fos.write("<data><![CDATA[".getBytes());
+    	git.log(revFrom, revTo, fos);
+    	//fos.write("]]></data>".getBytes());
     	fos.close();
     }
     
-    @Override
-    public void buildEnvVars(AbstractBuild build, Map<String, String> env) {
-    }
 
     @Override
     public ChangeLogParser createChangeLogParser() {
@@ -236,7 +284,6 @@ public class GitSCM extends SCM implements Serializable {
             return new GitSCM(
                     req.getParameter("git.source"),
                     req.getParameter("git.branch"),
-                    req.getParameter("git.submodules")!= null,
                     RepositoryBrowsers.createInstance(GitWeb.class, req, "git.browser"));
         }
 
@@ -259,12 +306,10 @@ public class GitSCM extends SCM implements Serializable {
                         
                         ok();
                         
-                    } catch (IOException e) {
-                        // failed
-                    } catch (InterruptedException e) {
-                        // failed
-                    }
-                    error("Unable to check git version");
+                    } catch (Exception e) {
+                    	error("Unable to check git version");
+                    } 
+                    
                 }
             }.process();
         }
@@ -273,11 +318,5 @@ public class GitSCM extends SCM implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-	public boolean getHasSubmodules() {
-		return hasSubmodules;
-	}
-
-	public void setHasSubmodules(boolean hasSubmodules) {
-		this.hasSubmodules = hasSubmodules;
-	}
+	
 }

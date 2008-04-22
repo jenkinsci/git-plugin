@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import java.io.OutputStream;
+import java.util.List;
 
 public interface IGitAPI {
 	
@@ -11,9 +12,17 @@ public interface IGitAPI {
     void submoduleUpdate()  throws GitException;
     
     void fetch() throws GitException;
+    void push() throws GitException;
     void merge() throws GitException;
     void clone(String source) throws GitException;
     
-    void log(OutputStream fos) throws GitException;
+    String revParse(String revName) throws GitException;
+    List<Tag> getTags() throws GitException;
+    List<Branch> getBranches() throws GitException;
+    void tag(String tagName, String comment) throws GitException;
+    void deleteTag(String tagName) throws GitException;
+    
+    void log(String revFrom, String revTo, OutputStream fos) throws GitException;
     void diff(OutputStream baos) throws GitException;
+	void checkout(String revToBuild) throws GitException;
 }
