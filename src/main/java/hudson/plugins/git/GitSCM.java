@@ -21,6 +21,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -42,10 +43,14 @@ public class GitSCM extends SCM implements Serializable {
      */
     private final String branch;
     
+    private final boolean doMerge;
+    
+    private final String mergeTarget;
+    
     private GitWeb browser;
 
     @DataBoundConstructor
-    public GitSCM(String source, String branch, GitWeb browser) {
+    public GitSCM(String source, String branch, boolean doMerge, String mergeTarget, GitWeb browser) {
         this.source = source;
 
         // normalization
@@ -53,6 +58,8 @@ public class GitSCM extends SCM implements Serializable {
         
         this.branch = branch;
         this.browser = browser;
+        this.doMerge = doMerge;
+        this.mergeTarget = mergeTarget;
     }
 
     /**
@@ -145,27 +152,84 @@ public class GitSCM extends SCM implements Serializable {
         }
         
         Set<Branch> toBeBuilt = branchesThatNeedBuilding(launcher, workspace, listener);
-        String revToBuild = null;
         
+        String log = "Candidate branches to be built: ";
+        for( Branch b: toBeBuilt )
+        	log+= b.getName() + " ";
+        listener.getLogger().println(log);
+
+        
+        Branch revToBuild = null;
+        String buildnumber = "hudson-" + build.getProject().getName() + "-" + build.getNumber();
         if( toBeBuilt.size() == 0 )
         {
-        	listener.getLogger().println("Nothing to do (no unbuilt branches)");
-        	revToBuild = git.revParse("HEAD");
+        	revToBuild = new Branch("HEAD", git.revParse("HEAD"));
+        	listener.getLogger().println("Nothing to do (no unbuilt branches) - rebuilding HEAD " + revToBuild);
         }
         else
         {
-        	revToBuild = toBeBuilt.iterator().next().getSHA1();
+        	revToBuild = toBeBuilt.iterator().next();
         }
         
-        git.checkout(revToBuild);
+        if( this.doMerge )
+        {
+        	if( revToBuild.getName() != getMergeTarget() )
+        	{
+        		// Only merge if there's a branch to merge that isn't us..
+        		listener.getLogger().println("Merging " + revToBuild + " onto " + getMergeTarget() );
+        		
+        		// checkout origin/blah
+        		git.checkout(getRemoteMergeTarget());
+        		
+        		try
+        		{
+        			git.merge( revToBuild.getSHA1() );
+        		}
+        		catch(Exception ex)
+        		{
+        			listener.getLogger().println("Branch not suitable for integration as it does not merge cleanly");
+        			
+        			// We still need to tag something to prevent repetitive builds from happening - tag the candidate
+        			// branch.
+        			git.checkout(revToBuild.getSHA1());
+        			
+        			git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+        			
+        			
+        			return false;
+        		}
+        		
+        		// Tag the successful merge
+        		git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+    			
+        		
+        		String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSHA1(), launcher, workspace, listener);
+        		
+        		// Fetch the diffs into the changelog file
+                putChangelogDiffsIntoFile(lastRevWas, git.revParse("HEAD"), launcher, workspace, listener, changelogFile);
+                 
+                
+                
+            
+        		return true;
+        	}
+        	
+        }
+                
+    	// Straight compile-the-branch
+        listener.getLogger().println("Checking out " + revToBuild);
+    	git.checkout(revToBuild.getSHA1());
         
-        String lastRevWas = whenWasBranchLastBuilt(revToBuild, launcher, workspace, listener);
+        String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSHA1(), launcher, workspace, listener);
         
         // Fetch the diffs into the changelog file
-        putChangelogDiffsIntoFile(lastRevWas, revToBuild, launcher, workspace, listener, changelogFile);
+        putChangelogDiffsIntoFile(lastRevWas, revToBuild.getSHA1(), launcher, workspace, listener, changelogFile);
         
-        String buildnumber = "hudson-" + build.getProject().getName() + "-" + build.getNumber();
+       
         git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+    
+        
+        
         
         return true;
     }
@@ -194,16 +258,39 @@ public class GitSCM extends SCM implements Serializable {
     			setOfThingsBuilt.add(tag.getCommitSHA1());
     	}
     	
-    	for(Branch branch : filterBranches(git.getBranches()))
+    	for(Branch branch : filterBranches(getTipBranches(git)))
     	{
     		if( branch.getName().startsWith("origin/") && !setOfThingsBuilt.contains(branch.getSHA1()) )
     			branchesThatNeedBuilding.add(branch);
     	}
     	
+    	// There could be a relationship between branches - so master may have merged br1, so br1
+    	// hasn't been built, but master has.
+    	
+    	// If there's any other branch in the list needing building that contains a branch, remove it
+    	
     	return (branchesThatNeedBuilding);
     }
     
-    private String whenWasBranchLastBuilt(String branchId, Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
+    /**
+     * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another
+     * branch).
+     * @param git
+     * @return
+     */
+    private Collection<Branch> getTipBranches(IGitAPI git) 
+    {
+    	List<Branch> branches = git.getBranches();
+    	Set<Branch> tips = new HashSet<Branch>();
+    	for(Branch b : branches)
+    	{
+    		if( git.getBranchesContaining(b.getSHA1()).size() == 1 )
+    			tips.add(b);
+    	}
+    	return tips;
+	}
+
+	private String whenWasBranchLastBuilt(String branchId, Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
     {
     	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
     	
@@ -284,6 +371,8 @@ public class GitSCM extends SCM implements Serializable {
             return new GitSCM(
                     req.getParameter("git.source"),
                     req.getParameter("git.branch"),
+                    req.getParameter("git.merge")!=null,
+                    req.getParameter("git.mergeTarget"),
                     RepositoryBrowsers.createInstance(GitWeb.class, req, "git.browser"));
         }
 
@@ -318,5 +407,16 @@ public class GitSCM extends SCM implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+	public boolean getDoMerge() {
+		return doMerge;
+	}
+
+	public String getMergeTarget() {
+		return mergeTarget;
+	}
+
+	public String getRemoteMergeTarget() {
+		return "origin/" + mergeTarget;
+	}
 	
 }

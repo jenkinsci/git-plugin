@@ -6,5 +6,15 @@
     <f:textbox name="git.branch" value="${scm.branch}" />
   </f:entry>
   
+  
+  <f:advanced>
+	  <f:entry title="Merge options" help="/plugin/git/merge.html">
+	  	<f:checkbox name="git.merge" checked="${scm.doMerge}" />
+	  	<label class="attach-previous">Merge before build?</label>
+	  	<label class=>Branch to merge to: (e.g master)</label><f:textbox name="git.mergeTarget" value="${scm.mergeTarget}" />
+	  	
+	  </f:entry>
+  </f:advanced>
+  
   <t:listScmBrowsers name="git.browser" />
 </j:jelly>
