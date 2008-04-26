@@ -7,5 +7,10 @@ public class Branch extends GitObject
 		super(name, sha1);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public @Override String toString()
+	{
+		return "Branch " + name + "(" + sha1 + ")";
+	}
 
 }

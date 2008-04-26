@@ -6,6 +6,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Result;
+import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormFieldValidator;
@@ -33,6 +35,15 @@ public class GitPublisher extends Publisher implements Serializable {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws InterruptedException {
 
+		SCM scm = build.getProject().getScm();
+		
+		if( !(scm instanceof GitSCM) )
+		{
+			
+			return false;
+		}
+		GitSCM gitSCM = (GitSCM)scm;
+		
 		IGitAPI git = new GitAPI(GitSCM.DescriptorImpl.DESCRIPTOR.getGitExe(),
 				launcher, build.getProject().getWorkspace(), listener);
 
@@ -49,8 +60,15 @@ public class GitPublisher extends Publisher implements Serializable {
 
 		git.tag(buildnumber, "Hudson Build #" + build.getNumber());
 
-		git.push();
-
+		if( gitSCM.getDoMerge() && build.getResult().isBetterOrEqualTo(Result.SUCCESS))
+		{
+			git.push("HEAD:"+gitSCM.getMergeTarget());
+		}
+		else
+		{
+			git.push(null);
+		}
+		
 		return true;
 	}
 

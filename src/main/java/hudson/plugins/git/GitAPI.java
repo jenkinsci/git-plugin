@@ -189,10 +189,10 @@ public class GitAPI implements IGitAPI {
 	/**
 	 * Merge any changes into the head.
 	 */
-	public void merge() throws GitException {
+	public void merge(String revSpec) throws GitException {
 
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "merge", "origin");
+		args.add(getGitExe(), "merge", revSpec);
 
 		launch(args.toCommandArray(), "Error in merge");
 
@@ -276,9 +276,12 @@ public class GitAPI implements IGitAPI {
 		}
 	}
 
-	public void push() throws GitException {
+	public void push(String refspec) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "push", "--tags");
+		args.add(getGitExe(), "push", "--tags", "origin");
+		
+		if( refspec != null )
+			args.add(refspec);
 		
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
@@ -296,6 +299,25 @@ public class GitAPI implements IGitAPI {
 		}
 	}
 
+	private List<Branch> parseBranches(String fos) throws IOException {
+		List<Branch> tags = new ArrayList<Branch>();
+		
+		BufferedReader rdr = new BufferedReader(new StringReader(fos.toString()));
+		String line;
+		while((line = rdr.readLine()) != null)
+		{
+			// Ignore the 1st 
+			line = line.substring(2);
+			// Ignore '(no branch)'
+			if( !line.startsWith("(") )
+			{
+				tags.add( new Branch(line, revParse(line)));
+			}
+		}
+		
+		return tags;
+	}
+	
 	public List<Branch> getBranches() throws GitException {
 		List<Branch> tags = new ArrayList<Branch>();
 		
@@ -310,25 +332,37 @@ public class GitAPI implements IGitAPI {
 			}
 
 			fos.close();
-			BufferedReader rdr = new BufferedReader(new StringReader(fos.toString()));
-			String line;
-			while((line = rdr.readLine()) != null)
-			{
-				// Ignore the 1st 
-				line = line.substring(2);
-				// Ignore '(no branch)'
-				if( !line.startsWith("(") )
-				{
-					tags.add( new Branch(line, revParse(line)));
-				}
-			}
 			
-			return tags;
+			return parseBranches(fos.toString());
 			
 		} catch (Exception e) {
 			throw new GitException("Error performing git branch", e);
 		}
 	}
+	
+
+	public List<Branch> getBranchesContaining(String revspec) throws GitException {
+		List<Branch> tags = new ArrayList<Branch>();
+		
+		ArgumentListBuilder args = new ArgumentListBuilder();
+		args.add(getGitExe(), "branch", "-a" , "--contains", revspec);
+		
+		try {
+			ByteArrayOutputStream fos = new ByteArrayOutputStream();
+			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
+					workspace).join() != 0) {
+				throw new GitException("Error launching git branch");
+			}
+
+			fos.close();
+
+			return parseBranches(fos.toString());
+			
+		} catch (Exception e) {
+			throw new GitException("Error performing git branch", e);
+		}
+	}
+
 
 	public void checkout(String ref) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
