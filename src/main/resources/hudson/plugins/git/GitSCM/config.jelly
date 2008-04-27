@@ -11,7 +11,7 @@
 	  <f:entry title="Merge options" help="/plugin/git/merge.html">
 	  	<f:checkbox name="git.merge" checked="${scm.doMerge}" />
 	  	<label class="attach-previous">Merge before build?</label>
-	  	<label class=>Branch to merge to: (e.g master)</label><f:textbox name="git.mergeTarget" value="${scm.mergeTarget}" />
+	  	<label>Branch to merge to: (e.g master)</label><f:textbox name="git.mergeTarget" value="${scm.mergeTarget}" />
 	  	
 	  </f:entry>
   </f:advanced>
