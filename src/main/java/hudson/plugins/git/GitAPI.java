@@ -227,7 +227,7 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "submodule", "update");
 
-		launch(args.toCommandArray(), "Error in submodule init");
+		launch(args.toCommandArray(), "Error in submodule update");
 	}
 
 	protected final Map<String, String> createEnvVarMap() {
