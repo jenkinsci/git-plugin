@@ -133,12 +133,6 @@ public class GitSCM extends SCM implements Serializable {
         	listener.getLogger().println("Checkout (update)");
         	
             git.fetch();            
-            	
-            if( git.hasGitModules())
-    		{	
-            	git.submoduleUpdate();
-    		}     
-           
         }
         else
         {
@@ -147,7 +141,6 @@ public class GitSCM extends SCM implements Serializable {
             if( git.hasGitModules())
     		{	
 	            git.submoduleInit();
-	            git.submoduleUpdate();
     		}
         }
         
@@ -180,7 +173,8 @@ public class GitSCM extends SCM implements Serializable {
         		
         		// checkout origin/blah
         		git.checkout(getRemoteMergeTarget());
-        		
+        	
+        	    
         		try
         		{
         			git.merge( revToBuild.getSHA1() );
@@ -199,6 +193,10 @@ public class GitSCM extends SCM implements Serializable {
         			return false;
         		}
         		
+        	    if( git.hasGitModules())
+        		{	
+                	git.submoduleUpdate();
+        		}    
         		// Tag the successful merge
         		git.tag(buildnumber, "Hudson Build #" + build.getNumber());
     			
@@ -220,7 +218,13 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Checking out " + revToBuild);
     	git.checkout(revToBuild.getSHA1());
         
+        if( git.hasGitModules())
+		{	
+        	git.submoduleUpdate();
+		}    
+        
         String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSHA1(), launcher, workspace, listener);
+
         
         // Fetch the diffs into the changelog file
         putChangelogDiffsIntoFile(lastRevWas, revToBuild.getSHA1(), launcher, workspace, listener, changelogFile);
@@ -258,7 +262,7 @@ public class GitSCM extends SCM implements Serializable {
     			setOfThingsBuilt.add(tag.getCommitSHA1());
     	}
     	
-    	for(Branch branch : filterBranches(getTipBranches(git)))
+    	for(Branch branch : filterBranches(getTipBranches(listener, git)))
     	{
     		if( branch.getName().startsWith("origin/") && !setOfThingsBuilt.contains(branch.getSHA1()) )
     			branchesThatNeedBuilding.add(branch);
@@ -278,18 +282,43 @@ public class GitSCM extends SCM implements Serializable {
      * @param git
      * @return
      */
-    private Collection<Branch> getTipBranches(IGitAPI git) 
+    private Collection<Branch> getTipBranches(TaskListener listener, IGitAPI git) 
     {
     	List<Branch> branches = git.getBranches();
+    	listener.getLogger().println("Available Branches : " + listBranches(branches) );
+		
     	Set<Branch> tips = new HashSet<Branch>();
     	for(Branch b : branches)
     	{
-    		if( git.getBranchesContaining(b.getSHA1()).size() == 1 )
+    		Collection<Branch> contained = git.getBranchesContaining(b.getSHA1());
+    		
+    		listener.getLogger().println("Branch " + b.getName() + " contained in " + listBranches(branches) );
+    		
+    		int count = 0;
+    		for( Branch candidate : contained )
+    		{
+    			if( candidate.getName().startsWith("origin/") && !candidate.getName().equals("origin/HEAD") )
+    				count++;
+    		}
+    		
+    		if( count == 1 )
     			tips.add(b);
     	}
+    	listener.getLogger().println("Tip Branches : " + listBranches(tips) );
+		
     	return tips;
 	}
 
+    private String listBranches(Collection<Branch> list)
+    {
+    	String txt = "";
+    	for(Branch branch : list)
+    	{
+    		txt += branch.getName() + " ";
+    	}
+    	return txt;
+    }
+    
 	private String whenWasBranchLastBuilt(String branchId, Launcher launcher, FilePath workspace, TaskListener listener) throws IOException 
     {
     	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
