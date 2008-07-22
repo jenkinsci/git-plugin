@@ -26,6 +26,8 @@ public class GitChangeLogParser extends ChangeLogParser {
 
 		BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
 
+		try
+    {
 		String line;
 		List<String> lines = null;
 
@@ -46,6 +48,11 @@ public class GitChangeLogParser extends ChangeLogParser {
 		}
 
 		return new GitChangeSetList(build, r);
+		}
+    finally
+    {
+      rdr.close();
+    }
 	}
 
 	private GitChangeSet parseCommit(List<String> lines) {
