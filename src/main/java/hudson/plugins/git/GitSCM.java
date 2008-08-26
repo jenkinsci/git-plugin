@@ -422,12 +422,16 @@ public class GitSCM extends SCM implements Serializable {
     			setOfThingsBuilt.add(tag.getCommitSHA1());
     	}
     	
+    	if (setOfThingsBuilt.isEmpty()) {
+    		return null;
+    	}
+    	
     	while(true)
     	{
     		try
     		{
 	    		String rev = git.revParse(branchId);
-	    		if( setOfThingsBuilt.contains(rev) )
+	    		if(setOfThingsBuilt.contains(rev) )
 	    			return rev;
 	    		branchId += "^";
     		}
