@@ -273,7 +273,7 @@ public class GitAPI implements IGitAPI {
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
 					workspace).join() != 0) {
 				// Might not be any tags, so just return an empty set.
-        return tags;
+                return tags;
 			}
 
 			fos.close();

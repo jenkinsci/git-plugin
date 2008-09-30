@@ -214,21 +214,23 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     @Override
-    public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile) throws IOException, InterruptedException {
-        
-    	IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
-    	
-        if(git.hasGitRepo())
-        {
-        	// It's an update
-        	
-        	listener.getLogger().println("Checkout (update)");
-        	
-            git.fetch();            
-            
-            for (RemoteRepository remoteRepository : repositories)
-            {
-            try
+  public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener,
+      File changelogFile) throws IOException, InterruptedException
+  {
+
+    IGitAPI git = new GitAPI(getDescriptor().getGitExe(), launcher, workspace, listener);
+
+    if (git.hasGitRepo())
+    {
+      // It's an update
+
+      listener.getLogger().println("Checkout (update)");
+
+      git.fetch();
+
+      for (RemoteRepository remoteRepository : repositories)
+      {
+        try
         {
           git.fetch(remoteRepository.getUrl(), remoteRepository.getRefspec());
         }
@@ -238,132 +240,134 @@ public class GitSCM extends SCM implements Serializable {
               "Problem fetching from " + remoteRepository.getName() + " - could be unavailable. Continuing anyway");
         }
       }
-            
-        }
-        else
-        {
-        	listener.getLogger().println("Checkout (clone)");
-            git.clone(source);
-            if( git.hasGitModules())
-    		{	
-	            git.submoduleInit();
-	            git.submoduleUpdate();
-    		}
-        }
-        
-        Set<Revision> toBeBuilt = branchesThatNeedBuilding(launcher, workspace, listener);
-        
-        String log = "Candidate revisions to be built: ";
+
+    }
+    else
+    {
+      listener.getLogger().println("Checkout (clone)");
+      git.clone(source);
+      if (git.hasGitModules())
+      {
+        git.submoduleInit();
+        git.submoduleUpdate();
+      }
+    }
+
+    Set<Revision> toBeBuilt = branchesThatNeedBuilding(launcher, workspace, listener);
+
+    String log = "Candidate revisions to be built: ";
     for (Revision b : toBeBuilt)
       log += b.toString() + "; ";
-        listener.getLogger().println(log);
+    listener.getLogger().println(log);
 
-        
-        Revision revToBuild = null;
-        String buildnumber = "hudson-" + build.getProject().getName() + "-" + build.getNumber();
-        if( toBeBuilt.size() == 0 )
-        {
-        	revToBuild = new Revision(git.revParse("HEAD"));
-        	listener.getLogger().println("Nothing to do (no unbuilt branches) - rebuilding HEAD " + revToBuild);
-        }
-        else
-        {
-        	revToBuild = toBeBuilt.iterator().next();
-        }
-        
-        if( this.doMerge )
-        {
-            // Do we need to merge this revision onto MergeTarget
+    Revision revToBuild = null;
+    String buildnumber = "hudson-" + build.getProject().getName() + "-" + build.getNumber();
+    if (toBeBuilt.size() == 0)
+    {
+      revToBuild = new Revision(git.revParse("HEAD"));
+      listener.getLogger().println("Nothing to do (no unbuilt branches) - rebuilding HEAD " + revToBuild);
+    }
+    else
+    {
+      revToBuild = toBeBuilt.iterator().next();
+    }
+
+    if (this.doMerge)
+    {
+      // Do we need to merge this revision onto MergeTarget
       if (!revToBuild.containsBranchName(getMergeTarget()))
-        	{
-        		// Only merge if there's a branch to merge that isn't us..
-        		listener.getLogger().println("Merging " + revToBuild + " onto " + getMergeTarget() );
-        		
-        		// checkout origin/blah
-        		git.checkout(getRemoteMergeTarget());
-        	
-        	    
-        		try
-        		{
-        			git.merge(revToBuild.getSha1());
-        		}
-        		catch(Exception ex)
-        		{
-        			listener.getLogger().println("Branch not suitable for integration as it does not merge cleanly");
-        			
-        			// We still need to tag something to prevent repetitive builds from happening - tag the candidate
-        			// branch.
-          git.checkout(revToBuild.getSha1());
-        			
-        			git.tag(buildnumber, "Hudson Build #" + build.getNumber());
-        			
-        			
-        			return false;
-        		}
-        		
-        	    if( git.hasGitModules())
-        		{	
-                	git.submoduleUpdate();
-        		}    
-        		// Tag the successful merge
-        		git.tag(buildnumber, "Hudson Build #" + build.getNumber());
-    			
-        		
-        		String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSha1(), launcher, workspace, listener);
-        		
-        		// Fetch the diffs into the changelog file
-                putChangelogDiffsIntoFile(lastRevWas, git.revParse("HEAD"), launcher, workspace, listener, changelogFile);
-                 
-        		return true;
-        	}
+      {
+        // Only merge if there's a branch to merge that isn't us..
+        listener.getLogger().println("Merging " + revToBuild + " onto " + getMergeTarget());
+
+        // checkout origin/blah
+        git.checkout(getRemoteMergeTarget());
+
+        try
+        {
+          git.merge(revToBuild.getSha1());
         }
-        
-        
-        
-                
-    	// Straight compile-the-branch
-        listener.getLogger().println("Checking out " + revToBuild);
-    	git.checkout(revToBuild.getSha1());
-        
-    	
-    	// if( compileSubmoduleCompares )
+        catch (Exception ex)
+        {
+          listener.getLogger().println("Branch not suitable for integration as it does not merge cleanly");
+
+          // We still need to tag something to prevent repetitive builds from happening - tag the candidate
+          // branch.
+          git.checkout(revToBuild.getSha1());
+
+          git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+
+          return false;
+        }
+
+        if (git.hasGitModules())
+        {
+          git.submoduleUpdate();
+        }
+        // Tag the successful merge
+        git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+
+        String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSha1(), launcher, workspace, listener);
+
+        // Fetch the diffs into the changelog file
+        putChangelogDiffsIntoFile(lastRevWas, git.revParse("HEAD"), launcher, workspace, listener, changelogFile);
+
+        return true;
+      }
+    }
+
+    // Straight compile-the-branch
+    listener.getLogger().println("Checking out " + revToBuild);
+    git.checkout(revToBuild.getSha1());
+
+    // if( compileSubmoduleCompares )
     if (doGenerateSubmoduleConfigurations)
     {
       SubmoduleCombinator combinator = new SubmoduleCombinator(git, launcher, listener, workspace, submoduleCfg);
       combinator.createSubmoduleCombinations();
     }
-    	
-        if( git.hasGitModules())
-		{	
-            git.submoduleInit();
-            
-            // Git submodule update will only 'fetch' from where it regards as 'origin'. However,
+
+    if (git.hasGitModules())
+    {
+      git.submoduleInit();
+
+      // Git submodule update will only 'fetch' from where it regards as 'origin'. However,
       // it is possible that we are building from a RemoteRepository with changes
       // that are not in 'origin' AND it may be a new module that we've only just discovered.
       // So - try updating from all RRs, then use the submodule Update to do the checkout
 
-            
-            for (RemoteRepository remoteRepository : repositories)
+      for (RemoteRepository remoteRepository : repositories)
       {
         fetchFrom(git, launcher, workspace, listener, remoteRepository);
       }
 
-            // Update to the correct checkout
+      // Update to the correct checkout
       git.submoduleUpdate();
-        	
-		}    
-        
-        String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSha1(), launcher, workspace, listener);
 
-        
-        // Fetch the diffs into the changelog file
-    putChangelogDiffsIntoFile(lastRevWas, revToBuild.getSha1(), launcher, workspace, listener, changelogFile);
-        
-       
-        git.tag(buildnumber, "Hudson Build #" + build.getNumber());
-        
-        return true;
     }
+
+    String lastRevWas = whenWasBranchLastBuilt(revToBuild.getSha1(), launcher, workspace, listener);
+
+    if( lastRevWas != null )
+    {
+      // No previous revision has been built - don't generate every
+      // single change in existence.
+      
+      changelogFile.delete();
+      FileOutputStream fos = new FileOutputStream(changelogFile);
+      fos.write("First Time Build of Branch.".getBytes());
+      fos.close();
+    }
+    else
+    {
+      // Fetch the diffs into the changelog file
+      putChangelogDiffsIntoFile(lastRevWas, revToBuild.getSha1(), launcher, workspace, listener, changelogFile);
+    }
+    
+    git.tag(buildnumber, "Hudson Build #" + build.getNumber());
+
+    return true;
+  }
     
     
     
