@@ -3,7 +3,7 @@ package hudson.plugins.git;
 /**
  * Definition of a remote GIT repository.
  */
-public class RemoteRepository
+public class RemoteRepository implements java.io.Serializable
 {
   /**
    * Name of the host (e.g origin).

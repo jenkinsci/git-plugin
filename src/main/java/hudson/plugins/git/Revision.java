@@ -3,7 +3,7 @@ package hudson.plugins.git;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class Revision
+public class Revision implements java.io.Serializable
 {
   String             sha1;
   Collection<Branch> branches;

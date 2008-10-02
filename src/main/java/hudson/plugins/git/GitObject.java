@@ -1,6 +1,7 @@
 package hudson.plugins.git;
+import java.io.Serializable;
 
-public class GitObject {
+public class GitObject implements Serializable {
 	String sha1;
 	String name;
 	

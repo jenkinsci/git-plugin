@@ -1,6 +1,5 @@
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
@@ -26,8 +25,7 @@ import java.util.Map;
 public class SubmoduleCombinator
 {
   IGitAPI      git;
-  Launcher     launcher;
-  FilePath     workspace;
+  File         workspace;
   TaskListener listener;
 
   long         tid = new Date().getTime();
@@ -35,12 +33,12 @@ public class SubmoduleCombinator
   
   Collection<SubmoduleConfig> submoduleConfig;
   
-  public SubmoduleCombinator(IGitAPI git, Launcher launcher, TaskListener listener, FilePath workspace,
+  public SubmoduleCombinator(IGitAPI git, TaskListener listener, File workspace,
       Collection<SubmoduleConfig> cfg)
   {
     this.git = git;
     this.listener = listener;
-    this.launcher = launcher;
+    
     this.workspace = workspace;
     this.submoduleConfig = cfg;
   }
@@ -53,8 +51,8 @@ public class SubmoduleCombinator
 
     for (IndexEntry submodule : gitUtils.getSubmodules("HEAD"))
     {
-      FilePath subdir = new FilePath(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), launcher, subdir, listener);
+      File subdir = new File(workspace, submodule.getFile());
+      IGitAPI subGit = new GitAPI(git.getGitExe(), subdir, listener);
       
       Collection<Revision> items = new GitUtils(listener, subGit).getTipBranches();
       
@@ -185,8 +183,8 @@ public class SubmoduleCombinator
     for (IndexEntry submodule : settings.keySet())
     {
       Revision branch = settings.get(submodule);
-      FilePath subdir = new FilePath(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), launcher, subdir, listener);
+      File subdir = new File(workspace, submodule.getFile());
+      IGitAPI subGit = new GitAPI(git.getGitExe(), subdir, listener);
       
       subGit.checkout(branch.sha1);
       git.add(submodule.file);
@@ -196,9 +194,16 @@ public class SubmoduleCombinator
     try
     {
       File f = File.createTempFile("gitcommit", ".txt");
-      FileOutputStream fos = new FileOutputStream(f);
-      fos.write(commit.getBytes());
-      fos.close();
+      FileOutputStream fos = null;
+      try
+      {
+        fos = new FileOutputStream(f);
+        fos.write(commit.getBytes());
+      }
+      finally
+      {
+        fos.close();
+      }
       git.commit(f);
       f.delete();
     }
