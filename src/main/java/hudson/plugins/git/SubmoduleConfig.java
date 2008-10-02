@@ -2,7 +2,7 @@ package hudson.plugins.git;
 
 import java.util.regex.Pattern;
 
-public class SubmoduleConfig
+public class SubmoduleConfig implements java.io.Serializable
 {
   String   submoduleName;
   String[] branches;
