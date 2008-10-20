@@ -29,6 +29,8 @@ public class GitChangeLogParser extends ChangeLogParser {
 		try
     {
 		String line;
+		// We use the null value to determine whether at least one commit was
+		// present in the changelog. If it stays null, there is no commit line.
 		List<String> lines = null;
 
 		while ((line = rdr.readLine()) != null) {
@@ -39,8 +41,8 @@ public class GitChangeLogParser extends ChangeLogParser {
 				lines = new ArrayList<String>();
 			}
 			
-
-			lines.add(line);
+			if (lines != null)
+				lines.add(line);
 		}
 
 		if (lines != null) {

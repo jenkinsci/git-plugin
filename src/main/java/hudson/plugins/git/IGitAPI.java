@@ -26,12 +26,13 @@ public interface IGitAPI {
     
     List<IndexEntry> lsTree(String treeIsh) throws GitException;
     
-    List<String> revList() throws GitException;
+    List<String> revListBranch(String branchId) throws GitException;
+    List<String> revListAll() throws GitException;
     
     void tag(String tagName, String comment) throws GitException;
     void deleteTag(String tagName) throws GitException;
     
-    void log(String revFrom, String revTo, OutputStream fos) throws GitException;
+    void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
     void diff(OutputStream baos) throws GitException;
 	void checkout(String revToBuild) throws GitException;
   
