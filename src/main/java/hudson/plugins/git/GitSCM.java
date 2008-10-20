@@ -17,7 +17,6 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowsers;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
-import hudson.util.ByteBuffer;
 import hudson.util.FormFieldValidator;
 
 import java.io.ByteArrayOutputStream;
@@ -128,7 +127,7 @@ public class GitSCM extends SCM implements Serializable {
 			public Boolean invoke(File workspace, VirtualChannel channel)
 					throws IOException {
 
-				IGitAPI git = new GitAPI(gitExe, workspace, listener);
+				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 
 				listener.getLogger().println("Poll for changes");
 
@@ -179,7 +178,7 @@ public class GitSCM extends SCM implements Serializable {
 							.getSubmoduleRepository(submodule.getFile());
 
 					File subdir = new File(workspace, submodule.getFile());
-					IGitAPI subGit = new GitAPI(git.getGitExe(), subdir,
+					IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
 							listener);
 
 					subGit.fetch(submoduleRemoteRepository.getUrl(),
@@ -246,7 +245,7 @@ public class GitSCM extends SCM implements Serializable {
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
 			public Revision invoke(File workspace, VirtualChannel channel)
 					throws IOException {
-				IGitAPI git = new GitAPI(gitExe, workspace, listener);
+				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 
 				if (git.hasGitRepo()) {
 					// It's an update
@@ -308,7 +307,7 @@ public class GitSCM extends SCM implements Serializable {
 				changeLog = workspace.act(new FileCallable<String>() {
 					public String invoke(File workspace, VirtualChannel channel)
 							throws IOException {
-						IGitAPI git = new GitAPI(gitExe, workspace, listener);
+						IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 
 						// Do we need to merge this revision onto MergeTarget
 
@@ -367,7 +366,7 @@ public class GitSCM extends SCM implements Serializable {
 		changeLog = workspace.act(new FileCallable<String>() {
 			public String invoke(File workspace, VirtualChannel channel)
 					throws IOException {
-				IGitAPI git = new GitAPI(gitExe, workspace, listener);
+				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 				// Straight compile-the-branch
 				listener.getLogger().println("Checking out " + revToBuild);
 				git.checkout(revToBuild.getSha1());
@@ -460,7 +459,7 @@ public class GitSCM extends SCM implements Serializable {
 		return (branchesThatNeedBuilding);
 	}
 
-	private String whenWasBranchLastBuilt(IGitAPI git, String branchId,
+	private static String whenWasBranchLastBuilt(IGitAPI git, String branchId,
 			File workspace, TaskListener listener) throws IOException {
 
 		Set<String> setOfThingsBuilt = new HashSet<String>();
@@ -474,25 +473,19 @@ public class GitSCM extends SCM implements Serializable {
 			return null;
 		}
 
-		while (true) {
-			try {
-				String rev = git.revParse(branchId);
-				if (setOfThingsBuilt.contains(rev))
-					return rev;
-				branchId += "^";
-			} catch (GitException ex) {
-				// It's never been built.
-				return null;
-			}
+		for (String rev : git.revListBranch(branchId)) {
+			if (setOfThingsBuilt.contains(rev))
+				return rev;
 		}
-
+		
+		return null;
 	}
 
 	private String putChangelogDiffsIntoFile(IGitAPI git, String revFrom,
 			String revTo) throws IOException {
 		ByteArrayOutputStream fos = new ByteArrayOutputStream();
 		// fos.write("<data><![CDATA[".getBytes());
-		git.log(revFrom, revTo, fos);
+		git.changelog(revFrom, revTo, fos);
 		// fos.write("]]></data>".getBytes());
 		fos.close();
 		return fos.toString();
@@ -579,7 +572,7 @@ public class GitSCM extends SCM implements Serializable {
 			new FormFieldValidator.Executable(req, rsp) {
 				protected void checkExecutable(File exe) throws IOException,
 						ServletException {
-					ByteBuffer baos = new ByteBuffer();
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					try {
 						Proc proc = Hudson.getInstance().createLauncher(
 								TaskListener.NULL).launch(

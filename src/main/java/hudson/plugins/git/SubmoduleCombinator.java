@@ -1,6 +1,6 @@
 package hudson.plugins.git;
 
-import hudson.Launcher;
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
 
@@ -52,7 +52,7 @@ public class SubmoduleCombinator
     for (IndexEntry submodule : gitUtils.getSubmodules("HEAD"))
     {
       File subdir = new File(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), subdir, listener);
+      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
       
       Collection<Revision> items = new GitUtils(listener, subGit).getTipBranches();
       
@@ -84,7 +84,7 @@ public class SubmoduleCombinator
     // Create a map which is SHA1 -> Submodule IDs that were present
     Map<String, List<IndexEntry>> entriesMap = new HashMap<String, List<IndexEntry>>();
     // Knock out already-defined configurations
-    for (String sha1 : git.revList())
+    for (String sha1 : git.revListAll())
     {
       // What's the submodule configuration
       List<IndexEntry> entries = gitUtils.getSubmodules(sha1);
@@ -184,7 +184,7 @@ public class SubmoduleCombinator
     {
       Revision branch = settings.get(submodule);
       File subdir = new File(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), subdir, listener);
+      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
       
       subGit.checkout(branch.sha1);
       git.add(submodule.file);

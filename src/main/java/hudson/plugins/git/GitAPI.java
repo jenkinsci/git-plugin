@@ -2,11 +2,8 @@ package hudson.plugins.git;
 
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
-import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.BufferedReader;
@@ -19,15 +16,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.Serializable;
 
 public class GitAPI implements IGitAPI {
 	Launcher launcher;
-	File workspace;
+	FilePath workspace;
 	TaskListener listener;
 	String gitExe;
 
-	public GitAPI(String gitExe, File workspace,
+	public GitAPI(String gitExe, FilePath workspace,
 			TaskListener listener) {
 		
 		this.workspace = workspace;
@@ -45,7 +41,7 @@ public class GitAPI implements IGitAPI {
 	public boolean hasGitRepo() throws GitException {
 		try {
 
-			File dotGit = new File(workspace, ".git");
+			File dotGit = new File(workspace.toURI().getPath(), ".git");
 
 			return dotGit.exists();
 
@@ -61,7 +57,7 @@ public class GitAPI implements IGitAPI {
 	public boolean hasGitModules() throws GitException {
 		try {
 
-			File dotGit = new File(workspace, ".gitmodules");
+			File dotGit = new File(workspace.toURI().getPath(), ".gitmodules");
 
 			return dotGit.exists();
 
@@ -90,7 +86,7 @@ public class GitAPI implements IGitAPI {
 
 		try {
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(),
-					listener.getLogger(), new FilePath(workspace)).join() != 0) {
+					listener.getLogger(), workspace).join() != 0) {
 				throw new GitException("Failed to fetch");
 			}
 		} catch (IOException e) {
@@ -113,7 +109,7 @@ public class GitAPI implements IGitAPI {
 
 		// TODO: Not here!
 		try {
-			Util.deleteRecursive(workspace);
+			workspace.deleteRecursive();
 		} catch (Exception e) {
 			e.printStackTrace(listener.error("Failed to clean the workspace"));
 			throw new GitException("Failed to delete workspace", e);
@@ -122,7 +118,13 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "clone");
 
-		args.add(source, workspace.getPath());
+		try {
+			args.add(source, workspace.toURI().getPath());
+		} catch (IOException e1) {
+			throw new GitException(e1);
+		} catch (InterruptedException e1) {
+			throw new GitException(e1);
+		}
 		int processResult = 0;
 
 		try {
@@ -147,7 +149,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error launching git rev-parse");
 			}
 
@@ -171,7 +173,7 @@ public class GitAPI implements IGitAPI {
 		try {
 
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), baos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Failed to diff");
 			}
 
@@ -181,10 +183,8 @@ public class GitAPI implements IGitAPI {
 
 	}
 
-	public void log(String revFrom, String revTo, OutputStream fos)
-			throws GitException {
-		// git log --numstat -M --summary --pretty=raw HEAD..origin
-
+	public void log(String revFrom, String revTo, OutputStream fos, String...extraargs)
+	throws GitException {
 		String revSpec;
 		if (revFrom == null) {
 			revSpec = revTo;
@@ -193,19 +193,26 @@ public class GitAPI implements IGitAPI {
 		}
 		// Find the changes between our current working copy and now
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "log", "--numstat", "-M", "--summary",
-				"--pretty=raw", revSpec);
+		args.add(getGitExe(), "log");
+		args.add(extraargs);
+		args.add(revSpec);
 
 		try {
 
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error launching git log");
 			}
 
 		} catch (Exception e) {
 			throw new GitException("Error performing git log", e);
 		}
+	}
+
+	public void changelog(String revFrom, String revTo, OutputStream fos)
+			throws GitException {
+		// git log --numstat -M --summary --pretty=raw HEAD..origin
+		log(revFrom, revTo, fos, "--numstat", "-M", "--summary", "--pretty=raw");
 	}
 
 	/**
@@ -223,7 +230,7 @@ public class GitAPI implements IGitAPI {
 	private void launch(String[] args, String error) {
 		try {
 			if (launcher.launch(args, createEnvVarMap(), listener.getLogger(),
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 
 				throw new GitException(error);
 			}
@@ -275,7 +282,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				// Might not be any tags, so just return an empty set.
 				return tags;
 			}
@@ -308,7 +315,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error launching git push");
 			}
 
@@ -346,7 +353,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error launching git branch");
 			}
 
@@ -369,7 +376,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				// No items : return empty set
 				return tags;
 			}
@@ -407,7 +414,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error executing cat-file");
 			}
 
@@ -435,7 +442,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error executing ls-tree");
 			}
 
@@ -456,15 +463,24 @@ public class GitAPI implements IGitAPI {
 		}
 	}
 
-	public List<String> revList() throws GitException {
+	public List<String> revListAll() throws GitException {
+		return revList("--all");
+	}
+
+	public List<String> revListBranch(String branchId) throws GitException {
+		return revList(branchId);
+	}
+
+	public List<String> revList(String...extraArgs) throws GitException {
 		List<String> entries = new ArrayList<String>();
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "rev-list", "--all");
+		args.add(getGitExe(), "rev-list");
+		args.add(extraArgs);
 
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
 			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					new FilePath(workspace)).join() != 0) {
+					workspace).join() != 0) {
 				throw new GitException("Error executing rev-list");
 			}
 

@@ -9,6 +9,10 @@ public class GitException extends RuntimeException {
 		super(message);
 	}
 
+	public GitException(Throwable cause) {
+		super(cause);
+	}
+
 	public GitException(String message, Throwable cause) {
 		super(message, cause);
 	}

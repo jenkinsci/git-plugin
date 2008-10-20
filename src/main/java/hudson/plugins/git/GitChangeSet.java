@@ -2,12 +2,8 @@ package hudson.plugins.git;
 
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.EditType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -155,6 +151,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
 	@Override
 	public User getAuthor() {
+		if (this.author == null)
+			throw new RuntimeException("No author in this changeset!");
 		return User.get(this.author, true);
 	}
 
