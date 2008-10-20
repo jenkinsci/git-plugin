@@ -205,19 +205,6 @@ public class GitSCM extends SCM implements Serializable {
 
 	}
 
-	private Collection<Revision> filterBranches(Collection<Revision> branches) {
-		if (this.branch == null || this.branch.length() == 0)
-			return branches;
-		Set<Revision> interesting = new HashSet<Revision>();
-		for (Revision r : branches) {
-			for (Branch b : r.getBranches()) {
-				if (!b.getName().equals(this.branch))
-					interesting.add(r);
-			}
-		}
-		return interesting;
-	}
-
 	private boolean changeLogResult(String changeLog, File changelogFile) throws IOException
 	{
 		if (changeLog == null)
@@ -429,7 +416,7 @@ public class GitSCM extends SCM implements Serializable {
 	/**
 	 * Are there any branches that haven't been built?
 	 * 
-	 * @return SHA1 id of the branch that requires building, or NULL if none are
+	 * @return set of revisions that require building, or an empty set if none are
 	 *         found.
 	 * @throws IOException
 	 * @throws InterruptedException
@@ -446,8 +433,14 @@ public class GitSCM extends SCM implements Serializable {
 				setOfThingsBuilt.add(tag.getCommitSHA1());
 		}
 
-		for (Revision revision : filterBranches(new GitUtils(listener, git)
-				.getTipBranches())) {
+		if (branch == null) {
+			for (Revision revision : new GitUtils(listener, git)
+					.getTipBranches()) {
+				if (!setOfThingsBuilt.contains(revision.getSha1()))
+					branchesThatNeedBuilding.add(revision);
+			}
+		} else {
+			Revision revision = new Revision(git.revParse(branch));
 			if (!setOfThingsBuilt.contains(revision.getSha1()))
 				branchesThatNeedBuilding.add(revision);
 		}
