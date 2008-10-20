@@ -113,6 +113,9 @@ public class GitSCM extends SCM implements Serializable {
 	}
 
 	public List<RemoteRepository> getRepositories() {
+		// Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
+		if (repositories == null)
+			return new ArrayList<RemoteRepository>();
 		return repositories;
 	}
 
@@ -139,7 +142,7 @@ public class GitSCM extends SCM implements Serializable {
 					// Get from 'Main' repo
 					git.fetch();
 
-					for (RemoteRepository remoteRepository : repositories) {
+					for (RemoteRepository remoteRepository : getRepositories()) {
 						fetchFrom(git, workspace, listener, remoteRepository);
 					}
 
@@ -254,7 +257,7 @@ public class GitSCM extends SCM implements Serializable {
 
 					git.fetch();
 
-					for (RemoteRepository remoteRepository : repositories) {
+					for (RemoteRepository remoteRepository : getRepositories()) {
 						try {
 							git.fetch(remoteRepository.getUrl(),
 									remoteRepository.getRefspec());
@@ -390,7 +393,7 @@ public class GitSCM extends SCM implements Serializable {
 					// So - try updating from all RRs, then use the submodule
 					// Update to do the checkout
 
-					for (RemoteRepository remoteRepository : repositories) {
+					for (RemoteRepository remoteRepository : getRepositories()) {
 						fetchFrom(git, workspace, listener, remoteRepository);
 					}
 
