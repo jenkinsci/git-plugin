@@ -148,13 +148,14 @@ public class GitAPI implements IGitAPI {
 
 		try {
 			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error launching git rev-parse");
-			}
+			int status = launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
+				workspace).join();
 
 			fos.close();
 			result = fos.toString().trim();
+
+			if (status != 0)
+				throw new GitException("Error launching git rev-parse: " + result);
 
 		} catch (Exception e) {
 			throw new GitException("Error performing git rev-parse", e);
