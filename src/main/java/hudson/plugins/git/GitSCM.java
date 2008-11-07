@@ -428,9 +428,8 @@ public class GitSCM extends SCM implements Serializable {
 		Set<String> setOfThingsBuilt = new HashSet<String>();
 		Set<Revision> branchesThatNeedBuilding = new HashSet<Revision>();
 
-		for (Tag tag : git.getTags()) {
-			if (tag.getName().startsWith("hudson"))
-				setOfThingsBuilt.add(tag.getCommitSHA1());
+		for (Tag tag : git.getHudsonTags()) {
+			setOfThingsBuilt.add(tag.getCommitSHA1());
 		}
 
 		if (branch == null) {
@@ -460,9 +459,8 @@ public class GitSCM extends SCM implements Serializable {
 
 		Set<String> setOfThingsBuilt = new HashSet<String>();
 
-		for (Tag tag : git.getTags()) {
-			if (tag.getName().startsWith("hudson"))
-				setOfThingsBuilt.add(tag.getCommitSHA1());
+		for (Tag tag : git.getHudsonTags()) {
+			setOfThingsBuilt.add(tag.getCommitSHA1());
 		}
 
 		if (setOfThingsBuilt.isEmpty()) {

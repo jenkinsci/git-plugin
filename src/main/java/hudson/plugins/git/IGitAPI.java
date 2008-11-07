@@ -20,7 +20,7 @@ public interface IGitAPI {
     void clone(String source) throws GitException;
     
     String revParse(String revName) throws GitException;
-    List<Tag> getTags() throws GitException;
+    List<Tag> getHudsonTags() throws GitException;
     List<Branch> getBranches() throws GitException;
     List<Branch> getBranchesContaining(String revspec) throws GitException;
     
@@ -33,12 +33,10 @@ public interface IGitAPI {
     void deleteTag(String tagName) throws GitException;
     
     void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
-    void diff(OutputStream baos) throws GitException;
 	void checkout(String revToBuild) throws GitException;
   
 	void add(String filePattern) throws GitException;
 	void branch(String name) throws GitException;
-	void commit(String comment) throws GitException;
 
     void commit(File f) throws GitException;
 }
