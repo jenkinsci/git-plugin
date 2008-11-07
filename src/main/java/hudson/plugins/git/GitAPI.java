@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 public class GitAPI implements IGitAPI {
 	Launcher launcher;
 	FilePath workspace;
@@ -144,47 +146,34 @@ public class GitAPI implements IGitAPI {
 	public String revParse(String revName) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "rev-parse", revName);
-		String result;
-
+		String result = launchCommand(args.toCommandArray());
+		return firstLine(result).trim();
+	}
+	
+	private String firstLine(String result) {
+		BufferedReader reader = new BufferedReader(new StringReader(result));
+		String line;
 		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			int status = launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-				workspace).join();
-
-			fos.close();
-			result = fos.toString().trim();
-
-			if (status != 0)
-				throw new GitException("Error launching git rev-parse: " + result);
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git rev-parse", e);
+			line = reader.readLine();
+			if (line == null)
+				return null;
+			if (reader.readLine() != null)
+				throw new GitException("Result has multiple lines");
+		} catch (IOException e) {
+			throw new GitException("Error parsing result");
 		}
-		if (result.contains("fatal"))
-			throw new GitException("Error fetching revision information "
-					+ result);
-
-		return result;
+		
+		return line;
 	}
 
-	public void diff(OutputStream baos) throws GitException {
+	private String showTag(String refName) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "diff", "--shortstat", "origin");
-
-		try {
-
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), baos,
-					workspace).join() != 0) {
-				throw new GitException("Failed to diff");
-			}
-
-		} catch (Exception e) {
-			throw new GitException("Failed to diff", e);
-		}
-
+		args.add(getGitExe(), "show-ref", "-s", "--tags", refName);
+		String result = launchCommand(args.toCommandArray());
+		return firstLine(result).trim();
 	}
 
-	public void log(String revFrom, String revTo, OutputStream fos, String...extraargs)
+	private void log(String revFrom, String revTo, OutputStream fos, String...extraargs)
 	throws GitException {
 		String revSpec;
 		if (revFrom == null) {
@@ -228,6 +217,7 @@ public class GitAPI implements IGitAPI {
 
 	}
 
+	// FIXME merge with launchCommand
 	private void launch(String[] args, String error) {
 		try {
 			if (launcher.launch(args, createEnvVarMap(), listener.getLogger(),
@@ -274,36 +264,46 @@ public class GitAPI implements IGitAPI {
 		launch(args.toCommandArray(), "Error in tag");
 	}
 
-	public List<Tag> getTags() throws GitException {
+	private String launchCommand(String[] args) throws GitException {
+		ByteArrayOutputStream fos = new ByteArrayOutputStream();
+
+		try {
+			int status = launcher.launch(args,
+					createEnvVarMap(), fos, workspace).join();
+	
+			String result = fos.toString();
+
+			if (status != 0) {
+				throw new GitException("Command returned status code " + status + ": " + result);
+			}
+
+			return result;
+		} catch (Exception e) {
+			throw new GitException("Error performing " + StringUtils.join(args, " "), e);
+		}
+	}
+
+	public List<Tag> getHudsonTags() throws GitException {
 		List<Tag> tags = new ArrayList<Tag>();
 
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "tag", "-l");
+		args.add(getGitExe(), "tag", "-l", "hudson-*");
+
+		BufferedReader rdr = new BufferedReader(new StringReader(launchCommand(args.toCommandArray())));
+		String line;
 
 		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				// Might not be any tags, so just return an empty set.
-				return tags;
-			}
-
-			fos.close();
-			BufferedReader rdr = new BufferedReader(new StringReader(fos
-					.toString()));
-			String line;
 			while ((line = rdr.readLine()) != null) {
-				Tag t = new Tag(line, revParse(line));
+				Tag t = new Tag(line, showTag(line));
 				t.setCommitSHA1(getTagCommit(t.getSHA1()));
 
 				tags.add(t);
 			}
-
-			return tags;
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git rev-parse", e);
+		} catch (IOException e) {
+			throw new GitException("Error parsing tags", e);
 		}
+
+		return tags;
 	}
 
 	public void push(String refspec) throws GitException {
@@ -313,155 +313,102 @@ public class GitAPI implements IGitAPI {
 		if (refspec != null)
 			args.add(refspec);
 
-		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error launching git push");
-			}
-
-			fos.close();
-			// Ignore output for now as there's many different formats
-			// That are possible.
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git push", e);
-		}
+		launchCommand(args.toCommandArray());
+		// Ignore output for now as there's many different formats
+		// That are possible.
 	}
 
-	private List<Branch> parseBranches(String fos) throws IOException {
+	private List<Branch> parseBranches(String fos) throws GitException {
 		List<Branch> tags = new ArrayList<Branch>();
 
 		BufferedReader rdr = new BufferedReader(new StringReader(fos));
 		String line;
-		while ((line = rdr.readLine()) != null) {
-			// Ignore the 1st
-			line = line.substring(2);
-			// Ignore '(no branch)'
-			if (!line.startsWith("(")) {
-				tags.add(new Branch(line, revParse(line)));
+		try {
+			while ((line = rdr.readLine()) != null) {
+				// Ignore the 1st
+				line = line.substring(2);
+				// Ignore '(no branch)'
+				if (!line.startsWith("(")) {
+					tags.add(new Branch(line, revParse(line)));
+				}
 			}
+		} catch (IOException e) {
+			throw new GitException("Error parsing branches", e);
 		}
 
 		return tags;
 	}
 
 	public List<Branch> getBranches() throws GitException {
-
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "branch", "-a");
-
-		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error launching git branch");
-			}
-
-			fos.close();
-
-			return parseBranches(fos.toString());
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git branch", e);
-		}
+		return parseBranches(launchCommand(args.toCommandArray()));
 	}
 
 	public List<Branch> getBranchesContaining(String revspec)
 			throws GitException {
-		List<Branch> tags = new ArrayList<Branch>();
-
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "branch", "-a", "--contains", revspec);
-
-		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				// No items : return empty set
-				return tags;
-			}
-
-			fos.close();
-
-			return parseBranches(fos.toString());
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git branch", e);
-		}
+		return parseBranches(launchCommand(args.toCommandArray()));
 	}
 
 	public void checkout(String ref) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "checkout", "-f", ref);
-
 		launch(args.toCommandArray(), "Error in checkout");
-
 	}
 
 	public void deleteTag(String tagName) throws GitException {
 		tagName = tagName.replace(' ', '_');
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "tag", "-d", tagName);
-
 		launch(args.toCommandArray(), "Error in deleteTag");
-
 	}
 
+	/**
+	 * Get the commit sha1 associated with the specifie tag
+	 * @param tagName
+	 * @return
+	 * @throws GitException
+	 */
 	private String getTagCommit(String tagName) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "cat-file", "-p", tagName);
 
+		String result = launchCommand(args.toCommandArray());
+		BufferedReader rdr = new BufferedReader(new StringReader(result));
+		String line;
 		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error executing cat-file");
-			}
-
-			fos.close();
-			BufferedReader rdr = new BufferedReader(new StringReader(fos
-					.toString()));
-			String line;
 			while ((line = rdr.readLine()) != null) {
 				if (line.startsWith("object"))
 					return line.substring(7);
 			}
-
-			return null;
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git cat-file", e);
+		} catch (IOException e) {
+			throw new GitException("Error parsing tag commit", e);
 		}
+
+		return null;
 	}
 
 	public List<IndexEntry> lsTree(String treeIsh) throws GitException {
 		List<IndexEntry> entries = new ArrayList<IndexEntry>();
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "ls-tree", treeIsh);
+		String result = launchCommand(args.toCommandArray());
 
+		BufferedReader rdr = new BufferedReader(new StringReader(result));
+		String line;
 		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error executing ls-tree");
-			}
-
-			fos.close();
-			BufferedReader rdr = new BufferedReader(new StringReader(fos
-					.toString()));
-			String line;
 			while ((line = rdr.readLine()) != null) {
 				String[] entry = line.split("\\s+");
 				entries.add(new IndexEntry(entry[0], entry[1], entry[2],
 						entry[3]));
 			}
-
-			return entries;
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git ls-tree", e);
+		} catch (IOException e) {
+			throw new GitException("Error parsing ls tree", e);
 		}
+
+		return entries;
 	}
 
 	public List<String> revListAll() throws GitException {
@@ -477,53 +424,32 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "rev-list");
 		args.add(extraArgs);
+		String result = launchCommand(args.toCommandArray());
+		BufferedReader rdr = new BufferedReader(new StringReader(result));
+		String line;
 
 		try {
-			ByteArrayOutputStream fos = new ByteArrayOutputStream();
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
-					workspace).join() != 0) {
-				throw new GitException("Error executing rev-list");
-			}
-
-			fos.close();
-			BufferedReader rdr = new BufferedReader(new StringReader(fos
-					.toString()));
-			String line;
 			while ((line = rdr.readLine()) != null) {
 				// Add the SHA1
 				entries.add(line);
-
 			}
-
-			return entries;
-
-		} catch (Exception e) {
-			throw new GitException("Error performing git rev-list", e);
+		} catch (IOException e) {
+			throw new GitException("Error parsing rev list", e);
 		}
+
+		return entries;
 	}
 
 	public void add(String filePattern) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "add", filePattern);
-
 		launch(args.toCommandArray(), "Error in add");
-
 	}
 
 	public void branch(String name) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "branch", name);
-
 		launch(args.toCommandArray(), "Error in branch");
-
-	}
-
-	public void commit(String comment) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "commit", "-m", comment);
-
-		launch(args.toCommandArray(), "Error in commit");
-
 	}
 
 	public void commit(File f) throws GitException {
@@ -531,7 +457,5 @@ public class GitAPI implements IGitAPI {
 		args.add(getGitExe(), "commit", "-F", f.getAbsolutePath());
 
 		launch(args.toCommandArray(), "Error in commit");
-
 	}
-
 }
