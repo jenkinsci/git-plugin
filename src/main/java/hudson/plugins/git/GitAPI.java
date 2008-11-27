@@ -43,7 +43,7 @@ public class GitAPI implements IGitAPI {
 	public boolean hasGitRepo() throws GitException {
 		try {
 
-			File dotGit = new File(workspace.toURI().getPath(), ".git");
+			FilePath dotGit = workspace.child(".git");
 
 			return dotGit.exists();
 
@@ -59,7 +59,7 @@ public class GitAPI implements IGitAPI {
 	public boolean hasGitModules() throws GitException {
 		try {
 
-			File dotGit = new File(workspace.toURI().getPath(), ".gitmodules");
+			FilePath dotGit = workspace.child(".gitmodules");
 
 			return dotGit.exists();
 
