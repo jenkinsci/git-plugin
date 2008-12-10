@@ -38,16 +38,6 @@ public class GitUtils
     return submodules;
   }
   
-  private String listBranches(Collection<Branch> list)
-  {
-    String txt = "";
-    for (Branch branch : list)
-    {
-      txt += branch.getName() + " ";
-    }
-    return txt;
-  }
-
   public Collection<Revision> getAllBranchRevisions()
   {
     Map<String, Revision> revisions = new HashMap<String, Revision>();
@@ -80,8 +70,6 @@ public class GitUtils
       Revision r = it.next();
       Collection<Branch> contained = git.getBranchesContaining(r.getSha1());
 
-      boolean remove = false;
-
       for (Branch candidate : contained)
       {
         if (!candidate.getSHA1().equals(r.getSha1()))
@@ -90,17 +78,8 @@ public class GitUtils
           break;
         }
       }
-      // if (candidate.getName().startsWith("origin/") && !candidate.getName().equals("origin/HEAD")) count++;
-      
     }
     
     return revisions;
   }
-  
- 
 }
-
-
-
-
-
