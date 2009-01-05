@@ -2,8 +2,10 @@ package hudson.plugins.git;
 
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.BufferedReader;
@@ -104,9 +106,11 @@ public class GitAPI implements IGitAPI {
 	}
 
 	/**
-	 * Start from scratch and clone the whole repository.
+	 * Start from scratch and clone the whole repository. Cloning into an
+	 * existing directory is not allowed, so the workspace is first deleted
+	 * entirely, then <tt>git clone</tt> is performed.
 	 */
-	public void clone(String source) throws GitException {
+	public void clone(final String source) throws GitException {
 		listener.getLogger().println("Cloning repository " + source);
 
 		// TODO: Not here!
@@ -117,29 +121,19 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Failed to delete workspace", e);
 		}
 
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "clone");
-
 		try {
-			args.add(source, workspace.toURI().getPath());
-		} catch (IOException e1) {
-			throw new GitException(e1);
-		} catch (InterruptedException e1) {
-			throw new GitException(e1);
-		}
-		int processResult = 0;
-
-		try {
-			processResult = launcher.launch(args.toCommandArray(),
-					createEnvVarMap(), listener.getLogger(), null).join();
-		} catch (IOException e) {
-			throw new GitException("Error running clone", e);
-		} catch (InterruptedException e) {
-			throw new GitException("Error running clone", e);
-		}
-
-		if (processResult != 0) {
-			throw new GitException("Clone returned an error code");
+			workspace.act(new FileCallable<String>() {
+				public String invoke(File workspace,
+						VirtualChannel channel) throws IOException {
+					final ArgumentListBuilder args = new ArgumentListBuilder();
+					args.add(getGitExe(), "clone");
+					args.add(source);
+					args.add(workspace.toString());
+					return launchCommandIn(args.toCommandArray(), null);
+				}
+			});
+		} catch (Exception e) {
+			throw new GitException("Could not clone " + source, e);
 		}
 	}
 
@@ -213,20 +207,10 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "merge", revSpec);
 
-		launch(args.toCommandArray(), "Error in merge");
-
-	}
-
-	// FIXME merge with launchCommand
-	private void launch(String[] args, String error) {
 		try {
-			if (launcher.launch(args, createEnvVarMap(), listener.getLogger(),
-					workspace).join() != 0) {
-
-				throw new GitException(error);
-			}
-		} catch (Exception e) {
-			throw new GitException(error, e);
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Could not merge " + revSpec, e);
 		}
 	}
 
@@ -237,7 +221,7 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "submodule", "init");
 
-		launch(args.toCommandArray(), "Error in submodule init");
+		launchCommand(args.toCommandArray());
 	}
 
 	/**
@@ -247,7 +231,7 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "submodule", "update");
 
-		launch(args.toCommandArray(), "Error in submodule update");
+		launchCommand(args.toCommandArray());
 	}
 
 	protected final Map<String, String> createEnvVarMap() {
@@ -261,15 +245,35 @@ public class GitAPI implements IGitAPI {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "tag", "-a", "-f", tagName, "-m", comment);
 
-		launch(args.toCommandArray(), "Error in tag");
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Could not apply tag " + tagName, e);
+		}
 	}
 
+	/**
+	 * Launch command using the workspace as working directory
+	 * @param args
+	 * @return command output
+	 * @throws GitException
+	 */
 	private String launchCommand(String[] args) throws GitException {
+		return launchCommandIn(args, workspace);
+	}
+
+	/**
+	 * @param args
+	 * @param workDir
+	 * @return command output
+	 * @throws GitException
+	 */
+	private String launchCommandIn(String[] args, FilePath workDir) throws GitException {
 		ByteArrayOutputStream fos = new ByteArrayOutputStream();
 
 		try {
 			int status = launcher.launch(args,
-					createEnvVarMap(), fos, workspace).join();
+					createEnvVarMap(), fos, workDir).join();
 	
 			String result = fos.toString();
 
@@ -355,14 +359,24 @@ public class GitAPI implements IGitAPI {
 	public void checkout(String ref) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "checkout", "-f", ref);
-		launch(args.toCommandArray(), "Error in checkout");
+
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Could not checkout " + ref, e);
+		}
 	}
 
 	public void deleteTag(String tagName) throws GitException {
 		tagName = tagName.replace(' ', '_');
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "tag", "-d", tagName);
-		launch(args.toCommandArray(), "Error in deleteTag");
+
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Could not delete tag " + tagName, e);
+		}
 	}
 
 	/**
@@ -443,19 +457,33 @@ public class GitAPI implements IGitAPI {
 	public void add(String filePattern) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "add", filePattern);
-		launch(args.toCommandArray(), "Error in add");
+
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Cannot add " + filePattern, e);
+		}
 	}
 
 	public void branch(String name) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "branch", name);
-		launch(args.toCommandArray(), "Error in branch");
+
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Cannot create branch " + name, e);
+		}
 	}
 
 	public void commit(File f) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "commit", "-F", f.getAbsolutePath());
 
-		launch(args.toCommandArray(), "Error in commit");
+		try {
+			launchCommand(args.toCommandArray());
+		} catch (GitException e) {
+			throw new GitException("Cannot commit " + f, e);
+		}
 	}
 }
