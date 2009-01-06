@@ -77,8 +77,10 @@ public class GitPublisher extends Publisher implements Serializable {
 							if (gitSCM.getDoMerge()
 									&& buildResult.isBetterOrEqualTo(
 											Result.SUCCESS)) {
+								listener.getLogger().println("Pushing tag " + buildnumber + " to " + gitSCM.getMergeTarget() + " branch of origin repository");
 								git.push("HEAD:" + gitSCM.getMergeTarget());
 							} else {
+								listener.getLogger().println("Pushing tag " + buildnumber + " to origin repository");
 								git.push(null);
 							}
 
@@ -86,7 +88,7 @@ public class GitPublisher extends Publisher implements Serializable {
 						}
 					});
 		} catch (IOException e) {
-			e.printStackTrace();
+			listener.error("Failed to push tags to origin repository: " + e.getMessage());
 			return false;
 		}
 		return canPerform;
