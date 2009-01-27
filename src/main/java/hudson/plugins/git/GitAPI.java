@@ -160,13 +160,6 @@ public class GitAPI implements IGitAPI {
 		return line;
 	}
 
-	private String showTag(String refName) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "show-ref", "-s", "--tags", refName);
-		String result = launchCommand(args.toCommandArray());
-		return firstLine(result).trim();
-	}
-
 	private void log(String revFrom, String revTo, OutputStream fos, String...extraargs)
 	throws GitException {
 		String revSpec;
@@ -287,29 +280,6 @@ public class GitAPI implements IGitAPI {
 		}
 	}
 
-	public List<Tag> getHudsonTags() throws GitException {
-		List<Tag> tags = new ArrayList<Tag>();
-
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "tag", "-l", "hudson-*");
-
-		BufferedReader rdr = new BufferedReader(new StringReader(launchCommand(args.toCommandArray())));
-		String line;
-
-		try {
-			while ((line = rdr.readLine()) != null) {
-				Tag t = new Tag(line, showTag(line));
-				t.setCommitSHA1(getTagCommit(t.getSHA1()));
-
-				tags.add(t);
-			}
-		} catch (IOException e) {
-			throw new GitException("Error parsing tags", e);
-		}
-
-		return tags;
-	}
-
 	public void push(String refspec) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "push", "--tags", "origin");
@@ -377,31 +347,6 @@ public class GitAPI implements IGitAPI {
 		} catch (GitException e) {
 			throw new GitException("Could not delete tag " + tagName, e);
 		}
-	}
-
-	/**
-	 * Get the commit sha1 associated with the specifie tag
-	 * @param tagName
-	 * @return
-	 * @throws GitException
-	 */
-	private String getTagCommit(String tagName) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "cat-file", "-p", tagName);
-
-		String result = launchCommand(args.toCommandArray());
-		BufferedReader rdr = new BufferedReader(new StringReader(result));
-		String line;
-		try {
-			while ((line = rdr.readLine()) != null) {
-				if (line.startsWith("object"))
-					return line.substring(7);
-			}
-		} catch (IOException e) {
-			throw new GitException("Error parsing tag commit", e);
-		}
-
-		return null;
 	}
 
 	public List<IndexEntry> lsTree(String treeIsh) throws GitException {

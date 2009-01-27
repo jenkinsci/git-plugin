@@ -20,7 +20,6 @@ public interface IGitAPI {
     void clone(String source) throws GitException;
     
     String revParse(String revName) throws GitException;
-    List<Tag> getHudsonTags() throws GitException;
     List<Branch> getBranches() throws GitException;
     List<Branch> getBranchesContaining(String revspec) throws GitException;
     
