@@ -141,12 +141,9 @@ public class GitSCM extends SCM implements Serializable {
 
 				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 
-				listener.getLogger().println("Poll for changes");
-
 				if (git.hasGitRepo()) {
 					// Repo is there - do a fetch
-					listener.getLogger().println("Update repository");
-					// return true if there are changes, false if not
+					listener.getLogger().println("Fetching changes from the remote Git repository");
 
 					// Get from 'Main' repo
 					git.fetch();
@@ -155,13 +152,14 @@ public class GitSCM extends SCM implements Serializable {
 						fetchFrom(git, workspace, listener, remoteRepository);
 					}
 
+					listener.getLogger().println("Polling for changes in " + getBranch());
 					// Find out if there are any changes from there to now
+					// return true if there are changes, false if not
 					return ! git.revParse(getBranch()).equals(getBuildCommitHash(project.getLastBuild()));
 				} else {
+					listener.getLogger().println("No Git repository yet, an initial checkout is required");
 					return true;
-
 				}
-
 			}
 		});
 		return pollChangesResult;
@@ -281,7 +279,7 @@ public class GitSCM extends SCM implements Serializable {
 				if (git.hasGitRepo()) {
 					// It's an update
 
-					listener.getLogger().println("Checkout (update)");
+					listener.getLogger().println("Fetching changes from the remote Git repository");
 
 					git.fetch();
 
@@ -302,7 +300,7 @@ public class GitSCM extends SCM implements Serializable {
 					}
 
 				} else {
-					listener.getLogger().println("Checkout (clone)");
+					listener.getLogger().println("Cloning the remote Git repository at " + source);
 					git.clone(source);
 					if (git.hasGitModules()) {
 						git.submoduleInit();
@@ -385,7 +383,7 @@ public class GitSCM extends SCM implements Serializable {
 					throws IOException {
 				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
 				// Straight compile-the-branch
-				listener.getLogger().println("Checking out " + revToBuild);
+				listener.getLogger().println("Checking out " + getBranch());
 				git.checkout(revToBuild.getSha1());
 
 				// if( compileSubmoduleCompares )
