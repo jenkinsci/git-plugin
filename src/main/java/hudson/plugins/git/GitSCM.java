@@ -9,6 +9,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.util.GitUtils;
@@ -19,16 +20,19 @@ import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormFieldValidator;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 
@@ -83,7 +87,12 @@ public class GitSCM extends SCM implements Serializable {
 		branch = Util.fixEmpty(branch);
 
 		this.repositories = repositories;
-		this.branch = branch;
+		if (branch == null)
+			this.branch = "origin/HEAD";
+		else if (! branch.startsWith("origin/"))
+			this.branch = "origin/" + branch;
+		else
+			this.branch = branch;
 		this.browser = browser;
 		this.doMerge = doMerge;
 		this.mergeTarget = mergeTarget;
@@ -101,10 +110,10 @@ public class GitSCM extends SCM implements Serializable {
 	}
 
 	/**
-	 * In-repository branch to follow. Null indicates "default".
+	 * Remote branch to follow. Null indicates "origin/HEAD".
 	 */
 	public String getBranch() {
-		return branch == null ? "" : branch;
+		return this.branch;
 	}
 
 	@Override
@@ -120,7 +129,7 @@ public class GitSCM extends SCM implements Serializable {
 	}
 
 	@Override
-	public boolean pollChanges(AbstractProject project, Launcher launcher,
+	public boolean pollChanges(final AbstractProject project, Launcher launcher,
 			FilePath workspace, final TaskListener listener)
 			throws IOException, InterruptedException {
 
@@ -147,8 +156,7 @@ public class GitSCM extends SCM implements Serializable {
 					}
 
 					// Find out if there are any changes from there to now
-					return branchesThatNeedBuilding(git, workspace, listener)
-							.size() > 0;
+					return git.revParse(getBranch()) != getBuildCommitHash(project.getLastBuild());
 				} else {
 					return true;
 
@@ -157,6 +165,40 @@ public class GitSCM extends SCM implements Serializable {
 			}
 		});
 		return pollChangesResult;
+	}
+
+	/**
+	 * Get commit hash from specified build
+	 * 
+	 * @param b
+	 * @return null if no commit hash was recorded in this build (most probably
+	 *         because rev-parse <branch> failed, ie the specified branch is
+	 *         invalid)
+	 * @throws GitException
+	 */
+	private static String getBuildCommitHash(Run b) throws GitException {
+		File d = new File(b.getRootDir(), "lastBuildCommitHash");
+		try {
+			BufferedReader rr = new BufferedReader(new FileReader(d));
+			String rev = rr.readLine();
+			rr.close();
+			return rev;
+		} catch (FileNotFoundException e) {
+			return null;
+		} catch (Exception e) {
+			throw new GitException("Cannot get build commit hash from " + d, e);
+		}
+	}
+	
+	private static void setBuildCommitHash(Run b, String rev) throws GitException {
+		File d = new File(b.getRootDir(), "lastBuildCommitHash");
+		try {
+			Writer w = new FileWriter(d);
+			w.write(rev);
+			w.close();
+		} catch (Exception e) {
+			throw new GitException("Cannot set build commit hash to " + d, e);
+		}
 	}
 
 	/**
@@ -188,8 +230,7 @@ public class GitSCM extends SCM implements Serializable {
 							submoduleRemoteRepository.getRefspec());
 				} catch (GitException ex) {
 					listener
-							.getLogger()
-							.println(
+							.error(
 									"Problem fetching from "
 											+ remoteRepository.getName()
 											+ " - could be unavailable. Continuing anyway");
@@ -197,7 +238,7 @@ public class GitSCM extends SCM implements Serializable {
 
 			}
 		} catch (GitException ex) {
-			listener.getLogger().println(
+			listener.error(
 					"Problem fetching from " + remoteRepository.getName()
 							+ " / " + remoteRepository.getUrl()
 							+ " - could be unavailable. Continuing anyway");
@@ -222,7 +263,7 @@ public class GitSCM extends SCM implements Serializable {
 	
 	
 	@Override
-	public boolean checkout(AbstractBuild build, Launcher launcher,
+	public boolean checkout(final AbstractBuild build, Launcher launcher,
 			FilePath workspace, final BuildListener listener, File changelogFile)
 			throws IOException, InterruptedException {
 
@@ -246,16 +287,17 @@ public class GitSCM extends SCM implements Serializable {
 
 					for (RemoteRepository remoteRepository : getRepositories()) {
 						try {
+							listener.getLogger().println(
+									"Checkout (update) repository "
+											+ remoteRepository.getName());
 							git.fetch(remoteRepository.getUrl(),
 									remoteRepository.getRefspec());
 						} catch (GitException ex) {
 							listener
-									.getLogger()
-									.println(
-											"Problem fetching from "
-													+ remoteRepository
-															.getName()
-													+ " - could be unavailable. Continuing anyway");
+									.error("Problem fetching from "
+											+ remoteRepository.getName()
+											+ " - could be unavailable. Continuing anyway");
+
 						}
 					}
 
@@ -268,24 +310,8 @@ public class GitSCM extends SCM implements Serializable {
 					}
 				}
 
-				Set<Revision> toBeBuilt = branchesThatNeedBuilding(git,
-						workspace, listener);
-
-				String log = "Candidate revisions to be built: ";
-				for (Revision b : toBeBuilt)
-					log += b.toString() + "; ";
-				listener.getLogger().println(log);
-
-				Revision revToBuild = null;
-
-				if (toBeBuilt.size() == 0) {
-					revToBuild = new Revision(git.revParse("HEAD"));
-					listener.getLogger().println(
-							"Nothing to do (no unbuilt branches) - rebuilding HEAD "
-									+ revToBuild);
-				} else {
-					revToBuild = toBeBuilt.iterator().next();
-				}
+				Revision revToBuild = new Revision(git.revParse(getBranch()));
+			    revToBuild.setBranches(git.getBranchesContaining(revToBuild.getSha1()));
 				return revToBuild;
 			}
 		});
@@ -336,13 +362,14 @@ public class GitSCM extends SCM implements Serializable {
 						}
 						// Tag the successful merge
 						git.tag(buildnumber, "Hudson Build #" + buildNumber);
+						setBuildCommitHash(build, revToBuild.getSha1());
 
-						String lastRevWas = whenWasBranchLastBuilt(git,
-								revToBuild.getSha1(), workspace, listener);
+						String lastRevWas = null;
+						if (build.getPreviousBuild() != null)
+							lastRevWas = getBuildCommitHash(build.getPreviousBuild());
 
 						// Fetch the diffs into the changelog file
-						return putChangelogDiffsIntoFile(git, lastRevWas, git
-								.revParse("HEAD"));
+						return putChangelogDiffsIntoFile(git, lastRevWas, revToBuild.getSha1());
 
 					}
 				});
@@ -389,10 +416,12 @@ public class GitSCM extends SCM implements Serializable {
 
 				}
 
-				String lastRevWas = whenWasBranchLastBuilt(git, revToBuild
-						.getSha1(), workspace, listener);
+				String lastRevWas = null;
+				if (build.getPreviousBuild() != null)
+					lastRevWas = getBuildCommitHash(build.getPreviousBuild());
 
 				git.tag(buildnumber, "Hudson Build #" + buildNumber);
+				setBuildCommitHash(build, revToBuild.getSha1());
 
 				if (lastRevWas == null) {
 					// No previous revision has been built - don't generate
@@ -411,68 +440,6 @@ public class GitSCM extends SCM implements Serializable {
 
 		return changeLogResult(changeLog, changelogFile);
 
-	}
-
-	/**
-	 * Are there any branches that haven't been built?
-	 * 
-	 * @return set of revisions that require building, or an empty set if none are
-	 *         found.
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private Set<Revision> branchesThatNeedBuilding(IGitAPI git, File workspace,
-			TaskListener listener) throws IOException {
-
-		// These are the set of things tagged that we have tried to build
-		Set<String> setOfThingsBuilt = new HashSet<String>();
-		Set<Revision> branchesThatNeedBuilding = new HashSet<Revision>();
-
-		for (Tag tag : git.getHudsonTags()) {
-			setOfThingsBuilt.add(tag.getCommitSHA1());
-		}
-
-		if (branch == null) {
-			for (Revision revision : new GitUtils(listener, git)
-					.getTipBranches()) {
-				if (!setOfThingsBuilt.contains(revision.getSha1()))
-					branchesThatNeedBuilding.add(revision);
-			}
-		} else {
-			Revision revision = new Revision(git.revParse(branch));
-			if (!setOfThingsBuilt.contains(revision.getSha1()))
-				branchesThatNeedBuilding.add(revision);
-		}
-
-		// There could be a relationship between branches - so master may have
-		// merged br1, so br1
-		// hasn't been built, but master has.
-
-		// If there's any other branch in the list needing building that
-		// contains a branch, remove it
-
-		return (branchesThatNeedBuilding);
-	}
-
-	private static String whenWasBranchLastBuilt(IGitAPI git, String branchId,
-			File workspace, TaskListener listener) throws IOException {
-
-		Set<String> setOfThingsBuilt = new HashSet<String>();
-
-		for (Tag tag : git.getHudsonTags()) {
-			setOfThingsBuilt.add(tag.getCommitSHA1());
-		}
-
-		if (setOfThingsBuilt.isEmpty()) {
-			return null;
-		}
-
-		for (String rev : git.revListBranch(branchId)) {
-			if (setOfThingsBuilt.contains(rev))
-				return rev;
-		}
-		
-		return null;
 	}
 
 	private String putChangelogDiffsIntoFile(IGitAPI git, String revFrom,
