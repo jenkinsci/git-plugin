@@ -156,7 +156,7 @@ public class GitSCM extends SCM implements Serializable {
 					}
 
 					// Find out if there are any changes from there to now
-					return git.revParse(getBranch()) != getBuildCommitHash(project.getLastBuild());
+					return ! git.revParse(getBranch()).equals(getBuildCommitHash(project.getLastBuild()));
 				} else {
 					return true;
 
