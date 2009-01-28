@@ -236,7 +236,7 @@ public class GitAPI implements IGitAPI {
 	public void tag(String tagName, String comment) throws GitException {
 		tagName = tagName.replace(' ', '_');
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "tag", "-a", "-f", tagName, "-m", comment);
+		args.add(getGitExe(), "tag", "-a", "-f", "-m", comment, tagName);
 
 		try {
 			launchCommand(args.toCommandArray());
