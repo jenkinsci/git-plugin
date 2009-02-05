@@ -19,4 +19,26 @@
     <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/git-0.1</developerConnection>
     <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/git/tags/git-0.1</url>
   </scm>
+
+  <repositories>
+    <repository>
+      <id>jgit-snapshot-repository</id>
+      <url>http://egit.googlecode.com/svn/maven/snapshot-repository/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.spearce</groupId>
+      <artifactId>jgit</artifactId>
+      <version>0.4-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
 </project>
