@@ -1,10 +1,12 @@
 package hudson.plugins.git;
 
+import org.spearce.jgit.lib.ObjectId;
+
 public class Tag extends GitObject
 {
 	public String commitSHA1;
 	
-	public Tag(String name, String sha1) {
+	public Tag(String name, ObjectId sha1) {
 		super(name, sha1);
 	}
 

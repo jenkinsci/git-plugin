@@ -1,0 +1,13 @@
+You need the following in ~/.m2/settings.xml :
+
+<?xml version="1.0"?>
+<settings>
+	<servers>
+		<server>
+		  <id>jgit-release-repository</id>
+		  <username>guest</username>
+		  <password>guest</password>
+		</server>
+	</servers>
+</settings>
+

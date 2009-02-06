@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.spearce.jgit.lib.ObjectId;
+
 /**
  * A common usecase for git submodules is to have child submodules, and a parent 'configuration' project that ties the
  * correct versions together. It is useful to be able to speculatively compile all combinations of submodules, so that
@@ -54,7 +56,8 @@ public class SubmoduleCombinator
       File subdir = new File(workspace, submodule.getFile());
       IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
       
-      Collection<Revision> items = new GitUtils(listener, subGit).getTipBranches();
+      GitUtils gu = new GitUtils(listener, subGit);
+      Collection<Revision> items = gu.filterTipBranches(gu.getAllBranchRevisions());
       
       filterRevisions(submodule.getFile(), items);
       
@@ -82,12 +85,12 @@ public class SubmoduleCombinator
     listener.getLogger().println("There are " + combinations.size() + " submodule/revision combinations possible");
 
     // Create a map which is SHA1 -> Submodule IDs that were present
-    Map<String, List<IndexEntry>> entriesMap = new HashMap<String, List<IndexEntry>>();
+    Map<ObjectId, List<IndexEntry>> entriesMap = new HashMap<ObjectId, List<IndexEntry>>();
     // Knock out already-defined configurations
-    for (String sha1 : git.revListAll())
+    for (ObjectId sha1 : git.revListAll())
     {
       // What's the submodule configuration
-      List<IndexEntry> entries = gitUtils.getSubmodules(sha1);
+      List<IndexEntry> entries = gitUtils.getSubmodules(sha1.name());
       entriesMap.put(sha1, entries);
 
     }
@@ -108,7 +111,7 @@ public class SubmoduleCombinator
     
     listener.getLogger().println("There are " + combinations.size() + " configurations that could be generated.");
   
-    String headSha1 = git.revParse("HEAD");
+    ObjectId headSha1 = git.revParse("HEAD");
 
     
     // Make up the combinations
@@ -116,11 +119,11 @@ public class SubmoduleCombinator
     for (Map<IndexEntry, Revision> combination : combinations)
     {
       // By default, use the head sha1
-      String sha1 = headSha1;
+      ObjectId sha1 = headSha1;
       int min = Integer.MAX_VALUE;
 
       // But let's see if we can find the most appropriate place to create the branch
-      for (String sha : entriesMap.keySet())
+      for (ObjectId sha : entriesMap.keySet())
       {
         List<IndexEntry> entries = entriesMap.get(sha);
         int value = difference(combination, entries);
@@ -133,7 +136,7 @@ public class SubmoduleCombinator
         if (min == 1) break; // look no further
       }
       
-      git.checkout(sha1);
+      git.checkout(sha1.name());
       makeCombination(combination);
     }
     
@@ -186,7 +189,7 @@ public class SubmoduleCombinator
       File subdir = new File(workspace, submodule.getFile());
       IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
       
-      subGit.checkout(branch.sha1);
+      subGit.checkout(branch.sha1.name());
       git.add(submodule.file);
       
     }
