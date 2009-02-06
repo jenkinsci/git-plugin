@@ -23,12 +23,22 @@
   <repositories>
     <repository>
       <id>jgit-snapshot-repository</id>
-      <url>http://egit.googlecode.com/svn/maven/snapshot-repository/</url>
+      <url>http://egit.googlecode.com/svn/maven/snapshot-repository</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
       <releases>
         <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>jgit-release-repository</id>
+      <url>https://hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
       </releases>
     </repository>
   </repositories>
@@ -37,7 +47,13 @@
     <dependency>
       <groupId>org.spearce</groupId>
       <artifactId>jgit</artifactId>
-      <version>0.4-SNAPSHOT</version>
+      <version>0.4-750e07d</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

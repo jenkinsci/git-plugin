@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.spearce.jgit.lib.ObjectId;
+
 public class GitUtils
 {
   IGitAPI git;
@@ -38,9 +40,14 @@ public class GitUtils
     return submodules;
   }
   
+  /**
+   * Return a list of "Revisions" - where a revision knows about all the branch names that refer to 
+   * a SHA1.
+   * @return
+   */
   public Collection<Revision> getAllBranchRevisions()
   {
-    Map<String, Revision> revisions = new HashMap<String, Revision>();
+    Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
     List<Branch> branches = git.getBranches();
     for (Branch b : branches)
     {
@@ -55,31 +62,42 @@ public class GitUtils
     return revisions.values();
   }
   
-  /**
-   * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
-   * 
-   * @param git
-   * @return
-   */
-  public Collection<Revision> getTipBranches()
-  {
-    Collection<Revision> revisions = getAllBranchRevisions();
-
-    for (Iterator<Revision> it = revisions.iterator(); it.hasNext();)
+   /**
+     * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
+     * 
+     * @param git
+     * @return
+     */
+    public Collection<Revision> filterTipBranches(Collection<Revision> revisions)
     {
-      Revision r = it.next();
-      Collection<Branch> contained = git.getBranchesContaining(r.getSha1());
+        // If we have 3 branches that we might want to build
+        // ----A--.---.--- B
+        //        \-----C
 
-      for (Branch candidate : contained)
-      {
-        if (!candidate.getSHA1().equals(r.getSha1()))
+        // we only want (B) and (C), as (A) is an ancestor (old).
+
+        for (Iterator<Revision> it = revisions.iterator(); it.hasNext();)
         {
-          it.remove();
-          break;
+            Revision r = it.next();
+            boolean remove = false;
+
+            for (Revision r2 : revisions)
+            {
+                if (r != r2)
+                {
+                    ObjectId commonAncestor = git.mergeBase(r.getSha1(), r2.getSha1());
+                    if (commonAncestor != null && commonAncestor.equals(r.getSha1()))
+                    {
+                        remove = true;
+                        break;
+                    }
+                }
+            }
+
+            if (remove) it.remove();
+
         }
-      }
+
+        return revisions;
     }
-    
-    return revisions;
-  }
 }

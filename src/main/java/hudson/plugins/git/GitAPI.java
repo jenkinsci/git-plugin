@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.spearce.jgit.lib.ObjectId;
+import org.spearce.jgit.transport.RemoteConfig;
 
 public class GitAPI implements IGitAPI {
 	Launcher launcher;
@@ -110,8 +112,8 @@ public class GitAPI implements IGitAPI {
 	 * existing directory is not allowed, so the workspace is first deleted
 	 * entirely, then <tt>git clone</tt> is performed.
 	 */
-	public void clone(final String source) throws GitException {
-		listener.getLogger().println("Cloning repository " + source);
+	public void clone(final RemoteConfig remoteConfig) throws GitException {
+		listener.getLogger().println("Cloning repository " + remoteConfig.getName() );
 
 		// TODO: Not here!
 		try {
@@ -121,6 +123,9 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Failed to delete workspace", e);
 		}
 
+		// Assume only 1 URL for this repository
+		final String source = remoteConfig.getURIs().get(0).toString();
+		
 		try {
 			workspace.act(new FileCallable<String>() {
 				public String invoke(File workspace,
@@ -137,11 +142,11 @@ public class GitAPI implements IGitAPI {
 		}
 	}
 
-	public String revParse(String revName) throws GitException {
+	public ObjectId revParse(String revName) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "rev-parse", revName);
 		String result = launchCommand(args.toCommandArray());
-		return firstLine(result).trim();
+		return ObjectId.fromString(firstLine(result).trim());
 	}
 	
 	private String firstLine(String result) {
@@ -292,8 +297,11 @@ public class GitAPI implements IGitAPI {
 		// That are possible.
 	}
 
-	private List<Branch> parseBranches(String fos) throws GitException {
-		List<Branch> tags = new ArrayList<Branch>();
+	private List<Branch> parseBranches(String fos) throws GitException 
+	{
+	    // TODO: git branch -a -v --abbrev=0 would do this in one shot..
+	    
+	    List<Branch> tags = new ArrayList<Branch>();
 
 		BufferedReader rdr = new BufferedReader(new StringReader(fos));
 		String line;
@@ -328,7 +336,7 @@ public class GitAPI implements IGitAPI {
 
 	public void checkout(String ref) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "checkout", "-f", ref);
+		args.add(getGitExe(), "checkout", "-f", ref.toString());
 
 		try {
 			launchCommand(args.toCommandArray());
@@ -370,16 +378,16 @@ public class GitAPI implements IGitAPI {
 		return entries;
 	}
 
-	public List<String> revListAll() throws GitException {
+	public List<ObjectId> revListAll() throws GitException {
 		return revList("--all");
 	}
 
-	public List<String> revListBranch(String branchId) throws GitException {
+	public List<ObjectId> revListBranch(String branchId) throws GitException {
 		return revList(branchId);
 	}
 
-	public List<String> revList(String...extraArgs) throws GitException {
-		List<String> entries = new ArrayList<String>();
+	public List<ObjectId> revList(String...extraArgs) throws GitException {
+		List<ObjectId> entries = new ArrayList<ObjectId>();
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "rev-list");
 		args.add(extraArgs);
@@ -390,7 +398,7 @@ public class GitAPI implements IGitAPI {
 		try {
 			while ((line = rdr.readLine()) != null) {
 				// Add the SHA1
-				entries.add(line);
+				entries.add( ObjectId.fromString(line) );
 			}
 		} catch (IOException e) {
 			throw new GitException("Error parsing rev list", e);
@@ -431,4 +439,42 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Cannot commit " + f, e);
 		}
 	}
+
+    public void fetch(RemoteConfig remoteRepository) throws GitException
+    {
+        // Assume there is only 1 URL / refspec for simplicity
+    	fetch(remoteRepository.getURIs().get(0).toString(), remoteRepository.getFetchRefSpecs().get(0).toString());
+        
+    }
+
+    public ObjectId mergeBase(ObjectId id1, ObjectId id2)
+    {
+        try {
+        	 ArgumentListBuilder args = new ArgumentListBuilder();
+             args.add(getGitExe(), "merge-base", id1.name(), id2.name());
+             
+             ByteArrayOutputStream fos = new ByteArrayOutputStream();
+             int status = launcher.launch(args.toCommandArray(),
+                     createEnvVarMap(), fos, workspace).join();
+
+             String result = fos.toString();
+
+             if (status != 0) {
+                 return null;
+             }
+
+           
+             BufferedReader rdr = new BufferedReader(new StringReader(result));
+             String line;
+             
+            while ((line = rdr.readLine()) != null) {
+                // Add the SHA1
+                return ObjectId.fromString(line);
+            }
+        } catch (Exception e) {
+            throw new GitException("Error parsing merge base", e);
+        }
+
+        return null;
+    }
 }

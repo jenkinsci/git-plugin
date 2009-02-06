@@ -3,16 +3,17 @@ package hudson.plugins.git;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
-import hudson.Util;
 import hudson.FilePath.FileCallable;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
-import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
+import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.GitUtils;
+import hudson.plugins.git.util.IBuildChooser;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowsers;
@@ -20,16 +21,12 @@ import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormFieldValidator;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.Writer;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +36,10 @@ import javax.servlet.ServletException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.spearce.jgit.lib.ObjectId;
+import org.spearce.jgit.lib.RepositoryConfig;
+import org.spearce.jgit.transport.RefSpec;
+import org.spearce.jgit.transport.RemoteConfig;
 
 /**
  * Git SCM.
@@ -46,23 +47,23 @@ import org.kohsuke.stapler.StaplerResponse;
  * @author Nigel Magnay
  */
 public class GitSCM extends SCM implements Serializable {
+    
+    /**
+     * All the remote repositories that we know about.
+     */
+	private final List<RemoteConfig> remoteRepositories;
+	
 	/**
-	 * Source repository URL from which we pull.
+	 * All the branches that we wish to care about building.
 	 */
-	private final String source;
+	private final List<BranchSpec> branches;
 
-	private List<RemoteRepository> repositories;
-
-	/**
-	 * In-repository branch to follow. Null indicates "master".
+    /**
+	 * Options for merging before a build.
 	 */
-	private final String branch;
+	private final PreBuildMergeOptions mergeOptions;
 
-	private final boolean doMerge;
-
-	private final boolean doGenerateSubmoduleConfigurations;
-
-	private final String mergeTarget;
+    private final boolean doGenerateSubmoduleConfigurations;
 
 	private GitWeb browser;
 
@@ -77,43 +78,24 @@ public class GitSCM extends SCM implements Serializable {
 	}
 
 	@DataBoundConstructor
-	public GitSCM(String source, String branch, boolean doMerge,
-			boolean doGenerateSubmoduleConfigurations, String mergeTarget,
-			List<RemoteRepository> repositories,
+	public GitSCM(
+	        List<RemoteConfig> repositories,
+	        List<BranchSpec> branches,
+	        PreBuildMergeOptions mergeOptions,
+	        boolean doGenerateSubmoduleConfigurations, 
 			Collection<SubmoduleConfig> submoduleCfg, GitWeb browser) {
-		this.source = source;
-
+		
 		// normalization
-		branch = Util.fixEmpty(branch);
+	    this.branches = branches;
 
-		this.repositories = repositories;
-		if (branch == null)
-			this.branch = "origin/HEAD";
-		else if (! branch.startsWith("origin/"))
-			this.branch = "origin/" + branch;
-		else
-			this.branch = branch;
+		this.remoteRepositories = repositories;
 		this.browser = browser;
-		this.doMerge = doMerge;
-		this.mergeTarget = mergeTarget;
+		
+		this.mergeOptions = mergeOptions;
 
 		this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
 		this.submoduleCfg = submoduleCfg;
 
-	}
-
-	/**
-	 * Gets the source repository path. Either URL or local file path.
-	 */
-	public String getSource() {
-		return source;
-	}
-
-	/**
-	 * Remote branch to follow. Null indicates "origin/HEAD".
-	 */
-	public String getBranch() {
-		return this.branch;
 	}
 
 	@Override
@@ -121,83 +103,60 @@ public class GitSCM extends SCM implements Serializable {
 		return browser;
 	}
 
-	public List<RemoteRepository> getRepositories() {
+	public List<RemoteConfig> getRepositories() {
 		// Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
-		if (repositories == null)
-			return new ArrayList<RemoteRepository>();
-		return repositories;
+		if (remoteRepositories == null)
+			return new ArrayList<RemoteConfig>();
+		return remoteRepositories;
 	}
 
 	@Override
 	public boolean pollChanges(final AbstractProject project, Launcher launcher,
 			FilePath workspace, final TaskListener listener)
-			throws IOException, InterruptedException {
-
+			throws IOException, InterruptedException 
+	{
+	    // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
+		
 		final String gitExe = getDescriptor().getGitExe();
-
+		
+		
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			public Boolean invoke(File workspace, VirtualChannel channel)
 					throws IOException {
 
 				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
-
+				File config = new File(workspace, ".buildinfo");
+				
+				IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+				
 				if (git.hasGitRepo()) {
 					// Repo is there - do a fetch
-					listener.getLogger().println("Fetching changes from the remote Git repository");
+					listener.getLogger().println("Fetching changes from the remote Git repositories");
 
-					// Get from 'Main' repo
-					git.fetch();
-
-					for (RemoteRepository remoteRepository : getRepositories()) {
+					// Fetch updates	
+					for (RemoteConfig remoteRepository : getRepositories()) {
 						fetchFrom(git, workspace, listener, remoteRepository);
 					}
 
-					listener.getLogger().println("Polling for changes in " + getBranch());
-					// Find out if there are any changes from there to now
-					// return true if there are changes, false if not
-					return ! git.revParse(getBranch()).equals(getBuildCommitHash(project.getLastBuild()));
+					listener.getLogger().println("Polling for changes in");
+					
+					Collection<Revision> candidates = buildChooser.getCandidateRevisions(); 
+					
+					return (candidates.size() > 0);
 				} else {
 					listener.getLogger().println("No Git repository yet, an initial checkout is required");
 					return true;
 				}
 			}
+
+            
 		});
 		return pollChangesResult;
 	}
 
-	/**
-	 * Get commit hash from specified build
-	 * 
-	 * @param b
-	 * @return null if no commit hash was recorded in this build (most probably
-	 *         because rev-parse <branch> failed, ie the specified branch is
-	 *         invalid)
-	 * @throws GitException
-	 */
-	private static String getBuildCommitHash(Run b) throws GitException {
-		File d = new File(b.getRootDir(), "lastBuildCommitHash");
-		try {
-			BufferedReader rr = new BufferedReader(new FileReader(d));
-			String rev = rr.readLine();
-			rr.close();
-			return rev;
-		} catch (FileNotFoundException e) {
-			return null;
-		} catch (Exception e) {
-			throw new GitException("Cannot get build commit hash from " + d, e);
-		}
-	}
 	
-	private static void setBuildCommitHash(Run b, String rev) throws GitException {
-		File d = new File(b.getRootDir(), "lastBuildCommitHash");
-		try {
-			Writer w = new FileWriter(d);
-			w.write(rev);
-			w.close();
-		} catch (Exception e) {
-			throw new GitException("Cannot set build commit hash to " + d, e);
-		}
-	}
+	
+
 
 	/**
 	 * Fetch information from a particular remote repository. Attempt to fetch
@@ -206,27 +165,26 @@ public class GitSCM extends SCM implements Serializable {
 	 * @param git
 	 * @param listener
 	 * @param remoteRepository
+	 * @throws  
 	 */
 	private void fetchFrom(IGitAPI git, File workspace, TaskListener listener,
-			RemoteRepository remoteRepository) {
+	        RemoteConfig remoteRepository) {
 		try {
-			git.fetch(remoteRepository.getUrl(), remoteRepository.getRefspec());
+			git.fetch(remoteRepository);
 
 			List<IndexEntry> submodules = new GitUtils(listener, git)
 					.getSubmodules("HEAD");
 
 			for (IndexEntry submodule : submodules) {
 				try {
-					RemoteRepository submoduleRemoteRepository = remoteRepository
-							.getSubmoduleRepository(submodule.getFile());
+					RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(remoteRepository, submodule.getFile());
 
 					File subdir = new File(workspace, submodule.getFile());
 					IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
 							listener);
 
-					subGit.fetch(submoduleRemoteRepository.getUrl(),
-							submoduleRemoteRepository.getRefspec());
-				} catch (GitException ex) {
+					subGit.fetch(submoduleRemoteRepository);
+				} catch (Exception ex) {
 					listener
 							.error(
 									"Problem fetching from "
@@ -238,12 +196,63 @@ public class GitSCM extends SCM implements Serializable {
 		} catch (GitException ex) {
 			listener.error(
 					"Problem fetching from " + remoteRepository.getName()
-							+ " / " + remoteRepository.getUrl()
+							+ " / " + remoteRepository.getName()
 							+ " - could be unavailable. Continuing anyway");
 		}
 
 	}
 
+	public RemoteConfig getSubmoduleRepository(RemoteConfig orig, String name) throws URISyntaxException
+    {
+	    // Attempt to guess the submodule URL??
+	    
+        String refUrl = orig.getURIs().get(0).toString();
+
+        if (refUrl.endsWith("/.git"))
+        {
+            refUrl = refUrl.substring(0, refUrl.length() - 4);
+        }
+
+        if (!refUrl.endsWith("/")) refUrl += "/";
+
+        refUrl += name;
+
+        if (!refUrl.endsWith("/")) refUrl += "/";
+
+        refUrl += ".git";
+
+        return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0) );
+    }
+
+	private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) throws URISyntaxException
+	{
+		
+        File temp = null;
+        try
+        {
+        	temp = File.createTempFile("tmp", "config");    
+        	RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
+            // Make up a repo config from the request parameters
+            
+   
+            repoConfig.setString("remote", name, "url", refUrl);
+            repoConfig.setString("remote", name, "fetch", refSpec.toString());
+            repoConfig.save();
+            return RemoteConfig.getAllRemoteConfigs(repoConfig).get(0);
+        }
+        catch(Exception ex)
+        {
+        	throw new GitException("Error creating temp file");
+        }
+        finally
+        {
+        	if( temp != null )
+        		temp.delete();
+        }
+        
+		   
+	}
+	
 	private boolean changeLogResult(String changeLog, File changelogFile) throws IOException
 	{
 		if (changeLog == null)
@@ -270,7 +279,8 @@ public class GitSCM extends SCM implements Serializable {
 		final String gitExe = getDescriptor().getGitExe();
 
 		final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
-
+		
+		
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
 			public Revision invoke(File workspace, VirtualChannel channel)
 					throws IOException {
@@ -281,61 +291,87 @@ public class GitSCM extends SCM implements Serializable {
 
 					listener.getLogger().println("Fetching changes from the remote Git repository");
 
-					git.fetch();
-
-					for (RemoteRepository remoteRepository : getRepositories()) {
-						try {
-							listener.getLogger().println(
-									"Checkout (update) repository "
-											+ remoteRepository.getName());
-							git.fetch(remoteRepository.getUrl(),
-									remoteRepository.getRefspec());
-						} catch (GitException ex) {
-							listener
-									.error("Problem fetching from "
-											+ remoteRepository.getName()
-											+ " - could be unavailable. Continuing anyway");
-
-						}
+					for (RemoteConfig remoteRepository : getRepositories()) 
+					{
+					        fetchFrom(git,workspace,listener,remoteRepository);
 					}
 
 				} else {
-					listener.getLogger().println("Cloning the remote Git repository at " + source);
-					git.clone(source);
+					listener.getLogger().println("Cloning the remote Git repository");
+					
+					// Go through the repositories, trying to clone from one
+					//
+					boolean successfullyCloned = false;
+					for(RemoteConfig rc : remoteRepositories)
+					{
+					    try
+					    {
+					        git.clone(rc);
+					        successfullyCloned = true;
+					        break;
+					    }
+					    catch(GitException ex)
+					    {
+					        // Failed. Try the next one
+					        listener.getLogger().println("Trying next repository");
+					    }
+					}
+					
+					if( !successfullyCloned )
+					{
+					    listener.error("Could not clone from a repository");
+					    throw new GitException("Could not clone");
+					}
+					
 					if (git.hasGitModules()) {
 						git.submoduleInit();
 						git.submoduleUpdate();
 					}
 				}
-
-				Revision revToBuild = new Revision(git.revParse(getBranch()));
-			    revToBuild.setBranches(git.getBranchesContaining(revToBuild.getSha1()));
-				return revToBuild;
+				
+                File config = new File(workspace, ".buildinfo");                
+                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+				
+                Collection<Revision> candidates = buildChooser.getCandidateRevisions();
+				if( candidates.size() == 0 )
+					return buildChooser.getLastBuiltRevision();
+				return candidates.iterator().next();
 			}
 		});
 
+		if( revToBuild == null )
+		{
+			// getBuildCandidates should make the last item the last build, so a re-build
+			// will build the last built thing.
+			listener.error("Nothing to do");
+			return false;
+		}
+		listener.getLogger().println("Commencing build of " + revToBuild);
 		String changeLog;
 
-		if (doMerge) {
-			if (!revToBuild.containsBranchName(getMergeTarget())) {
+		if (mergeOptions.doMerge()) {
+			if (!revToBuild.containsBranchName(mergeOptions.getMergeTarget())) {
 				changeLog = workspace.act(new FileCallable<String>() {
 					public String invoke(File workspace, VirtualChannel channel)
 							throws IOException {
 						IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
-
+						File config = new File(workspace, ".buildinfo");                            
+                        IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+                        
 						// Do we need to merge this revision onto MergeTarget
 
 						// Only merge if there's a branch to merge that isn't
 						// us..
 						listener.getLogger().println(
 								"Merging " + revToBuild + " onto "
-										+ getMergeTarget());
+										+ mergeOptions.getMergeTarget());
 
 						// checkout origin/blah
-						git.checkout(getRemoteMergeTarget());
+						ObjectId target = git.revParse(mergeOptions.getMergeTarget());
+						git.checkout(target.name());
 
 						try {
-							git.merge(revToBuild.getSha1());
+							git.merge(revToBuild.getSha1().name());
 						} catch (Exception ex) {
 							listener
 									.getLogger()
@@ -346,32 +382,49 @@ public class GitSCM extends SCM implements Serializable {
 							// repetitive builds from happening - tag the
 							// candidate
 							// branch.
-							git.checkout(revToBuild.getSha1());
+							git.checkout(revToBuild.getSha1().name());
 
 							git
 									.tag(buildnumber, "Hudson Build #"
 											+ buildNumber);
-
+							
+							
+			                
+							buildChooser.revisionBuilt(revToBuild, false);
 							return null;
 						}
 
 						if (git.hasGitModules()) {
 							git.submoduleUpdate();
 						}
+						
 						// Tag the successful merge
 						git.tag(buildnumber, "Hudson Build #" + buildNumber);
-						setBuildCommitHash(build, revToBuild.getSha1());
-
-						String lastRevWas = null;
-						if (build.getPreviousBuild() != null)
-							lastRevWas = getBuildCommitHash(build.getPreviousBuild());
-
+						
+						String changeLog = "";
+						
+						if( revToBuild.getBranches().size() > 0 )
+								listener.getLogger().println("Warning : There are multiple branch changesets here");
+						
+						for( Branch b : revToBuild.getBranches() )
+						{
+						    ObjectId lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+						    
+						    if( lastRevWas != null )
+						    {
+						    	// TODO: Inefficent string concat
+						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.name(), revToBuild.getSha1().name());    
+						    }
+						}
+						
+						buildChooser.revisionBuilt(revToBuild, true);
+						
 						// Fetch the diffs into the changelog file
-						return putChangelogDiffsIntoFile(git, lastRevWas, revToBuild.getSha1());
+						return changeLog;
 
 					}
 				});
-
+				
 				return changeLogResult(changeLog, changelogFile);
 			}
 		}
@@ -382,9 +435,12 @@ public class GitSCM extends SCM implements Serializable {
 			public String invoke(File workspace, VirtualChannel channel)
 					throws IOException {
 				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
+				File config = new File(workspace, ".buildinfo");                            
+                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+                
 				// Straight compile-the-branch
-				listener.getLogger().println("Checking out " + getBranch());
-				git.checkout(revToBuild.getSha1());
+				listener.getLogger().println("Checking out " + revToBuild);
+				git.checkout(revToBuild.getSha1().name());
 
 				// if( compileSubmoduleCompares )
 				if (doGenerateSubmoduleConfigurations) {
@@ -405,7 +461,7 @@ public class GitSCM extends SCM implements Serializable {
 					// So - try updating from all RRs, then use the submodule
 					// Update to do the checkout
 
-					for (RemoteRepository remoteRepository : getRepositories()) {
+					for (RemoteConfig remoteRepository : getRepositories()) {
 						fetchFrom(git, workspace, listener, remoteRepository);
 					}
 
@@ -414,24 +470,33 @@ public class GitSCM extends SCM implements Serializable {
 
 				}
 
-				String lastRevWas = null;
-				if (build.getPreviousBuild() != null)
-					lastRevWas = getBuildCommitHash(build.getPreviousBuild());
-
-				git.tag(buildnumber, "Hudson Build #" + buildNumber);
-				setBuildCommitHash(build, revToBuild.getSha1());
-
-				if (lastRevWas == null) {
-					// No previous revision has been built - don't generate
-					// every
-					// single change in existence.
-					return "First Time Build of Branch.";
-
-				} else {
-					// Fetch the diffs into the changelog file
-					return putChangelogDiffsIntoFile(git, lastRevWas,
-							revToBuild.getSha1());
-				}
+				// Tag the successful merge
+                git.tag(buildnumber, "Hudson Build #" + buildNumber);
+                
+                String changeLog = "";
+                
+                int histories = 0;
+                
+                for( Branch b : revToBuild.getBranches() )
+                {
+                    ObjectId lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+                    
+                    if( lastRevWas != null )
+                    {
+                        // TODO: Inefficent string concat
+                        changeLog += putChangelogDiffsIntoFile(git, b.name, lastRevWas.name(), revToBuild.getSha1().name());
+                        histories++;
+                    }
+                }
+                
+                if( histories > 1 )
+                    listener.getLogger().println("Warning : There are multiple branch changesets here");
+                
+                
+                buildChooser.revisionBuilt(revToBuild, true);
+                
+                // Fetch the diffs into the changelog file
+                return changeLog;
 
 			}
 		});
@@ -440,10 +505,13 @@ public class GitSCM extends SCM implements Serializable {
 
 	}
 
-	private String putChangelogDiffsIntoFile(IGitAPI git, String revFrom,
+	private String putChangelogDiffsIntoFile(IGitAPI git, String branchName, String revFrom,
 			String revTo) throws IOException {
 		ByteArrayOutputStream fos = new ByteArrayOutputStream();
 		// fos.write("<data><![CDATA[".getBytes());
+		String changeset = "Changes in branch " + branchName + ", between " + revFrom + " and " + revTo + "\n";
+		fos.write(changeset.getBytes());
+		
 		git.changelog(revFrom, revTo, fos);
 		// fos.write("]]></data>".getBytes());
 		fos.close();
@@ -484,19 +552,66 @@ public class GitSCM extends SCM implements Serializable {
 		}
 
 		public SCM newInstance(StaplerRequest req) throws FormException {
-			List<RemoteRepository> remoteRepositories = new ArrayList<RemoteRepository>();
-
+			List<RemoteConfig> remoteRepositories = new ArrayList<RemoteConfig>();
+			File temp;
+			
+			try
+            {
+			    temp = File.createTempFile("tmp", "config");
+			    
+            }
+            catch (IOException e1)
+            {
+            	 throw new GitException("Error creating repositories", e1);
+            }
+			
+			RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
+			// Make up a repo config from the request parameters
+			
 			String[] names = req.getParameterValues("git.repo.name");
-			String[] urls = req.getParameterValues("git.repo.url");
-			String[] refs = req.getParameterValues("git.repo.refspec");
-			if (names != null) {
-				for (int i = 0; i < names.length; i++) {
-					remoteRepositories.add(new RemoteRepository(names[i],
-							urls[i], refs[i]));
-				}
-			}
+            String[] urls = req.getParameterValues("git.repo.url");
+            String[] refs = req.getParameterValues("git.repo.refspec");
+            if (names != null)
+            {
+                for (int i = 0; i < names.length; i++)
+                {
+                	if( refs[i] == null || refs[i].length() == 0 )
+                	{
+                		refs[i] = "+refs/heads/*:refs/remotes/" + names[i] + "/*";                 				
+                	}
+                	
+                    repoConfig.setString("remote", names[i], "url", urls[i]);
+                    repoConfig.setString("remote", names[i], "fetch", refs[i]);
+                }
+            }
+			
+			try
+            {
+				repoConfig.save();
+                remoteRepositories = RemoteConfig.getAllRemoteConfigs(repoConfig);
+            }
+            catch (Exception e)
+            {
+                throw new GitException("Error creating repositories", e);
+            }
+			
+            temp.delete();
+            
+            List<BranchSpec> branches = new ArrayList<BranchSpec>();
+            String[] branchData = req.getParameterValues("git.branch");
+            for( int i=0; i<branchData.length;i++ )
+            {
+                branches.add(new BranchSpec(branchData[i]));
+            }
+            
+            PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
+            if( req.getParameterValues("git.merge") != null && req.getParameterValues("git.merge").length > 0 )
+            {
+            	mergeOptions.setMergeTarget(req.getParameterValues("git.merge")[0]);
+            }
 
 			Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
+			/*
 			String[] submoduleName = req
 					.getParameterValues("git.submodule.name");
 			String[] submoduleMatch = req
@@ -510,14 +625,17 @@ public class GitSCM extends SCM implements Serializable {
 					submoduleCfg.add(cfg);
 				}
 			}
-
-			return new GitSCM(req.getParameter("git.source"), req
-					.getParameter("git.branch"),
-					req.getParameter("git.merge") != null, req
-							.getParameter("git.generate") != null, req
-							.getParameter("git.mergeTarget"),
-					remoteRepositories, submoduleCfg, RepositoryBrowsers
-							.createInstance(GitWeb.class, req, "git.browser"));
+            */
+			
+            
+			return new GitSCM(
+					remoteRepositories,
+					branches,
+					mergeOptions,
+				    req.getParameter("git.generate") != null, 
+					submoduleCfg, RepositoryBrowsers
+							.createInstance(GitWeb.class, req, "git.browser")
+				);
 		}
 
 		public boolean configure(StaplerRequest req) throws FormException {
@@ -556,20 +674,20 @@ public class GitSCM extends SCM implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	public boolean getDoMerge() {
-		return doMerge;
-	}
+	
 
 	public boolean getDoGenerate() {
 		return this.doGenerateSubmoduleConfigurations;
 	}
 
-	public String getMergeTarget() {
-		return mergeTarget;
-	}
-
-	public String getRemoteMergeTarget() {
-		return "origin/" + mergeTarget;
-	}
+    public List<BranchSpec> getBranches()
+    {
+        return branches;
+    }
+    
+    public PreBuildMergeOptions getMergeOptions()
+    {
+        return mergeOptions;
+    }
 
 }

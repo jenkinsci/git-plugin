@@ -74,11 +74,11 @@ public class GitPublisher extends Publisher implements Serializable {
 							git.tag(buildnumber, "Hudson Build #"
 									+ buildNumber);
 
-							if (gitSCM.getDoMerge()
+							if (gitSCM.getMergeOptions().doMerge()
 									&& buildResult.isBetterOrEqualTo(
 											Result.SUCCESS)) {
-								listener.getLogger().println("Pushing tag " + buildnumber + " to " + gitSCM.getMergeTarget() + " branch of origin repository");
-								git.push("HEAD:" + gitSCM.getMergeTarget());
+								listener.getLogger().println("Pushing tag " + buildnumber + " to " + gitSCM.getMergeOptions().getMergeTarget() + " branch of origin repository");
+								git.push("HEAD:" + gitSCM.getMergeOptions().getMergeTarget());
 							} else {
 								listener.getLogger().println("Pushing tag " + buildnumber + " to origin repository");
 								git.push(null);
