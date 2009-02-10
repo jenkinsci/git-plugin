@@ -47,7 +47,7 @@
     <dependency>
       <groupId>org.spearce</groupId>
       <artifactId>jgit</artifactId>
-      <version>0.4-750e07d</version>
+      <version>0.4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
