@@ -6,12 +6,12 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import hudson.util.XStream2;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -139,15 +139,13 @@ public class BuildChooser implements IBuildChooser
             System.out.println("Save to file " + storageFile.getAbsolutePath());
             if (!storageFile.exists()) storageFile.createNewFile();
 
+            XStream2 xstream = new XStream2();
             FileOutputStream fos = new FileOutputStream(storageFile);
-            ObjectOutputStream os = new ObjectOutputStream(fos);
-            os.writeObject(new Long(1)); // Version
-            os.writeObject(lastBuiltIds);
-
-            os.writeObject(lastBuiltRevision);
-
-            os.flush();
-            os.close();
+            BuildInfo s = new BuildInfo();
+            s.setVersion(1);
+            s.setLastBuiltIds(lastBuiltIds);
+            s.setLastBuiltRevision(lastBuiltRevision);
+            xstream.toXML(s, fos);
             fos.close();
         }
         catch (Exception ex)
@@ -160,11 +158,12 @@ public class BuildChooser implements IBuildChooser
     {
         try
         {
-            ObjectInputStream ips = new ObjectInputStream(new FileInputStream(storageFile));
-            Long v = (Long) ips.readObject();
-            lastBuiltIds = (Map<String, ObjectId>) ips.readObject();
-            lastBuiltRevision = (Revision) ips.readObject();
-            ips.close();
+            InputStream is = new FileInputStream(storageFile);
+            XStream2 xstream = new XStream2();
+            BuildInfo buildInfo = (BuildInfo) xstream.fromXML(is);
+            lastBuiltIds = buildInfo.getLastBuiltIds();
+            lastBuiltRevision = buildInfo.getLastBuiltRevision();
+            is.close();
         }
         catch (Exception ex)
         {

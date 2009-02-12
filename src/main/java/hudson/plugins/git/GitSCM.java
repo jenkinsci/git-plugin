@@ -473,7 +473,7 @@ public class GitSCM extends SCM implements Serializable {
 				// Tag the successful merge
                 git.tag(buildnumber, "Hudson Build #" + buildNumber);
                 
-                String changeLog = "";
+                StringBuffer changeLog = new StringBuffer();
                 
                 int histories = 0;
                 
@@ -483,9 +483,11 @@ public class GitSCM extends SCM implements Serializable {
                     
                     if( lastRevWas != null )
                     {
-                        // TODO: Inefficent string concat
-                        changeLog += putChangelogDiffsIntoFile(git, b.name, lastRevWas.name(), revToBuild.getSha1().name());
+                        listener.getLogger().println("Recording changes in branch " + b.getName());
+                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.name(), revToBuild.getSha1().name()));
                         histories++;
+                    } else {
+                        listener.getLogger().println("No change to record in branch " + b.getName());
                     }
                 }
                 
@@ -496,7 +498,7 @@ public class GitSCM extends SCM implements Serializable {
                 buildChooser.revisionBuilt(revToBuild, true);
                 
                 // Fetch the diffs into the changelog file
-                return changeLog;
+                return changeLog.toString();
 
 			}
 		});
@@ -552,7 +554,7 @@ public class GitSCM extends SCM implements Serializable {
 		}
 
 		public SCM newInstance(StaplerRequest req) throws FormException {
-			List<RemoteConfig> remoteRepositories = new ArrayList<RemoteConfig>();
+			List<RemoteConfig> remoteRepositories;
 			File temp;
 			
 			try
