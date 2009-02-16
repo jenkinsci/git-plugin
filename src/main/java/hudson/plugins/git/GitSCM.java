@@ -622,6 +622,10 @@ public class GitSCM extends SCM implements Serializable {
             {
                 branches.add(new BranchSpec(branchData[i]));
             }
+            if( branches.size() == 0 )
+            {
+            	branches.add(new BranchSpec("origin/master"));
+            }
             
             PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
             if( req.getParameterValues("git.merge") != null && req.getParameterValues("git.merge").length > 0 )
