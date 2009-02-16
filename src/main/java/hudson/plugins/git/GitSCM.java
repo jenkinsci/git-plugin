@@ -6,12 +6,14 @@ import hudson.Proc;
 import hudson.FilePath.FileCallable;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.IBuildChooser;
 import hudson.remoting.VirtualChannel;
@@ -112,22 +114,24 @@ public class GitSCM extends SCM implements Serializable {
 
 	@Override
 	public boolean pollChanges(final AbstractProject project, Launcher launcher,
-			FilePath workspace, final TaskListener listener)
+			final FilePath workspace, final TaskListener listener)
 			throws IOException, InterruptedException 
 	{
 	    // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 		
 		final String gitExe = getDescriptor().getGitExe();
 		
+		final BuildData buildData = project.getLastBuild().getAction(BuildData.class);
+		
 		
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
-			public Boolean invoke(File workspace, VirtualChannel channel)
+			public Boolean invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
 
-				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
-				File config = new File(workspace, ".buildinfo");
+				IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener);
 				
-				IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+				
+				IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
 				
 				if (git.hasGitRepo()) {
 					// Repo is there - do a fetch
@@ -135,7 +139,7 @@ public class GitSCM extends SCM implements Serializable {
 
 					// Fetch updates	
 					for (RemoteConfig remoteRepository : getRepositories()) {
-						fetchFrom(git, workspace, listener, remoteRepository);
+						fetchFrom(git, localWorkspace, listener, remoteRepository);
 					}
 
 					listener.getLogger().println("Polling for changes in");
@@ -151,6 +155,7 @@ public class GitSCM extends SCM implements Serializable {
 
             
 		});
+		
 		return pollChangesResult;
 	}
 
@@ -271,20 +276,26 @@ public class GitSCM extends SCM implements Serializable {
 	
 	@Override
 	public boolean checkout(final AbstractBuild build, Launcher launcher,
-			FilePath workspace, final BuildListener listener, File changelogFile)
+			final FilePath workspace, final BuildListener listener, File changelogFile)
 			throws IOException, InterruptedException {
 
+	    listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
+	    
 		final String projectName = build.getProject().getName();
 		final int buildNumber = build.getNumber();
 		final String gitExe = getDescriptor().getGitExe();
-
+		
 		final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
 		
+		final BuildData buildData = build.getProject().getLastBuild().getAction(BuildData.class);
 		
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
-			public Revision invoke(File workspace, VirtualChannel channel)
+			public Revision invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
-				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
+			    FilePath ws = new FilePath(localWorkspace);
+			    listener.getLogger().println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
+			    
+				IGitAPI git = new GitAPI(gitExe, ws, listener);
 
 				if (git.hasGitRepo()) {
 					// It's an update
@@ -293,7 +304,7 @@ public class GitSCM extends SCM implements Serializable {
 
 					for (RemoteConfig remoteRepository : getRepositories()) 
 					{
-					        fetchFrom(git,workspace,listener,remoteRepository);
+					   fetchFrom(git,localWorkspace,listener,remoteRepository);
 					}
 
 				} else {
@@ -323,14 +334,20 @@ public class GitSCM extends SCM implements Serializable {
 					    throw new GitException("Could not clone");
 					}
 					
+					// Also do a fetch
+					for (RemoteConfig remoteRepository : getRepositories()) 
+                    {
+                       fetchFrom(git,localWorkspace,listener,remoteRepository);
+                    }
+					
 					if (git.hasGitModules()) {
 						git.submoduleInit();
 						git.submoduleUpdate();
 					}
 				}
 				
-                File config = new File(workspace, ".buildinfo");                
-                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+                FilePath config = new FilePath(workspace, ".buildinfo");                
+                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
 				
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions();
 				if( candidates.size() == 0 )
@@ -347,16 +364,16 @@ public class GitSCM extends SCM implements Serializable {
 			return false;
 		}
 		listener.getLogger().println("Commencing build of " + revToBuild);
-		String changeLog;
+		Object[] returnData; // Changelog, BuildData
 
 		if (mergeOptions.doMerge()) {
 			if (!revToBuild.containsBranchName(mergeOptions.getMergeTarget())) {
-				changeLog = workspace.act(new FileCallable<String>() {
-					public String invoke(File workspace, VirtualChannel channel)
+				returnData = workspace.act(new FileCallable<Object[]>() {
+					public Object[] invoke(File localWorkspace, VirtualChannel channel)
 							throws IOException {
-						IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
-						File config = new File(workspace, ".buildinfo");                            
-                        IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+						IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener);
+               
+                        IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
                         
 						// Do we need to merge this revision onto MergeTarget
 
@@ -391,6 +408,7 @@ public class GitSCM extends SCM implements Serializable {
 							
 			                
 							buildChooser.revisionBuilt(revToBuild, false);
+							build.addAction(buildChooser.getData());
 							return null;
 						}
 
@@ -420,23 +438,22 @@ public class GitSCM extends SCM implements Serializable {
 						buildChooser.revisionBuilt(revToBuild, true);
 						
 						// Fetch the diffs into the changelog file
-						return changeLog;
+						return new Object[]{changeLog, buildChooser.getData()};
 
 					}
 				});
-				
-				return changeLogResult(changeLog, changelogFile);
+				build.addAction((Action) returnData[1]);
+				return changeLogResult((String) returnData[0], changelogFile);
 			}
 		}
 
 		// No merge
 
-		changeLog = workspace.act(new FileCallable<String>() {
-			public String invoke(File workspace, VirtualChannel channel)
+		returnData = workspace.act(new FileCallable<Object[]>() {
+			public Object[] invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
-				IGitAPI git = new GitAPI(gitExe, new FilePath(workspace), listener);
-				File config = new File(workspace, ".buildinfo");                            
-                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), config );
+				IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener);                            
+                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
                 
 				// Straight compile-the-branch
 				listener.getLogger().println("Checking out " + revToBuild);
@@ -445,7 +462,7 @@ public class GitSCM extends SCM implements Serializable {
 				// if( compileSubmoduleCompares )
 				if (doGenerateSubmoduleConfigurations) {
 					SubmoduleCombinator combinator = new SubmoduleCombinator(
-							git, listener, workspace, submoduleCfg);
+							git, listener, localWorkspace, submoduleCfg);
 					combinator.createSubmoduleCombinations();
 				}
 
@@ -462,7 +479,7 @@ public class GitSCM extends SCM implements Serializable {
 					// Update to do the checkout
 
 					for (RemoteConfig remoteRepository : getRepositories()) {
-						fetchFrom(git, workspace, listener, remoteRepository);
+						fetchFrom(git, localWorkspace, listener, remoteRepository);
 					}
 
 					// Update to the correct checkout
@@ -498,12 +515,12 @@ public class GitSCM extends SCM implements Serializable {
                 buildChooser.revisionBuilt(revToBuild, true);
                 
                 // Fetch the diffs into the changelog file
-                return changeLog.toString();
+                return new Object[]{changeLog.toString(), buildChooser.getData()};
 
 			}
 		});
-
-		return changeLogResult(changeLog, changelogFile);
+		build.addAction((Action) returnData[1]);
+        return changeLogResult((String) returnData[0], changelogFile);
 
 	}
 

@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import hudson.model.Action;
 import hudson.plugins.git.Revision;
 
 import java.util.Collection;
@@ -42,4 +43,10 @@ public interface IBuildChooser
      * @return
      */
     public Revision getLastBuiltRevision();
+
+    /**
+     * Get data to be persisted.
+     * @return
+     */
+    Action getData();
 }

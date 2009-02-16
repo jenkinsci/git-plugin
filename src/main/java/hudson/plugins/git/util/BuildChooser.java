@@ -1,16 +1,21 @@
 package hudson.plugins.git.util;
 
+import hudson.FilePath;
+import hudson.FilePath.FileCallable;
+import hudson.model.Action;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import hudson.remoting.VirtualChannel;
 import hudson.util.XStream2;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,26 +24,23 @@ import java.util.Map;
 
 import org.spearce.jgit.lib.ObjectId;
 
-public class BuildChooser implements IBuildChooser
-{
+public class BuildChooser implements IBuildChooser {  
+    
     IGitAPI               git;
     GitUtils              utils;
     GitSCM                gitSCM;
 
-    File                  storageFile;
-
     //-------- Data -----------
-    Map<String, ObjectId> lastBuiltIds = new HashMap<String, ObjectId>();
-    Revision              lastBuiltRevision;
+    BuildData             data;
 
-    //-------- Data -----------
-
-    public BuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, File storageFile)
+    public BuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data)
     {
         this.gitSCM = gitSCM;
         this.git = git;
         this.utils = utils;
-        this.storageFile = storageFile;
+        this.data = data;
+        if( data == null )
+            this.data = new BuildData();
     }
     /**
      * In order to determine which Revisions to build.
@@ -104,75 +106,30 @@ public class BuildChooser implements IBuildChooser
 
     private boolean hasBeenBuilt(ObjectId sha1)
     {
-        load();
-        return lastBuiltIds.containsValue(sha1);
+        return data.lastBuiltIds.containsValue(sha1);
     }
 
     public void revisionBuilt(Revision revision, boolean success)
     {
-        load();
-        lastBuiltRevision = revision;
+        data.lastBuiltRevision = revision;
         for (Branch b : revision.getBranches())
         {
-            lastBuiltIds.put(b.getName(), b.getSHA1());
+            data.lastBuiltIds.put(b.getName(), b.getSHA1());
         }
-        save();
-
     }
 
     public ObjectId getLastBuiltRevisionOfBranch(String branch)
     {
-        load();
-        return lastBuiltIds.get(branch);
+        return data.lastBuiltIds.get(branch);
     }
 
     public Revision getLastBuiltRevision()
     {
-        load();
-        return lastBuiltRevision;
+        return data.lastBuiltRevision;
     }
-
-    private void save()
+    public Action getData()
     {
-        try
-        {
-            System.out.println("Save to file " + storageFile.getAbsolutePath());
-            if (!storageFile.exists()) storageFile.createNewFile();
-
-            XStream2 xstream = new XStream2();
-            FileOutputStream fos = new FileOutputStream(storageFile);
-            BuildInfo s = new BuildInfo();
-            s.setVersion(1);
-            s.setLastBuiltIds(lastBuiltIds);
-            s.setLastBuiltRevision(lastBuiltRevision);
-            xstream.toXML(s, fos);
-            fos.close();
-        }
-        catch (Exception ex)
-        {
-            throw new GitException("Couldn't save build state", ex);
-        }
-    }
-
-    private void load()
-    {
-        try
-        {
-            InputStream is = new FileInputStream(storageFile);
-            XStream2 xstream = new XStream2();
-            BuildInfo buildInfo = (BuildInfo) xstream.fromXML(is);
-            lastBuiltIds = buildInfo.getLastBuiltIds();
-            lastBuiltRevision = buildInfo.getLastBuiltRevision();
-            is.close();
-        }
-        catch (Exception ex)
-        {
-            // File not found, defective or corrupt.
-
-            lastBuiltIds = new HashMap<String, ObjectId>();
-            lastBuiltRevision = null;
-
-        }
+        return data;
     }
 
 }

@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.regex.Pattern;
  * origin/ *
  * origin/ * /thing
  */
-public class BranchSpec
+public class BranchSpec implements Serializable
 {
     private String name;
     
