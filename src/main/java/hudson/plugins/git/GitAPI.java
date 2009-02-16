@@ -15,12 +15,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.spearce.jgit.lib.AnyObjectId;
 import org.spearce.jgit.lib.ObjectId;
+import org.spearce.jgit.lib.Ref;
+import org.spearce.jgit.lib.Repository;
+import org.spearce.jgit.lib.Tag;
 import org.spearce.jgit.transport.RemoteConfig;
 
 public class GitAPI implements IGitAPI {
@@ -32,7 +37,7 @@ public class GitAPI implements IGitAPI {
 	public GitAPI(String gitExe, FilePath workspace,
 			TaskListener listener) {
 		
-	    listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
+	    //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
 	    
 		this.workspace = workspace;
 		this.listener = listener;
@@ -150,6 +155,13 @@ public class GitAPI implements IGitAPI {
 		String result = launchCommand(args.toCommandArray());
 		return ObjectId.fromString(firstLine(result).trim());
 	}
+	
+	public String describe(String commitIsh) throws GitException {
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add(getGitExe(), "describe", "--tags", commitIsh);
+        String result = launchCommand(args.toCommandArray());
+        return firstLine(result).trim();
+    }
 	
 	private String firstLine(String result) {
 		BufferedReader reader = new BufferedReader(new StringReader(result));
@@ -358,6 +370,8 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Could not delete tag " + tagName, e);
 		}
 	}
+	
+	
 
 	public List<IndexEntry> lsTree(String treeIsh) throws GitException {
 		List<IndexEntry> entries = new ArrayList<IndexEntry>();
@@ -478,5 +492,23 @@ public class GitAPI implements IGitAPI {
         }
 
         return null;
+    }
+
+    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException
+    {
+        Repository db = new Repository(new File(workspace.getRemote()));
+        ObjectId commit = db.resolve(revName);
+        List<Tag> ret = new ArrayList<Tag>();
+        
+        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
+            
+            Tag ttag = db.mapTag(tag.getKey());
+            if( ttag.getObjId().equals(commit) )
+            {
+                ret.add(ttag);
+            }
+        }
+        return ret;
+        
     }
 }

@@ -1,10 +1,12 @@
 package hudson.plugins.git;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
 import org.spearce.jgit.lib.ObjectId;
+import org.spearce.jgit.lib.Tag;
 import org.spearce.jgit.transport.RemoteConfig;
 
 public interface IGitAPI {
@@ -32,6 +34,10 @@ public interface IGitAPI {
     
     List<ObjectId> revListBranch(String branchId) throws GitException;
     List<ObjectId> revListAll() throws GitException;
+    
+    String describe(String commitIsh) throws GitException;
+    
+    List<Tag> getTagsOnCommit(String revName) throws GitException, IOException;
     
     void tag(String tagName, String comment) throws GitException;
     void deleteTag(String tagName) throws GitException;
