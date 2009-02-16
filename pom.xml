@@ -32,8 +32,11 @@
       </releases>
     </repository>
     <repository>
-      <id>jgit-release-repository</id>
-      <url>https://hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      <id>jgit-releases</id>
+      <url>http://fisheye4.atlassian.com/browse/~raw,r=trunk/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      <!--
+      <url>https://guest:guest@hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      -->
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -47,7 +50,8 @@
     <dependency>
       <groupId>org.spearce</groupId>
       <artifactId>jgit</artifactId>
-      <version>0.4-SNAPSHOT</version>
+      <!-- SEE README! -->
+      <version>0.4-47e4af3</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
