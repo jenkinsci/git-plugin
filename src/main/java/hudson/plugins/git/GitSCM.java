@@ -121,8 +121,19 @@ public class GitSCM extends SCM implements Serializable {
 		
 		final String gitExe = getDescriptor().getGitExe();
 		
-		final BuildData buildData = project.getLastBuild().getAction(BuildData.class);
-		
+		AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
+        
+        if( lastBuild != null )
+        {
+            listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber() );        
+        }
+        
+        final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
+        
+        if( buildData != null )
+        {
+            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuiltRevision );
+        }
 		
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			public Boolean invoke(File localWorkspace, VirtualChannel channel)
@@ -287,7 +298,20 @@ public class GitSCM extends SCM implements Serializable {
 		
 		final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
 		
-		final BuildData buildData = build.getProject().getLastBuild().getAction(BuildData.class);
+		AbstractBuild lastBuild = (AbstractBuild)build.getPreviousBuild();
+		
+		if( lastBuild != null )
+		{
+		    listener.getLogger().println("Last Build : #" + lastBuild.getNumber() );
+	            
+		}
+		
+		final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
+		
+		if( buildData != null )
+		{
+		    listener.getLogger().println("Last Built Revision: " + buildData.lastBuiltRevision );
+		}
 		
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
 			public Revision invoke(File localWorkspace, VirtualChannel channel)
@@ -345,8 +369,7 @@ public class GitSCM extends SCM implements Serializable {
 						git.submoduleUpdate();
 					}
 				}
-				
-                FilePath config = new FilePath(workspace, ".buildinfo");                
+				              
                 IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
 				
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions();

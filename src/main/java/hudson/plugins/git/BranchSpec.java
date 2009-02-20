@@ -38,7 +38,8 @@ public class BranchSpec implements Serializable
     {
         if( name.contains("*") )
         {
-            return Pattern.matches(name.replace("*", ".*"), item);
+            String regex = name.replace("*", ".*");
+            return Pattern.matches(regex, item);
             
         }
         else
