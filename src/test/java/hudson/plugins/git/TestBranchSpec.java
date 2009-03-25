@@ -25,7 +25,7 @@ public class TestBranchSpec extends TestCase
       
         BranchSpec m = new BranchSpec("*/magnayn*");
         
-        Assert.assertTrue(s.matches("origin/magnayn/b1"));
-        Assert.assertTrue(s.matches("remote/origin/magnayn/b1"));
+        Assert.assertTrue(m.matches("origin/magnayn/b1"));
+        Assert.assertTrue(m.matches("remote/origin/magnayn/b1"));
     }
 }
