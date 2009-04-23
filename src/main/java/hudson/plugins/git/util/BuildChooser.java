@@ -3,6 +3,7 @@ package hudson.plugins.git.util;
 import hudson.FilePath;
 import hudson.FilePath.FileCallable;
 import hudson.model.Action;
+import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
@@ -106,26 +107,49 @@ public class BuildChooser implements IBuildChooser {
 
     private boolean hasBeenBuilt(ObjectId sha1)
     {
-        return data.lastBuiltIds.containsValue(sha1);
+    	try
+    	{
+    		return data.lastBuiltIds.containsValue(sha1);
+    	}
+    	catch(Exception ex)
+    	{
+    		return false;
+    	}
     }
 
-    public void revisionBuilt(Revision revision, boolean success)
-    {
+    public void revisionBuilt(Revision revision, int buildNumber, Result result )
+    {    	
         data.lastBuiltRevision = revision;
         for (Branch b : revision.getBranches())
         {
-            data.lastBuiltIds.put(b.getName(), b.getSHA1());
+        	Build build = new Build(b, buildNumber, result);
+        	
+            data.lastBuiltIds.put(b.getName(), build);
         }
     }
 
-    public ObjectId getLastBuiltRevisionOfBranch(String branch)
+    public Build getLastBuiltRevisionOfBranch(String branch)
     {
-        return data.lastBuiltIds.get(branch);
+    	try
+    	{
+    		return data.lastBuiltIds.get(branch);
+    	}
+    	catch(Exception ex)
+    	{
+    		return null;
+    	}
     }
 
     public Revision getLastBuiltRevision()
     {
-        return data.lastBuiltRevision;
+    	try
+    	{
+    		return data.lastBuiltRevision;
+    	}
+    	catch(Exception ex)
+    	{
+    		return null;
+    	}
     }
     public Action getData()
     {

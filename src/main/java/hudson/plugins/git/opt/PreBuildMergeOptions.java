@@ -2,8 +2,6 @@ package hudson.plugins.git.opt;
 
 import java.io.Serializable;
 
-import hudson.plugins.git.BranchSpec;
-
 public class PreBuildMergeOptions implements Serializable
 {
     public String mergeTarget = null;
