@@ -4,21 +4,27 @@
         
         <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${scm.repositories}" minimum="1" noAddButton="false">
            <table width="100%">
-           <f:entry title="Name of repository">
-             <f:textbox name="git.repo.name" value="${repo.name}" />
-           </f:entry>
            
            <f:entry title="URL of repository">
             <f:textbox name="git.repo.url" value="${repo.URIs.get(0)}" />
            </f:entry>
            
-           <f:entry title="Refspec (leave blank for default)">
-              <f:textbox name="git.repo.refspec" value="${repo.fetchRefSpecs.get(0)}" />
-           </f:entry>
+           <f:advanced>
+           
+	           <f:entry title="Name of repository (blank to create default)">
+	             <f:textbox name="git.repo.name" value="${repo.name}" />
+	           </f:entry>
+	           
+	           
+	           <f:entry title="Refspec (blank to create default)">
+	              <f:textbox name="git.repo.refspec" value="${repo.fetchRefSpecs.get(0)}" />
+	           </f:entry>
+	           
+           </f:advanced>
            
            <f:entry>
             <div align="right">
-                <input type="button" value="Delete" class="repeatable-delete" style="margin-left: 1em;" />
+                <input type="button" value="Delete Repository" class="repeatable-delete" style="margin-left: 1em;" />
             </div>
           </f:entry>
           </table>
@@ -29,7 +35,7 @@
   <f:entry title="Branches to build" help="/plugin/git/branch.html">
   <f:repeatable var="branch" name="branch" varStatus="branchStatus" items="${scm.branches}" minimum="1" noAddButton="false">
            <table width="100%">
-               <f:entry title="Branch Specifier:">
+               <f:entry title="Branch Specifier (blank for default):">
                     <f:textbox name="git.branch" value="${branch.name}" />
                </f:entry>
            </table>
