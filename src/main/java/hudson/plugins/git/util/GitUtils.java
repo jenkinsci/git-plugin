@@ -2,15 +2,18 @@ package hudson.plugins.git.util;
 
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.IndexEntry;
 import hudson.plugins.git.Revision;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.spearce.jgit.lib.ObjectId;
 
@@ -48,7 +51,7 @@ public class GitUtils
   public Collection<Revision> getAllBranchRevisions()
   {
     Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
-    List<Branch> branches = git.getBranches();
+    List<Branch> branches = git.getRemoteBranches();
     for (Branch b : branches)
     {
       Revision r = revisions.get(b.getSHA1());
@@ -100,4 +103,51 @@ public class GitUtils
 
         return revisions;
     }
+    
+    public static BranchSpec makeSensibleBranchSpec(String branchData) {
+		// Detect them here
+    	BranchSpec bs;
+    	
+    	if( branchData == null || branchData.trim().length() == 0 )
+    		return new BranchSpec("*");
+    	
+		if( !branchData.contains("/") && !branchData.contains("*") )
+    	{
+    		// No /, no *; fix it up
+    		bs = new BranchSpec("*/" + branchData);
+    	}
+    	else
+    	{
+    		 bs = new BranchSpec(branchData);
+    	}
+		return bs;
+	}
+
+	public static String[] fixupNames(String[] names, String[] urls) {
+		String[] returnNames = new String[urls.length];
+		Set<String> usedNames = new HashSet<String>();
+		
+		for(int i=0; i<urls.length; i++ )
+		{
+			String name = names[i];
+			
+			if( name == null || name.trim().length() == 0 )
+			{
+				name = "origin";
+			}
+			
+			String baseName = name;
+			int j=1;
+			while(usedNames.contains(name))
+			{
+				name = baseName + (j++); 
+			}
+			
+			usedNames.add(name);
+			returnNames[i] = name;
+		}
+		
+		
+		return returnNames;
+	}
 }
