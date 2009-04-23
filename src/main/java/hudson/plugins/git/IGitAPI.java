@@ -28,6 +28,7 @@ public interface IGitAPI {
     
     ObjectId revParse(String revName) throws GitException;
     List<Branch> getBranches() throws GitException;
+    List<Branch> getRemoteBranches() throws GitException;
     List<Branch> getBranchesContaining(String revspec) throws GitException;
     
     List<IndexEntry> lsTree(String treeIsh) throws GitException;
