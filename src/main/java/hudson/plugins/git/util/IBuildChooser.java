@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import hudson.model.Action;
+import hudson.model.Result;
 import hudson.plugins.git.Revision;
 
 import java.util.Collection;
@@ -29,14 +30,14 @@ public interface IBuildChooser
      * @param revision
      * @param success
      */
-    void revisionBuilt(Revision revision, boolean success);
+    void revisionBuilt(Revision revision, int buildNumber, Result result);
     
     /**
      * What was the last SHA1 that a named branch was built with?
      * @param branch
      * @return ObjectId, or NULL 
      */
-    ObjectId getLastBuiltRevisionOfBranch(String branch);
+    Build getLastBuiltRevisionOfBranch(String branch);
     
     /**
      * What was the last revision to be built?

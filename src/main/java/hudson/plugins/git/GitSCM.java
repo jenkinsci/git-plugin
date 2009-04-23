@@ -12,6 +12,7 @@ import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
@@ -31,10 +32,13 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.logging.Log;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -50,22 +54,28 @@ import org.spearce.jgit.transport.RemoteConfig;
  */
 public class GitSCM extends SCM implements Serializable {
     
+	// old fields are left so that old config data can be read in, but
+   // they are deprecated. transient so that they won't show up in XML
+   // when writing back
+	@Deprecated transient String source;
+	@Deprecated transient String branch;
+	
     /**
      * All the remote repositories that we know about.
      */
-	private final List<RemoteConfig> remoteRepositories;
+	private List<RemoteConfig> remoteRepositories;
 	
 	/**
 	 * All the branches that we wish to care about building.
 	 */
-	private final List<BranchSpec> branches;
+	private List<BranchSpec> branches;
 
     /**
 	 * Options for merging before a build.
 	 */
-	private final PreBuildMergeOptions mergeOptions;
+	private PreBuildMergeOptions mergeOptions;
 
-    private final boolean doGenerateSubmoduleConfigurations;
+    private boolean doGenerateSubmoduleConfigurations;
 
 	private GitWeb browser;
 
@@ -99,7 +109,35 @@ public class GitSCM extends SCM implements Serializable {
 		this.submoduleCfg = submoduleCfg;
 
 	}
-
+	
+   public Object readResolve()  {
+	   // Migrate data
+	   
+       if(source!=null)
+       {
+    	   remoteRepositories = new ArrayList<RemoteConfig>();
+   			branches = new ArrayList<BranchSpec>();
+   			doGenerateSubmoduleConfigurations = false;
+   			mergeOptions = new PreBuildMergeOptions();
+   			
+   		
+    	   try {
+			remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*") ));
+			} catch (URISyntaxException e) {
+				// We gave it our best shot
+			}
+       }
+       if( branch != null )
+       {
+    	   branches.add(GitUtils.makeSensibleBranchSpec(branch));
+       }
+       else
+       {
+    	   branches.add(new BranchSpec("*/master"));
+       }
+       return this;
+   }
+	
 	@Override
 	public GitWeb getBrowser() {
 		return browser;
@@ -122,7 +160,7 @@ public class GitSCM extends SCM implements Serializable {
 		final String gitExe = getDescriptor().getGitExe();
 		
 		AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
-        
+		
         if( lastBuild != null )
         {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber() );        
@@ -430,7 +468,7 @@ public class GitSCM extends SCM implements Serializable {
 							
 							
 			                
-							buildChooser.revisionBuilt(revToBuild, false);
+							buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
 							build.addAction(buildChooser.getData());
 							return null;
 						}
@@ -449,16 +487,16 @@ public class GitSCM extends SCM implements Serializable {
 						
 						for( Branch b : revToBuild.getBranches() )
 						{
-						    ObjectId lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+						    Build lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
 						    
 						    if( lastRevWas != null )
 						    {
 						    	// TODO: Inefficent string concat
-						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.name(), revToBuild.getSha1().name());    
+						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.branch.getSHA1().name(), revToBuild.getSha1().name());    
 						    }
 						}
 						
-						buildChooser.revisionBuilt(revToBuild, true);
+						buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
 						
 						// Fetch the diffs into the changelog file
 						return new Object[]{changeLog, buildChooser.getData()};
@@ -519,12 +557,12 @@ public class GitSCM extends SCM implements Serializable {
                 
                 for( Branch b : revToBuild.getBranches() )
                 {
-                    ObjectId lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+                    Build lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
                     
                     if( lastRevWas != null )
                     {
                         listener.getLogger().println("Recording changes in branch " + b.getName());
-                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.name(), revToBuild.getSha1().name()));
+                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.branch.getSHA1().name(), revToBuild.getSha1().name()));
                         histories++;
                     } else {
                         listener.getLogger().println("No change to record in branch " + b.getName());
@@ -535,7 +573,7 @@ public class GitSCM extends SCM implements Serializable {
                     listener.getLogger().println("Warning : There are multiple branch changesets here");
                 
                 
-                buildChooser.revisionBuilt(revToBuild, true);
+                buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
                 
                 // Fetch the diffs into the changelog file
                 return new Object[]{changeLog.toString(), buildChooser.getData()};
@@ -610,20 +648,26 @@ public class GitSCM extends SCM implements Serializable {
 			RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
 			// Make up a repo config from the request parameters
 			
+			String[] urls = req.getParameterValues("git.repo.url");
 			String[] names = req.getParameterValues("git.repo.name");
-            String[] urls = req.getParameterValues("git.repo.url");
+            
+			names = GitUtils.fixupNames(names, urls);
+			
             String[] refs = req.getParameterValues("git.repo.refspec");
             if (names != null)
             {
                 for (int i = 0; i < names.length; i++)
                 {
+                	String name = names[i];
+                	name = name.replace(' ', '_');
+                	
                 	if( refs[i] == null || refs[i].length() == 0 )
                 	{
-                		refs[i] = "+refs/heads/*:refs/remotes/" + names[i] + "/*";                 				
+                		refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";                 				
                 	}
                 	
-                    repoConfig.setString("remote", names[i], "url", urls[i]);
-                    repoConfig.setString("remote", names[i], "fetch", refs[i]);
+                    repoConfig.setString("remote", name, "url", urls[i]);
+                    repoConfig.setString("remote", name, "fetch", refs[i]);
                 }
             }
 			
@@ -643,11 +687,17 @@ public class GitSCM extends SCM implements Serializable {
             String[] branchData = req.getParameterValues("git.branch");
             for( int i=0; i<branchData.length;i++ )
             {
-                branches.add(new BranchSpec(branchData[i]));
+            	// People will often blindly specify *local* branches like 'master' when
+            	// We want all branches to be relative to a remote (origin/master, */master).
+            	
+            	BranchSpec bs = GitUtils.makeSensibleBranchSpec(branchData[i]);
+
+                branches.add(bs);
             }
+            
             if( branches.size() == 0 )
             {
-            	branches.add(new BranchSpec("origin/master"));
+            	branches.add(new BranchSpec("*/master"));
             }
             
             PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
@@ -683,6 +733,8 @@ public class GitSCM extends SCM implements Serializable {
 							.createInstance(GitWeb.class, req, "git.browser")
 				);
 		}
+
+		
 
 		public boolean configure(StaplerRequest req) throws FormException {
 			gitExe = req.getParameter("git.gitExe");
@@ -735,5 +787,7 @@ public class GitSCM extends SCM implements Serializable {
     {
         return mergeOptions;
     }
+    
+    
 
 }
