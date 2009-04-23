@@ -139,6 +139,7 @@ public class GitAPI implements IGitAPI {
 						VirtualChannel channel) throws IOException {
 					final ArgumentListBuilder args = new ArgumentListBuilder();
 					args.add(getGitExe(), "clone");
+					args.add("-o", remoteConfig.getName());
 					args.add(source);
 					args.add(workspace.toString());
 					return launchCommandIn(args.toCommandArray(), null);
@@ -338,6 +339,12 @@ public class GitAPI implements IGitAPI {
 	public List<Branch> getBranches() throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "branch", "-a");
+		return parseBranches(launchCommand(args.toCommandArray()));
+	}
+	
+	public List<Branch> getRemoteBranches() throws GitException {
+		ArgumentListBuilder args = new ArgumentListBuilder();
+		args.add(getGitExe(), "branch", "-r");
 		return parseBranches(launchCommand(args.toCommandArray()));
 	}
 
