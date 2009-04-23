@@ -1,0 +1,16 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
+	xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
+	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+	<t:summary icon="/plugin/git/icons/git-48x48.png">
+	
+ 	<b>Revision</b> : ${it.lastBuiltRevision.sha1.name()}
+        <br/>
+        <ul>
+        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+        <li>${branch.name}</li>
+        </j:forEach>
+        </ul>
+
+
+	</t:summary>
+</j:jelly>
