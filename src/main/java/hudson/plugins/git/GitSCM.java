@@ -195,6 +195,19 @@ public class GitSCM extends SCM implements Serializable {
 					
 					Collection<Revision> candidates = buildChooser.getCandidateRevisions(); 
 					
+					if(candidates.size() > 0)
+					{
+						listener.getLogger().println("Unbuilt revisions:");
+						for(Revision candidate : candidates)
+						{
+							listener.getLogger().println(candidate.toString());	
+						}
+					}
+					else
+					{
+						listener.getLogger().println("Nothing to build");
+					}
+					
 					return (candidates.size() > 0);
 				} else {
 					listener.getLogger().println("No Git repository yet, an initial checkout is required");
