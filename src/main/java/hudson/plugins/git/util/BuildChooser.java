@@ -109,7 +109,13 @@ public class BuildChooser implements IBuildChooser {
     {
     	try
     	{
-    		return data.lastBuiltIds.containsValue(sha1);
+    		for(Build b : data.lastBuiltIds.values())
+    		{
+    			if( b.branch.getSHA1().equals(sha1) )
+    				return true;
+    		}
+    		
+    		return false;
     	}
     	catch(Exception ex)
     	{
