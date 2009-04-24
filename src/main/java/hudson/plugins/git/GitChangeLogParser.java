@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ import org.xml.sax.SAXException;
  * Parse the git log
  * @author Nigel Magnay
  */
-public class GitChangeLogParser extends ChangeLogParser {
+public class GitChangeLogParser extends ChangeLogParser implements Serializable {
 	public GitChangeSetList parse(AbstractBuild build, File changelogFile)
 			throws IOException, SAXException {
 

@@ -14,6 +14,9 @@ import org.spearce.jgit.lib.ObjectId;
  */
 public class Revision implements java.io.Serializable
 {
+
+	private static final long serialVersionUID = 1L;
+	
   ObjectId           sha1;
   Collection<Branch> branches;
 

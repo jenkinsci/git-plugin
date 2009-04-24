@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
  * Represents a change set.
  * @author Nigel Magnay
  */
-public class GitChangeSet extends ChangeLogSet.Entry {
+public class GitChangeSet extends ChangeLogSet.Entry implements Serializable {
 
 	String author;
 	String msg;
