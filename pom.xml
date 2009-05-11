@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>0.7.2-SNAPSHOT</version>
+  <version>0.7.2</version>
   <packaging>hpi</packaging>
   <name>Hudson GIT plugin</name>
   <description>Integrates Hudson to GIT SCM</description>
@@ -54,4 +54,10 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/git-0.7.2</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/git-0.7.2</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/git/tags/git-0.7.2</url>
+  </scm>
 </project>
