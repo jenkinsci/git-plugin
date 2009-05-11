@@ -45,7 +45,7 @@ public class SubmoduleCombinator
     this.submoduleConfig = cfg;
   }
 
-  public void createSubmoduleCombinations()
+  public void createSubmoduleCombinations() throws GitException, IOException
   {
     GitUtils gitUtils = new GitUtils(listener, git);
 

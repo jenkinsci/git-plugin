@@ -9,6 +9,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -126,15 +127,18 @@ public class GitSCM extends SCM implements Serializable {
 			} catch (URISyntaxException e) {
 				// We gave it our best shot
 			}
+			
+		   if( branch != null )
+	       {
+	    	   branches.add(GitUtils.makeSensibleBranchSpec(branch));
+	       }
+	       else
+	       {
+	    	   branches.add(new BranchSpec("*/master"));
+	       }
+			
        }
-       if( branch != null )
-       {
-    	   branches.add(GitUtils.makeSensibleBranchSpec(branch));
-       }
-       else
-       {
-    	   branches.add(new BranchSpec("*/master"));
-       }
+       
        return this;
    }
 	
@@ -168,9 +172,9 @@ public class GitSCM extends SCM implements Serializable {
         
         final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
         
-        if( buildData != null )
+        if( buildData != null && buildData.lastBuild != null)
         {
-            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuiltRevision );
+            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision );
         }
 		
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
@@ -194,19 +198,6 @@ public class GitSCM extends SCM implements Serializable {
 					listener.getLogger().println("Polling for changes in");
 					
 					Collection<Revision> candidates = buildChooser.getCandidateRevisions(); 
-					
-					if(candidates.size() > 0)
-					{
-						listener.getLogger().println("Unbuilt revisions:");
-						for(Revision candidate : candidates)
-						{
-							listener.getLogger().println(candidate.toString());	
-						}
-					}
-					else
-					{
-						listener.getLogger().println("Nothing to build");
-					}
 					
 					return (candidates.size() > 0);
 				} else {
@@ -359,9 +350,9 @@ public class GitSCM extends SCM implements Serializable {
 		
 		final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
 		
-		if( buildData != null )
+		if( buildData != null && buildData.lastBuild != null)
 		{
-		    listener.getLogger().println("Last Built Revision: " + buildData.lastBuiltRevision );
+		    listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision );
 		}
 		
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
@@ -425,7 +416,7 @@ public class GitSCM extends SCM implements Serializable {
 				
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions();
 				if( candidates.size() == 0 )
-					return buildChooser.getLastBuiltRevision();
+					return buildData == null?null:buildData.getLastBuiltRevision();
 				return candidates.iterator().next();
 			}
 		});
@@ -440,6 +431,7 @@ public class GitSCM extends SCM implements Serializable {
 		listener.getLogger().println("Commencing build of " + revToBuild);
 		Object[] returnData; // Changelog, BuildData
 
+		
 		if (mergeOptions.doMerge()) {
 			if (!revToBuild.containsBranchName(mergeOptions.getMergeTarget())) {
 				returnData = workspace.act(new FileCallable<Object[]>() {
@@ -481,9 +473,9 @@ public class GitSCM extends SCM implements Serializable {
 							
 							
 			                
-							buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
-							build.addAction(buildChooser.getData());
-							return null;
+							buildChooser.revisionBuilt(revToBuild, buildNumber, Result.FAILURE);
+							
+							return new Object[]{null, buildChooser.getData()};
 						}
 
 						if (git.hasGitModules()) {
@@ -500,23 +492,26 @@ public class GitSCM extends SCM implements Serializable {
 						
 						for( Branch b : revToBuild.getBranches() )
 						{
-						    Build lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+						    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
 						    
 						    if( lastRevWas != null )
 						    {
 						    	// TODO: Inefficent string concat
-						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.branch.getSHA1().name(), revToBuild.getSha1().name());    
+						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name());    
 						    }
 						}
 						
-						buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
+						Build buildData = buildChooser.revisionBuilt(revToBuild, buildNumber, null);
+						GitUtils gu = new GitUtils(listener,git);
+						buildData.mergeRevision = gu.getRevisionForSHA1(target);
 						
 						// Fetch the diffs into the changelog file
 						return new Object[]{changeLog, buildChooser.getData()};
 
 					}
 				});
-				build.addAction((Action) returnData[1]);
+				BuildData returningBuildData = (BuildData)returnData[1];
+				build.addAction(returningBuildData);
 				return changeLogResult((String) returnData[0], changelogFile);
 			}
 		}
@@ -570,12 +565,12 @@ public class GitSCM extends SCM implements Serializable {
                 
                 for( Branch b : revToBuild.getBranches() )
                 {
-                    Build lastRevWas = buildChooser.getLastBuiltRevisionOfBranch(b.getName());
+                    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
                     
                     if( lastRevWas != null )
                     {
                         listener.getLogger().println("Recording changes in branch " + b.getName());
-                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.branch.getSHA1().name(), revToBuild.getSha1().name()));
+                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
                         histories++;
                     } else {
                         listener.getLogger().println("No change to record in branch " + b.getName());
@@ -586,7 +581,7 @@ public class GitSCM extends SCM implements Serializable {
                     listener.getLogger().println("Warning : There are multiple branch changesets here");
                 
                 
-                buildChooser.revisionBuilt(revToBuild, build.getNumber(), build.getResult());
+                buildChooser.revisionBuilt(revToBuild, buildNumber, null);
                 
                 // Fetch the diffs into the changelog file
                 return new Object[]{changeLog.toString(), buildChooser.getData()};
@@ -714,29 +709,13 @@ public class GitSCM extends SCM implements Serializable {
             }
             
             PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
-            if( req.getParameterValues("git.merge") != null && req.getParameterValues("git.merge").length > 0 )
+            if( req.getParameter("git.mergeTarget") != null && req.getParameter("git.mergeTarget").trim().length()  > 0 )
             {
-            	mergeOptions.setMergeTarget(req.getParameterValues("git.merge")[0]);
+            	mergeOptions.setMergeTarget(req.getParameter("git.mergeTarget"));
             }
 
 			Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
-			/*
-			String[] submoduleName = req
-					.getParameterValues("git.submodule.name");
-			String[] submoduleMatch = req
-					.getParameterValues("git.submodule.match");
-
-			if (submoduleName != null) {
-				for (int i = 0; i < submoduleName.length; i++) {
-					SubmoduleConfig cfg = new SubmoduleConfig();
-					cfg.setSubmoduleName(submoduleName[i]);
-					cfg.setBranches(submoduleMatch[i].split(","));
-					submoduleCfg.add(cfg);
-				}
-			}
-            */
 			
-            
 			return new GitSCM(
 					remoteRepositories,
 					branches,

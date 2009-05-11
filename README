@@ -1,0 +1,13 @@
+This version of the git plugin needs a patched version of JGit to support various items being Serializable.
+
+If you just use any old 0.4-SNAPSHOT, until the patches are merged, things may not work (and master/slave definitely won't work).
+
+The patched version is in the maven-repository subdirectory. It's also available at
+https://guest:guest@hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository
+
+But - maven doesn't seem to want to pass the guest credentials - hence the slightly hackish raw fisheye URL:
+http://fisheye4.atlassian.com/browse/~raw,r=trunk/hudson/trunk/hudson/plugins/git/maven-repository
+
+If you wish to post-patch a (newer) version of JGit (newer than fedd114bc) then the patches are in jgit-patches. They have been
+submitted to the JGit maintainer.
+

@@ -3,10 +3,12 @@ package hudson.plugins.git.util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.IndexEntry;
 import hudson.plugins.git.Revision;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,8 +49,10 @@ public class GitUtils
    * Return a list of "Revisions" - where a revision knows about all the branch names that refer to 
    * a SHA1.
    * @return
+ * @throws IOException 
+ * @throws GitException 
    */
-  public Collection<Revision> getAllBranchRevisions()
+  public Collection<Revision> getAllBranchRevisions() throws GitException, IOException
   {
     Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
     List<Branch> branches = git.getRemoteBranches();
@@ -63,6 +67,38 @@ public class GitUtils
       r.getBranches().add(b);
     }
     return revisions.values();
+  }
+  
+  /**
+   * Return the revision containing the branch name.
+   * @param branchName
+   * @return
+ * @throws IOException 
+ * @throws GitException 
+   */
+  public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException
+  {
+	  for(Revision revision : getAllBranchRevisions() )
+	  {
+		  for(Branch b : revision.getBranches())
+		  {
+			  if( b.getName().equals(branchName) )
+			  {
+				  return revision;
+			  }
+		  }
+	  }
+	  return null;
+  }
+  
+  public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException
+  {
+	  for(Revision revision : getAllBranchRevisions() )
+	  {
+		  if( revision.getSha1().equals(sha1) )
+			  return revision;
+	  }
+	  return null;
   }
   
    /**

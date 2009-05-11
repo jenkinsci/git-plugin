@@ -22,13 +22,13 @@ public interface IGitAPI {
     void fetch(RemoteConfig remoteRepository);
     
     void fetch() throws GitException;
-    void push(String revspec) throws GitException;
+    void push(RemoteConfig repository, String revspec) throws GitException;
     void merge(String revSpec) throws GitException;
     void clone(RemoteConfig source) throws GitException;
     
     ObjectId revParse(String revName) throws GitException;
     List<Branch> getBranches() throws GitException;
-    List<Branch> getRemoteBranches() throws GitException;
+    List<Branch> getRemoteBranches() throws GitException, IOException;
     List<Branch> getBranchesContaining(String revspec) throws GitException;
     
     List<IndexEntry> lsTree(String treeIsh) throws GitException;
