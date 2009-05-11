@@ -3,7 +3,6 @@ package hudson.plugins.git;
 import hudson.scm.ChangeLogSet;
 import hudson.model.AbstractBuild;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
@@ -12,7 +11,7 @@ import java.util.Iterator;
  * List of changeset that went into a particular build.
  * @author Nigel Magnay
  */
-public class GitChangeSetList extends ChangeLogSet<GitChangeSet> implements Serializable {
+public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     private final List<GitChangeSet> changeSets;
 
     /*package*/ GitChangeSetList(AbstractBuild build, List<GitChangeSet> logs) {

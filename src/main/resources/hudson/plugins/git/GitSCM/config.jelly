@@ -38,6 +38,13 @@
                <f:entry title="Branch Specifier (blank for default):">
                     <f:textbox name="git.branch" value="${branch.name}" />
                </f:entry>
+               
+               <f:entry>
+            <div align="right">
+                <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;" />
+            </div>
+          </f:entry>
+               
            </table>
           
         </f:repeatable>

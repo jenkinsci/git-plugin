@@ -24,6 +24,7 @@ import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.spearce.jgit.transport.RemoteConfig;
 
 public class GitPublisher extends Publisher implements Serializable {
 
@@ -78,19 +79,24 @@ public class GitPublisher extends Publisher implements Serializable {
 							if (gitSCM.getMergeOptions().doMerge()
 									&& buildResult.isBetterOrEqualTo(
 											Result.SUCCESS)) {
-								listener.getLogger().println("Pushing tag " + buildnumber + " to " + gitSCM.getMergeOptions().getMergeTarget() + " branch of origin repository");
-								git.push("HEAD:" + gitSCM.getMergeOptions().getMergeTarget());
+								listener.getLogger().println("Pushing result " + buildnumber + " to " + gitSCM.getMergeOptions().getMergeTarget() + " branch of origin repository");
+								
+								RemoteConfig remote = gitSCM.getRepositories().get(0);
+								
+								git.push(remote, "HEAD:" + gitSCM.getMergeOptions().getMergeTarget());
 							} else {
-								listener.getLogger().println("Pushing tag " + buildnumber + " to origin repository");
-								git.push(null);
+								//listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
+								//git.push(null);
 							}
 
 							return true;
 						}
 					});
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			listener.error("Failed to push tags to origin repository: " + e.getMessage());
+			build.setResult(Result.FAILURE);
 			return false;
+			
 		}
 		return canPerform;
 	}
@@ -104,7 +110,7 @@ public class GitPublisher extends Publisher implements Serializable {
 		}
 
 		public String getDisplayName() {
-			return "Push GIT tags back to origin repository";
+			return "Push Merges back to origin";
 		}
 
 		public String getHelpFile() {

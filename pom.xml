@@ -24,6 +24,25 @@
     <repository>
       <id>jgit-snapshot-repository</id>
       <url>http://egit.googlecode.com/svn/maven/snapshot-repository</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>jgit-releases</id>
+      <url>http://fisheye4.atlassian.com/browse/~raw,r=trunk/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      <!--
+      <url>https://guest:guest@hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository</url>
+      -->
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
     </repository>
   </repositories>
 
@@ -31,7 +50,8 @@
     <dependency>
       <groupId>org.spearce</groupId>
       <artifactId>jgit</artifactId>
-      <version>0.4-SNAPSHOT</version>
+      <!-- SEE README! -->
+      <version>0.4-47e4af3</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

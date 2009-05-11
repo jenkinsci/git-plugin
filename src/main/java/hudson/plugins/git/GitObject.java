@@ -4,6 +4,9 @@ import java.io.Serializable;
 import org.spearce.jgit.lib.ObjectId;
 
 public class GitObject implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
 	ObjectId sha1;
 	String name;
 	
