@@ -6,8 +6,8 @@
 
   <h2>Summary</h2>
   <ol>
-    <j:forEach var="cs" items="${it.logs}">
-      <li><st:out value="${cs.msg}"/></li>
+    <j:forEach var="cs" items="${it.logs}" varStatus="loop">
+      <li>${cs.msgAnnotated} (<a href="#detail${loop.index}">details</a>)</li>
     </j:forEach>
   </ol>
   <table class="pane" style="border:none">
@@ -17,23 +17,20 @@
           <a name="detail${loop.index}"></a>
           <div class="changeset-message">
             <b>
-              Changeset 
-              <a href="${browser.getChangeSetLink(cs)}">${cs.rev}:${cs.shortNode}</a>
-              by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>:
-            </b><br/>
-            ${cs.msgAnnotated}
+              Commit
+              <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
+              <j:if test="${cslink!=null}">
+                <a href="${cslink}">${cs.id}</a>
+              </j:if>
+              <j:if test="${cslink==null}">
+                ${cs.id}
+              </j:if>
+              by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
+            </b>
+            <pre><st:out value="${cs.comment}"/></pre>
           </div>
         </td>
       </tr>
-
-      <j:forEach var="k" items="${cs.editTypes}">
-        <j:forEach var="p" items="${cs.getPaths(k)}">
-          <tr>
-            <td width="20"><t:editTypeIcon type="${k}" /></td>
-            <td>${p}</td>
-          </tr>
-        </j:forEach>
-      </j:forEach>
     </j:forEach>
   </table>
 </j:jelly>

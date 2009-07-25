@@ -210,7 +210,7 @@ public class GitAPI implements IGitAPI {
 	public void changelog(String revFrom, String revTo, OutputStream fos)
 			throws GitException {
 		// git log --numstat -M --summary --pretty=raw HEAD..origin
-		log(revFrom, revTo, fos, "--numstat", "-M", "--summary", "--pretty=raw");
+		log(revFrom, revTo, fos, "--name-status", "-M", "--summary", "--pretty=raw");
 	}
 
 	/**

@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -716,14 +717,26 @@ public class GitSCM extends SCM implements Serializable {
 
 			Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
 			
+			GitWeb gitWeb = null;
+			String gitWebUrl = req.getParameter("gitweb.url");
+			if (gitWebUrl != null && gitWebUrl.length() > 0)
+			{
+				try
+				{
+					gitWeb = new GitWeb(gitWebUrl);
+				}
+				catch (MalformedURLException e)
+				{
+					throw new GitException("Error creating GitWeb", e);
+				}
+			}
+
 			return new GitSCM(
 					remoteRepositories,
 					branches,
 					mergeOptions,
 				    req.getParameter("git.generate") != null, 
-					submoduleCfg, RepositoryBrowsers
-							.createInstance(GitWeb.class, req, "git.browser")
-				);
+					submoduleCfg, gitWeb);
 		}
 
 		
