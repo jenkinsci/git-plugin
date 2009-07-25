@@ -79,6 +79,8 @@ public class GitSCM extends SCM implements Serializable {
 
     private boolean doGenerateSubmoduleConfigurations;
 
+	private boolean clean;
+
 	private GitWeb browser;
 
 	private Collection<SubmoduleConfig> submoduleCfg;
@@ -97,7 +99,9 @@ public class GitSCM extends SCM implements Serializable {
 	        List<BranchSpec> branches,
 	        PreBuildMergeOptions mergeOptions,
 	        boolean doGenerateSubmoduleConfigurations, 
-			Collection<SubmoduleConfig> submoduleCfg, GitWeb browser) {
+	        Collection<SubmoduleConfig> submoduleCfg,
+	        boolean clean,
+	        GitWeb browser) {
 		
 		// normalization
 	    this.branches = branches;
@@ -110,6 +114,7 @@ public class GitSCM extends SCM implements Serializable {
 		this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
 		this.submoduleCfg = submoduleCfg;
 
+		this.clean = clean;
 	}
 	
    public Object readResolve()  {
@@ -146,6 +151,10 @@ public class GitSCM extends SCM implements Serializable {
 	@Override
 	public GitWeb getBrowser() {
 		return browser;
+	}
+
+	public boolean getClean() {
+		return this.clean;
 	}
 
 	public List<RemoteConfig> getRepositories() {
@@ -583,6 +592,11 @@ public class GitSCM extends SCM implements Serializable {
                 
                 
                 buildChooser.revisionBuilt(revToBuild, buildNumber, null);
+
+                if (getClean()) {
+    				listener.getLogger().println("Cleaning workspace");
+                    git.clean();
+                }
                 
                 // Fetch the diffs into the changelog file
                 return new Object[]{changeLog.toString(), buildChooser.getData()};
@@ -590,6 +604,7 @@ public class GitSCM extends SCM implements Serializable {
 			}
 		});
 		build.addAction((Action) returnData[1]);
+
         return changeLogResult((String) returnData[0], changelogFile);
 
 	}
@@ -736,7 +751,9 @@ public class GitSCM extends SCM implements Serializable {
 					branches,
 					mergeOptions,
 				    req.getParameter("git.generate") != null, 
-					submoduleCfg, gitWeb);
+					submoduleCfg,
+					req.getParameter("git.clean") != null,
+					gitWeb);
 		}
 
 		

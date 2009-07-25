@@ -88,6 +88,10 @@
 	  	<f:textbox id="git.mergeTarget" name="git.mergeTarget" value="${scm.mergeOptions.mergeTarget}" />
 	  	
 	  </f:entry>
+
+    <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
+      <f:checkbox name="git.clean" checked="${scm.clean}" />
+    </f:entry>
   </f:advanced>
   
   <t:listScmBrowsers name="git.browser" />

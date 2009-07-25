@@ -150,6 +150,12 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Could not clone " + source, e);
 		}
 	}
+	
+	public void clean() throws GitException {
+		ArgumentListBuilder args = new ArgumentListBuilder();
+		args.add(getGitExe(), "clean", "-fdx");
+		launchCommand(args.toCommandArray());
+	}
 
 	public ObjectId revParse(String revName) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
