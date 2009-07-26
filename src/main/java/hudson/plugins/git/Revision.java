@@ -12,8 +12,10 @@ import org.spearce.jgit.lib.ObjectId;
  * 
  * @author magnayn
  */
-public class Revision implements java.io.Serializable
+public class Revision implements java.io.Serializable, Cloneable
 {
+  private static final long serialVersionUID = -7203898556389073882L;
+
   ObjectId           sha1;
   Collection<Branch> branches;
 
@@ -66,11 +68,29 @@ public class Revision implements java.io.Serializable
     String s = "Revision " + sha1.name() + " (";
     for (Branch br : branches)
     {
-      s += br.getName() + " ";
+      s += br.getName() + ", ";
     }
+    if (s.endsWith(", "))
+      s = s.substring(0, s.length() - 2);
     s += ")";
 
     return s;
+  }
+  
+  @Override
+  public Revision clone()
+  {
+    Revision clone;
+	try
+    {
+      clone = (Revision) super.clone();
+    }
+    catch (CloneNotSupportedException e)
+    {
+      throw new RuntimeException("Error cloning Revision", e);
+    }
+    clone.branches = new ArrayList<Branch>(branches);
+    return clone;
   }
   
 }

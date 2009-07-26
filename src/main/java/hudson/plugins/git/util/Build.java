@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 import org.spearce.jgit.lib.ObjectId;
 
-public class Build implements Serializable
+public class Build implements Serializable, Cloneable
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -43,5 +43,26 @@ public class Build implements Serializable
 		if( mergeRevision != null )
 			str += " merged with " + mergeRevision;
 		return str;
+	}
+	
+	@Override
+	public Build clone()
+	{
+		Build clone;
+		try
+		{
+			clone = (Build) super.clone();
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new RuntimeException("Error cloning Build", e);
+		}
+		
+		if (revision != null)
+			clone.revision = revision.clone();
+		if (mergeRevision != null)
+			clone.mergeRevision = mergeRevision.clone();
+		
+		return clone;
 	}
 }

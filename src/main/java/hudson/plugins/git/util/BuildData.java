@@ -1,31 +1,19 @@
 package hudson.plugins.git.util;
 
-import hudson.FilePath;
-import hudson.FilePath.FileCallable;
 import hudson.model.Action;
-import hudson.model.Result;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.GitException;
-
-
 import hudson.plugins.git.Revision;
-import hudson.remoting.VirtualChannel;
-import hudson.util.XStream2;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.kohsuke.stapler.export.ExportedBean;
 import org.spearce.jgit.lib.ObjectId;
 
 @ExportedBean(defaultVisibility = 999)
-public class BuildData implements Action, Serializable
+public class BuildData implements Action, Serializable, Cloneable
 {
 	private static final long serialVersionUID = 1L;
 
@@ -102,4 +90,49 @@ public class BuildData implements Action, Serializable
 		return lastBuild==null?null:lastBuild.revision;
 	}
     
+	@Override
+	public BuildData clone()
+	{
+		BuildData clone;
+		try
+		{
+			clone = (BuildData) super.clone();
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new RuntimeException("Error cloning BuildData", e);
+		}
+		
+		IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
+		
+		if (buildsByBranchName != null)
+		{
+			clone.buildsByBranchName = new HashMap<String, Build>();
+			for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet())
+			{
+				String branchName = buildByBranchName.getKey();
+				Build build = buildByBranchName.getValue();
+				Build clonedBuild = clonedBuilds.get(build);
+				if (clonedBuild == null)
+				{
+					clonedBuild = build.clone();
+					clonedBuilds.put(build, clonedBuild);
+				}
+				clone.buildsByBranchName.put(branchName, clonedBuild);
+			}
+		}
+		
+		if (lastBuild != null)
+		{
+			clone.lastBuild = clonedBuilds.get(lastBuild);
+			if (clone.lastBuild == null)
+			{
+				clone.lastBuild = lastBuild.clone();
+				clonedBuilds.put(lastBuild, clone.lastBuild);
+			}
+		}
+		
+		return clone;
+	}
+	
 }

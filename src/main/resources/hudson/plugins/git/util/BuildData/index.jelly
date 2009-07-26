@@ -5,8 +5,7 @@
     <l:main-panel>
        	<h1>Git Build Data</h1>		
        	
-       	<b>Revision :</b> ${it.lastBuild.SHA1.name()}
-	<br/>
+       	<b>Revision:</b> ${it.lastBuild.SHA1.name()}
 	<ul>
 	<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
 	<li>${branch.name}</li>
@@ -17,7 +16,7 @@
 	<ul>
 
 	<j:forEach var="branch" items="${it.buildsByBranchName.keySet()}">
-	<li>${branch} : #${it.buildsByBranchName.get(branch).toString()} </li>
+	<li>${branch}: ${it.buildsByBranchName.get(branch).toString()}</li>
 	</j:forEach>
 	</ul>
 

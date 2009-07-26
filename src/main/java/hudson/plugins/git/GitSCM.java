@@ -20,7 +20,6 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.IBuildChooser;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
-import hudson.scm.RepositoryBrowsers;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormFieldValidator;
@@ -34,13 +33,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.logging.Log;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -352,13 +348,16 @@ public class GitSCM extends SCM implements Serializable {
 		
 		AbstractBuild lastBuild = (AbstractBuild)build.getPreviousBuild();
 		
-		if( lastBuild != null )
+		BuildData tempBuildData = null;
+		if (lastBuild != null)
 		{
-		    listener.getLogger().println("Last Build : #" + lastBuild.getNumber() );
-	            
+			listener.getLogger().println("Last Build : #" + lastBuild.getNumber());
+			tempBuildData = lastBuild.getAction(BuildData.class);
+			if (tempBuildData != null)
+				tempBuildData = tempBuildData.clone();
 		}
 		
-		final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
+		final BuildData buildData = tempBuildData;
 		
 		if( buildData != null && buildData.lastBuild != null)
 		{
