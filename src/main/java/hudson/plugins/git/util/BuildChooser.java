@@ -2,7 +2,9 @@ package hudson.plugins.git.util;
 
 import hudson.FilePath;
 import hudson.FilePath.FileCallable;
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
@@ -17,12 +19,14 @@ import java.io.IOException;
 
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 
 import org.spearce.jgit.lib.ObjectId;
+import org.spearce.jgit.transport.RemoteConfig;
 
 
 public class BuildChooser implements IBuildChooser {  
@@ -44,6 +48,92 @@ public class BuildChooser implements IBuildChooser {
             this.data = new BuildData();
     }
     /**
+     * Determines which Revisions to build.
+     * 
+     * If only one branch is chosen and only one repository is listed, then
+     * just attempt to find the latest revision number for the chosen branch.
+     * 
+     * If multiple branches are selected or the branches include wildcards, then
+     * use the advanced usecase as defined in the getAdvancedCandidateRevisons
+     * method.
+     * 
+     * @throws IOException 
+     * @throws GitException 
+     */
+    public Collection<Revision> getCandidateRevisions(AbstractBuild build)
+            throws GitException, IOException {
+        // if we have multiple branches skip to advanced usecase
+        if (gitSCM.getBranches().size() != 1)
+            return getAdvancedCandidateRevisions(build);
+
+        // if we have multiple repositories skip to advanced usecase
+        if (gitSCM.getRepositories().size() != 1)
+            return getAdvancedCandidateRevisions(build);
+
+        String branch = gitSCM.getBranches().get(0).getName();
+        String repository = gitSCM.getRepositories().get(0).getName();
+
+        // replace repository wildcard with repository name
+        if (branch.startsWith("*/"))
+            branch = repository + branch.substring(1);
+
+        // if the branch name contains more wildcards then the simple usecase
+        // does not apply and we need to skip to the advanced usecase
+        if (branch.contains("*"))
+            return getAdvancedCandidateRevisions(build);
+
+        // substitute build parameters if available
+        if (build != null)
+        {
+            ParametersAction parameters = build.getAction(ParametersAction.class);
+            if (parameters != null)
+                branch = parameters.substitute(build, branch);
+        }
+        
+        // check if we're trying to build a specific commit
+        // this only makes sense for a build, there is no
+        // reason to poll for a commit
+        if (build != null && branch.matches("[0-9a-f]{6,40}"))
+        {
+            try
+            {
+                ObjectId sha1 = git.revParse(branch);
+                Revision revision = new Revision(sha1);
+                revision.getBranches().add(new Branch("detached", sha1));
+                return Collections.singletonList(revision);
+            }
+            catch (GitException e)
+            {
+                // revision does not exist, may still be a branch
+                // for example a branch called "badface" would show up here
+            }
+        }
+        
+        // fully qualify the branch if needed
+        if (!branch.contains("/"))
+            branch = repository + "/" + branch;
+        
+        try
+        {
+            ObjectId sha1 = git.revParse(branch);
+            
+            // if polling for changes don't select something that has
+            // already been built as a build candidate
+            if (build == null && data.hasBeenBuilt(sha1))
+                return Collections.<Revision>emptyList();
+            
+            Revision revision = new Revision(sha1);
+            revision.getBranches().add(new Branch(branch, sha1));
+            return Collections.singletonList(revision);
+        }
+        catch (GitException e)
+        {
+            // branch does not exist, there is nothing to build
+            return Collections.<Revision>emptyList();
+        }
+    }
+    
+    /**
      * In order to determine which Revisions to build.
      * 
      * Does the following :
@@ -60,7 +150,7 @@ public class BuildChooser implements IBuildChooser {
      * @throws IOException 
      * @throws GitException 
      */
-    public Collection<Revision> getCandidateRevisions() throws GitException, IOException
+    private Collection<Revision> getAdvancedCandidateRevisions(AbstractBuild build) throws GitException, IOException
     {
         // 1. Get all the (branch) revisions that exist 
         Collection<Revision> revs = utils.getAllBranchRevisions();
@@ -103,18 +193,25 @@ public class BuildChooser implements IBuildChooser {
 
             if (data.hasBeenBuilt(r.getSha1())) 
             {
-            	i.remove();	
+                i.remove();    
             }
+        }
+        
+        // if we're trying to run a build (not an SCM poll) and nothing new
+        // was found then just run the last build again
+        if (build != null && revs.size() == 0 && data.getLastBuiltRevision() != null)
+        {
+            return Collections.singletonList(data.getLastBuiltRevision());
         }
 
         return revs;
     }
 
     public Build revisionBuilt(Revision revision, int buildNumber, Result result )
-    {    	
-    	Build build = new Build(revision, buildNumber, result);
-    	data.saveBuild(build);
-    	return build;
+    {        
+        Build build = new Build(revision, buildNumber, result);
+        data.saveBuild(build);
+        return build;
     }
 
     

@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Result;
 import hudson.plugins.git.GitException;
@@ -22,12 +23,14 @@ public interface IBuildChooser
 {
     /**
      * Get a list of revisions that are candidates to be built.
-     * May be an empty set.
+     * May be an empty set.  If this method is called from pollChanges then
+     * the build paramter may be set to null.
+     * @param build
      * @return
      * @throws IOException 
      * @throws GitException 
      */
-    Collection<Revision> getCandidateRevisions() throws GitException, IOException;
+    Collection<Revision> getCandidateRevisions(AbstractBuild build) throws GitException, IOException;
 
     /**
      * Report back whether a revision built was successful or not.

@@ -139,25 +139,6 @@ public class GitUtils
 
         return revisions;
     }
-    
-    public static BranchSpec makeSensibleBranchSpec(String branchData) {
-		// Detect them here
-    	BranchSpec bs;
-    	
-    	if( branchData == null || branchData.trim().length() == 0 )
-    		return new BranchSpec("*");
-    	
-		if( !branchData.contains("/") && !branchData.contains("*") )
-    	{
-    		// No /, no *; fix it up
-    		bs = new BranchSpec("*/" + branchData);
-    	}
-    	else
-    	{
-    		 bs = new BranchSpec(branchData);
-    	}
-		return bs;
-	}
 
 	public static String[] fixupNames(String[] names, String[] urls) {
 		String[] returnNames = new String[urls.length];

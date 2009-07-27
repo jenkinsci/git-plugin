@@ -10,6 +10,7 @@ import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -132,7 +133,7 @@ public class GitSCM extends SCM implements Serializable {
 			
 		   if( branch != null )
 	       {
-	    	   branches.add(GitUtils.makeSensibleBranchSpec(branch));
+	    	   branches.add(new BranchSpec(branch));
 	       }
 	       else
 	       {
@@ -176,7 +177,7 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber() );        
         }
         
-        final BuildData buildData = lastBuild!=null?lastBuild.getAction(BuildData.class):null;
+        final BuildData buildData = getBuildData(lastBuild, false);
         
         if( buildData != null && buildData.lastBuild != null)
         {
@@ -203,7 +204,7 @@ public class GitSCM extends SCM implements Serializable {
 
 					listener.getLogger().println("Polling for changes in");
 					
-					Collection<Revision> candidates = buildChooser.getCandidateRevisions(); 
+					Collection<Revision> candidates = buildChooser.getCandidateRevisions(null); 
 					
 					return (candidates.size() > 0);
 				} else {
@@ -346,18 +347,7 @@ public class GitSCM extends SCM implements Serializable {
 		
 		final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
 		
-		AbstractBuild lastBuild = (AbstractBuild)build.getPreviousBuild();
-		
-		BuildData tempBuildData = null;
-		if (lastBuild != null)
-		{
-			listener.getLogger().println("Last Build : #" + lastBuild.getNumber());
-			tempBuildData = lastBuild.getAction(BuildData.class);
-			if (tempBuildData != null)
-				tempBuildData = tempBuildData.clone();
-		}
-		
-		final BuildData buildData = tempBuildData;
+		final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 		
 		if( buildData != null && buildData.lastBuild != null)
 		{
@@ -423,9 +413,9 @@ public class GitSCM extends SCM implements Serializable {
 				              
                 IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
 				
-                Collection<Revision> candidates = buildChooser.getCandidateRevisions();
+                Collection<Revision> candidates = buildChooser.getCandidateRevisions(build);
 				if( candidates.size() == 0 )
-					return buildData == null?null:buildData.getLastBuiltRevision();
+					return null;
 				return candidates.iterator().next();
 			}
 		});
@@ -710,12 +700,7 @@ public class GitSCM extends SCM implements Serializable {
             String[] branchData = req.getParameterValues("git.branch");
             for( int i=0; i<branchData.length;i++ )
             {
-            	// People will often blindly specify *local* branches like 'master' when
-            	// We want all branches to be relative to a remote (origin/master, */master).
-            	
-            	BranchSpec bs = GitUtils.makeSensibleBranchSpec(branchData[i]);
-
-                branches.add(bs);
+                branches.add(new BranchSpec(branchData[i]));
             }
             
             if( branches.size() == 0 )
@@ -809,6 +794,30 @@ public class GitSCM extends SCM implements Serializable {
         return mergeOptions;
     }
     
-    
-
+    /**
+     * Look back as far as needed to find a valid BuildData.  BuildData
+     * may not be recorded if an exception occurs in the plugin logic.
+     * @param build 
+     * @param clone
+     * @return the last recorded build data
+     */
+    public BuildData getBuildData(Run build, boolean clone)
+    {
+		BuildData buildData = null;
+		while (build != null)
+		{
+			buildData = build.getAction(BuildData.class);
+			if (buildData != null)
+				break;
+			build = build.getPreviousBuild();
+		}
+		
+		if (buildData == null)
+			return null;
+		
+		if (clone)
+			return buildData.clone();
+		else
+			return buildData;
+    }
 }
