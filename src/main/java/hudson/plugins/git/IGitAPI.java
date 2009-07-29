@@ -1,5 +1,7 @@
 package hudson.plugins.git;
 
+import hudson.EnvVars;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,7 +13,8 @@ import org.spearce.jgit.transport.RemoteConfig;
 
 public interface IGitAPI {
     String getGitExe();
-	
+	EnvVars getEnvironment();
+    
     boolean hasGitRepo() throws GitException;
 	boolean hasGitModules() throws GitException;
 	

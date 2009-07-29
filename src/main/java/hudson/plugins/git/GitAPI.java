@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.FilePath.FileCallable;
@@ -13,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,15 +36,22 @@ public class GitAPI implements IGitAPI {
 	FilePath workspace;
 	TaskListener listener;
 	String gitExe;
-
+	EnvVars environment;
+	
 	public GitAPI(String gitExe, FilePath workspace,
-			TaskListener listener) {
+			TaskListener listener, EnvVars environment) {
 		
 	    //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
 	    
 		this.workspace = workspace;
 		this.listener = listener;
 		this.gitExe = gitExe;
+		this.environment = environment;
+		PrintStream log = listener.getLogger();
+		log.println("GitAPI created");
+		for(Map.Entry<String,String> ent : environment.entrySet()) {
+		    log.println("Env: " + ent.getKey() + "=" + ent.getValue());
+		}
 		
 		launcher = new LocalLauncher(listener);
 		
@@ -52,6 +61,10 @@ public class GitAPI implements IGitAPI {
 		return gitExe;
 	}
 
+	public EnvVars getEnvironment() {
+	    return environment;
+	}
+	
 	public boolean hasGitRepo() throws GitException {
 		try {
 
@@ -99,7 +112,7 @@ public class GitAPI implements IGitAPI {
 		}
 
 		try {
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(),
+			if (launcher.launch(args.toCommandArray(), environment,
 					listener.getLogger(), workspace).join() != 0) {
 				throw new GitException("Failed to fetch");
 			}
@@ -203,7 +216,7 @@ public class GitAPI implements IGitAPI {
 
 		try {
 
-			if (launcher.launch(args.toCommandArray(), createEnvVarMap(), fos,
+			if (launcher.launch(args.toCommandArray(), environment, fos,
 					workspace).join() != 0) {
 				throw new GitException("Error launching git log");
 			}
@@ -254,12 +267,6 @@ public class GitAPI implements IGitAPI {
 		launchCommand(args.toCommandArray());
 	}
 
-	protected final Map<String, String> createEnvVarMap() {
-		Map<String, String> env = new HashMap<String, String>();
-
-		return env;
-	}
-
 	public void tag(String tagName, String comment) throws GitException {
 		tagName = tagName.replace(' ', '_');
 		ArgumentListBuilder args = new ArgumentListBuilder();
@@ -293,7 +300,7 @@ public class GitAPI implements IGitAPI {
 
 		try {
 			int status = launcher.launch(args,
-					createEnvVarMap(), fos, workDir).join();
+					environment, fos, workDir).join();
 	
 			String result = fos.toString();
 			
@@ -501,7 +508,7 @@ public class GitAPI implements IGitAPI {
              
              ByteArrayOutputStream fos = new ByteArrayOutputStream();
              int status = launcher.launch(args.toCommandArray(),
-                     createEnvVarMap(), fos, workspace).join();
+                     environment, fos, workspace).join();
 
              String result = fos.toString();
 

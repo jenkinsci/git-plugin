@@ -54,7 +54,7 @@ public class SubmoduleCombinator
     for (IndexEntry submodule : gitUtils.getSubmodules("HEAD"))
     {
       File subdir = new File(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
+      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener, git.getEnvironment());
       
       GitUtils gu = new GitUtils(listener, subGit);
       Collection<Revision> items = gu.filterTipBranches(gu.getAllBranchRevisions());
@@ -187,7 +187,7 @@ public class SubmoduleCombinator
     {
       Revision branch = settings.get(submodule);
       File subdir = new File(workspace, submodule.getFile());
-      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener);
+      IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener, git.getEnvironment());
       
       subGit.checkout(branch.sha1.name());
       git.add(submodule.file);
