@@ -28,6 +28,11 @@ public class BranchSpec implements Serializable
         return name;
     }
 
+    public void setName(String value)
+    {
+       this.name = value;
+    }
+    
     public BranchSpec(String name)
     {
         if( name == null )

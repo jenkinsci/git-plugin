@@ -61,6 +61,12 @@ public class GitSCM extends SCM implements Serializable {
 	@Deprecated transient String source;
 	@Deprecated transient String branch;
 	
+	/**
+	 * Store a config version so we're able to migrate config on various
+	 * functionality upgrades.
+	 */
+	private Long configVersion;
+	
     /**
      * All the remote repositories that we know about.
      */
@@ -114,11 +120,18 @@ public class GitSCM extends SCM implements Serializable {
 		this.submoduleCfg = submoduleCfg;
 
 		this.clean = clean;
+		
+		this.configVersion = 1L;
 	}
 	
    public Object readResolve()  {
-	   // Migrate data
+	    // Migrate data
 	   
+      // Default unspecified to v0
+      if( configVersion == null )
+         configVersion = 0L;
+      
+      
        if(source!=null)
        {
     	   remoteRepositories = new ArrayList<RemoteConfig>();
@@ -142,6 +155,19 @@ public class GitSCM extends SCM implements Serializable {
 	    	   branches.add(new BranchSpec("*/master"));
 	       }
 			
+       }
+       
+       
+       if( configVersion < 1 && branches != null )
+       {
+          // Migrate the branch specs from 
+          // single * wildcard, to ** wildcard.
+          for( BranchSpec branchSpec : branches )
+          {
+             String name = branchSpec.getName();
+             name = name.replace("*", "**");
+             branchSpec.setName(name);
+          }
        }
        
        return this;
