@@ -3,15 +3,18 @@ package hudson.plugins.git;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 import org.spearce.jgit.lib.ObjectId;
 
 /**
  * A Revision is a SHA1 in the object tree, and the collection of branches
  * that share this ID. Unlike other SCMs, git can have >1 branches point
  * at the _same_ commit.
- * 
+ *
  * @author magnayn
  */
+@ExportedBean( defaultVisibility = 999 )
 public class Revision implements java.io.Serializable, Cloneable
 {
   private static final long serialVersionUID = -7203898556389073882L;
@@ -24,16 +27,21 @@ public class Revision implements java.io.Serializable, Cloneable
     this.sha1 = sha1;
     this.branches = new ArrayList<Branch>();
   }
-  
+
   public Revision(ObjectId sha1, Collection<Branch> branches)
   {
     this.sha1 = sha1;
     this.branches = branches;
   }
-  
+
   public ObjectId getSha1()
   {
     return sha1;
+  }
+
+  @Exported(name = "SHA1")
+  public String getSha1String() {
+	  return sha1 == null ? "" : sha1.name();
   }
 
   public void setSha1(ObjectId sha1)
@@ -41,6 +49,7 @@ public class Revision implements java.io.Serializable, Cloneable
     this.sha1 = sha1;
   }
 
+  @Exported(name = "branch")
   public Collection<Branch> getBranches()
   {
     return branches;
@@ -50,7 +59,7 @@ public class Revision implements java.io.Serializable, Cloneable
   {
     this.branches = branches;
   }
-  
+
   public boolean containsBranchName(String name)
   {
     for (Branch b : branches)
@@ -76,7 +85,7 @@ public class Revision implements java.io.Serializable, Cloneable
 
     return s;
   }
-  
+
   @Override
   public Revision clone()
   {
@@ -92,5 +101,5 @@ public class Revision implements java.io.Serializable, Cloneable
     clone.branches = new ArrayList<Branch>(branches);
     return clone;
   }
-  
+
 }

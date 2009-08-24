@@ -10,7 +10,7 @@ public class Branch extends GitObject
 		super(name, sha1);
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	public Branch(Ref candidate) {
 		super(strip(candidate.getName()), candidate.getObjectId());
 	}
