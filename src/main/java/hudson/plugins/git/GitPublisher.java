@@ -8,7 +8,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
-import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -28,6 +27,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.spearce.jgit.transport.RemoteConfig;
 
 public class GitPublisher extends Publisher implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	public Descriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
@@ -50,7 +50,7 @@ public class GitPublisher extends Publisher implements Serializable {
 		final String projectName = build.getProject().getName();
 		final int buildNumber = build.getNumber();
 		final Result buildResult = build.getResult();
-		
+
 		boolean canPerform;
 		try {
 			canPerform = build.getProject().getWorkspace().act(
@@ -91,9 +91,9 @@ public class GitPublisher extends Publisher implements Serializable {
 									&& buildResult.isBetterOrEqualTo(
 											Result.SUCCESS)) {
 								listener.getLogger().println("Pushing result " + buildnumber + " to " + gitSCM.getMergeOptions().getMergeTarget() + " branch of origin repository");
-								
+
 								RemoteConfig remote = gitSCM.getRepositories().get(0);
-								
+
 								git.push(remote, "HEAD:" + gitSCM.getMergeOptions().getMergeTarget());
 							} else {
 								//listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
@@ -107,7 +107,7 @@ public class GitPublisher extends Publisher implements Serializable {
 			listener.error("Failed to push tags to origin repository: " + e.getMessage());
 			build.setResult(Result.FAILURE);
 			return false;
-			
+
 		}
 		return canPerform;
 	}

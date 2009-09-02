@@ -30,7 +30,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 	}
 
 	private void parseCommit(List<String> lines) {
-		
+
 		String comment = "";
 
 		for (String line : lines) {

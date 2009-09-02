@@ -2,7 +2,6 @@ package hudson.plugins.git.util;
 
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.IndexEntry;
@@ -44,13 +43,13 @@ public class GitUtils
     }
     return submodules;
   }
-  
+
   /**
-   * Return a list of "Revisions" - where a revision knows about all the branch names that refer to 
+   * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
    * a SHA1.
    * @return
- * @throws IOException 
- * @throws GitException 
+ * @throws IOException
+ * @throws GitException
    */
   public Collection<Revision> getAllBranchRevisions() throws GitException, IOException
   {
@@ -68,13 +67,13 @@ public class GitUtils
     }
     return revisions.values();
   }
-  
+
   /**
    * Return the revision containing the branch name.
    * @param branchName
    * @return
- * @throws IOException 
- * @throws GitException 
+ * @throws IOException
+ * @throws GitException
    */
   public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException
   {
@@ -90,7 +89,7 @@ public class GitUtils
 	  }
 	  return null;
   }
-  
+
   public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException
   {
 	  for(Revision revision : getAllBranchRevisions() )
@@ -100,10 +99,10 @@ public class GitUtils
 	  }
 	  return null;
   }
-  
+
    /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
-     * 
+     *
      * @param git
      * @return
      */
@@ -143,28 +142,28 @@ public class GitUtils
 	public static String[] fixupNames(String[] names, String[] urls) {
 		String[] returnNames = new String[urls.length];
 		Set<String> usedNames = new HashSet<String>();
-		
+
 		for(int i=0; i<urls.length; i++ )
 		{
 			String name = names[i];
-			
+
 			if( name == null || name.trim().length() == 0 )
 			{
 				name = "origin";
 			}
-			
+
 			String baseName = name;
 			int j=1;
 			while(usedNames.contains(name))
 			{
-				name = baseName + (j++); 
+				name = baseName + (j++);
 			}
-			
+
 			usedNames.add(name);
 			returnNames[i] = name;
 		}
-		
-		
+
+
 		return returnNames;
 	}
 }

@@ -1,8 +1,6 @@
 package hudson.plugins.git.util;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;

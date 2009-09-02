@@ -17,13 +17,10 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.spearce.jgit.lib.AnyObjectId;
 import org.spearce.jgit.lib.Constants;
 import org.spearce.jgit.lib.ObjectId;
 import org.spearce.jgit.lib.Ref;
@@ -37,12 +34,12 @@ public class GitAPI implements IGitAPI {
 	TaskListener listener;
 	String gitExe;
 	EnvVars environment;
-	
+
 	public GitAPI(String gitExe, FilePath workspace,
 			TaskListener listener, EnvVars environment) {
-		
+
 	    //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
-	    
+
 		this.workspace = workspace;
 		this.listener = listener;
 		this.gitExe = gitExe;
@@ -52,11 +49,11 @@ public class GitAPI implements IGitAPI {
 		for(Map.Entry<String,String> ent : environment.entrySet()) {
 		    log.println("Env: " + ent.getKey() + "=" + ent.getValue());
 		}
-		
+
 		launcher = new LocalLauncher(listener);
-		
+
 	}
-	
+
 	public String getGitExe() {
 		return gitExe;
 	}
@@ -64,7 +61,7 @@ public class GitAPI implements IGitAPI {
 	public EnvVars getEnvironment() {
 	    return environment;
 	}
-	
+
 	public boolean hasGitRepo() throws GitException {
 		try {
 
@@ -146,9 +143,11 @@ public class GitAPI implements IGitAPI {
 
 		// Assume only 1 URL for this repository
 		final String source = remoteConfig.getURIs().get(0).toString();
-		
+
 		try {
 			workspace.act(new FileCallable<String>() {
+				private static final long serialVersionUID = 1L;
+
 				public String invoke(File workspace,
 						VirtualChannel channel) throws IOException {
 					final ArgumentListBuilder args = new ArgumentListBuilder();
@@ -163,7 +162,7 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Could not clone " + source, e);
 		}
 	}
-	
+
 	public void clean() throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add(getGitExe(), "clean", "-fdx");
@@ -176,14 +175,14 @@ public class GitAPI implements IGitAPI {
 		String result = launchCommand(args.toCommandArray());
 		return ObjectId.fromString(firstLine(result).trim());
 	}
-	
+
 	public String describe(String commitIsh) throws GitException {
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(getGitExe(), "describe", "--tags", commitIsh);
         String result = launchCommand(args.toCommandArray());
         return firstLine(result).trim();
     }
-	
+
 	private String firstLine(String result) {
 		BufferedReader reader = new BufferedReader(new StringReader(result));
 		String line;
@@ -196,7 +195,7 @@ public class GitAPI implements IGitAPI {
 		} catch (IOException e) {
 			throw new GitException("Error parsing result");
 		}
-		
+
 		return line;
 	}
 
@@ -301,11 +300,11 @@ public class GitAPI implements IGitAPI {
 		try {
 			int status = launcher.launch(args,
 					environment, fos, workDir).join();
-	
+
 			String result = fos.toString();
-			
+
 			System.out.println(result);
-			
+
 			if (status != 0) {
 				throw new GitException("Command returned status code " + status + ": " + result);
 			}
@@ -328,10 +327,10 @@ public class GitAPI implements IGitAPI {
 		// That are possible.
 	}
 
-	private List<Branch> parseBranches(String fos) throws GitException 
+	private List<Branch> parseBranches(String fos) throws GitException
 	{
 	    // TODO: git branch -a -v --abbrev=0 would do this in one shot..
-	    
+
 	    List<Branch> tags = new ArrayList<Branch>();
 
 		BufferedReader rdr = new BufferedReader(new StringReader(fos));
@@ -357,14 +356,14 @@ public class GitAPI implements IGitAPI {
 		args.add(getGitExe(), "branch", "-a");
 		return parseBranches(launchCommand(args.toCommandArray()));
 	}
-	
+
 	public List<Branch> getRemoteBranches() throws GitException, IOException {
-		
-		
+
+
 		Repository db = getRepository();
 		Map<String, Ref> refs = db.getAllRefs();
 		List<Branch> branches = new ArrayList<Branch>();
-		
+
 		for(Ref candidate : refs.values())
 		{
 			if( candidate.getName().startsWith(Constants.R_REMOTES) )
@@ -374,7 +373,7 @@ public class GitAPI implements IGitAPI {
 				branches.add( buildBranch );
 			}
 		}
-		
+
 		return branches;
 	}
 
@@ -407,8 +406,8 @@ public class GitAPI implements IGitAPI {
 			throw new GitException("Could not delete tag " + tagName, e);
 		}
 	}
-	
-	
+
+
 
 	public List<IndexEntry> lsTree(String treeIsh) throws GitException {
 		List<IndexEntry> entries = new ArrayList<IndexEntry>();
@@ -497,7 +496,7 @@ public class GitAPI implements IGitAPI {
     {
         // Assume there is only 1 URL / refspec for simplicity
     	fetch(remoteRepository.getURIs().get(0).toString(), remoteRepository.getFetchRefSpecs().get(0).toString());
-        
+
     }
 
     public ObjectId mergeBase(ObjectId id1, ObjectId id2)
@@ -505,7 +504,7 @@ public class GitAPI implements IGitAPI {
         try {
         	 ArgumentListBuilder args = new ArgumentListBuilder();
              args.add(getGitExe(), "merge-base", id1.name(), id2.name());
-             
+
              ByteArrayOutputStream fos = new ByteArrayOutputStream();
              int status = launcher.launch(args.toCommandArray(),
                      environment, fos, workspace).join();
@@ -516,10 +515,10 @@ public class GitAPI implements IGitAPI {
                  return null;
              }
 
-           
+
              BufferedReader rdr = new BufferedReader(new StringReader(result));
              String line;
-             
+
             while ((line = rdr.readLine()) != null) {
                 // Add the SHA1
                 return ObjectId.fromString(line);
@@ -535,15 +534,15 @@ public class GitAPI implements IGitAPI {
     {
     	return new Repository(new File(workspace.getRemote(), ".git"));
     }
-    
+
     public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException
     {
         Repository db = getRepository();
         ObjectId commit = db.resolve(revName);
         List<Tag> ret = new ArrayList<Tag>();
-        
+
         for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-            
+
             Tag ttag = db.mapTag(tag.getKey());
             if( ttag.getObjId().equals(commit) )
             {
@@ -551,6 +550,6 @@ public class GitAPI implements IGitAPI {
             }
         }
         return ret;
-        
+
     }
 }

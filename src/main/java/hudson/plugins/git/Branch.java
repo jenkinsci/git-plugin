@@ -5,6 +5,7 @@ import org.spearce.jgit.lib.Ref;
 
 public class Branch extends GitObject
 {
+	private static final long serialVersionUID = 1L;
 
 	public Branch(String name, ObjectId sha1) {
 		super(name, sha1);

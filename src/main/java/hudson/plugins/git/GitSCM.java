@@ -241,6 +241,8 @@ public class GitSCM extends SCM implements Serializable {
         final String singleBranch = getSingleBranch(lastBuild);
 
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
+			private static final long serialVersionUID = 1L;
+
 			public Boolean invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
 
@@ -427,6 +429,7 @@ public class GitSCM extends SCM implements Serializable {
         final String singleBranch = getSingleBranch(build);
 
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
+			private static final long serialVersionUID = 1L;
 			public Revision invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
 			    FilePath ws = new FilePath(localWorkspace);
@@ -506,6 +509,7 @@ public class GitSCM extends SCM implements Serializable {
 		if (mergeOptions.doMerge()) {
 			if (!revToBuild.containsBranchName(mergeOptions.getMergeTarget())) {
 				returnData = workspace.act(new FileCallable<Object[]>() {
+					private static final long serialVersionUID = 1L;
 					public Object[] invoke(File localWorkspace, VirtualChannel channel)
 							throws IOException {
 						EnvVars environment;
@@ -597,6 +601,7 @@ public class GitSCM extends SCM implements Serializable {
 		// No merge
 
 		returnData = workspace.act(new FileCallable<Object[]>() {
+			private static final long serialVersionUID = 1L;
 			public Object[] invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);

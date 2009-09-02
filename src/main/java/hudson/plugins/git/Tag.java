@@ -4,9 +4,10 @@ import org.spearce.jgit.lib.ObjectId;
 
 public class Tag extends GitObject
 {
+	private static final long serialVersionUID = 1L;
 	public String commitSHA1;
 	public String commitMessage;
-	
+
 	public String getCommitMessage()
     {
         return commitMessage;

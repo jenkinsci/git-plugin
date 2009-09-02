@@ -4,8 +4,9 @@ import java.io.Serializable;
 
 public class PreBuildMergeOptions implements Serializable
 {
-    public String mergeTarget = null;
-    
+	private static final long serialVersionUID = 1L;
+	public String mergeTarget = null;
+
     public String getMergeTarget()
     {
         return mergeTarget;
