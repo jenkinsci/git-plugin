@@ -17,8 +17,10 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.spearce.jgit.lib.Constants;
@@ -100,7 +102,7 @@ public class GitAPI implements IGitAPI {
 						+ (repository != null ? " from " + repository : ""));
 
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "fetch");
+		args.add(getGitExe(), "fetch", "-t");
 
 		if (repository != null) {
 			args.add(repository);
@@ -109,8 +111,8 @@ public class GitAPI implements IGitAPI {
 		}
 
 		try {
-			if (launcher.launch(args.toCommandArray(), environment,
-					listener.getLogger(), workspace).join() != 0) {
+			if (launcher.launch().cmds(args).
+					envs(environment).stdout(listener.getLogger()).pwd(workspace).join() != 0) {
 				throw new GitException("Failed to fetch");
 			}
 		} catch (IOException e) {
@@ -214,9 +216,8 @@ public class GitAPI implements IGitAPI {
 		args.add(revSpec);
 
 		try {
-
-			if (launcher.launch(args.toCommandArray(), environment, fos,
-					workspace).join() != 0) {
+			if (launcher.launch().cmds(args).
+					envs(environment).stdout(fos).pwd(workspace).join() != 0) {
 				throw new GitException("Error launching git log");
 			}
 
@@ -298,8 +299,8 @@ public class GitAPI implements IGitAPI {
 		ByteArrayOutputStream fos = new ByteArrayOutputStream();
 
 		try {
-			int status = launcher.launch(args,
-					environment, fos, workDir).join();
+			int status = launcher.launch().cmds(args).
+					envs(environment).stdout(fos).pwd(workspace).join();
 
 			String result = fos.toString();
 
@@ -506,8 +507,8 @@ public class GitAPI implements IGitAPI {
              args.add(getGitExe(), "merge-base", id1.name(), id2.name());
 
              ByteArrayOutputStream fos = new ByteArrayOutputStream();
-             int status = launcher.launch(args.toCommandArray(),
-                     environment, fos, workspace).join();
+             int status = launcher.launch().cmds(args).
+                   envs(environment).stdout(fos).pwd(workspace).join();
 
              String result = fos.toString();
 
@@ -551,5 +552,32 @@ public class GitAPI implements IGitAPI {
         }
         return ret;
 
+    }
+
+    public Set<String> getTagNames(String tagPattern) throws GitException {
+        try {
+            ArgumentListBuilder args = new ArgumentListBuilder();
+            args.add(getGitExe(), "tag", "-l", tagPattern);
+
+            ByteArrayOutputStream fos = new ByteArrayOutputStream();
+            int status = launcher.launch().cmds(args).
+                  envs(environment).stdout(fos).pwd(workspace).join();
+            String result = fos.toString();
+
+            if (status != 0) {
+                throw new GitException("Error retrieving tag names");
+            }
+
+            Set<String> tags = new HashSet<String>();
+            BufferedReader rdr = new BufferedReader(new StringReader(result));
+            String tag;
+            while ((tag = rdr.readLine()) != null) {
+	           // Add the SHA1
+               tags.add(tag);
+            }
+            return tags;
+        } catch (Exception e) {
+            throw new GitException("Error retrieving tag names");
+        }
     }
 }

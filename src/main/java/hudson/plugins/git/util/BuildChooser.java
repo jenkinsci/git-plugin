@@ -13,26 +13,25 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.spearce.jgit.lib.ObjectId;
 
 public class BuildChooser implements IBuildChooser {
 
-    IGitAPI               git;
-    GitUtils              utils;
-    GitSCM                gitSCM;
+    private final IGitAPI               git;
+    private final GitUtils              utils;
+    private final GitSCM                gitSCM;
 
     //-------- Data -----------
-    BuildData             data;
+    private final BuildData             data;
 
     public BuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data)
     {
         this.gitSCM = gitSCM;
         this.git = git;
         this.utils = utils;
-        this.data = data;
-        if( data == null )
-            this.data = new BuildData();
+        this.data = data == null ? new BuildData() : data;
     }
 
     /**
@@ -74,10 +73,15 @@ public class BuildChooser implements IBuildChooser {
             }
         }
 
-        // fully qualify the branch if needed
+        // if it doesn't contain '/' then it could be either a tag or an unqualified branch
         if (!singleBranch.contains("/")) {
-            String repository = gitSCM.getRepositories().get(0).getName();
-            singleBranch = repository + "/" + singleBranch;
+	        // the 'branch' could actually be a tag:
+	        Set<String> tags = git.getTagNames(singleBranch);
+	        if(tags.size() == 0) {
+		        // its not a tag, so lets fully qualify the branch
+		            String repository = gitSCM.getRepositories().get(0).getName();
+		            singleBranch = repository + "/" + singleBranch;
+	        }
         }
 
         try
