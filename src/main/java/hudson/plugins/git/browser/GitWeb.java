@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.RepositoryBrowser;
@@ -19,10 +20,10 @@ public class GitWeb extends RepositoryBrowser<GitChangeSet> {
 
 	@DataBoundConstructor
 	public GitWeb(String url) throws MalformedURLException {
-		
+
 		this.url = new URL(url);
 
-		
+
 	}
 
 	public URL getUrl() {
@@ -47,12 +48,8 @@ public class GitWeb extends RepositoryBrowser<GitChangeSet> {
 
 	}
 
-	public Descriptor<RepositoryBrowser<?>> getDescriptor() {
-		return DESCRIPTOR;
-	}
-
-	public static final Descriptor<RepositoryBrowser<?>> DESCRIPTOR = new Descriptor<RepositoryBrowser<?>>(
-			GitWeb.class) {
+	@Extension
+	public static class GitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
 		public String getDisplayName() {
 			return "gitweb";
 		}

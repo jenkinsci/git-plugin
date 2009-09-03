@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
@@ -702,15 +703,15 @@ public class GitSCM extends SCM implements Serializable {
 
 	@Override
 	public DescriptorImpl getDescriptor() {
-		return DescriptorImpl.DESCRIPTOR;
+		return (DescriptorImpl) super.getDescriptor();
 	}
 
+	@Extension
 	public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
-		public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
 		private String gitExe;
 
-		private DescriptorImpl() {
+		public DescriptorImpl() {
 			super(GitSCM.class, GitWeb.class);
 			load();
 		}

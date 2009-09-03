@@ -1,12 +1,12 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath.FileCallable;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
@@ -28,10 +28,6 @@ import org.spearce.jgit.transport.RemoteConfig;
 
 public class GitPublisher extends Publisher implements Serializable {
 	private static final long serialVersionUID = 1L;
-
-	public Descriptor<Publisher> getDescriptor() {
-		return DESCRIPTOR;
-	}
 
 	public boolean needsToRunAfterFinalized() {
 		return true;
@@ -55,6 +51,8 @@ public class GitPublisher extends Publisher implements Serializable {
 		try {
 			canPerform = build.getProject().getWorkspace().act(
 					new FileCallable<Boolean>() {
+						private static final long serialVersionUID = 1L;
+
 						public Boolean invoke(File workspace,
 								VirtualChannel channel) throws IOException {
 
@@ -71,7 +69,7 @@ public class GitPublisher extends Publisher implements Serializable {
                                 environment = new EnvVars();
                             }
                             IGitAPI git = new GitAPI(
-									GitSCM.DescriptorImpl.DESCRIPTOR
+                                    gitSCM.getDescriptor()
 											.getGitExe(), build.getProject().getWorkspace(),
 									listener, environment);
 
@@ -112,8 +110,7 @@ public class GitPublisher extends Publisher implements Serializable {
 		return canPerform;
 	}
 
-	public static final Descriptor<Publisher> DESCRIPTOR = new DescriptorImpl();
-
+	@Extension
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		public DescriptorImpl() {
