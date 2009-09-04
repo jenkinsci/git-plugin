@@ -2,6 +2,8 @@ package hudson.plugins.git;
 
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.AffectedFile;
+import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 
 import java.io.IOException;
@@ -21,7 +23,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 	private String title;
 	private String id;
 
-	private Collection<String> affectedPaths = new HashSet<String>();
+	private Collection<Path> paths = new HashSet<Path>();
 
 	public GitChangeSet(List<String> lines) {
 		if (lines.size() > 0) {
@@ -31,7 +33,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
 	private void parseCommit(List<String> lines) {
 
-		String comment = "";
+		String message = "";
 
 		for (String line : lines) {
 			if (line.length() > 0) {
@@ -45,17 +47,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 					this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
 				} else if (line.startsWith("author ")) {
 				} else if (line.startsWith("    ")) {
-					comment += line.substring(4) + "\n";
+					message += line.substring(4) + "\n";
 				} else if (line.startsWith("A\t") || line.startsWith("C\t") || line.startsWith("D\t")
 						|| line.startsWith("M\t") || line.startsWith("R\t") || line.startsWith("T\t")) {
-					this.affectedPaths.add(line.substring(2));
+					this.paths.add(new Path(line.charAt(0), line.substring(2)));
 				} else {
 					// Ignore
 				}
 			}
 		}
 
-		this.comment = comment;
+		this.comment = message;
 
 		int endOfFirstLine = this.comment.indexOf('\n');
 		if (endOfFirstLine == -1) {
@@ -65,13 +67,22 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 		}
 	}
 
+    @Override
 	public void setParent(ChangeLogSet parent) {
 		super.setParent(parent);
 	}
 
+    public Collection<Path> getPaths() {
+        return this.paths;
+    }
+
 	@Override
 	public Collection<String> getAffectedPaths() {
-		return this.affectedPaths;
+        Collection<String> affectedPaths = new HashSet<String>(this.paths.size());
+        for (Path file : this.paths) {
+            affectedPaths.add(file.getPath());
+        }
+        return affectedPaths;
 	}
 
 	@Override
@@ -103,8 +114,30 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 		return this.id;
 	}
 
-	public String getComment() {
-		return this.comment;
-	}
+    public String getComment() {
+        return this.comment;
+    }
 
+    public static class Path implements AffectedFile {
+
+        private char action;
+        private String path;
+
+        private Path(char action, String filePath) {
+            this.action = action;
+            this.path = filePath;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public EditType getEditType() {
+            if( action=='A' )
+                return EditType.ADD;
+            if( action=='D' )
+                return EditType.DELETE;
+            return EditType.EDIT;
+        }
+    }
 }
