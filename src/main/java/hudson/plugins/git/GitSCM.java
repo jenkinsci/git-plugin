@@ -62,13 +62,13 @@ public class GitSCM extends SCM implements Serializable {
    // when writing back
 	@Deprecated transient String source;
 	@Deprecated transient String branch;
-	
+
 	/**
 	 * Store a config version so we're able to migrate config on various
 	 * functionality upgrades.
 	 */
 	private Long configVersion;
-	
+
     /**
      * All the remote repositories that we know about.
      */
@@ -122,18 +122,18 @@ public class GitSCM extends SCM implements Serializable {
 		this.submoduleCfg = submoduleCfg;
 
 		this.clean = clean;
-		
+
 		this.configVersion = 1L;
 	}
 
    public Object readResolve()  {
 	    // Migrate data
-	   
+
       // Default unspecified to v0
       if( configVersion == null )
          configVersion = 0L;
-      
-      
+
+
        if(source!=null)
        {
     	   remoteRepositories = new ArrayList<RemoteConfig>();
@@ -158,11 +158,11 @@ public class GitSCM extends SCM implements Serializable {
 	       }
 
        }
-       
-       
+
+
        if( configVersion < 1 && branches != null )
        {
-          // Migrate the branch specs from 
+          // Migrate the branch specs from
           // single * wildcard, to ** wildcard.
           for( BranchSpec branchSpec : branches )
           {
@@ -171,7 +171,7 @@ public class GitSCM extends SCM implements Serializable {
              branchSpec.setName(name);
           }
        }
-       
+
        return this;
    }
 
@@ -241,18 +241,19 @@ public class GitSCM extends SCM implements Serializable {
 
         final String singleBranch = getSingleBranch(lastBuild);
 
+		EnvVars tmp = new EnvVars();
+        try {
+            tmp = Computer.currentComputer().getEnvironment();
+        } catch (InterruptedException e) {
+            listener.error("Interrupted exception getting environment .. trying empty environment");
+        }
+        final EnvVars environment = tmp;
+
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			private static final long serialVersionUID = 1L;
 
 			public Boolean invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
-
-				EnvVars environment = new EnvVars();
-                try {
-                    environment = Computer.currentComputer().getEnvironment();
-                } catch (InterruptedException e) {
-                    listener.error("Interrupted exception getting environment .. trying empty environment");
-                }
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
 
@@ -277,16 +278,10 @@ public class GitSCM extends SCM implements Serializable {
 					return true;
 				}
 			}
-
-
 		});
 
 		return pollChangesResult;
 	}
-
-
-
-
 
 	/**
 	 * Fetch information from a particular remote repository. Attempt to fetch
