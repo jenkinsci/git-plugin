@@ -563,20 +563,21 @@ public class GitSCM extends SCM implements Serializable {
 						// Tag the successful merge
 						git.tag(buildnumber, "Hudson Build #" + buildNumber);
 
-						String changeLog = "";
+						StringBuilder changeLog = new StringBuilder();
 
 						if( revToBuild.getBranches().size() > 0 )
 								listener.getLogger().println("Warning : There are multiple branch changesets here");
 
-						for( Branch b : revToBuild.getBranches() )
-						{
-						    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
-
-						    if( lastRevWas != null )
-						    {
-						    	// TODO: Inefficent string concat
-						        changeLog += putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name());
-						    }
+						try {
+							for( Branch b : revToBuild.getBranches() )
+							{
+							    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
+							    if( lastRevWas != null ) {
+							        changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
+							    }
+							}
+						} catch (GitException ge) {
+							changeLog.append("Unable to retrieve changeset");
 						}
 
 						Build buildData = buildChooser.revisionBuilt(revToBuild, buildNumber, null);
@@ -585,7 +586,6 @@ public class GitSCM extends SCM implements Serializable {
 
 						// Fetch the diffs into the changelog file
 						return new Object[]{changeLog, buildChooser.getData()};
-
 					}
 				});
 				BuildData returningBuildData = (BuildData)returnData[1];
@@ -638,22 +638,26 @@ public class GitSCM extends SCM implements Serializable {
 				// Tag the successful merge
                 git.tag(buildnumber, "Hudson Build #" + buildNumber);
 
-                StringBuffer changeLog = new StringBuffer();
+                StringBuilder changeLog = new StringBuilder();
 
                 int histories = 0;
 
-                for( Branch b : revToBuild.getBranches() )
-                {
-                    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
+                try {
+	                for( Branch b : revToBuild.getBranches() )
+	                {
+	                    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
 
-                    if( lastRevWas != null )
-                    {
-                        listener.getLogger().println("Recording changes in branch " + b.getName());
-                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
-                        histories++;
-                    } else {
-                        listener.getLogger().println("No change to record in branch " + b.getName());
-                    }
+	                    if( lastRevWas != null )
+	                    {
+	                        listener.getLogger().println("Recording changes in branch " + b.getName());
+	                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
+	                        histories++;
+	                    } else {
+	                        listener.getLogger().println("No change to record in branch " + b.getName());
+	                    }
+	                }
+                } catch (GitException ge) {
+					changeLog.append("Unable to retrieve changeset");
                 }
 
                 if( histories > 1 )
