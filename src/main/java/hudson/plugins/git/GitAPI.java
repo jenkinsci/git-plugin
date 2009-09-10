@@ -300,7 +300,7 @@ public class GitAPI implements IGitAPI {
 
 		try {
 			int status = launcher.launch().cmds(args).
-					envs(environment).stdout(fos).pwd(workspace).join();
+					envs(environment).stdout(fos).pwd(workDir).join();
 
 			String result = fos.toString();
 
