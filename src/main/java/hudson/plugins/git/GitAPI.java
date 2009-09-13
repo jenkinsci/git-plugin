@@ -64,6 +64,18 @@ public class GitAPI implements IGitAPI {
 	    return environment;
 	}
 
+	public void init() throws GitException {
+		if(hasGitRepo()) {
+			throw new GitException(".git directory already exists! Has it already been initialised?");
+		}
+		try {
+			final Repository repo = new Repository(new File(workspace.child(".git").getRemote()));
+			repo.create();
+		} catch (IOException ioe) {
+			throw new GitException("Error initiating git repo.", ioe);
+		}
+	}
+
 	public boolean hasGitRepo() throws GitException {
 		try {
 
@@ -153,11 +165,11 @@ public class GitAPI implements IGitAPI {
 				public String invoke(File workspace,
 						VirtualChannel channel) throws IOException {
 					final ArgumentListBuilder args = new ArgumentListBuilder();
-					args.add(getGitExe(), "clone");
+					args.add("clone");
 					args.add("-o", remoteConfig.getName());
 					args.add(source);
 					args.add(workspace.getAbsolutePath());
-					return launchCommandIn(args.toCommandArray(), null);
+					return launchCommandIn(args, null);
 				}
 			});
 		} catch (Exception e) {
@@ -166,22 +178,16 @@ public class GitAPI implements IGitAPI {
 	}
 
 	public void clean() throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "clean", "-fdx");
-		launchCommand(args.toCommandArray());
+		launchCommand("clean", "-fdx");
 	}
 
 	public ObjectId revParse(String revName) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "rev-parse", revName);
-		String result = launchCommand(args.toCommandArray());
+		String result = launchCommand("rev-parse", revName);
 		return ObjectId.fromString(firstLine(result).trim());
 	}
 
 	public String describe(String commitIsh) throws GitException {
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "describe", "--tags", commitIsh);
-        String result = launchCommand(args.toCommandArray());
+        String result = launchCommand("describe", "--tags", commitIsh);
         return firstLine(result).trim();
     }
 
@@ -236,12 +242,8 @@ public class GitAPI implements IGitAPI {
 	 * Merge any changes into the head.
 	 */
 	public void merge(String revSpec) throws GitException {
-
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "merge", revSpec);
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("merge", revSpec);
 		} catch (GitException e) {
 			throw new GitException("Could not merge " + revSpec, e);
 		}
@@ -251,29 +253,20 @@ public class GitAPI implements IGitAPI {
 	 * Init submodules.
 	 */
 	public void submoduleInit() throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "submodule", "init");
-
-		launchCommand(args.toCommandArray());
+		launchCommand("submodule", "init");
 	}
 
 	/**
 	 * Update submodules.
 	 */
 	public void submoduleUpdate() throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "submodule", "update");
-
-		launchCommand(args.toCommandArray());
+		launchCommand("submodule", "update");
 	}
 
 	public void tag(String tagName, String comment) throws GitException {
 		tagName = tagName.replace(' ', '_');
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "tag", "-a", "-f", "-m", comment, tagName);
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("tag", "-a", "-f", "-m", comment, tagName);
 		} catch (GitException e) {
 			throw new GitException("Could not apply tag " + tagName, e);
 		}
@@ -285,8 +278,18 @@ public class GitAPI implements IGitAPI {
 	 * @return command output
 	 * @throws GitException
 	 */
-	private String launchCommand(String[] args) throws GitException {
+	public String launchCommand(ArgumentListBuilder args) throws GitException {
 		return launchCommandIn(args, workspace);
+	}
+
+	/**
+	 * Launch command using the workspace as working directory
+	 * @param args
+	 * @return command output
+	 * @throws GitException
+	 */
+	public String launchCommand(String...args) throws GitException {
+		return launchCommand(new ArgumentListBuilder(args));
 	}
 
 	/**
@@ -295,11 +298,12 @@ public class GitAPI implements IGitAPI {
 	 * @return command output
 	 * @throws GitException
 	 */
-	private String launchCommandIn(String[] args, FilePath workDir) throws GitException {
+	private String launchCommandIn(ArgumentListBuilder args, FilePath workDir) throws GitException {
 		ByteArrayOutputStream fos = new ByteArrayOutputStream();
 
 		try {
-			int status = launcher.launch().cmds(args).
+			args.prepend(getGitExe());
+			int status = launcher.launch().cmds(args.toCommandArray()).
 					envs(environment).stdout(fos).pwd(workDir).join();
 
 			String result = fos.toString();
@@ -312,18 +316,18 @@ public class GitAPI implements IGitAPI {
 
 			return result;
 		} catch (Exception e) {
-			throw new GitException("Error performing " + StringUtils.join(args, " "), e);
+			throw new GitException("Error performing " + StringUtils.join(args.toCommandArray(), " "), e);
 		}
 	}
 
 	public void push(RemoteConfig repository, String refspec) throws GitException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "push", repository.getURIs().get(0).toString());
+		args.add("push", repository.getURIs().get(0).toString());
 
 		if (refspec != null)
 			args.add(refspec);
 
-		launchCommand(args.toCommandArray());
+		launchCommand(args);
 		// Ignore output for now as there's many different formats
 		// That are possible.
 	}
@@ -353,9 +357,7 @@ public class GitAPI implements IGitAPI {
 	}
 
 	public List<Branch> getBranches() throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "branch", "-a");
-		return parseBranches(launchCommand(args.toCommandArray()));
+		return parseBranches(launchCommand("branch", "-a"));
 	}
 
 	public List<Branch> getRemoteBranches() throws GitException, IOException {
@@ -380,17 +382,12 @@ public class GitAPI implements IGitAPI {
 
 	public List<Branch> getBranchesContaining(String revspec)
 			throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "branch", "-a", "--contains", revspec);
-		return parseBranches(launchCommand(args.toCommandArray()));
+		return parseBranches(launchCommand("branch", "-a", "--contains", revspec));
 	}
 
 	public void checkout(String ref) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "checkout", "-f", ref.toString());
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("checkout", "-f", ref.toString());
 		} catch (GitException e) {
 			throw new GitException("Could not checkout " + ref, e);
 		}
@@ -398,11 +395,8 @@ public class GitAPI implements IGitAPI {
 
 	public void deleteTag(String tagName) throws GitException {
 		tagName = tagName.replace(' ', '_');
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "tag", "-d", tagName);
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("tag", "-d", tagName);
 		} catch (GitException e) {
 			throw new GitException("Could not delete tag " + tagName, e);
 		}
@@ -412,9 +406,7 @@ public class GitAPI implements IGitAPI {
 
 	public List<IndexEntry> lsTree(String treeIsh) throws GitException {
 		List<IndexEntry> entries = new ArrayList<IndexEntry>();
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "ls-tree", treeIsh);
-		String result = launchCommand(args.toCommandArray());
+		String result = launchCommand("ls-tree", treeIsh);
 
 		BufferedReader rdr = new BufferedReader(new StringReader(result));
 		String line;
@@ -441,10 +433,9 @@ public class GitAPI implements IGitAPI {
 
 	public List<ObjectId> revList(String...extraArgs) throws GitException {
 		List<ObjectId> entries = new ArrayList<ObjectId>();
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "rev-list");
+		ArgumentListBuilder args = new ArgumentListBuilder("rev-list");
 		args.add(extraArgs);
-		String result = launchCommand(args.toCommandArray());
+		String result = launchCommand(args);
 		BufferedReader rdr = new BufferedReader(new StringReader(result));
 		String line;
 
@@ -461,33 +452,24 @@ public class GitAPI implements IGitAPI {
 	}
 
 	public void add(String filePattern) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "add", filePattern);
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("add", filePattern);
 		} catch (GitException e) {
 			throw new GitException("Cannot add " + filePattern, e);
 		}
 	}
 
 	public void branch(String name) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "branch", name);
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("branch", name);
 		} catch (GitException e) {
 			throw new GitException("Cannot create branch " + name, e);
 		}
 	}
 
 	public void commit(File f) throws GitException {
-		ArgumentListBuilder args = new ArgumentListBuilder();
-		args.add(getGitExe(), "commit", "-F", f.getAbsolutePath());
-
 		try {
-			launchCommand(args.toCommandArray());
+			launchCommand("commit", "-F", f.getAbsolutePath());
 		} catch (GitException e) {
 			throw new GitException("Cannot commit " + f, e);
 		}
@@ -503,11 +485,8 @@ public class GitAPI implements IGitAPI {
     public ObjectId mergeBase(ObjectId id1, ObjectId id2)
     {
         try {
-        	 ArgumentListBuilder args = new ArgumentListBuilder();
-             args.add(getGitExe(), "merge-base", id1.name(), id2.name());
-
              ByteArrayOutputStream fos = new ByteArrayOutputStream();
-             int status = launcher.launch().cmds(args).
+             int status = launcher.launch().cmds(new ArgumentListBuilder("merge-base", id1.name(), id2.name())).
                    envs(environment).stdout(fos).pwd(workspace).join();
 
              String result = fos.toString();

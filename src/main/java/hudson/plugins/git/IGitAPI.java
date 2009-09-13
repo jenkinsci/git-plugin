@@ -16,6 +16,7 @@ public interface IGitAPI {
     String getGitExe();
 	EnvVars getEnvironment();
 
+	public void init() throws GitException;
     boolean hasGitRepo() throws GitException;
 	boolean hasGitModules() throws GitException;
 
