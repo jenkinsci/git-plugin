@@ -458,10 +458,14 @@ public class GitSCM extends SCM implements Serializable {
 					        break;
 					    }
 					    catch(GitException ex)
-					    {
-					        // Failed. Try the next one
-					        listener.getLogger().println("Trying next repository");
-					    }
+                        {
+                            listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage());
+                            if(ex.getCause() != null) {
+                                listener.error("Cause: %s", ex.getCause().getMessage());
+                            }
+                            // Failed. Try the next one
+                            listener.getLogger().println("Trying next repository");
+                        }
 					}
 
 					if( !successfullyCloned )
