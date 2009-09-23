@@ -67,7 +67,7 @@ public class GitSCMTest extends HudsonTestCase {
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, commitFile1, Result.SUCCESS);
+        build(project, Result.SUCCESS, commitFile1);
 
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
 
@@ -75,7 +75,7 @@ public class GitSCMTest extends HudsonTestCase {
         commit(commitFile2, janeDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
         //... and build it...
-        final FreeStyleBuild build2 = build(project, commitFile2, Result.SUCCESS);
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
@@ -93,7 +93,7 @@ public class GitSCMTest extends HudsonTestCase {
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, commitFile1, Result.SUCCESS);
+        build(project, Result.SUCCESS, commitFile1);
 
         //now create and checkout a new branch:
         git.branch("untracked");
@@ -105,7 +105,8 @@ public class GitSCMTest extends HudsonTestCase {
     }
 
     /**
-     * A previous version of GitSCM would only build against branches, not tags.
+     * A previous version of GitSCM would only build against branches, not tags. This test checks that that
+     * regression has been fixed.
      */
     public void testGitSCMCanBuildAgainstTags() throws Exception {
         final String mytag = "mytag";
@@ -121,7 +122,7 @@ public class GitSCMTest extends HudsonTestCase {
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.pollSCMChanges(listener));
-        build(project, commitFile2, Result.FAILURE);
+        build(project, Result.FAILURE, commitFile2);
 
         // tag it, then delete the tmp branch
         git.tag(mytag, "mytag initial");
@@ -131,7 +132,7 @@ public class GitSCMTest extends HudsonTestCase {
         // at this point we're back on master, there are no other branches, tag "mytag" exists but is
         // not part of "master"
         assertTrue("scm polling should detect commit2 change in 'mytag'", project.pollSCMChanges(listener));
-        build(project, commitFile2, Result.SUCCESS);
+        build(project, Result.SUCCESS, commitFile2);
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
 
         // now, create tmp branch again against mytag:
@@ -149,23 +150,61 @@ public class GitSCMTest extends HudsonTestCase {
 
         // at this point we're back on master, there are no other branches, "mytag" has been updated to a new commit:
         assertTrue("scm polling should detect commit3 change in 'mytag'", project.pollSCMChanges(listener));
-        build(project, commitFile3, Result.SUCCESS);
+        build(project, Result.SUCCESS, commitFile3);
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
     }
 
-    private FreeStyleProject setupSimpleProject(String branch) throws Exception {
+    /**
+     * Not specifying a branch string in the project implies that we should be polling for changes in
+     * all branches.
+     */
+    public void testMultipleBranchBuild() throws Exception {
+        // empty string will result in a project that tracks against changes in all branches:
+        final FreeStyleProject project = setupSimpleProject("");
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        // create a branch here so we can get back to this point  later...
+        final String fork = "fork";
+        git.branch(fork);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling should detect changes in 'master' branch", project.pollSCMChanges(listener));
+        build(project, Result.SUCCESS, commitFile1, commitFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
+
+        // now jump back...
+        git.checkout(fork);
+
+        // add some commits to the fork branch...
+        final String forkFile1 = "forkFile1";
+        commit(forkFile1, johnDoe, "Fork commit number 1");
+        final String forkFile2 = "forkFile2";
+        commit(forkFile2, johnDoe, "Fork commit number 2");
+        assertTrue("scm polling should detect changes in 'fork' branch", project.pollSCMChanges(listener));
+        build(project, Result.SUCCESS, forkFile1, forkFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
+    }
+
+    private FreeStyleProject setupSimpleProject(String branchString) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         final MockStaplerRequest req = new MockStaplerRequest()
             .setRepo(workDir.getAbsolutePath(), "origin", "")
-            .setBranch(branch);
+            .setBranch(branchString);
         project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
 
-    private FreeStyleBuild build(final FreeStyleProject project, final String expectedNewlyCommittedFile, final Result expectedResult) throws Exception {
+    private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
-        assertTrue(project.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(project.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        }
         if(expectedResult != null) {
             assertBuildStatus(expectedResult, build);
         }

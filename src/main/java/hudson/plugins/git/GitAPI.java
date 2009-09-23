@@ -485,13 +485,10 @@ public class GitAPI implements IGitAPI {
     public ObjectId mergeBase(ObjectId id1, ObjectId id2)
     {
         try {
-             ByteArrayOutputStream fos = new ByteArrayOutputStream();
-             int status = launcher.launch().cmds(new ArgumentListBuilder("merge-base", id1.name(), id2.name())).
-                   envs(environment).stdout(fos).pwd(workspace).join();
-
-             String result = fos.toString();
-
-             if (status != 0) {
+             String result;
+             try {
+                 result = launchCommand("merge-base", id1.name(), id2.name());
+             } catch (GitException ge) {
                  return null;
              }
 
