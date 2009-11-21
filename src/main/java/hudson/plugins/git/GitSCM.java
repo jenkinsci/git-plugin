@@ -589,7 +589,7 @@ public class GitSCM extends SCM implements Serializable {
 						buildData.mergeRevision = gu.getRevisionForSHA1(target);
 
 						// Fetch the diffs into the changelog file
-						return new Object[]{changeLog, buildChooser.getData()};
+						return new Object[]{changeLog.toString(), buildChooser.getData()};
 					}
 				});
 				BuildData returningBuildData = (BuildData)returnData[1];
