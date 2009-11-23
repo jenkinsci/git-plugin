@@ -22,6 +22,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.fileupload.FileItem;
 import org.kohsuke.stapler.Ancestor;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -114,6 +115,10 @@ public class MockStaplerRequest implements StaplerRequest {
         return this;
     }
 
+    public Stapler getStapler() {
+        throw new UnsupportedOperationException();
+    }
+
     public <T> T bindJSON(Class<T> type, JSONObject src) {
         throw new UnsupportedOperationException();
     }
@@ -183,6 +188,10 @@ public class MockStaplerRequest implements StaplerRequest {
     }
 
     public String getRestOfPath() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getOriginalRestOfPath() {
         throw new UnsupportedOperationException();
     }
 
