@@ -33,7 +33,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -148,21 +147,15 @@ public class GitSCM extends SCM implements Serializable {
    			mergeOptions = new PreBuildMergeOptions();
 
 
-    	   try {
 			remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*") ));
-			} catch (URISyntaxException e) {
-				// We gave it our best shot
+			if( branch != null )
+			{
+			    branches.add(new BranchSpec(branch));
 			}
-
-		   if( branch != null )
-	       {
-	    	   branches.add(new BranchSpec(branch));
-	       }
-	       else
-	       {
-	    	   branches.add(new BranchSpec("*/master"));
-	       }
-
+			else
+			{
+			    branches.add(new BranchSpec("*/master"));
+			}
        }
 
 
@@ -344,7 +337,7 @@ public class GitSCM extends SCM implements Serializable {
 
 	}
 
-	public RemoteConfig getSubmoduleRepository(RemoteConfig orig, String name) throws URISyntaxException
+	public RemoteConfig getSubmoduleRepository(RemoteConfig orig, String name)
     {
 	    // Attempt to guess the submodule URL??
 
@@ -366,7 +359,7 @@ public class GitSCM extends SCM implements Serializable {
         return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0) );
     }
 
-	private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) throws URISyntaxException
+	private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec)
 	{
 
         File temp = null;
