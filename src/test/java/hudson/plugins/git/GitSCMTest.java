@@ -79,7 +79,7 @@ public class GitSCMTest extends HudsonTestCase {
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
-        assertTrue(project.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
@@ -213,7 +213,7 @@ public class GitSCMTest extends HudsonTestCase {
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
-            assertTrue(project.getWorkspace().child(expectedNewlyCommittedFile).exists());
+            assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
             assertBuildStatus(expectedResult, build);
