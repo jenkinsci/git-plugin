@@ -313,6 +313,16 @@ public class GitAPI implements IGitAPI {
     }
 
     /**
+     * Sync submodule URLs
+     */
+    public void submoduleSync() throws GitException {
+        // Check if git submodule has sync support.
+        // Only available in git 1.6.1 and above
+        launchCommand("submodule", "sync");
+    }
+
+    
+    /**
      * Update submodules.
      *
      * @throws GitException if executing the Git command fails

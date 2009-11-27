@@ -22,6 +22,7 @@ public interface IGitAPI {
 
 	void submoduleInit()  throws GitException;
     void submoduleUpdate()  throws GitException;
+    void submoduleSync() throws GitException;
 
     public void fetch(String repository, String refspec) throws GitException;
     void fetch(RemoteConfig remoteRepository);

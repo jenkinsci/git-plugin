@@ -636,6 +636,7 @@ public class GitSCM extends SCM implements Serializable {
 
 				if (git.hasGitModules()) {
 					git.submoduleInit();
+					git.submoduleSync();
 
 					// Git submodule update will only 'fetch' from where it
 					// regards as 'origin'. However,
