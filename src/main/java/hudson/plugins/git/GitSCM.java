@@ -6,6 +6,8 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.FilePath.FileCallable;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
@@ -430,6 +432,20 @@ public class GitSCM extends SCM implements Serializable {
 
         final String singleBranch = getSingleBranch(build);
 
+        Revision tempParentLastBuiltRev = null;
+
+        if (build instanceof MatrixRun) {
+            MatrixBuild parentBuild = ((MatrixRun)build).getParentBuild();
+            if (parentBuild != null) {
+                BuildData parentBuildData = parentBuild.getAction(BuildData.class);
+                if (parentBuildData != null) {
+                    tempParentLastBuiltRev = parentBuildData.getLastBuiltRevision();
+                }
+            }
+        }
+
+        final Revision parentLastBuiltRev = tempParentLastBuiltRev;
+
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
 			private static final long serialVersionUID = 1L;
 			public Revision invoke(File localWorkspace, VirtualChannel channel)
@@ -491,6 +507,9 @@ public class GitSCM extends SCM implements Serializable {
 						git.submoduleUpdate();
 					}
 				}
+
+                if (parentLastBuiltRev != null)
+                    return parentLastBuiltRev;
 
                 IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
 
