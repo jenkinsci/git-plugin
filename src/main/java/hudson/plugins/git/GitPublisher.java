@@ -8,6 +8,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -90,13 +91,14 @@ public class GitPublisher extends Publisher implements Serializable {
 
                             git.tag(buildnumber, "Hudson Build #" + buildNumber);
 
-                            if (gitSCM.getMergeOptions().doMerge() && buildResult.isBetterOrEqualTo(
+                            PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
+
+                            if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(
                                     Result.SUCCESS)) {
-                                listener.getLogger().println("Pushing result " + buildnumber + " to " + gitSCM.getMergeOptions().getMergeTarget() + " branch of origin repository");
+                                RemoteConfig remote = mergeOptions.getMergeRemote();
+                                listener.getLogger().println("Pushing result " + buildnumber + " to " + mergeOptions.getMergeTarget() + " branch of " + remote.getName() + " repository");
 
-                                RemoteConfig remote = gitSCM.getRepositories().get(0);
-
-                                git.push(remote, "HEAD:" + gitSCM.getMergeOptions().getMergeTarget());
+                                git.push(remote, "HEAD:" + mergeOptions.getMergeTarget());
                             } else {
                                 //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                                 //git.push(null);

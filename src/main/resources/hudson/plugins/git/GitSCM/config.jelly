@@ -1,5 +1,21 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   
+    <script><![CDATA[
+    function encodeAllInputs(sep, form, field) {
+        var inputs = Form.getInputs(form, null, field);
+        if (inputs.length == 0)
+            return "";
+
+        var rv = sep;
+        for (var i = 0; i < inputs.length; ++i) {
+            if (i != 0)
+                rv += "&";
+            rv += field+"="+encode(inputs[i].value);
+        }
+        return rv;
+    }
+    ]]></script>
+
     <f:entry title="Repositories" help="/plugin/git/help.html">
         
         <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${scm.repositories}" minimum="1" noAddButton="false">
@@ -82,10 +98,21 @@
      
 	  <f:entry title="Merge options" help="/plugin/git/merge.html">
 	  	
-	  	<label class="attach-previous">Merge before build?</label>
-	  	<br/>
-	  	<label for="git.mergeTarget">Branch to merge to: (e.g master)</label>
-	  	<f:textbox id="git.mergeTarget" name="git.mergeTarget" value="${scm.mergeOptions.mergeTarget}" />
+		<table width="100%">
+		<f:optionalBlock name="git.doMerge"
+		                 title="${%Merge before build}"
+		                 checked="${scm.mergeOptions.doMerge()}">
+		 <f:entry title="Name of repository: (default first specified, e.g. origin)">
+		  <f:textbox id="git.mergeRemote" name="git.mergeRemote" value="${scm.mergeOptions.mergeRemote.name}"
+		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?value='+escape(this.value)
+		                      +encodeAllInputs('&amp;', this.form, 'git.repo.name')
+		                      +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
+		 </f:entry>
+		 <f:entry title="Branch to merge to: (e.g. master)">
+		  <f:textbox id="git.mergeTarget" name="git.mergeTarget" value="${scm.mergeOptions.mergeTarget}" clazz="required"/>
+		 </f:entry>
+		</f:optionalBlock>
+		</table>
 	  	
 	  </f:entry>
 
