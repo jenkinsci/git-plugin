@@ -537,13 +537,6 @@ public class GitSCM extends SCM implements Serializable {
 					private static final long serialVersionUID = 1L;
 					public Object[] invoke(File localWorkspace, VirtualChannel channel)
 							throws IOException {
-						EnvVars environment;
-						try {
-						    environment = build.getEnvironment(listener);
-						} catch (Exception e) {
-						    listener.error("Exception reading environment - using empty environment");
-						    environment = new EnvVars();
-						}
                         IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
                         IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
