@@ -54,4 +54,12 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <scm>
+	<connection>scm:git:git://github.com/magnayn/Hudson-GIT-plugin.git</connection>
+	<developerConnection>scm:git:git@github.com:magnayn/Hudson-GIT-plugin.git</developerConnection>
+	<url>http://maven.apache.org</url>
+  </scm>
+  
+  
 </project>
