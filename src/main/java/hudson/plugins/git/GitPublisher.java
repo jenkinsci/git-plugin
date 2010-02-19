@@ -66,9 +66,6 @@ public class GitPublisher extends Publisher implements Serializable {
         } catch (IOException e) {
             listener.error("IOException publishing in git plugin");
             tempEnvironment = new EnvVars();
-        } catch (InterruptedException e) {
-            listener.error("IOException publishing in git plugin");
-            tempEnvironment = new EnvVars();
         }
         final EnvVars environment = tempEnvironment;
 

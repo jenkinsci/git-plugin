@@ -414,13 +414,7 @@ public class GitSCM extends SCM implements Serializable {
 		    listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision );
 		}
 
-		EnvVars tmp = new EnvVars();
-        try {
-            tmp = build.getEnvironment(listener);
-        } catch (InterruptedException e) {
-            listener.error("Interrupted exception getting environment .. using empty environment");
-        }
-        final EnvVars environment = tmp;
+        final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
 
