@@ -12,7 +12,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.Computer;
 import hudson.model.Hudson;
 import hudson.model.ParametersAction;
 import hudson.model.Result;
@@ -249,19 +248,12 @@ public class GitSCM extends SCM implements Serializable {
 
         final String singleBranch = getSingleBranch(lastBuild);
 
-		EnvVars tmp = new EnvVars();
-        try {
-            tmp = Computer.currentComputer().getEnvironment();
-        } catch (InterruptedException e) {
-            listener.error("Interrupted exception getting environment .. trying empty environment");
-        }
-        final EnvVars environment = tmp;
-
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			private static final long serialVersionUID = 1L;
 
-			public Boolean invoke(File localWorkspace, VirtualChannel channel)
-					throws IOException {
+			public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
+                EnvVars environment = new EnvVars(System.getenv());
+
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
 
