@@ -104,6 +104,16 @@ public class GitSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect commit2 change because it is not in the branch we are tracking.", project.pollSCMChanges(listener));
     }
 
+    public void testBranchIsAvailableInEvironment() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+    }
+
     /**
      * A previous version of GitSCM would only build against branches, not tags. This test checks that that
      * regression has been fixed.
@@ -222,5 +232,14 @@ public class GitSCMTest extends HudsonTestCase {
         }
         git.add(fileName);
         git.launchCommand("commit", "-m", message);
+    }
+
+    private EnvVars getEnvVars(FreeStyleProject project) {
+        for (hudson.tasks.Builder b : project.getBuilders()) {
+            if (b instanceof CaptureEnvironmentBuilder) {
+                return ((CaptureEnvironmentBuilder)b).getEnvVars();
+            }
+        }
+        return new EnvVars();
     }
 }

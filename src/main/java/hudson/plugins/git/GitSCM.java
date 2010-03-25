@@ -94,6 +94,8 @@ public class GitSCM extends SCM implements Serializable {
 
 	private Collection<SubmoduleConfig> submoduleCfg;
 
+    public static final String GIT_BRANCH = "GIT_BRANCH";
+
 	public Collection<SubmoduleConfig> getSubmoduleCfg() {
 		return submoduleCfg;
 	}
@@ -689,6 +691,11 @@ public class GitSCM extends SCM implements Serializable {
         return changeLogResult((String) returnData[0], changelogFile);
 
 	}
+
+    public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
+        super.buildEnvVars(build, env);
+        env.put(GIT_BRANCH, getSingleBranch(build));
+    }
 
 	private String putChangelogDiffsIntoFile(IGitAPI git, String branchName, String revFrom,
 			String revTo) throws IOException {
