@@ -19,11 +19,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.BuildChooser;
-import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.GitUtils;
-import hudson.plugins.git.util.IBuildChooser;
+import hudson.plugins.git.util.*;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.SCM;
@@ -41,6 +37,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
@@ -90,13 +87,17 @@ public class GitSCM extends SCM implements Serializable {
 
 	private boolean clean;
 
-	private GitWeb browser;
+    private String choosingStrategy = DEFAULT;
+    public static final String DEFAULT = "Default";
+    public static final String GERRIT = "Gerrit";
+
+    private GitWeb browser;
 
 	private Collection<SubmoduleConfig> submoduleCfg;
 
     public static final String GIT_BRANCH = "GIT_BRANCH";
 
-	public Collection<SubmoduleConfig> getSubmoduleCfg() {
+    public Collection<SubmoduleConfig> getSubmoduleCfg() {
 		return submoduleCfg;
 	}
 
@@ -106,13 +107,13 @@ public class GitSCM extends SCM implements Serializable {
 
 	@DataBoundConstructor
 	public GitSCM(
-	        List<RemoteConfig> repositories,
-	        List<BranchSpec> branches,
-	        PreBuildMergeOptions mergeOptions,
-	        boolean doGenerateSubmoduleConfigurations,
-	        Collection<SubmoduleConfig> submoduleCfg,
-	        boolean clean,
-	        GitWeb browser) {
+            List<RemoteConfig> repositories,
+            List<BranchSpec> branches,
+            PreBuildMergeOptions mergeOptions,
+            boolean doGenerateSubmoduleConfigurations,
+            Collection<SubmoduleConfig> submoduleCfg,
+            boolean clean,
+            String choosingStrategy, GitWeb browser) {
 
 		// normalization
 	    this.branches = branches;
@@ -126,7 +127,7 @@ public class GitSCM extends SCM implements Serializable {
 		this.submoduleCfg = submoduleCfg;
 
 		this.clean = clean;
-
+        this.choosingStrategy = choosingStrategy;
 		this.configVersion = 1L;
 	}
 
@@ -193,6 +194,9 @@ public class GitSCM extends SCM implements Serializable {
 		return this.clean;
 	}
 
+    public String getChoosingStrategy() {
+        return choosingStrategy;
+    }
 	public List<RemoteConfig> getRepositories() {
 		// Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
 		if (remoteRepositories == null)
@@ -233,6 +237,7 @@ public class GitSCM extends SCM implements Serializable {
 	    // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
 		final String gitExe = getDescriptor().getGitExe();
+        listener.getLogger().println("Using strategy: " + choosingStrategy);
 
 		AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
 
@@ -259,9 +264,9 @@ public class GitSCM extends SCM implements Serializable {
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
 
-				IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
+                IBuildChooser buildChooser = createBuildChooser(git, listener, buildData);
 
-				if (git.hasGitRepo()) {
+                if (git.hasGitRepo()) {
 					// Repo is there - do a fetch
 					listener.getLogger().println("Fetching changes from the remote Git repositories");
 
@@ -285,7 +290,16 @@ public class GitSCM extends SCM implements Serializable {
 		return pollChangesResult;
 	}
 
-	/**
+    private IBuildChooser createBuildChooser(IGitAPI git, TaskListener listener, BuildData buildData) {
+        if(this.choosingStrategy != null && GERRIT.equals(this.choosingStrategy)) {
+            return new GerritBuildChooser(this,git,new GitUtils(listener,git), buildData );
+        } else
+        {
+            return new BuildChooser(this, git, new GitUtils(listener, git), buildData);
+        }
+    }
+
+    /**
 	 * Fetch information from a particular remote repository. Attempt to fetch
 	 * from submodules, if they exist in the local WC
 	 *
@@ -402,6 +416,7 @@ public class GitSCM extends SCM implements Serializable {
 			throws IOException, InterruptedException {
 
 	    listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
+        listener.getLogger().println("Using strategy: " + choosingStrategy);
 
 		final String projectName = build.getProject().getName();
 		final int buildNumber = build.getNumber();
@@ -499,7 +514,7 @@ public class GitSCM extends SCM implements Serializable {
                 if (parentLastBuiltRev != null)
                     return parentLastBuiltRev;
 
-                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
+                IBuildChooser buildChooser = createBuildChooser(git, listener, buildData);
 
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions(false, singleBranch);
 				if( candidates.size() == 0 )
@@ -527,9 +542,9 @@ public class GitSCM extends SCM implements Serializable {
 							throws IOException {
                         IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
-                        IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
+                        IBuildChooser buildChooser = createBuildChooser(git, listener, buildData);
 
-						// Do we need to merge this revision onto MergeTarget
+                        // Do we need to merge this revision onto MergeTarget
 
 						// Only merge if there's a branch to merge that isn't
 						// us..
@@ -611,9 +626,9 @@ public class GitSCM extends SCM implements Serializable {
 			public Object[] invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
-                IBuildChooser buildChooser = new BuildChooser(GitSCM.this,git,new GitUtils(listener,git), buildData );
+                IBuildChooser buildChooser = createBuildChooser(git, listener, buildData);
 
-				// Straight compile-the-branch
+                // Straight compile-the-branch
 				listener.getLogger().println("Checking out " + revToBuild);
 				git.checkout(revToBuild.getSha1().name());
 
@@ -720,7 +735,7 @@ public class GitSCM extends SCM implements Serializable {
 		return (DescriptorImpl) super.getDescriptor();
 	}
 
-	@Extension
+    @Extension
 	public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
 		private String gitExe;
@@ -853,6 +868,7 @@ public class GitSCM extends SCM implements Serializable {
 				    req.getParameter("git.generate") != null,
 					submoduleCfg,
 					req.getParameter("git.clean") != null,
+                    req.getParameter("git.choosing_strategy"),
 					gitWeb);
 		}
 

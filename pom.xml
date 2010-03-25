@@ -14,6 +14,11 @@
   <description>Integrates Hudson to GIT SCM</description>
   <url>http://wiki.hudson-ci.org/display/HUDSON/Git+Plugin</url>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
   <repositories>
     <repository>
       <id>jgit-snapshot-repository</id>
@@ -38,6 +43,11 @@
         <enabled>true</enabled>
       </releases>
     </repository>
+      <repository>
+          <id>guice-maven</id>
+          <name>guice maven</name>
+          <url>http://guice-maven.googlecode.com/svn/trunk</url>
+      </repository>
   </repositories>
 
   <dependencies>
@@ -53,5 +63,21 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.eclipse.jgit</groupId>
+          <artifactId>org.eclipse.jgit</artifactId>
+          <version>0.5.1.51-g96b2e76</version>
+          <scope>compile</scope>
+      </dependency>
+      <dependency>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+          <version>1.5.1</version>
+      </dependency>
+       <dependency>
+            <groupId>com.google.code.guice</groupId>
+            <artifactId>guice</artifactId>
+            <version>2.0.1</version>
+       </dependency>
   </dependencies>
 </project>

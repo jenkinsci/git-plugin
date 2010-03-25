@@ -119,6 +119,26 @@
     <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
       <f:checkbox name="git.clean" checked="${scm.clean}" />
     </f:entry>
+    <f:entry title="Choosing strategy" help="/plugin/git/choosingStrategy.html" field="git.choosing_strategy">
+        <select name="git.choosing_strategy">
+            <j:choose>
+                <j:when test="${empty(scm.choosingStrategy)}">
+                    <option value="${scm.DEFAULT}" selected="SELECTED">Default</option>
+                    <option value="${scm.GERRIT}">Gerrit</option>
+                </j:when>
+                <j:otherwise>
+                    <j:if test="${scm.choosingStrategy==scm.DEFAULT}">
+                        <option value="${scm.DEFAULT}" selected="SELECTED" >Default</option>
+                        <option value="${scm.GERRIT}">Gerrit</option>
+                    </j:if>
+                    <j:if test="${scm.choosingStrategy==scm.GERRIT}">
+                        <option value="${scm.DEFAULT}">Default</option>
+                        <option value="${scm.GERRIT}" selected="SELECTED">Gerrit</option>
+                    </j:if>
+                </j:otherwise>
+            </j:choose>
+        </select>
+    </f:entry>
   </f:advanced>
   
   <t:listScmBrowsers name="git.browser" />

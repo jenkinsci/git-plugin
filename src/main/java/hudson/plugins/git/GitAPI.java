@@ -559,6 +559,10 @@ public class GitAPI implements IGitAPI {
         return null;
     }
 
+    public String getAllLogEntries(String branch) {
+        return launchCommand("log", "--all", "--pretty=format:'%H#%ct'", branch);
+    }
+
     private Repository getRepository() throws IOException
     {
         return new Repository(new File(workspace.getRemote(), ".git"));
