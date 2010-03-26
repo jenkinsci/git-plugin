@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import static hudson.Util.fixEmpty;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
@@ -116,11 +117,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             throw new RuntimeException("No author in this changeset!");
         }
 
-        User user = User.get(this.author, false);
+        User user = User.get(this.author, true);
 
-        // if the user doesn't exist create it and set the email address
-        if (user == null) {
-            user = User.get(this.author, true);
+        // set email address for user if needed
+        if (fixEmpty(this.authorEmail) != null && user.getProperty(Mailer.UserProperty.class) == null) {
             try {
                 user.addProperty(new Mailer.UserProperty(this.authorEmail));
             } catch (IOException e) {

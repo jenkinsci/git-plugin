@@ -12,7 +12,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.Computer;
 import hudson.model.Hudson;
 import hudson.model.ParametersAction;
 import hudson.model.Result;
@@ -94,6 +93,8 @@ public class GitSCM extends SCM implements Serializable {
 	private GitWeb browser;
 
 	private Collection<SubmoduleConfig> submoduleCfg;
+
+    public static final String GIT_BRANCH = "GIT_BRANCH";
 
 	public Collection<SubmoduleConfig> getSubmoduleCfg() {
 		return submoduleCfg;
@@ -249,19 +250,12 @@ public class GitSCM extends SCM implements Serializable {
 
         final String singleBranch = getSingleBranch(lastBuild);
 
-		EnvVars tmp = new EnvVars();
-        try {
-            tmp = Computer.currentComputer().getEnvironment();
-        } catch (InterruptedException e) {
-            listener.error("Interrupted exception getting environment .. trying empty environment");
-        }
-        final EnvVars environment = tmp;
-
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			private static final long serialVersionUID = 1L;
 
-			public Boolean invoke(File localWorkspace, VirtualChannel channel)
-					throws IOException {
+			public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
+                EnvVars environment = new EnvVars(System.getenv());
+
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
 
@@ -422,13 +416,7 @@ public class GitSCM extends SCM implements Serializable {
 		    listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision );
 		}
 
-		EnvVars tmp = new EnvVars();
-        try {
-            tmp = build.getEnvironment(listener);
-        } catch (InterruptedException e) {
-            listener.error("Interrupted exception getting environment .. using empty environment");
-        }
-        final EnvVars environment = tmp;
+        final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
 
@@ -703,6 +691,11 @@ public class GitSCM extends SCM implements Serializable {
         return changeLogResult((String) returnData[0], changelogFile);
 
 	}
+
+    public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
+        super.buildEnvVars(build, env);
+        env.put(GIT_BRANCH, getSingleBranch(build));
+    }
 
 	private String putChangelogDiffsIntoFile(IGitAPI git, String branchName, String revFrom,
 			String revTo) throws IOException {
