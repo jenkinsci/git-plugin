@@ -30,6 +30,18 @@
         <enabled>false</enabled>
       </releases>
     </repository>
+    
+    <repository>
+      <id>jgit-release-repository</id>
+      <url>http://egit.googlecode.com/svn/maven</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    
     <repository>
       <id>jgit-releases</id>
       <url>http://fisheye4.atlassian.com/browse/~raw,r=trunk/hudson/trunk/hudson/plugins/git/maven-repository</url>
