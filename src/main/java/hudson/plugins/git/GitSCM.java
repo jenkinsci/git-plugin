@@ -96,6 +96,7 @@ public class GitSCM extends SCM implements Serializable {
 	private Collection<SubmoduleConfig> submoduleCfg;
 
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_COMMIT = "GIT_COMMIT";
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
 		return submoduleCfg;
@@ -531,6 +532,7 @@ public class GitSCM extends SCM implements Serializable {
 			return false;
 		}
 		listener.getLogger().println("Commencing build of " + revToBuild);
+		environment.put(GIT_COMMIT, revToBuild.getSha1String());
 		Object[] returnData; // Changelog, BuildData
 
 
