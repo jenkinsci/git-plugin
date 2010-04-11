@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>0.8.2-SNAPSHOT</version>
+  <version>0.8.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson GIT plugin</name>
   <description>Integrates Hudson to GIT SCM</description>
