@@ -7,6 +7,9 @@ import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -103,6 +106,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     @Override
+    @Exported
     public Collection<String> getAffectedPaths() {
         Collection<String> affectedPaths = new HashSet<String>(this.paths.size());
         for (Path file : this.paths) {
@@ -112,6 +116,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     @Override
+    @Exported
     public User getAuthor() {
         if (this.author == null) {
             throw new RuntimeException("No author in this changeset!");
@@ -132,14 +137,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     @Override
+    @Exported
     public String getMsg() {
         return this.title;
     }
 
+    @Exported
     public String getId() {
         return this.id;
     }
 
+    @Exported
     public String getComment() {
         return this.comment;
     }
