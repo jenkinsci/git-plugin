@@ -3,9 +3,6 @@ package hudson.plugins.git;
 import hudson.scm.ChangeLogSet;
 import hudson.model.AbstractBuild;
 
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
