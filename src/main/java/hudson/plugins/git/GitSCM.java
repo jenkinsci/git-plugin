@@ -885,28 +885,36 @@ public class GitSCM extends SCM implements Serializable {
 			return true;
 		}
 
-		public void doGitExeCheck(StaplerRequest req, StaplerResponse rsp)
+		public void doGitExeCheck(final StaplerRequest req, StaplerResponse rsp)
 				throws IOException, ServletException {
 			new FormFieldValidator.Executable(req, rsp) {
 				protected void checkExecutable(File exe) throws IOException,
 						ServletException {
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					try {
+                        String gitExe = req.getParameter("value");
 						Proc proc = Hudson.getInstance().createLauncher(
 								TaskListener.NULL).launch(
-								new String[] { getGitExe(), "--version" },
+								new String[] { gitExe, "--version" },
 								new String[0], baos, null);
 						proc.join();
+                        String versionString = baos.toString();
+                        if (!versionString.startsWith("git")) {
+                             error("Version string didn't start with \"git\" as expected, output was :\n"
+                                     + versionString);
+                        } else {
+                            ok();
+                        }
 
-						// String result = baos.toString();
 
-						ok();
 
 					} catch (InterruptedException e) {
-						error("Unable to check git version");
+						error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
 					} catch (RuntimeException e) {
-						error("Unable to check git version");
-					}
+						error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
+					} catch (IOException e) {
+                        error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
+                    }
 
 				}
 			}.process();
