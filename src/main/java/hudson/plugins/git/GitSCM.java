@@ -711,7 +711,10 @@ public class GitSCM extends SCM implements Serializable {
 
     public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
-        env.put(GIT_BRANCH, getSingleBranch(build));
+        String branch = getSingleBranch(build);
+        if(branch != null){
+            env.put(GIT_BRANCH, branch);
+        }
     }
 
 	private String putChangelogDiffsIntoFile(IGitAPI git, String branchName, String revFrom,
