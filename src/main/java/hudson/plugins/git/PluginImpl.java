@@ -2,6 +2,8 @@ package hudson.plugins.git;
 
 import hudson.Plugin;
 
+import java.io.IOException;
+
 /**
  * Plugin entry point.
  *
@@ -9,4 +11,8 @@ import hudson.Plugin;
  * @plugin
  */
 public class PluginImpl extends Plugin {
+    @Override
+    public void postInitialize() throws IOException {
+        GitTool.onLoaded();
+    }
 }

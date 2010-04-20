@@ -139,6 +139,20 @@
             </j:choose>
         </select>
     </f:entry>
+      <f:entry title="Git executable" field="git.gitTool">
+          <select name="git.gitTool">
+              <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
+                  <j:choose>
+                      <j:when test="${scm.gitTool==gitTool.name}">
+                          <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
+                      </j:when>
+                      <j:otherwise>
+                          <option value="${gitTool.name}">${gitTool.name}</option>
+                      </j:otherwise>
+                  </j:choose>
+              </j:forEach>
+          </select>
+      </f:entry>
   </f:advanced>
   
   <t:listScmBrowsers name="git.browser" />

@@ -1,30 +1,18 @@
 package hudson.plugins.git;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Proc;
+import hudson.*;
 import hudson.FilePath.FileCallable;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
-import hudson.model.ParametersAction;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.*;
+import hudson.plugins.git.util.Build;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
-import hudson.util.FormFieldValidator;
 import hudson.util.FormValidation;
 
 import java.io.ByteArrayOutputStream;
@@ -33,10 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.*;
 
 import javax.servlet.ServletException;
 
@@ -47,6 +32,7 @@ import org.spearce.jgit.lib.ObjectId;
 import org.spearce.jgit.lib.RepositoryConfig;
 import org.spearce.jgit.transport.RefSpec;
 import org.spearce.jgit.transport.RemoteConfig;
+
 
 /**
  * Git SCM.
@@ -90,6 +76,8 @@ public class GitSCM extends SCM implements Serializable {
     public static final String DEFAULT = "Default";
     public static final String GERRIT = "Gerrit";
 
+    public String gitTool = null;
+
     private GitWeb browser;
 
 	private Collection<SubmoduleConfig> submoduleCfg;
@@ -113,7 +101,9 @@ public class GitSCM extends SCM implements Serializable {
             boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
             boolean clean,
-            String choosingStrategy, GitWeb browser) {
+            String choosingStrategy, GitWeb browser,
+            String gitTool) {
+
 
 		// normalization
 	    this.branches = branches;
@@ -129,6 +119,8 @@ public class GitSCM extends SCM implements Serializable {
 		this.clean = clean;
         this.choosingStrategy = choosingStrategy;
 		this.configVersion = 1L;
+        this.gitTool = gitTool;
+
 	}
 
    public Object readResolve()  {
@@ -198,6 +190,10 @@ public class GitSCM extends SCM implements Serializable {
 		return remoteRepositories;
 	}
 
+    public String getGitTool() {
+        return gitTool;
+    }
+
     private String getSingleBranch(AbstractBuild<?, ?> build) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1 || getRepositories().size() != 1)
@@ -230,7 +226,6 @@ public class GitSCM extends SCM implements Serializable {
 	{
 	    // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
-		final String gitExe = getDescriptor().getGitExe();
         listener.getLogger().println("Using strategy: " + choosingStrategy);
 
 		AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
@@ -248,10 +243,23 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         final String singleBranch = getSingleBranch(lastBuild);
+        Label label = project.getAssignedLabel();
+        final String gitExe;
+        //If this project is tied onto a node, it's built always there. On other cases,
+        //polling is done on the node which did the last build.
+        //
+        if (label != null && label.isSelfLabel()) {
+            if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
+                listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
+                return true;
+            }
+            gitExe = getGitExe(label.getNodes().iterator().next(), listener);
+        } else {
+            gitExe = getGitExe(project.getLastBuiltOn(), listener);
+        }
 
 		boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
 			private static final long serialVersionUID = 1L;
-
 			public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
                 EnvVars environment = new EnvVars(System.getenv());
 
@@ -403,8 +411,49 @@ public class GitSCM extends SCM implements Serializable {
 		}
 	}
 
+    private String getGitExe(Node builtOn, TaskListener listener) {
+        GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+        for(GitTool t : gitToolInstallations) {
+            //If gitTool is null, use first one.
+            if(gitTool == null) {
+                gitTool = t.getName();
+            }
 
-	@Override
+            if(t.getName().equals(gitTool)) {
+                if(builtOn != null){
+                    try {
+                        String s = t.forNode(builtOn, listener).getGitExe();
+                        return s;
+                    } catch (IOException e) {
+                        listener.getLogger().println("Failed to get git executable");
+                    } catch (InterruptedException e) {
+                        listener.getLogger().println("Failed to get git executable");
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+        /**
+     * If true, use the commit author as the changeset author, rather
+     * than the committer.
+     */
+    public boolean getAuthorOrCommitter() {
+        GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+        for(GitTool t : gitToolInstallations) {
+            //If gitTool is null, use first one.
+            if(gitTool == null) {
+                gitTool = t.getName();
+            }
+            if(t.getName().equals(gitTool)) {
+                return t.getAuthorOrCommitter();
+            }
+        }
+        return false;
+    }
+
+    @Override
 	public boolean checkout(final AbstractBuild build, Launcher launcher,
 			final FilePath workspace, final BuildListener listener, File changelogFile)
 			throws IOException, InterruptedException {
@@ -415,7 +464,7 @@ public class GitSCM extends SCM implements Serializable {
 		final String projectName = build.getProject().getName();
 		final int buildNumber = build.getNumber();
 
-		final String gitExe = getDescriptor().getGitExe();
+        final String gitExe = getGitExe(build.getBuiltOn(), listener);
 
 		final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
 
@@ -444,13 +493,13 @@ public class GitSCM extends SCM implements Serializable {
 
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
 
+
 		final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
 			private static final long serialVersionUID = 1L;
 			public Revision invoke(File localWorkspace, VirtualChannel channel)
 					throws IOException {
 			    FilePath ws = new FilePath(localWorkspace);
 			    listener.getLogger().println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
-
                 IGitAPI git = new GitAPI(gitExe, ws, listener, environment);
 
 				if (git.hasGitRepo()) {
@@ -727,7 +776,7 @@ public class GitSCM extends SCM implements Serializable {
 
 	@Override
 	public ChangeLogParser createChangeLogParser() {
-		return new GitChangeLogParser();
+		return new GitChangeLogParser(getAuthorOrCommitter());
 	}
 
 	@Override
@@ -739,31 +788,32 @@ public class GitSCM extends SCM implements Serializable {
 	public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
         
 		private String gitExe;
-        private boolean authorOrCommitter;
-                
+
 		public DescriptorImpl() {
 			super(GitSCM.class, GitWeb.class);
-			load();
+            load();
 		}
 
 		public String getDisplayName() {
 			return "Git";
 		}
 
-                /**
-                 * If true, use the commit author as the changeset author, rather
-                 * than the committer.
-                 */
-                public boolean getAuthorOrCommitter() {
-                    return authorOrCommitter;
-                }
-                
+        /**
+         * Lists available toolinstallations.
+         * @return  list of available git tools
+         */
+        public List<GitTool> getGitTools() {
+            GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            return Arrays.asList(gitToolInstallations);
+        }
+
 		/**
 		 * Path to git executable.
+         * @deprecated
+         * @see #hudson.plugins.git.GitTool
 		 */
+        @Deprecated
 		public String getGitExe() {
-			if (gitExe == null)
-				return "git";
 			return gitExe;
 		}
 
@@ -824,8 +874,9 @@ public class GitSCM extends SCM implements Serializable {
 					submoduleCfg,
 					req.getParameter("git.clean") != null,
                     req.getParameter("git.choosing_strategy"),
-					gitWeb);
-		}
+					gitWeb,
+                    gitTool);
+        }
 
 
 
@@ -918,13 +969,6 @@ public class GitSCM extends SCM implements Serializable {
             return mergeOptions;
         }
 
-		public boolean configure(StaplerRequest req) throws FormException {
-			gitExe = req.getParameter("git.gitExe");
-                        authorOrCommitter = req.getParameter("git.authorOrCommitter") != null;
-			save();
-			return true;
-		}
-
         public static GitWeb createGitWeb(String url) {
             GitWeb gitWeb = null;
             String gitWebUrl = url;
@@ -941,39 +985,6 @@ public class GitSCM extends SCM implements Serializable {
             }
             return gitWeb;
         }
-
-		public void doGitExeCheck(final StaplerRequest req, StaplerResponse rsp)
-				throws IOException, ServletException {
-			new FormFieldValidator.Executable(req, rsp) {
-				protected void checkExecutable(File exe) throws IOException,
-						ServletException {
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					try {
-                        String gitExe = req.getParameter("value");
-						Proc proc = Hudson.getInstance().createLauncher(
-								TaskListener.NULL).launch(
-								new String[] { gitExe, "--version" },
-								new String[0], baos, null);
-						proc.join();
-                        String versionString = baos.toString();
-                        if (!versionString.startsWith("git")) {
-                             error("Version string didn't start with \"git\" as expected, output was :\n"
-                                     + versionString);
-                        } else {
-                            ok();
-                        }
-
-					} catch (InterruptedException e) {
-						error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
-					} catch (RuntimeException e) {
-						error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
-					} catch (IOException e) {
-                        error("Unable to check git version, reason: \n" + e.getLocalizedMessage());
-                    }
-
-				}
-			}.process();
-		}
 
 		public FormValidation doGitRemoteNameCheck(StaplerRequest req, StaplerResponse rsp)
 				throws IOException, ServletException {

@@ -17,12 +17,17 @@ import org.xml.sax.SAXException;
  * @author Nigel Magnay
  */
 public class GitChangeLogParser extends ChangeLogParser {
+
+    private boolean authorOrCommitter;
+
+    public GitChangeLogParser(boolean authorOrCommitter) {
+        super();
+        this.authorOrCommitter = authorOrCommitter;
+    }
     public GitChangeSetList parse(AbstractBuild build, File changelogFile)
         throws IOException, SAXException {
         
         ArrayList<GitChangeSet> r = new ArrayList<GitChangeSet>();
-        
-        boolean authorOrCommitter = ((GitSCM)build.getProject().getScm()).getDescriptor().getAuthorOrCommitter();
         
         // Parse the log file into GitChangeSet items - each one is a commit
         
