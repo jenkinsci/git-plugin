@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmpty;
+import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
@@ -25,6 +26,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
+    private String committer;
+    private String committerEmail;
     private String author;
     private String authorEmail;
     private String comment;
@@ -32,8 +35,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String id;
     private String parentCommit;
     private Collection<Path> paths = new HashSet<Path>();
-
-    public GitChangeSet(List<String> lines) {
+    private boolean authorOrCommitter;
+    
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
+        this.authorOrCommitter = authorOrCommitter;
         if (lines.size() > 0) {
             parseCommit(lines);
         }
@@ -51,9 +56,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 } else if (line.startsWith("parent ")) {
                     this.parentCommit = line.split(" ")[1];
                 } else if (line.startsWith("committer ")) {
-                    this.author = line.substring(10, line.indexOf(" <"));
-                    this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
+                    this.committer = line.substring(10, line.indexOf(" <"));
+                    this.committerEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
                 } else if (line.startsWith("author ")) {
+                    this.author = line.substring(7, line.indexOf(" <"));
+                    this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
                 } else if (line.startsWith("    ")) {
                     message += line.substring(4) + "\n";
                 } else if (':' == line.charAt(0)) {
@@ -118,16 +125,29 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @Override
     @Exported
     public User getAuthor() {
-        if (this.author == null) {
+        String csAuthor;
+        String csAuthorEmail;
+
+        // If true, use the author field from git log rather than the committer.
+        if (authorOrCommitter) {
+            csAuthor = this.author;
+            csAuthorEmail = this.authorEmail;
+        }
+        else {
+            csAuthor = this.committer;
+            csAuthorEmail = this.committerEmail;
+        }
+        
+        if (csAuthor == null) {
             throw new RuntimeException("No author in this changeset!");
         }
 
-        User user = User.get(this.author, true);
+        User user = User.get(csAuthor, true);
 
         // set email address for user if needed
-        if (fixEmpty(this.authorEmail) != null && user.getProperty(Mailer.UserProperty.class) == null) {
+        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class) == null) {
             try {
-                user.addProperty(new Mailer.UserProperty(this.authorEmail));
+                user.addProperty(new Mailer.UserProperty(csAuthorEmail));
             } catch (IOException e) {
                 // ignore error
             }

@@ -736,9 +736,10 @@ public class GitSCM extends SCM implements Serializable {
 
     @Extension
 	public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
-
+        
 		private String gitExe;
-
+                private boolean authorOrCommitter;
+                
 		public DescriptorImpl() {
 			super(GitSCM.class, GitWeb.class);
 			load();
@@ -748,6 +749,14 @@ public class GitSCM extends SCM implements Serializable {
 			return "Git";
 		}
 
+                /**
+                 * If true, use the commit author as the changeset author, rather
+                 * than the committer.
+                 */
+                public boolean getAuthorOrCommitter() {
+                    return authorOrCommitter;
+                }
+                
 		/**
 		 * Path to git executable.
 		 */
@@ -875,6 +884,7 @@ public class GitSCM extends SCM implements Serializable {
 
 		public boolean configure(StaplerRequest req) throws FormException {
 			gitExe = req.getParameter("git.gitExe");
+                        authorOrCommitter = req.getParameter("git.authorOrCommitter") != null;
 			save();
 			return true;
 		}

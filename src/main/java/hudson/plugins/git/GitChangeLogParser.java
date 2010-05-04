@@ -17,48 +17,48 @@ import org.xml.sax.SAXException;
  * @author Nigel Magnay
  */
 public class GitChangeLogParser extends ChangeLogParser {
-	public GitChangeSetList parse(AbstractBuild build, File changelogFile)
-			throws IOException, SAXException {
-
-		ArrayList<GitChangeSet> r = new ArrayList<GitChangeSet>();
-
-		// Parse the log file into GitChangeSet items - each one is a commit
-
-		BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
-
-		try
-    {
-		String line;
-		// We use the null value to determine whether at least one commit was
-		// present in the changelog. If it stays null, there is no commit line.
-		List<String> lines = null;
-
-		while ((line = rdr.readLine()) != null) {
-			if (line.startsWith("commit ")) {
-				if (lines != null) {
-					r.add(parseCommit(lines));
-				}
-				lines = new ArrayList<String>();
-			}
-			
-			if (lines != null)
-				lines.add(line);
-		}
-
-		if (lines != null) {
-			r.add(parseCommit(lines));
-		}
-
-		return new GitChangeSetList(build, r);
-		}
-    finally
-    {
-      rdr.close();
+    public GitChangeSetList parse(AbstractBuild build, File changelogFile)
+        throws IOException, SAXException {
+        
+        ArrayList<GitChangeSet> r = new ArrayList<GitChangeSet>();
+        
+        boolean authorOrCommitter = ((GitSCM)build.getProject().getScm()).getDescriptor().getAuthorOrCommitter();
+        
+        // Parse the log file into GitChangeSet items - each one is a commit
+        
+        BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
+        
+        try {
+            String line;
+            // We use the null value to determine whether at least one commit was
+            // present in the changelog. If it stays null, there is no commit line.
+            List<String> lines = null;
+            
+            while ((line = rdr.readLine()) != null) {
+                if (line.startsWith("commit ")) {
+                    if (lines != null) {
+                        r.add(parseCommit(lines, authorOrCommitter));
+                    }
+                    lines = new ArrayList<String>();
+                }
+		
+                if (lines != null)
+                    lines.add(line);
+            }
+            
+            if (lines != null) {
+                r.add(parseCommit(lines, authorOrCommitter));
+            }
+            
+            return new GitChangeSetList(build, r);
+        }
+        finally {
+            rdr.close();
+        }
     }
-	}
-
-	private GitChangeSet parseCommit(List<String> lines) {
-		return new GitChangeSet(lines);
-	}
-
+    
+    private GitChangeSet parseCommit(List<String> lines, boolean authorOrCommitter) {
+        return new GitChangeSet(lines, authorOrCommitter);
+    }
+    
 }

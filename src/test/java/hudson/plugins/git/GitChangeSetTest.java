@@ -22,7 +22,7 @@ public class GitChangeSetTest extends TestCase {
         lines.add("tree 789ghi012jkl");
         lines.add("parent 345mno678pqr");
         lines.add("author John Author <jauthor@nospam.com> 1234567 -0600");
-        lines.add("commiter John Committer <jcommitter@nospam.com> 1234567 -0600");
+        lines.add("committer John Committer <jcommitter@nospam.com> 1234567 -0600");
         lines.add("");
         lines.add("    Commit title.");
         lines.add("    Commit extended description.");
@@ -31,7 +31,7 @@ public class GitChangeSetTest extends TestCase {
         lines.add(":123456 000000 123abc456def789abc012def345abc678def901a 0000000000000000000000000000000000000000 D\tsrc/test/deleted.file");
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 M\tsrc/test/modified.file");
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 R012\tsrc/test/renamedFrom.file\tsrc/test/renamedTo.file");
-        GitChangeSet changeSet = new GitChangeSet(lines);
+        GitChangeSet changeSet = new GitChangeSet(lines, false);
 
         Assert.assertEquals("123abc456def", changeSet.getId());
         Assert.assertEquals("Commit title.", changeSet.getMsg());
@@ -67,5 +67,4 @@ public class GitChangeSetTest extends TestCase {
             }
         }
     }
-
 }
