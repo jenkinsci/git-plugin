@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
+    private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
+    
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private String committer;
     private String committerEmail;
@@ -70,13 +72,28 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         if (mode.length() == 1) {
                             String src = null;
                             String dst = null;
+                            String path = fileMatcher.group(4);
                             char editMode = mode.charAt(0);
-                            if (editMode == 'M' || editMode == 'A' || editMode == 'D') {
+                            if (editMode == 'M' || editMode == 'A' || editMode == 'D'
+                                || editMode == 'R' || editMode == 'C') {
                                 src = parseHash(fileMatcher.group(1));
                                 dst = parseHash(fileMatcher.group(2));
                             }
-                            String path = fileMatcher.group(4);
-                            this.paths.add(new Path(src, dst, editMode, path, this));
+
+                            // I'm not sure what C is, so I'm just handling R for now.
+                            // And I'm doing that by adding both a delete and an add.
+                            if (editMode == 'R') {
+                                Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
+                                if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
+                                    String oldPath = renameSplitMatcher.group(1);
+                                    String newPath = renameSplitMatcher.group(2);
+                                    this.paths.add(new Path(src, dst, 'D', oldPath, this));
+                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
+                                }
+                            }
+                            else {
+                                this.paths.add(new Path(src, dst, editMode, path, this));
+                            }
                         }
                     }
                 } else {
@@ -108,18 +125,29 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return parentCommit;
     }
 
-    public Collection<Path> getPaths() {
-        return this.paths;
-    }
 
     @Override
-    @Exported
     public Collection<String> getAffectedPaths() {
         Collection<String> affectedPaths = new HashSet<String>(this.paths.size());
         for (Path file : this.paths) {
             affectedPaths.add(file.getPath());
         }
         return affectedPaths;
+    }
+
+    /**
+     * Gets the files that are changed in this commit.
+     * @return
+     *      can be empty but never null.
+     */
+    @Exported
+    public Collection<Path> getPaths() {
+        return paths;
+    }
+    
+    @Override
+    public Collection<Path> getAffectedFiles() {
+        return this.paths;
     }
 
     @Override
@@ -172,6 +200,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return this.comment;
     }
 
+    @ExportedBean(defaultVisibility=999)
     public static class Path implements AffectedFile {
 
         private String src;
@@ -196,6 +225,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return dst;
         }
 
+        @Exported(name="file")
         public String getPath() {
             return path;
         }
@@ -204,6 +234,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return changeSet;
         }
 
+        @Exported
         public EditType getEditType() {
             switch (action) {
                 case 'A':
