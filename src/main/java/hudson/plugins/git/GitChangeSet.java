@@ -80,14 +80,21 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                                 dst = parseHash(fileMatcher.group(2));
                             }
 
-                            // I'm not sure what C is, so I'm just handling R for now.
-                            // And I'm doing that by adding both a delete and an add.
+                            // Handle rename as two operations - a delete and an add
                             if (editMode == 'R') {
                                 Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
                                 if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
                                     String oldPath = renameSplitMatcher.group(1);
                                     String newPath = renameSplitMatcher.group(2);
                                     this.paths.add(new Path(src, dst, 'D', oldPath, this));
+                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
+                                }
+                            }
+                            // Handle copy as an add
+                            else if (editMode == 'C') {
+                                Matcher copySplitMatcher = RENAME_SPLIT.matcher(path);
+                                if (copySplitMatcher.matches() && copySplitMatcher.groupCount() >= 2) {
+                                    String newPath = copySplitMatcher.group(2);
                                     this.paths.add(new Path(src, dst, 'A', newPath, this));
                                 }
                             }
