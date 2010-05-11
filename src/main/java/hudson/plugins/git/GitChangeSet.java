@@ -12,7 +12,10 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,13 +28,19 @@ import java.util.regex.Pattern;
 public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
+    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^author (.*) <(.*)> (.*) (.*)$");
+    private static final Pattern COMMITTER_ENTRY = Pattern.compile("^committer (.*) <(.*)> (.*) (.*)$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
     
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private String committer;
     private String committerEmail;
+    private String committerTime;
+    private String committerTz;
     private String author;
     private String authorEmail;
+    private String authorTime;
+    private String authorTz;
     private String comment;
     private String title;
     private String id;
@@ -58,11 +67,29 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 } else if (line.startsWith("parent ")) {
                     this.parentCommit = line.split(" ")[1];
                 } else if (line.startsWith("committer ")) {
-                    this.committer = line.substring(10, line.indexOf(" <"));
-                    this.committerEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
+                    Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
+                    if (committerMatcher.matches() && committerMatcher.groupCount() >= 4) {
+                        this.committer = committerMatcher.group(1);
+                        this.committerEmail = committerMatcher.group(2);
+                        this.committerTime = committerMatcher.group(3);
+                        this.committerTz = committerMatcher.group(4);
+                    }
+                    //                    this.committer = line.substring(10, line.indexOf(" <"));
+                    //this.committerEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
+                    //this.committerTime = line.substring(line.indexOf("> ")).split(" ")[0];
+                    //this.committerTz = line.substring(line.indexOf("> ")).split(" ")[1];
                 } else if (line.startsWith("author ")) {
-                    this.author = line.substring(7, line.indexOf(" <"));
-                    this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
+                    Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
+                    if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
+                        this.author = authorMatcher.group(1);
+                        this.authorEmail = authorMatcher.group(2);
+                        this.authorTime = authorMatcher.group(3);
+                        this.authorTz = authorMatcher.group(4);
+                    }
+                    //                    this.author = line.substring(7, line.indexOf(" <"));
+                    //this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
+                    //this.authorTime = line.substring(line.indexOf("> ")).split(" ")[0];
+                    //this.authorTz = line.substring(line.indexOf("> ")).split(" ")[1];
                 } else if (line.startsWith("    ")) {
                     message += line.substring(4) + "\n";
                 } else if (':' == line.charAt(0)) {
@@ -123,6 +150,36 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return NULL_HASH.equals(hash) ? null : hash;
     }
 
+    @Exported
+    public String getDate() {
+        DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        String dateStr;
+        String csTime;
+        String csTz;
+        Date csDate;
+        
+        if (authorOrCommitter) {
+            csTime = this.authorTime;
+            csTz = this.authorTz;
+        }
+        else {
+            csTime = this.committerTime;
+            csTz = this.committerTz;
+        }
+
+        try {
+            csDate = new Date(Long.parseLong(csTime) * 1000L);
+        } catch (NumberFormatException e) {
+            csDate = new Date();
+        }
+
+        dateStr = fmt.format(csDate) + " " + csTz;
+
+        return dateStr;
+    }
+        
+            
     @Override
     public void setParent(ChangeLogSet parent) {
         super.setParent(parent);
@@ -202,6 +259,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return this.id;
     }
 
+    public String getRevision() {
+        return this.id;
+    }
+    
     @Exported
     public String getComment() {
         return this.comment;
