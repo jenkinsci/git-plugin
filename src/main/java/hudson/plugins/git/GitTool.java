@@ -65,8 +65,8 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
             if (s instanceof GitSCM.DescriptorImpl) {
                 //Get previous settings from descriptor
                 GitSCM.DescriptorImpl desc = (GitSCM.DescriptorImpl) s;
-                if (desc.getGitExe() != null) {
-                    defaultGitExe = desc.getGitExe();
+                if (desc.getOldGitExe() != null) {
+                    defaultGitExe = desc.getOldGitExe();
                 }
             }
         }

@@ -25,6 +25,8 @@ import java.util.*;
 
 import javax.servlet.ServletException;
 
+import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -411,7 +413,10 @@ public class GitSCM extends SCM implements Serializable {
 		}
 	}
 
-    private String getGitExe(Node builtOn, TaskListener listener) {
+    /**
+     * Exposing so that we can get this from GitPublisher.
+     */
+    public String getGitExe(Node builtOn, TaskListener listener) {
         GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
         for(GitTool t : gitToolInstallations) {
             //If gitTool is null, use first one.
@@ -817,7 +822,15 @@ public class GitSCM extends SCM implements Serializable {
 			return gitExe;
 		}
 
-		public SCM newInstance(StaplerRequest req) throws FormException {
+        /**
+         * Old configuration of git executable - exposed so that we can
+         * migrate this setting to GitTool without deprecation warnings.
+         */
+        public String getOldGitExe() {
+            return gitExe;
+        }
+
+        public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			List<RemoteConfig> remoteRepositories;
 			File temp = null;
 

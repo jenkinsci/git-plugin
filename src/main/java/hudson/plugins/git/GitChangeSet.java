@@ -74,10 +74,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         this.committerTime = committerMatcher.group(3);
                         this.committerTz = committerMatcher.group(4);
                     }
-                    //                    this.committer = line.substring(10, line.indexOf(" <"));
-                    //this.committerEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
-                    //this.committerTime = line.substring(line.indexOf("> ")).split(" ")[0];
-                    //this.committerTz = line.substring(line.indexOf("> ")).split(" ")[1];
                 } else if (line.startsWith("author ")) {
                     Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
                     if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
@@ -86,10 +82,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         this.authorTime = authorMatcher.group(3);
                         this.authorTz = authorMatcher.group(4);
                     }
-                    //                    this.author = line.substring(7, line.indexOf(" <"));
-                    //this.authorEmail = line.substring(line.indexOf(" <") + 2, line.indexOf("> "));
-                    //this.authorTime = line.substring(line.indexOf("> ")).split(" ")[0];
-                    //this.authorTz = line.substring(line.indexOf("> ")).split(" ")[1];
                 } else if (line.startsWith("    ")) {
                     message += line.substring(4) + "\n";
                 } else if (':' == line.charAt(0)) {

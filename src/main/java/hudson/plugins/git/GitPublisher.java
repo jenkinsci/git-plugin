@@ -15,7 +15,8 @@ import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
-import hudson.util.FormFieldValidator;
+import hudson.tasks.Recorder;
+import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,9 +28,12 @@ import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.QueryParameter;
+
 import org.spearce.jgit.transport.RemoteConfig;
 
-public class GitPublisher extends Publisher implements Serializable {
+public class GitPublisher extends Recorder implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -59,7 +63,7 @@ public class GitPublisher extends Publisher implements Serializable {
         final FilePath workspacePath = build.getWorkspace();
         final int buildNumber = build.getNumber();
         final Result buildResult = build.getResult();
-        final String gitExe = gitSCM.getDescriptor().getGitExe();
+        final String gitExe = gitSCM.getGitExe(build.getBuiltOn(), listener);
         EnvVars tempEnvironment;
         try {
             tempEnvironment = build.getEnvironment(listener);
@@ -136,14 +140,12 @@ public class GitPublisher extends Publisher implements Serializable {
         /**
          * Performs on-the-fly validation on the file mask wildcard.
          *
-         * @param req request
-         * @param rsp response
-         * @throws IOException
-         * @throws ServletException
+         * I don't think this actually ever gets called, but I'm modernizing it anyway.
+         *
          */
-        public void doCheck(StaplerRequest req, StaplerResponse rsp)
-                throws IOException, ServletException {
-            new FormFieldValidator.WorkspaceFileMask(req, rsp).process();
+        public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value)
+            throws IOException  {
+            return FilePath.validateFileMask(project.getSomeWorkspace(),value);
         }
 
         @Override
