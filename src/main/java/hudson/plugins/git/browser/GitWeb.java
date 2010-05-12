@@ -54,13 +54,13 @@ public class GitWeb extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
-                || path.getChangeSet().getParentCommit() == null) {
+            || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         GitChangeSet changeSet = path.getChangeSet();
         String spec = param().add("a=blobdiff").add("f=" + path.getPath()).add("fp=" + path.getPath())
-                             .add("h=" + path.getSrc()).add("hp=" + path.getDst())
-                             .add("hb=" + changeSet.getId()).add("hpb=" + changeSet.getParentCommit()).toString();
+            .add("h=" + path.getSrc()).add("hp=" + path.getDst())
+            .add("hb=" + changeSet.getId()).add("hpb=" + changeSet.getParentCommit()).toString();
         return new URL(url, url.getPath()+spec);
     }
 
@@ -75,7 +75,7 @@ public class GitWeb extends GitRepositoryBrowser {
     public URL getFileLink(Path path) throws IOException {
         String h = (path.getDst() != null) ? path.getDst() : path.getSrc();
         String spec = param().add("a=blob").add("f=" + path.getPath())
-                             .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
+            .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
         return new URL(url, url.getPath()+spec);
     }
 
@@ -86,9 +86,9 @@ public class GitWeb extends GitRepositoryBrowser {
         }
 
         @Override
-		public GitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindParameters(GitWeb.class, "gitweb.");
-		}
-	}
+        public GitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+            return req.bindParameters(GitWeb.class, "gitweb.");
+        }
+    }
 
 }

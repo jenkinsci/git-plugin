@@ -21,8 +21,7 @@ public class GerritBuildChooser implements IBuildChooser {
     //-------- Data -----------
     private final BuildData             data;
     Logger logger = Logger.getLogger(GerritBuildChooser.class.getName());
-    public GerritBuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data)
-    {
+    public GerritBuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data) {
         this.gitSCM = gitSCM;
         this.git = git;
         this.utils = utils;
@@ -40,7 +39,7 @@ public class GerritBuildChooser implements IBuildChooser {
      * @throws GitException
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch)
-            throws GitException, IOException {
+        throws GitException, IOException {
       
         Revision last = data.getLastBuiltRevision();
         String result = git.getAllLogEntries(singleBranch);
@@ -87,7 +86,7 @@ public class GerritBuildChooser implements IBuildChooser {
     private Collection<TimedCommit> sortRevList(String logOutput) {
         SortedSet<TimedCommit> timedCommits = new TreeSet<TimedCommit>();
         String[] lines = logOutput.split("\n");
-        for (String s : lines ) {
+        for (String s : lines) {
             timedCommits.add(parseCommit(s));            
         }
         
@@ -99,10 +98,10 @@ public class GerritBuildChooser implements IBuildChooser {
         String[] lines = line.split(separator);
         /*Line has ' in the beginning and in the end */
         String id = lines[0].substring(1);
-        String date = lines[1].substring(0, lines[1].length() - 1 );
+        String date = lines[1].substring(0, lines[1].length() - 1);
         //From seconds to milliseconds
         return new TimedCommit(ObjectId.fromString(id),
-                new DateTime(Long.parseLong(date) * 1000));
+                               new DateTime(Long.parseLong(date) * 1000));
     }
     
     private class TimedCommit implements Comparable<TimedCommit> {
@@ -128,18 +127,16 @@ public class GerritBuildChooser implements IBuildChooser {
             }
             return result;
         }
-     }
+    }
 
-    public Build revisionBuilt(Revision revision, int buildNumber, Result result )
-    {
+    public Build revisionBuilt(Revision revision, int buildNumber, Result result) {
         Build build = new Build(revision, buildNumber, result);
         data.saveBuild(build);
         return build;
     }
 
 
-    public Action getData()
-    {
+    public Action getData() {
         return data;
     }
 

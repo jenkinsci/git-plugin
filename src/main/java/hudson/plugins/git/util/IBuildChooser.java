@@ -15,8 +15,7 @@ import java.util.Collection;
  * @author magnayn
  *
  */
-public interface IBuildChooser
-{
+public interface IBuildChooser {
     /**
      * Get a list of revisions that are candidates to be built.
      * May be an empty set.

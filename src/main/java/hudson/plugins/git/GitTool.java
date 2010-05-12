@@ -73,7 +73,7 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
 
         GitTool tool = new GitTool(defaultValueName, defaultGitExe, false, Collections.<ToolProperty<?>>emptyList());
 
-        descriptor.setInstallations(new GitTool[] { tool } );
+        descriptor.setInstallations(new GitTool[] { tool });
         descriptor.save();
     }
 
@@ -126,7 +126,7 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
         }
 
         public FormValidation doCheckHome(@QueryParameter File value)
-                throws IOException, ServletException {
+            throws IOException, ServletException {
 
             Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
             String path = value.getPath();

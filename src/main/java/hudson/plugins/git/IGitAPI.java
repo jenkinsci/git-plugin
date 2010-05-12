@@ -14,13 +14,13 @@ import org.spearce.jgit.transport.RemoteConfig;
 
 public interface IGitAPI {
     String getGitExe();
-	EnvVars getEnvironment();
+    EnvVars getEnvironment();
 
-	public void init() throws GitException;
+    public void init() throws GitException;
     boolean hasGitRepo() throws GitException;
-	boolean hasGitModules() throws GitException;
+    boolean hasGitModules() throws GitException;
 
-	void submoduleInit()  throws GitException;
+    void submoduleInit()  throws GitException;
     void submoduleUpdate()  throws GitException;
     void submoduleSync() throws GitException;
 
@@ -52,10 +52,10 @@ public interface IGitAPI {
     Set<String> getTagNames(String tagPattern) throws GitException;
 
     void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
-	void checkout(String revToBuild) throws GitException;
+    void checkout(String revToBuild) throws GitException;
 
-	void add(String filePattern) throws GitException;
-	void branch(String name) throws GitException;
+    void add(String filePattern) throws GitException;
+    void branch(String name) throws GitException;
 
     void commit(File f) throws GitException;
 

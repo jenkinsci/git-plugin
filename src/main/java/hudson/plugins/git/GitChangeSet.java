@@ -297,12 +297,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         @Exported
         public EditType getEditType() {
             switch (action) {
-                case 'A':
-                    return EditType.ADD;
-                case 'D':
-                    return EditType.DELETE;
-                default:
-                    return EditType.EDIT;
+            case 'A':
+                return EditType.ADD;
+            case 'D':
+                return EditType.DELETE;
+            default:
+                return EditType.EDIT;
             }
         }
     }

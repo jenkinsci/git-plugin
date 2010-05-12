@@ -15,7 +15,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
-
+    
     /**
      * Determines the link to a single file under Git.
      * This page should display all the past revisions of this file, etc.
@@ -26,6 +26,6 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException
      */
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException;
-
+    
     private static final long serialVersionUID = 1L;
 }

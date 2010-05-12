@@ -16,44 +16,37 @@ import java.util.regex.Pattern;
  * origin/ *
  * origin/ * /thing
  */
-public class BranchSpec implements Serializable
-{
+public class BranchSpec implements Serializable {
     private static final long serialVersionUID = -6177158367915899356L;
 
     private String name;
     private transient Pattern pattern;
     
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName(String value)
-    {
-       this.name = value;
+    public void setName(String value) {
+        this.name = value;
     }
     
-    public BranchSpec(String name)
-    {
-        if( name == null )
+    public BranchSpec(String name) {
+        if(name == null)
             throw new IllegalArgumentException();
-        else if( name.length() == 0 )
+        else if(name.length() == 0)
             this.name = "**";
         else
             this.name = name;
     }
     
-    public boolean matches(String item)
-    {
+    public boolean matches(String item) {
         return getPattern().matcher(item).matches();
     }
     
-    public List<String> filterMatching(Collection<String> branches)
-    {
+    public List<String> filterMatching(Collection<String> branches) {
         List<String> items = new ArrayList<String>();
         
-        for(String b : branches)
-        {
+        for(String b : branches) {
             if(matches(b))
                 items.add(b);
         }
@@ -61,12 +54,10 @@ public class BranchSpec implements Serializable
         return items;
     }
     
-    public List<Branch> filterMatchingBranches(Collection<Branch> branches)
-    {
+    public List<Branch> filterMatchingBranches(Collection<Branch> branches) {
         List<Branch> items = new ArrayList<Branch>();
         
-        for(Branch b : branches)
-        {
+        for(Branch b : branches) {
             if(matches(b.getName()))
                 items.add(b);
         }
@@ -74,8 +65,7 @@ public class BranchSpec implements Serializable
         return items;
     }
     
-    private Pattern getPattern()
-    {
+    private Pattern getPattern() {
         // return the saved pattern if available
         if (pattern != null)
             return pattern;
@@ -96,32 +86,26 @@ public class BranchSpec implements Serializable
         
         // split the string at the wildcards
         StringTokenizer tokenizer = new StringTokenizer(qualifiedName, "*", true);
-        while (tokenizer.hasMoreTokens())
-        {
+        while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
             
             // is this token is a wildcard?
-            if (token.equals("*"))
-            {
+            if (token.equals("*")) {
                 // yes, was the previous token a wildcard?
-                if (foundWildcard)
-                {
+                if (foundWildcard) {
                     // yes, we found "**"
                     // match over any number of characters
                     builder.append(".*");
                     foundWildcard = false;
                 }
-                else
-                {
+                else {
                     // no, set foundWildcard to true and go on
                     foundWildcard = true;
                 }
             }
-            else
-            {
+            else {
                 // no, was the previous token a wildcard?
-                if (foundWildcard)
-                {
+                if (foundWildcard) {
                     // yes, we found "*" followed by a non-wildcard
                     // match any number of characters other than a "/"
                     builder.append("[^/]*");
@@ -133,8 +117,7 @@ public class BranchSpec implements Serializable
         }
         
         // if the string ended with a wildcard add it now
-        if (foundWildcard)
-        {
+        if (foundWildcard) {
             builder.append("[^/]*");
         }
         

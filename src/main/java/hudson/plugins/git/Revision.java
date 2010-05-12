@@ -14,92 +14,77 @@ import org.spearce.jgit.lib.ObjectId;
  *
  * @author magnayn
  */
-@ExportedBean( defaultVisibility = 999 )
-public class Revision implements java.io.Serializable, Cloneable
-{
-  private static final long serialVersionUID = -7203898556389073882L;
+@ExportedBean(defaultVisibility = 999)
+public class Revision implements java.io.Serializable, Cloneable {
+    private static final long serialVersionUID = -7203898556389073882L;
 
-  ObjectId           sha1;
-  Collection<Branch> branches;
+    ObjectId           sha1;
+    Collection<Branch> branches;
 
-  public Revision(ObjectId sha1)
-  {
-    this.sha1 = sha1;
-    this.branches = new ArrayList<Branch>();
-  }
-
-  public Revision(ObjectId sha1, Collection<Branch> branches)
-  {
-    this.sha1 = sha1;
-    this.branches = branches;
-  }
-
-  public ObjectId getSha1()
-  {
-    return sha1;
-  }
-
-  @Exported(name = "SHA1")
-  public String getSha1String() {
-	  return sha1 == null ? "" : sha1.name();
-  }
-
-  public void setSha1(ObjectId sha1)
-  {
-    this.sha1 = sha1;
-  }
-
-  @Exported(name = "branch")
-  public Collection<Branch> getBranches()
-  {
-    return branches;
-  }
-
-  public void setBranches(Collection<Branch> branches)
-  {
-    this.branches = branches;
-  }
-
-  public boolean containsBranchName(String name)
-  {
-    for (Branch b : branches)
-    {
-      if (b.getName().equals(name))
-      {
-        return true;
-      }
+    public Revision(ObjectId sha1) {
+        this.sha1 = sha1;
+        this.branches = new ArrayList<Branch>();
     }
-    return false;
-  }
 
-  public String toString()
-  {
-    String s = "Revision " + sha1.name() + " (";
-    for (Branch br : branches)
-    {
-      s += br.getName() + ", ";
+    public Revision(ObjectId sha1, Collection<Branch> branches) {
+        this.sha1 = sha1;
+        this.branches = branches;
     }
-    if (s.endsWith(", "))
-      s = s.substring(0, s.length() - 2);
-    s += ")";
 
-    return s;
-  }
+    public ObjectId getSha1() {
+        return sha1;
+    }
 
-  @Override
-  public Revision clone()
-  {
-    Revision clone;
-	try
-    {
-      clone = (Revision) super.clone();
+    @Exported(name = "SHA1")
+    public String getSha1String() {
+        return sha1 == null ? "" : sha1.name();
     }
-    catch (CloneNotSupportedException e)
-    {
-      throw new RuntimeException("Error cloning Revision", e);
+
+    public void setSha1(ObjectId sha1) {
+        this.sha1 = sha1;
     }
-    clone.branches = new ArrayList<Branch>(branches);
-    return clone;
-  }
+
+    @Exported(name = "branch")
+    public Collection<Branch> getBranches() {
+        return branches;
+    }
+
+    public void setBranches(Collection<Branch> branches) {
+        this.branches = branches;
+    }
+
+    public boolean containsBranchName(String name) {
+        for (Branch b : branches) {
+            if (b.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String toString() {
+        String s = "Revision " + sha1.name() + " (";
+        for (Branch br : branches) {
+            s += br.getName() + ", ";
+        }
+        if (s.endsWith(", "))
+            s = s.substring(0, s.length() - 2);
+        s += ")";
+
+        return s;
+    }
+
+    @Override
+    public Revision clone() {
+        Revision clone;
+	try {
+            clone = (Revision) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Error cloning Revision", e);
+        }
+        clone.branches = new ArrayList<Branch>(branches);
+        return clone;
+    }
 
 }
