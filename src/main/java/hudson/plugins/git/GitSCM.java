@@ -80,7 +80,8 @@ public class GitSCM extends SCM implements Serializable {
     private String choosingStrategy = DEFAULT;
     public static final String DEFAULT = "Default";
     public static final String GERRIT = "Gerrit";
-
+    public static final String DIGG = "Digg";
+    
     public String gitTool = null;
 
     private GitWeb browser;
@@ -297,6 +298,8 @@ public class GitSCM extends SCM implements Serializable {
     private IBuildChooser createBuildChooser(IGitAPI git, TaskListener listener, BuildData buildData) {
         if(this.choosingStrategy != null && GERRIT.equals(this.choosingStrategy)) {
             return new GerritBuildChooser(this,git,new GitUtils(listener,git), buildData);
+        } else if(this.choosingStrategy != null && DIGG.equals(this.choosingStrategy)) {
+            return new DiggBuildChooser(this,git,new GitUtils(listener,git), buildData);
         } else {
             return new BuildChooser(this, git, new GitUtils(listener, git), buildData);
         }

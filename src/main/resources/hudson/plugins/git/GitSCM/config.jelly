@@ -129,15 +129,23 @@
                 <j:when test="${empty(scm.choosingStrategy)}">
                     <option value="${scm.DEFAULT}" selected="SELECTED">Default</option>
                     <option value="${scm.GERRIT}">Gerrit</option>
+                    <option value="${scm.DIGG}">Digg</option>
                 </j:when>
                 <j:otherwise>
                     <j:if test="${scm.choosingStrategy==scm.DEFAULT}">
                         <option value="${scm.DEFAULT}" selected="SELECTED" >Default</option>
                         <option value="${scm.GERRIT}">Gerrit</option>
+                        <option value="${scm.DIGG}">Digg</option>
                     </j:if>
                     <j:if test="${scm.choosingStrategy==scm.GERRIT}">
                         <option value="${scm.DEFAULT}">Default</option>
                         <option value="${scm.GERRIT}" selected="SELECTED">Gerrit</option>
+                        <option value="${scm.DIGG}">Digg</option>
+                    </j:if>
+                    <j:if test="${scm.choosingStrategy==scm.DIGG}">
+                        <option value="${scm.DEFAULT}">Default</option>
+                        <option value="${scm.GERRIT}">Gerrit</option>
+                        <option value="${scm.DIGG}" selected="SELECTED">Digg</option>
                     </j:if>
                 </j:otherwise>
             </j:choose>
