@@ -14,6 +14,7 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
+import hudson.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -74,6 +75,8 @@ public class GitSCM extends SCM implements Serializable {
 
     private boolean clean;
 
+    private boolean wipeOutWorkspace;
+    
     private String choosingStrategy = DEFAULT;
     public static final String DEFAULT = "Default";
     public static final String GERRIT = "Gerrit";
@@ -103,6 +106,7 @@ public class GitSCM extends SCM implements Serializable {
                   boolean doGenerateSubmoduleConfigurations,
                   Collection<SubmoduleConfig> submoduleCfg,
                   boolean clean,
+                  boolean wipeOutWorkspace,
                   String choosingStrategy, GitWeb browser,
                   String gitTool) {
 
@@ -119,6 +123,7 @@ public class GitSCM extends SCM implements Serializable {
         this.submoduleCfg = submoduleCfg;
 
         this.clean = clean;
+        this.wipeOutWorkspace = wipeOutWorkspace;
         this.choosingStrategy = choosingStrategy;
         this.configVersion = 1L;
         this.gitTool = gitTool;
@@ -172,6 +177,10 @@ public class GitSCM extends SCM implements Serializable {
         return browser;
     }
 
+    public boolean getWipeOutWorkspace() {
+        return this.wipeOutWorkspace;
+    }
+    
     public boolean getClean() {
         return this.clean;
     }
@@ -489,6 +498,16 @@ public class GitSCM extends SCM implements Serializable {
                     listener.getLogger().println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
                     IGitAPI git = new GitAPI(gitExe, ws, listener, environment);
 
+                    if (wipeOutWorkspace) {
+                        listener.getLogger().println("Wiping out workspace first");
+                        try {
+                            ws.deleteContents();
+                        } catch (InterruptedException e) {
+                            // I don't really care if this fails.
+                        } 
+                        
+                    }
+
                     if (git.hasGitRepo()) {
                         // It's an update
 
@@ -499,6 +518,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
 
                     } else {
+                        
                         listener.getLogger().println("Cloning the remote Git repository");
 
                         // Go through the repositories, trying to clone from one
@@ -852,6 +872,7 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.generate") != null,
                               submoduleCfg,
                               req.getParameter("git.clean") != null,
+                              req.getParameter("git.wipeOutWorkspace") != null,
                               req.getParameter("git.choosing_strategy"),
                               gitWeb,
                               gitTool);
