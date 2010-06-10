@@ -122,21 +122,32 @@
     <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
       <f:checkbox name="authorOrCommitter" checked="${scm.authorOrCommitter}"/>
     </f:entry>
+    <f:entry title="Wipe out workspace" help="/plugin/git/wipeOutWorkspace.html">
+      <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}" />
+    </f:entry>
     <f:entry title="Choosing strategy" help="/plugin/git/choosingStrategy.html" field="git.choosing_strategy">
         <select name="git.choosing_strategy">
             <j:choose>
                 <j:when test="${empty(scm.choosingStrategy)}">
                     <option value="${scm.DEFAULT}" selected="SELECTED">Default</option>
                     <option value="${scm.GERRIT}">Gerrit</option>
+                    <option value="${scm.DIGG}">Digg</option>
                 </j:when>
                 <j:otherwise>
                     <j:if test="${scm.choosingStrategy==scm.DEFAULT}">
                         <option value="${scm.DEFAULT}" selected="SELECTED" >Default</option>
                         <option value="${scm.GERRIT}">Gerrit</option>
+                        <option value="${scm.DIGG}">Digg</option>
                     </j:if>
                     <j:if test="${scm.choosingStrategy==scm.GERRIT}">
                         <option value="${scm.DEFAULT}">Default</option>
                         <option value="${scm.GERRIT}" selected="SELECTED">Gerrit</option>
+                        <option value="${scm.DIGG}">Digg</option>
+                    </j:if>
+                    <j:if test="${scm.choosingStrategy==scm.DIGG}">
+                        <option value="${scm.DEFAULT}">Default</option>
+                        <option value="${scm.GERRIT}">Gerrit</option>
+                        <option value="${scm.DIGG}" selected="SELECTED">Digg</option>
                     </j:if>
                 </j:otherwise>
             </j:choose>
