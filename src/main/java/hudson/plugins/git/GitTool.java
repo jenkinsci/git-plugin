@@ -34,12 +34,9 @@ import java.util.List;
  */
 public final class GitTool extends ToolInstallation implements NodeSpecific<GitTool>, EnvironmentSpecific<GitTool> {
 
-    private boolean authorOrCommitter;
-
     @DataBoundConstructor
-    public GitTool(String name, String home, boolean authorOrCommitter, List<? extends ToolProperty<?>> properties) {
+    public GitTool(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
-        this.authorOrCommitter = authorOrCommitter;
     }
 
     static transient final String defaultValueName = "Default";
@@ -89,20 +86,16 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
 
 
     public GitTool forNode(Node node, TaskListener log) throws IOException, InterruptedException {
-        return new GitTool(getName(), translateFor(node, log), authorOrCommitter, Collections.<ToolProperty<?>>emptyList());
+        return new GitTool(getName(), translateFor(node, log), Collections.<ToolProperty<?>>emptyList());
     }
 
     public GitTool forEnvironment(EnvVars environment) {
-        return new GitTool(getName(), environment.expand(getHome()), authorOrCommitter, Collections.<ToolProperty<?>>emptyList());
+        return new GitTool(getName(), environment.expand(getHome()), Collections.<ToolProperty<?>>emptyList());
     }
 
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) Hudson.getInstance().getDescriptor(GitTool.class);
-    }
-
-    public boolean getAuthorOrCommitter() {
-        return authorOrCommitter;
     }
 
     @Extension

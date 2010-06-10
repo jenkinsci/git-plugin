@@ -71,7 +71,8 @@ public class GitSCM extends SCM implements Serializable {
     private PreBuildMergeOptions mergeOptions;
 
     private boolean doGenerateSubmoduleConfigurations;
-
+    private boolean authorOrCommitter;
+    
     private boolean clean;
 
     private String choosingStrategy = DEFAULT;
@@ -428,17 +429,7 @@ public class GitSCM extends SCM implements Serializable {
      * than the committer.
      */
     public boolean getAuthorOrCommitter() {
-        GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
-        for(GitTool t : gitToolInstallations) {
-            //If gitTool is null, use first one.
-            if(gitTool == null) {
-                gitTool = t.getName();
-            }
-            if(t.getName().equals(gitTool)) {
-                return t.getAuthorOrCommitter();
-            }
-        }
-        return false;
+        return authorOrCommitter;
     }
 
     @Override

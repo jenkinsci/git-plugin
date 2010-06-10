@@ -5,7 +5,4 @@
     <f:entry title="Path to Git executable" field="home" help="/plugin/git/help-globalConfig.html">
         <f:textbox />
     </f:entry>
-    <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
-        <f:checkbox name="authorOrCommitter" checked="${authorOrCommitter}"/>
-    </f:entry>
 </j:jelly>
