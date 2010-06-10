@@ -110,7 +110,8 @@ public class GitSCM extends SCM implements Serializable {
                   boolean clean,
                   boolean wipeOutWorkspace,
                   String choosingStrategy, GitWeb browser,
-                  String gitTool) {
+                  String gitTool,
+                  boolean authorOrCommitter) {
 
 
         // normalization
@@ -129,7 +130,7 @@ public class GitSCM extends SCM implements Serializable {
         this.choosingStrategy = choosingStrategy;
         this.configVersion = 1L;
         this.gitTool = gitTool;
-
+        this.authorOrCommitter = authorOrCommitter;
     }
 
     public Object readResolve()  {
@@ -869,7 +870,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.wipeOutWorkspace") != null,
                               req.getParameter("git.choosing_strategy"),
                               gitWeb,
-                              gitTool);
+                              gitTool,
+                              req.getParameter("git.authorOrCommitter") != null);
         }
 
 

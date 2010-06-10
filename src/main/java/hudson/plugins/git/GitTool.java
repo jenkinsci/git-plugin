@@ -68,7 +68,7 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
             }
         }
 
-        GitTool tool = new GitTool(defaultValueName, defaultGitExe, false, Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool(defaultValueName, defaultGitExe, Collections.<ToolProperty<?>>emptyList());
 
         descriptor.setInstallations(new GitTool[] { tool });
         descriptor.save();
