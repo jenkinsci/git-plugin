@@ -81,7 +81,7 @@ public class GitSCM extends SCM implements Serializable {
     private String choosingStrategy = DEFAULT;
     public static final String DEFAULT = "Default";
     public static final String GERRIT = "Gerrit";
-    public static final String DIGG = "Digg";
+    public static final String GERRIT_TRIGGER = "Gerrit Trigger";
     
     public String gitTool = null;
 
@@ -202,6 +202,16 @@ public class GitSCM extends SCM implements Serializable {
         return gitTool;
     }
 
+    private String getRefSpec(RemoteConfig repo, AbstractBuild<?,?> build) {
+        String refSpec = repo.getFetchRefSpecs().get(0).toString();
+
+        ParametersAction parameters = build.getAction(ParametersAction.class);
+        if (parameters != null)
+            refSpec = parameters.substitute(build, refSpec);
+
+        return refSpec;
+    }
+    
     private String getSingleBranch(AbstractBuild<?, ?> build) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1 || getRepositories().size() != 1)
@@ -235,7 +245,7 @@ public class GitSCM extends SCM implements Serializable {
 
         listener.getLogger().println("Using strategy: " + choosingStrategy);
 
-        AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
+        final AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
 
         if(lastBuild != null) {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber());
@@ -279,7 +289,7 @@ public class GitSCM extends SCM implements Serializable {
 
                         // Fetch updates
                         for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository);
+                            fetchFrom(git, localWorkspace, listener, remoteRepository, lastBuild);
                         }
 
                         listener.getLogger().println("Polling for changes in");
@@ -300,8 +310,8 @@ public class GitSCM extends SCM implements Serializable {
     private IBuildChooser createBuildChooser(IGitAPI git, TaskListener listener, BuildData buildData) {
         if(this.choosingStrategy != null && GERRIT.equals(this.choosingStrategy)) {
             return new GerritBuildChooser(this,git,new GitUtils(listener,git), buildData);
-        } else if(this.choosingStrategy != null && DIGG.equals(this.choosingStrategy)) {
-            return new DiggBuildChooser(this,git,new GitUtils(listener,git), buildData);
+        } else if(this.choosingStrategy != null && GERRIT_TRIGGER.equals(this.choosingStrategy)) {
+            return new GerritTriggerBuildChooser(this,git,new GitUtils(listener,git), buildData);
         } else {
             return new BuildChooser(this, git, new GitUtils(listener, git), buildData);
         }
@@ -317,9 +327,10 @@ public class GitSCM extends SCM implements Serializable {
      * @throws
      */
     private void fetchFrom(IGitAPI git, File workspace, TaskListener listener,
-                           RemoteConfig remoteRepository) {
+                           RemoteConfig remoteRepository, AbstractBuild<?,?> build) {
         try {
-            git.fetch(remoteRepository);
+            git.fetch(remoteRepository.getURIs().get(0).toString(),
+                      getRefSpec(remoteRepository, build));
 
             List<IndexEntry> submodules = new GitUtils(listener, git)
                 .getSubmodules("HEAD");
@@ -332,7 +343,8 @@ public class GitSCM extends SCM implements Serializable {
                     IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
                                                 listener, git.getEnvironment());
 
-                    subGit.fetch(submoduleRemoteRepository);
+                    subGit.fetch(submoduleRemoteRepository.getURIs().get(0).toString(),
+                                 getRefSpec(submoduleRemoteRepository, build));
                 } catch (Exception ex) {
                     listener
                         .error(
@@ -509,7 +521,7 @@ public class GitSCM extends SCM implements Serializable {
                         listener.getLogger().println("Fetching changes from the remote Git repository");
 
                         for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository);
+                            fetchFrom(git,localWorkspace,listener,remoteRepository, build);
                         }
 
                     } else {
@@ -542,7 +554,7 @@ public class GitSCM extends SCM implements Serializable {
 
                         // Also do a fetch
                         for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository);
+                            fetchFrom(git,localWorkspace,listener,remoteRepository, build);
                         }
 
                         if (git.hasGitModules()) {
@@ -692,7 +704,7 @@ public class GitSCM extends SCM implements Serializable {
                         // Update to do the checkout
 
                         for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository);
+                            fetchFrom(git, localWorkspace, listener, remoteRepository, build);
                         }
 
                         // Update to the correct checkout

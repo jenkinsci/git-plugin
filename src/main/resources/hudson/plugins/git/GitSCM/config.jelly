@@ -131,23 +131,23 @@
                 <j:when test="${empty(scm.choosingStrategy)}">
                     <option value="${scm.DEFAULT}" selected="SELECTED">Default</option>
                     <option value="${scm.GERRIT}">Gerrit</option>
-                    <option value="${scm.DIGG}">Digg</option>
+                    <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
                 </j:when>
                 <j:otherwise>
                     <j:if test="${scm.choosingStrategy==scm.DEFAULT}">
                         <option value="${scm.DEFAULT}" selected="SELECTED" >Default</option>
                         <option value="${scm.GERRIT}">Gerrit</option>
-                        <option value="${scm.DIGG}">Digg</option>
+                        <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
                     </j:if>
                     <j:if test="${scm.choosingStrategy==scm.GERRIT}">
                         <option value="${scm.DEFAULT}">Default</option>
                         <option value="${scm.GERRIT}" selected="SELECTED">Gerrit</option>
-                        <option value="${scm.DIGG}">Digg</option>
+                        <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
                     </j:if>
-                    <j:if test="${scm.choosingStrategy==scm.DIGG}">
+                    <j:if test="${scm.choosingStrategy==scm.GERRIT_TRIGGER}">
                         <option value="${scm.DEFAULT}">Default</option>
                         <option value="${scm.GERRIT}">Gerrit</option>
-                        <option value="${scm.DIGG}" selected="SELECTED">Digg</option>
+                        <option value="${scm.GERRIT_TRIGGER}" selected="SELECTED">Gerrit Trigger</option>
                     </j:if>
                 </j:otherwise>
             </j:choose>
