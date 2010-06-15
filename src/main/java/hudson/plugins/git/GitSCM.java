@@ -496,7 +496,6 @@ public class GitSCM extends SCM implements Serializable {
 
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
 
-
         final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
                 private static final long serialVersionUID = 1L;
                 public Revision invoke(File localWorkspace, VirtualChannel channel)

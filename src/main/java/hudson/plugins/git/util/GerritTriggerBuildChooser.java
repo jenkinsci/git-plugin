@@ -13,6 +13,8 @@ import hudson.util.DescribableList;
 import org.joda.time.DateTime;
 import org.spearce.jgit.lib.ObjectId;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.io.IOException;
 import java.util.*;
 
@@ -64,7 +66,7 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
 
         try {
             ObjectId sha1 = git.revParse("FETCH_HEAD");
-
+            
             // if polling for changes don't select something that has
             // already been built as a build candidate
             if (isPollCall && data.hasBeenBuilt(sha1))
@@ -72,6 +74,27 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
 
             Revision revision = new Revision(sha1);
             revision.getBranches().add(new Branch(singleBranch, sha1));
+
+            if (!isPollCall) {
+                // Now we cheat and add the parent as the last build on the branch, so we can
+                // get the changelog working properly-ish.
+                ObjectId parentSha1 = getFirstParent(ObjectId.toString(sha1));
+                Revision parentRev = new Revision(parentSha1);
+                parentRev.getBranches().add(new Branch(singleBranch, parentSha1));
+
+                int prevBuildNum = 0;
+                Result r = null;
+                
+                Build lastBuild = data.getLastBuildOfBranch(singleBranch);
+                if (lastBuild != null) {
+                    prevBuildNum = lastBuild.getBuildNumber();
+                    r = lastBuild.getBuildResult();
+                }
+
+                // And we add this as the last revision built for this branch, so that history works.
+                revisionBuilt(parentRev, prevBuildNum, r);
+            }
+                
             return Collections.singletonList(revision);
         }
         catch (GitException e) {
@@ -92,5 +115,27 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
     public Action getData() {
         return data;
     }
+
+    private ObjectId getFirstParent(String revName) throws GitException {
+        String result = ((GitAPI)git).launchCommand("log", "-1", "--pretty=format:%P", revName);
+        return ObjectId.fromString(firstLine(result).trim());
+    }
+
+    private String firstLine(String result) {
+        BufferedReader reader = new BufferedReader(new StringReader(result));
+        String line;
+        try {
+            line = reader.readLine();
+            if (line == null)
+                return null;
+            if (reader.readLine() != null)
+                throw new GitException("Result has multiple lines");
+        } catch (IOException e) {
+            throw new GitException("Error parsing result", e);
+        }
+
+        return line;
+    }
+
 
 }
