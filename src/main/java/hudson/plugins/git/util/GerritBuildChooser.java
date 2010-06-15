@@ -140,4 +140,8 @@ public class GerritBuildChooser implements IBuildChooser {
         return data;
     }
 
+    public Build prevBuildForChangelog(String singleBranch) {
+        return data==null?null:data.getLastBuildOfBranch(singleBranch);
+    }
+
 }

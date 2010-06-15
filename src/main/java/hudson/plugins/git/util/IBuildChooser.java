@@ -56,4 +56,10 @@ public interface IBuildChooser {
      * @return
      */
     Action getData();
+
+    /**
+     * What should we be comparing against for changelog generation?
+     */
+    Build prevBuildForChangelog(String singleBranch);
+    
 }

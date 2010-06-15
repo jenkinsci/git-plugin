@@ -482,7 +482,7 @@ public class GitSCM extends SCM implements Serializable {
                             final FilePath workspace, final BuildListener listener, File changelogFile)
         throws IOException, InterruptedException {
         Object[] returnData; // Changelog, BuildData
-
+        Object[] revAndDataToBuild;
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + choosingStrategy);
 
@@ -591,13 +591,14 @@ public class GitSCM extends SCM implements Serializable {
                     IBuildChooser buildChooser = createBuildChooser(git, listener, buildData);
 
                     Collection<Revision> candidates = buildChooser.getCandidateRevisions(false, singleBranch);
+                    
                     if(candidates.size() == 0)
                         return null;
                     return candidates.iterator().next();
                 }
             });
 
-        
+
         if(revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
@@ -606,7 +607,6 @@ public class GitSCM extends SCM implements Serializable {
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
-
 
         if (mergeOptions.doMerge()) {
             if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
@@ -668,8 +668,9 @@ public class GitSCM extends SCM implements Serializable {
                                 listener.getLogger().println("Warning : There are multiple branch changesets here");
 
                             try {
+
                                 for(Branch b : revToBuild.getBranches()) {
-                                    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
+                                    Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName());
                                     if(lastRevWas != null) {
                                         changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
                                     }
@@ -743,7 +744,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     try {
 	                for(Branch b : revToBuild.getBranches()) {
-	                    Build lastRevWas = buildData==null?null:buildData.getLastBuildOfBranch(b.getName());
+                            Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName());
 
 	                    if(lastRevWas != null) {
 	                        listener.getLogger().println("Recording changes in branch " + b.getName());

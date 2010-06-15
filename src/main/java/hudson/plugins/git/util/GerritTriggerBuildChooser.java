@@ -67,34 +67,9 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
         try {
             ObjectId sha1 = git.revParse("FETCH_HEAD");
             
-            // if polling for changes don't select something that has
-            // already been built as a build candidate
-            if (isPollCall && data.hasBeenBuilt(sha1))
-                return Collections.<Revision>emptyList();
-
             Revision revision = new Revision(sha1);
             revision.getBranches().add(new Branch(singleBranch, sha1));
 
-            if (!isPollCall) {
-                // Now we cheat and add the parent as the last build on the branch, so we can
-                // get the changelog working properly-ish.
-                ObjectId parentSha1 = getFirstParent(ObjectId.toString(sha1));
-                Revision parentRev = new Revision(parentSha1);
-                parentRev.getBranches().add(new Branch(singleBranch, parentSha1));
-
-                int prevBuildNum = 0;
-                Result r = null;
-                
-                Build lastBuild = data.getLastBuildOfBranch(singleBranch);
-                if (lastBuild != null) {
-                    prevBuildNum = lastBuild.getBuildNumber();
-                    r = lastBuild.getBuildResult();
-                }
-
-                // And we add this as the last revision built for this branch, so that history works.
-                revisionBuilt(parentRev, prevBuildNum, r);
-            }
-                
             return Collections.singletonList(revision);
         }
         catch (GitException e) {
@@ -103,6 +78,30 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
         }
     }
 
+    @Override
+    public Build prevBuildForChangelog(String singleBranch) {
+        ObjectId sha1 = git.revParse("FETCH_HEAD");
+
+        // Now we cheat and add the parent as the last build on the branch, so we can
+        // get the changelog working properly-ish.
+        ObjectId parentSha1 = getFirstParent(ObjectId.toString(sha1));
+        Revision parentRev = new Revision(parentSha1);
+        parentRev.getBranches().add(new Branch(singleBranch, parentSha1));
+        
+        int prevBuildNum = 0;
+        Result r = null;
+        
+        Build lastBuild = data.getLastBuildOfBranch(singleBranch);
+        if (lastBuild != null) {
+            prevBuildNum = lastBuild.getBuildNumber();
+            r = lastBuild.getBuildResult();
+        }
+
+        Build newLastBuild = new Build(parentRev, prevBuildNum, r);
+        
+        return newLastBuild;
+    }
+        
     @Override
     public Build revisionBuilt(Revision revision, int buildNumber, Result result) {
         Build build = new Build(revision, buildNumber, result);
@@ -136,6 +135,5 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
 
         return line;
     }
-
 
 }
