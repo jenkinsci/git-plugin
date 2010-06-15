@@ -14,6 +14,7 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
+import hudson.util.IOException2;
 import hudson.Util;
 
 import java.io.ByteArrayOutputStream;
@@ -191,6 +192,24 @@ public class GitSCM extends SCM implements Serializable {
     public String getChoosingStrategy() {
         return choosingStrategy;
     }
+
+    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?,?> build) {
+        if (remoteRepositories == null)
+            return new ArrayList<RemoteConfig>();
+        else {
+            List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
+
+            for (RemoteConfig oldRepo : remoteRepositories) {
+                expandedRepos.add(newRemoteConfig(oldRepo.getName(),
+                                                  oldRepo.getURIs().get(0).toString(),
+                                                  new RefSpec(getRefSpec(oldRepo, build))));
+            }
+
+            return expandedRepos;
+        }
+    }
+                            
+        
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null)
@@ -256,10 +275,13 @@ public class GitSCM extends SCM implements Serializable {
         if(buildData != null && buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
-
+        
         final String singleBranch = getSingleBranch(lastBuild);
         Label label = project.getAssignedLabel();
         final String gitExe;
+
+        final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
+        
         //If this project is tied onto a node, it's built always there. On other cases,
         //polling is done on the node which did the last build.
         //
@@ -288,8 +310,8 @@ public class GitSCM extends SCM implements Serializable {
                         listener.getLogger().println("Fetching changes from the remote Git repositories");
 
                         // Fetch updates
-                        for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository, lastBuild);
+                        for (RemoteConfig remoteRepository : paramRepos) {
+                            fetchFrom(git, localWorkspace, listener, remoteRepository);
                         }
 
                         listener.getLogger().println("Polling for changes in");
@@ -327,10 +349,9 @@ public class GitSCM extends SCM implements Serializable {
      * @throws
      */
     private void fetchFrom(IGitAPI git, File workspace, TaskListener listener,
-                           RemoteConfig remoteRepository, AbstractBuild<?,?> build) {
+                           RemoteConfig remoteRepository) {
         try {
-            git.fetch(remoteRepository.getURIs().get(0).toString(),
-                      getRefSpec(remoteRepository, build));
+            git.fetch(remoteRepository);
 
             List<IndexEntry> submodules = new GitUtils(listener, git)
                 .getSubmodules("HEAD");
@@ -343,8 +364,7 @@ public class GitSCM extends SCM implements Serializable {
                     IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
                                                 listener, git.getEnvironment());
 
-                    subGit.fetch(submoduleRemoteRepository.getURIs().get(0).toString(),
-                                 getRefSpec(submoduleRemoteRepository, build));
+                    subGit.fetch(submoduleRemoteRepository);
                 } catch (Exception ex) {
                     listener
                         .error(
@@ -461,6 +481,7 @@ public class GitSCM extends SCM implements Serializable {
     public boolean checkout(final AbstractBuild build, Launcher launcher,
                             final FilePath workspace, final BuildListener listener, File changelogFile)
         throws IOException, InterruptedException {
+        Object[] returnData; // Changelog, BuildData
 
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + choosingStrategy);
@@ -494,8 +515,10 @@ public class GitSCM extends SCM implements Serializable {
             }
         }
 
+        final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
+        
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
-
+        
         final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
                 private static final long serialVersionUID = 1L;
                 public Revision invoke(File localWorkspace, VirtualChannel channel)
@@ -519,8 +542,8 @@ public class GitSCM extends SCM implements Serializable {
 
                         listener.getLogger().println("Fetching changes from the remote Git repository");
 
-                        for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository, build);
+                        for (RemoteConfig remoteRepository : paramRepos) {
+                            fetchFrom(git,localWorkspace,listener,remoteRepository);
                         }
 
                     } else {
@@ -530,7 +553,7 @@ public class GitSCM extends SCM implements Serializable {
                         // Go through the repositories, trying to clone from one
                         //
                         boolean successfullyCloned = false;
-                        for(RemoteConfig rc : remoteRepositories) {
+                        for(RemoteConfig rc : paramRepos) {
                             try {
                                 git.clone(rc);
                                 successfullyCloned = true;
@@ -552,8 +575,8 @@ public class GitSCM extends SCM implements Serializable {
                         }
 
                         // Also do a fetch
-                        for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository, build);
+                        for (RemoteConfig remoteRepository : paramRepos) {
+                            fetchFrom(git,localWorkspace,listener,remoteRepository);
                         }
 
                         if (git.hasGitModules()) {
@@ -574,6 +597,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             });
 
+        
         if(revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
@@ -582,7 +606,6 @@ public class GitSCM extends SCM implements Serializable {
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
-        Object[] returnData; // Changelog, BuildData
 
 
         if (mergeOptions.doMerge()) {
@@ -702,8 +725,8 @@ public class GitSCM extends SCM implements Serializable {
                         // So - try updating from all RRs, then use the submodule
                         // Update to do the checkout
 
-                        for (RemoteConfig remoteRepository : getRepositories()) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository, build);
+                        for (RemoteConfig remoteRepository : paramRepos) {
+                            fetchFrom(git, localWorkspace, listener, remoteRepository);
                         }
 
                         // Update to the correct checkout
