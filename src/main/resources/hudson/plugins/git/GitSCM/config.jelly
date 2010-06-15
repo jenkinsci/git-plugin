@@ -120,7 +120,7 @@
       <f:checkbox name="git.clean" checked="${scm.clean}" />
     </f:entry>
     <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
-      <f:checkbox name="authorOrCommitter" checked="${scm.authorOrCommitter}"/>
+      <f:checkbox name="git.authorOrCommitter" checked="${scm.authorOrCommitter}"/>
     </f:entry>
     <f:entry title="Wipe out workspace" help="/plugin/git/wipeOutWorkspace.html">
       <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}" />
