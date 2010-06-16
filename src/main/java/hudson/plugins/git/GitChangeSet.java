@@ -294,7 +294,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * Gets {@linkplain #getComment() the comment} fully marked up by {@link ChangeLogAnnotator}.
      */
     public String getCommentAnnotated() {
-        MarkupText markup = new MarkupText(Util.escape(getComment()));
+        MarkupText markup = new MarkupText(getComment());
         for (ChangeLogAnnotator a : ChangeLogAnnotator.all())
             a.annotate(getParent().build,this,markup);
 
