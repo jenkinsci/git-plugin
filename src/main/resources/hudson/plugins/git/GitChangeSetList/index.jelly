@@ -27,7 +27,7 @@
               </j:if>
               by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
             </b>
-            <pre><st:out value="${cs.comment}"/></pre>
+            <pre><st:out value="${cs.commentAnnotated}"/></pre>
           </div>
         </td>
       </tr>

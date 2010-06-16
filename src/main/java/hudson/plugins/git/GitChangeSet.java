@@ -1,8 +1,12 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmpty;
+
+import hudson.MarkupText;
+import hudson.Util;
 import hudson.model.Hudson;
 import hudson.model.User;
+import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
@@ -284,6 +288,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @Exported
     public String getComment() {
         return this.comment;
+    }
+
+    /**
+     * Gets {@linkplain #getComment() the comment} fully marked up by {@link ChangeLogAnnotator}.
+     */
+    public String getCommentAnnotated() {
+        MarkupText markup = new MarkupText(Util.escape(getComment()));
+        for (ChangeLogAnnotator a : ChangeLogAnnotator.all())
+            a.annotate(getParent().build,this,markup);
+
+        return markup.toString();
     }
 
     @ExportedBean(defaultVisibility=999)
