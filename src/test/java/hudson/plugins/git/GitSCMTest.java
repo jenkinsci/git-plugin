@@ -84,6 +84,58 @@ public class GitSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    public void testAuthorOrCommitterFalse() throws Exception {
+        // Test with authorOrCommitter set to false and make sure we get the committer.
+        FreeStyleProject project = setupProject("master", false);
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+
+        final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final Set<User> secondCulprits = secondBuild.getCulprits();
+
+        assertEquals("The build should have only one culprit", 1, secondCulprits.size());
+        assertEquals("Did not get the committer as the change author with authorOrCommiter==false",
+                     janeDoe.getName(), secondCulprits.iterator().next().getFullName());
+    }
+
+    public void testAuthorOrCommitterTrue() throws Exception {
+        // Next, test with authorOrCommitter set to true and make sure we get the author.
+        FreeStyleProject project = setupProject("master", true);
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+
+        final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final Set<User> secondCulprits = secondBuild.getCulprits();
+
+        assertEquals("The build should have only one culprit", 1, secondCulprits.size());
+        assertEquals("Did not get the author as the change author with authorOrCommiter==true",
+                     johnDoe.getName(), secondCulprits.iterator().next().getFullName());
+    }
+
     /**
      * Method name is self-explanatory.
      */
@@ -200,6 +252,19 @@ public class GitSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
     }
 
+    private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+        MockStaplerRequest req = new MockStaplerRequest()
+            .setRepo(workDir.getAbsolutePath(), "origin", "")
+            .setBranch(branchString);
+        if (authorOrCommitter) 
+            req = req.setAuthorOrCommitter("true");
+        
+        project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
+        project.getBuildersList().add(new CaptureEnvironmentBuilder());
+        return project;
+    }
+
     private FreeStyleProject setupSimpleProject(String branchString) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         final MockStaplerRequest req = new MockStaplerRequest()
@@ -223,6 +288,19 @@ public class GitSCMTest extends HudsonTestCase {
 
     private void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
         setAuthor(committer);
+        setCommitter(committer);
+        FilePath file = workspace.child(fileName);
+        try {
+            file.write(fileName, null);
+        } catch (Exception e) {
+            throw new GitException("unable to write file", e);
+        }
+        git.add(fileName);
+        git.launchCommand("commit", "-m", message);
+    }
+
+    private void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws GitException {
+        setAuthor(author);
         setCommitter(committer);
         FilePath file = workspace.child(fileName);
         try {

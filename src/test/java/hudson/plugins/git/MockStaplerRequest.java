@@ -93,6 +93,10 @@ public class MockStaplerRequest implements StaplerRequest {
         return put("git.gitExe", gitExe);
     }
 
+    public MockStaplerRequest setAuthorOrCommitter(String authorOrCommitter) {
+        return put("git.authorOrCommitter", authorOrCommitter);
+    }
+
     /**
      * In addition to the setter methods you can directly prime values into the parameter map
      * using this method.

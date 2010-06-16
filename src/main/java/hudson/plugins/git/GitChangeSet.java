@@ -240,6 +240,32 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
+    /**
+     * Gets the author name for this changeset - note that this is mainly here
+     * so that we can test authorOrCommitter without needing a fully instantiated
+     * Hudson (which is needed for User.get in getAuthor()).
+     */
+    public String getAuthorName() {
+        String csAuthor;
+        String csAuthorEmail;
+
+        // If true, use the author field from git log rather than the committer.
+        if (authorOrCommitter) {
+            csAuthor = this.author;
+            csAuthorEmail = this.authorEmail;
+        }
+        else {
+            csAuthor = this.committer;
+            csAuthorEmail = this.committerEmail;
+        }
+        
+        if (csAuthor == null) {
+            throw new RuntimeException("No author in this changeset!");
+        }
+
+        return csAuthor;
+    }
+    
     @Override
     @Exported
     public String getMsg() {

@@ -14,7 +14,7 @@ public class GitChangeSetTest extends TestCase {
         super(testName);
     }
 
-    public void testChangeSet() {
+    private GitChangeSet genChangeSet(boolean authorOrCommitter) {
         ArrayList<String> lines = new ArrayList<String>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");
@@ -32,8 +32,12 @@ public class GitChangeSetTest extends TestCase {
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 M\tsrc/test/modified.file");
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 R012\tsrc/test/renamedFrom.file\tsrc/test/renamedTo.file");
         lines.add(":000000 123456 bc234def567abc890def123abc456def789abc01 123abc456def789abc012def345abc678def901a C100\tsrc/test/original.file\tsrc/test/copyOf.file");
-        GitChangeSet changeSet = new GitChangeSet(lines, false);
 
+        return new GitChangeSet(lines, authorOrCommitter);
+    }
+    
+    public void testChangeSet() {
+        GitChangeSet changeSet = genChangeSet(false);
         Assert.assertEquals("123abc456def", changeSet.getId());
         Assert.assertEquals("Commit title.", changeSet.getMsg());
         Assert.assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
@@ -77,5 +81,15 @@ public class GitChangeSetTest extends TestCase {
                 Assert.fail("Unrecognized path.");
             }
         }
+    }
+
+    public void testAuthorOrCommitter() {
+        GitChangeSet committerCS = genChangeSet(false);
+
+        Assert.assertEquals("John Committer", committerCS.getAuthorName());
+
+        GitChangeSet authorCS = genChangeSet(true);
+
+        Assert.assertEquals("John Author", authorCS.getAuthorName());
     }
 }
