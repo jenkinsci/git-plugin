@@ -8,14 +8,19 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.User;
+import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
-
-import java.io.File;
-import java.util.Set;
-
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.spearce.jgit.lib.PersonIdent;
+import org.spearce.jgit.transport.RemoteConfig;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Tests for {@link GitSCM}.
@@ -254,25 +259,26 @@ public class GitSCMTest extends HudsonTestCase {
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        MockStaplerRequest req = new MockStaplerRequest()
-            .setRepo(workDir.getAbsolutePath(), "origin", "")
-            .setBranch(branchString);
-        if (authorOrCommitter) 
-            req = req.setAuthorOrCommitter("true");
-        
-        project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
+        project.setScm(new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec(branchString)),
+                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, new DefaultBuildChooser(), null, null, authorOrCommitter));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
 
     private FreeStyleProject setupSimpleProject(String branchString) throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
-        final MockStaplerRequest req = new MockStaplerRequest()
-            .setRepo(workDir.getAbsolutePath(), "origin", "")
-            .setBranch(branchString);
-        project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
-        project.getBuildersList().add(new CaptureEnvironmentBuilder());
-        return project;
+        return setupProject(branchString,false);
+    }
+
+    private List<RemoteConfig> createRemoteRepositories() throws IOException {
+        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
+                new String[]{workDir.getAbsolutePath()},
+                new String[]{"origin"},
+                new String[]{""},
+                File.createTempFile("tmp", "config", hudson.getRootDir())
+        );
     }
 
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {

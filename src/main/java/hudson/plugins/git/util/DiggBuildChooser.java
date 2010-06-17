@@ -2,51 +2,22 @@ package hudson.plugins.git.util;
 
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.plugins.git.*;
-import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.GitUtils;
-import hudson.util.DescribableList;
 import org.joda.time.DateTime;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.spearce.jgit.lib.ObjectId;
 
 import java.io.IOException;
 import java.util.*;
 
-public class DiggBuildChooser implements IBuildChooser {
+public class DiggBuildChooser extends BuildChooser {
 
     private final String separator = "#";
-    private IGitAPI               git;
-    private GitUtils utils;
-    private GitSCM                gitSCM;
 
-    //-------- Data -----------
-    private BuildData data;
-
+    @DataBoundConstructor
     public DiggBuildChooser() {
-        this.gitSCM = null;
-        this.git = null;
-        this.utils = null;
-        this.data = null;
 
-    }
-
-    public DiggBuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data)
-    {
-        this.gitSCM = gitSCM;
-        this.git = git;
-        this.utils = utils;
-        this.data = data == null ? new BuildData() : data;
-    }
-    
-    public void setUtilities(GitSCM gitSCM, IGitAPI git, GitUtils gitUtils) {
-        this.gitSCM = gitSCM;
-        this.git = git;
-        this.utils = gitUtils;
-        this.data = data == null ? new BuildData() : data;
     }
 
     /**
@@ -60,7 +31,8 @@ public class DiggBuildChooser implements IBuildChooser {
      * @throws GitException
      */
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch)
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                                                      IGitAPI git, TaskListener listener, BuildData data)
             throws GitException, IOException {
 
         Build lastTimeBased = data.getLastBuildOfBranch("timebased");
@@ -78,7 +50,6 @@ public class DiggBuildChooser implements IBuildChooser {
         Collection<TimedCommit> commits = sortRevList(result);
         Iterator<TimedCommit> i = commits.iterator();
         ArrayList<Revision> revs = new ArrayList<Revision>();
-        DateTime lastBuilt = null;
 
         TimedCommit first = null;
 
@@ -182,19 +153,16 @@ public class DiggBuildChooser implements IBuildChooser {
         }
      }
 
-    @Override
-    public Build revisionBuilt(Revision revision, int buildNumber, Result result )
-    {
-        Build build = new Build(revision, buildNumber, result);
-        data.saveBuild(build);
-        return build;
+    @Extension
+    public static final class DescriptorImpl extends BuildChooserDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Digg";
+        }
+
+        @Override
+        public String getLegacyId() {
+            return "Digg";
+        }
     }
-
-
-    @Override
-    public Action getData()
-    {
-        return data;
-    }
-
 }

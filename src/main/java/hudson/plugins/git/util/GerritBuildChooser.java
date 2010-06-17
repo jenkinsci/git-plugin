@@ -1,31 +1,35 @@
 package hudson.plugins.git.util;
 
 
-import hudson.model.Action;
-import hudson.model.Result;
-import hudson.plugins.git.*;
+import hudson.Extension;
+import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.IGitAPI;
+import hudson.plugins.git.Revision;
 import org.joda.time.DateTime;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.spearce.jgit.lib.ObjectId;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
-public class GerritBuildChooser implements IBuildChooser {
+// TODO: to be moved to the Gerrit plugin
+public class GerritBuildChooser extends BuildChooser {
 
     private final String separator = "#";
-    private final IGitAPI               git;
-    private final GitUtils              utils;
-    private final GitSCM                gitSCM;
 
-    //-------- Data -----------
-    private final BuildData             data;
     Logger logger = Logger.getLogger(GerritBuildChooser.class.getName());
-    public GerritBuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data) {
-        this.gitSCM = gitSCM;
-        this.git = git;
-        this.utils = utils;
-        this.data = data == null ? new BuildData() : data;
+
+    @DataBoundConstructor
+    public GerritBuildChooser() {
     }
 
     /**
@@ -38,7 +42,8 @@ public class GerritBuildChooser implements IBuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch)
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                                                      IGitAPI git, TaskListener listener, BuildData data)
         throws GitException, IOException {
       
         Revision last = data.getLastBuiltRevision();
@@ -129,15 +134,16 @@ public class GerritBuildChooser implements IBuildChooser {
         }
     }
 
-    public Build revisionBuilt(Revision revision, int buildNumber, Result result) {
-        Build build = new Build(revision, buildNumber, result);
-        data.saveBuild(build);
-        return build;
+    @Extension
+    public static final class DescriptorImpl extends BuildChooserDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Gerrit";
+        }
+
+        @Override
+        public String getLegacyId() {
+            return "Gerrit";
+        }
     }
-
-
-    public Action getData() {
-        return data;
-    }
-
 }
