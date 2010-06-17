@@ -170,6 +170,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 </configuration>
            </plugin>
         </plugins>
+        <extensions>
+          <extension>
+            <groupId>org.jvnet.wagon-svn</groupId>
+            <artifactId>wagon-svn</artifactId>
+            <version>1.8</version>
+          </extension>
+        </extensions>
     </build>
     <dependencies>
         <dependency>
@@ -186,6 +193,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </dependency>
     </dependencies>
     <distributionManagement>
+      <repository>
+        <id>java.net-m2-repository</id>
+        <url>java-net:/maven2-repository/trunk/repository/</url>
+      </repository>
         <snapshotRepository>
             <id>jgit-maven-snapshot-repository</id>
             <name>JGit Maven Snapshot Repository</name>

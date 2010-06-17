@@ -2,6 +2,7 @@ package hudson.plugins.git.util;
 
 
 import hudson.Extension;
+import hudson.model.TaskListener;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Result;
@@ -11,6 +12,7 @@ import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.util.DescribableList;
 import org.joda.time.DateTime;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.spearce.jgit.lib.ObjectId;
 
 import java.io.BufferedReader;
@@ -18,37 +20,11 @@ import java.io.StringReader;
 import java.io.IOException;
 import java.util.*;
 
-public class GerritTriggerBuildChooser implements IBuildChooser {
-
+public class GerritTriggerBuildChooser extends BuildChooser {
     private final String separator = "#";
-    private IGitAPI               git;
-    private GitUtils utils;
-    private GitSCM                gitSCM;
 
-    //-------- Data -----------
-    private BuildData data;
-
+    @DataBoundConstructor
     public GerritTriggerBuildChooser() {
-        this.gitSCM = null;
-        this.git = null;
-        this.utils = null;
-        this.data = null;
-
-    }
-
-    public GerritTriggerBuildChooser(GitSCM gitSCM, IGitAPI git, GitUtils utils, BuildData data)
-    {
-        this.gitSCM = gitSCM;
-        this.git = git;
-        this.utils = utils;
-        this.data = data == null ? new BuildData() : data;
-    }
-    
-    public void setUtilities(GitSCM gitSCM, IGitAPI git, GitUtils gitUtils) {
-        this.gitSCM = gitSCM;
-        this.git = git;
-        this.utils = gitUtils;
-        this.data = data == null ? new BuildData() : data;
     }
 
     /**
@@ -61,7 +37,8 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
      * @throws GitException
      */
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch)
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                                                      IGitAPI git, TaskListener listener, BuildData data)
             throws GitException, IOException {
 
         try {
@@ -79,12 +56,12 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
     }
 
     @Override
-    public Build prevBuildForChangelog(String singleBranch) {
+    public Build prevBuildForChangelog(String singleBranch, BuildData data, IGitAPI git) {
         ObjectId sha1 = git.revParse("FETCH_HEAD");
 
         // Now we cheat and add the parent as the last build on the branch, so we can
         // get the changelog working properly-ish.
-        ObjectId parentSha1 = getFirstParent(ObjectId.toString(sha1));
+        ObjectId parentSha1 = getFirstParent(ObjectId.toString(sha1), git);
         Revision parentRev = new Revision(parentSha1);
         parentRev.getBranches().add(new Branch(singleBranch, parentSha1));
         
@@ -102,20 +79,7 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
         return newLastBuild;
     }
         
-    @Override
-    public Build revisionBuilt(Revision revision, int buildNumber, Result result) {
-        Build build = new Build(revision, buildNumber, result);
-        data.saveBuild(build);
-        return build;
-    }
-    
-
-    @Override
-    public Action getData() {
-        return data;
-    }
-
-    private ObjectId getFirstParent(String revName) throws GitException {
+    private ObjectId getFirstParent(String revName, IGitAPI git) throws GitException {
         String result = ((GitAPI)git).launchCommand("log", "-1", "--pretty=format:%P", revName);
         return ObjectId.fromString(firstLine(result).trim());
     }
@@ -134,6 +98,19 @@ public class GerritTriggerBuildChooser implements IBuildChooser {
         }
 
         return line;
+    }
+
+    @Extension
+    public static final class DescriptorImpl extends BuildChooserDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Gerrit Trigger";
+        }
+
+        @Override
+        public String getLegacyId() {
+            return "Gerrit Trigger";
+        }
     }
 
 }

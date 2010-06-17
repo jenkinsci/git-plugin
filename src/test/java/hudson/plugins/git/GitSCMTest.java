@@ -8,14 +8,19 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.User;
+import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
-
-import java.io.File;
-import java.util.Set;
-
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.spearce.jgit.lib.PersonIdent;
+import org.spearce.jgit.transport.RemoteConfig;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Tests for {@link GitSCM}.
@@ -63,6 +68,30 @@ public class GitSCMTest extends HudsonTestCase {
      */
     public void testBasic() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    public void testBasicWithSlave() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        project.setAssignedLabel(createSlave(null, null).getSelfLabel());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -254,25 +283,26 @@ public class GitSCMTest extends HudsonTestCase {
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        MockStaplerRequest req = new MockStaplerRequest()
-            .setRepo(workDir.getAbsolutePath(), "origin", "")
-            .setBranch(branchString);
-        if (authorOrCommitter) 
-            req = req.setAuthorOrCommitter("true");
-        
-        project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
+        project.setScm(new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec(branchString)),
+                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, new DefaultBuildChooser(), null, null, authorOrCommitter));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
 
     private FreeStyleProject setupSimpleProject(String branchString) throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
-        final MockStaplerRequest req = new MockStaplerRequest()
-            .setRepo(workDir.getAbsolutePath(), "origin", "")
-            .setBranch(branchString);
-        project.setScm(hudson.getScm("GitSCM").newInstance(req, null));
-        project.getBuildersList().add(new CaptureEnvironmentBuilder());
-        return project;
+        return setupProject(branchString,false);
+    }
+
+    private List<RemoteConfig> createRemoteRepositories() throws IOException {
+        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
+                new String[]{workDir.getAbsolutePath()},
+                new String[]{"origin"},
+                new String[]{""},
+                File.createTempFile("tmp", "config", hudson.getRootDir())
+        );
     }
 
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {

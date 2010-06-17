@@ -43,19 +43,6 @@
     </repository>
     
     <repository>
-      <id>jgit-releases</id>
-      <url>http://fisheye4.atlassian.com/browse/~raw,r=trunk/hudson/trunk/hudson/plugins/git/maven-repository</url>
-      <!--
-          <url>https://guest:guest@hudson.dev.java.net/svn/hudson/trunk/hudson/plugins/git/maven-repository</url>
-      -->
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
       <id>guice-maven</id>
       <name>guice maven</name>
       <url>http://guice-maven.googlecode.com/svn/trunk</url>

@@ -125,34 +125,22 @@
     <f:entry title="Wipe out workspace" help="/plugin/git/wipeOutWorkspace.html">
       <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}" />
     </f:entry>
-    <f:entry title="Choosing strategy" help="/plugin/git/choosingStrategy.html" field="git.choosing_strategy">
-        <select name="git.choosing_strategy">
-            <j:choose>
-                <j:when test="${empty(scm.choosingStrategy)}">
-                    <option value="${scm.DEFAULT}" selected="SELECTED">Default</option>
-                    <option value="${scm.GERRIT}">Gerrit</option>
-                    <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
-                </j:when>
-                <j:otherwise>
-                    <j:if test="${scm.choosingStrategy==scm.DEFAULT}">
-                        <option value="${scm.DEFAULT}" selected="SELECTED" >Default</option>
-                        <option value="${scm.GERRIT}">Gerrit</option>
-                        <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
-                    </j:if>
-                    <j:if test="${scm.choosingStrategy==scm.GERRIT}">
-                        <option value="${scm.DEFAULT}">Default</option>
-                        <option value="${scm.GERRIT}" selected="SELECTED">Gerrit</option>
-                        <option value="${scm.GERRIT_TRIGGER}">Gerrit Trigger</option>
-                    </j:if>
-                    <j:if test="${scm.choosingStrategy==scm.GERRIT_TRIGGER}">
-                        <option value="${scm.DEFAULT}">Default</option>
-                        <option value="${scm.GERRIT}">Gerrit</option>
-                        <option value="${scm.GERRIT_TRIGGER}" selected="SELECTED">Gerrit Trigger</option>
-                    </j:if>
-                </j:otherwise>
-            </j:choose>
-        </select>
-    </f:entry>
+    <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
+      <j:scope>
+        <j:set var="current" value="${instance.buildChooser}"/>
+        <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
+          <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
+            selected="${current.descriptor==descriptor}">
+            <j:set var="instance" value="${current.descriptor==descriptor ? current : null}" />
+            <tr><td>
+              <input type="hidden" name="stapler-class" value="${descriptor.clazz.name}" />
+            </td></tr>
+            <st:include from="${descriptor}" page="${descriptor.configPage}" optional="true"/>
+          </f:dropdownListBlock>
+        </j:forEach>
+      </j:scope>
+    </f:dropdownList>
+
       <f:entry title="Git executable" field="git.gitTool">
           <select name="git.gitTool">
               <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
