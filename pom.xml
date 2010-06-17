@@ -79,4 +79,11 @@
       <version>2.0.1</version>
     </dependency>
   </dependencies>
+
+  <scm>
+    <connection>scm:git:git://github.com/hudson/Hudson-GIT-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:hudson/Hudson-GIT-plugin.git</developerConnection>
+    <url>http://github.com/hudson/Hudson-GIT-plugin</url>
+  </scm>
+
 </project>
