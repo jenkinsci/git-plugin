@@ -212,81 +212,26 @@ public class GitAPI implements IGitAPI {
         return line;
     }
 
-    private void log(String revFrom, String revTo, OutputStream fos, String... extraargs)
-        throws GitException {
-        String revSpec;
-        if (revFrom == null) {
-            revSpec = revTo;
-        } else {
-            revSpec = revFrom + ".." + revTo;
-        }
-        // Find the changes between our current working copy and now
+    public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
+        whatchanged(revFrom, revTo, outputStream, "--no-abbrev", "-M", "--pretty=raw");
+    }
+
+    private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
+        String revSpec = revFrom + ".." + revTo;
+
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "log");
+        args.add(getGitExe(), "whatchanged");
         args.add(extraargs);
         args.add(revSpec);
 
         try {
-            if (launcher.launch().cmds(args).
-                envs(environment).stdout(fos).pwd(workspace).join() != 0) {
-                throw new GitException("Error launching git log");
-            }
-
-        } catch (Exception e) {
-            throw new GitException("Error performing git log", e);
-        }
-    }
-
-    private void treeDiff(String rev, OutputStream fos, String... extraargs) throws GitException {
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "diff-tree");
-        args.add(extraargs);
-        args.add(rev);
-
-        try {
-            fos.write("\n".getBytes());
-            if (launcher.launch().cmds(args).
-                envs(environment).stdout(fos).pwd(workspace).join() != 0) {
-                throw new GitException("Error launching git diff-tree");
+            if (launcher.launch().cmds(args).envs(environment).stdout(
+                    outputStream).pwd(workspace).join() != 0) {
+                throw new GitException("Error launching git whatchanged");
             }
         } catch (Exception e) {
-            throw new GitException("Error performing git diff-tree", e);
+            throw new GitException("Error performing git whatchanged", e);
         }
-    }
-
-    public void changelog(String revFrom, String revTo, OutputStream fos) throws GitException {
-        //log(revFrom, revTo, fos, "--name-status", "-M", "--summary", "--pretty=raw");
-        List<String> commits = getChangeLogCommits(revFrom, revTo);
-        for (String commit : commits) {
-            logCommit(commit, fos);
-        }
-    }
-
-    private List<String> getChangeLogCommits(String revFrom, String revTo) throws GitException {
-        ByteArrayOutputStream commitStream = new ByteArrayOutputStream();
-        log(revFrom, revTo, commitStream, "--pretty=format:%H"); // just the sha1
-        BufferedReader commitReader = new BufferedReader(new StringReader(commitStream.toString()));
-        ArrayList<String> commits = new ArrayList<String>();
-        try {
-            String line = commitReader.readLine();
-            while (line != null) {
-                commits.add(line);
-                line = commitReader.readLine();
-            }
-        } catch (Exception e) {
-            throw new GitException("Could not process change log", e);
-        } finally {
-            try {
-                commitStream.close();
-            } catch (IOException ioe) {
-            }
-        }
-        return commits;
-    }
-
-    private void logCommit(String commit, OutputStream fos) throws GitException {
-        log(null, commit, fos, "-M", "--summary", "--pretty=raw", "-n", "1");
-        treeDiff(commit, fos, "-M", "-r"); // Detect renames, recursive
     }
 
     /**
