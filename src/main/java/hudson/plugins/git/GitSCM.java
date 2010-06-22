@@ -4,13 +4,20 @@ import hudson.*;
 import hudson.FilePath.FileCallable;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
+
 import hudson.model.*;
+
 import hudson.plugins.git.browser.GitWeb;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+
 import hudson.plugins.git.util.*;
 import hudson.plugins.git.util.Build;
+
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.RepositoryBrowsers;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
@@ -89,7 +96,7 @@ public class GitSCM extends SCM implements Serializable {
 
     public String gitTool = null;
 
-    private GitWeb browser;
+    private GitRepositoryBrowser browser;
 
     private Collection<SubmoduleConfig> submoduleCfg;
 
@@ -113,7 +120,7 @@ public class GitSCM extends SCM implements Serializable {
                   Collection<SubmoduleConfig> submoduleCfg,
                   boolean clean,
                   boolean wipeOutWorkspace,
-                  BuildChooser buildChooser, GitWeb browser,
+                  BuildChooser buildChooser, GitRepositoryBrowser browser,
                   String gitTool,
                   boolean authorOrCommitter) {
 
@@ -197,7 +204,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     @Override
-    public GitWeb getBrowser() {
+    public GitRepositoryBrowser getBrowser() {
         return browser;
     }
 
@@ -822,7 +829,7 @@ public class GitSCM extends SCM implements Serializable {
         private String gitExe;
 
         public DescriptorImpl() {
-            super(GitSCM.class, GitWeb.class);
+            super(GitSCM.class, GitRepositoryBrowser.class);
             load();
         }
 
@@ -892,16 +899,7 @@ public class GitSCM extends SCM implements Serializable {
             String[] names = req.getParameterValues("git.repo.name");
             Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
 
-            GitWeb gitWeb = null;
-            String gitWebUrl = req.getParameter("gitweb.url");
-            if (gitWebUrl != null && gitWebUrl.length() > 0) {
-                try {
-                    gitWeb = new GitWeb(gitWebUrl);
-                }
-                catch (MalformedURLException e) {
-                    throw new GitException("Error creating GitWeb", e);
-                }
-            }
+            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req);
             String gitTool = req.getParameter("git.gitTool");
 
             return new GitSCM(
@@ -913,13 +911,43 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.clean") != null,
                               req.getParameter("git.wipeOutWorkspace") != null,
                               req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
-                              gitWeb,
+                              gitBrowser,
                               gitTool,
                               req.getParameter("git.authorOrCommitter") != null);
         }
+        
+        /**
+         * Determine the browser from the {@link StaplerRequest}.
+         *
+         * @param req
+         * @return
+         */
+        private GitRepositoryBrowser getBrowserFromRequest(StaplerRequest req) {
+            final GitRepositoryBrowser gitBrowser;
+            final String gitWebUrl = req.getParameter("gitweb.url");
+            final String githubWebUrl = req.getParameter("githubweb.url");
+            if (gitWebUrl != null && gitWebUrl.trim().length() > 0) {
+                try {
+                    gitBrowser = new GitWeb(gitWebUrl.trim());
+                }
+                catch (MalformedURLException e) {
+                    throw new GitException("Error creating GitWeb", e);
+                }
+            }
+            else if (githubWebUrl != null && githubWebUrl.trim().length() > 0) {
+                try {
+                    gitBrowser = new GithubWeb(githubWebUrl.trim());
+                }
+                catch (MalformedURLException e) {
+                    throw new GitException("Error creating GithubWeb", e);
+                }
+            }
+            else {
+                gitBrowser = null;
+            }
 
-
-
+            return gitBrowser;
+        }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
                                                                         String[] repoNames,
@@ -1076,4 +1104,21 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
+
+    /**
+     * {@inheritDoc}
+     *
+     * Due to compatibility issues with older version we implement this ourselves instead of relying
+     * on the parent method. Kohsuke implemented a fix for this in the core (r21961), so we may drop
+     * this function after 1.325 is released.
+     *
+     * @todo: remove this function after 1.325 is released.
+     *
+     * @see <a href="https://hudson.dev.java.net/issues/show_bug.cgi?id=4514">#4514</a>
+     * @see <a href="http://fisheye4.atlassian.com/changelog/hudson/trunk/hudson?cs=21961">core fix</a>
+     */
+    //@Override
+    public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
+        return RepositoryBrowsers.filter(GitRepositoryBrowser.class);
+    }
 }
