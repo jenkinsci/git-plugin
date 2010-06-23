@@ -26,8 +26,6 @@ public class GerritBuildChooser extends BuildChooser {
 
     private final String separator = "#";
 
-    Logger logger = Logger.getLogger(GerritBuildChooser.class.getName());
-
     @DataBoundConstructor
     public GerritBuildChooser() {
     }

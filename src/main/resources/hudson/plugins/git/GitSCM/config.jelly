@@ -130,7 +130,7 @@
         <j:set var="current" value="${instance.buildChooser}"/>
         <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
           <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
-            selected="${current.descriptor==descriptor}">
+            selected="${current.descriptor==descriptor or (current==null and descriptor.displayName=='Default')}">
             <j:set var="instance" value="${current.descriptor==descriptor ? current : null}" />
             <tr><td>
               <input type="hidden" name="stapler-class" value="${descriptor.clazz.name}" />
