@@ -24,11 +24,15 @@ import org.xml.sax.SAXException;
  */
 public class GithubWebTest extends TestCase {
 
+    /**
+     *
+     */
+    private static final String GITHUB_URL = "http://github.com/USER/REPO";
     private final GithubWeb githubWeb;
 
     {
         try {
-            githubWeb = new GithubWeb("http://github.com/mfriedenhagen/Hudson-GIT-plugin");
+            githubWeb = new GithubWeb(GITHUB_URL);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +43,15 @@ public class GithubWebTest extends TestCase {
      * @throws MalformedURLException
      */
     public void testGetUrl() throws MalformedURLException {
-        assertEquals(String.valueOf(githubWeb.getUrl()), "http://github.com/mfriedenhagen/Hudson-GIT-plugin/");
+        assertEquals(String.valueOf(githubWeb.getUrl()), GITHUB_URL  + "/");
+    }
+
+    /**
+     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
+     * @throws MalformedURLException
+     */
+    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+        assertEquals(String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()), GITHUB_URL  + "/");
     }
 
     /**
@@ -50,7 +62,7 @@ public class GithubWebTest extends TestCase {
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final List<GitChangeSet> changeSetList = createChangeSetList("rawchangelog");
         final URL changeSetLink = githubWeb.getChangeSetLink(changeSetList.get(0));
-        assertEquals("http://github.com/mfriedenhagen/Hudson-GIT-plugin/commit/031fff899fb0686f9cbafcb969f37a37361a4365", changeSetLink.toString());
+        assertEquals(GITHUB_URL + "/commit/031fff899fb0686f9cbafcb969f37a37361a4365", changeSetLink.toString());
     }
 
     /**
@@ -62,7 +74,7 @@ public class GithubWebTest extends TestCase {
         final List<GitChangeSet> changeSetList = createChangeSetList("rawchangelog");
         final Path path = changeSetList.get(0).getPaths().iterator().next();
         final URL diffLink = githubWeb.getDiffLink(path);
-        assertEquals("http://github.com/mfriedenhagen/Hudson-GIT-plugin/commit/031fff899fb0686f9cbafcb969f37a37361a4365#diff-0", diffLink.toString());
+        assertEquals(GITHUB_URL + "/commit/031fff899fb0686f9cbafcb969f37a37361a4365#diff-0", diffLink.toString());
     }
 
     /**
@@ -74,7 +86,22 @@ public class GithubWebTest extends TestCase {
         final List<GitChangeSet> changeSetList = createChangeSetList("rawchangelog");
         final Path path = changeSetList.get(0).getPaths().iterator().next();
         final URL fileLink = githubWeb.getFileLink(path);
-        assertEquals("http://github.com/mfriedenhagen/Hudson-GIT-plugin/blob/031fff899fb0686f9cbafcb969f37a37361a4365/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
+        assertEquals(GITHUB_URL  + "/blob/031fff899fb0686f9cbafcb969f37a37361a4365/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
+    }
+
+    /**
+     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
+     * @throws SAXException
+     * @throws IOException
+     */
+    public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
+        final List<GitChangeSet> changeSetList = createChangeSetList("rawchangelog-with-deleted-file");
+        final Path path = changeSetList.get(0).getPaths().iterator().next();
+        System.out.println(path.getSrc());
+        System.out.println(path.getPath());
+        System.out.println(path.getEditType().getDescription());
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#diff-0", String.valueOf(fileLink));
     }
 
     private List<GitChangeSet> createChangeSetList(String rawchangelogpath) throws IOException, SAXException {

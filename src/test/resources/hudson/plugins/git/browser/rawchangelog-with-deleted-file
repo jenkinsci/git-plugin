@@ -1,0 +1,9 @@
+commit fc029da233f161c65eb06d0f1ed4f36ae81d1f4f
+tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904
+parent b547aa10c3f06710c6fdfcdb2a9149c81662923b
+author Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277410107 +0200
+committer Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277410107 +0200
+
+    Delete file
+
+:100644 000000 257cc5642cb1a054f08cc83f2d943e56fd3ebe99 0000000000000000000000000000000000000000 D	bar
