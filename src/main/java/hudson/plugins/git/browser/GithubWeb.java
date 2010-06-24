@@ -8,7 +8,6 @@ import hudson.plugins.git.GitRepositoryBrowser;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 
-import hudson.scm.browsers.QueryBuilder;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -38,10 +37,6 @@ public class GithubWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         return new URL(url, url.getPath()+"commit/" + changeSet.getId().toString());
-    }
-
-    private QueryBuilder param() {
-        return new QueryBuilder(url.getQuery());
     }
 
     /**
@@ -75,17 +70,15 @@ public class GithubWeb extends GitRepositoryBrowser {
     /**
      * Creates a link to the file.
      * http://[GitHib URL]/blob/573670a3bb1f3b939e87f1dee3e99b6bfe281fcb/src/main/java/hudson/plugins/git/browser/GithubWeb.java
-     * http://[GitHub URL]?a=blob;f=[path];h=[dst, or src for deleted files];hb=[commit]
+     *
+     * @todo Do not know how to handle deleted files.
      * @param path file
      * @return file link
      * @throws IOException
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
-        String h = (path.getDst() != null) ? path.getDst() : path.getSrc();
         final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
-//        String spec2 = param().add("a=blob").add("f=" + path.getPath())
-//                             .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
         return new URL(url, url.getPath()+spec);
     }
 
