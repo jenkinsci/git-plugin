@@ -53,6 +53,18 @@ public class GithubWeb extends GitRepositoryBrowser {
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
+        return getDiffLinkRegardlessOfEditType(path);
+    }
+
+    /**
+     * Return a diff link regardless of the edit type. Github seems to have no URL for deleted files, so just return
+     * a difflink instead.
+     *
+     * @param path
+     * @return
+     * @throws MalformedURLException
+     */
+    private URL getDiffLinkRegardlessOfEditType(Path path) throws MalformedURLException {
         final GitChangeSet changeSet = path.getChangeSet();
         final Collection<String> affectedPaths = changeSet.getAffectedPaths();
         int i = 0;
@@ -70,16 +82,20 @@ public class GithubWeb extends GitRepositoryBrowser {
     /**
      * Creates a link to the file.
      * http://[GitHib URL]/blob/573670a3bb1f3b939e87f1dee3e99b6bfe281fcb/src/main/java/hudson/plugins/git/browser/GithubWeb.java
+     * For deleted files we just return the diffLink.
      *
-     * @todo Do not know how to handle deleted files.
      * @param path file
      * @return file link
      * @throws IOException
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
-        final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
-        return new URL(url, url.getPath()+spec);
+        if (path.getEditType().equals(EditType.DELETE)) {
+            return getDiffLinkRegardlessOfEditType(path);
+        } else {
+            final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+            return new URL(url, url.getPath() + spec);
+        }
     }
 
     @Extension
