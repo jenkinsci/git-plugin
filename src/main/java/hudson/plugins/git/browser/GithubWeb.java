@@ -11,8 +11,8 @@ import hudson.scm.RepositoryBrowser;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.Collection;
-
+import java.util.ArrayList;
+import java.util.Collections;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -41,7 +41,7 @@ public class GithubWeb extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     * http://[GitWeb URL]?a=blobdiff;f=[path];fp=[path];h=[dst];hp=[src];hb=[commit];hpb=[parent commit]
+     * http://[GitHib URL]/commit/573670a3bb1f3b939e87f1dee3e99b6bfe281fcb#diff-N
      *
      * @param path affected file path
      * @return diff link
@@ -57,32 +57,28 @@ public class GithubWeb extends GitRepositoryBrowser {
     }
 
     /**
-     * Return a diff link regardless of the edit type. Github seems to have no URL for deleted files, so just return
-     * a difflink instead.
+     * Return a diff link regardless of the edit type by appending the index of the pathname in the changeset.
      *
      * @param path
      * @return
-     * @throws MalformedURLException
+     * @throws IOException
      */
-    private URL getDiffLinkRegardlessOfEditType(Path path) throws MalformedURLException {
+    private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final Collection<String> affectedPaths = changeSet.getAffectedPaths();
-        int i = 0;
+        final ArrayList<String> affectedPaths = new ArrayList<String>(changeSet.getAffectedPaths());
+        // Github seems to sort the output alphabetically by the path.
+        Collections.sort(affectedPaths);
         final String pathAsString = path.getPath();
-        for (String affectedPath : affectedPaths) {
-            if (affectedPath.equals(pathAsString)) {
-                return new URL(url, url.getPath()+"commit/" + changeSet.getId().toString() + "#diff-" + String.valueOf(i));
-            } else {
-                i++;
-            }
-        }
-        return null;
+        final int i = Collections.binarySearch(affectedPaths, pathAsString);
+        assert i >= 0;
+        return new URL(getChangeSetLink(changeSet), "#diff-" + String.valueOf(i));
     }
 
     /**
      * Creates a link to the file.
      * http://[GitHib URL]/blob/573670a3bb1f3b939e87f1dee3e99b6bfe281fcb/src/main/java/hudson/plugins/git/browser/GithubWeb.java
-     * For deleted files we just return the diffLink.
+     *  Github seems to have no URL for deleted files, so just return
+     * a difflink instead.
      *
      * @param path file
      * @return file link
