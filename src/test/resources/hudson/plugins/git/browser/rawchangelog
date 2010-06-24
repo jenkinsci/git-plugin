@@ -1,0 +1,10 @@
+commit 031fff899fb0686f9cbafcb969f37a37361a4365
+tree 87dcfe523b95fb9f2eeb6c3e66dd209452fa16a7
+parent 573670a3bb1f3b939e87f1dee3e99b6bfe281fcb
+author Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277152793 +0200
+committer Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277152793 +0200
+
+    Implement getFileLink
+
+031fff899fb0686f9cbafcb969f37a37361a4365
+:100644 100644 6ea57f9940b02891697bc577edf38de62cccc572 c2861c838b3291935d1fbbc1e3c77de3bafa6859 M	src/main/java/hudson/plugins/git/browser/GithubWeb.java
