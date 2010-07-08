@@ -89,6 +89,33 @@ public class GitSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    public void testBasicInSubdir() throws Exception {
+        FreeStyleProject project = setupProject("master", false, "subdir");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, "subdir", Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, "subdir", Result.SUCCESS,
+                                            commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertEquals("The workspace should have a 'subdir' subdirectory, but does not.", true,
+                     build2.getWorkspace().child("subdir").exists());
+        assertEquals("The 'subdir' subdirectory should contain commitFile2, but does not.", true,
+                     build2.getWorkspace().child("subdir").child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
     public void testBasicWithSlave() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(createSlave(null, null).getSelfLabel());
@@ -282,12 +309,17 @@ public class GitSCMTest extends HudsonTestCase {
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
+        return setupProject(branchString, authorOrCommitter, null);
+    }
+    
+    private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
+                                          String relativeTargetDir) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
-                createRemoteRepositories(),
+                createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, authorOrCommitter));
+                false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
@@ -296,12 +328,12 @@ public class GitSCMTest extends HudsonTestCase {
         return setupProject(branchString,false);
     }
 
-    private List<RemoteConfig> createRemoteRepositories() throws IOException {
+    private List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
         return GitSCM.DescriptorImpl.createRepositoryConfigurations(
-                new String[]{workDir.getAbsolutePath()},
-                new String[]{"origin"},
-                new String[]{""},
-                File.createTempFile("tmp", "config", hudson.getRootDir())
+                                                                    new String[]{workDir.getAbsolutePath()},
+                                                                    new String[]{"origin"},
+                                                                    new String[]{""},
+                                                                    File.createTempFile("tmp", "config", hudson.getRootDir())
         );
     }
 
@@ -309,6 +341,17 @@ public class GitSCMTest extends HudsonTestCase {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        }
+        if(expectedResult != null) {
+            assertBuildStatus(expectedResult, build);
+        }
+        return build;
+    }
+
+    private FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
+        final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
             assertBuildStatus(expectedResult, build);
@@ -325,11 +368,13 @@ public class GitSCMTest extends HudsonTestCase {
         } catch (Exception e) {
             throw new GitException("unable to write file", e);
         }
+
         git.add(fileName);
         git.launchCommand("commit", "-m", message);
     }
 
-    private void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws GitException {
+    private void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+                        final String message) throws GitException {
         setAuthor(author);
         setCommitter(committer);
         FilePath file = workspace.child(fileName);

@@ -68,7 +68,11 @@
   </f:entry>
 
   <f:advanced>
-         <!-- This needs more thought
+    <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
+      <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
+    </f:entry>
+    
+    <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">
     <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
     <label class="attach-previous">Generate submodule configurations</label>

@@ -103,6 +103,8 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
 
+    private String relativeTargetDir;
+    
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -122,7 +124,8 @@ public class GitSCM extends SCM implements Serializable {
                   boolean wipeOutWorkspace,
                   BuildChooser buildChooser, GitRepositoryBrowser browser,
                   String gitTool,
-                  boolean authorOrCommitter) {
+                  boolean authorOrCommitter,
+                  String relativeTargetDir) {
 
 
         // normalization
@@ -142,6 +145,7 @@ public class GitSCM extends SCM implements Serializable {
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
+        this.relativeTargetDir = relativeTargetDir;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -321,7 +325,15 @@ public class GitSCM extends SCM implements Serializable {
             gitExe = getGitExe(project.getLastBuiltOn(), listener);
         }
 
-        boolean pollChangesResult = workspace.act(new FileCallable<Boolean>() {
+        FilePath workingDirectory = workingDirectory(workspace);
+
+        // Rebuild if the working directory doesn't exist
+        // I'm actually not 100% sure about this, but I'll leave it in for now.
+        if (!workingDirectory.exists()) {
+            return true;
+        }
+        
+        boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
                     EnvVars environment = new EnvVars(System.getenv());
@@ -506,6 +518,12 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
+        final FilePath workingDirectory = workingDirectory(workspace);
+
+        if (!workingDirectory.exists()) {
+            workingDirectory.mkdirs();
+        }
+        
         final String projectName = build.getProject().getName();
         final int buildNumber = build.getNumber();
 
@@ -539,7 +557,7 @@ public class GitSCM extends SCM implements Serializable {
         
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
         
-        final Revision revToBuild = workspace.act(new FileCallable<Revision>() {
+        final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
                 private static final long serialVersionUID = 1L;
                 public Revision invoke(File localWorkspace, VirtualChannel channel)
                 throws IOException {
@@ -628,7 +646,7 @@ public class GitSCM extends SCM implements Serializable {
 
         if (mergeOptions.doMerge()) {
             if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
-                returnData = workspace.act(new FileCallable<Object[]>() {
+                returnData = workingDirectory.act(new FileCallable<Object[]>() {
                         private static final long serialVersionUID = 1L;
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException {
@@ -711,7 +729,7 @@ public class GitSCM extends SCM implements Serializable {
 
         // No merge
 
-        returnData = workspace.act(new FileCallable<Object[]>() {
+        returnData = workingDirectory.act(new FileCallable<Object[]>() {
                 private static final long serialVersionUID = 1L;
                 public Object[] invoke(File localWorkspace, VirtualChannel channel)
                 throws IOException {
@@ -913,7 +931,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
                               gitBrowser,
                               gitTool,
-                              req.getParameter("git.authorOrCommitter") != null);
+                              req.getParameter("git.authorOrCommitter") != null,
+                              req.getParameter("git.relativeTargetDir"));
         }
         
         /**
@@ -1103,6 +1122,25 @@ public class GitSCM extends SCM implements Serializable {
             return buildData;
     }
 
+    /**
+     * Given the workspace, gets the working directory, which will be the workspace
+     * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
+     * 
+     * @param workspace
+     * @return working directory
+     */
+    protected FilePath workingDirectory(final FilePath workspace) {
+
+        if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
+            return workspace;
+        }
+        return workspace.child(relativeTargetDir);
+    }
+
+    public String getRelativeTargetDir() {
+        return relativeTargetDir;
+    }
+    
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
 
     /**
