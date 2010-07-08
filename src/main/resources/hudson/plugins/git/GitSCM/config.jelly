@@ -68,6 +68,9 @@
   </f:entry>
 
   <f:advanced>
+    <f:entry title="Local branch to use (optional)" help="/plugin/git/help-localBranch.html">
+      <f:textbox name="git.localBranch" value="${scm.localBranch}" />
+    </f:entry>
     <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
       <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
     </f:entry>

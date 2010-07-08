@@ -311,15 +311,21 @@ public class GitSCMTest extends HudsonTestCase {
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
         return setupProject(branchString, authorOrCommitter, null);
     }
-    
+
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, null);
+    }
+
+    private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
+                                          String relativeTargetDir, String localBranch) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir));
+                false, new DefaultBuildChooser(), null, null, authorOrCommitter,
+                relativeTargetDir, localBranch));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
