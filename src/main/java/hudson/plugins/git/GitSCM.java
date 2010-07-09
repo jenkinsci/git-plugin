@@ -378,10 +378,13 @@ public class GitSCM extends SCM implements Serializable {
      * @param git
      * @param listener
      * @param remoteRepository
+     * @return true if fetch goes through, false otherwise.
      * @throws
      */
-    private void fetchFrom(IGitAPI git, File workspace, TaskListener listener,
-                           RemoteConfig remoteRepository) {
+    private boolean fetchFrom(IGitAPI git, File workspace, TaskListener listener,
+                              RemoteConfig remoteRepository) {
+        boolean fetched = true;
+        
         try {
             git.fetch(remoteRepository);
 
@@ -403,6 +406,7 @@ public class GitSCM extends SCM implements Serializable {
                                "Problem fetching from "
                                + remoteRepository.getName()
                                + " - could be unavailable. Continuing anyway");
+                    fetched = false;
                 }
 
             }
@@ -411,8 +415,10 @@ public class GitSCM extends SCM implements Serializable {
                            "Problem fetching from " + remoteRepository.getName()
                            + " / " + remoteRepository.getName()
                            + " - could be unavailable. Continuing anyway");
+            fetched = false;
         }
 
+        return fetched;
     }
 
     public RemoteConfig getSubmoduleRepository(RemoteConfig orig, String name) {
@@ -580,8 +586,17 @@ public class GitSCM extends SCM implements Serializable {
 
                         listener.getLogger().println("Fetching changes from the remote Git repository");
 
+                        boolean fetched = false;
+                        
                         for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository);
+                            if (fetchFrom(git,localWorkspace,listener,remoteRepository)) {
+                                fetched = true;
+                            }
+                        }
+
+                        if (!fetched) {
+                            listener.error("Could not fetch from any repository");
+                            throw new GitException("Could not fetch from any repository");
                         }
 
                     } else {
@@ -612,11 +627,21 @@ public class GitSCM extends SCM implements Serializable {
                             throw new GitException("Could not clone");
                         }
 
+                        boolean fetched = false;
+                        
                         // Also do a fetch
                         for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchFrom(git,localWorkspace,listener,remoteRepository);
+                            if (fetchFrom(git,localWorkspace,listener,remoteRepository)) {
+                                fetched = true;
+                            }
                         }
 
+                        if (!fetched) {
+                            listener.error("Could not fetch from any repository");
+                            throw new GitException("Could not fetch from any repository");
+                        }
+
+                        
                         if (git.hasGitModules()) {
                             git.submoduleInit();
                             git.submoduleUpdate();
