@@ -327,7 +327,8 @@ public class GitAPI implements IGitAPI {
 
             return result;
         } catch (Exception e) {
-            throw new GitException("Error performing " + StringUtils.join(args.toCommandArray(), " "), e);
+            throw new GitException("Error performing " + StringUtils.join(args.toCommandArray(), " ")
+                                   + "\n" + e.getMessage(), e);
         }
     }
 

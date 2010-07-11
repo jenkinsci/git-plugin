@@ -623,7 +623,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
 
                         if(!successfullyCloned) {
-                            listener.error("Could not clone from a repository");
+                            listener.error("Could not clone repository");
                             throw new GitException("Could not clone");
                         }
 
