@@ -319,7 +319,7 @@ public class GitSCMTest extends HudsonTestCase {
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir));
+                false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null, null));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }

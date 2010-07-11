@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -234,6 +235,31 @@ public class GitAPI implements IGitAPI {
         }
     }
 
+    /**
+     * Given a Revision, show it as if it were an entry from git whatchanged, so that it
+     * can be parsed by GitChangeLogParser.
+     *
+     * @param r The Revision object
+     * @return The git show output, in List form.
+     * @throws GitException if errors were encountered running git show.
+     */
+    public List<String> showRevision(Revision r) throws GitException {
+        String revName = r.getSha1String();
+        String result = "";
+
+        if (revName != null) {
+            result = launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName);
+        }
+
+        List<String> revShow = new ArrayList<String>();
+
+        if (result != null) {
+            revShow = new ArrayList<String>(Arrays.asList(result.split("\\n")));
+        }
+
+        return revShow;
+    }
+    
     /**
      * Merge any changes into the head.
      *

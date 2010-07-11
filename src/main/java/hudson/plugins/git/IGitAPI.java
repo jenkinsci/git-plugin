@@ -61,4 +61,6 @@ public interface IGitAPI {
 
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);
+
+    List<String> showRevision(Revision r) throws GitException;
 }

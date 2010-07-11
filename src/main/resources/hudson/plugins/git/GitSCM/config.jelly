@@ -68,6 +68,12 @@
   </f:entry>
 
   <f:advanced>
+    <f:entry title="${%Excluded Regions}" help="/plugin/git/help-excludedRegions.html">
+        <f:textarea name="git.excludedRegions" value="${scm.excludedRegions}" />
+    </f:entry>
+    <f:entry title="${%Excluded Users}" help="/plugin/git/help-excludedUsers.html">
+        <f:textarea name="git.excludedUsers" value="${scm.excludedUsers}" />
+    </f:entry>
     <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
       <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
     </f:entry>
