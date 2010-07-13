@@ -79,6 +79,11 @@ public class GitSCM extends SCM implements Serializable {
     private List<BranchSpec> branches;
 
     /**
+     * Optional local branch to work on.
+     */
+    private String localBranch;
+    
+    /**
      * Options for merging before a build.
      */
     private PreBuildMergeOptions mergeOptions;
@@ -135,12 +140,13 @@ public class GitSCM extends SCM implements Serializable {
                   boolean authorOrCommitter,
                   String relativeTargetDir,
                   String excludedRegions,
-                  String excludedUsers) {
-
+                  String excludedUsers,
+                  String localBranch) {
 
         // normalization
         this.branches = branches;
 
+        this.localBranch = localBranch;
         this.remoteRepositories = repositories;
         this.browser = browser;
 
@@ -747,8 +753,14 @@ public class GitSCM extends SCM implements Serializable {
 
                             // checkout origin/blah
                             ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
-                            git.checkout(target.name());
 
+                            if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                                git.checkout(target.name());
+                            }
+                            else {
+                                git.checkoutBranch(localBranch, target.name());
+                            }
+                            
                             try {
                                 git.merge(revToBuild.getSha1().name());
                             } catch (Exception ex) {
@@ -761,8 +773,13 @@ public class GitSCM extends SCM implements Serializable {
                                 // repetitive builds from happening - tag the
                                 // candidate
                                 // branch.
-                                git.checkout(revToBuild.getSha1().name());
-
+                                if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                                    git.checkout(revToBuild.getSha1().name());
+                                }
+                                else {
+                                    git.checkoutBranch(localBranch, revToBuild.getSha1().name());
+                                }
+                                
                                 git.tag(buildnumber, "Hudson Build #"
                                          + buildNumber);
 
@@ -822,8 +839,13 @@ public class GitSCM extends SCM implements Serializable {
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
-                    git.checkout(revToBuild.getSha1().name());
-
+                    if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                        git.checkout(revToBuild.getSha1().name());
+                    }
+                    else {
+                        git.checkoutBranch(localBranch, revToBuild.getSha1().name());
+                    }
+                        
                     // if(compileSubmoduleCompares)
                     if (doGenerateSubmoduleConfigurations) {
                         SubmoduleCombinator combinator = new SubmoduleCombinator(
@@ -1019,7 +1041,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.authorOrCommitter") != null,
                               req.getParameter("git.relativeTargetDir"),
                               req.getParameter("git.excludedRegions"),
-                              req.getParameter("git.excludedUsers"));
+                              req.getParameter("git.excludedUsers"),
+                              req.getParameter("git.localBranch"));
         }
         
         /**
@@ -1224,6 +1247,10 @@ public class GitSCM extends SCM implements Serializable {
         return workspace.child(relativeTargetDir);
     }
 
+    public String getLocalBranch() {
+        return localBranch;
+    }
+    
     public String getRelativeTargetDir() {
         return relativeTargetDir;
     }

@@ -53,7 +53,8 @@ public interface IGitAPI {
 
     void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
     void checkout(String revToBuild) throws GitException;
-
+    void checkoutBranch(String branch, String revToBuild) throws GitException;
+    
     void add(String filePattern) throws GitException;
     void branch(String name) throws GitException;
 

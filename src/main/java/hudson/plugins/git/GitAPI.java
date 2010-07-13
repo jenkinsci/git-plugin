@@ -426,6 +426,16 @@ public class GitAPI implements IGitAPI {
         }
     }
 
+    public void checkoutBranch(String branch, String ref) throws GitException {
+        // Checkout the branch, with ref as the starting point.
+        try {
+            launchCommand("checkout", "-b", branch, ref.toString());
+        } catch (GitException e) {
+            throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
+        }
+    }
+    
+
     public void deleteTag(String tagName) throws GitException {
         tagName = tagName.replace(' ', '_');
         try {
