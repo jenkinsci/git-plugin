@@ -1,4 +1,75 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-	
-  
+    <script><![CDATA[
+    function encodeAllInputs(sep, form, field) {
+        var inputs = Form.getInputs(form, null, field);
+        if (inputs.length == 0)
+            return "";
+
+        var rv = sep;
+        for (var i = 0; i < inputs.length; ++i) {
+            if (i != 0)
+                rv += "&";
+            rv += field+"="+encode(inputs[i].value);
+        }
+        return rv;
+    }
+    ]]></script>
+
+    <f:entry field="pushMerge"
+             title="${%Merge Results}"
+             description="${%If pre-build merging is configured, push the result back to the origin}">
+      <f:checkbox />
+    </f:entry>
+    <f:entry field="tagsToPush"
+             title="${%Tags}"
+             description="${%Tags to push to remote repositories}">
+      <f:repeatable field="tagsToPush"
+                    add="${%Add Tag}">
+        <table width="100%">
+          <br/>
+          <f:entry field="tagName"
+                   title="${%Tag to push}">
+            <f:textbox />
+          </f:entry>
+          <f:entry field="createTag"
+                   title="${%Create new tag}">
+            <f:checkbox />
+          </f:entry>
+          <f:entry field="targetRepoName"
+                   title="${%Target remote name}">
+            <f:textbox
+                checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?value='+escape(this.value)
+                          +encodeAllInputs('&amp;', this.form, 'git.repo.name')
+                          +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
+          </f:entry>
+        </table>
+        <div align="right">
+          <input type="button" value="Delete Tag" class="repeatable-delete" style="margin-left: 1em;" />
+        </div>
+      </f:repeatable>
+    </f:entry>
+    <f:entry field="branchesToPush"
+             title="${%Branches}"
+             description="${%Branches to push to remote repositories}">
+      <f:repeatable field="branchesToPush"
+                    add="${%Add Branch}">
+        <table width="100%">
+          <br/>
+          <f:entry field="branchName"
+                   title="${%Branch to push}">
+            <f:textbox />
+          </f:entry>
+          <f:entry field="targetRepoName"
+                   title="${%Target remote name}">
+            <f:textbox
+                checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?value='+escape(this.value)
+                          +encodeAllInputs('&amp;', this.form, 'git.repo.name')
+                          +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
+          </f:entry>
+        </table>
+        <div align="right">
+          <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;" />
+        </div>
+      </f:repeatable>
+    </f:entry>
 </j:jelly>

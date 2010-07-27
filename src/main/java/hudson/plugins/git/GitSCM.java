@@ -297,6 +297,16 @@ public class GitSCM extends SCM implements Serializable {
             return expandedRepos;
         }
     }
+
+    public RemoteConfig getRepositoryByName(String repoName) {
+        for (RemoteConfig r : getRepositories()) {
+            if (r.getName().equals(repoName)) {
+                return r;
+            }
+        }
+
+        return null;
+    }
                             
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
