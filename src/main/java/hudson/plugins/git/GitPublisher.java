@@ -67,10 +67,16 @@ public class GitPublisher extends Recorder implements Serializable {
     }
 
     public boolean isPushTags() {
+        if (tagsToPush == null) {
+            return false;
+        }
         return !tagsToPush.isEmpty();
     }
 
     public boolean isPushBranches() {
+        if (branchesToPush == null) {
+            return false;
+        }
         return !branchesToPush.isEmpty();
     }
 
@@ -90,11 +96,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return branchesToPush;
     }
     
-    @Override
-    public boolean needsToRunAfterFinalized() {
-        return true;
-    }
-
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -182,58 +183,63 @@ public class GitPublisher extends Recorder implements Serializable {
         if (isPushTags()) {
             boolean allTagsResult = true;
             for (final TagToPush t : tagsToPush) {
-                boolean tagResult;
-                try {
-                    tagResult = workingDirectory.act(new FileCallable<Boolean>() {
-                            private static final long serialVersionUID = 1L;
-                            
-                            public Boolean invoke(File workspace,
-                                                  VirtualChannel channel) throws IOException {
-                                
-                                IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
-                                                         listener, environment);
-                                
-                                if (t.getTagName() == null) {
-                                    listener.getLogger().println("No tag to push defined");
-                                    return false;
-                                }
-                                if (t.getTargetRepoName() == null) {
-                                    listener.getLogger().println("No target repo to push to defined");
-                                    return false;
-                                }
-                                RemoteConfig remote = gitSCM.getRepositoryByName(t.getTargetRepoName());
-                                
-                                if (remote == null) {
-                                    listener.getLogger().println("No repository found for target repo name " + t.getTargetRepoName());
-                                    return false;
-                                }
-                                
-                                if (t.isCreateTag()) {
-                                    if (git.tagExists(t.getTagName())) {
-                                        listener.getLogger().println("Tag " + t.getTagName() + " already exists and Create Tag is specified, so failing.");
-                                        return false;
-                                    }
-                                    git.tag(t.getTagName(), "Hudson Git plugin tagging with " + t.getTagName());
-                                }
-                                else if (!git.tagExists(t.getTagName())) {
-                                    listener.getLogger().println("Tag " + t.getTagName() + " does not exist and Create Tag is not specified, so failing.");
-                                    return false;
-                                }
-                                
-                                listener.getLogger().println("Pushing tag " + t.getTagName() + " to repo "
-                                                             + t.getTargetRepoName());
-                                git.push(remote, t.getTagName());
-                                
-                                return true;
-                            }
-                        });
-                } catch (Throwable e) {
-                    listener.error("Failed to push tag " + t.getTagName() + " to " + t.getTargetRepoName()
-                                   + ": " + e.getMessage());
-                    build.setResult(Result.FAILURE);
+                boolean tagResult = true;
+                if (t.getTagName() == null) {
+                    listener.getLogger().println("No tag to push defined");
                     tagResult = false;
                 }
-
+                if (t.getTargetRepoName() == null) {
+                    listener.getLogger().println("No target repo to push to defined");
+                    tagResult = false;
+                }
+                if (tagResult) {
+                    final String tagName = environment.expand(t.getTagName());
+                    final String targetRepo = environment.expand(t.getTargetRepoName());
+                    
+                    try {
+                        tagResult = workingDirectory.act(new FileCallable<Boolean>() {
+                                private static final long serialVersionUID = 1L;
+                                
+                                public Boolean invoke(File workspace,
+                                                      VirtualChannel channel) throws IOException {
+                                    
+                                    IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
+                                                             listener, environment);
+                                    
+                                    RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                                    
+                                    if (remote == null) {
+                                        listener.getLogger().println("No repository found for target repo name " + targetRepo);
+                                        return false;
+                                    }
+                                    
+                                    if (t.isCreateTag()) {
+                                        if (git.tagExists(tagName)) {
+                                            listener.getLogger().println("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
+                                            return false;
+                                        }
+                                        git.tag(tagName, "Hudson Git plugin tagging with " + tagName);
+                                    }
+                                    else if (!git.tagExists(tagName)) {
+                                        listener.getLogger().println("Tag " + tagName + " does not exist and Create Tag is not specified, so failing.");
+                                        return false;
+                                    }
+                                    
+                                    listener.getLogger().println("Pushing tag " + tagName + " to repo "
+                                                                 + targetRepo);
+                                    git.push(remote, tagName);
+                                    
+                                    return true;
+                                }
+                            });
+                    } catch (Throwable e) {
+                        listener.error("Failed to push tag " + tagName + " to " + targetRepo
+                                       + ": " + e.getMessage());
+                        build.setResult(Result.FAILURE);
+                        tagResult = false;
+                    }
+                }
+                
                 if (!tagResult) {
                     allTagsResult = false;
                 }
@@ -246,45 +252,50 @@ public class GitPublisher extends Recorder implements Serializable {
         if (isPushBranches()) {
             boolean allBranchesResult = true;
             for (final BranchToPush b : branchesToPush) {
-                boolean branchResult;
-                try {
-                    branchResult = workingDirectory.act(new FileCallable<Boolean>() {
-                            private static final long serialVersionUID = 1L;
-                            
-                            public Boolean invoke(File workspace,
-                                                  VirtualChannel channel) throws IOException {
+                boolean branchResult = true;
+                if (b.getBranchName() == null) {
+                    listener.getLogger().println("No branch to push defined");
+                    return false;
+                }
+                if (b.getTargetRepoName() == null) {
+                    listener.getLogger().println("No branch repo to push to defined");
+                    return false;
+                }
+                final String branchName = environment.expand(b.getBranchName());
+                final String targetRepo = environment.expand(b.getTargetRepoName());
+
+                if (branchResult) {
+                    try {
+                        branchResult = workingDirectory.act(new FileCallable<Boolean>() {
+                                private static final long serialVersionUID = 1L;
                                 
-                                IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
-                                                         listener, environment);
-                                
-                                if (b.getBranchName() == null) {
-                                    listener.getLogger().println("No branch to push defined");
-                                    return false;
+                                public Boolean invoke(File workspace,
+                                                      VirtualChannel channel) throws IOException {
+                                    
+                                    IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
+                                                             listener, environment);
+                                    
+                                    RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                                    
+                                    if (remote == null) {
+                                        listener.getLogger().println("No repository found for target repo name " + targetRepo);
+                                        return false;
+                                    }
+                                    
+                                    listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
+                                                                 + targetRepo);
+                                    git.push(remote, "HEAD:" + branchName);
+                                    
+                                    return true;
                                 }
-                                if (b.getTargetRepoName() == null) {
-                                    listener.getLogger().println("No branch repo to push to defined");
-                                    return false;
-                                }
-                                RemoteConfig remote = gitSCM.getRepositoryByName(b.getTargetRepoName());
-                                
-                                if (remote == null) {
-                                    listener.getLogger().println("No repository found for target repo name " + b.getTargetRepoName());
-                                    return false;
-                                }
-                                
-                                listener.getLogger().println("Pushing HEAD to branch " + b.getBranchName() + " at repo "
-                                                             + b.getTargetRepoName());
-                                git.push(remote, "HEAD:" + b.getBranchName());
-                                
-                                return true;
-                            }
-                        });
-                } catch (Throwable e) {
-                    listener.error("Failed to push branch " + b.getBranchName() + " to "
-                                   + b.getTargetRepoName() + ": " + e.getMessage());
-                    build.setResult(Result.FAILURE);
-                    branchResult = false;
-                } 
+                            });
+                    } catch (Throwable e) {
+                        listener.error("Failed to push branch " + branchName + " to "
+                                       + targetRepo + ": " + e.getMessage());
+                        build.setResult(Result.FAILURE);
+                        branchResult = false;
+                    }
+                }
 
                 if (!branchResult) {
                     allBranchesResult = false;
@@ -297,15 +308,6 @@ public class GitPublisher extends Recorder implements Serializable {
         }
         
         return pushResult;
-    }
-
-    private String replaceBuildVars(String origStr, AbstractBuild<?,?> build) {
-        String newStr = origStr;
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null)
-            newStr = parameters.substitute(build, newStr);
-
-        return newStr;
     }
 
     /**
