@@ -381,8 +381,10 @@ public class GitAPI implements IGitAPI {
             while ((line = rdr.readLine()) != null) {
                 // Ignore the 1st
                 line = line.substring(2);
-                // Ignore '(no branch)'
-                if (!line.startsWith("(")) {
+                // Ignore '(no branch)' or anything with " -> ", since I think
+                // that's just noise
+                if ((!line.startsWith("("))
+                    && (line.indexOf(" -> ") == -1)) {
                     tags.add(new Branch(line, revParse(line)));
                 }
             }
@@ -430,8 +432,12 @@ public class GitAPI implements IGitAPI {
         try {
             // First, checkout to detached HEAD, so we can delete the branch.
             checkout(ref);
-            // Second, delete the existing branch, just to be safe.
-            deleteBranch(branch);
+            // Second, check to see if the branch actually exists, and then delete it if it does.
+            for (Branch b : getBranches()) {
+                if (b.name.equals(branch)) {
+                    deleteBranch(branch);
+                }
+            }
             // Lastly, checkout the branch, creating it in the process, using ref as the start point.
             launchCommand("checkout", "-b", branch, ref.toString());
         } catch (GitException e) {
