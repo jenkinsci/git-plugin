@@ -427,8 +427,12 @@ public class GitAPI implements IGitAPI {
     }
 
     public void checkoutBranch(String branch, String ref) throws GitException {
-        // Checkout the branch, with ref as the starting point.
         try {
+            // First, checkout to detached HEAD, so we can delete the branch.
+            checkout(ref);
+            // Second, delete the existing branch, just to be safe.
+            deleteBranch(branch);
+            // Lastly, checkout the branch, creating it in the process, using ref as the start point.
             launchCommand("checkout", "-b", branch, ref.toString());
         } catch (GitException e) {
             throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
@@ -443,6 +447,15 @@ public class GitAPI implements IGitAPI {
         }
 
         return false;
+    }
+
+    public void deleteBranch(String name) throws GitException {
+        try {
+            launchCommand("branch", "-D", name);
+        } catch (GitException e) {
+            throw new GitException("Could not delete branch " + name, e);
+        }
+
     }
     
     public void deleteTag(String tagName) throws GitException {

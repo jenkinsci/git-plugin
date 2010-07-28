@@ -58,7 +58,8 @@ public interface IGitAPI {
     
     void add(String filePattern) throws GitException;
     void branch(String name) throws GitException;
-
+    void deleteBranch(String name) throws GitException;
+    
     void commit(File f) throws GitException;
 
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
