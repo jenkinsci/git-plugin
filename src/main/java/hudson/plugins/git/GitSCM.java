@@ -468,9 +468,8 @@ public class GitSCM extends SCM implements Serializable {
                 .getSubmodules("HEAD");
 
             for (IndexEntry submodule : submodules) {
+                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(remoteRepository, submodule.getFile());
                 try {
-                    RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(remoteRepository, submodule.getFile());
-
                     File subdir = new File(workspace, submodule.getFile());
                     IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
                                                 listener, git.getEnvironment());
@@ -478,11 +477,11 @@ public class GitSCM extends SCM implements Serializable {
                     subGit.fetch(submoduleRemoteRepository);
                 } catch (Exception ex) {
                     listener
-                        .error(
-                               "Problem fetching from "
-                               + remoteRepository.getName()
+                        .getLogger()
+                        .println(
+                                 "Problem fetching from submodule "
+                                 + submoduleRemoteRepository.getName()
                                + " - could be unavailable. Continuing anyway");
-                    fetched = false;
                 }
 
             }
