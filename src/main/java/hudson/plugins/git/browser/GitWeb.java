@@ -27,7 +27,7 @@ public class GitWeb extends GitRepositoryBrowser {
 
     @DataBoundConstructor
     public GitWeb(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+        this.url = new URL(url);
     }
 
     public URL getUrl() {
