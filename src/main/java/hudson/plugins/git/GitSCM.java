@@ -473,6 +473,7 @@ public class GitSCM extends SCM implements Serializable {
                 try {
                     RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(workspace, remoteRepository, submodule.getFile());
                     File subdir = new File(workspace, submodule.getFile());
+                    listener.getLogger().println("Trying to fetch " + submodule.getFile() + " into " + subdir);
                     IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
                                                 listener, git.getEnvironment());
 
@@ -723,9 +724,16 @@ public class GitSCM extends SCM implements Serializable {
                         
                         // Also do a fetch
                         for (RemoteConfig remoteRepository : paramRepos) {
-                            if (fetchFrom(git,localWorkspace,listener,remoteRepository)) {
+                            try {
+                                git.fetch(remoteRepository);
                                 fetched = true;
-                            }
+                            } catch (Exception e) {
+                                listener.error(
+                                               "Problem fetching from " + remoteRepository.getName()
+                                               + " / " + remoteRepository.getName()
+                                               + " - could be unavailable. Continuing anyway");
+                                
+                            } 
                         }
 
                         if (!fetched) {
