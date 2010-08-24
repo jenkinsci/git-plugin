@@ -819,7 +819,11 @@ public class GitSCM extends SCM implements Serializable {
 
 
                                 buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
-
+                                if (getClean()) {
+                                    listener.getLogger().println("Cleaning workspace");
+                                    git.clean();
+                                }
+                                
                                 return new Object[]{null, buildData};
                             }
 
@@ -852,6 +856,10 @@ public class GitSCM extends SCM implements Serializable {
                             buildData.saveBuild(build);
                             GitUtils gu = new GitUtils(listener,git);
                             build.mergeRevision = gu.getRevisionForSHA1(target);
+                            if (getClean()) {
+                                listener.getLogger().println("Cleaning workspace");
+                                git.clean();
+                            }
 
                             // Fetch the diffs into the changelog file
                             return new Object[]{changeLog.toString(), buildData};
