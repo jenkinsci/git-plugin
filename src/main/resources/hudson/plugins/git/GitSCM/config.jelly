@@ -117,7 +117,7 @@
 		                 checked="${scm.mergeOptions.doMerge()}">
 		 <f:entry title="Name of repository: (default first specified, e.g. origin)">
 		  <f:textbox id="git.mergeRemote" name="git.mergeRemote" value="${scm.mergeOptions.mergeRemote.name}"
-		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?value='+escape(this.value)
+		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
 		                      +encodeAllInputs('&amp;', this.form, 'git.repo.name')
 		                      +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
 		 </f:entry>

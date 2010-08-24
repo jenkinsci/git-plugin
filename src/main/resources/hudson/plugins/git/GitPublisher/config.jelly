@@ -32,7 +32,7 @@
           <br/>
           <f:entry field="tagName"
                    title="${%Tag to push}">
-            <f:textbox />
+            <f:textbox checkUrl="'descriptorByName/GitPublisher/checkTagName?value='+escape(this.value)" />
           </f:entry>
           <f:entry field="createTag"
                    title="${%Create new tag}">
@@ -60,7 +60,7 @@
           <br/>
           <f:entry field="branchName"
                    title="${%Branch to push}">
-            <f:textbox />
+            <f:textbox checkUrl="'descriptorByName/GitPublisher/checkBranchName?value='+escape(this.value)" />
           </f:entry>
           <f:entry field="targetRepoName"
                    title="${%Target remote name}">

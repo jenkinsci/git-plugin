@@ -1215,8 +1215,10 @@ public class GitSCM extends SCM implements Serializable {
         public FormValidation doGitRemoteNameCheck(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");
+            boolean isMerge = req.getParameter("isMerge") != null;
 
-            if (mergeRemoteName.length() == 0)
+            // Added isMerge because we don't want to allow empty remote names for tag/branch pushes.
+            if (mergeRemoteName.length() == 0 && isMerge)
                 return FormValidation.ok();
 
             String[] urls = req.getParameterValues("git.repo.url");

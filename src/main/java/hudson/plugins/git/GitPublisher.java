@@ -29,6 +29,8 @@ import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.AncestorInPath;
@@ -371,6 +373,14 @@ public class GitPublisher extends Recorder implements Serializable {
             return FilePath.validateFileMask(project.getSomeWorkspace(),value);
         }
 
+        public FormValidation doCheckTagName(@QueryParameter String value) {
+            return checkFieldNotEmpty(value, "Tag Name");
+        }
+
+        public FormValidation doCheckBranchName(@QueryParameter String value) {
+            return checkFieldNotEmpty(value, "Branch Name");
+        }
+                
         @Override
         public GitPublisher newInstance(StaplerRequest req, JSONObject formData)
             throws FormException {
@@ -379,6 +389,15 @@ public class GitPublisher extends Recorder implements Serializable {
 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
+        }
+
+        private FormValidation checkFieldNotEmpty(String value, String field) {
+            value = StringUtils.strip(value);
+
+            if (value == null || value.equals("")) {
+                return FormValidation.error(field + " is required.");
+            }
+            return FormValidation.ok();
         }
     }
 
