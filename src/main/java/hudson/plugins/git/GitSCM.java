@@ -449,6 +449,36 @@ public class GitSCM extends SCM implements Serializable {
         return bd!=null ? bd : new BuildData() /*dummy*/;
     }
 
+    
+    private void cleanSubmodules(IGitAPI parentGit,
+                                 File workspace,
+                                 TaskListener listener,
+                                 RemoteConfig remoteRepository) {
+        
+        List<IndexEntry> submodules = new GitUtils(listener, parentGit)
+            .getSubmodules("HEAD");
+        
+        for (IndexEntry submodule : submodules) {
+            try {
+                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(workspace, remoteRepository, submodule.getFile());
+                File subdir = new File(workspace, submodule.getFile());
+                listener.getLogger().println("Trying to clean submodule in " + subdir);
+                IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
+                                            listener, parentGit.getEnvironment());
+                
+                subGit.clean();
+            } catch (Exception ex) {
+                listener
+                    .getLogger()
+                    .println(
+                                 "Problem cleaning submodule in "
+                                 + submodule.getFile()
+                                 + " - could be unavailable. Continuing anyway");
+            }
+            
+        }
+    }
+
     /**
      * Fetch information from a particular remote repository. Attempt to fetch
      * from submodules, if they exist in the local WC
@@ -822,6 +852,9 @@ public class GitSCM extends SCM implements Serializable {
                                 if (getClean()) {
                                     listener.getLogger().println("Cleaning workspace");
                                     git.clean();
+                                    for (RemoteConfig remoteRepository : paramRepos) {
+                                        cleanSubmodules(git,localWorkspace,listener,remoteRepository);
+                                    }
                                 }
                                 
                                 return new Object[]{null, buildData};
@@ -859,6 +892,9 @@ public class GitSCM extends SCM implements Serializable {
                             if (getClean()) {
                                 listener.getLogger().println("Cleaning workspace");
                                 git.clean();
+                                for (RemoteConfig remoteRepository : paramRepos) {
+                                    cleanSubmodules(git,localWorkspace,listener,remoteRepository);
+                                }
                             }
 
                             // Fetch the diffs into the changelog file
