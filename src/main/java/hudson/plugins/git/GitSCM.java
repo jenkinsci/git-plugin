@@ -368,6 +368,10 @@ public class GitSCM extends SCM implements Serializable {
 
         if(lastBuild != null) {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber());
+        } else {
+            // If we've never been built before, well, gotta build!
+            listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
+            return true;
         }
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
@@ -399,17 +403,18 @@ public class GitSCM extends SCM implements Serializable {
 
         // Rebuild if the working directory doesn't exist
         // I'm actually not 100% sure about this, but I'll leave it in for now.
+        // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
+        // for whether we'd ever been built before. But I'm fixing that right now anyway.
         if (!workingDirectory.exists()) {
             return true;
         }
-        
+
+        final EnvVars environment = lastBuild.getEnvironment(listener);
+
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
-                    EnvVars environment = new EnvVars(System.getenv());
-
                     IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
-
 
                     if (git.hasGitRepo()) {
                         // Repo is there - do a fetch
