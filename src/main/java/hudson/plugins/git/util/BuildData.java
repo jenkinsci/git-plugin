@@ -39,6 +39,25 @@ public class BuildData implements Action, Serializable, Cloneable {
         return "git";
     }
 
+    public Object readResolve() {
+        Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
+        
+        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+            String branchName = buildByBranchName.getKey();
+            Build build = buildByBranchName.getValue();
+
+            if (branchName == null) {
+                branchName = "";
+            }
+
+            newBuildsByBranchName.put(branchName, build);
+        }
+
+        this.buildsByBranchName = newBuildsByBranchName;
+
+        return this;
+    }
+    
     /**
      * Return true if the history shows this SHA1 has been built.
      * False otherwise.
@@ -62,7 +81,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     public void saveBuild(Build build) {
     	lastBuild = build;
     	for(Branch branch : build.revision.getBranches()) {
-            buildsByBranchName.put(branch.getName(), build);
+            String branchName = branch.getName();
+            if (branchName == null) {
+                branchName = "";
+            }
+            buildsByBranchName.put(branchName, build);
     	}
     }
 
@@ -96,6 +119,9 @@ public class BuildData implements Action, Serializable, Cloneable {
             clone.buildsByBranchName = new HashMap<String, Build>();
             for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
                 String branchName = buildByBranchName.getKey();
+                if (branchName == null) {
+                    branchName = "";
+                }
                 Build build = buildByBranchName.getValue();
                 Build clonedBuild = clonedBuilds.get(build);
                 if (clonedBuild == null) {
