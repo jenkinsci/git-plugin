@@ -16,7 +16,7 @@
 	<ul>
 
 	<j:forEach var="branch" items="${it.buildsByBranchName.keySet()}">
-	<li>${branch}: ${it.buildsByBranchName.get(branch).toString()}</li>
+	<li><j:choose><j:when test="${branch}==''}">(unnamed)</j:when><j:otherwise>${branch}</j:otherwise></j:choose>: ${it.buildsByBranchName.get(branch).toString()}</li>
 	</j:forEach>
 	</ul>
 
