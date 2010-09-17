@@ -90,6 +90,11 @@ public class GitSCM extends SCM implements Serializable {
      */
     private PreBuildMergeOptions mergeOptions;
 
+    /**
+     * Use --recursive flag on submodule commands - requires git>=1.6.5
+     */
+    private boolean recursiveSubmodules;
+    
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
     
@@ -143,7 +148,8 @@ public class GitSCM extends SCM implements Serializable {
                   String relativeTargetDir,
                   String excludedRegions,
                   String excludedUsers,
-                  String localBranch) {
+                  String localBranch,
+                  boolean recursiveSubmodules) {
 
         // normalization
         this.branches = branches;
@@ -166,6 +172,7 @@ public class GitSCM extends SCM implements Serializable {
         this.relativeTargetDir = relativeTargetDir;
         this.excludedRegions = excludedRegions;
         this.excludedUsers = excludedUsers;
+        this.recursiveSubmodules = recursiveSubmodules;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -183,7 +190,8 @@ public class GitSCM extends SCM implements Serializable {
             doGenerateSubmoduleConfigurations = false;
             mergeOptions = new PreBuildMergeOptions();
 
-
+            recursiveSubmodules = false;
+            
             remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*")));
             if(branch != null) {
                 branches.add(new BranchSpec(branch));
@@ -779,7 +787,7 @@ public class GitSCM extends SCM implements Serializable {
                         
                         if (git.hasGitModules()) {
                             git.submoduleInit();
-                            git.submoduleUpdate();
+                            git.submoduleUpdate(recursiveSubmodules);
                         }
                     }
 
@@ -857,8 +865,9 @@ public class GitSCM extends SCM implements Serializable {
                                 if (getClean()) {
                                     listener.getLogger().println("Cleaning workspace");
                                     git.clean();
-                                    for (RemoteConfig remoteRepository : paramRepos) {
-                                        cleanSubmodules(git,localWorkspace,listener,remoteRepository);
+
+                                    if (git.hasGitModules()) {
+                                        git.submoduleClean(recursiveSubmodules);
                                     }
                                 }
                                 
@@ -866,7 +875,7 @@ public class GitSCM extends SCM implements Serializable {
                             }
 
                             if (git.hasGitModules()) {
-                                git.submoduleUpdate();
+                                git.submoduleUpdate(recursiveSubmodules);
                             }
 
                             // Tag the successful merge
@@ -897,8 +906,8 @@ public class GitSCM extends SCM implements Serializable {
                             if (getClean()) {
                                 listener.getLogger().println("Cleaning workspace");
                                 git.clean();
-                                for (RemoteConfig remoteRepository : paramRepos) {
-                                    cleanSubmodules(git,localWorkspace,listener,remoteRepository);
+                                if (git.hasGitModules()) {
+                                    git.submoduleClean(recursiveSubmodules);
                                 }
                             }
 
@@ -948,13 +957,17 @@ public class GitSCM extends SCM implements Serializable {
                         // we've only just discovered.
                         // So - try updating from all RRs, then use the submodule
                         // Update to do the checkout
-
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository);
+                        //
+                        // Also, only do this if we're not doing recursive submodules, since that'll
+                        // theoretically be dealt with there anyway.
+                        if (!recursiveSubmodules) {
+                            for (RemoteConfig remoteRepository : paramRepos) {
+                                fetchFrom(git, localWorkspace, listener, remoteRepository);
+                            }
                         }
 
                         // Update to the correct checkout
-                        git.submoduleUpdate();
+                        git.submoduleUpdate(recursiveSubmodules);
 
                     }
 
@@ -1125,7 +1138,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.relativeTargetDir"),
                               req.getParameter("git.excludedRegions"),
                               req.getParameter("git.excludedUsers"),
-                              req.getParameter("git.localBranch"));
+                              req.getParameter("git.localBranch"),
+                              req.getParameter("git.recursiveSubmodules") != null);
         }
         
         /**
@@ -1279,7 +1293,10 @@ public class GitSCM extends SCM implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-
+    public boolean getRecursiveSubmodules() {
+        return this.recursiveSubmodules;
+    }
+    
     public boolean getDoGenerate() {
         return this.doGenerateSubmoduleConfigurations;
     }

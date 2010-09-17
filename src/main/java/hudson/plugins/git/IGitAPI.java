@@ -21,7 +21,8 @@ public interface IGitAPI {
     boolean hasGitModules() throws GitException;
 
     void submoduleInit()  throws GitException;
-    void submoduleUpdate()  throws GitException;
+    void submoduleUpdate(boolean recursive)  throws GitException;
+    void submoduleClean(boolean recursive)  throws GitException;
     void submoduleSync() throws GitException;
 
     public void fetch(String repository, String refspec) throws GitException;

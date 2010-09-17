@@ -296,10 +296,36 @@ public class GitAPI implements IGitAPI {
     /**
      * Update submodules.
      *
+     * @param recursive if true, will recursively update submodules (requires git>=1.6.5)
+     * 
      * @throws GitException if executing the Git command fails
      */
-    public void submoduleUpdate() throws GitException {
-        launchCommand("submodule", "update");
+    public void submoduleUpdate(boolean recursive) throws GitException {
+    	ArgumentListBuilder args = new ArgumentListBuilder();
+    	args.add("submodule", "update");
+    	if (recursive) {
+            args.add("--init", "--recursive");
+        }
+        
+        launchCommand(args);
+    }
+
+    /**
+     * Cleans submodules
+     *
+     * @param recursive if true, will recursively clean submodules (requres git>=1.6.5)
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void submoduleClean(boolean recursive) throws GitException {
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("submodule", "foreach");
+    	if (recursive) {
+            args.add("--recursive");
+    	}
+    	args.add("git clean -fdx");
+    	
+    	launchCommand(args);
     }
 
     public void tag(String tagName, String comment) throws GitException {

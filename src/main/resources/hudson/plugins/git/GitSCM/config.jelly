@@ -132,6 +132,9 @@
     <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
       <f:checkbox name="git.clean" checked="${scm.clean}" />
     </f:entry>
+    <f:entry title="Recursively update submodules" help="/plugin/git/help-recursiveSubmodules.html">
+      <f:checkbox name="git.recursiveSubmodules" checked="${scm.recursiveSubmodules}" />
+    </f:entry>
     <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
       <f:checkbox name="git.authorOrCommitter" checked="${scm.authorOrCommitter}"/>
     </f:entry>
