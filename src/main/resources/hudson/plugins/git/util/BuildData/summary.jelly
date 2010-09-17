@@ -6,7 +6,9 @@
  	<b>Revision</b>: ${it.lastBuiltRevision.sha1.name()}
         <ul>
         <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
-        <li>${branch.name}</li>
+          <j:if test="${branch!=''}">
+            <li>${branch.name}</li>
+          </j:if>
         </j:forEach>
         </ul>
 
