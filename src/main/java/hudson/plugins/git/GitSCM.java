@@ -417,11 +417,12 @@ public class GitSCM extends SCM implements Serializable {
             return true;
         }
 
-        final EnvVars environment = lastBuild.getEnvironment(listener);
-
+        //        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+       
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
+                    EnvVars environment = new EnvVars(System.getenv());
                     IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
                     if (git.hasGitRepo()) {

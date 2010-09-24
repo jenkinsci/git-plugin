@@ -1,13 +1,17 @@
 package hudson.plugins.git;
 
+import hudson.BulkChange;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.User;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
@@ -198,6 +202,35 @@ public class GitSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    // For HUDSON-7547
+    public void testBasicWithSlaveNoExecutorsOnMaster() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        hudson.setNumExecutors(0);
+        hudson.setNodes(hudson.getNodes());
+        
+        project.setAssignedLabel(createSlave(null, null).getSelfLabel());
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
     public void testAuthorOrCommitterFalse() throws Exception {
         // Test with authorOrCommitter set to false and make sure we get the committer.
         FreeStyleProject project = setupProject("master", false);
@@ -278,6 +311,19 @@ public class GitSCMTest extends HudsonTestCase {
         build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+    }
+
+    // For HUDSON-7411
+    public void testNodeEnvVarsAvailable() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        Node s = createSlave(null,null);
+        setVariables(s, new Entry("TESTKEY", "slaveValue"));
+        project.setAssignedLabel(s.getSelfLabel());
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
     }
 
     /**
@@ -467,4 +513,12 @@ public class GitSCMTest extends HudsonTestCase {
         }
         return new EnvVars();
     }
+
+    private void setVariables(Node node, Entry... entries) throws IOException {
+        node.getNodeProperties().replaceBy(
+                                           Collections.singleton(new EnvironmentVariablesNodeProperty(
+                                                                                                      entries)));
+        
+    }
+
 }

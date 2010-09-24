@@ -1,11 +1,22 @@
 package hudson.plugins.git.util;
 
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Environment;
+import hudson.model.Hudson;
+import hudson.model.Node;
 import hudson.model.TaskListener;
+import hudson.slaves.NodeProperty;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.IndexEntry;
 import hudson.plugins.git.Revision;
+
 
 import java.io.IOException;
 import java.util.Collection;
@@ -118,6 +129,65 @@ public class GitUtils {
         }
 
         return revisions;
+    }
+
+    /**
+     * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
+     * Cribbed from various places.
+     */
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+        throws IOException,InterruptedException {
+        EnvVars env;
+
+        AbstractBuild b = (AbstractBuild)p.getLastBuild();
+
+        if (b != null) {
+            Node lastBuiltOn = b.getBuiltOn();
+
+            if (lastBuiltOn != null) {
+                env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
+            } else {
+                env = new EnvVars(System.getenv());
+            }
+
+            String rootUrl = Hudson.getInstance().getRootUrl();
+            if(rootUrl!=null) {
+                env.put("HUDSON_URL", rootUrl);
+                env.put("BUILD_URL", rootUrl+b.getUrl());
+                env.put("JOB_URL", rootUrl+p.getUrl());
+            }
+            
+            if(!env.containsKey("HUDSON_HOME"))
+                env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
+            
+            if (ws != null)
+                env.put("WORKSPACE", ws.getRemote());
+            
+            
+            p.getScm().buildEnvVars(b,env);
+            
+            for (NodeProperty nodeProperty: Hudson.getInstance().getGlobalNodeProperties()) {
+                Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)listener);
+                if (environment != null) {
+                    environment.buildEnvVars(env);
+                }
+            }
+
+            if (lastBuiltOn != null) {
+                for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
+                    Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)listener);
+                    if (environment != null) {
+                        environment.buildEnvVars(env);
+                    }
+                }
+            }
+
+            EnvVars.resolve(env);
+        } else {
+            env = new EnvVars(System.getenv());
+        }
+
+        return env;
     }
 
     public static String[] fixupNames(String[] names, String[] urls) {
