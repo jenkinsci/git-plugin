@@ -417,12 +417,11 @@ public class GitSCM extends SCM implements Serializable {
             return true;
         }
 
-        //        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
        
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
-                    EnvVars environment = new EnvVars(System.getenv());
                     IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
                     if (git.hasGitRepo()) {
@@ -548,16 +547,24 @@ public class GitSCM extends SCM implements Serializable {
         BufferedReader bfr = new BufferedReader(new FileReader(aWorkspace + File.separator + ".gitmodules"));
         String line = "";
         boolean isSubmodule = false;
-        while((line= bfr.readLine()) != null) {
-            line = line.trim();
-            if(line.startsWith("[submodule \"" + name )) {
-                isSubmodule = true;
-            } else if (isSubmodule && line.startsWith("url")) {
-                int index = line.indexOf("=");
-                String refUrl = line.substring(index + 1).trim();
-                return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0));
+
+        try {
+            while((line= bfr.readLine()) != null) {
+                line = line.trim();
+                if(line.startsWith("[submodule \"" + name )) {
+                    isSubmodule = true;
+                } else if (isSubmodule && line.startsWith("url")) {
+                    int index = line.indexOf("=");
+                    String refUrl = line.substring(index + 1).trim();
+                    return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0));
+                }
             }
+        } catch (IOException e) {
+            throw new GitException("Error in reading .gitmodules", e);
+        } finally {
+            bfr.close();
         }
+
         
         // Attempt to guess the submodule URL??
 
