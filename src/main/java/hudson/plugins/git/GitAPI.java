@@ -116,7 +116,7 @@ public class GitAPI implements IGitAPI {
                                      + (repository != null ? " from " + repository : ""));
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "fetch", "-t");
+        args.add("fetch", "-t");
 
         if (repository != null) {
             args.add(repository);
@@ -124,17 +124,7 @@ public class GitAPI implements IGitAPI {
                 args.add(refspec);
         }
 
-        try {
-            if (launcher.launch().cmds(args).
-                envs(environment).stdout(listener.getLogger()).pwd(workspace).join() != 0) {
-                throw new GitException("Failed to fetch");
-            }
-        } catch (IOException e) {
-            throw new GitException("Failed to fetch", e);
-        } catch (InterruptedException e) {
-            throw new GitException("Failed to fetch", e);
-        }
-
+        launchCommand(args);
     }
 
     public void fetch() throws GitException {
@@ -627,16 +617,9 @@ public class GitAPI implements IGitAPI {
     public Set<String> getTagNames(String tagPattern) throws GitException {
         try {
             ArgumentListBuilder args = new ArgumentListBuilder();
-            args.add(getGitExe(), "tag", "-l", tagPattern);
+            args.add("tag", "-l", tagPattern);
 
-            ByteArrayOutputStream fos = new ByteArrayOutputStream();
-            int status = launcher.launch().cmds(args).
-                envs(environment).stdout(fos).pwd(workspace).join();
-            String result = fos.toString();
-
-            if (status != 0) {
-                throw new GitException("Error retrieving tag names");
-            }
+            String result = launchCommandIn(args, workspace);
 
             Set<String> tags = new HashSet<String>();
             BufferedReader rdr = new BufferedReader(new StringReader(result));
