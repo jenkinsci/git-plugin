@@ -346,7 +346,7 @@ public class GitPublisher extends Recorder implements Serializable {
         return this;
     }
     
-    @Extension
+    @Extension(ordinal=-1)
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public DescriptorImpl() {
