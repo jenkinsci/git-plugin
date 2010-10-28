@@ -102,6 +102,8 @@ public class GitSCM extends SCM implements Serializable {
 
     private boolean wipeOutWorkspace;
 
+    private boolean pruneBranches;
+    
     /**
      * @deprecated
      *      Replaced by {@link #buildChooser} instead.
@@ -149,7 +151,8 @@ public class GitSCM extends SCM implements Serializable {
                   String excludedRegions,
                   String excludedUsers,
                   String localBranch,
-                  boolean recursiveSubmodules) {
+                  boolean recursiveSubmodules,
+                  boolean pruneBranches) {
 
         // normalization
         this.branches = branches;
@@ -173,6 +176,7 @@ public class GitSCM extends SCM implements Serializable {
         this.excludedRegions = excludedRegions;
         this.excludedUsers = excludedUsers;
         this.recursiveSubmodules = recursiveSubmodules;
+        this.pruneBranches = pruneBranches;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -280,6 +284,10 @@ public class GitSCM extends SCM implements Serializable {
         return browser;
     }
 
+    public boolean getPruneBranches() {
+        return this.pruneBranches;
+    }
+    
     public boolean getWipeOutWorkspace() {
         return this.wipeOutWorkspace;
     }
@@ -728,6 +736,14 @@ public class GitSCM extends SCM implements Serializable {
                     if (git.hasGitRepo()) {
                         // It's an update
 
+                        // Do we want to prune first?
+                        if (pruneBranches) {
+                            listener.getLogger().println("Pruning obsolete local branches");
+                            for (RemoteConfig remoteRepository : paramRepos) {
+                                git.prune(remoteRepository);
+                            }
+                        }
+
                         listener.getLogger().println("Fetching changes from the remote Git repository");
 
                         boolean fetched = false;
@@ -1147,7 +1163,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.excludedRegions"),
                               req.getParameter("git.excludedUsers"),
                               req.getParameter("git.localBranch"),
-                              req.getParameter("git.recursiveSubmodules") != null);
+                              req.getParameter("git.recursiveSubmodules") != null,
+                              req.getParameter("git.pruneBranches") != null);
         }
         
         /**
