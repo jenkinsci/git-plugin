@@ -74,7 +74,7 @@
     <f:entry title="${%Excluded Users}" help="/plugin/git/help-excludedUsers.html">
         <f:textarea name="git.excludedUsers" value="${scm.excludedUsers}" />
     </f:entry>
-    <f:entry title="Local branch to use (optional)" help="/plugin/git/help-localBranch.html">
+    <f:entry title="Checkout/merge to local branch (optional)" help="/plugin/git/help-localBranch.html">
       <f:textbox name="git.localBranch" value="${scm.localBranch}" />
     </f:entry>
     <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
