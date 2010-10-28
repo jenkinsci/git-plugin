@@ -1060,7 +1060,7 @@ public class GitSCM extends SCM implements Serializable {
         git.changelog(revFrom, revTo, fos);
         // fos.write("]]></data>".getBytes());
         fos.close();
-        return fos.toString();
+        return fos.toString("UTF-8");
     }
 
     @Override
