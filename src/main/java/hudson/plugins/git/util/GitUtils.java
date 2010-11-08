@@ -11,6 +11,7 @@ import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.slaves.NodeProperty;
+import hudson.model.StreamBuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
@@ -19,6 +20,7 @@ import hudson.plugins.git.Revision;
 
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -165,9 +167,11 @@ public class GitUtils {
             
             
             p.getScm().buildEnvVars(b,env);
+
+            StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
             
             for (NodeProperty nodeProperty: Hudson.getInstance().getGlobalNodeProperties()) {
-                Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)listener);
+                Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
                 if (environment != null) {
                     environment.buildEnvVars(env);
                 }
@@ -175,7 +179,7 @@ public class GitUtils {
 
             if (lastBuiltOn != null) {
                 for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
-                    Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)listener);
+                    Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
                     if (environment != null) {
                         environment.buildEnvVars(env);
                     }
