@@ -1,7 +1,3 @@
-/**
- * Copyright 2010 Mirko Friedenhagen
- */
-
 package hudson.plugins.git.browser;
 
 import hudson.plugins.git.GitChangeLogParser;
@@ -21,8 +17,7 @@ import junit.framework.TestCase;
 import org.xml.sax.SAXException;
 
 /**
- * @author mirko
- *
+ * @author mfriedenhagen
  */
 public class RedmineWebTest extends TestCase {
 
