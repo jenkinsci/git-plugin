@@ -58,7 +58,7 @@ public class RedmineWebTest extends TestCase {
      */
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = redmineWeb.getChangeSetLink(createChangeSet("rawchangelog"));
-        assertEquals(REDMINE_URL + "/revisions/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
+        assertEquals(REDMINE_URL + "/diff?rev=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     /**
