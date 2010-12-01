@@ -11,6 +11,7 @@ import static hudson.Util.fixEmptyAndTrim;
 
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.browser.GithubWeb;
+import hudson.plugins.git.browser.RedmineWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 
 import hudson.plugins.git.util.*;
@@ -1177,6 +1178,7 @@ public class GitSCM extends SCM implements Serializable {
             final GitRepositoryBrowser gitBrowser;
             final String gitWebUrl = req.getParameter("gitweb.url");
             final String githubWebUrl = req.getParameter("githubweb.url");
+            final String redmineWebUrl = req.getParameter("redmineweb.url");
             if (gitWebUrl != null && gitWebUrl.trim().length() > 0) {
                 try {
                     gitBrowser = new GitWeb(gitWebUrl.trim());
@@ -1188,6 +1190,14 @@ public class GitSCM extends SCM implements Serializable {
             else if (githubWebUrl != null && githubWebUrl.trim().length() > 0) {
                 try {
                     gitBrowser = new GithubWeb(githubWebUrl.trim());
+                }
+                catch (MalformedURLException e) {
+                    throw new GitException("Error creating GithubWeb", e);
+                }
+            }
+            else if (redmineWebUrl != null && redmineWebUrl.trim().length() > 0) {
+                try {
+                    gitBrowser = new RedmineWeb(redmineWebUrl.trim());
                 }
                 catch (MalformedURLException e) {
                     throw new GitException("Error creating GithubWeb", e);
