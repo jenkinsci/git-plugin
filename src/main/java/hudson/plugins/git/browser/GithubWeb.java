@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
-import hudson.plugins.git.GitRepositoryBrowser;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 

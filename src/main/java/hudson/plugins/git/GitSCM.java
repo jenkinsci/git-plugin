@@ -9,6 +9,7 @@ import hudson.model.*;
 
 import static hudson.Util.fixEmptyAndTrim;
 
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.browser.RedmineWeb;
@@ -32,8 +33,13 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -41,6 +47,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.servlet.ServletException;
 
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -1167,7 +1174,6 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.recursiveSubmodules") != null,
                               req.getParameter("git.pruneBranches") != null);
         }
-        
         /**
          * Determine the browser from the {@link StaplerRequest}.
          *
@@ -1176,38 +1182,37 @@ public class GitSCM extends SCM implements Serializable {
          */
         private GitRepositoryBrowser getBrowserFromRequest(StaplerRequest req) {
             final GitRepositoryBrowser gitBrowser;
-            final String gitWebUrl = req.getParameter("gitweb.url");
-            final String githubWebUrl = req.getParameter("githubweb.url");
-            final String redmineWebUrl = req.getParameter("redmineweb.url");
-            if (gitWebUrl != null && gitWebUrl.trim().length() > 0) {
-                try {
-                    gitBrowser = new GitWeb(gitWebUrl.trim());
-                }
-                catch (MalformedURLException e) {
-                    throw new GitException("Error creating GitWeb", e);
-                }
+            try {
+                final JSONObject submittedForm = req.getSubmittedForm().getJSONObject("scm");
+//                System.err.println(submittedForm.toString(2));
+                final JSONObject browserObject = submittedForm.getJSONObject("browser");
+                final String staplerClass = browserObject.getString("stapler-class");
+                final URL url = new URL(browserObject.getString("url"));
+                final Class<?> browserClass = Class.forName(staplerClass);                
+                final Constructor<?> constructor = browserClass.getConstructor(String.class);
+                gitBrowser = (GitRepositoryBrowser) constructor.newInstance(url.toString());
+                return gitBrowser;
+            } catch (ServletException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (SecurityException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (InstantiationException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException("Message:", e);
+            } catch (JSONException e) {
+                return null;
             }
-            else if (githubWebUrl != null && githubWebUrl.trim().length() > 0) {
-                try {
-                    gitBrowser = new GithubWeb(githubWebUrl.trim());
-                }
-                catch (MalformedURLException e) {
-                    throw new GitException("Error creating GithubWeb", e);
-                }
-            }
-            else if (redmineWebUrl != null && redmineWebUrl.trim().length() > 0) {
-                try {
-                    gitBrowser = new RedmineWeb(redmineWebUrl.trim());
-                }
-                catch (MalformedURLException e) {
-                    throw new GitException("Error creating GithubWeb", e);
-                }
-            }
-            else {
-                gitBrowser = null;
-            }
-
-            return gitBrowser;
         }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
@@ -1458,21 +1463,4 @@ public class GitSCM extends SCM implements Serializable {
     }
         
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
-
-    /**
-     * {@inheritDoc}
-     *
-     * Due to compatibility issues with older version we implement this ourselves instead of relying
-     * on the parent method. Kohsuke implemented a fix for this in the core (r21961), so we may drop
-     * this function after 1.325 is released.
-     *
-     * @todo: remove this function after 1.325 is released.
-     *
-     * @see <a href="https://hudson.dev.java.net/issues/show_bug.cgi?id=4514">#4514</a>
-     * @see <a href="http://fisheye4.atlassian.com/changelog/hudson/trunk/hudson?cs=21961">core fix</a>
-     */
-    //@Override
-    public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
-        return RepositoryBrowsers.filter(GitRepositoryBrowser.class);
-    }
 }
