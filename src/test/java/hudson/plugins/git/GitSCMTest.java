@@ -30,39 +30,7 @@ import java.util.Set;
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
-public class GitSCMTest extends HudsonTestCase {
-
-    private File workDir;
-    private GitAPI git;
-    private TaskListener listener;
-    private EnvVars envVars;
-    private FilePath workspace;
-
-    private final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
-    private final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        workDir = createTmpDir();
-        listener = new StreamTaskListener();
-        envVars = new EnvVars();
-        setAuthor(johnDoe);
-        setCommitter(johnDoe);
-        workspace = new FilePath(workDir);
-        git = new GitAPI("git", workspace, listener, envVars);
-        git.init();
-    }
-
-    private void setAuthor(final PersonIdent author) {
-        envVars.put("GIT_AUTHOR_NAME", author.getName());
-        envVars.put("GIT_AUTHOR_EMAIL", author.getEmailAddress());
-    }
-
-    private void setCommitter(final PersonIdent committer) {
-        envVars.put("GIT_COMMITTER_NAME", committer.getName());
-        envVars.put("GIT_COMMITTER_EMAIL", committer.getEmailAddress());
-    }
+public class GitSCMTest extends AbstractGitTestCase {
 
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
