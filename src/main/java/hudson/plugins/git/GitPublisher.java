@@ -5,10 +5,13 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.FilePath;
 import hudson.FilePath.FileCallable;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.remoting.VirtualChannel;
@@ -25,21 +28,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletException;
-
-import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.spearce.jgit.transport.RemoteConfig;
 
-public class GitPublisher extends Recorder implements Serializable {
+public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -109,10 +107,28 @@ public class GitPublisher extends Recorder implements Serializable {
         return BuildStepMonitor.BUILD;
     }
 
+    /**
+     * For a matrix project, push should only happen once.
+     */
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        return new MatrixAggregator(build,launcher,listener) {
+            @Override
+            public boolean endBuild() throws InterruptedException, IOException {
+                return GitPublisher.this.perform(build,launcher,listener);
+            }
+        };
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
                            Launcher launcher, final BuildListener listener)
         throws InterruptedException {
+
+        // during matrix build, the push back would happen at the very end only once for the whole matrix,
+        // not for individual configuration build.
+        if (build instanceof MatrixRun) {
+            return true;
+        }
 
         SCM scm = build.getProject().getScm();
 
@@ -348,11 +364,6 @@ public class GitPublisher extends Recorder implements Serializable {
     
     @Extension(ordinal=-1)
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-
-        public DescriptorImpl() {
-            super(GitPublisher.class);
-        }
-
         public String getDisplayName() {
             return "Git Publisher";
         }
@@ -381,12 +392,6 @@ public class GitPublisher extends Recorder implements Serializable {
             return checkFieldNotEmpty(value, "Branch Name");
         }
                 
-        @Override
-        public GitPublisher newInstance(StaplerRequest req, JSONObject formData)
-            throws FormException {
-            return req.bindJSON(GitPublisher.class, formData);
-        }
-
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }
