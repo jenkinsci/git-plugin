@@ -36,7 +36,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import javax.servlet.ServletException;
 
@@ -133,6 +132,21 @@ public class GitSCM extends SCM implements Serializable {
 
     public void setSubmoduleCfg(Collection<SubmoduleConfig> submoduleCfg) {
         this.submoduleCfg = submoduleCfg;
+    }
+
+    /**
+     * A convenience constructor that sets everything to default.
+     *
+     * @param repositoryUrl
+     *      Repository URL to clone from.
+     */
+    public GitSCM(String repositoryUrl) throws IOException {
+        this(
+                DescriptorImpl.createRepositoryConfigurations(new String[]{repositoryUrl},new String[]{null},new String[]{null}),
+                Collections.singletonList(new BranchSpec("")),
+                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, new DefaultBuildChooser(), null, null, false, null,
+                null, null, null, false, false);
     }
 
     @DataBoundConstructor
@@ -1115,21 +1129,13 @@ public class GitSCM extends SCM implements Serializable {
 
         public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             List<RemoteConfig> remoteRepositories;
-            File temp = null;
-
             try {
-                temp = File.createTempFile("tmp", "config");
                 remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
-                                                                    req.getParameterValues("git.repo.name"), req.getParameterValues("git.repo.refspec"),
-                                                                    temp);
+                                                                    req.getParameterValues("git.repo.name"),
+                                                                    req.getParameterValues("git.repo.refspec"));
             }
             catch (IOException e1) {
                 throw new GitException("Error creating repositories", e1);
-            }
-            finally {
-                if(temp != null) {
-                    temp.delete();
-                }
             }
             List<BranchSpec> branches = createBranches(req.getParameterValues("git.branch"));
 
@@ -1200,6 +1206,21 @@ public class GitSCM extends SCM implements Serializable {
             return gitBrowser;
         }
 
+        public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
+                                                                        String[] repoNames,
+                                                                        String[] refSpecs) throws IOException {
+            File temp = File.createTempFile("tmp", "config");
+            try {
+                return createRepositoryConfigurations(pUrls,repoNames,refSpecs,temp);
+            } finally {
+                temp.delete();
+            }
+        }
+
+        /**
+         * @deprecated
+         *      Use {@link #createRepositoryConfigurations(String[], String[], String[])}
+         */
         public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
                                                                         String[] repoNames,
                                                                         String[] refSpecs,
