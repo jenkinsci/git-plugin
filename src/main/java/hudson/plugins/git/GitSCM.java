@@ -1158,7 +1158,7 @@ public class GitSCM extends SCM implements Serializable {
             String[] names = req.getParameterValues("git.repo.name");
             Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
 
-            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req);
+            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(formData);
             String gitTool = req.getParameter("git.gitTool");
 
             return new GitSCM(
@@ -1180,35 +1180,38 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.recursiveSubmodules") != null,
                               req.getParameter("git.pruneBranches") != null);
         }
+        
         /**
-         * Determine the browser from the {@link StaplerRequest}.
+         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
          *
-         * @param req
+         * @param scmData
          * @return
          */
-        private GitRepositoryBrowser getBrowserFromRequest(StaplerRequest req) {
-            final GitRepositoryBrowser gitBrowser;
+        private GitRepositoryBrowser getBrowserFromRequest(final JSONObject scmData) {
+//            System.out.println(scmData.toString(2));
             try {
-                final JSONObject submittedForm = req.getSubmittedForm().getJSONObject("scm");
-//                System.err.println(submittedForm.toString(2));
-                final JSONObject browserObject = submittedForm.getJSONObject("browser");
-                final String staplerClass = browserObject.getString("stapler-class");
-                final URL url = new URL(browserObject.getString("url"));
+                final JSONObject browserObject;
+                final String staplerClass;
+                final String urlString;
+                try {
+                    browserObject = scmData.getJSONObject("browser");
+                    staplerClass = browserObject.getString("stapler-class");
+                    urlString = browserObject.getString("url");
+                } catch (JSONException e) {
+                    // may occurr, when no browser is set.
+                    return null;
+                }
+                final URL url = new URL(urlString);
                 final Class<?> browserClass = Class.forName(staplerClass);                
                 final Constructor<?> constructor = browserClass.getConstructor(String.class);
-                gitBrowser = (GitRepositoryBrowser) constructor.newInstance(url.toString());
-                return gitBrowser;
-            } catch (ServletException e) {
+                return (GitRepositoryBrowser) constructor.newInstance(url.toString());
+            } catch (MalformedURLException e) {
                 throw new RuntimeException("Message:", e);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (MalformedURLException e) {
                 throw new RuntimeException("Message:", e);
             } catch (SecurityException e) {
                 throw new RuntimeException("Message:", e);
             } catch (NoSuchMethodException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Message:", e);
             } catch (InstantiationException e) {
                 throw new RuntimeException("Message:", e);
@@ -1216,8 +1219,6 @@ public class GitSCM extends SCM implements Serializable {
                 throw new RuntimeException("Message:", e);
             } catch (InvocationTargetException e) {
                 throw new RuntimeException("Message:", e);
-            } catch (JSONException e) {
-                return null;
             }
         }
 
