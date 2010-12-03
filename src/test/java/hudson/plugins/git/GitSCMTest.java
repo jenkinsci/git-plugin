@@ -30,39 +30,7 @@ import java.util.Set;
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
-public class GitSCMTest extends HudsonTestCase {
-
-    private File workDir;
-    private GitAPI git;
-    private TaskListener listener;
-    private EnvVars envVars;
-    private FilePath workspace;
-
-    private final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
-    private final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        workDir = createTmpDir();
-        listener = new StreamTaskListener();
-        envVars = new EnvVars();
-        setAuthor(johnDoe);
-        setCommitter(johnDoe);
-        workspace = new FilePath(workDir);
-        git = new GitAPI("git", workspace, listener, envVars);
-        git.init();
-    }
-
-    private void setAuthor(final PersonIdent author) {
-        envVars.put("GIT_AUTHOR_NAME", author.getName());
-        envVars.put("GIT_AUTHOR_EMAIL", author.getEmailAddress());
-    }
-
-    private void setCommitter(final PersonIdent committer) {
-        envVars.put("GIT_COMMITTER_NAME", committer.getName());
-        envVars.put("GIT_COMMITTER_EMAIL", committer.getEmailAddress());
-    }
+public class GitSCMTest extends AbstractGitTestCase {
 
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
@@ -446,15 +414,6 @@ public class GitSCMTest extends HudsonTestCase {
         return setupProject(branchString,false);
     }
 
-    private List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
-        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
-                                                                    new String[]{workDir.getAbsolutePath()},
-                                                                    new String[]{"origin"},
-                                                                    new String[]{""},
-                                                                    File.createTempFile("tmp", "config", hudson.getRootDir())
-        );
-    }
-
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
@@ -475,34 +434,6 @@ public class GitSCMTest extends HudsonTestCase {
             assertBuildStatus(expectedResult, build);
         }
         return build;
-    }
-
-    private void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
-        setAuthor(committer);
-        setCommitter(committer);
-        FilePath file = workspace.child(fileName);
-        try {
-            file.write(fileName, null);
-        } catch (Exception e) {
-            throw new GitException("unable to write file", e);
-        }
-
-        git.add(fileName);
-        git.launchCommand("commit", "-m", message);
-    }
-
-    private void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws GitException {
-        setAuthor(author);
-        setCommitter(committer);
-        FilePath file = workspace.child(fileName);
-        try {
-            file.write(fileName, null);
-        } catch (Exception e) {
-            throw new GitException("unable to write file", e);
-        }
-        git.add(fileName);
-        git.launchCommand("commit", "-m", message);
     }
 
     private EnvVars getEnvVars(FreeStyleProject project) {

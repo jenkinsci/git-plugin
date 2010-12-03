@@ -4,7 +4,7 @@ Since you're looking at the git plugin, you're presumably a git user.
 
 If you're wanting to make changes, please clone the git repository at
 
-https://github.com/hudson/Hudson-GIT-plugin
+git://github.com/hudson/Hudson-GIT-plugin.git
 
 Changes here are periodically squashed back into SVN - if you don't use this route, then changes
 are potentially lost in SVN if they don't merge cleanly with master.
