@@ -414,15 +414,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         return setupProject(branchString,false);
     }
 
-    private List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
-        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
-                                                                    new String[]{workDir.getAbsolutePath()},
-                                                                    new String[]{"origin"},
-                                                                    new String[]{""},
-                                                                    File.createTempFile("tmp", "config", hudson.getRootDir())
-        );
-    }
-
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
@@ -443,34 +434,6 @@ public class GitSCMTest extends AbstractGitTestCase {
             assertBuildStatus(expectedResult, build);
         }
         return build;
-    }
-
-    private void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
-        setAuthor(committer);
-        setCommitter(committer);
-        FilePath file = workspace.child(fileName);
-        try {
-            file.write(fileName, null);
-        } catch (Exception e) {
-            throw new GitException("unable to write file", e);
-        }
-
-        git.add(fileName);
-        git.launchCommand("commit", "-m", message);
-    }
-
-    private void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws GitException {
-        setAuthor(author);
-        setCommitter(committer);
-        FilePath file = workspace.child(fileName);
-        try {
-            file.write(fileName, null);
-        } catch (Exception e) {
-            throw new GitException("unable to write file", e);
-        }
-        git.add(fileName);
-        git.launchCommand("commit", "-m", message);
     }
 
     private EnvVars getEnvVars(FreeStyleProject project) {

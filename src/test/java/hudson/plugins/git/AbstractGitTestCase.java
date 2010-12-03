@@ -6,8 +6,11 @@ import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.spearce.jgit.lib.PersonIdent;
+import org.spearce.jgit.transport.RemoteConfig;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Base test case for Git related stuff.
@@ -15,7 +18,7 @@ import java.io.File;
  * @author Kohsuke Kawaguchi
  * @author ishaaq
  */
-public class AbstractGitTestCase extends HudsonTestCase {
+public abstract class AbstractGitTestCase extends HudsonTestCase {
     protected File workDir;
     protected GitAPI git;
     protected TaskListener listener;
@@ -46,4 +49,41 @@ public class AbstractGitTestCase extends HudsonTestCase {
         envVars.put("GIT_COMMITTER_NAME", committer.getName());
         envVars.put("GIT_COMMITTER_EMAIL", committer.getEmailAddress());
     }
+
+    protected void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
+        setAuthor(committer);
+        setCommitter(committer);
+        FilePath file = workspace.child(fileName);
+        try {
+            file.write(fileName, null);
+        } catch (Exception e) {
+            throw new GitException("unable to write file", e);
+        }
+
+        git.add(fileName);
+        git.launchCommand("commit", "-m", message);
+    }
+
+    protected void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+                        final String message) throws GitException {
+        setAuthor(author);
+        setCommitter(committer);
+        FilePath file = workspace.child(fileName);
+        try {
+            file.write(fileName, null);
+        } catch (Exception e) {
+            throw new GitException("unable to write file", e);
+        }
+        git.add(fileName);
+        git.launchCommand("commit", "-m", message);
+    }
+
+    protected List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
+        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
+                                                                    new String[]{workDir.getAbsolutePath()},
+                                                                    new String[]{"origin"},
+                                                                    new String[]{""}
+        );
+    }
+
 }
