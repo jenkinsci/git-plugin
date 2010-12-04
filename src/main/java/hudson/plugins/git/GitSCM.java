@@ -1158,9 +1158,8 @@ public class GitSCM extends SCM implements Serializable {
             String[] names = req.getParameterValues("git.repo.name");
             Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
 
-            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(formData);
+            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
             String gitTool = req.getParameter("git.gitTool");
-
             return new GitSCM(
                               remoteRepositories,
                               branches,
@@ -1187,38 +1186,11 @@ public class GitSCM extends SCM implements Serializable {
          * @param scmData
          * @return
          */
-        private GitRepositoryBrowser getBrowserFromRequest(final JSONObject scmData) {
-//            System.out.println(scmData.toString(2));
-            try {
-                final JSONObject browserObject;
-                final String staplerClass;
-                final String urlString;
-                try {
-                    browserObject = scmData.getJSONObject("browser");
-                    staplerClass = browserObject.getString("stapler-class");
-                    urlString = browserObject.getString("url");
-                } catch (JSONException e) {
-                    // may occurr, when no browser is set.
-                    return null;
-                }
-                final URL url = new URL(urlString);
-                final Class<?> browserClass = Class.forName(staplerClass);                
-                final Constructor<?> constructor = browserClass.getConstructor(String.class);
-                return (GitRepositoryBrowser) constructor.newInstance(url.toString());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (SecurityException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (InstantiationException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Message:", e);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException("Message:", e);
+        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
+            if (scmData.containsKey("browser")) {
+                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
+            } else {
+                return null;
             }
         }
 

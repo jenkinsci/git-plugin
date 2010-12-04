@@ -13,8 +13,6 @@ import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
-
-import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -34,6 +32,7 @@ public class BrowserChooserTest extends TestCase {
 
     private final HttpServletRequest servletRequest = Mockito.mock(HttpServletRequest.class);
 
+    @SuppressWarnings("unchecked")
     private final StaplerRequest staplerRequest = new RequestImpl(stapler, servletRequest, Collections.EMPTY_LIST, null);
 
     {
@@ -41,7 +40,7 @@ public class BrowserChooserTest extends TestCase {
         Mockito.when(webApp.getClassLoader()).thenReturn(this.getClass().getClassLoader());
         Mockito.when(stapler.getWebApp()).thenReturn(webApp);
     }
-    
+
     public void testRedmineWeb() throws IOException {
         testExistingBrowser(RedmineWeb.class);
     }
@@ -53,13 +52,23 @@ public class BrowserChooserTest extends TestCase {
     public void testGitWeb() throws IOException {
         testExistingBrowser(GitWeb.class);
     }
-    
+
+    public void testNonExistingBrowser() throws IOException {
+        final JSONObject json = readJson();
+        try {
+            createBrowserFromJson(json);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertSame(e.getCause().getCause().getClass(), ClassNotFoundException.class);
+        }
+    }
+
     /**
      * @param browserClass
      * @throws IOException
      */
     void testExistingBrowser(final Class<? extends GitRepositoryBrowser> browserClass) throws IOException {
-        final JSONObject json = readJson(browserClass);        
+        final JSONObject json = readJson(browserClass);
         assertSame(browserClass, createBrowserFromJson(json).getClass());
     }
 
@@ -68,19 +77,19 @@ public class BrowserChooserTest extends TestCase {
      * @return
      */
     GitRepositoryBrowser createBrowserFromJson(final JSONObject json) {
-        GitRepositoryBrowser browser = staplerRequest.bindJSON(GitRepositoryBrowser.class, json.getJSONObject("browser"));
+        GitRepositoryBrowser browser = staplerRequest.bindJSON(GitRepositoryBrowser.class,
+                json.getJSONObject("browser"));
         return browser;
     }
 
     /**
-     * @param browserClass 
+     * @param browserClass
      * @return
      * @throws IOException
      */
     JSONObject readJson(Class<? extends GitRepositoryBrowser> browserClass) throws IOException {
         final JSONObject json = readJson();
         json.getJSONObject("browser").element("stapler-class", browserClass.getName());
-        System.err.println(json.toString(2));
         return json;
     }
 
