@@ -1164,20 +1164,20 @@ public class GitSCM extends SCM implements Serializable {
                               remoteRepositories,
                               branches,
                               mergeOptions,
-                              formData.getBoolean("generate"),
+                              req.getParameter("git.generate") != null,
                               submoduleCfg,
-                              formData.getBoolean("clean"),
-                              formData.getBoolean("wipeOutWorkspace"),
-                              req.bindJSON(BuildChooser.class, formData.getJSONObject("buildChooser")),
+                              req.getParameter("git.clean") != null,
+                              req.getParameter("git.wipeOutWorkspace") != null,
+                              req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
                               gitBrowser,
                               gitTool,
-                              formData.getBoolean("authorOrCommitter"),
-                              formData.getString("relativeTargetDir"),
-                              formData.getString("excludedRegions"),
-                              formData.getString("excludedUsers"),
-                              formData.getString("localBranch"),
-                              formData.getBoolean("recursiveSubmodules"),
-                              formData.getBoolean("pruneBranches"));
+                              req.getParameter("git.authorOrCommitter") != null,
+                              req.getParameter("git.relativeTargetDir"),
+                              req.getParameter("git.excludedRegions"),
+                              req.getParameter("git.excludedUsers"),
+                              req.getParameter("git.localBranch"),
+                              req.getParameter("git.recursiveSubmodules") != null,
+                              req.getParameter("git.pruneBranches") != null);
         }
         
         /**
