@@ -1,29 +1,38 @@
 package hudson.plugins.git;
 
-import hudson.*;
-import hudson.FilePath.FileCallable;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
-
-import hudson.model.*;
-
 import static hudson.Util.fixEmptyAndTrim;
-
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.FilePath.FileCallable;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.matrix.MatrixRun;
+import hudson.matrix.MatrixBuild;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.ParametersAction;
+import hudson.model.Run;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
-import hudson.plugins.git.browser.GithubWeb;
-import hudson.plugins.git.browser.RedmineWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-
-import hudson.plugins.git.util.*;
 import hudson.plugins.git.util.Build;
-
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.RepositoryBrowsers;
-import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
+import hudson.scm.SCM;
 import hudson.util.FormValidation;
 
 import java.io.BufferedReader;
@@ -33,20 +42,20 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Future;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
-import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -133,6 +142,7 @@ public class GitSCM extends SCM implements Serializable {
     private String excludedRegions;
 
     private String excludedUsers;
+    private boolean remotePoll;
     
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -153,7 +163,7 @@ public class GitSCM extends SCM implements Serializable {
                 DescriptorImpl.createRepositoryConfigurations(new String[]{repositoryUrl},new String[]{null},new String[]{null}),
                 Collections.singletonList(new BranchSpec("")),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, false, null,
+                false, new DefaultBuildChooser(), null, null, false, false, null,
                 null, null, null, false, false);
     }
 
@@ -168,6 +178,7 @@ public class GitSCM extends SCM implements Serializable {
                   boolean wipeOutWorkspace,
                   BuildChooser buildChooser, GitRepositoryBrowser browser,
                   String gitTool,
+                  boolean remotePoll,
                   boolean authorOrCommitter,
                   String relativeTargetDir,
                   String excludedRegions,
@@ -192,6 +203,12 @@ public class GitSCM extends SCM implements Serializable {
         this.wipeOutWorkspace = wipeOutWorkspace;
         this.configVersion = 1L;
         this.gitTool = gitTool;
+        if(remotePoll && (branches.size() > 1 || repositories.size() > 1 || (excludedRegions != null && excludedRegions.length()>0) || (excludedUsers != null && excludedUsers.length()>0))) {
+            LOGGER.log(Level.WARNING, "Cannot poll remotely with current configuration.");
+            this.remotePoll = false;
+        } else {
+            this.remotePoll = remotePoll;
+        }
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.relativeTargetDir = relativeTargetDir;
@@ -310,6 +327,10 @@ public class GitSCM extends SCM implements Serializable {
         return this.pruneBranches;
     }
     
+    public boolean getRemotePoll() {
+        return this.remotePoll;
+    }
+    
     public boolean getWipeOutWorkspace() {
         return this.wipeOutWorkspace;
     }
@@ -393,6 +414,14 @@ public class GitSCM extends SCM implements Serializable {
         return branch;
     }
 
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        if(this.remotePoll) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     @Override
     public boolean pollChanges(final AbstractProject project, Launcher launcher,
@@ -414,9 +443,13 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
 
+        String lastBuildRevision = "none";
         if(buildData != null && buildData.lastBuild != null) {
-            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
+            lastBuildRevision = buildData.lastBuild.revision.getSha1String();
+            listener.getLogger().println("[poll] Last Built Revision: " + lastBuildRevision);
         }
+        
+        
         
         final String singleBranch = getSingleBranch(lastBuild);
         Label label = project.getAssignedLabel();
@@ -436,6 +469,19 @@ public class GitSCM extends SCM implements Serializable {
         } else {
             gitExe = getGitExe(project.getLastBuiltOn(), listener);
         }
+        
+        
+        if (singleBranch != null && this.remotePoll) {
+            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment);
+            String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
+            String headRevision = git.getHeadRev(gitRepo, singleBranch);
+
+            listener.getLogger().println("Remote revision is \"" + headRevision + "\" and previous revision is \"" + lastBuildRevision + "\"");
+
+            return !lastBuildRevision.equals(headRevision);
+
+        }
 
         FilePath workingDirectory = workingDirectory(workspace);
 
@@ -448,7 +494,6 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
-       
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
@@ -493,34 +538,6 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     
-    private void cleanSubmodules(IGitAPI parentGit,
-                                 File workspace,
-                                 TaskListener listener,
-                                 RemoteConfig remoteRepository) {
-        
-        List<IndexEntry> submodules = new GitUtils(listener, parentGit)
-            .getSubmodules("HEAD");
-        
-        for (IndexEntry submodule : submodules) {
-            try {
-                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(workspace, remoteRepository, submodule.getFile());
-                File subdir = new File(workspace, submodule.getFile());
-                listener.getLogger().println("Trying to clean submodule in " + subdir);
-                IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
-                                            listener, parentGit.getEnvironment());
-                
-                subGit.clean();
-            } catch (Exception ex) {
-                listener
-                    .getLogger()
-                    .println(
-                                 "Problem cleaning submodule in "
-                                 + submodule.getFile()
-                                 + " - could be unavailable. Continuing anyway");
-            }
-            
-        }
-    }
 
     /**
      * Fetch information from a particular remote repository. Attempt to fetch
@@ -1171,6 +1188,7 @@ public class GitSCM extends SCM implements Serializable {
                               req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
                               gitBrowser,
                               gitTool,
+                              req.getParameter("git.remotePoll") != null,
                               req.getParameter("git.authorOrCommitter") != null,
                               req.getParameter("git.relativeTargetDir"),
                               req.getParameter("git.excludedRegions"),
@@ -1199,7 +1217,7 @@ public class GitSCM extends SCM implements Serializable {
                                                                         String[] refSpecs) throws IOException {
             File temp = File.createTempFile("tmp", "config");
             try {
-                return createRepositoryConfigurations(pUrls,repoNames,refSpecs,temp);
+                return createRepositoryConfigurations(pUrls,repoNames,refSpecs, temp);
             } finally {
                 temp.delete();
             }

@@ -175,6 +175,10 @@
               </j:forEach>
           </select>
       </f:entry>
+      <f:entry title="Fast remote polling" help="/plugin/git/help-fastremote.html">
+      	<f:checkbox name="git.remotePoll" checked="${scm.remotePoll}" />
+      </f:entry>
+      
   </f:advanced>
   
   <t:listScmBrowsers name="git.browser" />
