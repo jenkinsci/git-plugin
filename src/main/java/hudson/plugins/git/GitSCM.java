@@ -926,23 +926,7 @@ public class GitSCM extends SCM implements Serializable {
                             // Tag the successful merge
                             git.tag(buildnumber, "Hudson Build #" + buildNumber);
 
-                            StringBuilder changeLog = new StringBuilder();
-
-                            if(revToBuild.getBranches().size() > 0)
-                                listener.getLogger().println("Warning : There are multiple branch changesets here");
-
-                            try {
-
-                                for(Branch b : revToBuild.getBranches()) {
-                                    Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), 
-                                                                                          buildData, git);
-                                    if(lastRevWas != null) {
-                                        changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
-                                    }
-                                }
-                            } catch (GitException ge) {
-                                changeLog.append("Unable to retrieve changeset");
-                            }
+                            String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                             Build build = new Build(revToBuild, buildNumber, null);
                             buildData.saveBuild(build);
@@ -957,7 +941,7 @@ public class GitSCM extends SCM implements Serializable {
                             }
 
                             // Fetch the diffs into the changelog file
-                            return new Object[]{changeLog.toString(), buildData};
+                            return new Object[]{changeLog, buildData};
                         }
                     });
                 BuildData returningBuildData = (BuildData)returnData[1];
@@ -1019,29 +1003,7 @@ public class GitSCM extends SCM implements Serializable {
                     // Tag the successful merge
                     git.tag(buildnumber, "Hudson Build #" + buildNumber);
 
-                    StringBuilder changeLog = new StringBuilder();
-
-                    int histories = 0;
-
-                    try {
-	                for(Branch b : revToBuild.getBranches()) {
-                            Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git);
-
-	                    if(lastRevWas != null) {
-	                        listener.getLogger().println("Recording changes in branch " + b.getName());
-	                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
-	                        histories++;
-	                    } else {
-	                        listener.getLogger().println("No change to record in branch " + b.getName());
-	                    }
-	                }
-                    } catch (GitException ge) {
-                        changeLog.append("Unable to retrieve changeset");
-                    }
-
-                    if(histories > 1)
-                        listener.getLogger().println("Warning : There are multiple branch changesets here");
-
+                    String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                     buildData.saveBuild(new Build(revToBuild, buildNumber, null));
 
@@ -1051,8 +1013,7 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     // Fetch the diffs into the changelog file
-                    return new Object[]{changeLog.toString(), buildData};
-
+                    return new Object[]{changeLog, buildData};
                 }
             });
         
@@ -1061,6 +1022,43 @@ public class GitSCM extends SCM implements Serializable {
 
         return changeLogResult((String) returnData[0], changelogFile);
 
+    }
+
+    /**
+     * Build up change log from all the branches that we've merged into {@code revToBuild}
+     *
+     * @param git
+     *      Used for invoking Git
+     * @param revToBuild
+     *      Points to the revisiont we'll be building. This includes all the branches we've merged.
+     * @param listener
+     *      Used for writing to build console
+     * @param buildData
+     *      Information that captures what we did during the last build. We need this for changelog,
+     *      or else we won't know where to stop.
+     */
+    private String computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData) throws IOException {
+        int histories = 0;
+
+        StringBuilder changeLog = new StringBuilder();
+        try {
+            for(Branch b : revToBuild.getBranches()) {
+                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git);
+                if(lastRevWas != null) {
+                    changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
+                    histories++;
+                } else {
+                    listener.getLogger().println("No change to record in branch " + b.getName());
+                }
+            }
+        } catch (GitException ge) {
+            changeLog.append("Unable to retrieve changeset");
+        }
+
+        if(histories > 1)
+            listener.getLogger().println("Warning : There are multiple branch changesets here");
+
+        return changeLog.toString();
     }
 
     public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
