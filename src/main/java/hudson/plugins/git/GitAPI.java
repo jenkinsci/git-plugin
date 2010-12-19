@@ -471,11 +471,7 @@ public class GitAPI implements IGitAPI {
     public boolean tagExists(String tagName) throws GitException {
         tagName = tagName.replace(' ', '_');
 
-        if (launchCommand("tag", "-l", tagName).trim().equals(tagName)) {
-            return true;
-        }
-
-        return false;
+        return launchCommand("tag", "-l", tagName).trim().equals(tagName);
     }
 
     public void deleteBranch(String name) throws GitException {
