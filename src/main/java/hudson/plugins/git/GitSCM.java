@@ -877,10 +877,9 @@ public class GitSCM extends SCM implements Serializable {
                             // checkout origin/blah
                             ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                            if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                            if (getLocalBranch() == null) {
                                 git.checkout(target.name());
-                            }
-                            else {
+                            } else {
                                 git.checkoutBranch(localBranch, target.name());
                             }
                             
@@ -896,7 +895,7 @@ public class GitSCM extends SCM implements Serializable {
                                 // repetitive builds from happening - tag the
                                 // candidate
                                 // branch.
-                                if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                                if (getLocalBranch()==null) {
                                     git.checkout(revToBuild.getSha1().name());
                                 }
                                 else {
@@ -977,7 +976,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
-                    if (localBranch == null || localBranch.length() == 0 || localBranch.equals("")) {
+                    if (getLocalBranch()==null) {
                         git.checkout(revToBuild.getSha1().name());
                     }
                     else {
@@ -1384,7 +1383,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     public String getLocalBranch() {
-        return localBranch;
+        return Util.fixEmpty(localBranch);
     }
     
     public String getRelativeTargetDir() {
