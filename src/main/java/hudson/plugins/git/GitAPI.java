@@ -445,7 +445,7 @@ public class GitAPI implements IGitAPI {
 
     public void checkout(String ref) throws GitException {
         try {
-            launchCommand("checkout", "-f", ref.toString());
+            launchCommand("checkout", "-f", ref);
         } catch (GitException e) {
             throw new GitException("Could not checkout " + ref, e);
         }
@@ -462,7 +462,7 @@ public class GitAPI implements IGitAPI {
                 }
             }
             // Lastly, checkout the branch, creating it in the process, using ref as the start point.
-            launchCommand("checkout", "-b", branch, ref.toString());
+            launchCommand("checkout", "-b", branch, ref);
         } catch (GitException e) {
             throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
         }
