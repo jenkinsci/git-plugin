@@ -713,7 +713,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 
-        if(buildData != null && buildData.lastBuild != null) {
+        if (buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
