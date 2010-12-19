@@ -179,7 +179,7 @@ public class GitSCM extends SCM implements Serializable {
         // normalization
         this.branches = branches;
 
-        this.localBranch = localBranch;
+        this.localBranch = Util.fixEmptyAndTrim(localBranch);
         this.remoteRepositories = repositories;
         this.browser = browser;
 
@@ -877,12 +877,8 @@ public class GitSCM extends SCM implements Serializable {
                             // checkout origin/blah
                             ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                            if (getLocalBranch() == null) {
-                                git.checkout(target.name());
-                            } else {
-                                git.checkoutBranch(localBranch, target.name());
-                            }
-                            
+                            git.checkoutBranch(getLocalBranch(), target.name());
+
                             try {
                                 git.merge(revToBuild.getSha1().name());
                             } catch (Exception ex) {
@@ -895,13 +891,8 @@ public class GitSCM extends SCM implements Serializable {
                                 // repetitive builds from happening - tag the
                                 // candidate
                                 // branch.
-                                if (getLocalBranch()==null) {
-                                    git.checkout(revToBuild.getSha1().name());
-                                }
-                                else {
-                                    git.checkoutBranch(localBranch, revToBuild.getSha1().name());
-                                }
-                                
+                                git.checkoutBranch(getLocalBranch(), revToBuild.getSha1().name());
+
                                 git.tag(buildnumber, "Hudson Build #"
                                          + buildNumber);
 
@@ -960,12 +951,8 @@ public class GitSCM extends SCM implements Serializable {
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
-                    if (getLocalBranch()==null) {
-                        git.checkout(revToBuild.getSha1().name());
-                    }
-                    else {
-                        git.checkoutBranch(localBranch, revToBuild.getSha1().name());
-                    }
+
+                    git.checkoutBranch(getLocalBranch(), revToBuild.getSha1().name());
                         
                     // if(compileSubmoduleCompares)
                     if (doGenerateSubmoduleConfigurations) {

@@ -55,8 +55,19 @@ public interface IGitAPI {
     Set<String> getTagNames(String tagPattern) throws GitException;
 
     void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
-    void checkout(String revToBuild) throws GitException;
-    void checkoutBranch(String branch, String revToBuild) throws GitException;
+
+    /**
+     * Short for {@code checkoutBranch(null,commitish)}
+     */
+    void checkout(String commitish) throws GitException;
+
+    /**
+     * Checks out the specified commit/ref into the workspace.
+     *
+     * @param branch
+     *      If non-null, move/create the branch in this name at the specified commit-ish and check out that branch.
+     */
+    void checkoutBranch(String branch, String commitish) throws GitException;
     
     void add(String filePattern) throws GitException;
     void branch(String name) throws GitException;

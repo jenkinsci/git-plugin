@@ -443,28 +443,27 @@ public class GitAPI implements IGitAPI {
         return parseBranches(launchCommand("branch", "-a", "--contains", revspec));
     }
 
-    public void checkout(String ref) throws GitException {
-        try {
-            launchCommand("checkout", "-f", ref);
-        } catch (GitException e) {
-            throw new GitException("Could not checkout " + ref, e);
-        }
+    public void checkout(String commitish) throws GitException {
+        checkoutBranch(null,commitish);
     }
 
-    public void checkoutBranch(String branch, String ref) throws GitException {
+    public void checkoutBranch(String branch, String commitish) throws GitException {
         try {
             // First, checkout to detached HEAD, so we can delete the branch.
-            checkout(ref);
-            // Second, check to see if the branch actually exists, and then delete it if it does.
-            for (Branch b : getBranches()) {
-                if (b.name.equals(branch)) {
-                    deleteBranch(branch);
+            launchCommand("checkout", "-f", commitish);
+
+            if (branch!=null) {
+                // Second, check to see if the branch actually exists, and then delete it if it does.
+                for (Branch b : getBranches()) {
+                    if (b.name.equals(branch)) {
+                        deleteBranch(branch);
+                    }
                 }
+                // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
+                launchCommand("checkout", "-b", branch, commitish);
             }
-            // Lastly, checkout the branch, creating it in the process, using ref as the start point.
-            launchCommand("checkout", "-b", branch, ref);
         } catch (GitException e) {
-            throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
+            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
         }
     }
     
