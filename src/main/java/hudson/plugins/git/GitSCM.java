@@ -830,6 +830,14 @@ public class GitSCM extends SCM implements Serializable {
                             throw new GitException("Could not fetch from any repository");
                         }
 
+                        if (getClean()) {
+                            listener.getLogger().println("Cleaning workspace");
+                            git.clean();
+                            
+                            if (git.hasGitModules()) {
+                                git.submoduleClean(recursiveSubmodules);
+                            }
+                        }
                         
                         if (git.hasGitModules()) {
                             git.submoduleInit();
@@ -898,15 +906,6 @@ public class GitSCM extends SCM implements Serializable {
 
 
                                 buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
-                                if (getClean()) {
-                                    listener.getLogger().println("Cleaning workspace");
-                                    git.clean();
-
-                                    if (git.hasGitModules()) {
-                                        git.submoduleClean(recursiveSubmodules);
-                                    }
-                                }
-                                
                                 return new Object[]{null, buildData};
                             }
 
@@ -952,6 +951,11 @@ public class GitSCM extends SCM implements Serializable {
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
 
+                    if (getClean()) {
+                        listener.getLogger().println("Cleaning workspace");
+                        git.clean();
+                    }
+
                     git.checkoutBranch(getLocalBranch(), revToBuild.getSha1().name());
                         
                     // if(compileSubmoduleCompares)
@@ -993,11 +997,6 @@ public class GitSCM extends SCM implements Serializable {
                     String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                     buildData.saveBuild(new Build(revToBuild, buildNumber, null));
-
-                    if (getClean()) {
-                        listener.getLogger().println("Cleaning workspace");
-                        git.clean();
-                    }
 
                     // Fetch the diffs into the changelog file
                     return new Object[]{changeLog, buildData};
