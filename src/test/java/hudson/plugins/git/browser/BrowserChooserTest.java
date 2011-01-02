@@ -23,8 +23,10 @@ import org.kohsuke.stapler.WebApp;
 import org.mockito.Mockito;
 
 /**
- * @author mirko
  * 
+ * This class tests switching between the different browser implementation.
+ * 
+ * @author mfriedenhagen
  */
 public class BrowserChooserTest extends TestCase {
 
@@ -83,6 +85,9 @@ public class BrowserChooserTest extends TestCase {
     }
 
     /**
+     * Reads the request data from file scm.json and replaces the invalid browser class in the JSONObject with the class
+     * specified as parameter.
+     * 
      * @param browserClass
      * @return
      * @throws IOException
@@ -94,6 +99,8 @@ public class BrowserChooserTest extends TestCase {
     }
 
     /**
+     * Reads the request data from file scm.json.
+     * 
      * @return
      * @throws IOException
      */
