@@ -503,7 +503,7 @@ public class GitSCM extends SCM implements Serializable {
         
         for (IndexEntry submodule : submodules) {
             try {
-                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(workspace, remoteRepository, submodule.getFile());
+                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(parentGit, remoteRepository, submodule.getFile());
                 File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
                 IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
@@ -539,12 +539,16 @@ public class GitSCM extends SCM implements Serializable {
         try {
             git.fetch(remoteRepository);
 
+            // This ensures we don't miss changes to submodule paths and allows
+            // seemless use of bare and non-bare superproject repositories.
+            git.setupSubmoduleUrls( listener );
+
             List<IndexEntry> submodules = new GitUtils(listener, git)
                 .getSubmodules("HEAD");
 
             for (IndexEntry submodule : submodules) {
                 try {
-                    RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(workspace, remoteRepository, submodule.getFile());
+                    RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(git, remoteRepository, submodule.getFile());
                     File subdir = new File(workspace, submodule.getFile());
                     listener.getLogger().println("Trying to fetch " + submodule.getFile() + " into " + subdir);
                     IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
@@ -572,46 +576,14 @@ public class GitSCM extends SCM implements Serializable {
         return fetched;
     }
 
-    public RemoteConfig getSubmoduleRepository(File aWorkspace, RemoteConfig orig, String name) throws IOException {
-        // Read submodule from .gitmodules
-        BufferedReader bfr = new BufferedReader(new FileReader(aWorkspace + File.separator + ".gitmodules"));
-        String line = "";
-        boolean isSubmodule = false;
-
-        try {
-            while((line= bfr.readLine()) != null) {
-                line = line.trim();
-                if(line.startsWith("[submodule \"" + name )) {
-                    isSubmodule = true;
-                } else if (isSubmodule && line.startsWith("url")) {
-                    int index = line.indexOf("=");
-                    String refUrl = line.substring(index + 1).trim();
-                    return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0));
-                }
-            }
-        } catch (IOException e) {
-            throw new GitException("Error in reading .gitmodules", e);
-        } finally {
-            bfr.close();
-        }
-
-        
-        // Attempt to guess the submodule URL??
-
-        String refUrl = orig.getURIs().get(0).toString();
-
-        if (refUrl.endsWith("/.git")) {
-            refUrl = refUrl.substring(0, refUrl.length() - 4);
-        }
-
-        if (!refUrl.endsWith("/")) refUrl += "/";
-
-        refUrl += name;
-
-        if (!refUrl.endsWith("/")) refUrl += "/";
-
-        refUrl += ".git";
-
+    public RemoteConfig getSubmoduleRepository( IGitAPI parentGit,
+                                                RemoteConfig orig,
+                                                String name ) throws GitException {
+        // The first attempt at finding the URL in this new code relies on
+        // submoduleInit, submoduleSync, fixSubmoduleUrls already being executed
+        // since the last fetch of the super project.  (This is currently done
+        // by calling git.setupSubmoduleUrls(...). )
+        String refUrl = parentGit.getSubmoduleUrl( name );
         return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0));
     }
 
@@ -838,9 +810,12 @@ public class GitSCM extends SCM implements Serializable {
                                 git.submoduleClean(recursiveSubmodules);
                             }
                         }
-                        
+
+                        /* The initial clone for submodules... */
                         if (git.hasGitModules()) {
-                            git.submoduleInit();
+                            // This ensures we don't miss changes to submodule paths and allows
+                            // seemless use of bare and non-bare superproject repositories.
+                            git.setupSubmoduleUrls( listener );
                             git.submoduleUpdate(recursiveSubmodules);
                         }
                     }
@@ -910,6 +885,9 @@ public class GitSCM extends SCM implements Serializable {
                             }
 
                             if (git.hasGitModules()) {
+                                // This ensures we don't miss changes to submodule paths and allows
+                                // seemless use of bare and non-bare superproject repositories.
+                                git.setupSubmoduleUrls( listener );
                                 git.submoduleUpdate(recursiveSubmodules);
                             }
 
@@ -966,9 +944,6 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     if (git.hasGitModules()) {
-                        git.submoduleInit();
-                        git.submoduleSync();
-
                         // Git submodule update will only 'fetch' from where it
                         // regards as 'origin'. However,
                         // it is possible that we are building from a
@@ -984,6 +959,10 @@ public class GitSCM extends SCM implements Serializable {
                             for (RemoteConfig remoteRepository : paramRepos) {
                                 fetchFrom(git, localWorkspace, listener, remoteRepository);
                             }
+                        } else {
+                            // This ensures we don't miss changes to submodule paths and allows
+                            // seemless use of bare and non-bare superproject repositories.
+                            git.setupSubmoduleUrls( listener );
                         }
 
                         // Update to the correct checkout

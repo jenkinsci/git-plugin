@@ -9,6 +9,8 @@ import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
+import hudson.plugins.git.util.GitUtils;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -323,6 +326,215 @@ public class GitAPI implements IGitAPI {
     	args.add("git clean -fdx");
     	
     	launchCommand(args);
+    }
+
+    /**
+     * Get submodule URL
+     *
+     * @param name The name of the submodule
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public String getSubmoduleUrl(String name) throws GitException {
+        String result = launchCommand( "config", "--get", "submodule."+name+".url" );
+        return firstLine(result).trim();
+    }
+
+    /**
+     * Set submodule URL
+     *
+     * @param name The name of the submodule
+     *
+     * @param url The new value of the submodule's URL
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void setSubmoduleUrl(String name, String url) throws GitException {
+        launchCommand( "config", "submodule."+name+".url", url );
+    }
+
+    /**
+     * Get a remote's URL
+     *
+     * @param name The name of the remote (e.g. origin)
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public String getRemoteUrl(String name) throws GitException {
+        String result = launchCommand( "config", "--get", "remote."+name+".url" );
+        return firstLine(result).trim();
+    }
+
+    /**
+     * Set a remote's URL
+     *
+     * @param name The name of the remote (e.g. origin)
+     *
+     * @param url The new value of the remote's URL
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void setRemoteUrl(String name, String url) throws GitException {
+        launchCommand( "config", "remote."+name+".url", url );
+    }
+
+    /**
+     * From a given repository, get a remote's URL
+     *
+     * @param name The name of the remote (e.g. origin)
+     *
+     * @param GIT_DIR The path to the repository (must be to .git dir)
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public String getRemoteUrl(String name, String GIT_DIR) throws GitException {
+        String result
+            = launchCommand( "--git-dir=" + GIT_DIR,
+                             "config", "--get", "remote."+name+".url" );
+        return firstLine(result).trim();
+    }
+
+    /**
+     * For a given repository, set a remote's URL
+     *
+     * @param name The name of the remote (e.g. origin)
+     *
+     * @param url The new value of the remote's URL
+     *
+     * @param GIT_DIR The path to the repository (must be to .git dir)
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void setRemoteUrl(String name, String url, String GIT_DIR ) throws GitException {
+        launchCommand( "--git-dir=" + GIT_DIR,
+                       "config", "remote."+name+".url", url );
+    }
+
+
+    /**
+     * Detect whether a repository is bare or not.
+     *
+     * @throws GitException
+     */
+    public boolean isBareRepository() throws GitException {
+        return isBareRepository("");
+    }
+
+    /**
+     * Detect whether a repository at the given path is bare or not.
+     *
+     * @param GIT_DIR The path to the repository (must be to .git dir).
+     *
+     * @throws GitException
+     */
+    public boolean isBareRepository(String GIT_DIR) throws GitException {
+        String ret = null;
+        if ( "".equals(GIT_DIR) )
+            ret = launchCommand(        "rev-parse", "--is-bare-repository");
+        else {
+            String gitDir = "--git-dir=" + GIT_DIR;
+            ret = launchCommand(gitDir, "rev-parse", "--is-bare-repository");
+        }
+
+        if ( "false".equals( firstLine(ret).trim() ) )
+            return false;
+        else
+            return true;
+    }
+
+    private String pathJoin( String a, String b ) {
+        return new File(a, b).toString();
+    }
+
+    /**
+     * Fixes urls for submodule as stored in .git/config and
+     * $SUBMODULE/.git/config for when the remote repo is NOT a bare repository.
+     * It is only really possible to detect whether a repository is bare if we
+     * have local access to the repository.  If the repository is remote, we
+     * therefore must default to believing that it is either bare or NON-bare.
+     * The defaults are according to the ending of the super-project
+     * remote.origin.url:
+     *  - Ends with "/.git":  default is NON-bare
+     *  -         otherwise:  default is bare
+     *  .
+     *
+     * @param listener The task listener (used to create a GitUtils instance).
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void fixSubmoduleUrls( TaskListener listener ) throws GitException {
+        boolean is_bare = true;
+
+        URI origin = null;
+        try {
+            String url = getRemoteUrl("origin");
+
+            // ensure that any /.git ending is removed
+            String gitEnd = pathJoin("", ".git");
+            if ( url.endsWith( gitEnd ) ) {
+                url = url.substring(0, url.length() - gitEnd.length() );
+                // change the default detection value to NON-bare
+                is_bare = false;
+            }
+
+            origin = new URI( url );
+        } catch (Exception e) {
+            throw new GitException("Could determine remote.origin.url", e);
+        }
+
+        if ( origin.getScheme() == null ||
+             ( "file".equalsIgnoreCase( origin.getScheme() ) &&
+               ( origin.getHost() == null || "".equals( origin.getHost() ) )
+             )
+           ) {
+            // The uri is a local path, so we will test to see if it is a bare
+            // repository...
+            List<String> paths = new ArrayList<String>();
+            paths.add( origin.getPath() );
+            paths.add( pathJoin( origin.getPath(), ".git" ) );
+
+            for ( String path : paths ) {
+                try {
+                    is_bare = isBareRepository(path);
+                    break;// we can break already if we don't have an exception
+                } catch (GitException e) { }
+            }
+        }
+
+        if ( ! is_bare ) {
+            List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
+
+            for (IndexEntry submodule : submodules) {
+                // First fix the URL to the submodule inside the super-project
+                String sUrl = pathJoin( origin.getPath(), submodule.getFile() );
+                setSubmoduleUrl( submodule.getFile(), sUrl );
+
+                // Second, if the submodule already has been cloned, fix its own
+                // url...
+                try {
+                    String subGitDir = pathJoin( submodule.getFile(), ".git" );
+
+                    if ( ! "".equals( getRemoteUrl("origin", subGitDir) ) ) {
+                        setRemoteUrl("origin", sUrl, subGitDir);
+                    }
+                } catch ( GitException e ) { }
+            }
+        } else {
+           // we've made a reasonable attempt to detect whether the origin is
+           // non-bare, so we'll just assume it is bare from here on out and
+           // thus the URLs are correct as given by (which is default behavior)
+           //    git config --get submodule.NAME.url
+        }
+    }
+
+    public void setupSubmoduleUrls( TaskListener listener ) throws GitException {
+        // This is to make sure that we don't miss any new submodules or
+        // changes in submodule origin paths...
+        submoduleInit();
+        submoduleSync();
+        // This allows us to seemlessly use bare and non-bare superproject
+        // repositories.
+        fixSubmoduleUrls(listener);
     }
 
     public void tag(String tagName, String comment) throws GitException {

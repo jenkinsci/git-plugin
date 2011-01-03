@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
+import hudson.model.TaskListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,11 +20,21 @@ public interface IGitAPI {
     public void init() throws GitException;
     boolean hasGitRepo() throws GitException;
     boolean hasGitModules() throws GitException;
+    String getRemoteUrl(String name) throws GitException;
+    void setRemoteUrl(String name, String url) throws GitException;
+    String getRemoteUrl(String name, String GIT_DIR) throws GitException;
+    void setRemoteUrl(String name, String url, String GIT_DIR) throws GitException;
+    boolean isBareRepository() throws GitException;
+    boolean isBareRepository(String GIT_DIR) throws GitException;
 
     void submoduleInit()  throws GitException;
     void submoduleUpdate(boolean recursive)  throws GitException;
     void submoduleClean(boolean recursive)  throws GitException;
     void submoduleSync() throws GitException;
+    String getSubmoduleUrl(String name) throws GitException;
+    void setSubmoduleUrl(String name, String url) throws GitException;
+    void fixSubmoduleUrls( TaskListener listener ) throws GitException;
+    void setupSubmoduleUrls( TaskListener listener ) throws GitException;
 
     public void fetch(String repository, String refspec) throws GitException;
     void fetch(RemoteConfig remoteRepository);
