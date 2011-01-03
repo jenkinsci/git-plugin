@@ -75,7 +75,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * All the registered build choosers.
      */
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Hudson.getInstance().getDescriptorList(BuildChooser.class);
+        return Hudson.getInstance()
+               .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 
     public Build prevBuildForChangelog(String singleBranch, BuildData data, IGitAPI git) {
