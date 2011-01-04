@@ -1,3 +1,29 @@
 <div>
-  Specify the repository to track. This can be URL or a local file path.
+  Specify the repository to track. This can be a URL or a local file path.
+  <br>
+  If the repository is a super-project (a repository with submodules), the
+  location from which to clone submodules is dependent on whether the repository
+  is bare or non-bare (i.e. has a working directory).
+  <ul>
+    <li>If the super-project is bare, the location of the submodules will be
+    taken from <i>.gitmodules</i>.</li>
+    <li>If the super-project is <b>not</b> bare, it is assumed that the
+    repository has each of its submodules cloned and checked out appropriately.
+    Thus, the submodules will be taken directly from a path like
+    <code>${SUPER_PROJECT_URL}/${SUBMODULE}</code>, rather than relying on
+    information from <i>.gitmodules</i>.</li>
+  </ul>
+
+  For a local URL/path to a super-project,
+  <i>git rev-parse --is-bare-repository</i>
+  is used to detect whether the super-project is bare or not.
+  <br>
+  For a remote URL to a super-project, the ending of the URL determines whether
+  a bare or non-bare repository is assumed:
+  <ul>
+    <li>If the remote URL ends with <i>/.git</i>, a <i>non</i>-bare repository is
+    assumed.</li>
+    <li>If the remote URL does <b>NOT</b> end with <i>/.git</i>, a bare
+    repository is assumed.</li>
+  </ul>
 </div>
