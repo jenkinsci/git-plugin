@@ -692,7 +692,7 @@ public class GitSCM extends SCM implements Serializable {
         final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
-
+        final String paramLocalBranch = getLocalBranch(build);
         Revision tempParentLastBuiltRev = null;
 
         if (build instanceof MatrixRun) {
@@ -860,7 +860,7 @@ public class GitSCM extends SCM implements Serializable {
                             // checkout origin/blah
                             ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                            git.checkoutBranch(getLocalBranch(), target.name());
+                            git.checkoutBranch(paramLocalBranch, target.name());
 
                             try {
                                 git.merge(revToBuild.getSha1().name());
@@ -874,7 +874,7 @@ public class GitSCM extends SCM implements Serializable {
                                 // repetitive builds from happening - tag the
                                 // candidate
                                 // branch.
-                                git.checkoutBranch(getLocalBranch(), revToBuild.getSha1().name());
+                                git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
                                 git.tag(buildnumber, "Hudson Build #"
                                          + buildNumber);
@@ -934,7 +934,7 @@ public class GitSCM extends SCM implements Serializable {
                         git.clean();
                     }
 
-                    git.checkoutBranch(getLocalBranch(), revToBuild.getSha1().name());
+                    git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
                         
                     // if(compileSubmoduleCompares)
                     if (doGenerateSubmoduleConfigurations) {
@@ -1345,8 +1345,13 @@ public class GitSCM extends SCM implements Serializable {
         return workspace.child(relativeTargetDir);
     }
 
-    public String getLocalBranch() {
-        return Util.fixEmpty(localBranch);
+    public String getLocalBranch(AbstractBuild<?,?> build) {
+        String branch = Util.fixEmpty(localBranch);
+        // substitute build parameters if available
+        ParametersAction parameters = build.getAction(ParametersAction.class);
+        if (parameters != null)
+            branch = parameters.substitute(build, branch);
+        return branch;
     }
     
     public String getRelativeTargetDir() {
