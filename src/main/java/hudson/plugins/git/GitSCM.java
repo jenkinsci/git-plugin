@@ -862,14 +862,6 @@ public class GitSCM extends SCM implements Serializable {
                                 git.submoduleClean(recursiveSubmodules);
                             }
                         }
-
-                        /* The initial clone for submodules... */
-                        if (git.hasGitModules()) {
-                            // This ensures we don't miss changes to submodule paths and allows
-                            // seemless use of bare and non-bare superproject repositories.
-                            git.setupSubmoduleUrls( listener );
-                            git.submoduleUpdate(recursiveSubmodules);
-                        }
                     }
 
                     if (parentLastBuiltRev != null)
