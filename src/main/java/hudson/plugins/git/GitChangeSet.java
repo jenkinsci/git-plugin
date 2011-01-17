@@ -232,13 +232,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
         User user = User.get(csAuthor, true);
 
-        // set email address for user if needed
-        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class) == null) {
-            try {
-                user.addProperty(new Mailer.UserProperty(csAuthorEmail));
-            } catch (IOException e) {
-                // ignore error
-            }
+	// won't work because it creates a recursive loop
+	//	String adrs = fixEmpty(user.getProperty(Mailer.UserProperty.class).getAddress());
+
+        // set email address for user -- removes the default one stored in Users table (null)
+        if (fixEmpty(csAuthorEmail) != null /* && addrs == null */) {
+	    try {
+		user.addProperty(new Mailer.UserProperty(csAuthorEmail)); // addProperty() will overwrite the existing property
+	    } catch(IOException e) {
+		// ignore error
+	    }
         }
 
         return user;
