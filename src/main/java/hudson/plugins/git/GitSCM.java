@@ -692,7 +692,7 @@ public class GitSCM extends SCM implements Serializable {
         final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
-        final String paramLocalBranch = getLocalBranch(build);
+        final String paramLocalBranch = getParamLocalBranch(build);
         Revision tempParentLastBuiltRev = null;
 
         if (build instanceof MatrixRun) {
@@ -1345,8 +1345,12 @@ public class GitSCM extends SCM implements Serializable {
         return workspace.child(relativeTargetDir);
     }
 
-    public String getLocalBranch(AbstractBuild<?,?> build) {
-        String branch = Util.fixEmpty(localBranch);
+    public String getLocalBranch() {
+        return Util.fixEmpty(localBranch);
+    }
+    
+    public String getParamLocalBranch(AbstractBuild<?,?> build) {
+        String branch = getLocalBranch();
         // substitute build parameters if available
         ParametersAction parameters = build.getAction(ParametersAction.class);
         if (parameters != null)
