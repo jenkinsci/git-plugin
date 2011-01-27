@@ -103,6 +103,11 @@ public class BuildData implements Action, Serializable, Cloneable {
         return lastBuild==null?null:lastBuild.revision;
     }
 
+    @Exported
+    public Map<String,Build> getBuildsByBranchName() {
+        return buildsByBranchName;
+    }
+
     @Override
     public BuildData clone() {
         BuildData clone;
