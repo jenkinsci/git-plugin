@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -478,6 +479,11 @@ public class GitAPI implements IGitAPI {
             }
 
             origin = new URI( url );
+        } catch (URISyntaxException e) {
+            // Sometimes the URI is of a form that we can't parse; like
+            //   user@git.somehost.com:repository
+            // In these cases, origin is null and it's best to just exit early.
+            return;
         } catch (Exception e) {
             throw new GitException("Could determine remote.origin.url", e);
         }
