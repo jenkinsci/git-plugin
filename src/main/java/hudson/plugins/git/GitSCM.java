@@ -128,6 +128,18 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
 
+    /** Use SCM agnostic environment names */
+    public static final String SCM_BRANCH = "SCM_BRANCH";
+    public static final String SCM_COMMIT = "SCM_COMMIT";
+
+    /** 
+     * Preserver the last branch/commit value for 
+     * the next {@link #buildEnvVars(AbstractBuild , java.util.Map<String, String> )} call.
+     * FIXME: Concurrency issues ? Or maybe there is a better approach ?
+     */
+    private String lastBranch;
+    private String lastCommit;
+
     private String relativeTargetDir;
 
     private String excludedRegions;
@@ -839,7 +851,8 @@ public class GitSCM extends SCM implements Serializable {
             return false;
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
-        environment.put(GIT_COMMIT, revToBuild.getSha1String());
+        lastCommit = revToBuild.getSha1String();
+        environment.put(GIT_COMMIT, lastCommit);
 
         if (mergeOptions.doMerge()) {
             if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
@@ -1028,9 +1041,13 @@ public class GitSCM extends SCM implements Serializable {
 
     public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
-        String branch = getSingleBranch(build);
-        if(branch != null){
-            env.put(GIT_BRANCH, branch);
+        lastBranch = getSingleBranch(build);
+        if(lastBranch != null){
+            env.put(GIT_BRANCH, lastBranch);
+            env.put(SCM_BRANCH, lastBranch);
+        }
+        if(null != lastCommit) {
+            env.put(SCM_COMMIT, lastCommit);
         }
     }
 
