@@ -127,6 +127,7 @@ public class GitSCM extends SCM implements Serializable {
 
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    private String commitHash;
 
     private String relativeTargetDir;
 
@@ -831,7 +832,6 @@ public class GitSCM extends SCM implements Serializable {
                 }
             });
 
-
         if(revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
@@ -839,7 +839,9 @@ public class GitSCM extends SCM implements Serializable {
             return false;
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
-        environment.put(GIT_COMMIT, revToBuild.getSha1String());
+        commitHash = revToBuild.getSha1String();
+        environment.put(GIT_COMMIT, commitHash);
+        Object[] returnData; // Changelog, BuildData
 
         if (mergeOptions.doMerge()) {
             if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
@@ -1031,6 +1033,10 @@ public class GitSCM extends SCM implements Serializable {
         String branch = getSingleBranch(build);
         if(branch != null){
             env.put(GIT_BRANCH, branch);
+        }
+
+        if(commitHash != null){
+            env.put(GIT_COMMIT, commitHash);
         }
     }
 
