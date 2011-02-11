@@ -1,7 +1,17 @@
 <div>
   Specify the repository to track. This can be a URL or a local file path.
+  Note that for super-projects (repositories with submodules), only a local file
+  path or a complete URL is valid.  For instance, user@host:/path is not a valid
+  URL.  The following are examples of valid git URLs.
+  <ul>
+    <li>http://github.com/github/git.git</li>
+    <li>git://github.com/github/git.git</li>
+    <li>ssh://git@github.com/github/git.git</li>
+    <li>ssh://user@other.host.com/~/repos/R.git (to access the repos/R.git
+    repository in the user's home directory)</li>
+  </ul>
   <br>
-  If the repository is a super-project (a repository with submodules), the
+  If the repository is a super-project, the
   location from which to clone submodules is dependent on whether the repository
   is bare or non-bare (i.e. has a working directory).
   <ul>
