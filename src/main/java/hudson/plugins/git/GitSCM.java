@@ -1019,13 +1019,6 @@ public class GitSCM extends SCM implements Serializable {
 
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
                         
-                    // if(compileSubmoduleCompares)
-                    if (doGenerateSubmoduleConfigurations) {
-                        SubmoduleCombinator combinator = new SubmoduleCombinator(
-                                                                                 git, listener, localWorkspace, submoduleCfg);
-                        combinator.createSubmoduleCombinations();
-                    }
-
                     if (git.hasGitModules()) {
                         // Git submodule update will only 'fetch' from where it
                         // regards as 'origin'. However,
@@ -1053,11 +1046,18 @@ public class GitSCM extends SCM implements Serializable {
 
                     }
 
+                    // if(compileSubmoduleCompares)
+                    if (doGenerateSubmoduleConfigurations) {
+                        SubmoduleCombinator combinator = new SubmoduleCombinator(
+                                                                                 git, listener, localWorkspace, submoduleCfg);
+                        combinator.createSubmoduleCombinations();
+                    }
+
                     if (!getSkipTag()) {
                         // Tag the successful merge
                         git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
-                    
+
                     String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                     buildData.saveBuild(new Build(revToBuild, buildNumber, null));
