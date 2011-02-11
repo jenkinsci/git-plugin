@@ -499,7 +499,7 @@ public class GitSCM extends SCM implements Serializable {
 
                         // Fetch updates
                         for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchFrom(git, localWorkspace, listener, remoteRepository);
+                            fetchFrom(git, listener, remoteRepository);
                         }
 
                         listener.getLogger().println("Polling for changes in");
@@ -562,8 +562,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * Fetch information from a particular remote repository. Attempt to fetch
-     * from submodules, if they exist in the local WC
+     * Fetch information from a particular remote repository.
      *
      * @param git
      * @param listener
@@ -571,17 +570,44 @@ public class GitSCM extends SCM implements Serializable {
      * @return true if fetch goes through, false otherwise.
      * @throws
      */
-    private boolean fetchFrom(IGitAPI git, File workspace, TaskListener listener,
-                              RemoteConfig remoteRepository) {
-        boolean fetched = true;
-        
+    private boolean fetchFrom( IGitAPI git,
+                               TaskListener listener,
+                               RemoteConfig remoteRepository ) {
         try {
             git.fetch(remoteRepository);
+            return true;
+        } catch (GitException ex) {
+            listener.error(
+                           "Problem fetching from " + remoteRepository.getName()
+                           + " / " + remoteRepository.getName()
+                           + " - could be unavailable. Continuing anyway");
+        }
+        return false;
+    }
 
+    /**
+     * Fetch submodule information from relative to a particular remote repository.
+     *
+     * @param git
+     * @param listener
+     * @param remoteRepository
+     * @return true if fetch goes through, false otherwise.
+     * @throws
+     */
+    private boolean fetchSubmodulesFrom( IGitAPI git,
+                                         File workspace,
+                                         TaskListener listener,
+                                         RemoteConfig remoteRepository ) {
+        boolean fetched = true;
+
+        try {
             // This ensures we don't miss changes to submodule paths and allows
             // seemless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls( listener );
 
+            /* with the new re-ordering of "git checkout" and the submodule
+             * commands, it appears that this test will always succeed... But
+             * we'll keep it anyway for now. */
             boolean hasHead = true;
             try {
                 git.revParse("HEAD");
@@ -590,33 +616,40 @@ public class GitSCM extends SCM implements Serializable {
             }
 
             if (hasHead) {
-                List<IndexEntry> submodules = new GitUtils(listener, git).getSubmodules("HEAD");
+                List<IndexEntry> submodules =
+                    new GitUtils(listener, git).getSubmodules("HEAD");
 
                 for (IndexEntry submodule : submodules) {
                     try {
-                        RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(git, remoteRepository, submodule.getFile());
+                        RemoteConfig submoduleRemoteRepository
+                            = getSubmoduleRepository( git,
+                                                      remoteRepository,
+                                                      submodule.getFile() );
                         File subdir = new File(workspace, submodule.getFile());
-                        listener.getLogger().println("Trying to fetch " + submodule.getFile() + " into " + subdir);
-                        IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
-                                                    listener, git.getEnvironment());
+
+                        listener.getLogger().println(
+                          "Trying to fetch " + submodule.getFile() + " into " + subdir );
+
+                        IGitAPI subGit = new GitAPI( git.getGitExe(),
+                                                     new FilePath(subdir),
+                                                     listener, git.getEnvironment() );
 
                         subGit.fetch(submoduleRemoteRepository);
                     } catch (Exception ex) {
-                        listener
-                            .getLogger()
-                            .println(
-                                     "Problem fetching from submodule "
-                                     + submodule.getFile()
-                                     + " - could be unavailable. Continuing anyway");
+                        listener.getLogger().println(
+                            "Problem fetching from submodule "
+                            + submodule.getFile()
+                            + " - could be unavailable. Continuing anyway" );
                     }
-
                 }
             }
         } catch (GitException ex) {
             ex.printStackTrace(listener.error(
-                    "Problem fetching from " + remoteRepository.getName()
-                            + " / " + remoteRepository.getName()
-                            + " - could be unavailable. Continuing anyway"));
+                "Problem fetching submodules from a path relative to "
+                + remoteRepository.getName()
+                + " / " + remoteRepository.getName()
+                + " - could be unavailable. Continuing anyway"
+            ));
             fetched = false;
         }
 
@@ -795,7 +828,7 @@ public class GitSCM extends SCM implements Serializable {
                         boolean fetched = false;
                         
                         for (RemoteConfig remoteRepository : paramRepos) {
-                            if (fetchFrom(git,localWorkspace,listener,remoteRepository)) {
+                            if ( fetchFrom(git, listener, remoteRepository) ) {
                                 fetched = true;
                             }
                         }
@@ -1007,7 +1040,7 @@ public class GitSCM extends SCM implements Serializable {
                         // theoretically be dealt with there anyway.
                         if (!recursiveSubmodules) {
                             for (RemoteConfig remoteRepository : paramRepos) {
-                                fetchFrom(git, localWorkspace, listener, remoteRepository);
+                                fetchSubmodulesFrom(git, localWorkspace, listener, remoteRepository);
                             }
                         } else {
                             // This ensures we don't miss changes to submodule paths and allows
