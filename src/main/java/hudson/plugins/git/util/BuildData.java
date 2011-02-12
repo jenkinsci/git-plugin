@@ -1,5 +1,7 @@
 package hudson.plugins.git.util;
 
+import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
@@ -14,6 +16,15 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.spearce.jgit.lib.ObjectId;
 
+import static hudson.Util.fixNull;
+
+/**
+ * Captures the Git related information for a build.
+ *
+ * <p>
+ * This object is added to {@link AbstractBuild#getActions()} and
+ * remember the Git related information of that build.
+ */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
@@ -43,13 +54,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
         
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = buildByBranchName.getKey();
+            String branchName = fixNull(buildByBranchName.getKey());
             Build build = buildByBranchName.getValue();
-
-            if (branchName == null) {
-                branchName = "";
-            }
-
             newBuildsByBranchName.put(branchName, build);
         }
 
@@ -81,11 +87,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     public void saveBuild(Build build) {
     	lastBuild = build;
     	for(Branch branch : build.revision.getBranches()) {
-            String branchName = branch.getName();
-            if (branchName == null) {
-                branchName = "";
-            }
-            buildsByBranchName.put(branchName, build);
+            buildsByBranchName.put(fixNull(branch.getName()), build);
     	}
     }
 
