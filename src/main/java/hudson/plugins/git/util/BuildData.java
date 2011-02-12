@@ -122,21 +122,19 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
 
-        if (buildsByBranchName != null) {
-            clone.buildsByBranchName = new HashMap<String, Build>();
-            for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-                String branchName = buildByBranchName.getKey();
-                if (branchName == null) {
-                    branchName = "";
-                }
-                Build build = buildByBranchName.getValue();
-                Build clonedBuild = clonedBuilds.get(build);
-                if (clonedBuild == null) {
-                    clonedBuild = build.clone();
-                    clonedBuilds.put(build, clonedBuild);
-                }
-                clone.buildsByBranchName.put(branchName, clonedBuild);
+        clone.buildsByBranchName = new HashMap<String, Build>();
+        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+            String branchName = buildByBranchName.getKey();
+            if (branchName == null) {
+                branchName = "";
             }
+            Build build = buildByBranchName.getValue();
+            Build clonedBuild = clonedBuilds.get(build);
+            if (clonedBuild == null) {
+                clonedBuild = build.clone();
+                clonedBuilds.put(build, clonedBuild);
+            }
+            clone.buildsByBranchName.put(branchName, clonedBuild);
         }
 
         if (lastBuild != null) {
