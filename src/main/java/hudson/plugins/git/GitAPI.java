@@ -587,7 +587,7 @@ public class GitAPI implements IGitAPI {
             String result = fos.toString();
 
             if (status != 0) {
-                throw new GitException("Command returned status code " + status + ": " + result);
+                throw new GitException("Command "+StringUtils.join(args.toCommandArray(), " ")+" returned status code " + status + ": " + result);
             }
 
             return result;
