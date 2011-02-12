@@ -587,12 +587,12 @@ public class GitAPI implements IGitAPI {
             String result = fos.toString();
 
             if (status != 0) {
-                throw new GitException("Command "+StringUtils.join(args.toCommandArray(), " ")+" returned status code " + status + ": " + result);
+                throw new GitException("Command \""+StringUtils.join(args.toCommandArray(), " ")+"\" returned status code " + status + ": " + result);
             }
 
             return result;
         } catch (Exception e) {
-            throw new GitException("Error performing " + StringUtils.join(args.toCommandArray(), " ")
+            throw new GitException("Error performing command: " + StringUtils.join(args.toCommandArray(), " ")
                                    + "\n" + e.getMessage(), e);
         }
     }
