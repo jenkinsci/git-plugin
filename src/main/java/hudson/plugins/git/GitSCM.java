@@ -1441,5 +1441,5 @@ public class GitSCM extends SCM implements Serializable {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
-    public static boolean VERBOSE = false;
+    public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName()+".verbose");
 }
