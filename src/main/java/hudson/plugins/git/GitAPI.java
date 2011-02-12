@@ -210,7 +210,7 @@ public class GitAPI implements IGitAPI {
 
     public void prune(RemoteConfig repository) throws GitException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("remote", "prune", repository.getURIs().get(0).toPrivateString());
+        args.add("remote", "prune", repository.getName());
         
         launchCommand(args);
     }
