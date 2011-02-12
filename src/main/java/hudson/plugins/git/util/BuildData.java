@@ -31,11 +31,15 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /**
      * Map of branch name -> build (Branch name to last built SHA1).
+     *
+     * <p>
+     * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
+     * is attached to) 
      */
     public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
 
     /**
-     * The last build that we did.
+     * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
     public Build              lastBuild;
 
