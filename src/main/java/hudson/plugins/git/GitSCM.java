@@ -322,20 +322,22 @@ public class GitSCM extends SCM implements Serializable {
         return buildChooser;
     }
 
+    /**
+     * Expand parameters in {@link #remoteRepositories} with the parameter values provided in the given build
+     * and return them.
+     *
+     * @return can be empty but never null.
+     */
     public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?,?> build) {
-        if (remoteRepositories == null)
-            return new ArrayList<RemoteConfig>();
-        else {
-            List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
+        List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
-            for (RemoteConfig oldRepo : remoteRepositories) {
-                expandedRepos.add(newRemoteConfig(oldRepo.getName(),
-                                                  oldRepo.getURIs().get(0).toString(),
-                                                  new RefSpec(getRefSpec(oldRepo, build))));
-            }
-
-            return expandedRepos;
+        for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
+            expandedRepos.add(newRemoteConfig(oldRepo.getName(),
+                                              oldRepo.getURIs().get(0).toString(),
+                                              new RefSpec(getRefSpec(oldRepo, build))));
         }
+
+        return expandedRepos;
     }
 
     public RemoteConfig getRepositoryByName(String repoName) {
@@ -368,7 +370,13 @@ public class GitSCM extends SCM implements Serializable {
 
         return refSpec;
     }
-    
+
+    /**
+     * If the configuration is such that we are tracking just one branch of one repository
+     * return that branch specifier (in the form of something like "origin/master"
+     *
+     * Otherwise return null.
+     */
     private String getSingleBranch(AbstractBuild<?, ?> build) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1 || getRepositories().size() != 1)
@@ -418,23 +426,21 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
         
-        final String singleBranch = getSingleBranch(lastBuild);
-        Label label = project.getAssignedLabel();
         final String gitExe;
-
-        final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
-        
-        //If this project is tied onto a node, it's built always there. On other cases,
-        //polling is done on the node which did the last build.
-        //
-        if (label != null && label.isSelfLabel()) {
-            if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
-                listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
-                return true;
+        {
+            //If this project is tied onto a node, it's built always there. On other cases,
+            //polling is done on the node which did the last build.
+            //
+            Label label = project.getAssignedLabel();
+            if (label != null && label.isSelfLabel()) {
+                if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
+                    listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
+                    return true;
+                }
+                gitExe = getGitExe(label.getNodes().iterator().next(), listener);
+            } else {
+                gitExe = getGitExe(project.getLastBuiltOn(), listener);
             }
-            gitExe = getGitExe(label.getNodes().iterator().next(), listener);
-        } else {
-            gitExe = getGitExe(project.getLastBuiltOn(), listener);
         }
 
         FilePath workingDirectory = workingDirectory(workspace);
@@ -448,7 +454,9 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
-       
+        final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
+        final String singleBranch = getSingleBranch(lastBuild);
+
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
                 private static final long serialVersionUID = 1L;
                 public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
