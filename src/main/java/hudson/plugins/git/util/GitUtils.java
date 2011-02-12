@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.spearce.jgit.lib.ObjectId;
 
@@ -120,6 +121,7 @@ public class GitUtils {
                 if (r != r2) {
                     ObjectId commonAncestor = git.mergeBase(r.getSha1(), r2.getSha1());
                     if (commonAncestor != null && commonAncestor.equals(r.getSha1())) {
+                        LOGGER.fine("filterTipBranches: "+r2+" subsumes "+r);
                         remove = true;
                         break;
                     }
@@ -218,4 +220,6 @@ public class GitUtils {
 
         return returnNames;
     }
+
+    private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 }
