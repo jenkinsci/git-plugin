@@ -92,12 +92,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Build getLastBuildOfBranch(String branch) {
-    	try {
-            return buildsByBranchName.get(branch);
-    	}
-    	catch(Exception ex) {
-            return null;
-    	}
+        return buildsByBranchName.get(branch);
     }
 
     @Exported
