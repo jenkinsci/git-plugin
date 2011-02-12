@@ -1436,4 +1436,10 @@ public class GitSCM extends SCM implements Serializable {
     }
         
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
+
+    /**
+     * Set to true to enable more logging to build's {@link TaskListener}.
+     * Used by various classes in this package.
+     */
+    public static boolean VERBOSE = false;
 }
