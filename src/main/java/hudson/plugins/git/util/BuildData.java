@@ -150,4 +150,9 @@ public class BuildData implements Action, Serializable, Cloneable {
     public Api getApi() {
         return new Api(this);
     }
+
+    @Override
+    public String toString() {
+        return super.toString()+"[buildsByBranchName="+buildsByBranchName+",lastBuild="+lastBuild+"]";
+    }
 }
