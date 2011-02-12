@@ -13,11 +13,18 @@ import org.spearce.jgit.lib.ObjectId;
 import org.spearce.jgit.lib.Tag;
 import org.spearce.jgit.transport.RemoteConfig;
 
+/**
+ * Encapsulates Git operations on a particular directory through git(1).
+ */
 public interface IGitAPI {
     String getGitExe();
     EnvVars getEnvironment();
 
     public void init() throws GitException;
+
+    /**
+     * Returns true if the encapsulated directory has ".git" directory
+     */
     boolean hasGitRepo() throws GitException;
     boolean hasGitModules() throws GitException;
     String getRemoteUrl(String name) throws GitException;
