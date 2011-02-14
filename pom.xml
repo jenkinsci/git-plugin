@@ -4,7 +4,6 @@
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.345</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>git</artifactId>
@@ -90,6 +89,13 @@
       <artifactId>mockito-all</artifactId>
       <version>1.8.5</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>parameterized-trigger</artifactId>
+      <version>2.5</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 
