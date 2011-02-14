@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.345</version>
+    <version>1.357</version>
   </parent>
 
   <artifactId>git</artifactId>
@@ -92,9 +92,9 @@
     </dependency>
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
-      <groupId>org.jenkins-ci.plugins</groupId>
+      <groupId>org.jvnet.hudson.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
-      <version>2.5</version>
+      <version>2.4</version>
       <optional>true</optional>
     </dependency>
   </dependencies>

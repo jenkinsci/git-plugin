@@ -506,22 +506,24 @@ public class GitAPI implements IGitAPI {
         }
 
         if ( ! is_bare ) {
-            List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
+            try {
+                List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
 
-            for (IndexEntry submodule : submodules) {
-                // First fix the URL to the submodule inside the super-project
-                String sUrl = pathJoin( origin.getPath(), submodule.getFile() );
-                setSubmoduleUrl( submodule.getFile(), sUrl );
+                for (IndexEntry submodule : submodules) {
+                    // First fix the URL to the submodule inside the super-project
+                    String sUrl = pathJoin( origin.getPath(), submodule.getFile() );
+                    setSubmoduleUrl( submodule.getFile(), sUrl );
 
-                // Second, if the submodule already has been cloned, fix its own
-                // url...
-                try {
+                    // Second, if the submodule already has been cloned, fix its own
+                    // url...
                     String subGitDir = pathJoin( submodule.getFile(), ".git" );
 
                     if ( ! "".equals( getRemoteUrl("origin", subGitDir) ) ) {
                         setRemoteUrl("origin", sUrl, subGitDir);
                     }
-                } catch ( GitException e ) { }
+                }
+            } catch (GitException e) {
+                // this can fail for example HEAD doesn't exist yet
             }
         } else {
            // we've made a reasonable attempt to detect whether the origin is
@@ -536,7 +538,7 @@ public class GitAPI implements IGitAPI {
         // changes in submodule origin paths...
         submoduleInit();
         submoduleSync();
-        // This allows us to seemlessly use bare and non-bare superproject
+        // This allows us to seamlessly use bare and non-bare superproject
         // repositories.
         fixSubmoduleUrls(listener);
     }

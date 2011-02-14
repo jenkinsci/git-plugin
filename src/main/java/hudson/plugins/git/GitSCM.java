@@ -11,8 +11,6 @@ import static hudson.Util.fixEmptyAndTrim;
 
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
-import hudson.plugins.git.browser.GithubWeb;
-import hudson.plugins.git.browser.RedmineWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 
 import hudson.plugins.git.util.*;
@@ -20,33 +18,25 @@ import hudson.plugins.git.util.Build;
 
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.RepositoryBrowsers;
+import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
+import hudson.scm.SCMRevisionState;
 import hudson.util.FormValidation;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
-import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -401,23 +391,25 @@ public class GitSCM extends SCM implements Serializable {
         return branch;
     }
 
+    @Override
+    public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> abstractBuild, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+        return SCMRevisionState.NONE;
+    }
 
     @Override
-    public boolean pollChanges(final AbstractProject project, Launcher launcher,
-                               final FilePath workspace, final TaskListener listener)
-        throws IOException, InterruptedException {
+    protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final AbstractBuild lastBuild = (AbstractBuild)project.getLastBuild();
+        final AbstractBuild lastBuild = project.getLastBuild();
 
         if(lastBuild != null) {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber());
         } else {
             // If we've never been built before, well, gotta build!
             listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
-            return true;
+            return PollingResult.BUILD_NOW;
         }
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
@@ -435,7 +427,7 @@ public class GitSCM extends SCM implements Serializable {
             if (label != null && label.isSelfLabel()) {
                 if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
                     listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
-                    return true;
+                    return PollingResult.BUILD_NOW;
                 }
                 gitExe = getGitExe(label.getNodes().iterator().next(), listener);
             } else {
@@ -450,7 +442,7 @@ public class GitSCM extends SCM implements Serializable {
         // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
         // for whether we'd ever been built before. But I'm fixing that right now anyway.
         if (!workingDirectory.exists()) {
-            return true;
+            return PollingResult.BUILD_NOW;
         }
 
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
@@ -492,7 +484,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             });
 
-        return pollChangesResult;
+        return pollChangesResult ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
     }
 
 
@@ -551,33 +543,41 @@ public class GitSCM extends SCM implements Serializable {
             // seemless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls( listener );
 
-            List<IndexEntry> submodules = new GitUtils(listener, git)
-                .getSubmodules("HEAD");
+            boolean hasHead = true;
+            try {
+                git.revParse("HEAD");
+            } catch (GitException e) {
+                hasHead = false;
+            }
 
-            for (IndexEntry submodule : submodules) {
-                try {
-                    RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(git, remoteRepository, submodule.getFile());
-                    File subdir = new File(workspace, submodule.getFile());
-                    listener.getLogger().println("Trying to fetch " + submodule.getFile() + " into " + subdir);
-                    IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
-                                                listener, git.getEnvironment());
+            if (hasHead) {
+                List<IndexEntry> submodules = new GitUtils(listener, git).getSubmodules("HEAD");
 
-                    subGit.fetch(submoduleRemoteRepository);
-                } catch (Exception ex) {
-                    listener
-                        .getLogger()
-                        .println(
-                                 "Problem fetching from submodule "
-                                 + submodule.getFile()
-                                 + " - could be unavailable. Continuing anyway");
+                for (IndexEntry submodule : submodules) {
+                    try {
+                        RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(git, remoteRepository, submodule.getFile());
+                        File subdir = new File(workspace, submodule.getFile());
+                        listener.getLogger().println("Trying to fetch " + submodule.getFile() + " into " + subdir);
+                        IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
+                                                    listener, git.getEnvironment());
+
+                        subGit.fetch(submoduleRemoteRepository);
+                    } catch (Exception ex) {
+                        listener
+                            .getLogger()
+                            .println(
+                                     "Problem fetching from submodule "
+                                     + submodule.getFile()
+                                     + " - could be unavailable. Continuing anyway");
+                    }
+
                 }
-
             }
         } catch (GitException ex) {
-            listener.error(
-                           "Problem fetching from " + remoteRepository.getName()
-                           + " / " + remoteRepository.getName()
-                           + " - could be unavailable. Continuing anyway");
+            ex.printStackTrace(listener.error(
+                    "Problem fetching from " + remoteRepository.getName()
+                            + " / " + remoteRepository.getName()
+                            + " - could be unavailable. Continuing anyway"));
             fetched = false;
         }
 
@@ -1039,7 +1039,7 @@ public class GitSCM extends SCM implements Serializable {
         return changeLog.toString();
     }
 
-    public void buildEnvVars(AbstractBuild build, java.util.Map<String, String> env) {
+    public void buildEnvVars(AbstractBuild<?,?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
         String branch = getSingleBranch(build);
         if(branch != null){
