@@ -157,8 +157,19 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                 listener.error("IOException publishing in git plugin");
                 tempEnvironment = new EnvVars();
             }
-            final EnvVars environment = tempEnvironment;
+
+            String confName = gitSCM.getGitConfigNameToUse();
+            if ((confName != null) && (!confName.equals(""))) {
+                tempEnvironment.put("GIT_COMMITTER_NAME", confName);
+                tempEnvironment.put("GIT_AUTHOR_NAME", confName);
+            }
+            String confEmail = gitSCM.getGitConfigEmailToUse();
+            if ((confEmail != null) && (!confEmail.equals(""))) {
+                tempEnvironment.put("GIT_COMMITTER_EMAIL", confEmail);
+                tempEnvironment.put("GIT_AUTHOR_EMAIL", confEmail);
+            }
             
+            final EnvVars environment = tempEnvironment;
             final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath);
             
             boolean pushResult = true;

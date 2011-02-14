@@ -80,6 +80,12 @@
     <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
       <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
     </f:entry>
+    <f:entry title="Config user.name Value" field="gitConfigName">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="Config user.email Value" field="gitConfigEmail">
+      <f:textbox />
+    </f:entry>
     
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">

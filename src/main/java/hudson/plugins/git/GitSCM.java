@@ -123,6 +123,9 @@ public class GitSCM extends SCM implements Serializable {
     private String excludedRegions;
 
     private String excludedUsers;
+
+    private String gitConfigName;
+    private String gitConfigEmail;
     
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -144,7 +147,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collections.singletonList(new BranchSpec("")),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false);
+                null, null, null, false, false, null, null);
     }
 
     @DataBoundConstructor
@@ -164,7 +167,9 @@ public class GitSCM extends SCM implements Serializable {
                   String excludedUsers,
                   String localBranch,
                   boolean recursiveSubmodules,
-                  boolean pruneBranches) {
+                  boolean pruneBranches,
+                  String gitConfigName,
+                  String gitConfigEmail) {
 
         // normalization
         this.branches = branches;
@@ -189,6 +194,8 @@ public class GitSCM extends SCM implements Serializable {
         this.excludedUsers = excludedUsers;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
+        this.gitConfigName = gitConfigName;
+        this.gitConfigEmail = gitConfigEmail;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -296,6 +303,38 @@ public class GitSCM extends SCM implements Serializable {
         return browser;
     }
 
+    public String getGitConfigName() {
+        return gitConfigName;
+    }
+
+    public String getGitConfigEmail() {
+        return gitConfigEmail;
+    }
+    
+    public String getGitConfigNameToUse() {
+        String confName;
+        String globalConfigName = ((DescriptorImpl)getDescriptor()).getGlobalConfigName();
+        if ((globalConfigName != null) && (gitConfigName == null) && (!fixEmptyAndTrim(globalConfigName).equals(""))) {
+            confName = globalConfigName;
+        } else {
+            confName = gitConfigName;
+        }
+        
+        return fixEmptyAndTrim(confName);
+    }
+
+    public String getGitConfigEmailToUse() {
+        String confEmail;
+        String globalConfigEmail = ((DescriptorImpl)getDescriptor()).getGlobalConfigEmail();
+        if ((globalConfigEmail != null) && (gitConfigEmail == null) && (!fixEmptyAndTrim(globalConfigEmail).equals(""))) {
+            confEmail = globalConfigEmail;
+        } else {
+            confEmail = gitConfigEmail;
+        }
+        
+        return fixEmptyAndTrim(confEmail);
+    }
+    
     public boolean getPruneBranches() {
         return this.pruneBranches;
     }
@@ -697,8 +736,21 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final EnvVars environment = build.getEnvironment(listener);
+        EnvVars tempEnvironment = build.getEnvironment(listener);
 
+        String confName = getGitConfigNameToUse();
+        if ((confName != null) && (!confName.equals(""))) {
+            tempEnvironment.put("GIT_COMMITTER_NAME", confName);
+            tempEnvironment.put("GIT_AUTHOR_NAME", confName);
+        }
+        String confEmail = getGitConfigEmailToUse();
+        if ((confEmail != null) && (!confEmail.equals(""))) {
+            tempEnvironment.put("GIT_COMMITTER_EMAIL", confEmail);
+            tempEnvironment.put("GIT_AUTHOR_EMAIL", confEmail);
+        }
+
+        final EnvVars environment = tempEnvironment;
+        
         final String singleBranch = getSingleBranch(build);
         final String paramLocalBranch = getParamLocalBranch(build);
         Revision tempParentLastBuiltRev = null;
@@ -1069,7 +1121,9 @@ public class GitSCM extends SCM implements Serializable {
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
         
         private String gitExe;
-
+        private String globalConfigName;
+        private String globalConfigEmail;
+        
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
@@ -1100,6 +1154,20 @@ public class GitSCM extends SCM implements Serializable {
         @Deprecated
         public String getGitExe() {
             return gitExe;
+        }
+
+        /**
+         * Global setting to be used in call to "git config user.name".
+         */
+        public String getGlobalConfigName() {
+            return globalConfigName;
+        }
+
+        /**
+         * Global setting to be used in call to "git config user.email".
+         */
+        public String getGlobalConfigEmail() {
+            return globalConfigEmail;
         }
 
         /**
@@ -1152,7 +1220,9 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.excludedUsers"),
                               req.getParameter("git.localBranch"),
                               req.getParameter("git.recursiveSubmodules") != null,
-                              req.getParameter("git.pruneBranches") != null);
+                              req.getParameter("git.pruneBranches") != null,
+                              req.getParameter("git.gitConfigName"),
+                              req.getParameter("git.gitConfigEmail"));
         }
         
         /**
@@ -1297,6 +1367,14 @@ public class GitSCM extends SCM implements Serializable {
 
             return FormValidation.error("No remote repository configured with name '" + mergeRemoteName + "'");
         }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+            req.bindJSON(this, formData);
+            save();
+            return true;
+        }
+
     }
 
     private static final long serialVersionUID = 1L;
