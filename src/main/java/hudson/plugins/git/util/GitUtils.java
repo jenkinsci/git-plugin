@@ -138,7 +138,7 @@ public class GitUtils {
             }
         }
 
-        return revisions;
+        return l;
     }
 
     /**
