@@ -716,7 +716,9 @@ public class GitSCM extends SCM implements Serializable {
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
         
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
-        
+
+        final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
+
         final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
                 private static final long serialVersionUID = 1L;
                 public Revision invoke(File localWorkspace, VirtualChannel channel)
@@ -830,6 +832,9 @@ public class GitSCM extends SCM implements Serializable {
 
                     if (parentLastBuiltRev != null)
                         return parentLastBuiltRev;
+
+                    if (rpa!=null)
+                        return rpa.toRevision(git);
 
                     Collection<Revision> candidates = buildChooser.getCandidateRevisions(
                             false, singleBranch, git, listener, buildData);
