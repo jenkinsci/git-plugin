@@ -7,7 +7,7 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>1.1.5-SNAPSHOT</version>
+  <version>1.1.5</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
