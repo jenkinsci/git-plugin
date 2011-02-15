@@ -97,8 +97,6 @@ public class GitSCM extends SCM implements Serializable {
     
     private boolean clean;
 
-    private boolean wipeOutWorkspace;
-
     private boolean pruneBranches;
     
     /**
@@ -145,7 +143,7 @@ public class GitSCM extends SCM implements Serializable {
         this(
                 DescriptorImpl.createRepositoryConfigurations(new String[]{repositoryUrl},new String[]{null},new String[]{null}),
                 Collections.singletonList(new BranchSpec("")),
-                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), 
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null, null, null, false, false, null, null);
     }
@@ -158,7 +156,6 @@ public class GitSCM extends SCM implements Serializable {
                   boolean doGenerateSubmoduleConfigurations,
                   Collection<SubmoduleConfig> submoduleCfg,
                   boolean clean,
-                  boolean wipeOutWorkspace,
                   BuildChooser buildChooser, GitRepositoryBrowser browser,
                   String gitTool,
                   boolean authorOrCommitter,
@@ -184,7 +181,6 @@ public class GitSCM extends SCM implements Serializable {
         this.submoduleCfg = submoduleCfg;
 
         this.clean = clean;
-        this.wipeOutWorkspace = wipeOutWorkspace;
         this.configVersion = 1L;
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
@@ -337,10 +333,6 @@ public class GitSCM extends SCM implements Serializable {
     
     public boolean getPruneBranches() {
         return this.pruneBranches;
-    }
-    
-    public boolean getWipeOutWorkspace() {
-        return this.wipeOutWorkspace;
     }
     
     public boolean getClean() {
@@ -779,16 +771,6 @@ public class GitSCM extends SCM implements Serializable {
                     listener.getLogger().println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
                     IGitAPI git = new GitAPI(gitExe, ws, listener, environment);
 
-                    if (wipeOutWorkspace) {
-                        listener.getLogger().println("Wiping out workspace first");
-                        try {
-                            ws.deleteContents();
-                        } catch (InterruptedException e) {
-                            // I don't really care if this fails.
-                        } 
-                        
-                    }
-
                     if (git.hasGitRepo()) {
                         // It's an update
 
@@ -1210,7 +1192,6 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.generate") != null,
                               submoduleCfg,
                               req.getParameter("git.clean") != null,
-                              req.getParameter("git.wipeOutWorkspace") != null,
                               req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
                               gitBrowser,
                               gitTool,
