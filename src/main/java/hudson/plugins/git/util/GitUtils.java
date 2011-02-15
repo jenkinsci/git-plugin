@@ -162,14 +162,18 @@ public class GitUtils {
 
             String rootUrl = Hudson.getInstance().getRootUrl();
             if(rootUrl!=null) {
-                env.put("HUDSON_URL", rootUrl);
+                env.put("HUDSON_URL", rootUrl); // Legacy.
+                env.put("JENKINS_URL", rootUrl);
                 env.put("BUILD_URL", rootUrl+b.getUrl());
                 env.put("JOB_URL", rootUrl+p.getUrl());
             }
             
-            if(!env.containsKey("HUDSON_HOME"))
+            if(!env.containsKey("HUDSON_HOME")) // Legacy
                 env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
-            
+
+            if(!env.containsKey("JENKINS_HOME"))
+                env.put("JENKINS_HOME", Hudson.getInstance().getRootDir().getPath() );
+
             if (ws != null)
                 env.put("WORKSPACE", ws.getRemote());
             

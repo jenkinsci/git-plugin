@@ -728,7 +728,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final String gitExe = getGitExe(build.getBuiltOn(), listener);
 
-        final String buildnumber = "hudson-" + projectName + "-" + buildNumber;
+        final String buildnumber = "jenkins-" + projectName + "-" + buildNumber;
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 
@@ -932,7 +932,7 @@ public class GitSCM extends SCM implements Serializable {
                                 git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
                                 if (!getSkipTag()) {
-                                    git.tag(buildnumber, "Hudson Build #"
+                                    git.tag(buildnumber, "Jenkins Build #"
                                             + buildNumber);
                                 }
 
@@ -949,7 +949,7 @@ public class GitSCM extends SCM implements Serializable {
 
                             if (!getSkipTag()) {
                                 // Tag the successful merge
-                                git.tag(buildnumber, "Hudson Build #" + buildNumber);
+                                git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                             }
                             
                             String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
@@ -1030,7 +1030,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     if (!getSkipTag()) {
                         // Tag the successful merge
-                        git.tag(buildnumber, "Hudson Build #" + buildNumber);
+                        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
                     
                     String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
