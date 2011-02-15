@@ -139,6 +139,9 @@
             <f:checkbox name="git.pruneBranches" checked="${scm.pruneBranches}" />
           </f:entry>
 
+    <f:entry title="Skip internal tag" help="/plugin/git/help-skipTag.html">
+      <f:checkbox name="git.skipTag" checked="${scm.skipTag}" />
+    </f:entry>
     <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
       <f:checkbox name="git.clean" checked="${scm.clean}" />
     </f:entry>

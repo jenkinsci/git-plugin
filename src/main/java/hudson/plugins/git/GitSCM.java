@@ -124,6 +124,8 @@ public class GitSCM extends SCM implements Serializable {
 
     private String gitConfigName;
     private String gitConfigEmail;
+
+    private boolean skipTag;
     
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -145,7 +147,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collections.singletonList(new BranchSpec("")),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), 
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false, null, null);
+                null, null, null, false, false, null, null, false);
     }
 
     @DataBoundConstructor
@@ -166,7 +168,8 @@ public class GitSCM extends SCM implements Serializable {
                   boolean recursiveSubmodules,
                   boolean pruneBranches,
                   String gitConfigName,
-                  String gitConfigEmail) {
+                  String gitConfigEmail,
+                  boolean skipTag) {
 
         // normalization
         this.branches = branches;
@@ -192,6 +195,7 @@ public class GitSCM extends SCM implements Serializable {
         this.pruneBranches = pruneBranches;
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
+        this.skipTag = skipTag;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -329,6 +333,10 @@ public class GitSCM extends SCM implements Serializable {
         }
         
         return fixEmptyAndTrim(confEmail);
+    }
+
+    public boolean getSkipTag() {
+        return this.skipTag;
     }
     
     public boolean getPruneBranches() {
@@ -923,9 +931,10 @@ public class GitSCM extends SCM implements Serializable {
                                 // branch.
                                 git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
-                                git.tag(buildnumber, "Hudson Build #"
-                                         + buildNumber);
-
+                                if (!getSkipTag()) {
+                                    git.tag(buildnumber, "Hudson Build #"
+                                            + buildNumber);
+                                }
 
                                 buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
                                 return new Object[]{null, buildData};
@@ -938,9 +947,11 @@ public class GitSCM extends SCM implements Serializable {
                                 git.submoduleUpdate(recursiveSubmodules);
                             }
 
-                            // Tag the successful merge
-                            git.tag(buildnumber, "Hudson Build #" + buildNumber);
-
+                            if (!getSkipTag()) {
+                                // Tag the successful merge
+                                git.tag(buildnumber, "Hudson Build #" + buildNumber);
+                            }
+                            
                             String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                             Build build = new Build(revToBuild, buildNumber, null);
@@ -1017,9 +1028,11 @@ public class GitSCM extends SCM implements Serializable {
 
                     }
 
-                    // Tag the successful merge
-                    git.tag(buildnumber, "Hudson Build #" + buildNumber);
-
+                    if (!getSkipTag()) {
+                        // Tag the successful merge
+                        git.tag(buildnumber, "Hudson Build #" + buildNumber);
+                    }
+                    
                     String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
 
                     buildData.saveBuild(new Build(revToBuild, buildNumber, null));
@@ -1203,7 +1216,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.recursiveSubmodules") != null,
                               req.getParameter("git.pruneBranches") != null,
                               req.getParameter("git.gitConfigName"),
-                              req.getParameter("git.gitConfigEmail"));
+                              req.getParameter("git.gitConfigEmail"),
+                              req.getParameter("git.skipTag") != null);
         }
         
         /**
