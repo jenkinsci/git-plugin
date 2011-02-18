@@ -22,7 +22,7 @@
            <table width="100%">
            
            <f:entry title="URL of repository">
-            <f:textbox name="git.repo.url" value="${repo.URIs.get(0)}" />
+            <f:textbox name="git.repo.url" value="${repo.URIs.get(0).toPrivateString()}" />
            </f:entry>
            
            <f:advanced>

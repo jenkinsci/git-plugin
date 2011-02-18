@@ -153,7 +153,7 @@ public class GitAPI implements IGitAPI {
         }
 
         // Assume only 1 URL for this repository
-        final String source = remoteConfig.getURIs().get(0).toString();
+        final String source = remoteConfig.getURIs().get(0).toPrivateString();
 
         try {
             workspace.act(new FileCallable<String>() {
@@ -191,7 +191,7 @@ public class GitAPI implements IGitAPI {
 
     public void prune(RemoteConfig repository) throws GitException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("remote", "prune", repository.getURIs().get(0).toString());
+        args.add("remote", "prune", repository.getURIs().get(0).toPrivateString());
         
         launchCommand(args);
     }
@@ -601,7 +601,7 @@ public class GitAPI implements IGitAPI {
 
     public void push(RemoteConfig repository, String refspec) throws GitException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("push", repository.getURIs().get(0).toString());
+        args.add("push", repository.getURIs().get(0).toPrivateString());
 
         if (refspec != null)
             args.add(refspec);
@@ -782,7 +782,7 @@ public class GitAPI implements IGitAPI {
 
     public void fetch(RemoteConfig remoteRepository) throws GitException {
         // Assume there is only 1 URL / refspec for simplicity
-        fetch(remoteRepository.getURIs().get(0).toString(), remoteRepository.getFetchRefSpecs().get(0).toString());
+        fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0).toString());
 
     }
 
