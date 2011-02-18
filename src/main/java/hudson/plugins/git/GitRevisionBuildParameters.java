@@ -54,7 +54,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		return new RevisionParameterAction(data.getLastBuiltRevision().getSha1String());
 	}
 
-	@Extension
+	@Extension(optional=true)
 	public static class DescriptorImpl extends Descriptor<AbstractBuildParameters> {
 		@Override
 		public String getDisplayName() {
