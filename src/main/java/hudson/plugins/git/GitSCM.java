@@ -362,7 +362,7 @@ public class GitSCM extends SCM implements Serializable {
 
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
             expandedRepos.add(newRemoteConfig(oldRepo.getName(),
-                                              oldRepo.getURIs().get(0).toString(),
+                                              oldRepo.getURIs().get(0).toPrivateString(),
                                               new RefSpec(getRefSpec(oldRepo, build))));
         }
 
