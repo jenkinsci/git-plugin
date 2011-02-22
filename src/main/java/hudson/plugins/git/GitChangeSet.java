@@ -233,7 +233,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         User user = User.get(csAuthor, true);
 
         // set email address for user if needed
-        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class) == null) {
+        if (fixEmpty(csAuthorEmail) != null) {
             try {
                 user.addProperty(new Mailer.UserProperty(csAuthorEmail));
             } catch (IOException e) {
