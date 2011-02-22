@@ -31,6 +31,7 @@ public interface IGitAPI {
     void setRemoteUrl(String name, String url) throws GitException;
     String getRemoteUrl(String name, String GIT_DIR) throws GitException;
     void setRemoteUrl(String name, String url, String GIT_DIR) throws GitException;
+    String getDefaultRemote( String _default_ ) throws GitException;
     boolean isBareRepository() throws GitException;
     boolean isBareRepository(String GIT_DIR) throws GitException;
 
@@ -40,8 +41,9 @@ public interface IGitAPI {
     void submoduleSync() throws GitException;
     String getSubmoduleUrl(String name) throws GitException;
     void setSubmoduleUrl(String name, String url) throws GitException;
-    void fixSubmoduleUrls( TaskListener listener ) throws GitException;
-    void setupSubmoduleUrls( TaskListener listener ) throws GitException;
+    void fixSubmoduleUrls( String remote, TaskListener listener ) throws GitException;
+    void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException;
+    void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException;
 
     public void fetch(String repository, String refspec) throws GitException;
     void fetch(RemoteConfig remoteRepository);
