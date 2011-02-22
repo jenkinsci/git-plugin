@@ -301,6 +301,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testGitSCMCanBuildAgainstTags() throws Exception {
         final String mytag = "mytag";
         FreeStyleProject project = setupSimpleProject(mytag);
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
 
@@ -312,7 +314,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.pollSCMChanges(listener));
-        build(project, Result.FAILURE, commitFile2);
+        build(project, Result.FAILURE);  // fail, because there's nothing to be checked out here
 
         // tag it, then delete the tmp branch
         git.tag(mytag, "mytag initial");
@@ -404,8 +406,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
-                excludedRegions, excludedUsers, localBranch, false, false));
+                new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
+                excludedRegions, excludedUsers, localBranch, false, false, null, null, false));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }

@@ -1,5 +1,7 @@
 package hudson.plugins.git.util;
 
+import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
@@ -14,17 +16,30 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.spearce.jgit.lib.ObjectId;
 
+import static hudson.Util.fixNull;
+
+/**
+ * Captures the Git related information for a build.
+ *
+ * <p>
+ * This object is added to {@link AbstractBuild#getActions()} and
+ * remember the Git related information of that build.
+ */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
      * Map of branch name -> build (Branch name to last built SHA1).
+     *
+     * <p>
+     * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
+     * is attached to) 
      */
     public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
 
     /**
-     * The last build that we did.
+     * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
     public Build              lastBuild;
 
@@ -43,13 +58,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
         
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = buildByBranchName.getKey();
+            String branchName = fixNull(buildByBranchName.getKey());
             Build build = buildByBranchName.getValue();
-
-            if (branchName == null) {
-                branchName = "";
-            }
-
             newBuildsByBranchName.put(branchName, build);
         }
 
@@ -81,21 +91,12 @@ public class BuildData implements Action, Serializable, Cloneable {
     public void saveBuild(Build build) {
     	lastBuild = build;
     	for(Branch branch : build.revision.getBranches()) {
-            String branchName = branch.getName();
-            if (branchName == null) {
-                branchName = "";
-            }
-            buildsByBranchName.put(branchName, build);
+            buildsByBranchName.put(fixNull(branch.getName()), build);
     	}
     }
 
     public Build getLastBuildOfBranch(String branch) {
-    	try {
-            return buildsByBranchName.get(branch);
-    	}
-    	catch(Exception ex) {
-            return null;
-    	}
+        return buildsByBranchName.get(branch);
     }
 
     @Exported
@@ -120,21 +121,19 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
 
-        if (buildsByBranchName != null) {
-            clone.buildsByBranchName = new HashMap<String, Build>();
-            for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-                String branchName = buildByBranchName.getKey();
-                if (branchName == null) {
-                    branchName = "";
-                }
-                Build build = buildByBranchName.getValue();
-                Build clonedBuild = clonedBuilds.get(build);
-                if (clonedBuild == null) {
-                    clonedBuild = build.clone();
-                    clonedBuilds.put(build, clonedBuild);
-                }
-                clone.buildsByBranchName.put(branchName, clonedBuild);
+        clone.buildsByBranchName = new HashMap<String, Build>();
+        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+            String branchName = buildByBranchName.getKey();
+            if (branchName == null) {
+                branchName = "";
             }
+            Build build = buildByBranchName.getValue();
+            Build clonedBuild = clonedBuilds.get(build);
+            if (clonedBuild == null) {
+                clonedBuild = build.clone();
+                clonedBuilds.put(build, clonedBuild);
+            }
+            clone.buildsByBranchName.put(branchName, clonedBuild);
         }
 
         if (lastBuild != null) {
@@ -150,5 +149,10 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public Api getApi() {
         return new Api(this);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()+"[buildsByBranchName="+buildsByBranchName+",lastBuild="+lastBuild+"]";
     }
 }

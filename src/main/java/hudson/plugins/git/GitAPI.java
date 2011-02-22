@@ -53,13 +53,11 @@ public class GitAPI implements IGitAPI {
         this.gitExe = gitExe;
         this.environment = environment;
         PrintStream log = listener.getLogger();
-        log.println("GitAPI created");
         for (Map.Entry<String, String> ent : environment.entrySet()) {
             //log.println("Env: " + ent.getKey() + "=" + ent.getValue());
         }
 
-        launcher = new LocalLauncher(listener);
-
+        launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
     }
 
     public String getGitExe() {
@@ -508,22 +506,24 @@ public class GitAPI implements IGitAPI {
         }
 
         if ( ! is_bare ) {
-            List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
+            try {
+                List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
 
-            for (IndexEntry submodule : submodules) {
-                // First fix the URL to the submodule inside the super-project
-                String sUrl = pathJoin( origin.getPath(), submodule.getFile() );
-                setSubmoduleUrl( submodule.getFile(), sUrl );
+                for (IndexEntry submodule : submodules) {
+                    // First fix the URL to the submodule inside the super-project
+                    String sUrl = pathJoin( origin.getPath(), submodule.getFile() );
+                    setSubmoduleUrl( submodule.getFile(), sUrl );
 
-                // Second, if the submodule already has been cloned, fix its own
-                // url...
-                try {
+                    // Second, if the submodule already has been cloned, fix its own
+                    // url...
                     String subGitDir = pathJoin( submodule.getFile(), ".git" );
 
                     if ( ! "".equals( getRemoteUrl("origin", subGitDir) ) ) {
                         setRemoteUrl("origin", sUrl, subGitDir);
                     }
-                } catch ( GitException e ) { }
+                }
+            } catch (GitException e) {
+                // this can fail for example HEAD doesn't exist yet
             }
         } else {
            // we've made a reasonable attempt to detect whether the origin is
@@ -538,7 +538,7 @@ public class GitAPI implements IGitAPI {
         // changes in submodule origin paths...
         submoduleInit();
         submoduleSync();
-        // This allows us to seemlessly use bare and non-bare superproject
+        // This allows us to seamlessly use bare and non-bare superproject
         // repositories.
         fixSubmoduleUrls(listener);
     }
@@ -589,12 +589,12 @@ public class GitAPI implements IGitAPI {
             String result = fos.toString();
 
             if (status != 0) {
-                throw new GitException("Command returned status code " + status + ": " + result);
+                throw new GitException("Command \""+StringUtils.join(args.toCommandArray(), " ")+"\" returned status code " + status + ": " + result);
             }
 
             return result;
         } catch (Exception e) {
-            throw new GitException("Error performing " + StringUtils.join(args.toCommandArray(), " ")
+            throw new GitException("Error performing command: " + StringUtils.join(args.toCommandArray(), " ")
                                    + "\n" + e.getMessage(), e);
         }
     }

@@ -80,6 +80,12 @@
     <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
       <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
     </f:entry>
+    <f:entry title="Config user.name Value" field="gitConfigName">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="Config user.email Value" field="gitConfigEmail">
+      <f:textbox />
+    </f:entry>
     
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">
@@ -133,6 +139,9 @@
             <f:checkbox name="git.pruneBranches" checked="${scm.pruneBranches}" />
           </f:entry>
 
+    <f:entry title="Skip internal tag" help="/plugin/git/help-skipTag.html">
+      <f:checkbox name="git.skipTag" checked="${scm.skipTag}" />
+    </f:entry>
     <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
       <f:checkbox name="git.clean" checked="${scm.clean}" />
     </f:entry>
@@ -141,9 +150,6 @@
     </f:entry>
     <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
       <f:checkbox name="git.authorOrCommitter" checked="${scm.authorOrCommitter}"/>
-    </f:entry>
-    <f:entry title="Wipe out workspace" help="/plugin/git/wipeOutWorkspace.html">
-      <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}" />
     </f:entry>
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
       <j:scope>

@@ -21,6 +21,7 @@ import hudson.plugins.git.Revision;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.spearce.jgit.lib.ObjectId;
 
@@ -112,25 +114,31 @@ public class GitUtils {
 
         // we only want (B) and (C), as (A) is an ancestor (old).
 
-        for (Iterator<Revision> it = revisions.iterator(); it.hasNext();) {
-            Revision r = it.next();
-            boolean remove = false;
+        List<Revision> l = new ArrayList<Revision>(revisions);
 
-            for (Revision r2 : revisions) {
-                if (r != r2) {
-                    ObjectId commonAncestor = git.mergeBase(r.getSha1(), r2.getSha1());
-                    if (commonAncestor != null && commonAncestor.equals(r.getSha1())) {
-                        remove = true;
-                        break;
-                    }
+        OUTER:
+        for (int i=0; i<l.size(); i++) {
+            for (int j=i+1; j<l.size(); j++) {
+                Revision ri = l.get(i);
+                Revision rj = l.get(j);
+                ObjectId commonAncestor = git.mergeBase(ri.getSha1(), rj.getSha1());
+                if (commonAncestor==null)   continue;
+
+                if (commonAncestor.equals(ri.getSha1())) {
+                    LOGGER.fine("filterTipBranches: "+rj+" subsumes "+ri);
+                    l.remove(i);
+                    i--;
+                    continue OUTER;
+                }
+                if (commonAncestor.equals(rj.getSha1())) {
+                    LOGGER.fine("filterTipBranches: "+ri+" subsumes "+rj);
+                    l.remove(j);
+                    j--;
                 }
             }
-
-            if (remove) it.remove();
-
         }
 
-        return revisions;
+        return l;
     }
 
     /**
@@ -154,14 +162,18 @@ public class GitUtils {
 
             String rootUrl = Hudson.getInstance().getRootUrl();
             if(rootUrl!=null) {
-                env.put("HUDSON_URL", rootUrl);
+                env.put("HUDSON_URL", rootUrl); // Legacy.
+                env.put("JENKINS_URL", rootUrl);
                 env.put("BUILD_URL", rootUrl+b.getUrl());
                 env.put("JOB_URL", rootUrl+p.getUrl());
             }
             
-            if(!env.containsKey("HUDSON_HOME"))
+            if(!env.containsKey("HUDSON_HOME")) // Legacy
                 env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
-            
+
+            if(!env.containsKey("JENKINS_HOME"))
+                env.put("JENKINS_HOME", Hudson.getInstance().getRootDir().getPath() );
+
             if (ws != null)
                 env.put("WORKSPACE", ws.getRemote());
             
@@ -218,4 +230,6 @@ public class GitUtils {
 
         return returnNames;
     }
+
+    private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 }
