@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 import org.spearce.jgit.lib.Constants;
@@ -413,6 +414,51 @@ public class GitAPI implements IGitAPI {
                        "config", "remote."+name+".url", url );
     }
 
+    /**
+     * Get the default remote.
+     *
+     * @param _default_ The default remote to use if more than one exists.
+     *
+     * @return _default_ if it exists, otherwise return the first remote.
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public String getDefaultRemote( String _default_ ) throws GitException {
+        BufferedReader rdr =
+            new BufferedReader(
+                new StringReader( launchCommand( "remote" ) )
+            );
+
+        List<String> remotes = new ArrayList<String>();
+
+        String line;
+        try {
+            while ((line = rdr.readLine()) != null) {
+                remotes.add(line);
+            }
+        } catch (IOException e) {
+            throw new GitException("Error parsing remotes", e);
+        }
+
+        if        ( remotes.contains(_default_) ) {
+            return _default_;
+        } else if ( remotes.size() >= 1 ) {
+            return remotes.get(0);
+        } else {
+            throw new GitException("No remotes found!");
+        }
+    }
+
+    /**
+     * Get the default remote.
+     *
+     * @return "origin" if it exists, otherwise return the first remote.
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public String getDefaultRemote() throws GitException {
+        return getDefaultRemote("origin");
+    }
 
     /**
      * Detect whether a repository is bare or not.
@@ -465,12 +511,13 @@ public class GitAPI implements IGitAPI {
      *
      * @throws GitException if executing the git command fails
      */
-    public void fixSubmoduleUrls( TaskListener listener ) throws GitException {
+    public void fixSubmoduleUrls( String remote,
+                                  TaskListener listener ) throws GitException {
         boolean is_bare = true;
 
         URI origin = null;
         try {
-            String url = getRemoteUrl("origin");
+            String url = getRemoteUrl(remote);
 
             // ensure that any /.git ending is removed
             String gitEnd = pathJoin("", ".git");
@@ -542,14 +589,38 @@ public class GitAPI implements IGitAPI {
         }
     }
 
-    public void setupSubmoduleUrls( TaskListener listener ) throws GitException {
+    /**
+     * Set up submodule URLs so that they correspond to the remote pertaining to
+     * the revision that has been checked out.
+     */
+    public void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException {
+        String remote;
+
+        Iterator<Branch> bi = rev.getBranches().iterator();
+        if ( bi.hasNext() ) {
+            // this is supposed to be a remote branch
+            String b = bi.next().getName();
+            int slash = b.indexOf('/');
+
+            if ( slash == -1 )
+              throw new GitException("no remote from branch name ("+b+")");
+
+            remote = getDefaultRemote( b.substring(0,slash) );
+        } else {
+            remote = getDefaultRemote();
+        }
+
+        setupSubmoduleUrls( remote, listener );
+    }
+
+    public void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException {
         // This is to make sure that we don't miss any new submodules or
         // changes in submodule origin paths...
         submoduleInit();
         submoduleSync();
         // This allows us to seamlessly use bare and non-bare superproject
         // repositories.
-        fixSubmoduleUrls(listener);
+        fixSubmoduleUrls( remote, listener );
     }
 
     public void tag(String tagName, String comment) throws GitException {

@@ -603,7 +603,7 @@ public class GitSCM extends SCM implements Serializable {
         try {
             // This ensures we don't miss changes to submodule paths and allows
             // seamless use of bare and non-bare superproject repositories.
-            git.setupSubmoduleUrls( listener );
+            git.setupSubmoduleUrls( remoteRepository.getName(), listener );
 
             /* with the new re-ordering of "git checkout" and the submodule
              * commands, it appears that this test will always succeed... But
@@ -968,7 +968,7 @@ public class GitSCM extends SCM implements Serializable {
                             if (git.hasGitModules()) {
                                 // This ensures we don't miss changes to submodule paths and allows
                                 // seamless use of bare and non-bare superproject repositories.
-                                git.setupSubmoduleUrls( listener );
+                                git.setupSubmoduleUrls( revToBuild, listener );
                                 git.submoduleUpdate(recursiveSubmodules);
                             }
 
@@ -1035,13 +1035,11 @@ public class GitSCM extends SCM implements Serializable {
                             for (RemoteConfig remoteRepository : paramRepos) {
                                 fetchSubmodulesFrom(git, localWorkspace, listener, remoteRepository);
                             }
-                        } else {
-                            // This ensures we don't miss changes to submodule paths and allows
-                            // seamless use of bare and non-bare superproject repositories.
-                            git.setupSubmoduleUrls( listener );
                         }
 
-                        // Update to the correct checkout
+                        // This ensures we don't miss changes to submodule paths and allows
+                        // seamless use of bare and non-bare superproject repositories.
+                        git.setupSubmoduleUrls( revToBuild, listener );
                         git.submoduleUpdate(recursiveSubmodules);
 
                     }
