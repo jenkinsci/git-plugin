@@ -42,18 +42,6 @@ public class GitUtils {
         this.listener = listener;
     }
 
-    public List<IndexEntry> getSubmodules(String treeIsh) {
-        List<IndexEntry> submodules = git.lsTree(treeIsh);
-
-        // Remove anything that isn't a submodule
-        for (Iterator<IndexEntry> it = submodules.iterator(); it.hasNext();) {
-            if (!it.next().getMode().equals("160000")) {
-                it.remove();
-            }
-        }
-        return submodules;
-    }
-
     /**
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.

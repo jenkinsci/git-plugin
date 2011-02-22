@@ -28,6 +28,8 @@ public interface IGitAPI {
     boolean hasGitRepo() throws GitException;
     boolean isCommitInRepo(String sha1);
     boolean hasGitModules() throws GitException;
+    boolean hasGitModules( String treeIsh ) throws GitException;
+    List<IndexEntry> getSubmodules( String treeIsh ) throws GitException;
     String getRemoteUrl(String name) throws GitException;
     void setRemoteUrl(String name, String url) throws GitException;
     String getRemoteUrl(String name, String GIT_DIR) throws GitException;
