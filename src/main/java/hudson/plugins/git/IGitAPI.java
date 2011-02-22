@@ -26,6 +26,7 @@ public interface IGitAPI {
      * Returns true if the encapsulated directory has ".git" directory
      */
     boolean hasGitRepo() throws GitException;
+    boolean isCommitInRepo(String sha1);
     boolean hasGitModules() throws GitException;
     String getRemoteUrl(String name) throws GitException;
     void setRemoteUrl(String name, String url) throws GitException;

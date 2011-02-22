@@ -1070,8 +1070,13 @@ public class GitSCM extends SCM implements Serializable {
             for(Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git);
                 if(lastRevWas != null) {
-                    changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
-                    histories++;
+                    if (git.isCommitInRepo(lastRevWas.getSHA1().name())) {
+                        changeLog.append(putChangelogDiffsIntoFile(git,  b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
+                        histories++;
+                    } else {
+                        listener.getLogger().println("Could not record history. Previous build's commit, " + lastRevWas.getSHA1().name()
+                                                     + ", does not exist in the current repository.");
+                    }
                 } else {
                     listener.getLogger().println("No change to record in branch " + b.getName());
                 }

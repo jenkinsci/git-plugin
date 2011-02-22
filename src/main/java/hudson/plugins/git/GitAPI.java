@@ -756,6 +756,20 @@ public class GitAPI implements IGitAPI {
         return entries;
     }
 
+    public boolean isCommitInRepo(String sha1) {
+        try {
+            List<ObjectId> revs = revList(sha1);
+
+            if (revs.size() == 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch (GitException e) {
+            return false;
+        }
+    }
+    
     public void add(String filePattern) throws GitException {
         try {
             launchCommand("add", filePattern);
