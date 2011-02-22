@@ -44,11 +44,9 @@ public class SubmoduleCombinator {
     }
 
     public void createSubmoduleCombinations() throws GitException, IOException {
-        GitUtils gitUtils = new GitUtils(listener, git);
-
         Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<IndexEntry, Collection<Revision>>();
 
-        for (IndexEntry submodule : gitUtils.getSubmodules("HEAD")) {
+        for (IndexEntry submodule : git.getSubmodules("HEAD")) {
             File subdir = new File(workspace, submodule.getFile());
             IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener, git.getEnvironment());
       
@@ -83,7 +81,7 @@ public class SubmoduleCombinator {
         // Knock out already-defined configurations
         for (ObjectId sha1 : git.revListAll()) {
             // What's the submodule configuration
-            List<IndexEntry> entries = gitUtils.getSubmodules(sha1.name());
+            List<IndexEntry> entries = git.getSubmodules(sha1.name());
             entriesMap.put(sha1, entries);
 
         }

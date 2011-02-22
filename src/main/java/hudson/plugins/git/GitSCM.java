@@ -537,8 +537,7 @@ public class GitSCM extends SCM implements Serializable {
                                  TaskListener listener,
                                  RemoteConfig remoteRepository) {
         
-        List<IndexEntry> submodules = new GitUtils(listener, parentGit)
-            .getSubmodules("HEAD");
+        List<IndexEntry> submodules = parentGit.getSubmodules("HEAD");
         
         for (IndexEntry submodule : submodules) {
             try {
@@ -616,8 +615,7 @@ public class GitSCM extends SCM implements Serializable {
             }
 
             if (hasHead) {
-                List<IndexEntry> submodules =
-                    new GitUtils(listener, git).getSubmodules("HEAD");
+                List<IndexEntry> submodules = git.getSubmodules("HEAD");
 
                 for (IndexEntry submodule : submodules) {
                     try {

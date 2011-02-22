@@ -9,8 +9,6 @@ import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
-import hudson.plugins.git.util.GitUtils;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -115,6 +113,22 @@ public class GitAPI implements IGitAPI {
         } catch (Exception e) {
             throw new GitException("Couldn't check for .gitmodules", e);
         }
+    }
+
+    public List<IndexEntry> getSubmodules( String treeIsh ) throws GitException {
+        List<IndexEntry> submodules = lsTree(treeIsh);
+
+        // Remove anything that isn't a submodule
+        for (Iterator<IndexEntry> it = submodules.iterator(); it.hasNext();) {
+            if (!it.next().getMode().equals("160000")) {
+                it.remove();
+            }
+        }
+        return submodules;
+    }
+
+    public boolean hasGitModules( String treeIsh ) throws GitException {
+        return hasGitModules() && ( getSubmodules(treeIsh).size() > 0 );
     }
 
     public void fetch(String repository, String refspec) throws GitException {
@@ -507,7 +521,7 @@ public class GitAPI implements IGitAPI {
      *  -         otherwise:  default is bare
      *  .
      *
-     * @param listener The task listener (used to create a GitUtils instance).
+     * @param listener The task listener.
      *
      * @throws GitException if executing the git command fails
      */
@@ -558,7 +572,7 @@ public class GitAPI implements IGitAPI {
 
         if ( ! is_bare ) {
             try {
-                List<IndexEntry> submodules = new GitUtils(listener, this).getSubmodules("HEAD");
+                List<IndexEntry> submodules = getSubmodules("HEAD");
 
                 for (IndexEntry submodule : submodules) {
                     // First fix the URL to the submodule inside the super-project
