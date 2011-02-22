@@ -602,7 +602,7 @@ public class GitSCM extends SCM implements Serializable {
 
         try {
             // This ensures we don't miss changes to submodule paths and allows
-            // seemless use of bare and non-bare superproject repositories.
+            // seamless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls( listener );
 
             /* with the new re-ordering of "git checkout" and the submodule
@@ -967,7 +967,7 @@ public class GitSCM extends SCM implements Serializable {
 
                             if (git.hasGitModules()) {
                                 // This ensures we don't miss changes to submodule paths and allows
-                                // seemless use of bare and non-bare superproject repositories.
+                                // seamless use of bare and non-bare superproject repositories.
                                 git.setupSubmoduleUrls( listener );
                                 git.submoduleUpdate(recursiveSubmodules);
                             }
@@ -1037,7 +1037,7 @@ public class GitSCM extends SCM implements Serializable {
                             }
                         } else {
                             // This ensures we don't miss changes to submodule paths and allows
-                            // seemless use of bare and non-bare superproject repositories.
+                            // seamless use of bare and non-bare superproject repositories.
                             git.setupSubmoduleUrls( listener );
                         }
 

@@ -81,9 +81,13 @@ public class GitAPI implements IGitAPI {
     }
 
     public boolean hasGitRepo() throws GitException {
+        return hasGitRepo(".git");
+    }
+
+    public boolean hasGitRepo( String GIT_DIR ) throws GitException {
         try {
 
-            FilePath dotGit = workspace.child(".git");
+            FilePath dotGit = workspace.child(GIT_DIR);
 
             return dotGit.exists();
 
@@ -518,8 +522,13 @@ public class GitAPI implements IGitAPI {
                     // url...
                     String subGitDir = pathJoin( submodule.getFile(), ".git" );
 
-                    if ( ! "".equals( getRemoteUrl("origin", subGitDir) ) ) {
-                        setRemoteUrl("origin", sUrl, subGitDir);
+                    /* it is possible that the submodule does not exist yet
+                     * since we wait until after checkout to do 'submodule
+                     * udpate' */
+                    if ( hasGitRepo( subGitDir ) ) {
+                        if (! "".equals( getRemoteUrl("origin", subGitDir) )) {
+                            setRemoteUrl("origin", sUrl, subGitDir);
+                        }
                     }
                 }
             } catch (GitException e) {
