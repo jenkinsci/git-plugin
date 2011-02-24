@@ -1247,6 +1247,7 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.generate") != null,
                               submoduleCfg,
                               req.getParameter("git.clean") != null,
+                              req.getParameter("git.wipeOutWorkspace") != null,
                               req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
                               gitBrowser,
                               gitTool,
