@@ -37,7 +37,7 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-@Extension
+@Extension(optional=true)
 public class GitBranchTokenMacro extends DataBoundTokenMacro {
     /**
      * If true, list up all the branches not just the first one.

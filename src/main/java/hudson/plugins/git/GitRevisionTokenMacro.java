@@ -37,7 +37,7 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-@Extension
+@Extension(optional=true)
 public class GitRevisionTokenMacro extends DataBoundTokenMacro {
     /**
      * Number of chars to use
