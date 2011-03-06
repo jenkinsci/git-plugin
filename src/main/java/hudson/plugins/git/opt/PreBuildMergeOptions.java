@@ -1,6 +1,10 @@
 package hudson.plugins.git.opt;
 
 import java.io.Serializable;
+import java.util.List;
+
+import hudson.model.Descriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.spearce.jgit.transport.RemoteConfig;
 
 /**
@@ -16,10 +20,20 @@ public class PreBuildMergeOptions implements Serializable {
      */
     public RemoteConfig mergeRemote = null;
 
+    private String mergeRemoteName;
+
     /**
      * Remote ref to merge.
      */
     public String mergeTarget = null;
+
+    public PreBuildMergeOptions() {}
+
+    @DataBoundConstructor
+    public PreBuildMergeOptions(String mergeRemoteName, String mergeTarget) {
+        this.mergeRemoteName = mergeRemoteName.trim();
+        this.mergeTarget = mergeTarget;
+    }
 
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
@@ -43,5 +57,9 @@ public class PreBuildMergeOptions implements Serializable {
 
     public boolean doMerge() {
         return mergeTarget != null;
+    }
+
+    public String getMergeRemoteName() {
+        return mergeRemoteName;
     }
 }

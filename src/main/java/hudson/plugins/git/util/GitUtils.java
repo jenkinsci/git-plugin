@@ -194,11 +194,11 @@ public class GitUtils {
         return env;
     }
 
-    public static String[] fixupNames(String[] names, String[] urls) {
-        String[] returnNames = new String[urls.length];
+    public static String[] fixupNames(String[] names) {
+        String[] returnNames = new String[names.length];
         Set<String> usedNames = new HashSet<String>();
 
-        for(int i=0; i<urls.length; i++) {
+        for(int i=0; i<names.length; i++) {
             String name = names[i];
 
             if(name == null || name.trim().length() == 0) {

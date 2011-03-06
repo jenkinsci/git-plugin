@@ -39,6 +39,7 @@ import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -71,6 +72,7 @@ public class GitSCM extends SCM implements Serializable {
      * All the remote repositories that we know about.
      */
     private List<RemoteConfig> remoteRepositories;
+    private List<Repository> _remoteRepositories;
 
     /**
      * All the branches that we wish to care about building.
@@ -144,20 +146,18 @@ public class GitSCM extends SCM implements Serializable {
      */
     public GitSCM(String repositoryUrl) throws IOException {
         this(
-                DescriptorImpl.createRepositoryConfigurations(new String[]{repositoryUrl},new String[]{null},new String[]{null}),
+                Arrays.asList(new Repository(repositoryUrl, null, null)),
                 Collections.singletonList(new BranchSpec("")),
-                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false, 
+                new PreBuildMergeOptions(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null, null, null, false, false, null, null, false);
     }
 
     @DataBoundConstructor
     public GitSCM(
-                  List<RemoteConfig> repositories,
+                  List<Repository> remoteRepositories,
                   List<BranchSpec> branches,
                   PreBuildMergeOptions mergeOptions,
-                  boolean doGenerateSubmoduleConfigurations,
-                  Collection<SubmoduleConfig> submoduleCfg,
                   boolean clean,
                   boolean wipeOutWorkspace,
                   BuildChooser buildChooser, GitRepositoryBrowser browser,
@@ -173,17 +173,14 @@ public class GitSCM extends SCM implements Serializable {
                   String gitConfigEmail,
                   boolean skipTag) {
 
-        // normalization
         this.branches = branches;
-
         this.localBranch = Util.fixEmptyAndTrim(localBranch);
-        this.remoteRepositories = repositories;
+        this._remoteRepositories = remoteRepositories;
         this.browser = browser;
+        this.mergeOptions = mergeOptions != null ? mergeOptions : new PreBuildMergeOptions();
 
-        this.mergeOptions = mergeOptions;
-
-        this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
-        this.submoduleCfg = submoduleCfg;
+//        this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
+//        this.submoduleCfg = submoduleCfg;
 
         this.clean = clean;
         this.wipeOutWorkspace = wipeOutWorkspace;
@@ -200,6 +197,36 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
         buildChooser.gitSCM = this; // set the owner
+
+        try {
+            this.remoteRepositories = DescriptorImpl.createRepositoryConfigurations(remoteRepositories);
+        }
+        catch (IOException e1) {
+            throw new GitException("Error creating repositories", e1);
+        }
+
+        if(branches.size() == 0) {
+            branches.add(new BranchSpec("*/master"));
+        }
+
+        if (mergeOptions != null) {
+            String mergeRemoteName = mergeOptions.getMergeRemoteName();
+            if (StringUtils.isEmpty(mergeRemoteName)) {
+                mergeOptions.setMergeRemote(this.remoteRepositories.get(0));
+            } else {
+                RemoteConfig mergeRemote = null;
+                for (RemoteConfig remote : this.remoteRepositories) {
+                    if (remote.getName().equals(mergeRemoteName)) {
+                        mergeRemote = remote;
+                        break;
+                    }
+                }
+                if (mergeRemote == null) {
+                    throw new IllegalArgumentException("No remote repository configured with name '" + mergeRemoteName + "'");
+                }
+            }
+        }
+
     }
 
     public Object readResolve()  {
@@ -385,7 +412,11 @@ public class GitSCM extends SCM implements Serializable {
 
         return null;
     }
-                            
+
+    public List<Repository> getRemoteRepositories() {
+        return _remoteRepositories;
+    }
+
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null)
@@ -1215,173 +1246,44 @@ public class GitSCM extends SCM implements Serializable {
             return gitExe;
         }
 
-        public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            List<RemoteConfig> remoteRepositories;
-            try {
-                remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
-                                                                    req.getParameterValues("git.repo.name"),
-                                                                    req.getParameterValues("git.repo.refspec"));
-            }
-            catch (IOException e1) {
-                throw new GitException("Error creating repositories", e1);
-            }
-            List<BranchSpec> branches = createBranches(req.getParameterValues("git.branch"));
-
-            // Make up a repo config from the request parameters
-
-            PreBuildMergeOptions mergeOptions = createMergeOptions(req.getParameter("git.doMerge"),
-                                                                   req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"), 
-                                                                   remoteRepositories);
-
-
-            String[] urls = req.getParameterValues("git.repo.url");
-            String[] names = req.getParameterValues("git.repo.name");
-            Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
-
-            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
-            String gitTool = req.getParameter("git.gitTool");
-            return new GitSCM(
-                              remoteRepositories,
-                              branches,
-                              mergeOptions,
-                              req.getParameter("git.generate") != null,
-                              submoduleCfg,
-                              req.getParameter("git.clean") != null,
-                              req.getParameter("git.wipeOutWorkspace") != null,
-                              req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
-                              gitBrowser,
-                              gitTool,
-                              req.getParameter("git.authorOrCommitter") != null,
-                              req.getParameter("git.relativeTargetDir"),
-                              req.getParameter("git.excludedRegions"),
-                              req.getParameter("git.excludedUsers"),
-                              req.getParameter("git.localBranch"),
-                              req.getParameter("git.recursiveSubmodules") != null,
-                              req.getParameter("git.pruneBranches") != null,
-                              req.getParameter("git.gitConfigName"),
-                              req.getParameter("git.gitConfigEmail"),
-                              req.getParameter("git.skipTag") != null);
-        }
-        
-        /**
-         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
-         *
-         * @param scmData
-         * @return
-         */
-        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
-            if (scmData.containsKey("browser")) {
-                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
-            } else {
-                return null;
-            }
-        }
-
-        public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
-                                                                        String[] repoNames,
-                                                                        String[] refSpecs) throws IOException {
+        public static List<RemoteConfig> createRepositoryConfigurations(List<Repository> repositories) throws IOException {
             File temp = File.createTempFile("tmp", "config");
             try {
-                return createRepositoryConfigurations(pUrls,repoNames,refSpecs,temp);
-            } finally {
-                temp.delete();
-            }
-        }
+                List<RemoteConfig> remoteRepositories;
+                RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
+                // Make up a repo config from the request parameters
 
-        /**
-         * @deprecated
-         *      Use {@link #createRepositoryConfigurations(String[], String[], String[])}
-         */
-        public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
-                                                                        String[] repoNames,
-                                                                        String[] refSpecs,
-                                                                        File temp) {
-            List<RemoteConfig> remoteRepositories;
-            RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
-            // Make up a repo config from the request parameters
-
-            String[] urls = pUrls;
-            String[] names = repoNames;
-
-            names = GitUtils.fixupNames(names, urls);
-
-            String[] refs = refSpecs;
-            if (names != null) {
+                String[] names = new String[repositories.size()];
                 for (int i = 0; i < names.length; i++) {
+                    names[i] = repositories.get(i).getRepoName();
+                }
+                names = GitUtils.fixupNames(names);
+
+                for (int i = 0; i < names.length; i++) {
+                    Repository repository = repositories.get(i);
                     String name = names[i];
                     name = name.replace(' ', '_');
 
-                    if(refs[i] == null || refs[i].length() == 0) {
-                        refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";
+                    String refSpec = repository.getRefSpec();
+                    if(StringUtils.isEmpty(refSpec)) {
+                        refSpec = "+refs/heads/*:refs/remotes/" + name + "/*";
                     }
 
-                    repoConfig.setString("remote", name, "url", urls[i]);
-                    repoConfig.setString("remote", name, "fetch", refs[i]);
+                    repoConfig.setString("remote", name, "url", repository.getUrl());
+                    repoConfig.setString("remote", name, "fetch", refSpec);
                 }
-            }
 
-            try {
-                repoConfig.save();
-                remoteRepositories = RemoteConfig.getAllRemoteConfigs(repoConfig);
-            }
-            catch (Exception e) {
-                throw new GitException("Error creating repositories", e);
-            }
-            return remoteRepositories;
-        }
-
-        public static List<BranchSpec> createBranches(String[] branch) {
-            List<BranchSpec> branches = new ArrayList<BranchSpec>();
-            String[] branchData = branch;
-            for(int i=0; i<branchData.length;i++) {
-                branches.add(new BranchSpec(branchData[i]));
-            }
-
-            if(branches.size() == 0) {
-            	branches.add(new BranchSpec("*/master"));
-            }
-            return branches;
-        }
-
-        public static PreBuildMergeOptions createMergeOptions(String doMerge, String pMergeRemote,
-                                                              String mergeTarget,
-                                                              List<RemoteConfig> remoteRepositories)
-            throws FormException {
-            PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
-            if(doMerge != null && doMerge.trim().length()  > 0) {
-                RemoteConfig mergeRemote = null;
-                String mergeRemoteName = pMergeRemote.trim();
-                if (mergeRemoteName.length() == 0)
-                    mergeRemote = remoteRepositories.get(0);
-                else
-                    for (RemoteConfig remote : remoteRepositories) {
-                        if (remote.getName().equals(mergeRemoteName)) {
-                            mergeRemote = remote;
-                            break;
-                        }
-                    }
-                if (mergeRemote==null)
-                    throw new FormException("No remote repository configured with name '" + mergeRemoteName + "'", "git.mergeRemote");
-                mergeOptions.setMergeRemote(mergeRemote);
-
-            	mergeOptions.setMergeTarget(mergeTarget);
-            }
-
-            return mergeOptions;
-        }
-
-        public static GitWeb createGitWeb(String url) {
-            GitWeb gitWeb = null;
-            String gitWebUrl = url;
-            if (gitWebUrl != null && gitWebUrl.length() > 0) {
                 try {
-                    gitWeb = new GitWeb(gitWebUrl);
+                    repoConfig.save();
+                    remoteRepositories = RemoteConfig.getAllRemoteConfigs(repoConfig);
                 }
-                catch (MalformedURLException e) {
-                    throw new GitException("Error creating GitWeb", e);
+                catch (Exception e) {
+                    throw new GitException("Error creating repositories", e);
                 }
+                return remoteRepositories;
+            } finally {
+                temp.delete();
             }
-            return gitWeb;
         }
 
         public FormValidation doGitRemoteNameCheck(StaplerRequest req, StaplerResponse rsp)
@@ -1396,7 +1298,7 @@ public class GitSCM extends SCM implements Serializable {
             String[] urls = req.getParameterValues("git.repo.url");
             String[] names = req.getParameterValues("git.repo.name");
 
-            names = GitUtils.fixupNames(names, urls);
+            names = GitUtils.fixupNames(names);
 
             for (String name : names) {
                 if (name.equals(mergeRemoteName))

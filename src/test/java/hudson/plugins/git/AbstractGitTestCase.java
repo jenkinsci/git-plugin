@@ -10,6 +10,7 @@ import org.spearce.jgit.transport.RemoteConfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         setAuthor(johnDoe);
         setCommitter(johnDoe);
         workspace = new FilePath(workDir);
-        git = new GitAPI("git", workspace, listener, envVars);
+        git = new GitAPI("git.cmd", workspace, listener, envVars);
         git.init();
     }
 
@@ -78,12 +79,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         git.launchCommand("commit", "-m", message);
     }
 
-    protected List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
-        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
-                                                                    new String[]{workDir.getAbsolutePath()},
-                                                                    new String[]{"origin"},
-                                                                    new String[]{""}
-        );
+    protected List<Repository> createRemoteRepositories(String relativeTargetDir) throws IOException {
+        return Arrays.asList(new Repository(workDir.getAbsolutePath(), "origin", ""));
     }
 
 }

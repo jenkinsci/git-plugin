@@ -56,7 +56,7 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
             return;
         }
         DescriptorExtensionList<SCM, SCMDescriptor<?>> scms = GitSCM.all();
-        String defaultGitExe = File.separatorChar != '/' ? "git.exe" : "git";
+        String defaultGitExe = File.separatorChar != '/' ? "git.cmd" : "git";
 
         for (SCMDescriptor<?> s : scms) {
             if (s instanceof GitSCM.DescriptorImpl) {

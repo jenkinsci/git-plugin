@@ -1,5 +1,7 @@
 package hudson.plugins.git;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +31,8 @@ public class BranchSpec implements Serializable {
     public void setName(String value) {
         this.name = value;
     }
-    
+
+    @DataBoundConstructor
     public BranchSpec(String name) {
         if(name == null)
             throw new IllegalArgumentException();
