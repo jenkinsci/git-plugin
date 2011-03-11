@@ -1,5 +1,6 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
     <script><![CDATA[
     function encodeAllInputs(sep, form, field) {
         var inputs = Form.getInputs(form, null, field);
@@ -16,174 +17,199 @@
     }
     ]]></script>
 
-    <f:entry title="Repositories" help="/plugin/git/help.html">
-        
-        <f:repeatable field="remoteRepositories" minimum="1" noAddButton="false">
-           <table width="100%">
-           
-           <f:entry title="URL of repository">
-            <f:textbox field="url" />
-           </f:entry>
-           
-           <f:advanced>
-           
-	           <f:entry title="Name of repository (blank to create default)">
-	             <f:textbox field="name" />
-	           </f:entry>
-	           
-	           
-	           <f:entry title="Refspec (blank to create default)">
-	              <f:textbox field="refSpec" />
-	           </f:entry>
-	           
-           </f:advanced>
-           
-           <f:entry>
-            <div align="right">
-                <input type="button" value="Delete Repository" class="repeatable-delete" style="margin-left: 1em;" />
-            </div>
-          </f:entry>
-          </table>
-          
+    <f:entry title="${%Modules}">
+        <f:repeatable field="modules" noAddButton="false" minimum="1">
+            <table width="100%">
+                <f:entry title="Directory" field="relativeTargetDir">
+                    <f:textbox />
+                </f:entry>
+                <f:entry title="Repositories" help="/plugin/git/help.html" field="remoteRepositories">
+
+                    <f:repeatable minimum="1" noAddButton="false" field="remoteRepositories">
+                        <table width="100%">
+
+                            <f:entry title="URL of repository" field="url">
+                                <f:textbox/>
+                            </f:entry>
+
+                            <f:advanced>
+
+                                <f:entry title="Name of repository (blank to create default)" field="name">
+                                    <f:textbox/>
+                                </f:entry>
+
+
+                                <f:entry title="Refspec (blank to create default)" field="refSpec">
+                                    <f:textbox/>
+                                </f:entry>
+
+                            </f:advanced>
+
+                            <f:entry>
+                                <div align="right">
+                                    <input type="button" value="Delete Repository" class="repeatable-delete"
+                                           style="margin-left: 1em;"/>
+                                </div>
+                            </f:entry>
+                        </table>
+
+                    </f:repeatable>
+                </f:entry>
+
+                <f:entry title="Branches to build" help="/plugin/git/branch.html">
+                    <f:repeatable var="instance" name="branches" items="${instance.branches}" minimum="1" noAddButton="false">
+                        <table width="100%">
+                            <f:entry title="Branch Specifier (blank for default):">
+                                <f:textbox field="name"/>
+                            </f:entry>
+
+                            <f:entry>
+                                <div align="right">
+                                    <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;"/>
+                                </div>
+                            </f:entry>
+                        </table>
+                    </f:repeatable>
+                </f:entry>
+
+                <f:advanced>
+                    <f:entry title="Merge options" help="/plugin/git/merge.html">
+
+                        <table width="100%">
+                            <f:optionalBlock field="mergeOptions" checked="${instance.mergeOptions.doMerge()}"
+                                             title="${%Merge before build}">
+                                <j:set var="instance" value="${instance.mergeOptions}"/>
+                                <f:entry title="Name of repository: (default first specified, e.g. origin)" field="mergeRemoteName">
+                                    <f:textbox/>
+                                    <!-- TODO
+                                            checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
+                                          +encodeAllInputs('&amp;', this.form, 'git.repo.name')
+                                          +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
+                                     -->
+                                </f:entry>
+                                <f:entry title="Branch to merge to: (e.g. master)" field="mergeTarget">
+                                    <f:textbox clazz="required"/>
+                                </f:entry>
+                            </f:optionalBlock>
+                        </table>
+
+                    </f:entry>
+                </f:advanced>
+
+                <f:entry>
+                    <div align="right">
+                        <input type="button" value="Delete Module" class="repeatable-delete"
+                               style="margin-left: 1em;"/>
+                    </div>
+                </f:entry>
+            </table>
         </f:repeatable>
-   </f:entry>
-  
-  <f:entry title="Branches to build" help="/plugin/git/branch.html">
-  <f:repeatable var="instance" name="branches" items="${instance.branches}" minimum="1" noAddButton="false">
-           <table width="100%">
-               <f:entry title="Branch Specifier (blank for default):">
-                    <f:textbox field="name" />
-               </f:entry>
-               
-               <f:entry>
-            <div align="right">
-                <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;" />
-            </div>
-          </f:entry>
-               
-           </table>
-          
-        </f:repeatable>
-  
-  </f:entry>
+    </f:entry>
 
-  <f:advanced>
-    <f:entry title="${%Excluded Regions}" field="excludedRegions" help="/plugin/git/help-excludedRegions.html">
-        <f:textarea />
-    </f:entry>
-    <f:entry title="${%Excluded Users}" field="excludedUsers" help="/plugin/git/help-excludedUsers.html">
-        <f:textarea />
-    </f:entry>
-    <f:entry title="Checkout/merge to local branch (optional)" field="localBranch" help="/plugin/git/help-localBranch.html">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir" help="/plugin/git/help-local.html">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="Config user.name Value" field="gitConfigName">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="Config user.email Value" field="gitConfigEmail">
-      <f:textbox />
-    </f:entry>
-    
-    <!-- This needs more thought
-  <f:entry title="Autogenerate submodule configurations">
-    <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
-    <label class="attach-previous">Generate submodule configurations</label>
-    
-    <f:repeatable var="smcfg" name="smcfg" varStatus="cfgStatus" items="${scm.submoduleCfg}" noAddButton="false">
-           <table width="100%">
-           <f:entry title="Name of submodule">
-             <f:textbox name="git.submodule.name" value="${smcfg.submoduleName}" />
-           </f:entry>
-           
-           <f:entry title="Matching Branches">
-            <f:textbox name="git.submodule.match" value="${smcfg.branchesString}" />
-           </f:entry>
-           
-          
-           <f:entry>
-            <div align="right">
-                <input type="button" value="Delete" class="repeatable-delete" style="margin-left: 1em;" />
-            </div>
-          </f:entry>
-          </table>
-          
-        </f:repeatable>
-    
-  </f:entry>
-     -->
-     
-	  <f:entry title="Merge options" help="/plugin/git/merge.html">
-	  	
-		<table width="100%">
-		<f:optionalBlock field="mergeOptions"
-		                 title="${%Merge before build}">
-		 <f:entry title="Name of repository: (default first specified, e.g. origin)" field="mergeRemoteName">
-		  <f:textbox
-		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
-		                      +encodeAllInputs('&amp;', this.form, 'git.repo.name')
-		                      +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
-		 </f:entry>
-		 <f:entry title="Branch to merge to: (e.g. master)" field="mergeTarget" >
-		  <f:textbox clazz="required"/>
-		 </f:entry>
-		</f:optionalBlock>
-		</table>
-	  	
-	  </f:entry>
 
-          <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
-            <f:checkbox />
-          </f:entry>
 
-    <f:entry title="Skip internal tag" field="skipTag" help="/plugin/git/help-skipTag.html">
-      <f:checkbox />
-    </f:entry>
-    <f:entry title="Clean after checkout" field="clean" help="/plugin/git/clean.html">
-      <f:checkbox />
-    </f:entry>
-    <f:entry title="Recursively update submodules" field="recursiveSubmodules" help="/plugin/git/help-recursiveSubmodules.html">
-      <f:checkbox />
-    </f:entry>
-    <f:entry title="Use commit author in changelog" field="authorOrCommitter" help="/plugin/git/help-authorCommitter.html">
-      <f:checkbox />
-    </f:entry>
-    <f:entry title="Wipe out workspace before build" field="wipeOutWorkspace" help="/plugin/git/wipeOutWorkspace.html">
-      <f:checkbox />
-    </f:entry>
-    <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
-      <j:scope>
-        <j:set var="current" value="${instance.buildChooser}"/>
-        <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
-          <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
-            selected="${current.descriptor==descriptor or (current==null and descriptor.displayName=='Default')}">
-            <j:set var="instance" value="${current.descriptor==descriptor ? current : null}" />
-            <tr><td>
-              <input type="hidden" name="stapler-class" value="${descriptor.clazz.name}" />
-            </td></tr>
-            <st:include from="${descriptor}" page="${descriptor.configPage}" optional="true"/>
-          </f:dropdownListBlock>
-        </j:forEach>
-      </j:scope>
-    </f:dropdownList>
+    <f:advanced>
+        <f:entry title="${%Excluded Regions}" field="excludedRegions" help="/plugin/git/help-excludedRegions.html">
+            <f:textarea/>
+        </f:entry>
+        <f:entry title="${%Excluded Users}" field="excludedUsers" help="/plugin/git/help-excludedUsers.html">
+            <f:textarea/>
+        </f:entry>
+        <f:entry title="Checkout/merge to local branch (optional)" field="localBranch"
+                 help="/plugin/git/help-localBranch.html">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="Config user.name Value" field="gitConfigName">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="Config user.email Value" field="gitConfigEmail">
+            <f:textbox/>
+        </f:entry>
 
-      <f:entry title="Git executable" field="git.gitTool">
-          <select name="git.gitTool">
-              <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
-                  <j:choose>
-                      <j:when test="${scm.gitTool==gitTool.name}">
-                          <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
-                      </j:when>
-                      <j:otherwise>
-                          <option value="${gitTool.name}">${gitTool.name}</option>
-                      </j:otherwise>
-                  </j:choose>
-              </j:forEach>
-          </select>
-      </f:entry>
-  </f:advanced>
-  
-  <t:listScmBrowsers name="git.browser" />
+        <!-- This needs more thought
+     <f:entry title="Autogenerate submodule configurations">
+       <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
+       <label class="attach-previous">Generate submodule configurations</label>
+
+       <f:repeatable var="smcfg" name="smcfg" varStatus="cfgStatus" items="${scm.submoduleCfg}" noAddButton="false">
+              <table width="100%">
+              <f:entry title="Name of submodule">
+                <f:textbox name="git.submodule.name" value="${smcfg.submoduleName}" />
+              </f:entry>
+
+              <f:entry title="Matching Branches">
+               <f:textbox name="git.submodule.match" value="${smcfg.branchesString}" />
+              </f:entry>
+
+
+              <f:entry>
+               <div align="right">
+                   <input type="button" value="Delete" class="repeatable-delete" style="margin-left: 1em;" />
+               </div>
+             </f:entry>
+             </table>
+
+           </f:repeatable>
+
+     </f:entry>
+        -->
+
+
+        <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
+            <f:checkbox/>
+        </f:entry>
+
+        <f:entry title="Skip internal tag" field="skipTag" help="/plugin/git/help-skipTag.html">
+            <f:checkbox/>
+        </f:entry>
+        <f:entry title="Clean after checkout" field="clean" help="/plugin/git/clean.html">
+            <f:checkbox/>
+        </f:entry>
+        <f:entry title="Recursively update submodules" field="recursiveSubmodules"
+                 help="/plugin/git/help-recursiveSubmodules.html">
+            <f:checkbox/>
+        </f:entry>
+        <f:entry title="Use commit author in changelog" field="authorOrCommitter"
+                 help="/plugin/git/help-authorCommitter.html">
+            <f:checkbox/>
+        </f:entry>
+        <f:entry title="Wipe out workspace before build" field="wipeOutWorkspace"
+                 help="/plugin/git/wipeOutWorkspace.html">
+            <f:checkbox/>
+        </f:entry>
+        <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
+            <j:scope>
+                <j:set var="current" value="${instance.buildChooser}"/>
+                <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
+                    <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
+                                         selected="${current.descriptor==descriptor or (current==null and descriptor.displayName=='Default')}">
+                        <j:set var="instance" value="${current.descriptor==descriptor ? current : null}"/>
+                        <tr>
+                            <td>
+                                <input type="hidden" name="stapler-class" value="${descriptor.clazz.name}"/>
+                            </td>
+                        </tr>
+                        <st:include from="${descriptor}" page="${descriptor.configPage}" optional="true"/>
+                    </f:dropdownListBlock>
+                </j:forEach>
+            </j:scope>
+        </f:dropdownList>
+
+        <f:entry title="Git executable" field="git.gitTool">
+            <select name="git.gitTool">
+                <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
+                    <j:choose>
+                        <j:when test="${scm.gitTool==gitTool.name}">
+                            <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
+                        </j:when>
+                        <j:otherwise>
+                            <option value="${gitTool.name}">${gitTool.name}</option>
+                        </j:otherwise>
+                    </j:choose>
+                </j:forEach>
+            </select>
+        </f:entry>
+    </f:advanced>
+
+    <t:listScmBrowsers name="git.browser"/>
 </j:jelly>

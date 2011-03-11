@@ -1,17 +1,17 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
 	xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-	<t:summary icon="/plugin/git/icons/git-48x48.png">
-	
- 	<b>Revision</b>: ${it.lastBuiltRevision.sha1.name()}
-        <ul>
-        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
-          <j:if test="${branch!=''}">
-            <li>${branch.name}</li>
-          </j:if>
-        </j:forEach>
-        </ul>
+    <j:if test="${it.visible}">
+        <t:summary icon="/plugin/git/icons/git-48x48.png">
 
-
-	</t:summary>
+        <b>Revision</b>: ${it.lastBuiltRevision.sha1.name()}
+            <ul>
+            <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+              <j:if test="${branch!=''}">
+                <li>${branch.name}</li>
+              </j:if>
+            </j:forEach>
+            </ul>
+        </t:summary>
+    </j:if>
 </j:jelly>

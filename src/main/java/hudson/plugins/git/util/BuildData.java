@@ -43,15 +43,40 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public Build              lastBuild;
 
+    /**
+     * Identifies the module this is for (using relativeTargetDir). Will be null for older builds (before multiple
+     * module support)
+     */
+    private String id;
+
+    public BuildData(String id) {
+        this.id = id;
+    }
+
+    @Exported
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     * Should we display this action ? Yes for older builds, else use MultiBuildData
+     */
+    public boolean isVisible() {
+        return id == null;
+    }
 
     public String getDisplayName() {
         return "Git Build Data";
     }
     public String getIconFileName() {
-        return "/plugin/git/icons/git-32x32.png";
+        return isVisible() ? "/plugin/git/icons/git-32x32.png" : null;
     }
     public String getUrlName() {
-        return "git";
+        return isVisible() ? "git" : null;
     }
 
     public Object readResolve() {

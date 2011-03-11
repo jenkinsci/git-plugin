@@ -138,6 +138,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         final GitSCM gitSCM = (GitSCM) scm;
 
+        // GitPublisher only works on the first module for now
+        final GitSCMModule module = gitSCM.getModules().get(0);
+
         final String projectName = build.getProject().getName();
         final FilePath workspacePath = build.getWorkspace();
         final int buildNumber = build.getNumber();
@@ -170,7 +173,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
             
             final EnvVars environment = tempEnvironment;
-            final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath);
+            final FilePath workingDirectory = module.workingDirectory(workspacePath);
             
             boolean pushResult = true;
             // If we're pushing the merge back...
@@ -196,7 +199,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 
                                 git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                                 
-                                PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
+                                PreBuildMergeOptions mergeOptions = module.getMergeOptions();
                                 
                                 if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(
                                                                                             Result.SUCCESS)) {
@@ -249,7 +252,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                         IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
                                                                  listener, environment);
                                         
-                                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                                        RemoteConfig remote = module.getRepositoryByName(targetRepo);
                                         
                                         if (remote == null) {
                                             listener.getLogger().println("No repository found for target repo name " + targetRepo);
@@ -318,7 +321,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                         IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
                                                                  listener, environment);
                                         
-                                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                                        RemoteConfig remote = module.getRepositoryByName(targetRepo);
                                         
                                         if (remote == null) {
                                             listener.getLogger().println("No repository found for target repo name " + targetRepo);

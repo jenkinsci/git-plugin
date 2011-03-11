@@ -1,10 +1,9 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 	<l:layout title="Git">
 	
-	
     <l:main-panel>
-       	<h1>Git Build Data</h1>		
-       	
+       	<h1>Git Build Data</h1>
+
        	<b>Revision:</b> ${it.lastBuild.SHA1.name()}
 	<ul>
 	<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
@@ -16,7 +15,11 @@
 	<ul>
 
 	<j:forEach var="branch" items="${it.buildsByBranchName.keySet()}">
-	<li><j:choose><j:when test="${branch}==''}">(unnamed)</j:when><j:otherwise>${branch}</j:otherwise></j:choose>: ${it.buildsByBranchName.get(branch).toString()}</li>
+	<li>
+        <j:choose>
+            <j:when test="${branch}==''}">(unnamed)</j:when>
+            <j:otherwise>${branch}</j:otherwise>
+        </j:choose>: ${it.buildsByBranchName.get(branch).toString()}</li>
 	</j:forEach>
 	</ul>
 
