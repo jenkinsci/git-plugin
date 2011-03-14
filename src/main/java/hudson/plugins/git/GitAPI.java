@@ -614,12 +614,17 @@ public class GitAPI implements IGitAPI {
         if ( bi.hasNext() ) {
             // this is supposed to be a remote branch
             String b = bi.next().getName();
-            int slash = b.indexOf('/');
-
-            if ( slash == -1 )
-              throw new GitException("no remote from branch name ("+b+")");
-
-            remote = getDefaultRemote( b.substring(0,slash) );
+            if (b != null) {
+                int slash = b.indexOf('/');
+                
+                if ( slash == -1 )
+                    throw new GitException("no remote from branch name ("+b+")");
+                
+                remote = getDefaultRemote( b.substring(0,slash) );
+            }
+            else {
+                remote = getDefaultRemote();
+            }
         } else {
             remote = getDefaultRemote();
         }
