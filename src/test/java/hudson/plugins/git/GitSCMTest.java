@@ -374,6 +374,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
     }
 
+    public void testPollLocallyWithoutWorkspace() throws Exception {
+        final FreeStyleProject project = setupSimpleLocallyPolledProject("master");
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+        project.getBuildersList().add(new RemoveWorkspaceBuilder());
+        project.scheduleBuild2(0, new Cause.UserCause()).get();
+        // Must be roaming to allow hudson to indicate that a change has occured if the workspace has dissapeared
+        project.setAssignedLabel(null);
+        assertFalse("scm polling should not detect any changes even after workspace has been deleted",
+                    project.pollSCMChanges(listener));
+    }
+
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
         return setupProject(branchString, authorOrCommitter, null);
     }
@@ -389,23 +402,34 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String excludedUsers) throws Exception {
         return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null);
     }
-    
+
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir, String excludedRegions,
                                           String excludedUsers, String localBranch) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions,
+                            excludedUsers, localBranch, false, false);
+    }
+    private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
+                                          String relativeTargetDir, String excludedRegions,
+                                          String excludedUsers, String localBranch,
+                                          boolean skipTags, boolean pollLocally) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
-                excludedRegions, excludedUsers, localBranch, false, false, null, null, false, false));
+                excludedRegions, excludedUsers, localBranch, false, false, null, null, false, pollLocally));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
 
     private FreeStyleProject setupSimpleProject(String branchString) throws Exception {
         return setupProject(branchString,false);
+    }
+    
+    private FreeStyleProject setupSimpleLocallyPolledProject(String branchString) throws Exception {
+        return setupProject(branchString, false, null, null, null, null, false, true);
     }
 
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
