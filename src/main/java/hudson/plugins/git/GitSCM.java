@@ -566,8 +566,8 @@ public class GitSCM extends SCM implements Serializable {
         };
         boolean pollChangesResult;
         if (getPollLocally()) {
-            listener.getLogger().println("Performing poll on master, using dir: " + project.getRootDir().getAbsolutePath() + "/poll");
-            File pollDir = new File(project.getRootDir(), "poll");
+            listener.getLogger().println("Performing poll on master, using dir: " + project.getRootDir().getAbsolutePath() + "/git-poll-repo");
+            File pollDir = new File(project.getRootDir(), "git-poll-repo");
             IGitAPI git = new GitAPI(gitExe, new FilePath(pollDir), listener, environment);
             // This may fail when fast forward is not possible!
             updateRepo(git, getRepositories(), listener);
