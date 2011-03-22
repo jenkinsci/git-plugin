@@ -1,27 +1,40 @@
 package hudson.plugins.git;
 
-import hudson.*;
-import hudson.FilePath.FileCallable;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
-
-import hudson.model.*;
-
 import static hudson.Util.fixEmptyAndTrim;
-
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.FilePath.FileCallable;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.matrix.MatrixRun;
+import hudson.matrix.MatrixBuild;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.ParametersAction;
+import hudson.model.Run;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-
-import hudson.plugins.git.util.*;
 import hudson.plugins.git.util.Build;
-
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
+import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
-import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.scm.SCM;
 import hudson.util.FormValidation;
 
 import java.io.ByteArrayOutputStream;
@@ -30,7 +43,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -128,6 +147,11 @@ public class GitSCM extends SCM implements Serializable {
 
     private boolean skipTag;
     
+    /**
+     * Use local config dir for polling, useful when slaves dies easily, also allows polling without workspace.
+     */
+    private boolean pollLocally;
+
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -148,7 +172,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collections.singletonList(new BranchSpec("")),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false, 
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false, null, null, false);
+                null, null, null, false, false, null, null, false, false);
     }
 
     @DataBoundConstructor
@@ -171,7 +195,8 @@ public class GitSCM extends SCM implements Serializable {
                   boolean pruneBranches,
                   String gitConfigName,
                   String gitConfigEmail,
-                  boolean skipTag) {
+                  boolean skipTag,
+                  boolean pollLocally) {
 
         // normalization
         this.branches = branches;
@@ -199,6 +224,7 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
+        this.pollLocally = pollLocally;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -341,7 +367,11 @@ public class GitSCM extends SCM implements Serializable {
     public boolean getSkipTag() {
         return this.skipTag;
     }
-    
+
+    public boolean getPollLocally() {
+        return this.pollLocally;
+    }
+
     public boolean getPruneBranches() {
         return this.pruneBranches;
     }
@@ -466,18 +496,22 @@ public class GitSCM extends SCM implements Serializable {
         
         final String gitExe;
         {
-            //If this project is tied onto a node, it's built always there. On other cases,
-            //polling is done on the node which did the last build.
-            //
-            Label label = project.getAssignedLabel();
-            if (label != null && label.isSelfLabel()) {
-                if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
-                    listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
-                    return PollingResult.BUILD_NOW;
-                }
-                gitExe = getGitExe(label.getNodes().iterator().next(), listener);
+            //If this project is polled locally, use local git exe. 
+            //If this project is tied onto a node, it's built always there.
+            // On other cases, polling is done on the node which did the last build
+            if (getPollLocally()) {
+                gitExe = getGitExe(Hudson.getInstance(), listener);
             } else {
-                gitExe = getGitExe(project.getLastBuiltOn(), listener);
+                Label label = project.getAssignedLabel();
+                if (label != null && label.isSelfLabel()) {
+                    if(label.getNodes().iterator().next() != project.getLastBuiltOn()) {
+                        listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
+                        return PollingResult.BUILD_NOW;
+                    }
+                    gitExe = getGitExe(label.getNodes().iterator().next(), listener);
+                } else {
+                    gitExe = getGitExe(project.getLastBuiltOn(), listener);
+                }
             }
         }
 
@@ -487,7 +521,8 @@ public class GitSCM extends SCM implements Serializable {
         // I'm actually not 100% sure about this, but I'll leave it in for now.
         // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
         // for whether we'd ever been built before. But I'm fixing that right now anyway.
-        if (!workingDirectory.exists()) {
+        // Nb this will never be true unless SCM.requiresWorkspaceForPolling returns false
+        if (!getPollLocally() && (workingDirectory == null || !workingDirectory.exists())) {
             return PollingResult.BUILD_NOW;
         }
 
@@ -495,41 +530,51 @@ public class GitSCM extends SCM implements Serializable {
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
         final String singleBranch = getSingleBranch(lastBuild);
 
-        boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
-                private static final long serialVersionUID = 1L;
-                public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+        FileCallable<Boolean> doPoll = new FileCallable<Boolean>() {
+            private static final long serialVersionUID = 1L;
+            public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
+                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
-                    if (git.hasGitRepo()) {
-                        // Repo is there - do a fetch
-                        listener.getLogger().println("Fetching changes from the remote Git repositories");
+                if (git.hasGitRepo()) {
+                    // Repo is there - do a fetch
+                    listener.getLogger().println("Fetching changes from the remote Git repositories");
 
-                        // Fetch updates
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchFrom(git, listener, remoteRepository);
-                        }
-
-                        listener.getLogger().println("Polling for changes in");
-
-                        Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
-                                true, singleBranch, git, listener, buildData);
-
-                        List<Revision> candidates = new ArrayList<Revision>();
-                        
-                        for (Revision c : origCandidates) {
-                            if (!isRevExcluded(git, c, listener)) {
-                                candidates.add(c);
-                            }
-                        }
-                        
-                        return (candidates.size() > 0);
-                    } else {
-                        listener.getLogger().println("No Git repository yet, an initial checkout is required");
-                        return true;
+                    // Fetch updates
+                    for (RemoteConfig remoteRepository : paramRepos) {
+                        fetchFrom(git, listener, remoteRepository);
                     }
-                }
-            });
 
+                    listener.getLogger().println("Polling for changes in");
+
+                    Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
+                                                                                             true, singleBranch, git, listener, buildData);
+
+                    List<Revision> candidates = new ArrayList<Revision>();
+
+                    for (Revision c : origCandidates) {
+                        if (!isRevExcluded(git, c, listener)) {
+                            candidates.add(c);
+                        }
+                    }
+
+                    return (candidates.size() > 0);
+                } else {
+                    listener.getLogger().println("No Git repository yet, an initial checkout is required");
+                    return true;
+                }
+            }
+        };
+        boolean pollChangesResult;
+        if (getPollLocally()) {
+            listener.getLogger().println("Performing poll on master, using dir: " + project.getRootDir().getAbsolutePath() + "/poll");
+            File pollDir = new File(project.getRootDir(), "poll");
+            IGitAPI git = new GitAPI(gitExe, new FilePath(pollDir), listener, environment);
+            // This may fail when fast forward is not possible!
+            updateRepo(git, getRepositories(), listener);
+            pollChangesResult = doPoll.invoke(pollDir, null);
+        } else {
+            pollChangesResult = workingDirectory.act(doPoll);
+        }
         return pollChangesResult ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
     }
 
@@ -716,6 +761,7 @@ public class GitSCM extends SCM implements Serializable {
      */
     public String getGitExe(Node builtOn, TaskListener listener) {
         GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+
         for(GitTool t : gitToolInstallations) {
             //If gitTool is null, use first one.
             if(gitTool == null) {
@@ -736,6 +782,11 @@ public class GitSCM extends SCM implements Serializable {
             }
         }
         return null;
+    }
+
+    public boolean requiresWorkspaceForPolling()
+    {
+        return !getPollLocally();
     }
 
     /**
@@ -826,90 +877,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
                     }
                     
-                    if (git.hasGitRepo()) {
-                        // It's an update
-
-                        // Do we want to prune first?
-                        if (pruneBranches) {
-                            listener.getLogger().println("Pruning obsolete local branches");
-                            for (RemoteConfig remoteRepository : paramRepos) {
-                                git.prune(remoteRepository);
-                            }
-                        }
-
-                        listener.getLogger().println("Fetching changes from the remote Git repository");
-
-                        boolean fetched = false;
-                        
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            if ( fetchFrom(git, listener, remoteRepository) ) {
-                                fetched = true;
-                            }
-                        }
-
-                        if (!fetched) {
-                            listener.error("Could not fetch from any repository");
-                            throw new GitException("Could not fetch from any repository");
-                        }
-
-                    } else {
-                        
-                        listener.getLogger().println("Cloning the remote Git repository");
-
-                        // Go through the repositories, trying to clone from one
-                        //
-                        boolean successfullyCloned = false;
-                        for(RemoteConfig rc : paramRepos) {
-                            try {
-                                git.clone(rc);
-                                successfullyCloned = true;
-                                break;
-                            }
-                            catch(GitException ex) {
-                                listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage());
-                                if(ex.getCause() != null) {
-                                    listener.error("Cause: %s", ex.getCause().getMessage());
-                                }
-                                // Failed. Try the next one
-                                listener.getLogger().println("Trying next repository");
-                            }
-                        }
-
-                        if(!successfullyCloned) {
-                            listener.error("Could not clone repository");
-                            throw new GitException("Could not clone");
-                        }
-
-                        boolean fetched = false;
-                        
-                        // Also do a fetch
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            try {
-                                git.fetch(remoteRepository);
-                                fetched = true;
-                            } catch (Exception e) {
-                                listener.error(
-                                               "Problem fetching from " + remoteRepository.getName()
-                                               + " / " + remoteRepository.getName()
-                                               + " - could be unavailable. Continuing anyway");
-                                
-                            } 
-                        }
-
-                        if (!fetched) {
-                            listener.error("Could not fetch from any repository");
-                            throw new GitException("Could not fetch from any repository");
-                        }
-
-                        if (getClean()) {
-                            listener.getLogger().println("Cleaning workspace");
-                            git.clean();
-                            
-                            if (git.hasGitModules()) {
-                                git.submoduleClean(recursiveSubmodules);
-                            }
-                        }
-                    }
+                    updateRepo(git, paramRepos, listener);
 
                     if (parentLastBuiltRev != null)
                         return parentLastBuiltRev;
@@ -1086,6 +1054,92 @@ public class GitSCM extends SCM implements Serializable {
 
     }
 
+    private void updateRepo(IGitAPI git, final List<RemoteConfig> paramRepos, final TaskListener listener)
+    {
+        if (git.hasGitRepo()) {
+            // It's an update
+
+            // Do we want to prune first?
+            if (pruneBranches) {
+                listener.getLogger().println("Pruning obsolete local branches");
+                for (RemoteConfig remoteRepository : paramRepos) {
+                    git.prune(remoteRepository);
+                }
+            }
+
+            listener.getLogger().println("Fetching changes from the remote Git repository");
+
+            boolean fetched = false;
+
+            for (RemoteConfig remoteRepository : paramRepos) {
+                if ( fetchFrom(git, listener, remoteRepository) ) {
+                    fetched = true;
+                }
+            }
+
+            if (!fetched) {
+                listener.error("Could not fetch from any repository");
+                throw new GitException("Could not fetch from any repository");
+            }
+
+        } else {
+            listener.getLogger().println("Cloning the remote Git repository");
+
+            // Go through the repositories, trying to clone from one
+            //
+            boolean successfullyCloned = false;
+            for(RemoteConfig rc : paramRepos) {
+                try {
+                    git.clone(rc);
+                    successfullyCloned = true;
+                    break;
+                }
+                catch(GitException ex) {
+                    listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage());
+                    ex.printStackTrace();
+                    if(ex.getCause() != null) {
+                        listener.error("Cause: %s", ex.getCause().getMessage());
+                    }
+                    // Failed. Try the next one
+                    listener.getLogger().println("Trying next repository");
+                }
+            }
+
+            if(!successfullyCloned) {
+                listener.error("Could not clone repository");
+                throw new GitException("Could not clone");
+            }
+
+            boolean fetched = false;
+            // Also do a fetch
+            for (RemoteConfig remoteRepository : paramRepos) {
+                try {
+                    git.fetch(remoteRepository);
+                    fetched = true;
+                } catch (Exception e) {
+                    listener.error(
+                                   "Problem fetching from " + remoteRepository.getName()
+                                   + " / " + remoteRepository.getName()
+                                   + " - could be unavailable. Continuing anyway");
+                }
+            }
+
+            if (!fetched) {
+                listener.error("Could not fetch from any repository");
+                throw new GitException("Could not fetch from any repository");
+            }
+
+            if (getClean()) {
+                listener.getLogger().println("Cleaning workspace");
+                git.clean();
+
+                if (git.hasGitModules()) {
+                    git.submoduleClean(recursiveSubmodules);
+                }
+            }
+        }
+    }
+
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}
      *
@@ -1260,7 +1314,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.pruneBranches") != null,
                               req.getParameter("git.gitConfigName"),
                               req.getParameter("git.gitConfigEmail"),
-                              req.getParameter("git.skipTag") != null);
+                              req.getParameter("git.skipTag") != null,
+                              req.getParameter("git.pollLocally") != null);
         }
         
         /**

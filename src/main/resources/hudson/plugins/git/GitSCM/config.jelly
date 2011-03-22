@@ -115,6 +115,10 @@
   </f:entry>
      -->
      
+     <f:entry title="Perform Poll On Master">
+       <f:checkbox name="git.pollLocally" checked="${scm.pollLocally}" />
+     </f:entry>
+
 	  <f:entry title="Merge options" help="/plugin/git/merge.html">
 	  	
 		<table width="100%">
