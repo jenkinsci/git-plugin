@@ -1,30 +1,22 @@
 package hudson.plugins.git;
 
-import hudson.BulkChange;
 import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
+import hudson.model.Result;
+import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
-import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.User;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
-import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
-import hudson.util.StreamTaskListener;
-import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
-import org.jvnet.hudson.test.HudsonTestCase;
-import org.spearce.jgit.lib.PersonIdent;
-import org.spearce.jgit.transport.RemoteConfig;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
+
+import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
 /**
  * Tests for {@link GitSCM}.

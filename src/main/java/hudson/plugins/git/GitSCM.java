@@ -478,7 +478,7 @@ public class GitSCM extends SCM implements Serializable {
 
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final AbstractBuild lastBuild = project.getLastBuild();
+        final AbstractBuild<?, ?> lastBuild = project.getLastBuild();
 
         if(lastBuild != null) {
             listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber());
@@ -578,38 +578,8 @@ public class GitSCM extends SCM implements Serializable {
         return pollChangesResult ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
     }
 
-
     private BuildData fixNull(BuildData bd) {
         return bd!=null ? bd : new BuildData() /*dummy*/;
-    }
-
-    
-    private void cleanSubmodules(IGitAPI parentGit,
-                                 File workspace,
-                                 TaskListener listener,
-                                 RemoteConfig remoteRepository) {
-        
-        List<IndexEntry> submodules = parentGit.getSubmodules("HEAD");
-        
-        for (IndexEntry submodule : submodules) {
-            try {
-                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(parentGit, remoteRepository, submodule.getFile());
-                File subdir = new File(workspace, submodule.getFile());
-                listener.getLogger().println("Trying to clean submodule in " + subdir);
-                IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
-                                            listener, parentGit.getEnvironment());
-                
-                subGit.clean();
-            } catch (Exception ex) {
-                listener
-                    .getLogger()
-                    .println(
-                                 "Problem cleaning submodule in "
-                                 + submodule.getFile()
-                                 + " - could be unavailable. Continuing anyway");
-            }
-            
-        }
     }
 
     /**
@@ -798,7 +768,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     @Override
-    public boolean checkout(final AbstractBuild build, Launcher launcher,
+    public boolean checkout(final AbstractBuild<?, ?> build, Launcher launcher,
                             final FilePath workspace, final BuildListener listener, File changelogFile)
         throws IOException, InterruptedException {
         Object[] returnData; // Changelog, BuildData
@@ -1287,9 +1257,6 @@ public class GitSCM extends SCM implements Serializable {
                                                                    req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"), 
                                                                    remoteRepositories);
 
-
-            String[] urls = req.getParameterValues("git.repo.url");
-            String[] names = req.getParameterValues("git.repo.name");
             Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
 
             final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
@@ -1496,7 +1463,7 @@ public class GitSCM extends SCM implements Serializable {
      * @param clone
      * @return the last recorded build data
      */
-    public BuildData getBuildData(Run build, boolean clone) {
+    public BuildData getBuildData(Run<?, ?> build, boolean clone) {
         BuildData buildData = null;
         while (build != null) {
             buildData = build.getAction(BuildData.class);

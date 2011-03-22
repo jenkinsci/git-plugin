@@ -24,11 +24,11 @@
 package hudson.plugins.git;
 
 import hudson.model.InvisibleAction;
-import org.spearce.jgit.lib.ObjectId;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.logging.Logger;
+
+import org.spearce.jgit.lib.ObjectId;
 
 /**
  * Used as a build parameter to specify the revision to be built.

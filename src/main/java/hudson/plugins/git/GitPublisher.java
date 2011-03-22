@@ -430,7 +430,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             return targetRepoName;
         }
 
-        public void setTargetRepoName() {
+        public void setTargetRepoName(String targetRepoName) {
             this.targetRepoName = targetRepoName;
         }
     }

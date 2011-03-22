@@ -1,8 +1,8 @@
 package hudson.plugins.git.util;
 
-import hudson.Util;
-import hudson.model.AbstractBuild;
+import static hudson.Util.fixNull;
 import hudson.model.Action;
+import hudson.model.AbstractBuild;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
@@ -15,8 +15,6 @@ import java.util.Map;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.spearce.jgit.lib.ObjectId;
-
-import static hudson.Util.fixNull;
 
 /**
  * Captures the Git related information for a build.

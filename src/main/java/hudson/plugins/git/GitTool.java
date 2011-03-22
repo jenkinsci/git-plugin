@@ -4,27 +4,29 @@ import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentSpecific;
+import hudson.model.TaskListener;
 import hudson.model.Hudson;
 import hudson.model.Node;
-import hudson.model.TaskListener;
-import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
+import hudson.scm.SCM;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
-import hudson.tools.ToolInstallation;
 import hudson.tools.ToolProperty;
+import hudson.tools.ToolInstallation;
 import hudson.util.FormValidation;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import javax.servlet.ServletException;
+
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 
 /**

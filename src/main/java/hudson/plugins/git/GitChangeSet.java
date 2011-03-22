@@ -1,19 +1,13 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmpty;
-
 import hudson.MarkupText;
-import hudson.Util;
-import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
-
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -24,6 +18,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * Represents a change set.

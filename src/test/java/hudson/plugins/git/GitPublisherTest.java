@@ -28,17 +28,17 @@ import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
-import hudson.model.Result;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
-import org.jvnet.hudson.test.Bug;
 
 import java.util.Collections;
+
+import org.jvnet.hudson.test.Bug;
 
 /**
  * Tests for {@link GitPublisher}
