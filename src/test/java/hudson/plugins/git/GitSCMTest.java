@@ -306,6 +306,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
 
+        // Try again. The first build will leave the repository in a bad state because we
+        // cloned something without even a HEAD - which will mean it will want to re-clone once there is some
+        // actual data.
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
         //now create and checkout a new branch:
         final String tmpBranch = "tmp";
         git.branch(tmpBranch);

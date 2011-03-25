@@ -80,7 +80,23 @@ public class GitAPI implements IGitAPI {
     }
 
     public boolean hasGitRepo() throws GitException {
-        return hasGitRepo(".git");
+        if( hasGitRepo(".git") )
+        {
+            // Check if this is actually a valid git repo by parsing the HEAD revision. If it's duff, this will
+            // fail.
+            try
+            {
+                validateRevision("HEAD");
+            }
+            catch(Exception ex)
+            {
+                listener.getLogger().println("Workspace has a .git repository, but it appears to be corrupt.");
+                return false;
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public boolean hasGitRepo( String GIT_DIR ) throws GitException {
@@ -201,6 +217,11 @@ public class GitAPI implements IGitAPI {
 
     public ObjectId revParse(String revName) throws GitException {
         String result = launchCommand("rev-parse", revName);
+        return ObjectId.fromString(firstLine(result).trim());
+    }
+
+    public ObjectId validateRevision(String revName) throws GitException {
+        String result = launchCommand("rev-parse", "--verify", revName);
         return ObjectId.fromString(firstLine(result).trim());
     }
 
