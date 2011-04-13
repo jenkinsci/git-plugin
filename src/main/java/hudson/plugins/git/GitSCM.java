@@ -1136,7 +1136,7 @@ public class GitSCM extends SCM implements Serializable {
             env.put(GIT_BRANCH, branch);
         }
         BuildData bd = fixNull(getBuildData(build, false));
-        if (bd != null) {
+        if ((bd != null) && (bd.getLastBuiltRevision() != null)) {
             String commit = bd.getLastBuiltRevision().getSha1String();
             if (commit != null) {
                 env.put(GIT_COMMIT, commit);
