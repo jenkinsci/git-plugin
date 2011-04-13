@@ -183,6 +183,7 @@ public class GitAPI implements IGitAPI {
                                          VirtualChannel channel) throws IOException {
                         final ArgumentListBuilder args = new ArgumentListBuilder();
                         args.add("clone");
+                        args.add("--progress");
                         args.add("-o", remoteConfig.getName());
                         args.add(source);
                         args.add(workspace.getAbsolutePath());
