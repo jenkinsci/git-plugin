@@ -930,7 +930,7 @@ public class GitSCM extends SCM implements Serializable {
         if(revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
-            listener.error("Nothing to do");
+            listener.error("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
             return false;
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
