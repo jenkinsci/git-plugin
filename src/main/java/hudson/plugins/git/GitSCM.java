@@ -434,6 +434,11 @@ public class GitSCM extends SCM implements Serializable {
         ParametersAction parameters = build.getAction(ParametersAction.class);
         if (parameters != null)
             branch = parameters.substitute(build, branch);
+
+        // Check for empty string - replace with "**" when seen.
+        if (branch.equals("")) 
+            branch = "**";
+            
         return branch;
     }
 
