@@ -81,10 +81,10 @@
       <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
     </f:entry>
     <f:entry title="Config user.name Value" field="gitConfigName">
-      <f:textbox />
+      <f:textbox name="git.gitConfigName" value="${scm.gitConfigName}" />
     </f:entry>
     <f:entry title="Config user.email Value" field="gitConfigEmail">
-      <f:textbox />
+      <f:textbox name="git.gitConfigEmail" value="${scm.gitConfigEmail}" />
     </f:entry>
     
     <!-- This needs more thought

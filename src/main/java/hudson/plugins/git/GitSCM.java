@@ -1209,11 +1209,19 @@ public class GitSCM extends SCM implements Serializable {
             return globalConfigName;
         }
 
+        public void setGlobalConfigName(String globalConfigName) {
+            this.globalConfigName = globalConfigName;
+        }
+        
         /**
          * Global setting to be used in call to "git config user.email".
          */
         public String getGlobalConfigEmail() {
             return globalConfigEmail;
+        }
+
+        public void setGlobalConfigEmail(String globalConfigEmail) {
+            this.globalConfigEmail = globalConfigEmail;
         }
 
         /**
