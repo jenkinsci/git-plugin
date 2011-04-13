@@ -230,8 +230,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             throw new RuntimeException("No author in this changeset!");
         }
 
-        User user = User.get(csAuthor, true);
+        User user = User.get(csAuthor, false);
 
+        if (user == null) 
+            user = User.get(csAuthorEmail.split("@")[0], true);
+    
         // set email address for user if needed
         if (fixEmpty(csAuthorEmail) != null) {
             try {
