@@ -368,8 +368,8 @@ public class GitSCM extends SCM implements Serializable {
         List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
-            expandedRepos.add(newRemoteConfig(oldRepo.getName(),
-                                              oldRepo.getURIs().get(0).toPrivateString(),
+            expandedRepos.add(newRemoteConfig(getParameterString(oldRepo.getName(), build),
+                                              getParameterString(oldRepo.getURIs().get(0).toPrivateString(), build),
                                               new RefSpec(getRefSpec(oldRepo, build))));
         }
 
@@ -397,14 +397,18 @@ public class GitSCM extends SCM implements Serializable {
         return gitTool;
     }
 
+    private String getParameterString(String original, AbstractBuild<?,?> build) {
+        ParametersAction parameters = build.getAction(ParametersAction.class);
+        if (parameters != null)
+            original = parameters.substitute(build, original);
+
+        return original;
+    }
+    
     private String getRefSpec(RemoteConfig repo, AbstractBuild<?,?> build) {
         String refSpec = repo.getFetchRefSpecs().get(0).toString();
 
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null)
-            refSpec = parameters.substitute(build, refSpec);
-
-        return refSpec;
+        return getParameterString(refSpec, build);
     }
 
     /**
@@ -431,9 +435,7 @@ public class GitSCM extends SCM implements Serializable {
             return null;
 
         // substitute build parameters if available
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null)
-            branch = parameters.substitute(build, branch);
+        branch = getParameterString(branch, build);
 
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) 
@@ -1503,10 +1505,7 @@ public class GitSCM extends SCM implements Serializable {
     public String getParamLocalBranch(AbstractBuild<?,?> build) {
         String branch = getLocalBranch();
         // substitute build parameters if available
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null)
-            branch = parameters.substitute(build, branch);
-        return branch;
+        return getParameterString(branch, build);
     }
     
     public String getRelativeTargetDir() {
