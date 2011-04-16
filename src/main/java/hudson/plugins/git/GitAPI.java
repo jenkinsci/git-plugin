@@ -80,7 +80,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public boolean hasGitRepo() throws GitException {
-fieldfieldfield        return hasGitRepo(".git");
+        return hasGitRepo(".git");
     }
 
     public boolean hasGitRepo( String GIT_DIR ) throws GitException {
