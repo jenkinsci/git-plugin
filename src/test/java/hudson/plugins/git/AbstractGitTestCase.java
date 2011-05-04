@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.model.User;
 import hudson.util.StreamTaskListener;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.spearce.jgit.lib.PersonIdent;
@@ -33,6 +34,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         workDir = createTmpDir();
         listener = new StreamTaskListener();
         envVars = new EnvVars();
+        User u1 = User.get(johnDoe.getName(), true);
+        User u2 = User.get(janeDoe.getName(), true);
         setAuthor(johnDoe);
         setCommitter(johnDoe);
         workspace = new FilePath(workDir);
