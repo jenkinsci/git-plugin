@@ -99,6 +99,8 @@ public class GitSCM extends SCM implements Serializable {
     private boolean wipeOutWorkspace;
     
     private boolean pruneBranches;
+
+    private boolean shared;
     
     /**
      * @deprecated
@@ -148,7 +150,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collections.singletonList(new BranchSpec("")),
                 new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false, 
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false, null, null, false);
+                null, null, null, false, false, null, null, false, false);
     }
 
     @DataBoundConstructor
@@ -171,7 +173,8 @@ public class GitSCM extends SCM implements Serializable {
                   boolean pruneBranches,
                   String gitConfigName,
                   String gitConfigEmail,
-                  boolean skipTag) {
+                  boolean skipTag,
+		  boolean shared) {
 
         // normalization
         this.branches = branches;
@@ -184,7 +187,7 @@ public class GitSCM extends SCM implements Serializable {
 
         this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
         this.submoduleCfg = submoduleCfg;
-
+	this.shared = shared;
         this.clean = clean;
         this.wipeOutWorkspace = wipeOutWorkspace;
         this.configVersion = 1L;
@@ -340,6 +343,10 @@ public class GitSCM extends SCM implements Serializable {
 
     public boolean getSkipTag() {
         return this.skipTag;
+    }
+
+    public boolean getShared() {
+        return this.shared;
     }
     
     public boolean getPruneBranches() {
@@ -869,7 +876,7 @@ public class GitSCM extends SCM implements Serializable {
                         boolean successfullyCloned = false;
                         for(RemoteConfig rc : paramRepos) {
                             try {
-                                git.clone(rc);
+                                git.clone(rc, getShared());
                                 successfullyCloned = true;
                                 break;
                             }
@@ -1284,7 +1291,8 @@ public class GitSCM extends SCM implements Serializable {
                               req.getParameter("git.pruneBranches") != null,
                               req.getParameter("git.gitConfigName"),
                               req.getParameter("git.gitConfigEmail"),
-                              req.getParameter("git.skipTag") != null);
+                              req.getParameter("git.skipTag") != null,
+			       req.getParameter("git.shared") != null);
         }
         
         /**

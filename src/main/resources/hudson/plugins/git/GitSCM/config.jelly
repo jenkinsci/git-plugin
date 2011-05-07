@@ -154,6 +154,9 @@
     <f:entry title="Wipe out workspace before build" help="/plugin/git/wipeOutWorkspace.html">
       <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}"/>
     </f:entry>
+    <f:entry title="Use shared option during clone" help="/plugin/git/shared.html">
+      <f:checkbox name="git.shared" checked="${scm.shared}"/>
+    </f:entry>
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
       <j:scope>
         <j:set var="current" value="${instance.buildChooser}"/>

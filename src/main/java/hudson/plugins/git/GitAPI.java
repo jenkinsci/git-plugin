@@ -176,7 +176,7 @@ public class GitAPI implements IGitAPI {
      * @param remoteConfig remote config
      * @throws GitException if deleting or cloning the workspace fails
      */
-    public void clone(final RemoteConfig remoteConfig) throws GitException {
+    public void clone(final RemoteConfig remoteConfig, final boolean shared) throws GitException {
         listener.getLogger().println("Cloning repository " + remoteConfig.getName());
 
         // TODO: Not here!
@@ -200,6 +200,10 @@ public class GitAPI implements IGitAPI {
                         final ArgumentListBuilder args = new ArgumentListBuilder();
                         args.add("clone");
                         args.add("--progress");
+                        if (shared)
+                        {
+                          args.add("--shared");
+                        }
                         args.add("-o", remoteConfig.getName());
                         args.add(source);
                         args.add(workspace.getAbsolutePath());
