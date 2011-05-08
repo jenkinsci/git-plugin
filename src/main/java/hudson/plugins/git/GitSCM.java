@@ -8,6 +8,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 
 import static hudson.Util.fixEmptyAndTrim;
+import hudson.model.Descriptor.FormException;
 
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
@@ -42,6 +43,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
 import org.spearce.jgit.lib.ObjectId;
 import org.spearce.jgit.lib.RepositoryConfig;
 import org.spearce.jgit.transport.RefSpec;
@@ -69,7 +71,8 @@ public class GitSCM extends SCM implements Serializable {
     /**
      * All the remote repositories that we know about.
      */
-    private List<RemoteConfig> remoteRepositories;
+    private List<UserRemoteConfig> userRemoteConfigs;
+    private transient List<RemoteConfig> remoteRepositories;
     /**
      * All the branches that we wish to care about building.
      */
@@ -81,7 +84,8 @@ public class GitSCM extends SCM implements Serializable {
     /**
      * Options for merging before a build.
      */
-    private PreBuildMergeOptions mergeOptions;
+    private UserMergeOptions userMergeOptions;
+    private transient PreBuildMergeOptions mergeOptions;
     /**
      * Use --recursive flag on submodule commands - requires git>=1.6.5
      */
@@ -117,27 +121,34 @@ public class GitSCM extends SCM implements Serializable {
         this.submoduleCfg = submoduleCfg;
     }
 
+    static private List<UserRemoteConfig> createRepoList(String url) {
+        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        repoList.add(new UserRemoteConfig(url, null, null));
+        return repoList;
+    }
+
     /**
      * A convenience constructor that sets everything to default.
      *
      * @param repositoryUrl
      *      Repository URL to clone from.
      */
-    public GitSCM(String repositoryUrl) throws IOException {
+    public GitSCM(String repositoryUrl) {
         this(
-                DescriptorImpl.createRepositoryConfigurations(new String[]{repositoryUrl}, new String[]{null}, new String[]{null}),
+                createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
-                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                null,
+                false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null, null, null, false, false, null, null, false);
     }
 
     @DataBoundConstructor
     public GitSCM(
-            List<RemoteConfig> repositories,
+            List<UserRemoteConfig> repo,
             List<BranchSpec> branches,
-            PreBuildMergeOptions mergeOptions,
-            boolean doGenerateSubmoduleConfigurations,
+            UserMergeOptions doMerge,
+            Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
             boolean clean,
             boolean wipeOutWorkspace,
@@ -154,21 +165,39 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigEmail,
             boolean skipTag) {
 
-        // normalization
+        // moved from createBranches
+        if (branches == null) {
+            branches = new ArrayList<BranchSpec>();
+        }
+        if (branches.isEmpty()) {
+            branches.add(new BranchSpec("*/master"));
+        }
         this.branches = branches;
 
         this.localBranch = Util.fixEmptyAndTrim(localBranch);
-        this.remoteRepositories = repositories;
+
+        this.userRemoteConfigs = repo;
+        this.userMergeOptions = doMerge;
+        updateFromUserData();
+
+        // TODO: getBrowserFromRequest
         this.browser = browser;
 
-        this.mergeOptions = mergeOptions;
+        // emulate bindJSON behavior here
+        if (doGenerateSubmoduleConfigurations != null) {
+            this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations.booleanValue();
+        } else {
+            this.doGenerateSubmoduleConfigurations = false;
+        }
 
-        this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
+        if (submoduleCfg == null) {
+            submoduleCfg = new ArrayList<SubmoduleConfig>();
+        }
         this.submoduleCfg = submoduleCfg;
 
         this.clean = clean;
         this.wipeOutWorkspace = wipeOutWorkspace;
-        this.configVersion = 1L;
+        this.configVersion = 2L;
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
@@ -181,6 +210,36 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
         buildChooser.gitSCM = this; // set the owner
+    }
+
+    private void updateFromUserData() throws GitException {
+        // do what newInstance used to do directly from the request data
+        try {
+            String[] pUrls = new String[userRemoteConfigs.size()];
+            String[] repoNames = new String[userRemoteConfigs.size()];
+            String[] refSpecs = new String[userRemoteConfigs.size()];
+            for (int i = 0; i < userRemoteConfigs.size(); ++i) {
+                pUrls[i] = userRemoteConfigs.get(i).getUrl();
+                repoNames[i] = userRemoteConfigs.get(i).getName();
+                refSpecs[i] = userRemoteConfigs.get(i).getRefspec();
+            }
+            this.remoteRepositories = DescriptorImpl.createRepositoryConfigurations(pUrls, repoNames, refSpecs);
+
+            // TODO: replace with new repositories
+        } catch (IOException e1) {
+            throw new GitException("Error creating repositories", e1);
+        }
+
+        try {
+            this.mergeOptions = DescriptorImpl.createMergeOptions(userMergeOptions, remoteRepositories);
+
+            // replace with new merge options
+            if (userMergeOptions != null) {
+                this.userMergeOptions = new UserMergeOptions(userMergeOptions.getMergeRemote(), userMergeOptions.getMergeTarget());
+            }
+        } catch (FormException ex) {
+            throw new GitException("Error creating JGit merge options", ex);
+        }
     }
 
     public Object readResolve() {
@@ -216,6 +275,43 @@ public class GitSCM extends SCM implements Serializable {
                 String name = branchSpec.getName();
                 name = name.replace("*", "**");
                 branchSpec.setName(name);
+            }
+        }
+
+        // update from version 1
+        if (mergeOptions != null && userMergeOptions == null) {
+            // update from version 1
+            if (mergeOptions.doMerge()) {
+                userMergeOptions = new UserMergeOptions(mergeOptions.getRemoteBranchName(),
+                        mergeOptions.getMergeTarget());
+            }
+        }
+
+        if (remoteRepositories != null && userRemoteConfigs == null) {
+            userRemoteConfigs = new ArrayList<UserRemoteConfig>();
+            for(RemoteConfig cfg : remoteRepositories) {
+                // converted as in config.jelly
+                String url = "";
+                if (cfg.getURIs().size() > 0 && cfg.getURIs().get(0) != null)
+                    url = cfg.getURIs().get(0).toPrivateString();
+
+                String refspec = "";
+                if (cfg.getFetchRefSpecs().size() > 0 && cfg.getFetchRefSpecs().get(0) != null)
+                    refspec = cfg.getFetchRefSpecs().get(0).toString();
+
+                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec));
+            }
+        }
+
+        // patch internal objects from user data
+        // if (configVersion == 2) {
+        if (remoteRepositories == null || mergeOptions == null) {
+            // if we don't catch GitException here, the whole job fails to load
+            try {
+                updateFromUserData();
+            } catch (GitException e) {
+                LOGGER.log(Level.WARNING, "Failed to load SCM data", e);
+                mergeOptions = new PreBuildMergeOptions();
             }
         }
 
@@ -371,6 +467,7 @@ public class GitSCM extends SCM implements Serializable {
         return null;
     }
 
+    @Exported
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
@@ -1233,21 +1330,24 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return super.newInstance(req, formData);
+            /*
             List<RemoteConfig> remoteRepositories;
             try {
-                remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
-                        req.getParameterValues("git.repo.name"),
-                        req.getParameterValues("git.repo.refspec"));
-            } catch (IOException e1) {
-                throw new GitException("Error creating repositories", e1);
+            remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
+            req.getParameterValues("git.repo.name"),
+            req.getParameterValues("git.repo.refspec"));
+            }
+            catch (IOException e1) {
+            throw new GitException("Error creating repositories", e1);
             }
             List<BranchSpec> branches = createBranches(req.getParameterValues("git.branch"));
 
             // Make up a repo config from the request parameters
 
             PreBuildMergeOptions mergeOptions = createMergeOptions(req.getParameter("git.doMerge"),
-                    req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"),
-                    remoteRepositories);
+            req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"),
+            remoteRepositories);
 
 
             String[] urls = req.getParameterValues("git.repo.url");
@@ -1257,26 +1357,27 @@ public class GitSCM extends SCM implements Serializable {
             final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
             String gitTool = req.getParameter("git.gitTool");
             return new GitSCM(
-                    remoteRepositories,
-                    branches,
-                    mergeOptions,
-                    req.getParameter("git.generate") != null,
-                    submoduleCfg,
-                    req.getParameter("git.clean") != null,
-                    req.getParameter("git.wipeOutWorkspace") != null,
-                    req.bindJSON(BuildChooser.class, formData.getJSONObject("buildChooser")),
-                    gitBrowser,
-                    gitTool,
-                    req.getParameter("git.authorOrCommitter") != null,
-                    req.getParameter("git.relativeTargetDir"),
-                    req.getParameter("git.excludedRegions"),
-                    req.getParameter("git.excludedUsers"),
-                    req.getParameter("git.localBranch"),
-                    req.getParameter("git.recursiveSubmodules") != null,
-                    req.getParameter("git.pruneBranches") != null,
-                    req.getParameter("git.gitConfigName"),
-                    req.getParameter("git.gitConfigEmail"),
-                    req.getParameter("git.skipTag") != null);
+            remoteRepositories,
+            branches,
+            mergeOptions,
+            req.getParameter("git.generate") != null,
+            submoduleCfg,
+            req.getParameter("git.clean") != null,
+            req.getParameter("git.wipeOutWorkspace") != null,
+            req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
+            gitBrowser,
+            gitTool,
+            req.getParameter("git.authorOrCommitter") != null,
+            req.getParameter("git.relativeTargetDir"),
+            req.getParameter("git.excludedRegions"),
+            req.getParameter("git.excludedUsers"),
+            req.getParameter("git.localBranch"),
+            req.getParameter("git.recursiveSubmodules") != null,
+            req.getParameter("git.pruneBranches") != null,
+            req.getParameter("git.gitConfigName"),
+            req.getParameter("git.gitConfigEmail"),
+            req.getParameter("git.skipTag") != null);
+             */
         }
 
         /**
@@ -1345,27 +1446,13 @@ public class GitSCM extends SCM implements Serializable {
             return remoteRepositories;
         }
 
-        public static List<BranchSpec> createBranches(String[] branch) {
-            List<BranchSpec> branches = new ArrayList<BranchSpec>();
-            String[] branchData = branch;
-            for (int i = 0; i < branchData.length; i++) {
-                branches.add(new BranchSpec(branchData[i]));
-            }
-
-            if (branches.size() == 0) {
-                branches.add(new BranchSpec("*/master"));
-            }
-            return branches;
-        }
-
-        public static PreBuildMergeOptions createMergeOptions(String doMerge, String pMergeRemote,
-                String mergeTarget,
+        public static PreBuildMergeOptions createMergeOptions(UserMergeOptions mergeOptionsBean,
                 List<RemoteConfig> remoteRepositories)
                 throws FormException {
             PreBuildMergeOptions mergeOptions = new PreBuildMergeOptions();
-            if (doMerge != null && doMerge.trim().length() > 0) {
+            if (mergeOptionsBean != null) {
                 RemoteConfig mergeRemote = null;
-                String mergeRemoteName = pMergeRemote.trim();
+                String mergeRemoteName = mergeOptionsBean.getMergeRemote().trim();
                 if (mergeRemoteName.length() == 0) {
                     mergeRemote = remoteRepositories.get(0);
                 } else {
@@ -1381,7 +1468,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
                 mergeOptions.setMergeRemote(mergeRemote);
 
-                mergeOptions.setMergeTarget(mergeTarget);
+                mergeOptions.setMergeTarget(mergeOptionsBean.getMergeTarget());
             }
 
             return mergeOptions;
@@ -1410,8 +1497,8 @@ public class GitSCM extends SCM implements Serializable {
                 return FormValidation.ok();
             }
 
-            String[] urls = req.getParameterValues("git.repo.url");
-            String[] names = req.getParameterValues("git.repo.name");
+            String[] urls = req.getParameterValues("repo.url");
+            String[] names = req.getParameterValues("repo.name");
 
             names = GitUtils.fixupNames(names, urls);
 
@@ -1441,10 +1528,12 @@ public class GitSCM extends SCM implements Serializable {
         return this.doGenerateSubmoduleConfigurations;
     }
 
+    @Exported
     public List<BranchSpec> getBranches() {
         return branches;
     }
 
+    @Exported
     public PreBuildMergeOptions getMergeOptions() {
         return mergeOptions;
     }

@@ -15,25 +15,25 @@
         return rv;
     }
     ]]></script>
-
+    
     <f:entry title="Repositories" help="/plugin/git/help.html">
         
-        <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${scm.repositories}" minimum="1" noAddButton="false">
+        <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${instance.repositories}" minimum="1" noAddButton="false">
            <table width="100%">
            
-           <f:entry title="URL of repository">
-            <f:textbox name="git.repo.url" value="${repo.URIs.get(0).toPrivateString()}" />
+           <f:entry title="URL of repository" field="url">
+            <f:textbox value="${repo.URIs.get(0).toPrivateString()}" />
            </f:entry>
            
            <f:advanced>
            
-	           <f:entry title="Name of repository (blank to create default)">
-	             <f:textbox name="git.repo.name" value="${repo.name}" />
+	           <f:entry title="Name of repository (blank to create default)" field="name">
+	             <f:textbox value="${repo.name}" />
 	           </f:entry>
 	           
 	           
-	           <f:entry title="Refspec (blank to create default)">
-	              <f:textbox name="git.repo.refspec" value="${repo.fetchRefSpecs.get(0)}" />
+	           <f:entry title="Refspec (blank to create default)" field="refspec">
+	              <f:textbox value="${repo.fetchRefSpecs.get(0)}" />
 	           </f:entry>
 	           
            </f:advanced>
@@ -49,10 +49,10 @@
    </f:entry>
   
   <f:entry title="Branches to build" help="/plugin/git/branch.html">
-  <f:repeatable var="branch" name="branch" varStatus="branchStatus" items="${scm.branches}" minimum="1" noAddButton="false">
+  <f:repeatable var="branch" name="branch" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">
            <table width="100%">
-               <f:entry title="Branch Specifier (blank for default):">
-                    <f:textbox name="git.branch" value="${branch.name}" />
+               <f:entry title="Branch Specifier (blank for default):" field="name">
+                    <f:textbox value="${branch.name}"/>
                </f:entry>
                
                <f:entry>
@@ -68,23 +68,23 @@
   </f:entry>
 
   <f:advanced>
-    <f:entry title="${%Excluded Regions}" help="/plugin/git/help-excludedRegions.html">
-        <f:textarea name="git.excludedRegions" value="${scm.excludedRegions}" />
+    <f:entry title="${%Excluded Regions}" field="excludedRegions" help="/plugin/git/help-excludedRegions.html">
+        <f:textarea />
     </f:entry>
-    <f:entry title="${%Excluded Users}" help="/plugin/git/help-excludedUsers.html">
-        <f:textarea name="git.excludedUsers" value="${scm.excludedUsers}" />
+    <f:entry title="${%Excluded Users}" field="excludedUsers" help="/plugin/git/help-excludedUsers.html">
+        <f:textarea />
     </f:entry>
-    <f:entry title="Checkout/merge to local branch (optional)" help="/plugin/git/help-localBranch.html">
-      <f:textbox name="git.localBranch" value="${scm.localBranch}" />
+    <f:entry title="Checkout/merge to local branch (optional)" field="localBranch" help="/plugin/git/help-localBranch.html">
+      <f:textbox />
     </f:entry>
-    <f:entry title="Local subdirectory for repo (optional)" help="/plugin/git/help-local.html">
-      <f:textbox name="git.relativeTargetDir" value="${scm.relativeTargetDir}" />
+    <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir" help="/plugin/git/help-local.html">
+      <f:textbox />
     </f:entry>
     <f:entry title="Config user.name Value" field="gitConfigName">
-      <f:textbox name="git.gitConfigName" value="${scm.gitConfigName}" />
+      <f:textbox />
     </f:entry>
     <f:entry title="Config user.email Value" field="gitConfigEmail">
-      <f:textbox name="git.gitConfigEmail" value="${scm.gitConfigEmail}" />
+      <f:textbox />
     </f:entry>
     
     <!-- This needs more thought
@@ -118,41 +118,42 @@
 	  <f:entry title="Merge options" help="/plugin/git/merge.html">
 	  	
 		<table width="100%">
-		<f:optionalBlock name="git.doMerge"
+		<f:optionalBlock field="doMerge"
 		                 title="${%Merge before build}"
-		                 checked="${scm.mergeOptions.doMerge()}">
-		 <f:entry title="Name of repository: (default first specified, e.g. origin)">
-		  <f:textbox id="git.mergeRemote" name="git.mergeRemote" value="${scm.mergeOptions.mergeRemote.name}"
-		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
-		                      +encodeAllInputs('&amp;', this.form, 'git.repo.name')
-		                      +encodeAllInputs('&amp;', this.form, 'git.repo.url')"/>
+		                 checked="${doMerge}">
+		 <f:entry title="Name of repository: (default first specified, e.g. origin)" field="mergeRemote">
+		  <f:textbox id="git.mergeRemote" />
+<!-- TODO add the check url. Note that we cannot rely on the repo.name tag to be at the root of the form -->
+<!--		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
+		                      +encodeAllInputs('&amp;', this.form, 'repo.name')
+		                      +encodeAllInputs('&amp;', this.form, 'repo.url')"/ -->
 		 </f:entry>
-		 <f:entry title="Branch to merge to: (e.g. master)">
-		  <f:textbox id="git.mergeTarget" name="git.mergeTarget" value="${scm.mergeOptions.mergeTarget}" clazz="required"/>
+		 <f:entry title="Branch to merge to: (e.g. master)" field="mergeTarget">
+		  <f:textbox id="git.mergeTarget" clazz="required"/>
 		 </f:entry>
 		</f:optionalBlock>
 		</table>
 	  	
 	  </f:entry>
 
-          <f:entry title="Prune remote branches before build" help="/plugin/git/prune.html">
-            <f:checkbox name="git.pruneBranches" checked="${scm.pruneBranches}" />
+          <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
+            <f:checkbox />
           </f:entry>
 
-    <f:entry title="Skip internal tag" help="/plugin/git/help-skipTag.html">
-      <f:checkbox name="git.skipTag" checked="${scm.skipTag}" />
+    <f:entry title="Skip internal tag" field="skipTag" help="/plugin/git/help-skipTag.html">
+      <f:checkbox />
     </f:entry>
-    <f:entry title="Clean after checkout" help="/plugin/git/clean.html">
-      <f:checkbox name="git.clean" checked="${scm.clean}" />
+    <f:entry title="Clean after checkout" field="clean" help="/plugin/git/clean.html">
+      <f:checkbox />
     </f:entry>
-    <f:entry title="Recursively update submodules" help="/plugin/git/help-recursiveSubmodules.html">
-      <f:checkbox name="git.recursiveSubmodules" checked="${scm.recursiveSubmodules}" />
+    <f:entry title="Recursively update submodules" field="recursiveSubmodules" help="/plugin/git/help-recursiveSubmodules.html">
+      <f:checkbox />
     </f:entry>
-    <f:entry title="Use commit author in changelog" help="/plugin/git/help-authorCommitter.html">
-      <f:checkbox name="git.authorOrCommitter" checked="${scm.authorOrCommitter}"/>
+    <f:entry title="Use commit author in changelog" field="authorOrCommitter" help="/plugin/git/help-authorCommitter.html">
+      <f:checkbox />
     </f:entry>
-    <f:entry title="Wipe out workspace before build" help="/plugin/git/wipeOutWorkspace.html">
-      <f:checkbox name="git.wipeOutWorkspace" checked="${scm.wipeOutWorkspace}"/>
+    <f:entry title="Wipe out workspace before build" field="wipeOutWorkspace" help="/plugin/git/wipeOutWorkspace.html">
+      <f:checkbox />
     </f:entry>
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
       <j:scope>
@@ -170,11 +171,11 @@
       </j:scope>
     </f:dropdownList>
 
-      <f:entry title="Git executable" field="git.gitTool">
-          <select name="git.gitTool">
+      <f:entry title="Git executable" field="gitTool">
+          <select name="gitTool">
               <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
                   <j:choose>
-                      <j:when test="${scm.gitTool==gitTool.name}">
+                      <j:when test="${gitTool==gitTool.name}">
                           <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
                       </j:when>
                       <j:otherwise>
