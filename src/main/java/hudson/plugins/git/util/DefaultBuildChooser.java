@@ -66,16 +66,13 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
-        // if it doesn't contain '/' then it could be either a tag or an unqualified branch
-        if (!singleBranch.contains("/")) {
-            // the 'branch' could actually be a tag:
-            Set<String> tags = git.getTagNames(singleBranch);
-            if(tags.size() == 0) {
-                // its not a tag, so lets fully qualify the branch
-                String repository = gitSCM.getRepositories().get(0).getName();
-                singleBranch = repository + "/" + singleBranch;
-                verbose(listener, "{0} is not a tag. Qualifying with the repository {1} a a branch", singleBranch, repository);
-            }
+        // it could be either a tag or an unqualified branch
+        Set<String> tags = git.getTagNames(singleBranch);
+        if(tags.size() == 0) {
+            // its not a tag, so lets fully qualify the branch
+            String repository = gitSCM.getRepositories().get(0).getName();
+            singleBranch = repository + "/" + singleBranch;
+            verbose(listener, "{0} is not a tag. Qualifying with the repository {1} a a branch", singleBranch, repository);
         }
 
         try {
