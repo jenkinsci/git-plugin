@@ -49,10 +49,10 @@
    </f:entry>
   
   <f:entry title="Branches to build" help="/plugin/git/branch.html">
-  <f:repeatable var="branch" name="branch" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">
+  <f:repeatable var="branch" name="branches" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">
            <table width="100%">
                <f:entry title="Branch Specifier (blank for default):" field="name">
-                    <f:textbox value="${branch.name}"/>
+                    <f:textbox value="${branch.name}" />
                </f:entry>
                
                <f:entry>
