@@ -112,6 +112,7 @@ public class GitSCM extends SCM implements Serializable {
     private String gitConfigName;
     private String gitConfigEmail;
     private boolean skipTag;
+    private String scmName;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -135,6 +136,7 @@ public class GitSCM extends SCM implements Serializable {
      */
     public GitSCM(String repositoryUrl) {
         this(
+                null,
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
                 null,
@@ -145,6 +147,7 @@ public class GitSCM extends SCM implements Serializable {
 
     @DataBoundConstructor
     public GitSCM(
+            String scmName,
             List<UserRemoteConfig> repo,
             List<BranchSpec> branches,
             UserMergeOptions doMerge,
@@ -164,6 +167,8 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigName,
             String gitConfigEmail,
             boolean skipTag) {
+
+        this.scmName = scmName;
 
         // moved from createBranches
         if (branches == null) {
@@ -631,7 +636,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData() /*dummy*/;
+        return bd != null ? bd : new BuildData(getScmName()) /*dummy*/;
     }
 
     private void cleanSubmodules(IGitAPI parentGit,
@@ -887,7 +892,7 @@ public class GitSCM extends SCM implements Serializable {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
-                BuildData parentBuildData = parentBuild.getAction(BuildData.class);
+                BuildData parentBuildData = getBuildData(parentBuild, false);
                 if (parentBuildData != null) {
                     tempParentLastBuiltRev = parentBuildData.getLastBuiltRevision();
                 }
@@ -1189,7 +1194,7 @@ public class GitSCM extends SCM implements Serializable {
      * @param git
      *      Used for invoking Git
      * @param revToBuild
-     *      Points to the revisiont we'll be building. This includes all the branches we've merged.
+     *      Points to the revision we'll be building. This includes all the branches we've merged.
      * @param listener
      *      Used for writing to build console
      * @param buildData
@@ -1258,6 +1263,20 @@ public class GitSCM extends SCM implements Serializable {
     @Override
     public ChangeLogParser createChangeLogParser() {
         return new GitChangeLogParser(getAuthorOrCommitter());
+    }
+
+    /**
+     * @return the scmName
+     */
+    public String getScmName() {
+        return scmName;
+    }
+
+    /** Compares the SCM names for equality even if they're null. */
+    private boolean sameScm(String scmName1, String scmName2) {
+        scmName1 = (scmName1 == null ? "" : scmName1);
+        scmName2 = (scmName2 == null ? "" : scmName2);
+        return scmName1.equals(scmName2);
     }
 
     @Extension
@@ -1548,7 +1567,13 @@ public class GitSCM extends SCM implements Serializable {
     public BuildData getBuildData(Run build, boolean clone) {
         BuildData buildData = null;
         while (build != null) {
-            buildData = build.getAction(BuildData.class);
+            List<BuildData> buildDataList = build.getActions(BuildData.class);
+            for (BuildData bd : buildDataList) {
+                if (bd != null && sameScm(bd.getScmName(), scmName)) {
+                    buildData = bd;
+                    break;
+                }
+            }
             if (buildData != null) {
                 break;
             }
@@ -1556,7 +1581,7 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         if (buildData == null) {
-            return clone ? new BuildData() : null;
+            return clone ? new BuildData(getScmName()) : null;
         }
 
         if (clone) {

@@ -3,9 +3,10 @@
 	
 	
     <l:main-panel>
-       	<h1>Git Build Data</h1>		
-       	
+       	<h1>Git Build Data</h1>
+
        	<b>Revision:</b> ${it.lastBuild.SHA1.name()}
+        <j:if test="${it.scmName}"> from <b>SCM:</b> ${it.scmName}</j:if>
 	<ul>
 	<j:forEach var="branch" items="${it.lastBuild.revision.branches}">
 	<li>${branch.name}</li>

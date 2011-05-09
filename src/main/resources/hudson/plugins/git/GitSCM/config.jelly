@@ -15,7 +15,7 @@
         return rv;
     }
     ]]></script>
-    
+
     <f:entry title="Repositories" help="/plugin/git/help.html">
         
         <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${instance.repositories}" minimum="1" noAddButton="false">
@@ -80,6 +80,9 @@
     <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir" help="/plugin/git/help-local.html">
       <f:textbox />
     </f:entry>
+   <f:entry title="Unique SCM name (optional)" field="scmName">
+        <f:textbox />
+   </f:entry>
     <f:entry title="Config user.name Value" field="gitConfigName">
       <f:textbox />
     </f:entry>
