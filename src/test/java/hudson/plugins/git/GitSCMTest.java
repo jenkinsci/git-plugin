@@ -408,9 +408,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String excludedUsers, String localBranch) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
+                null,
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
-                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                null,
+                false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
                 excludedRegions, excludedUsers, localBranch, false, false, null, null, false));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
