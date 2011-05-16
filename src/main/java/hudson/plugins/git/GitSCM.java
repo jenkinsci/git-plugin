@@ -403,7 +403,7 @@ public class GitSCM extends SCM implements Serializable {
     public String getGitConfigNameToUse() {
         String confName;
         String globalConfigName = ((DescriptorImpl) getDescriptor()).getGlobalConfigName();
-        if ((globalConfigName != null) && (gitConfigName == null) && (!fixEmptyAndTrim(globalConfigName).equals(""))) {
+        if ((fixEmptyAndTrim(globalConfigName) != null) && (gitConfigName == null)) {
             confName = globalConfigName;
         } else {
             confName = gitConfigName;
@@ -415,7 +415,7 @@ public class GitSCM extends SCM implements Serializable {
     public String getGitConfigEmailToUse() {
         String confEmail;
         String globalConfigEmail = ((DescriptorImpl) getDescriptor()).getGlobalConfigEmail();
-        if ((globalConfigEmail != null) && (gitConfigEmail == null) && (!fixEmptyAndTrim(globalConfigEmail).equals(""))) {
+        if ((fixEmptyAndTrim(globalConfigEmail) != null) && (gitConfigEmail == null)) {
             confEmail = globalConfigEmail;
         } else {
             confEmail = gitConfigEmail;
