@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.spearce.jgit.lib.Constants;
@@ -67,6 +69,22 @@ public class GitAPI implements IGitAPI {
         return environment;
     }
 
+    private int[] getGitVersion() {
+        int minorVer = 0;
+        int majorVer = 0;
+        String v = firstLine(launchCommand("--version")).trim();
+        Pattern p = Pattern.compile("git version ([0-9]+)\\.([0-9+])\\..*");
+        Matcher m = p.matcher(v);
+        if (m.matches() && m.groupCount() >= 2) {
+            try {
+                majorVer = Integer.parseInt(m.group(1));
+                minorVer = Integer.parseInt(m.group(2));
+            } catch (NumberFormatException e) { }
+        }
+
+        return new int[]{majorVer,minorVer};
+    }
+        
     public void init() throws GitException {
         if (hasGitRepo()) {
             throw new GitException(".git directory already exists! Has it already been initialised?");
@@ -178,7 +196,8 @@ public class GitAPI implements IGitAPI {
      */
     public void clone(final RemoteConfig remoteConfig) throws GitException {
         listener.getLogger().println("Cloning repository " + remoteConfig.getName());
-
+        final int[] gitVer = getGitVersion();
+        
         // TODO: Not here!
         try {
             workspace.deleteRecursive();
@@ -199,7 +218,9 @@ public class GitAPI implements IGitAPI {
                                          VirtualChannel channel) throws IOException {
                         final ArgumentListBuilder args = new ArgumentListBuilder();
                         args.add("clone");
-                        args.add("--progress");
+                        if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) { 
+                            args.add("--progress");
+                        }
                         args.add("-o", remoteConfig.getName());
                         args.add(source);
                         args.add(workspace.getAbsolutePath());
