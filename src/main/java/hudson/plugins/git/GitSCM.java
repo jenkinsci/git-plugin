@@ -743,6 +743,7 @@ public class GitSCM extends SCM implements Serializable {
                                 "Problem fetching from submodule "
                                 + submodule.getFile()
                                 + " - could be unavailable. Continuing anyway");
+                        listener.error(" (Underlying report) : " + ex.getMessage());
                     }
                 }
             }
@@ -988,7 +989,8 @@ public class GitSCM extends SCM implements Serializable {
                             listener.error(
                                     "Problem fetching from " + remoteRepository.getName()
                                     + " / " + remoteRepository.getName()
-                                    + " - could be unavailable. Continuing anyway");
+                                    + " - could be unavailable. Continuing anyway.");
+                            listener.error(" (Underlying report) : " + ex.getMessage());
 
                         }
                     }
