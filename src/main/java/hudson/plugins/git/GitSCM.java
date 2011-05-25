@@ -990,7 +990,7 @@ public class GitSCM extends SCM implements Serializable {
                                     "Problem fetching from " + remoteRepository.getName()
                                     + " / " + remoteRepository.getName()
                                     + " - could be unavailable. Continuing anyway.");
-                            listener.error(" (Underlying report) : " + ex.getMessage());
+                            listener.error(" (Underlying report) : " + e.getMessage());
 
                         }
                     }
