@@ -29,12 +29,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.spearce.jgit.lib.Constants;
-import org.spearce.jgit.lib.ObjectId;
-import org.spearce.jgit.lib.Ref;
-import org.spearce.jgit.lib.Repository;
-import org.spearce.jgit.lib.Tag;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 public class GitAPI implements IGitAPI {
 
@@ -96,7 +96,8 @@ public class GitAPI implements IGitAPI {
             throw new GitException(".git directory already exists! Has it already been initialised?");
         }
         try {
-            final Repository repo = new Repository(new File(workspace.child(".git").getRemote()));
+			final Repository repo = new FileRepository(new File(workspace
+					.child(Constants.DOT_GIT).getRemote()));
             repo.create();
         } catch (IOException ioe) {
             throw new GitException("Error initiating git repo.", ioe);
@@ -980,19 +981,21 @@ public class GitAPI implements IGitAPI {
     }
 
     private Repository getRepository() throws IOException {
-        return new Repository(new File(workspace.getRemote(), ".git"));
+        return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
     }
 
-    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException {
+    public List<Ref> getTagsOnCommit(String revName) throws GitException, IOException {
         Repository db = getRepository();
         ObjectId commit = db.resolve(revName);
-        List<Tag> ret = new ArrayList<Tag>();
-
-        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-
-            Tag ttag = db.mapTag(tag.getKey());
-            if(ttag.getObjId().equals(commit)) {
-                ret.add(ttag);
+        List<Ref> ret = new ArrayList<Ref>();
+        if (commit != null) {
+            for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
+                Ref ref = tag.getValue();
+                ObjectId sha = ref.getPeeledObjectId();
+                if (sha == null)
+                    sha = ref.getObjectId();
+                if (commit.equals(sha))
+                    ret.add(ref);
             }
         }
         return ret;

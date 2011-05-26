@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * A common usecase for git submodules is to have child submodules, and a parent 'configuration' project that ties the

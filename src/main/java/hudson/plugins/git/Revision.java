@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * A Revision is a SHA1 in the object tree, and the collection of branches

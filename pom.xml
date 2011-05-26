@@ -42,25 +42,9 @@
 
   <repositories>
     <repository>
-      <id>jgit-snapshot-repository</id>
-      <url>http://egit.googlecode.com/svn/maven/snapshot-repository</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-    
-    <repository>
-      <id>jgit-release-repository</id>
-      <url>http://egit.googlecode.com/svn/maven</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
+      <id>jgit-repository</id>
+      <name>Eclipse JGit Repository</name>
+      <url>http://download.eclipse.org/jgit/maven</url>
     </repository>
     
     <repository>
@@ -72,22 +56,15 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.spearce</groupId>
-      <artifactId>jgit</artifactId>
-      <!-- SEE README! -->
-      <version>0.4-47e4af3</version>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>0.12.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>0.5.1.51-g96b2e76</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>

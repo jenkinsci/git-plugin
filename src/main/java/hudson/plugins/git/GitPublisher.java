@@ -35,7 +35,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;

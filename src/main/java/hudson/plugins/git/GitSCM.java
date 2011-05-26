@@ -44,10 +44,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-import org.spearce.jgit.lib.ObjectId;
-import org.spearce.jgit.lib.RepositoryConfig;
-import org.spearce.jgit.transport.RefSpec;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.storage.file.FileBasedConfig;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.util.FS;
 
 /**
  * Git SCM.
@@ -775,7 +777,7 @@ public class GitSCM extends SCM implements Serializable {
         File temp = null;
         try {
             temp = File.createTempFile("tmp", "config");
-            RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
+            StoredConfig repoConfig = new FileBasedConfig(null, temp, FS.DETECTED);
             // Make up a repo config from the request parameters
 
 
@@ -1435,7 +1437,7 @@ public class GitSCM extends SCM implements Serializable {
                 String[] refSpecs,
                 File temp) {
             List<RemoteConfig> remoteRepositories;
-            RepositoryConfig repoConfig = new RepositoryConfig(null, temp);
+            StoredConfig repoConfig = new FileBasedConfig(null, temp, FS.DETECTED);
             // Make up a repo config from the request parameters
 
             String[] urls = pUrls;

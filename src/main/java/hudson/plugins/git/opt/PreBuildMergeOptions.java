@@ -1,7 +1,7 @@
 package hudson.plugins.git.opt;
 
 import java.io.Serializable;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
  * Git SCM can optionally perform a merge with another branch (possibly another repository.)
