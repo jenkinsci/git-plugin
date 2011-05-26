@@ -6,8 +6,7 @@ import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.util.StreamTaskListener;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.spearce.jgit.lib.PersonIdent;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.PersonIdent;
 
 import java.io.File;
 import java.io.IOException;

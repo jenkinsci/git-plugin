@@ -17,8 +17,6 @@ import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.spearce.jgit.lib.PersonIdent;
-import org.spearce.jgit.transport.RemoteConfig;
 
 import java.io.File;
 import java.io.IOException;
