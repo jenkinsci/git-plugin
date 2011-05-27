@@ -301,7 +301,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         for (ChangeLogAnnotator a : ChangeLogAnnotator.all())
             a.annotate(getParent().build,this,markup);
 
-        return markup.toString();
+        return markup.toString(false);
     }
 
     @ExportedBean(defaultVisibility=999)
