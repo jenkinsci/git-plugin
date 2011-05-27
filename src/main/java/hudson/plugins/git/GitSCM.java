@@ -40,6 +40,7 @@ import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
+import org.eclipse.jgit.lib.Config;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -774,26 +775,17 @@ public class GitSCM extends SCM implements Serializable {
 
     private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) {
 
-        File temp = null;
         try {
-            temp = File.createTempFile("tmp", "config");
-            StoredConfig repoConfig = new FileBasedConfig(null, temp, FS.DETECTED);
+            Config repoConfig = new Config();
             // Make up a repo config from the request parameters
-
 
             repoConfig.setString("remote", name, "url", refUrl);
             repoConfig.setString("remote", name, "fetch", refSpec.toString());
-            repoConfig.save();
+
             return RemoteConfig.getAllRemoteConfigs(repoConfig).get(0);
         } catch (Exception ex) {
-            throw new GitException("Error creating temp file");
-        } finally {
-            if (temp != null) {
-                temp.delete();
-            }
+            throw new GitException("Error trying to create JGit configuration", ex);
         }
-
-
     }
 
     private boolean changeLogResult(String changeLog, File changelogFile) throws IOException {
@@ -1420,24 +1412,9 @@ public class GitSCM extends SCM implements Serializable {
         public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
                 String[] repoNames,
                 String[] refSpecs) throws IOException {
-            File temp = File.createTempFile("tmp", "config");
-            try {
-                return createRepositoryConfigurations(pUrls, repoNames, refSpecs, temp);
-            } finally {
-                temp.delete();
-            }
-        }
 
-        /**
-         * @deprecated
-         *      Use {@link #createRepositoryConfigurations(String[], String[], String[])}
-         */
-        public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
-                String[] repoNames,
-                String[] refSpecs,
-                File temp) {
             List<RemoteConfig> remoteRepositories;
-            StoredConfig repoConfig = new FileBasedConfig(null, temp, FS.DETECTED);
+            Config repoConfig = new Config();
             // Make up a repo config from the request parameters
 
             String[] urls = pUrls;
@@ -1461,7 +1438,6 @@ public class GitSCM extends SCM implements Serializable {
             }
 
             try {
-                repoConfig.save();
                 remoteRepositories = RemoteConfig.getAllRemoteConfigs(repoConfig);
             } catch (Exception e) {
                 throw new GitException("Error creating repositories", e);

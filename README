@@ -1,9 +1,0 @@
-This version of the git plugin needs a patched version of JGit to support various items being Serializable.
-
-If you just use any old 0.4-SNAPSHOT, until the patches are merged, things may not work (and master/slave definitely won't work).
-
-The patched version is deployed to the java.net Maven2 repository.
-
-If you wish to post-patch a (newer) version of JGit (newer than fedd114bc) then the patches are in jgit-patches. They have been
-submitted to the JGit maintainer.
-

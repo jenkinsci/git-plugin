@@ -984,22 +984,18 @@ public class GitAPI implements IGitAPI {
         return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
     }
 
-    public List<Ref> getTagsOnCommit(String revName) throws GitException, IOException {
+    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException {
         Repository db = getRepository();
         ObjectId commit = db.resolve(revName);
-        List<Ref> ret = new ArrayList<Ref>();
-        if (commit != null) {
-            for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-                Ref ref = tag.getValue();
-                ObjectId sha = ref.getPeeledObjectId();
-                if (sha == null)
-                    sha = ref.getObjectId();
-                if (commit.equals(sha))
-                    ret.add(ref);
-            }
+        List<Tag> ret = new ArrayList<Tag>();
+
+        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
+
+            Ref ref = db.getTags().get( tag.getKey() );
+            if( ref.getObjectId().equals(commit) )
+                ret.add( new Tag( tag.getKey(), ref.getObjectId() ) );
         }
         return ret;
-
     }
 
     public Set<String> getTagNames(String tagPattern) throws GitException {

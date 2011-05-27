@@ -70,7 +70,7 @@ public interface IGitAPI {
 
     String describe(String commitIsh) throws GitException;
 
-    List<Ref> getTagsOnCommit(String revName) throws GitException, IOException;
+    List<Tag> getTagsOnCommit(String revName) throws GitException, IOException;
 
     void tag(String tagName, String comment) throws GitException;
     boolean tagExists(String tagName) throws GitException;
