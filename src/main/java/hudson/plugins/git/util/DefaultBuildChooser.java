@@ -158,7 +158,7 @@ public class DefaultBuildChooser extends BuildChooser {
         verbose(listener, "After non-tip filtering: {0}", revs);
 
         // 4. Finally, remove any revisions that have already been built.
-        verbose(listener, "Removing what's already been built: {0}", data.getBuildsByBranchName());
+        verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
             Revision r = i.next();
 
@@ -166,7 +166,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 i.remove();
             }
         }
-        verbose(listener, "After filtering out what's already been built: {0}", revs);
+        verbose(listener, "After filtering out what''s already been built: {0}", revs);
 
         // if we're trying to run a build (not an SCM poll) and nothing new
         // was found then just run the last build again
