@@ -140,13 +140,13 @@ public class DefaultBuildChooser extends BuildChooser {
                 }
 
                 if (!keep) {
-                    verbose(listener, "Ignoring {0} because it doesn't match branch specifier", b);
+                    verbose(listener, "Ignoring {0} because it doesn''t match branch specifier", b);
                     j.remove();
                 }
             }
 
             if (r.getBranches().size() == 0) {
-                verbose(listener, "Ignoring {0} because we don't care about any of the branches that point to it", r);
+                verbose(listener, "Ignoring {0} because we don''t care about any of the branches that point to it", r);
                 i.remove();
             }
         }
