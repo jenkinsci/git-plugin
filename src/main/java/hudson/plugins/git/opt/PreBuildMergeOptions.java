@@ -3,11 +3,15 @@ package hudson.plugins.git.opt;
 import java.io.Serializable;
 import org.eclipse.jgit.transport.RemoteConfig;
 
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
 /**
  * Git SCM can optionally perform a merge with another branch (possibly another repository.)
  *
  * This object specifies that configuration.
  */
+@ExportedBean(defaultVisibility = 999)
 public class PreBuildMergeOptions implements Serializable {
     private static final long serialVersionUID = 2L;
 
@@ -21,6 +25,7 @@ public class PreBuildMergeOptions implements Serializable {
      */
     public String mergeTarget = null;
 
+    @Exported
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
     }
@@ -29,6 +34,7 @@ public class PreBuildMergeOptions implements Serializable {
         this.mergeRemote = mergeRemote;
     }
 
+    @Exported
     public String getMergeTarget() {
         return mergeTarget;
     }
@@ -37,6 +43,7 @@ public class PreBuildMergeOptions implements Serializable {
         this.mergeTarget = mergeTarget;
     }
 
+    @Exported
     public String getRemoteBranchName() {
         return mergeRemote.getName() + "/" + mergeTarget;
     }
