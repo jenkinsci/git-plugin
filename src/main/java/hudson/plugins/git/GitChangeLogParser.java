@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.xml.sax.SAXException;
 
@@ -27,7 +29,7 @@ public class GitChangeLogParser extends ChangeLogParser {
     public GitChangeSetList parse(AbstractBuild build, File changelogFile)
         throws IOException, SAXException {
         
-        ArrayList<GitChangeSet> r = new ArrayList<GitChangeSet>();
+        Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
         
         // Parse the log file into GitChangeSet items - each one is a commit
         
@@ -55,7 +57,7 @@ public class GitChangeLogParser extends ChangeLogParser {
                 r.add(parseCommit(lines, authorOrCommitter));
             }
             
-            return new GitChangeSetList(build, r);
+            return new GitChangeSetList(build, new ArrayList<GitChangeSet>(r));
         }
         finally {
             rdr.close();
