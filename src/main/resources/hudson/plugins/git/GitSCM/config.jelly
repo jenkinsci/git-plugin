@@ -178,7 +178,7 @@
           <select name="gitTool">
               <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
                   <j:choose>
-                      <j:when test="${gitTool==gitTool.name}">
+                      <j:when test="${instance.gitTool==gitTool.name}">
                           <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
                       </j:when>
                       <j:otherwise>
