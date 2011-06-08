@@ -980,7 +980,7 @@ public class GitAPI implements IGitAPI {
         return launchCommand("log", "--all", "--pretty=format:'%H#%ct'", branch);
     }
 
-    private Repository getRepository() throws IOException {
+    public Repository getRepository() throws IOException {
         return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
     }
 
