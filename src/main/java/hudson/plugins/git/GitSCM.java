@@ -1284,6 +1284,7 @@ public class GitSCM extends SCM implements Serializable {
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
+            Run.XSTREAM.registerConverter(new ObjectIdConverter());
             load();
         }
 
