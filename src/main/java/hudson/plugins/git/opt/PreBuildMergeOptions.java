@@ -45,7 +45,7 @@ public class PreBuildMergeOptions implements Serializable {
 
     @Exported
     public String getRemoteBranchName() {
-        return mergeRemote.getName() + "/" + mergeTarget;
+        return (mergeRemote == null) ? null : mergeRemote.getName() + "/" + mergeTarget;
     }
 
     public boolean doMerge() {
