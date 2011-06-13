@@ -3,8 +3,6 @@ package hudson.plugins.git;
 import static hudson.Util.fixEmpty;
 
 import hudson.MarkupText;
-import hudson.Util;
-import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
@@ -30,10 +28,17 @@ import java.util.regex.Pattern;
  * @author Nigel Magnay
  */
 public class GitChangeSet extends ChangeLogSet.Entry {
+    
+    private static final String PREFIX_AUTHOR = "author ";
+    private static final String PREFIX_COMMITTER = "committer ";
+    private static final String IDENTITY = "(.*)<(.*)> (.*) (.*)";
+    
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
-    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^author (.*) <(.*)> (.*) (.*)$");
-    private static final Pattern COMMITTER_ENTRY = Pattern.compile("^committer (.*) <(.*)> (.*) (.*)$");
+    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
+            + PREFIX_AUTHOR + IDENTITY + "$");
+    private static final Pattern COMMITTER_ENTRY = Pattern.compile("^"
+            + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
     
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
@@ -52,6 +57,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private Collection<Path> paths = new HashSet<Path>();
     private boolean authorOrCommitter;
     
+    /**
+     * Create Git change set using information in given lines
+     * 
+     * @param lines
+     * @param authorOrCommitter
+     */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
         this.authorOrCommitter = authorOrCommitter;
         if (lines.size() > 0) {
@@ -61,78 +72,77 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     private void parseCommit(List<String> lines) {
 
-        String message = "";
+        StringBuilder message = new StringBuilder();
 
         for (String line : lines) {
-            if (line.length() > 0) {
-                if (line.startsWith("commit ")) {
-                    this.id = line.split(" ")[1];
-                } else if (line.startsWith("tree ")) {
-                } else if (line.startsWith("parent ")) {
-                    this.parentCommit = line.split(" ")[1];
-                } else if (line.startsWith("committer ")) {
-                    Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
-                    if (committerMatcher.matches() && committerMatcher.groupCount() >= 4) {
-                        this.committer = committerMatcher.group(1);
-                        this.committerEmail = committerMatcher.group(2);
-                        this.committerTime = committerMatcher.group(3);
-                        this.committerTz = committerMatcher.group(4);
-                    }
-                } else if (line.startsWith("author ")) {
-                    Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
-                    if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
-                        this.author = authorMatcher.group(1);
-                        this.authorEmail = authorMatcher.group(2);
-                        this.authorTime = authorMatcher.group(3);
-                        this.authorTz = authorMatcher.group(4);
-                    }
-                } else if (line.startsWith("    ")) {
-                    message += line.substring(4) + "\n";
-                } else if (':' == line.charAt(0)) {
-                    Matcher fileMatcher = FILE_LOG_ENTRY.matcher(line);
-                    if (fileMatcher.matches() && fileMatcher.groupCount() >= 4) {
-                        String mode = fileMatcher.group(3);
-                        if (mode.length() == 1) {
-                            String src = null;
-                            String dst = null;
-                            String path = fileMatcher.group(4);
-                            char editMode = mode.charAt(0);
-                            if (editMode == 'M' || editMode == 'A' || editMode == 'D'
-                                || editMode == 'R' || editMode == 'C') {
-                                src = parseHash(fileMatcher.group(1));
-                                dst = parseHash(fileMatcher.group(2));
-                            }
+            if( line.length() < 1) 
+                continue;
+            if (line.startsWith("commit ")) {
+                this.id = line.split(" ")[1];
+            } else if (line.startsWith("tree ")) {
+            } else if (line.startsWith("parent ")) {
+                this.parentCommit = line.split(" ")[1];
+            } else if (line.startsWith(PREFIX_COMMITTER)) {
+                Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
+                if (committerMatcher.matches()
+                        && committerMatcher.groupCount() >= 4) {
+                    this.committer = committerMatcher.group(1).trim();
+                    this.committerEmail = committerMatcher.group(2);
+                    this.committerTime = committerMatcher.group(3);
+                    this.committerTz = committerMatcher.group(4);
+                }
+            } else if (line.startsWith(PREFIX_AUTHOR)) {
+                Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
+                if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
+                    this.author = authorMatcher.group(1).trim();
+                    this.authorEmail = authorMatcher.group(2);
+                    this.authorTime = authorMatcher.group(3);
+                    this.authorTz = authorMatcher.group(4);
+                }
+            } else if (line.startsWith("    ")) {
+                message.append(line.substring(4)).append('\n');
+            } else if (':' == line.charAt(0)) {
+                Matcher fileMatcher = FILE_LOG_ENTRY.matcher(line);
+                if (fileMatcher.matches() && fileMatcher.groupCount() >= 4) {
+                    String mode = fileMatcher.group(3);
+                    if (mode.length() == 1) {
+                        String src = null;
+                        String dst = null;
+                        String path = fileMatcher.group(4);
+                        char editMode = mode.charAt(0);
+                        if (editMode == 'M' || editMode == 'A' || editMode == 'D'
+                            || editMode == 'R' || editMode == 'C') {
+                            src = parseHash(fileMatcher.group(1));
+                            dst = parseHash(fileMatcher.group(2));
+                        }
 
-                            // Handle rename as two operations - a delete and an add
-                            if (editMode == 'R') {
-                                Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
-                                if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
-                                    String oldPath = renameSplitMatcher.group(1);
-                                    String newPath = renameSplitMatcher.group(2);
-                                    this.paths.add(new Path(src, dst, 'D', oldPath, this));
-                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
-                                }
-                            }
-                            // Handle copy as an add
-                            else if (editMode == 'C') {
-                                Matcher copySplitMatcher = RENAME_SPLIT.matcher(path);
-                                if (copySplitMatcher.matches() && copySplitMatcher.groupCount() >= 2) {
-                                    String newPath = copySplitMatcher.group(2);
-                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
-                                }
-                            }
-                            else {
-                                this.paths.add(new Path(src, dst, editMode, path, this));
+                        // Handle rename as two operations - a delete and an add
+                        if (editMode == 'R') {
+                            Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
+                            if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
+                                String oldPath = renameSplitMatcher.group(1);
+                                String newPath = renameSplitMatcher.group(2);
+                                this.paths.add(new Path(src, dst, 'D', oldPath, this));
+                                this.paths.add(new Path(src, dst, 'A', newPath, this));
                             }
                         }
+                        // Handle copy as an add
+                        else if (editMode == 'C') {
+                            Matcher copySplitMatcher = RENAME_SPLIT.matcher(path);
+                            if (copySplitMatcher.matches() && copySplitMatcher.groupCount() >= 2) {
+                                String newPath = copySplitMatcher.group(2);
+                                this.paths.add(new Path(src, dst, 'A', newPath, this));
+                            }
+                        }
+                        else {
+                            this.paths.add(new Path(src, dst, editMode, path, this));
+                        }
                     }
-                } else {
-                    // Ignore
                 }
             }
         }
 
-        this.comment = message;
+        this.comment = message.toString();
 
         int endOfFirstLine = this.comment.indexOf('\n');
         if (endOfFirstLine == -1) {
@@ -227,7 +237,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
         
         if (csAuthor == null) {
-            throw new RuntimeException("No author in this changeset!");
+            throw new RuntimeException("No author in changeset " + id);
         }
 
         User user = User.get(csAuthor, false);
@@ -251,25 +261,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * Gets the author name for this changeset - note that this is mainly here
      * so that we can test authorOrCommitter without needing a fully instantiated
      * Hudson (which is needed for User.get in getAuthor()).
+     *
+     * @return author name
      */
     public String getAuthorName() {
-        String csAuthor;
-        String csAuthorEmail;
-
         // If true, use the author field from git log rather than the committer.
-        if (authorOrCommitter) {
-            csAuthor = this.author;
-            csAuthorEmail = this.authorEmail;
-        }
-        else {
-            csAuthor = this.committer;
-            csAuthorEmail = this.committerEmail;
-        }
-        
-        if (csAuthor == null) {
-            throw new RuntimeException("No author in this changeset!");
-        }
-
+        String csAuthor = authorOrCommitter ? author : committer;
+        if (csAuthor == null)
+            throw new RuntimeException("No author in changeset " + id);
         return csAuthor;
     }
     
