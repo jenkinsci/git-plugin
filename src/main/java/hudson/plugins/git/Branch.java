@@ -8,7 +8,6 @@ public class Branch extends GitObject {
     
     public Branch(String name, ObjectId sha1) {
         super(name, sha1);
-        // TODO Auto-generated constructor stub
     }
     
     public Branch(Ref candidate) {
