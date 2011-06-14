@@ -1528,14 +1528,10 @@ public class GitSCM extends SCM implements Serializable {
 
             String[] urls = req.getParameterValues("repo.url");
             String[] names = req.getParameterValues("repo.name");
-
-            names = GitUtils.fixupNames(names, urls);
-
-            for (String name : names) {
-                if (name.equals(mergeRemoteName)) {
-                    return FormValidation.ok();
-                }
-            }
+            if (urls != null && names != null)
+                for (String name : GitUtils.fixupNames(names, urls))
+                    if (name.equals(mergeRemoteName))
+                        return FormValidation.ok();
 
             return FormValidation.error("No remote repository configured with name '" + mergeRemoteName + "'");
         }
