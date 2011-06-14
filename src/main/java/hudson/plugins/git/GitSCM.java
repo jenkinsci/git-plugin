@@ -1,37 +1,59 @@
 package hudson.plugins.git;
 
-import hudson.*;
-import hudson.FilePath.FileCallable;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
-
-import hudson.model.*;
-
 import static hudson.Util.fixEmptyAndTrim;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.FilePath.FileCallable;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.matrix.MatrixRun;
+import hudson.matrix.MatrixBuild;
+import hudson.model.Action;
+import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
-
+import hudson.model.Items;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.ParametersAction;
+import hudson.model.Run;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-
-import hudson.plugins.git.util.*;
 import hudson.plugins.git.util.Build;
-
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
-import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.scm.SCM;
 import hudson.util.FormValidation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -41,16 +63,13 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.storage.file.FileBasedConfig;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.util.FS;
 
 /**
  * Git SCM.
@@ -907,11 +926,12 @@ public class GitSCM extends SCM implements Serializable {
             public Revision invoke(File localWorkspace, VirtualChannel channel)
                     throws IOException {
                 FilePath ws = new FilePath(localWorkspace);
-                listener.getLogger().println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
+                final PrintStream log = listener.getLogger();
+                log.println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
                 IGitAPI git = new GitAPI(gitExe, ws, listener, environment);
 
                 if (wipeOutWorkspace) {
-                    listener.getLogger().println("Wiping out workspace first.");
+                    log.println("Wiping out workspace first.");
                     try {
                         ws.deleteContents();
                     } catch (InterruptedException e) {
@@ -924,13 +944,18 @@ public class GitSCM extends SCM implements Serializable {
 
                     // Do we want to prune first?
                     if (pruneBranches) {
-                        listener.getLogger().println("Pruning obsolete local branches");
+                        log.println("Pruning obsolete local branches");
                         for (RemoteConfig remoteRepository : paramRepos) {
                             git.prune(remoteRepository);
                         }
                     }
 
-                    listener.getLogger().println("Fetching changes from the remote Git repository");
+                    if (paramRepos.size() == 1)
+                        log.println("Fetching changes from 1 remote Git repository");
+                    else
+                        log.println(MessageFormat
+                                .format("Fetching changes from {0} remote Git repositories",
+                                        paramRepos));
 
                     boolean fetched = false;
 
@@ -947,7 +972,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 } else {
 
-                    listener.getLogger().println("Cloning the remote Git repository");
+                    log.println("Cloning the remote Git repository");
 
                     // Go through the repositories, trying to clone from one
                     //
@@ -963,7 +988,7 @@ public class GitSCM extends SCM implements Serializable {
                                 listener.error("Cause: %s", ex.getCause().getMessage());
                             }
                             // Failed. Try the next one
-                            listener.getLogger().println("Trying next repository");
+                            log.println("Trying next repository");
                         }
                     }
 
@@ -995,7 +1020,7 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     if (getClean()) {
-                        listener.getLogger().println("Cleaning workspace");
+                        log.println("Cleaning workspace");
                         git.clean();
 
                         if (git.hasGitModules()) {
