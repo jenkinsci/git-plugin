@@ -1,7 +1,6 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.model.TaskListener;
 
 import java.io.File;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 

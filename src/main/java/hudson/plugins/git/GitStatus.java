@@ -20,7 +20,6 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import java.io.IOException;
 
 import java.util.logging.Logger;
-import static java.util.logging.Level.INFO;
 
 /**
  * Information screen for the use of Git in Hudson.

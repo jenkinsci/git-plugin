@@ -27,7 +27,6 @@ import hudson.model.InvisibleAction;
 import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.logging.Logger;
 
 /**
