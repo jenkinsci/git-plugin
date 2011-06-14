@@ -17,7 +17,7 @@ import org.eclipse.jgit.lib.ObjectId;
  */
 public class ObjectIdConverter implements Converter {
 
-    private Base64Encoder base64;
+    private final Base64Encoder base64;
 
     /**
      * Create ObjectId converter
@@ -26,7 +26,7 @@ public class ObjectIdConverter implements Converter {
         base64 = new Base64Encoder();
     }
 
-    public boolean canConvert(Class type) {
+    public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
         return ObjectId.class == type;
     }
 
@@ -35,15 +35,38 @@ public class ObjectIdConverter implements Converter {
         writer.setValue(((ObjectId) source).name());
     }
 
+    /**
+     * Is the current reader node a legacy node?
+     * 
+     * @param reader
+     * @param context
+     * @return true if legacy, false otherwise
+     */
+    protected boolean isLegacyNode(HierarchicalStreamReader reader,
+            UnmarshallingContext context) {
+        return reader.hasMoreChildren()
+                && "byte-array".equals(reader.peekNextChild());
+    }
+
+    /**
+     * Legacy unmarshalling of object id
+     * 
+     * @param reader
+     * @param context
+     * @return object id
+     */
+    protected Object legacyUnmarshal(HierarchicalStreamReader reader,
+            UnmarshallingContext context) {
+        reader.moveDown();
+        ObjectId sha1 = ObjectId.fromRaw(base64.decode(reader.getValue()));
+        reader.moveUp();
+        return sha1;
+    }
+
     public Object unmarshal(HierarchicalStreamReader reader,
-            final UnmarshallingContext context) {
-        if (reader.hasMoreChildren()
-                && "byte-array".equals(reader.peekNextChild())) {
-            reader.moveDown();
-            ObjectId sha1 = ObjectId.fromRaw(base64.decode(reader.getValue()));
-            reader.moveUp();
-            return sha1;
-        } else
-            return ObjectId.fromString(reader.getValue());
+            UnmarshallingContext context) {
+        if (isLegacyNode(reader, context))
+            return legacyUnmarshal(reader, context);
+        return ObjectId.fromString(reader.getValue());
     }
 }

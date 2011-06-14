@@ -1285,6 +1285,10 @@ public class GitSCM extends SCM implements Serializable {
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             Run.XSTREAM.registerConverter(new ObjectIdConverter());
+            Items.XSTREAM.registerConverter(new RemoteConfigConverter(
+                    Items.XSTREAM));
+            Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig",
+                    RemoteConfig.class);
             load();
         }
 
