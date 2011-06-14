@@ -14,7 +14,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -53,10 +52,6 @@ public class GitAPI implements IGitAPI {
         this.listener = listener;
         this.gitExe = gitExe;
         this.environment = environment;
-        PrintStream log = listener.getLogger();
-        for (Map.Entry<String, String> ent : environment.entrySet()) {
-            //log.println("Env: " + ent.getKey() + "=" + ent.getValue());
-        }
 
         launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
     }

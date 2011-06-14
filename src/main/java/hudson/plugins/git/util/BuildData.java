@@ -1,6 +1,5 @@
 package hudson.plugins.git.util;
 
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
