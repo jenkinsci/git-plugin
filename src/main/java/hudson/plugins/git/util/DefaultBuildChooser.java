@@ -91,9 +91,20 @@ public class DefaultBuildChooser extends BuildChooser {
 
             verbose(listener, "Found a new commit {0} to be built on {1}", sha1, singleBranch);
 
-            Revision revision = new Revision(sha1);
-            revision.getBranches().add(new Branch(singleBranch, sha1));
-            return Collections.singletonList(revision);
+            // calculate the revisions that are new compared to the last build
+            List<ObjectId> allRevs = git.revListAll(); // index 0 contains the newest revision
+            Revision lastBuiltRev = data.getLastBuiltRevision();
+            int indexOfLastBuildRev = allRevs.indexOf(lastBuiltRev.getSha1());
+            List<ObjectId> newRevisionsSinceLastBuild = allRevs.subList(0, indexOfLastBuildRev);
+
+            // translate list of ObjectIds into list of Revisions
+            List<Revision> candidateRevs = new ArrayList<Revision>();
+            for (ObjectId objectId : newRevisionsSinceLastBuild) {
+                Revision revision = new Revision(objectId);
+                revision.getBranches().add(new Branch(singleBranch, sha1));
+                candidateRevs.add(revision);
+            }
+            return candidateRevs;
         } catch (GitException e) {
             // branch does not exist, there is nothing to build
             verbose(listener, "Failed to rev-parse: {0}", singleBranch);
