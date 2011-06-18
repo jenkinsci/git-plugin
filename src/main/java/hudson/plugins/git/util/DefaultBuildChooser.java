@@ -104,6 +104,12 @@ public class DefaultBuildChooser extends BuildChooser {
                 revision.getBranches().add(new Branch(singleBranch, sha1));
                 candidateRevs.add(revision);
             }
+            // fallback to return given sha1 if the list of candidate revisions is empty
+            if (candidateRevs.isEmpty()) {
+                Revision revision = new Revision(sha1);
+                revision.getBranches().add(new Branch(singleBranch, sha1));
+                return Collections.singletonList(revision);
+            }
             return candidateRevs;
         } catch (GitException e) {
             // branch does not exist, there is nothing to build
