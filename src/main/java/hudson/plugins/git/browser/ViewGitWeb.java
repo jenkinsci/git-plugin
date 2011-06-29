@@ -7,6 +7,8 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
+import hudson.util.FormValidation;
+import hudson.util.FormValidation.URLCheck;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -14,9 +16,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import javax.servlet.ServletException;
+
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 public class ViewGitWeb extends GitRepositoryBrowser {
@@ -82,6 +87,27 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         public ViewGitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
             return req.bindParameters(ViewGitWeb.class, "viewgit.");
         }
-    }
 
+        public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url) throws IOException, ServletException {
+            if (url == null) // nothing entered yet
+                return FormValidation.ok();
+            return new URLCheck() {
+                protected FormValidation check() throws IOException, ServletException {
+                    String v = url;
+                    if (!v.endsWith("/"))
+                        v += '/';
+
+                    try {
+                        if (findText(open(new URL(v)), "ViewGit")) {
+                            return FormValidation.ok();
+                        } else {
+                            return FormValidation.error("This is a valid URL but it doesn't look like ViewGit");
+                        }
+                    } catch (IOException e) {
+                        return handleIOException(v, e);
+                    }
+                }
+            }.check();
+        }
+    }
 }
