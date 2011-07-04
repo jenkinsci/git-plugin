@@ -9,7 +9,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.IOException;
 import java.text.MessageFormat;
