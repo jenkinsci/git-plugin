@@ -51,7 +51,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             String spec = buildCommitDiffSpec(path);
             return new URL(url, url.getPath() + spec);            
         }
-        String spec = param().add("p=" + projectName).add("a=viewblob").add("h=" + path.getSrc()).add("f=" +  path.getPath()).toString();
+        String spec = param().add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
         return new URL(url, url.getPath() + spec);
     }
 

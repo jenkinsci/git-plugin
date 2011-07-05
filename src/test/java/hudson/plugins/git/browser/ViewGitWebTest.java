@@ -94,7 +94,7 @@ public class ViewGitWebTest extends TestCase {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = viewGitWeb.getFileLink(path);
-        assertEquals(VIEWGIT_URL + "/?p=PROJECT&a=viewblob&h=3f28ad75f5ecd5e0ea9659362e2eef18951bd451&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java",
+        assertEquals(VIEWGIT_URL + "/?p=PROJECT&a=viewblob&h=2e0756cd853dccac638486d6aab0e74bc2ef4041&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                 String.valueOf(fileLink));
     }
     
