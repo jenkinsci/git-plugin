@@ -423,27 +423,21 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     public String getGitConfigNameToUse() {
-        String confName;
-        String globalConfigName = ((DescriptorImpl) getDescriptor()).getGlobalConfigName();
-        if ((fixEmptyAndTrim(globalConfigName) != null) && (gitConfigName == null)) {
-            confName = globalConfigName;
-        } else {
-            confName = gitConfigName;
+        String confName = fixEmptyAndTrim(gitConfigName);
+        if (confName == null) {
+        	String globalConfigName = ((DescriptorImpl) getDescriptor()).getGlobalConfigName();
+        	confName = fixEmptyAndTrim(globalConfigName);
         }
-
-        return fixEmptyAndTrim(confName);
+        return confName;
     }
 
     public String getGitConfigEmailToUse() {
-        String confEmail;
-        String globalConfigEmail = ((DescriptorImpl) getDescriptor()).getGlobalConfigEmail();
-        if ((fixEmptyAndTrim(globalConfigEmail) != null) && (gitConfigEmail == null)) {
-            confEmail = globalConfigEmail;
-        } else {
-            confEmail = gitConfigEmail;
+        String confEmail = fixEmptyAndTrim(gitConfigEmail);
+        if (confEmail == null) {
+        	String globalConfigEmail = ((DescriptorImpl) getDescriptor()).getGlobalConfigEmail();
+        	confEmail = fixEmptyAndTrim(globalConfigEmail);
         }
-
-        return fixEmptyAndTrim(confEmail);
+        return confEmail;
     }
 
     public boolean getSkipTag() {
