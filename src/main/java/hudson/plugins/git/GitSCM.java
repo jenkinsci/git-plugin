@@ -1,6 +1,8 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
+
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
