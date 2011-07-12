@@ -49,8 +49,8 @@ public class GitChangeLogParser extends ChangeLogParser {
                     lines = new ArrayList<String>();
                 }
 		
-                if (lines != null)
-                    lines.add(line);
+                if (lines != null && lines.size()<THRESHOLD)
+                    lines.add(line);    // TODO: if we ignored some lines, tell the user so.
             }
             
             if (lines != null) {
@@ -67,5 +67,9 @@ public class GitChangeLogParser extends ChangeLogParser {
     private GitChangeSet parseCommit(List<String> lines, boolean authorOrCommitter) {
         return new GitChangeSet(lines, authorOrCommitter);
     }
-    
+
+    /**
+     * To control the memory overhead of a large change, we ignore beyond certain number of lines.
+     */
+    private static int THRESHOLD = 1000;
 }
