@@ -39,7 +39,6 @@ import hudson.scm.SCMRevisionState;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -60,6 +59,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
+import hudson.util.IOUtils;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
@@ -858,9 +858,10 @@ public class GitSCM extends SCM implements Serializable {
 
     @Override
     public boolean checkout(final AbstractBuild build, Launcher launcher,
-            final FilePath workspace, final BuildListener listener, File changelogFile)
+            final FilePath workspace, final BuildListener listener, File _changelogFile)
             throws IOException, InterruptedException {
-        Object[] returnData; // Changelog, BuildData
+
+        final FilePath changelogFile = new FilePath(_changelogFile);
 
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
@@ -1056,157 +1057,144 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
 
-        if (mergeOptions.doMerge()) {
-            if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
-                returnData = workingDirectory.act(new FileCallable<Object[]>() {
+        if (mergeOptions.doMerge() && !revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
+            build.addAction(workingDirectory.act(new FileCallable<BuildData>() {
 
-                    private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-                    public Object[] invoke(File localWorkspace, VirtualChannel channel)
-                            throws IOException {
-                        IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+                public BuildData invoke(File localWorkspace, VirtualChannel channel)
+                        throws IOException, InterruptedException {
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
 
-                        // Do we need to merge this revision onto MergeTarget
+                    // Do we need to merge this revision onto MergeTarget
 
-                        // Only merge if there's a branch to merge that isn't
-                        // us..
-                        listener.getLogger().println(
-                                "Merging " + revToBuild + " onto "
-                                + mergeOptions.getMergeTarget());
+                    // Only merge if there's a branch to merge that isn't
+                    // us..
+                    listener.getLogger().println(
+                            "Merging " + revToBuild + " onto "
+                            + mergeOptions.getMergeTarget());
 
-                        // checkout origin/blah
-                        ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
+                    // checkout origin/blah
+                    ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                        git.checkoutBranch(paramLocalBranch, target.name());
+                    git.checkoutBranch(paramLocalBranch, target.name());
 
-                        try {
-                            git.merge(revToBuild.getSha1().name());
-                        } catch (Exception ex) {
-                            listener.getLogger().println(
-                                    "Branch not suitable for integration as it does not merge cleanly");
-
-                            // We still need to tag something to prevent
-                            // repetitive builds from happening - tag the
-                            // candidate
-                            // branch.
-                            git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
-
-                            if (!getSkipTag()) {
-                                git.tag(buildnumber, "Jenkins Build #"
-                                        + buildNumber);
-                            }
-
-                            buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
-                            return new Object[]{null, buildData};
-                        }
-
-                        if (git.hasGitModules()) {
-                            // This ensures we don't miss changes to submodule paths and allows
-                            // seamless use of bare and non-bare superproject repositories.
-                            git.setupSubmoduleUrls(revToBuild, listener);
-                            git.submoduleUpdate(recursiveSubmodules);
-                        }
+                    try {
+                        git.merge(revToBuild.getSha1().name());
+                    } catch (Exception ex) {
+                        // We still need to tag something to prevent
+                        // repetitive builds from happening - tag the
+                        // candidate
+                        // branch.
+                        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
                         if (!getSkipTag()) {
-                            // Tag the successful merge
-                            git.tag(buildnumber, "Jenkins Build #" + buildNumber);
+                            git.tag(buildnumber, "Jenkins Build #"
+                                    + buildNumber);
                         }
 
-                        String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
+                        buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
+                        throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
+                    }
 
-                        Build build = new Build(revToBuild, buildNumber, null);
-                        buildData.saveBuild(build);
-                        GitUtils gu = new GitUtils(listener, git);
-                        build.mergeRevision = gu.getRevisionForSHA1(target);
-                        if (getClean()) {
-                            listener.getLogger().println("Cleaning workspace");
-                            git.clean();
-                            if (git.hasGitModules()) {
-                                git.submoduleClean(recursiveSubmodules);
+                    if (git.hasGitModules()) {
+                        // This ensures we don't miss changes to submodule paths and allows
+                        // seamless use of bare and non-bare superproject repositories.
+                        git.setupSubmoduleUrls(revToBuild, listener);
+                        git.submoduleUpdate(recursiveSubmodules);
+                    }
+
+                    if (!getSkipTag()) {
+                        // Tag the successful merge
+                        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
+                    }
+
+                    computeChangeLog(git, revToBuild, listener, buildData, changelogFile);
+
+                    Build build = new Build(revToBuild, buildNumber, null);
+                    buildData.saveBuild(build);
+                    GitUtils gu = new GitUtils(listener, git);
+                    build.mergeRevision = gu.getRevisionForSHA1(target);
+                    if (getClean()) {
+                        listener.getLogger().println("Cleaning workspace");
+                        git.clean();
+                        if (git.hasGitModules()) {
+                            git.submoduleClean(recursiveSubmodules);
+                        }
+                    }
+
+                    // Fetch the diffs into the changelog file
+                    return buildData;
+                }
+            }));
+        } else {
+            // No merge
+            build.addAction(workingDirectory.act(new FileCallable<BuildData>() {
+
+                private static final long serialVersionUID = 1L;
+
+                public BuildData invoke(File localWorkspace, VirtualChannel channel)
+                        throws IOException, InterruptedException {
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+
+                    // Straight compile-the-branch
+                    listener.getLogger().println("Checking out " + revToBuild);
+
+                    if (getClean()) {
+                        listener.getLogger().println("Cleaning workspace");
+                        git.clean();
+                    }
+
+                    git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
+
+                    if (git.hasGitModules()) {
+                        // Git submodule update will only 'fetch' from where it
+                        // regards as 'origin'. However,
+                        // it is possible that we are building from a
+                        // RemoteRepository with changes
+                        // that are not in 'origin' AND it may be a new module that
+                        // we've only just discovered.
+                        // So - try updating from all RRs, then use the submodule
+                        // Update to do the checkout
+                        //
+                        // Also, only do this if we're not doing recursive submodules, since that'll
+                        // theoretically be dealt with there anyway.
+                        if (!recursiveSubmodules) {
+                            for (RemoteConfig remoteRepository : paramRepos) {
+                                fetchSubmodulesFrom(git, localWorkspace, listener, remoteRepository);
                             }
                         }
 
-                        // Fetch the diffs into the changelog file
-                        return new Object[]{changeLog, buildData};
+                        // This ensures we don't miss changes to submodule paths and allows
+                        // seamless use of bare and non-bare superproject repositories.
+                        git.setupSubmoduleUrls(revToBuild, listener);
+                        git.submoduleUpdate(recursiveSubmodules);
+
                     }
-                });
-                BuildData returningBuildData = (BuildData) returnData[1];
-                build.addAction(returningBuildData);
-                return changeLogResult((String) returnData[0], changelogFile);
-            }
+
+                    // if(compileSubmoduleCompares)
+                    if (doGenerateSubmoduleConfigurations) {
+                        SubmoduleCombinator combinator = new SubmoduleCombinator(
+                                git, listener, localWorkspace, submoduleCfg);
+                        combinator.createSubmoduleCombinations();
+                    }
+
+                    if (!getSkipTag()) {
+                        // Tag the successful merge
+                        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
+                    }
+
+                    computeChangeLog(git, revToBuild, listener, buildData,changelogFile);
+
+                    buildData.saveBuild(new Build(revToBuild, buildNumber, null));
+
+                    // Fetch the diffs into the changelog file
+                    return buildData;
+                }
+            }));
         }
 
-        // No merge
-
-        returnData = workingDirectory.act(new FileCallable<Object[]>() {
-
-            private static final long serialVersionUID = 1L;
-
-            public Object[] invoke(File localWorkspace, VirtualChannel channel)
-                    throws IOException {
-                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
-
-                // Straight compile-the-branch
-                listener.getLogger().println("Checking out " + revToBuild);
-
-                if (getClean()) {
-                    listener.getLogger().println("Cleaning workspace");
-                    git.clean();
-                }
-
-                git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
-
-                if (git.hasGitModules()) {
-                    // Git submodule update will only 'fetch' from where it
-                    // regards as 'origin'. However,
-                    // it is possible that we are building from a
-                    // RemoteRepository with changes
-                    // that are not in 'origin' AND it may be a new module that
-                    // we've only just discovered.
-                    // So - try updating from all RRs, then use the submodule
-                    // Update to do the checkout
-                    //
-                    // Also, only do this if we're not doing recursive submodules, since that'll
-                    // theoretically be dealt with there anyway.
-                    if (!recursiveSubmodules) {
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            fetchSubmodulesFrom(git, localWorkspace, listener, remoteRepository);
-                        }
-                    }
-
-                    // This ensures we don't miss changes to submodule paths and allows
-                    // seamless use of bare and non-bare superproject repositories.
-                    git.setupSubmoduleUrls(revToBuild, listener);
-                    git.submoduleUpdate(recursiveSubmodules);
-
-                }
-
-                // if(compileSubmoduleCompares)
-                if (doGenerateSubmoduleConfigurations) {
-                    SubmoduleCombinator combinator = new SubmoduleCombinator(
-                            git, listener, localWorkspace, submoduleCfg);
-                    combinator.createSubmoduleCombinations();
-                }
-
-                if (!getSkipTag()) {
-                    // Tag the successful merge
-                    git.tag(buildnumber, "Jenkins Build #" + buildNumber);
-                }
-
-                String changeLog = computeChangeLog(git, revToBuild, listener, buildData);
-
-                buildData.saveBuild(new Build(revToBuild, buildNumber, null));
-
-                // Fetch the diffs into the changelog file
-                return new Object[]{changeLog, buildData};
-            }
-        });
-
-
-        build.addAction((Action) returnData[1]);
-
-        return changeLogResult((String) returnData[0], changelogFile);
-
+        return true;
     }
 
     /**
@@ -1222,16 +1210,16 @@ public class GitSCM extends SCM implements Serializable {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private String computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData) throws IOException {
+    private void computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile) throws IOException, InterruptedException {
         int histories = 0;
 
-        StringBuilder changeLog = new StringBuilder();
+        PrintStream out = new PrintStream(changelogFile.write());
         try {
             for (Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git);
                 if (lastRevWas != null) {
                     if (git.isCommitInRepo(lastRevWas.getSHA1().name())) {
-                        changeLog.append(putChangelogDiffsIntoFile(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name()));
+                        putChangelogDiffs(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
                         histories++;
                     } else {
                         listener.getLogger().println("Could not record history. Previous build's commit, " + lastRevWas.getSHA1().name()
@@ -1242,14 +1230,14 @@ public class GitSCM extends SCM implements Serializable {
                 }
             }
         } catch (GitException ge) {
-            changeLog.append("Unable to retrieve changeset");
+            out.println("Unable to retrieve changeset");
+        } finally {
+            IOUtils.closeQuietly(out);
         }
 
         if (histories > 1) {
             listener.getLogger().println("Warning : There are multiple branch changesets here");
         }
-
-        return changeLog.toString();
     }
 
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
@@ -1268,17 +1256,10 @@ public class GitSCM extends SCM implements Serializable {
 
     }
 
-    private String putChangelogDiffsIntoFile(IGitAPI git, String branchName, String revFrom,
-            String revTo) throws IOException {
-        ByteArrayOutputStream fos = new ByteArrayOutputStream();
-        // fos.write("<data><![CDATA[".getBytes());
-        String changeset = "Changes in branch " + branchName + ", between " + revFrom + " and " + revTo + "\n";
-        fos.write(changeset.getBytes());
-
+    private void putChangelogDiffs(IGitAPI git, String branchName, String revFrom,
+            String revTo, PrintStream fos) throws IOException {
+        fos.println("Changes in branch " + branchName + ", between " + revFrom + " and " + revTo);
         git.changelog(revFrom, revTo, fos);
-        // fos.write("]]></data>".getBytes());
-        fos.close();
-        return fos.toString("UTF-8");
     }
 
     @Override
