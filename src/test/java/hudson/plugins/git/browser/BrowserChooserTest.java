@@ -47,6 +47,10 @@ public class BrowserChooserTest extends TestCase {
         testExistingBrowser(RedmineWeb.class);
     }
 
+    public void testGitoriousWeb() throws IOException {
+        testExistingBrowser(GitoriousWeb.class);
+    }
+
     public void testGithubWeb() throws IOException {
         testExistingBrowser(GithubWeb.class);
     }
