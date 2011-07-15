@@ -123,16 +123,16 @@
 		<table width="100%">
 		<f:optionalBlock field="doMerge"
 		                 title="${%Merge before build}"
-		                 checked="${doMerge}">
+		                 checked="${scm.mergeOptions.doMerge()}">
 		 <f:entry title="Name of repository: (default first specified, e.g. origin)" field="mergeRemote">
-		  <f:textbox id="git.mergeRemote" />
+		  <f:textbox id="git.mergeRemote" value="${scm.mergeOptions.getMergeRemote().getName()}"/>
 <!-- TODO add the check url. Note that we cannot rely on the repo.name tag to be at the root of the form -->
 <!--		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
 		                      +encodeAllInputs('&amp;', this.form, 'repo.name')
 		                      +encodeAllInputs('&amp;', this.form, 'repo.url')"/ -->
 		 </f:entry>
 		 <f:entry title="Branch to merge to: (e.g. master)" field="mergeTarget">
-		  <f:textbox id="git.mergeTarget" clazz="required"/>
+		  <f:textbox id="git.mergeTarget" value="${scm.mergeOptions.getMergeTarget()}" clazz="required"/>
 		 </f:entry>
 		</f:optionalBlock>
 		</table>
