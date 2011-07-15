@@ -939,14 +939,6 @@ public class GitSCM extends SCM implements Serializable {
                 if (git.hasGitRepo()) {
                     // It's an update
 
-                    // Do we want to prune first?
-                    if (pruneBranches) {
-                        log.println("Pruning obsolete local branches");
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            git.prune(remoteRepository);
-                        }
-                    }
-
                     if (paramRepos.size() == 1)
                         log.println("Fetching changes from 1 remote Git repository");
                     else
@@ -965,6 +957,13 @@ public class GitSCM extends SCM implements Serializable {
                     if (!fetched) {
                         listener.error("Could not fetch from any repository");
                         throw new GitException("Could not fetch from any repository");
+                    }
+                    // Do we want to prune first?
+                    if (pruneBranches) {
+                        log.println("Pruning obsolete local branches");
+                        for (RemoteConfig remoteRepository : paramRepos) {
+                            git.prune(remoteRepository);
+                        }
                     }
 
                 } else {
