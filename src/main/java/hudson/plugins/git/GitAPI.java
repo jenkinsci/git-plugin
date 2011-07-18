@@ -979,16 +979,16 @@ public class GitAPI implements IGitAPI {
         return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
     }
 
-    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException {
-        Repository db = getRepository();
-        ObjectId commit = db.resolve(revName);
-        List<Tag> ret = new ArrayList<Tag>();
+    public List<Tag> getTagsOnCommit(final String revName) throws GitException,
+            IOException {
+        final Repository db = getRepository();
+        final ObjectId commit = db.resolve(revName);
+        final List<Tag> ret = new ArrayList<Tag>();
 
         for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-
-            Ref ref = db.getTags().get( tag.getKey() );
-            if( ref.getObjectId().equals(commit) )
-                ret.add( new Tag( tag.getKey(), ref.getObjectId() ) );
+            final ObjectId tagId = tag.getValue().getObjectId();
+            if (commit.equals(tagId))
+                ret.add(new Tag(tag.getKey(), tagId));
         }
         return ret;
     }
