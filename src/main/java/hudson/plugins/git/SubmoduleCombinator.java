@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -59,18 +60,18 @@ public class SubmoduleCombinator {
         }
 
         // Remove any uninteresting branches
-    
-    
-    
-        for (IndexEntry entry : moduleBranches.keySet()) {
-            listener.getLogger().print("Submodule " + entry.getFile() + " branches");
-            for (Revision br : moduleBranches.get(entry)) {
-                listener.getLogger().print(" " + br.toString());
 
-            }
-            listener.getLogger().print("\n");
+
+
+        for (Entry<IndexEntry, Collection<Revision>> submodule : moduleBranches
+                .entrySet()) {
+            listener.getLogger().print(
+                    "Submodule " + submodule.getKey().getFile() + " branches");
+            for (Revision br : submodule.getValue())
+                listener.getLogger().print(" " + br.toString());
+            listener.getLogger().print('\n');
         }
-    
+
         // Make all the possible combinations
         List<Map<IndexEntry, Revision>> combinations = createCombinations(moduleBranches);
 
@@ -110,12 +111,12 @@ public class SubmoduleCombinator {
             int min = Integer.MAX_VALUE;
 
             // But let's see if we can find the most appropriate place to create the branch
-            for (ObjectId sha : entriesMap.keySet()) {
-                List<IndexEntry> entries = entriesMap.get(sha);
-                int value = difference(combination, entries);
+            for (Entry<ObjectId, List<IndexEntry>> entry : entriesMap
+                    .entrySet()) {
+                int value = difference(combination, entry.getValue());
                 if (value > 0 && value < min) {
                     min = value;
-                    sha1 = sha;
+                    sha1 = entry.getKey();
                 }
 
                 if (min == 1) break; // look no further
@@ -151,25 +152,29 @@ public class SubmoduleCombinator {
         String name = "combine-" + tid + "-" + (idx++); 
         git.branch(name);
         git.checkout(name);
-   
-        String commit = "Jenkins generated combination of:\n";
-    
-        for (IndexEntry submodule : settings.keySet()) {
-            Revision branch = settings.get(submodule);
-            commit += "  " + submodule.getFile() + " " + branch.toString() + "\n";
+
+        StringBuilder commit = new StringBuilder(
+                "Jenkins generated combination of:\n");
+
+        for (Entry<IndexEntry, Revision> setting : settings.entrySet()) {
+            commit.append(' ').append(' ');
+            commit.append(setting.getKey().getFile());
+            commit.append(' ');
+            commit.append(setting.getValue());
+            commit.append('\n');
         }
-    
+
         listener.getLogger().print(commit);
-    
-    
-        for (IndexEntry submodule : settings.keySet()) {
-            Revision branch = settings.get(submodule);
+
+        for (Entry<IndexEntry, Revision> setting : settings.entrySet()) {
+            IndexEntry submodule = setting.getKey();
+            Revision branch = setting.getValue();
             File subdir = new File(workspace, submodule.getFile());
-            IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener, git.getEnvironment());
-      
+            IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
+                    listener, git.getEnvironment());
+
             subGit.checkout(branch.sha1.name());
             git.add(submodule.file);
-      
         }
     
         try {
@@ -177,10 +182,10 @@ public class SubmoduleCombinator {
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(f);
-                fos.write(commit.getBytes());
-            }
-            finally {
-                fos.close();
+                fos.write(commit.toString().getBytes());
+            } finally {
+                if (fos != null)
+                    fos.close();
             }
             git.commit(f);
             f.delete();
