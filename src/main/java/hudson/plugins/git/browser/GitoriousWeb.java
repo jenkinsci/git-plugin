@@ -40,7 +40,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     /**
      * Creates a link to the commit diff.
      * 
-     * https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b
+     * https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diffs?diffmode=sidebyside&fragment=1#[path to file]
      * 
      * @param path
      * @return diff link
@@ -49,8 +49,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        // gitorious does not show diffs on single files so we create a link to the commit
-        return new URL(url, "commit/" + changeSet.getId().toString());    
+        return new URL(url, "commit/" + changeSet.getId().toString() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
     }
 
     /**
