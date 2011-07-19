@@ -4,6 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 
+import hudson.Util;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -72,7 +74,7 @@ public class Revision implements java.io.Serializable, Cloneable {
                 Iterables.transform(branches, new Function<Branch, String>() {
 
                     public String apply(Branch from) {
-                        return from.getName();
+                        return Util.fixNull(from.getName());
                     }
                 }));
         s.append(')');
