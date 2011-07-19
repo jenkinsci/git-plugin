@@ -67,10 +67,10 @@ public class GitoriousWebTest extends TestCase {
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", gitoriousWeb.getDiffLink(modified1).toString());
+        assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/main/java/hudson/plugins/git/browser/GithubWeb.java", gitoriousWeb.getDiffLink(modified1).toString());
         // For added files returns a link to the commit.
         final Path added = pathMap.get("src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file");
-        assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", gitoriousWeb.getDiffLink(added).toString());
+        assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file", gitoriousWeb.getDiffLink(added).toString());
     }
 
     /**
@@ -94,7 +94,7 @@ public class GitoriousWebTest extends TestCase {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = gitoriousWeb.getFileLink(path);
-        assertEquals(GITORIOUS_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f", String.valueOf(fileLink));
+        assertEquals(GITORIOUS_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f/diffs?diffmode=sidebyside&fragment=1#bar", String.valueOf(fileLink));
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
