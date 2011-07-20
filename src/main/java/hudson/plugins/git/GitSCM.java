@@ -1051,6 +1051,8 @@ public class GitSCM extends SCM implements Serializable {
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
+        Branch branch = revToBuild.getBranches().iterator().next();
+        environment.put(GIT_BRANCH, branch.getName());
 
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
             build.addAction(workingDirectory.act(new FileCallable<BuildData>() {
@@ -1237,13 +1239,16 @@ public class GitSCM extends SCM implements Serializable {
 
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
-        String branch = getSingleBranch(build);
-        if (branch != null) {
-            env.put(GIT_BRANCH, branch);
+        Revision rev = fixNull(getBuildData(build, false)).getLastBuiltRevision();
+        String singleBranch = getSingleBranch(build);
+        if (singleBranch != null){
+            env.put(GIT_BRANCH, singleBranch);
+        } else if (rev != null) {
+            Branch branch = rev.getBranches().iterator().next();
+            env.put(GIT_BRANCH, branch.getName());
         }
-        BuildData bd = fixNull(getBuildData(build, false));
-        if ((bd != null) && (bd.getLastBuiltRevision() != null)) {
-            String commit = bd.getLastBuiltRevision().getSha1String();
+        if (rev != null) {
+            String commit = rev.getSha1String();
             if (commit != null) {
                 env.put(GIT_COMMIT, commit);
             }
