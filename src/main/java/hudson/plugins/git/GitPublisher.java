@@ -28,14 +28,17 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletException;
+
 
 import org.apache.commons.lang.StringUtils;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;
@@ -401,6 +404,31 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         public FormValidation doCheckBranchName(@QueryParameter String value) {
             return checkFieldNotEmpty(value, "Branch Name");
+        }
+        
+        public FormValidation doCheckRemote(
+                @AncestorInPath AbstractProject project, StaplerRequest req)
+                throws IOException, ServletException {
+            String remote = req.getParameter("value");
+            boolean isMerge = req.getParameter("isMerge") != null;
+
+            // Added isMerge because we don't want to allow empty remote names
+            // for tag/branch pushes.
+            if (remote.length() == 0 && isMerge)
+                return FormValidation.ok();
+
+            FormValidation validation = checkFieldNotEmpty(remote,
+                    "Remote Name");
+            if (validation.kind != FormValidation.Kind.OK)
+                return validation;
+
+            GitSCM scm = (GitSCM) project.getScm();
+            if (scm.getRepositoryByName(remote) == null)
+                return FormValidation
+                        .error("No remote repository configured with name '"
+                                + remote + "'");
+
+            return FormValidation.ok();
         }
                 
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {

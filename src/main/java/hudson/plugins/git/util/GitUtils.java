@@ -15,23 +15,24 @@ import hudson.model.StreamBuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
-import hudson.plugins.git.IndexEntry;
 import hudson.plugins.git.Revision;
-
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
 
 public class GitUtils {
     IGitAPI git;
@@ -92,8 +93,8 @@ public class GitUtils {
     /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
-     * @param git
-     * @return
+     * @param revisions
+     * @return filtered tip branches
      */
     public Collection<Revision> filterTipBranches(Collection<Revision> revisions) {
         // If we have 3 branches that we might want to build
@@ -101,30 +102,69 @@ public class GitUtils {
         //        \-----C
 
         // we only want (B) and (C), as (A) is an ancestor (old).
+        final List<Revision> l = new ArrayList<Revision>(revisions);
+        
+        // Bypass any rev walks if only one branch or less
+        if (l.size() <= 1)
+            return l;
 
-        List<Revision> l = new ArrayList<Revision>(revisions);
+        final boolean log = LOGGER.isLoggable(Level.FINE);
+        Revision revI;
+        Revision revJ;
+        ObjectId shaI;
+        ObjectId shaJ;
+        ObjectId commonAncestor;
+        RevWalk walk = null;
+        final long start = System.currentTimeMillis();
+        long calls = 0;
+        if (log)
+            LOGGER.fine(MessageFormat.format(
+                    "Computing merge base of {0}  branches", l.size()));
+        try {
+            walk = new RevWalk(git.getRepository());
+            walk.setRetainBody(false);
+            walk.setRevFilter(RevFilter.MERGE_BASE);
+            for (int i = 0; i < l.size(); i++)
+                for (int j = i + 1; j < l.size(); j++) {
+                    revI = l.get(i);
+                    revJ = l.get(j);
+                    shaI = revI.getSha1();
+                    shaJ = revJ.getSha1();
 
-        OUTER:
-        for (int i=0; i<l.size(); i++) {
-            for (int j=i+1; j<l.size(); j++) {
-                Revision ri = l.get(i);
-                Revision rj = l.get(j);
-                ObjectId commonAncestor = git.mergeBase(ri.getSha1(), rj.getSha1());
-                if (commonAncestor==null)   continue;
+                    walk.reset();
+                    walk.markStart(walk.parseCommit(shaI));
+                    walk.markStart(walk.parseCommit(shaJ));
+                    commonAncestor = walk.next();
+                    calls++;
 
-                if (commonAncestor.equals(ri.getSha1())) {
-                    LOGGER.fine("filterTipBranches: "+rj+" subsumes "+ri);
-                    l.remove(i);
-                    i--;
-                    continue OUTER;
+                    if (commonAncestor == null)
+                        continue;
+                    if (commonAncestor.equals(shaI)) {
+                        if (log)
+                            LOGGER.fine("filterTipBranches: " + revJ
+                                    + " subsumes " + revI);
+                        l.remove(i);
+                        i--;
+                        break;
+                    }
+                    if (commonAncestor.equals(shaJ)) {
+                        if (log)
+                            LOGGER.fine("filterTipBranches: " + revI
+                                    + " subsumes " + revJ);
+                        l.remove(j);
+                        j--;
+                    }
                 }
-                if (commonAncestor.equals(rj.getSha1())) {
-                    LOGGER.fine("filterTipBranches: "+ri+" subsumes "+rj);
-                    l.remove(j);
-                    j--;
-                }
-            }
+        } catch (IOException e) {
+            throw new GitException("Error computing merge base", e);
+        } finally {
+            if (walk != null)
+                walk.release();
         }
+        if (log)
+            LOGGER.fine(MessageFormat.format(
+                    "Computed {0} merge bases in {1} ms", calls,
+                    (System.currentTimeMillis() - start)));
 
         return l;
     }

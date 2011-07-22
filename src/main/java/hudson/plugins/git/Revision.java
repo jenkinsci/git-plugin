@@ -1,17 +1,23 @@
 package hudson.plugins.git;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
+
+import hudson.Util;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 /**
- * A Revision is a SHA1 in the object tree, and the collection of branches
- * that share this ID. Unlike other SCMs, git can have >1 branches point
- * at the _same_ commit.
- *
+ * A Revision is a SHA1 in the object tree, and the collection of branches that
+ * share this ID. Unlike other SCMs, git can have >1 branches point at the
+ * _same_ commit.
+ * 
  * @author magnayn
  */
 @ExportedBean(defaultVisibility = 999)
@@ -63,15 +69,16 @@ public class Revision implements java.io.Serializable, Cloneable {
     }
 
     public String toString() {
-        String s = "Revision " + sha1.name() + " (";
-        for (Branch br : branches) {
-            s += br.getName() + ", ";
-        }
-        if (s.endsWith(", "))
-            s = s.substring(0, s.length() - 2);
-        s += ")";
+        StringBuilder s = new StringBuilder("Revision " + sha1.name() + " (");
+        Joiner.on(", ").appendTo(s,
+                Iterables.transform(branches, new Function<Branch, String>() {
 
-        return s;
+                    public String apply(Branch from) {
+                        return Util.fixNull(from.getName());
+                    }
+                }));
+        s.append(')');
+        return s.toString();
     }
 
     @Override

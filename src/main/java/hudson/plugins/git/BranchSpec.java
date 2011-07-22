@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A specification of branches to build. Rather like a refspec.
@@ -29,7 +30,8 @@ public class BranchSpec implements Serializable {
     public void setName(String value) {
         this.name = value;
     }
-    
+
+    @DataBoundConstructor
     public BranchSpec(String name) {
         if(name == null)
             throw new IllegalArgumentException();

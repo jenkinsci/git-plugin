@@ -1,6 +1,5 @@
 package hudson.plugins.git.util;
 
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 import static hudson.Util.fixNull;
 
@@ -43,8 +42,22 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public Build              lastBuild;
 
+    /**
+     * The name of the SCM as given by the user.
+     */
+    public String scmName;
+
+    public BuildData() {
+    }
+    
+    public BuildData(String scmName) {
+        this.scmName = scmName;
+    }
+
 
     public String getDisplayName() {
+        if (scmName != null && !scmName.isEmpty())
+            return "Git Build Data:" + scmName;
         return "Git Build Data";
     }
     public String getIconFileName() {
@@ -109,6 +122,16 @@ public class BuildData implements Action, Serializable, Cloneable {
         return buildsByBranchName;
     }
 
+    public void setScmName(String scmName)
+    {
+        this.scmName = scmName;
+    }
+
+    @Exported
+    public String getScmName()
+    {
+        return scmName;
+    }
     @Override
     public BuildData clone() {
         BuildData clone;
@@ -153,6 +176,8 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return super.toString()+"[buildsByBranchName="+buildsByBranchName+",lastBuild="+lastBuild+"]";
+        return super.toString()+"[scmName="+scmName==null?"<null>":scmName+
+                ",buildsByBranchName="+buildsByBranchName+
+                ",lastBuild="+lastBuild+"]";
     }
 }

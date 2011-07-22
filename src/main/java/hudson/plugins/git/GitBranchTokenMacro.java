@@ -81,7 +81,7 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
     private String format(Branch b) {
         String n = b.getName();
         if (fullName)   return n;
-        return n.substring(n.lastIndexOf('/')+1); // trim off '/'
+        return n.substring(n.indexOf('/')+1); // trim off '/'
     }
 }
 

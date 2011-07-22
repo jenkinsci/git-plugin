@@ -24,10 +24,9 @@
 package hudson.plugins.git;
 
 import hudson.model.InvisibleAction;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.logging.Logger;
 
 /**

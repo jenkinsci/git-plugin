@@ -14,7 +14,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,14 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.spearce.jgit.lib.Constants;
-import org.spearce.jgit.lib.ObjectId;
-import org.spearce.jgit.lib.Ref;
-import org.spearce.jgit.lib.Repository;
-import org.spearce.jgit.lib.Tag;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 public class GitAPI implements IGitAPI {
 
@@ -51,10 +52,6 @@ public class GitAPI implements IGitAPI {
         this.listener = listener;
         this.gitExe = gitExe;
         this.environment = environment;
-        PrintStream log = listener.getLogger();
-        for (Map.Entry<String, String> ent : environment.entrySet()) {
-            //log.println("Env: " + ent.getKey() + "=" + ent.getValue());
-        }
 
         launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
     }
@@ -67,12 +64,35 @@ public class GitAPI implements IGitAPI {
         return environment;
     }
 
+    private int[] getGitVersion() {
+        int minorVer = 1;
+        int majorVer = 6;
+
+        try {
+            String v = firstLine(launchCommand("--version")).trim();
+            Pattern p = Pattern.compile("git version ([0-9]+)\\.([0-9+])\\..*");
+            Matcher m = p.matcher(v);
+            if (m.matches() && m.groupCount() >= 2) {
+                try {
+                    majorVer = Integer.parseInt(m.group(1));
+                    minorVer = Integer.parseInt(m.group(2));
+                } catch (NumberFormatException e) { }
+            }
+        } catch(GitException ex) {
+            listener.getLogger().println("Error trying to determine the git version: " + ex.getMessage());
+            listener.getLogger().println("Assuming 1.6");
+        }
+
+        return new int[]{majorVer,minorVer};
+    }
+        
     public void init() throws GitException {
         if (hasGitRepo()) {
             throw new GitException(".git directory already exists! Has it already been initialised?");
         }
         try {
-            final Repository repo = new Repository(new File(workspace.child(".git").getRemote()));
+			final Repository repo = new FileRepository(new File(workspace
+					.child(Constants.DOT_GIT).getRemote()));
             repo.create();
         } catch (IOException ioe) {
             throw new GitException("Error initiating git repo.", ioe);
@@ -80,7 +100,23 @@ public class GitAPI implements IGitAPI {
     }
 
     public boolean hasGitRepo() throws GitException {
-        return hasGitRepo(".git");
+        if( hasGitRepo(".git") )
+        {
+            // Check if this is actually a valid git repo by parsing the HEAD revision. If it's duff, this will
+            // fail.
+            try
+            {
+                validateRevision("HEAD");
+            }
+            catch(Exception ex)
+            {
+                listener.getLogger().println("Workspace has a .git repository, but it appears to be corrupt.");
+                return false;
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public boolean hasGitRepo( String GIT_DIR ) throws GitException {
@@ -162,7 +198,8 @@ public class GitAPI implements IGitAPI {
      */
     public void clone(final RemoteConfig remoteConfig) throws GitException {
         listener.getLogger().println("Cloning repository " + remoteConfig.getName());
-
+        final int[] gitVer = getGitVersion();
+        
         // TODO: Not here!
         try {
             workspace.deleteRecursive();
@@ -183,7 +220,9 @@ public class GitAPI implements IGitAPI {
                                          VirtualChannel channel) throws IOException {
                         final ArgumentListBuilder args = new ArgumentListBuilder();
                         args.add("clone");
-                        args.add("--progress");
+                        if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) { 
+                            args.add("--progress");
+                        }
                         args.add("-o", remoteConfig.getName());
                         args.add(source);
                         args.add(workspace.getAbsolutePath());
@@ -204,16 +243,24 @@ public class GitAPI implements IGitAPI {
         return ObjectId.fromString(firstLine(result).trim());
     }
 
+    public ObjectId validateRevision(String revName) throws GitException {
+        String result = launchCommand("rev-parse", "--verify", revName);
+        return ObjectId.fromString(firstLine(result).trim());
+    }
+
     public String describe(String commitIsh) throws GitException {
         String result = launchCommand("describe", "--tags", commitIsh);
         return firstLine(result).trim();
     }
 
     public void prune(RemoteConfig repository) throws GitException {
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("remote", "prune", repository.getName());
-        
-        launchCommand(args);
+        if (getRemoteUrl(repository.getName()) != null &&
+            !getRemoteUrl(repository.getName()).equals("")) {
+            ArgumentListBuilder args = new ArgumentListBuilder();
+            args.add("remote", "prune", repository.getName());
+            
+            launchCommand(args);
+        }
     }
     
     private String firstLine(String result) {
@@ -928,24 +975,22 @@ public class GitAPI implements IGitAPI {
         return launchCommand("log", "--all", "--pretty=format:'%H#%ct'", branch);
     }
 
-    private Repository getRepository() throws IOException {
-        return new Repository(new File(workspace.getRemote(), ".git"));
+    public Repository getRepository() throws IOException {
+        return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
     }
 
-    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException {
-        Repository db = getRepository();
-        ObjectId commit = db.resolve(revName);
-        List<Tag> ret = new ArrayList<Tag>();
+    public List<Tag> getTagsOnCommit(final String revName) throws GitException,
+            IOException {
+        final Repository db = getRepository();
+        final ObjectId commit = db.resolve(revName);
+        final List<Tag> ret = new ArrayList<Tag>();
 
         for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-
-            Tag ttag = db.mapTag(tag.getKey());
-            if(ttag.getObjId().equals(commit)) {
-                ret.add(ttag);
-            }
+            final ObjectId tagId = tag.getValue().getObjectId();
+            if (commit.equals(tagId))
+                ret.add(new Tag(tag.getKey(), tagId));
         }
         return ret;
-
     }
 
     public Set<String> getTagNames(String tagPattern) throws GitException {

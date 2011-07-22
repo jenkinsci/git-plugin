@@ -3,13 +3,14 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.model.User;
 import hudson.util.StreamTaskListener;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.spearce.jgit.lib.PersonIdent;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.PersonIdent;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,6 +34,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         workDir = createTmpDir();
         listener = new StreamTaskListener();
         envVars = new EnvVars();
+        User u1 = User.get(johnDoe.getName(), true);
+        User u2 = User.get(janeDoe.getName(), true);
         setAuthor(johnDoe);
         setCommitter(johnDoe);
         workspace = new FilePath(workDir);
@@ -78,12 +81,10 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         git.launchCommand("commit", "-m", message);
     }
 
-    protected List<RemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
-        return GitSCM.DescriptorImpl.createRepositoryConfigurations(
-                                                                    new String[]{workDir.getAbsolutePath()},
-                                                                    new String[]{"origin"},
-                                                                    new String[]{""}
-        );
+    protected List<UserRemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
+        List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
+        list.add(new UserRemoteConfig(workDir.getAbsolutePath(), "origin", ""));
+        return list;
     }
 
 }

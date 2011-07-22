@@ -1,5 +1,7 @@
 package hudson.plugins.git;
 
+import com.google.common.base.Joiner;
+
 import java.util.regex.Pattern;
 
 public class SubmoduleConfig implements java.io.Serializable {
@@ -40,13 +42,6 @@ public class SubmoduleConfig implements java.io.Serializable {
     }
 
     public String getBranchesString() {
-        String ret = "";
-
-        for (String branch : branches) {
-            if (ret.length() > 0) ret += ",";
-            ret += branch;
-        }
-        return ret;
-
+        return Joiner.on(',').join(branches);
     }
 }

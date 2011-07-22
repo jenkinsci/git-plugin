@@ -1,4 +1,5 @@
 target
+bin
 .classpath
 .settings
 .project
@@ -6,3 +7,4 @@ target
 *.ipr
 *.iws
 work
+nbactions.xml

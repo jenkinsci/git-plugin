@@ -9,9 +9,9 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
-import org.spearce.jgit.lib.ObjectId;
-import org.spearce.jgit.lib.Tag;
-import org.spearce.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
  * Encapsulates Git operations on a particular directory through git(1).
@@ -19,6 +19,7 @@ import org.spearce.jgit.transport.RemoteConfig;
 public interface IGitAPI {
     String getGitExe();
     EnvVars getEnvironment();
+    Repository getRepository() throws IOException; 
 
     public void init() throws GitException;
 

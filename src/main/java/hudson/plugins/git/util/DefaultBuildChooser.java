@@ -9,13 +9,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
@@ -91,14 +93,40 @@ public class DefaultBuildChooser extends BuildChooser {
 
             verbose(listener, "Found a new commit {0} to be built on {1}", sha1, singleBranch);
 
-            Revision revision = new Revision(sha1);
-            revision.getBranches().add(new Branch(singleBranch, sha1));
-            return Collections.singletonList(revision);
+            // calculate the revisions that are new compared to the last build
+            List<Revision> candidateRevs = new ArrayList<Revision>();
+            List<ObjectId> allRevs = git.revListAll(); // index 0 contains the newest revision
+            if (data != null && allRevs != null) {
+                Revision lastBuiltRev = data.getLastBuiltRevision();
+                if (lastBuiltRev == null) {
+                    return Collections.singletonList(objectId2Revision(singleBranch, sha1));
+                }
+                int indexOfLastBuildRev = allRevs.indexOf(lastBuiltRev.getSha1());
+                if (indexOfLastBuildRev == -1) {
+                    // mhmmm ... can happen when branches are switched.
+                    return Collections.singletonList(objectId2Revision(singleBranch, sha1));
+                }
+                List<ObjectId> newRevisionsSinceLastBuild = allRevs.subList(0, indexOfLastBuildRev);
+                // translate list of ObjectIds into list of Revisions
+                for (ObjectId objectId : newRevisionsSinceLastBuild) {
+                    candidateRevs.add(objectId2Revision(singleBranch, objectId));
+                }
+            }
+            if (candidateRevs.isEmpty()) {
+                return Collections.singletonList(objectId2Revision(singleBranch, sha1));
+            }
+            return candidateRevs;
         } catch (GitException e) {
             // branch does not exist, there is nothing to build
             verbose(listener, "Failed to rev-parse: {0}", singleBranch);
             return emptyList();
         }
+    }
+
+    private Revision objectId2Revision(String singleBranch, ObjectId sha1) {
+        Revision revision = new Revision(sha1);
+        revision.getBranches().add(new Branch(singleBranch, sha1));
+        return revision;
     }
 
     /**
@@ -140,13 +168,13 @@ public class DefaultBuildChooser extends BuildChooser {
                 }
 
                 if (!keep) {
-                    verbose(listener, "Ignoring {0} because it doesn't match branch specifier", b);
+                    verbose(listener, "Ignoring {0} because it doesn''t match branch specifier", b);
                     j.remove();
                 }
             }
 
             if (r.getBranches().size() == 0) {
-                verbose(listener, "Ignoring {0} because we don't care about any of the branches that point to it", r);
+                verbose(listener, "Ignoring {0} because we don''t care about any of the branches that point to it", r);
                 i.remove();
             }
         }
@@ -158,7 +186,7 @@ public class DefaultBuildChooser extends BuildChooser {
         verbose(listener, "After non-tip filtering: {0}", revs);
 
         // 4. Finally, remove any revisions that have already been built.
-        verbose(listener, "Removing what's already been built: {0}", data.getBuildsByBranchName());
+        verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
             Revision r = i.next();
 
@@ -166,7 +194,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 i.remove();
             }
         }
-        verbose(listener, "After filtering out what's already been built: {0}", revs);
+        verbose(listener, "After filtering out what''s already been built: {0}", revs);
 
         // if we're trying to run a build (not an SCM poll) and nothing new
         // was found then just run the last build again

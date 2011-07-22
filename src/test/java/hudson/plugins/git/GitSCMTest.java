@@ -15,10 +15,10 @@ import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
+
+import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.spearce.jgit.lib.PersonIdent;
-import org.spearce.jgit.transport.RemoteConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,6 +88,33 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    @Bug(value = 8342)
+    public void testExcludedRegionMultiCommit() throws Exception {
+        // Got 2 projects, each one should only build if changes in its own file
+        FreeStyleProject clientProject = setupProject("master", false, null, ".*serverFile", null);
+        FreeStyleProject serverProject = setupProject("master", false, null, ".*clientFile", null);
+        String initialCommitFile = "initialFile";
+        commit(initialCommitFile, johnDoe, "initial commit");
+        build(clientProject, Result.SUCCESS, initialCommitFile);
+        build(serverProject, Result.SUCCESS, initialCommitFile);
+
+        assertFalse("scm polling should not detect any more changes after initial build", clientProject.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect any more changes after initial build", serverProject.poll(listener).hasChanges());
+
+        // Got commits on serverFile, so only server project should build.
+        commit("myserverFile", johnDoe, "commit first server file");
+
+        assertFalse("scm polling should not detect any changes in client project", clientProject.poll(listener).hasChanges());
+        assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
+
+        // Got commits on both client and serverFile, so both projects should build.
+        commit("myNewserverFile", johnDoe, "commit new server file");
+        commit("myclientFile", johnDoe, "commit first clientfile");
+
+        assertTrue("scm polling did not detect changes in client project", clientProject.poll(listener).hasChanges());
+        assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
     }
 
     public void testBasicExcludedUser() throws Exception {
@@ -306,6 +333,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
 
+        // Try again. The first build will leave the repository in a bad state because we
+        // cloned something without even a HEAD - which will mean it will want to re-clone once there is some
+        // actual data.
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
         //now create and checkout a new branch:
         final String tmpBranch = "tmp";
         git.branch(tmpBranch);
@@ -403,9 +435,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String excludedUsers, String localBranch) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
+                null,
                 createRemoteRepositories(relativeTargetDir),
                 Collections.singletonList(new BranchSpec(branchString)),
-                new PreBuildMergeOptions(), false, Collections.<SubmoduleConfig>emptyList(), false,
+                null,
+                false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
                 excludedRegions, excludedUsers, localBranch, false, false, null, null, false));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());

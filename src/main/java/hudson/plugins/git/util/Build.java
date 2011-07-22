@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-import org.spearce.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectId;
 
 @ExportedBean(defaultVisibility = 999)
 public class Build implements Serializable, Cloneable {
