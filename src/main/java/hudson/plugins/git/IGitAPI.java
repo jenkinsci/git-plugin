@@ -19,7 +19,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 public interface IGitAPI {
     String getGitExe();
     EnvVars getEnvironment();
-    Repository getRepository() throws IOException; 
+    Repository getRepository() throws IOException;
 
     public void init() throws GitException;
 
@@ -58,7 +58,7 @@ public interface IGitAPI {
     void clone(RemoteConfig source) throws GitException;
     void clean() throws GitException;
     void prune(RemoteConfig repository) throws GitException;
-    
+
     ObjectId revParse(String revName) throws GitException;
     List<Branch> getBranches() throws GitException;
     List<Branch> getRemoteBranches() throws GitException, IOException;
@@ -92,15 +92,16 @@ public interface IGitAPI {
      *      If non-null, move/create the branch in this name at the specified commit-ish and check out that branch.
      */
     void checkoutBranch(String branch, String commitish) throws GitException;
-    
+
     void add(String filePattern) throws GitException;
     void branch(String name) throws GitException;
     void deleteBranch(String name) throws GitException;
-    
+
     void commit(File f) throws GitException;
 
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);
 
     List<String> showRevision(Revision r) throws GitException;
+    String getHeadRev(String remoteRepoUrl, String branch) throws GitException;
 }

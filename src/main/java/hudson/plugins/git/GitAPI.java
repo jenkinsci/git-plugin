@@ -85,7 +85,7 @@ public class GitAPI implements IGitAPI {
 
         return new int[]{majorVer,minorVer};
     }
-        
+
     public void init() throws GitException {
         if (hasGitRepo()) {
             throw new GitException(".git directory already exists! Has it already been initialised?");
@@ -199,7 +199,7 @@ public class GitAPI implements IGitAPI {
     public void clone(final RemoteConfig remoteConfig) throws GitException {
         listener.getLogger().println("Cloning repository " + remoteConfig.getName());
         final int[] gitVer = getGitVersion();
-        
+
         // TODO: Not here!
         try {
             workspace.deleteRecursive();
@@ -220,7 +220,7 @@ public class GitAPI implements IGitAPI {
                                          VirtualChannel channel) throws IOException {
                         final ArgumentListBuilder args = new ArgumentListBuilder();
                         args.add("clone");
-                        if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) { 
+                        if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) {
                             args.add("--progress");
                         }
                         args.add("-o", remoteConfig.getName());
@@ -258,11 +258,11 @@ public class GitAPI implements IGitAPI {
             !getRemoteUrl(repository.getName()).equals("")) {
             ArgumentListBuilder args = new ArgumentListBuilder();
             args.add("remote", "prune", repository.getName());
-            
+
             launchCommand(args);
         }
     }
-    
+
     private String firstLine(String result) {
         BufferedReader reader = new BufferedReader(new StringReader(result));
         String line;
@@ -325,7 +325,7 @@ public class GitAPI implements IGitAPI {
 
         return revShow;
     }
-    
+
     /**
      * Merge any changes into the head.
      *
@@ -358,12 +358,12 @@ public class GitAPI implements IGitAPI {
         launchCommand("submodule", "sync");
     }
 
-    
+
     /**
      * Update submodules.
      *
      * @param recursive if true, will recursively update submodules (requires git>=1.6.5)
-     * 
+     *
      * @throws GitException if executing the Git command fails
      */
     public void submoduleUpdate(boolean recursive) throws GitException {
@@ -372,7 +372,7 @@ public class GitAPI implements IGitAPI {
     	if (recursive) {
             args.add("--init", "--recursive");
         }
-        
+
         launchCommand(args);
     }
 
@@ -390,7 +390,7 @@ public class GitAPI implements IGitAPI {
             args.add("--recursive");
     	}
     	args.add("git clean -fdx");
-    	
+
     	launchCommand(args);
     }
 
@@ -664,10 +664,10 @@ public class GitAPI implements IGitAPI {
             String b = bi.next().getName();
             if (b != null) {
                 int slash = b.indexOf('/');
-                
+
                 if ( slash == -1 )
                     throw new GitException("no remote from branch name ("+b+")");
-                
+
                 remote = getDefaultRemote( b.substring(0,slash) );
             }
             else {
@@ -831,7 +831,7 @@ public class GitAPI implements IGitAPI {
             throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
         }
     }
-    
+
     public boolean tagExists(String tagName) throws GitException {
         tagName = tagName.replace(' ', '_');
 
@@ -846,7 +846,7 @@ public class GitAPI implements IGitAPI {
         }
 
     }
-    
+
     public void deleteTag(String tagName) throws GitException {
         tagName = tagName.replace(' ', '_');
         try {
@@ -916,7 +916,7 @@ public class GitAPI implements IGitAPI {
             return false;
         }
     }
-    
+
     public void add(String filePattern) throws GitException {
         try {
             launchCommand("add", filePattern);
@@ -1011,5 +1011,16 @@ public class GitAPI implements IGitAPI {
         } catch (Exception e) {
             throw new GitException("Error retrieving tag names", e);
         }
+    }
+
+    public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
+        String[] branchExploded = branch.split("/");
+        branch = branchExploded[branchExploded.length-1];
+        ArgumentListBuilder args = new ArgumentListBuilder("ls-remote");
+        args.add("-h");
+        args.add(remoteRepoUrl);
+        args.add(branch);
+        String result = launchCommand(args);
+        return result.length()>=40 ? result.substring(0,40) : "";
     }
 }
