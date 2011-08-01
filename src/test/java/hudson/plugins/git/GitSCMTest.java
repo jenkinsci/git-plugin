@@ -61,6 +61,30 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    public void testBasicRemotePoll() throws Exception {
+//        FreeStyleProject project = setupProject("master", true, false);
+        FreeStyleProject project = setupProject("master", false, null, null, null, true);
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+
     public void testBasicExcludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, ".*2", null);
 
@@ -203,7 +227,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         hudson.setNumExecutors(0);
         hudson.setNodes(hudson.getNodes());
-        
+
         project.setAssignedLabel(createSlave(null, null).getSelfLabel());
 
         // create initial commit and then run the build against it:
@@ -422,17 +446,25 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String relativeTargetDir) throws Exception {
         return setupProject(branchString, authorOrCommitter, relativeTargetDir, null, null);
     }
-    
+
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir,
                                           String excludedRegions,
                                           String excludedUsers) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null);
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, false);
     }
-    
+
+    private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
+            String relativeTargetDir,
+            String excludedRegions,
+            String excludedUsers,
+            boolean fastRemotePoll) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, fastRemotePoll);
+    }
+
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir, String excludedRegions,
-                                          String excludedUsers, String localBranch) throws Exception {
+                                          String excludedUsers, String localBranch, boolean fastRemotePoll) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
@@ -441,7 +473,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir,
-                excludedRegions, excludedUsers, localBranch, false, false, null, null, false));
+                excludedRegions, excludedUsers, localBranch, false, false, fastRemotePoll, null, null, false));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
@@ -485,7 +517,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         node.getNodeProperties().replaceBy(
                                            Collections.singleton(new EnvironmentVariablesNodeProperty(
                                                                                                       entries)));
-        
+
     }
 
 }

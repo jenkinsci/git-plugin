@@ -1,7 +1,6 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
-
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -11,7 +10,6 @@ import hudson.Launcher;
 import hudson.Util;
 import hudson.matrix.MatrixRun;
 import hudson.matrix.MatrixBuild;
-import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Items;
@@ -30,9 +28,9 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserDescriptor;
-import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
+import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
@@ -40,6 +38,7 @@ import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
+import hudson.util.IOUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,7 +60,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
-import hudson.util.IOUtils;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
@@ -119,6 +117,8 @@ public class GitSCM extends SCM implements Serializable {
     private boolean clean;
     private boolean wipeOutWorkspace;
     private boolean pruneBranches;
+    private boolean remotePoll;
+
     /**
      * @deprecated
      *      Replaced by {@link #buildChooser} instead.
@@ -166,7 +166,7 @@ public class GitSCM extends SCM implements Serializable {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false, null, null, false);
+                null, null, null, false, false, false, null, null, false);
     }
 
     @DataBoundConstructor
@@ -188,6 +188,7 @@ public class GitSCM extends SCM implements Serializable {
             String localBranch,
             boolean recursiveSubmodules,
             boolean pruneBranches,
+            boolean remotePoll,
             String gitConfigName,
             String gitConfigEmail,
             boolean skipTag) {
@@ -235,6 +236,19 @@ public class GitSCM extends SCM implements Serializable {
         this.excludedUsers = excludedUsers;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
+        if (remotePoll
+            && (branches.size() != 1
+            || branches.get(0).getName().contains("*")
+            || repo.size() != 1
+            || (excludedRegions != null && excludedRegions.length() > 0)
+            || (submoduleCfg.size() != 0)
+            || (excludedUsers != null && excludedUsers.length() > 0))) {
+            LOGGER.log(Level.WARNING, "Cannot poll remotely with current configuration.");
+            this.remotePoll = false;
+        } else {
+            this.remotePoll = remotePoll;
+        }
+
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
@@ -450,6 +464,10 @@ public class GitSCM extends SCM implements Serializable {
         return this.pruneBranches;
     }
 
+    public boolean getRemotePoll() {
+        return this.remotePoll;
+    }
+
     public boolean getWipeOutWorkspace() {
         return this.wipeOutWorkspace;
     }
@@ -561,6 +579,13 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     @Override
+    public boolean requiresWorkspaceForPolling() {
+        if(remotePoll)
+            return false;
+        return true;
+    }
+
+    @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
@@ -580,6 +605,30 @@ public class GitSCM extends SCM implements Serializable {
 
         if (buildData != null && buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
+        }
+
+        final String singleBranch = getSingleBranch(lastBuild);
+
+        if (singleBranch != null && this.remotePoll) {
+            String gitExe = "";
+            GitTool[] installations = ((hudson.plugins.git.GitTool.DescriptorImpl)Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)).getInstallations();
+            for(GitTool i : installations) {
+                if(i.getName().equals(gitTool)) {
+                    gitExe = i.getGitExe();
+                    break;
+                }
+            }
+            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment);
+            String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
+            String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
+
+            if(buildData.lastBuild.getRevision().getSha1String().equals(headRevision)) {
+                return PollingResult.NO_CHANGES;
+            } else {
+                return PollingResult.BUILD_NOW;
+            }
+
         }
 
         final String gitExe;
@@ -611,7 +660,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
-        final String singleBranch = getSingleBranch(lastBuild);
+//        final String singleBranch = getSingleBranch(lastBuild);
 
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
 
@@ -1581,7 +1630,7 @@ public class GitSCM extends SCM implements Serializable {
     /**
      * Given the workspace, gets the working directory, which will be the workspace
      * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
-     * 
+     *
      * @param workspace
      * @return working directory
      */
