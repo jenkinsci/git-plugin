@@ -26,6 +26,17 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>com.infradna.tool</groupId>
+        <artifactId>bridge-method-injector</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <configuration>
@@ -70,6 +81,11 @@
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>1.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.infradna.tool</groupId>
+      <artifactId>bridge-method-annotation</artifactId>
+      <version>1.4</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>

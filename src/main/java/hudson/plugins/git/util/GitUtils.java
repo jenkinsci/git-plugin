@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -96,7 +97,8 @@ public class GitUtils {
      * @param revisions
      * @return filtered tip branches
      */
-    public Collection<Revision> filterTipBranches(Collection<Revision> revisions) {
+    @WithBridgeMethods(Collection.class)
+    public List<Revision> filterTipBranches(Collection<Revision> revisions) {
         // If we have 3 branches that we might want to build
         // ----A--.---.--- B
         //        \-----C

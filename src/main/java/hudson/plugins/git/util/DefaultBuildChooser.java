@@ -143,6 +143,7 @@ public class DefaultBuildChooser extends BuildChooser {
      *  3. Get rid of any revisions that are wholly subsumed by another
      *     revision we're considering.
      *  4. Get rid of any revisions that we've already built.
+     *  5. Sort revisions from old to new.
      *
      *  NB: Alternate BuildChooser implementations are possible - this
      *  may be beneficial if "only 1" branch is to be built, as much of
@@ -150,9 +151,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    private Collection<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data) throws GitException, IOException {
+    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data) throws GitException, IOException {
         // 1. Get all the (branch) revisions that exist
-        Collection<Revision> revs = utils.getAllBranchRevisions();
+        List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
         verbose(listener, "Starting with all the branches: {0}", revs);
 
         // 2. Filter out any revisions that don't contain any branches that we
@@ -206,6 +207,10 @@ public class DefaultBuildChooser extends BuildChooser {
             verbose(listener, "Nothing seems worth building, so falling back to the previously built revision: {0}", data.getLastBuiltRevision());
             return Collections.singletonList(data.getLastBuiltRevision());
         }
+
+        // 5. sort them by the date of commit, old to new
+        // this ensures the fairness in scheduling.
+        Collections.sort(revs,new CommitTimeComparator(utils.git.getRepository()));
 
         return revs;
     }
