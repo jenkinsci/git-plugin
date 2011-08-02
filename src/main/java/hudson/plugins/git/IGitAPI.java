@@ -94,6 +94,10 @@ public interface IGitAPI {
     void checkoutBranch(String branch, String commitish) throws GitException;
 
     void add(String filePattern) throws GitException;
+
+    /**
+     * Creates a new branch that points to the current HEAD.
+     */
     void branch(String name) throws GitException;
     void deleteBranch(String name) throws GitException;
 
