@@ -577,7 +577,7 @@ public class GitAPI implements IGitAPI {
                                   TaskListener listener ) throws GitException {
         boolean is_bare = true;
 
-        URI origin = null;
+        URI origin;
         try {
             String url = getRemoteUrl(remote);
 
@@ -656,28 +656,48 @@ public class GitAPI implements IGitAPI {
      * the revision that has been checked out.
      */
     public void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException {
-        String remote;
+        String remote = null;
 
-        Iterator<Branch> bi = rev.getBranches().iterator();
-        if ( bi.hasNext() ) {
-            // this is supposed to be a remote branch
-            String b = bi.next().getName();
+        // try to locate the remote repository from where this commit came from
+        // (by using the heuristics that the branch name, if available, contains the remote name)
+        // if we can figure out the remote, the other setupSubmoduleUrls method
+        // look at its URL, and if it's a non-bare repository, we attempt to retrieve modules
+        // from this checked out copy.
+        //
+        // the idea is that you have something like tree-structured repositories: at the root you have corporate central repositories that you
+        // ultimately push to, which all .gitmodules point to, then you have intermediate team local repository,
+        // which is assumed to be a non-bare repository (say, a checked out copy on a shared server accessed via SSH)
+        //
+        // the abovementioned behaviour of the Git plugin makes it pick up submodules from this team local repository,
+        // not the corporate central.
+        //
+        // (Kohsuke: I have a bit of hesitation/doubt about such a behaviour change triggered by seemingly indirect
+        // evidence of whether the upstream is bare or not (not to mention the fact that you can't reliably
+        // figure out if the repository is bare or not just from the URL), but that's what apparently has been implemented
+        // and we care about the backward compatibility.)
+        //
+        // note that "figuring out which remote repository the commit came from" isn't a well-defined
+        // question, and this is really a heuristics. The user might be telling us to build a specific SHA1.
+        // or maybe someone pushed directly to the workspace and so it may not correspond to any remote branch.
+        // so if we fail to figure this out, we back out and avoid being too clever. See JENKINS-10060 as an example
+        // of where our trying to be too clever here is breaking stuff for people.
+        for (Branch br : rev.getBranches()) {
+            String b = br.getName();
             if (b != null) {
                 int slash = b.indexOf('/');
 
-                if ( slash == -1 )
-                    throw new GitException("no remote from branch name ("+b+")");
+                if ( slash != -1 )
+                    remote = getDefaultRemote( b.substring(0,slash) );
+            }
 
-                remote = getDefaultRemote( b.substring(0,slash) );
-            }
-            else {
-                remote = getDefaultRemote();
-            }
-        } else {
-            remote = getDefaultRemote();
+            if (remote!=null)   break;
         }
 
-        setupSubmoduleUrls( remote, listener );
+        if (remote==null)
+            remote = getDefaultRemote();
+
+        if (remote!=null)
+            setupSubmoduleUrls( remote, listener );
     }
 
     public void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException {
