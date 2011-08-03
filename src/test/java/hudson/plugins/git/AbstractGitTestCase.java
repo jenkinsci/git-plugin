@@ -20,6 +20,9 @@ import java.util.List;
  * @author ishaaq
  */
 public abstract class AbstractGitTestCase extends HudsonTestCase {
+    /**
+     * This is where the commit commands create a Git repository.
+     */
     protected File workDir;
     protected GitAPI git;
     protected TaskListener listener;

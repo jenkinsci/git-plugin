@@ -28,6 +28,10 @@ public interface IGitAPI {
      */
     boolean hasGitRepo() throws GitException;
     boolean isCommitInRepo(String sha1);
+
+    /**
+     * Returns true if the repository has Git submodules.
+     */
     boolean hasGitModules() throws GitException;
     boolean hasGitModules( String treeIsh ) throws GitException;
     List<IndexEntry> getSubmodules( String treeIsh ) throws GitException;
