@@ -10,6 +10,9 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.User;
+import hudson.plugins.parameterizedtrigger.BuildTrigger;
+import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
+import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -161,8 +164,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        assertEquals("", johnDoe.getName(), ((User)culprits.toArray()[0]).getFullName());
-        assertEquals("", janeDoe.getName(), ((User)culprits.toArray()[1]).getFullName());
+        assertEquals("", johnDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
+        assertEquals("", janeDoe.getName(), ((User) culprits.toArray()[1]).getFullName());
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         assertBuildStatusSuccess(build2);
@@ -192,7 +195,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("The workspace should have a 'subdir' subdirectory, but does not.", true,
                      build2.getWorkspace().child("subdir").exists());
         assertEquals("The 'subdir' subdirectory should contain commitFile2, but does not.", true,
-                     build2.getWorkspace().child("subdir").child(commitFile2).exists());
+                build2.getWorkspace().child("subdir").child(commitFile2).exists());
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
@@ -299,7 +302,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
         assertEquals("Did not get the author as the change author with authorOrCommiter==true",
-                     johnDoe.getName(), secondCulprits.iterator().next().getFullName());
+                johnDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
     /**
@@ -436,6 +439,43 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue("scm polling should detect changes in 'fork' branch", project.pollSCMChanges(listener));
         build(project, Result.SUCCESS, forkFile1, forkFile2);
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
+    }
+
+    @Bug(10060)
+    public void testSubmoduleFixup() throws Exception {
+        FilePath moduleWs = new FilePath(createTmpDir());
+        GitAPI moduleRepo = new GitAPI("git", moduleWs, listener, new EnvVars());
+
+        {// first we create a Git repository with submodule
+            moduleRepo.init();
+            moduleWs.child("a").touch(0);
+            moduleRepo.add("a");
+            moduleRepo.launchCommand("commit", "-m", "creating a module");
+
+            git.launchCommand("submodule","add",moduleWs.getRemote(),"module1");
+            git.launchCommand("commit", "-m", "creating a super project");
+        }
+
+        // configure two uproject 'u' -> 'd' that's chained together.
+        FreeStyleProject u = createFreeStyleProject();
+        FreeStyleProject d = createFreeStyleProject();
+
+        u.setScm(new GitSCM(workDir.getPath()));
+        u.getPublishersList().add(new BuildTrigger(new BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
+                new GitRevisionBuildParameters())));
+
+        d.setScm(new GitSCM(workDir.getPath()));
+        hudson.rebuildDependencyGraph();
+
+
+        FreeStyleBuild ub = assertBuildStatusSuccess(u.scheduleBuild2(0));
+        System.out.println(ub.getLog());
+        for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
+            Thread.sleep(100);
+
+        FreeStyleBuild db = d.getLastBuild();
+        assertNotNull("downstream build didn't happen",db);
+        assertBuildStatusSuccess(db);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
