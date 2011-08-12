@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
+
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -8,35 +9,35 @@ import hudson.FilePath;
 import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.matrix.MatrixRun;
 import hudson.matrix.MatrixBuild;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor.FormException;
-import hudson.model.Items;
-import hudson.model.Result;
-import hudson.model.TaskListener;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
+import hudson.model.Items;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.ParametersAction;
+import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
-import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
+import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.scm.SCM;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 
@@ -57,19 +58,19 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
 import javax.servlet.ServletException;
-
-import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
+
+import net.sf.json.JSONObject;
 
 /**
  * Git SCM.
@@ -1402,6 +1403,14 @@ public class GitSCM extends SCM implements Serializable {
          */
         public String getOldGitExe() {
             return gitExe;
+        }
+
+        public FormValidation doCheckLocation(@QueryParameter String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.error("Please enter Git repository.");
+            } else {
+                return FormValidation.ok();
+            }
         }
 
         public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {

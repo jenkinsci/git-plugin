@@ -22,7 +22,8 @@
            <table width="100%">
            
            <f:entry title="URL of repository" field="url">
-            <f:textbox value="${repo.URIs.get(0).toPrivateString()}" />
+            <f:textbox value="${repo.URIs.get(0).toPrivateString()}"
+                       checkUrl="'${rootURL}/scm/GitSCM/checkLocation?value='+escape(this.value)"/>
            </f:entry>
            
            <f:advanced>
