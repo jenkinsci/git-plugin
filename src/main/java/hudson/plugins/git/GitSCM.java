@@ -1104,8 +1104,9 @@ public class GitSCM extends SCM implements Serializable {
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
+        BuildData returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
-            build.addAction(workingDirectory.act(new FileCallable<BuildData>() {
+            returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
 
                 private static final long serialVersionUID = 1L;
 
@@ -1173,10 +1174,10 @@ public class GitSCM extends SCM implements Serializable {
                     // Fetch the diffs into the changelog file
                     return buildData;
                 }
-            }));
+            });
         } else {
             // No merge
-            build.addAction(workingDirectory.act(new FileCallable<BuildData>() {
+            returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
 
                 private static final long serialVersionUID = 1L;
 
@@ -1238,8 +1239,11 @@ public class GitSCM extends SCM implements Serializable {
                     // Fetch the diffs into the changelog file
                     return buildData;
                 }
-            }));
+            });
         }
+
+        build.addAction(returnedBuildData);
+        build.addAction(new GitTagAction(build, returnedBuildData));
 
         return true;
     }
