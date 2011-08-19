@@ -17,37 +17,34 @@
     ]]></script>
 
     <f:entry title="Repositories" help="/plugin/git/help.html">
-        
-        <f:repeatable var="repo" name="repo" varStatus="repoStatus" items="${instance.repositories}" minimum="1" noAddButton="false">
-           <table width="100%">
-           
-           <f:entry title="URL of repository" field="url">
-            <f:textbox value="${repo.URIs.get(0).toPrivateString()}"
-                       checkUrl="'${rootURL}/scm/GitSCM/checkLocation?value='+escape(this.value)"/>
-           </f:entry>
-           
-           <f:advanced>
-           
-	           <f:entry title="Name of repository (blank to create default)" field="name">
-	             <f:textbox value="${repo.name}" />
-	           </f:entry>
-	           
-	           
-	           <f:entry title="Refspec (blank to create default)" field="refspec">
-	              <f:textbox value="${repo.fetchRefSpecs.get(0)}" />
-	           </f:entry>
-	           
-           </f:advanced>
-           
-           <f:entry>
+      <f:repeatable name="repo" field="userRemoteConfigs" minimum="1" noAddButton="false">
+        <table width="100%">
+
+          <f:entry title="${%Repository URL}" field="url">
+            <f:textbox/>
+          </f:entry>
+
+          <f:advanced>
+
+            <f:entry title="${%Name}" field="name">
+              <f:textbox/>
+            </f:entry>
+
+            <f:entry title="${%Refspec}" field="refspec">
+              <f:textbox/>
+            </f:entry>
+
+          </f:advanced>
+
+          <f:entry>
             <div align="right">
-                <input type="button" value="Delete Repository" class="repeatable-delete" style="margin-left: 1em;" />
+              <input type="button" value="Delete Repository" class="repeatable-delete" style="margin-left: 1em;"/>
             </div>
           </f:entry>
-          </table>
-          
-        </f:repeatable>
-   </f:entry>
+        </table>
+
+      </f:repeatable>
+    </f:entry>
   
   <f:entry title="Branches to build" help="/plugin/git/branch.html">
   <f:repeatable var="branch" name="branches" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">

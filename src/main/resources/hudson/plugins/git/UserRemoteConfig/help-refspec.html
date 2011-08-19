@@ -1,0 +1,16 @@
+<div>
+    A refspec controls the remote refs to be retrieved and how they map to local refs. If left blank, it will default to
+    the normal behaviour of <tt>git fetch</tt>, which retrieves all the branch heads as <tt>remotes/REPOSITORYNAME/BRANCHNAME</tt>.
+    This default behaviour is OK for most cases.
+
+    <p>
+    In other words, the default refspec is "+refs/heads/*:refs/remotes/REPOSITORYNAME/*" where <tt>REPOSITORYNAME</tt> is the value
+    you specify in the above "name of repository" textbox.
+
+    <p>
+    When do you want to modify this value? A good example is when you want to just retrieve one branch. For example,
+    <tt>+refs/heads/master:refs/remotes/origin/master</tt> would only retrieve the master branch and nothing else.
+
+    <p>
+    See <a href="http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#def_refspec">the term definition in Git user manual</a> for more details.
+</div>

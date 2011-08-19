@@ -173,7 +173,7 @@ public class GitSCM extends SCM implements Serializable {
     @DataBoundConstructor
     public GitSCM(
             String scmName,
-            List<UserRemoteConfig> repo,
+            List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
             UserMergeOptions doMerge,
             Boolean doGenerateSubmoduleConfigurations,
@@ -207,7 +207,7 @@ public class GitSCM extends SCM implements Serializable {
 
         this.localBranch = Util.fixEmptyAndTrim(localBranch);
 
-        this.userRemoteConfigs = repo;
+        this.userRemoteConfigs = userRemoteConfigs;
         this.userMergeOptions = doMerge;
         updateFromUserData();
 
@@ -240,7 +240,7 @@ public class GitSCM extends SCM implements Serializable {
         if (remotePoll
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
-            || repo.size() != 1
+            || userRemoteConfigs.size() != 1
             || (excludedRegions != null && excludedRegions.length() > 0)
             || (submoduleCfg.size() != 0)
             || (excludedUsers != null && excludedUsers.length() > 0))) {
@@ -507,6 +507,11 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         return null;
+    }
+
+    @Exported
+    public List<UserRemoteConfig> getUserRemoteConfigs() {
+        return Collections.unmodifiableList(userRemoteConfigs);
     }
 
     @Exported
@@ -1407,14 +1412,6 @@ public class GitSCM extends SCM implements Serializable {
          */
         public String getOldGitExe() {
             return gitExe;
-        }
-
-        public FormValidation doCheckLocation(@QueryParameter String value) {
-            if (value == null || value.isEmpty()) {
-                return FormValidation.error("Please enter Git repository.");
-            } else {
-                return FormValidation.ok();
-            }
         }
 
         public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {

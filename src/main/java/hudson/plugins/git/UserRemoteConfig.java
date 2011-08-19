@@ -1,9 +1,18 @@
 package hudson.plugins.git;
 
 import java.io.Serializable;
-import org.kohsuke.stapler.DataBoundConstructor;
 
-public class UserRemoteConfig implements Serializable {
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.util.FormValidation;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
+@ExportedBean
+public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
 
     private String name;
     private String refspec;
@@ -16,15 +25,34 @@ public class UserRemoteConfig implements Serializable {
         this.refspec = refspec;
     }
 
+    @Exported
     public String getName() {
         return name;
     }
 
+    @Exported
     public String getRefspec() {
         return refspec;
     }
 
+    @Exported
     public String getUrl() {
         return url;
+    }
+
+    @Extension
+    public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
+        public FormValidation doCheckUrl(@QueryParameter String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.error("Please enter Git repository.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "";
+        }
     }
 }
