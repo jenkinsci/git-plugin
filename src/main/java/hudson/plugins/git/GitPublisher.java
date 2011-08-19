@@ -203,7 +203,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 
                                 if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                                     RemoteConfig remote = mergeOptions.getMergeRemote();
-                                    listener.getLogger().println("Pushing result " + buildnumber + " to " + mergeOptions.getMergeTarget() + " branch of " + remote.getName() + " repository");
+                                    listener.getLogger().println("Pushing HEAD to branch " + mergeOptions.getMergeTarget() + " of " + remote.getName() + " repository");
                                     
                                     git.push(remote, "HEAD:" + mergeOptions.getMergeTarget());
                                 } else {
