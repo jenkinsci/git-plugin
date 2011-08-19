@@ -1,0 +1,12 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="Name of repository" field="mergeRemote">
+    <f:textbox id="git.mergeRemote" />
+    <!-- TODO add the check url. Note that we cannot rely on the repo.name tag to be at the root of the form -->
+    <!--		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
+                     +encodeAllInputs('&amp;', this.form, 'repo.name')
+                     +encodeAllInputs('&amp;', this.form, 'repo.url')"/ -->
+  </f:entry>
+  <f:entry title="${%Branch to merge to}" field="mergeTarget">
+    <f:textbox id="git.mergeTarget" clazz="required"/>
+  </f:entry>
+</j:jelly>

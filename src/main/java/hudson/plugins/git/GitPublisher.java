@@ -201,8 +201,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 
                                 PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
                                 
-                                if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(
-                                                                                            Result.SUCCESS)) {
+                                if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                                     RemoteConfig remote = mergeOptions.getMergeRemote();
                                     listener.getLogger().println("Pushing result " + buildnumber + " to " + mergeOptions.getMergeTarget() + " branch of " + remote.getName() + " repository");
                                     

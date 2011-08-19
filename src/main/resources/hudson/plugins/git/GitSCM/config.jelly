@@ -115,31 +115,16 @@
     
   </f:entry>
      -->
-     
-	  <f:entry title="Merge options" help="/plugin/git/merge.html">
-	  	
-		<table width="100%">
-		<f:optionalBlock field="doMerge"
-		                 title="${%Merge before build}"
-		                 checked="${scm.mergeOptions.doMerge()}">
-		 <f:entry title="Name of repository: (default first specified, e.g. origin)" field="mergeRemote">
-		  <f:textbox id="git.mergeRemote" value="${scm.mergeOptions.getMergeRemote().getName()}"/>
-<!-- TODO add the check url. Note that we cannot rely on the repo.name tag to be at the root of the form -->
-<!--		             checkUrl="'${rootURL}/scm/GitSCM/gitRemoteNameCheck?isMerge=true&amp;value='+escape(this.value)
-		                      +encodeAllInputs('&amp;', this.form, 'repo.name')
-		                      +encodeAllInputs('&amp;', this.form, 'repo.url')"/ -->
-		 </f:entry>
-		 <f:entry title="Branch to merge to: (e.g. master)" field="mergeTarget">
-		  <f:textbox id="git.mergeTarget" value="${scm.mergeOptions.getMergeTarget()}" clazz="required"/>
-		 </f:entry>
-		</f:optionalBlock>
-		</table>
-	  	
-	  </f:entry>
 
-          <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
-            <f:checkbox />
-          </f:entry>
+    <f:entry title="Merge options">
+      <table width="100%">
+        <f:optionalProperty title="${%Merge before build}" field="userMergeOptions" />
+      </table>
+    </f:entry>
+
+    <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
+      <f:checkbox/>
+    </f:entry>
 
     <f:entry title="Skip internal tag" field="skipTag" help="/plugin/git/help-skipTag.html">
       <f:checkbox />

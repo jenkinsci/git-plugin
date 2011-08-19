@@ -10,7 +10,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A specification of branches to build. Rather like a refspec.
- * 
+ *
  * eg:
  * master
  * origin/master

@@ -175,7 +175,7 @@ public class GitSCM extends SCM implements Serializable {
             String scmName,
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
-            UserMergeOptions doMerge,
+            UserMergeOptions userMergeOptions,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
             boolean clean,
@@ -208,7 +208,7 @@ public class GitSCM extends SCM implements Serializable {
         this.localBranch = Util.fixEmptyAndTrim(localBranch);
 
         this.userRemoteConfigs = userRemoteConfigs;
-        this.userMergeOptions = doMerge;
+        this.userMergeOptions = userMergeOptions;
         updateFromUserData();
 
         // TODO: getBrowserFromRequest
@@ -1601,6 +1601,10 @@ public class GitSCM extends SCM implements Serializable {
     @Exported
     public PreBuildMergeOptions getMergeOptions() {
         return mergeOptions;
+    }
+
+    public UserMergeOptions getUserMergeOptions() {
+        return userMergeOptions;
     }
 
     /**
