@@ -265,12 +265,12 @@ public class GitAPI implements IGitAPI {
 
     private String firstLine(String result) {
        String[] lines = result.split("(\\r?\\n)+");
-       if (line[0].trim().isEmpty()) {
+       if (lines[0].trim().isEmpty()) {
           return null;
-       } else if (line.length > 1) {
+       } else if (lines.length > 1) {
           throw new GitException("Result has multiple lines");
        }
-       return line[0];
+       return lines[0];
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
