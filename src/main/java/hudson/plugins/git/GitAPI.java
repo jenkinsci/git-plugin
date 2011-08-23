@@ -264,19 +264,13 @@ public class GitAPI implements IGitAPI {
     }
 
     private String firstLine(String result) {
-        BufferedReader reader = new BufferedReader(new StringReader(result));
-        String line;
-        try {
-            line = reader.readLine();
-            if (line == null)
-                return null;
-            if (reader.readLine() != null)
-                throw new GitException("Result has multiple lines");
-        } catch (IOException e) {
-            throw new GitException("Error parsing result", e);
-        }
-
-        return line;
+       String[] lines = result.split("(\\r?\\n)+");
+       if (line[0].trim().isEmpty()) {
+          return null;
+       } else if (line.length > 1) {
+          throw new GitException("Result has multiple lines");
+       }
+       return line[0];
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
