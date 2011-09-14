@@ -135,6 +135,9 @@
     <f:entry title="Fast remote polling" help="/plugin/git/help-fastremote.html">
       <f:checkbox name="git.remotePoll" checked="${scm.remotePoll}" />
     </f:entry>
+    <f:entry title="Updated submodules" help="/plugin/git/help-updateSubmodules.html">
+      <f:checkbox name="git.updateSubmodules" checked="${scm.updateSubmodules}" default="true" />
+    </f:entry>
     <f:entry title="Recursively update submodules" field="recursiveSubmodules" help="/plugin/git/help-recursiveSubmodules.html">
       <f:checkbox />
     </f:entry>
