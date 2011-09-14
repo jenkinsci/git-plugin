@@ -110,6 +110,11 @@ public class GitSCM extends SCM implements Serializable {
     private UserMergeOptions userMergeOptions;
     private transient PreBuildMergeOptions mergeOptions;
     /**
+     * Run a submodule update after checking out
+     */
+    private boolean updateSubmodules;
+
+    /**
      * Use --recursive flag on submodule commands - requires git>=1.6.5
      */
     private boolean recursiveSubmodules;
@@ -167,7 +172,7 @@ public class GitSCM extends SCM implements Serializable {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
-                null, null, null, false, false, false, null, null, false);
+                null, null, null, true, false, false, /* pruneBranches */false, null, null, /* skipTag */false);
     }
 
     @DataBoundConstructor
@@ -187,6 +192,7 @@ public class GitSCM extends SCM implements Serializable {
             String excludedRegions,
             String excludedUsers,
             String localBranch,
+            boolean updateSubmodules,
             boolean recursiveSubmodules,
             boolean pruneBranches,
             boolean remotePoll,
@@ -235,6 +241,7 @@ public class GitSCM extends SCM implements Serializable {
         this.relativeTargetDir = relativeTargetDir;
         this.excludedRegions = excludedRegions;
         this.excludedUsers = excludedUsers;
+        this.updateSubmodules = updateSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
         if (remotePoll
@@ -301,6 +308,7 @@ public class GitSCM extends SCM implements Serializable {
             doGenerateSubmoduleConfigurations = false;
             mergeOptions = new PreBuildMergeOptions();
 
+            updateSubmodules = true;
             recursiveSubmodules = false;
 
             remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*")));
@@ -1074,7 +1082,7 @@ public class GitSCM extends SCM implements Serializable {
                         log.println("Cleaning workspace");
                         git.clean();
 
-                        if (git.hasGitModules()) {
+                        if (updateSubmodules && git.hasGitModules()) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1150,7 +1158,7 @@ public class GitSCM extends SCM implements Serializable {
                         throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
                     }
 
-                    if (git.hasGitModules()) {
+                    if (updateSubmodules && git.hasGitModules()) {
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
@@ -1171,7 +1179,7 @@ public class GitSCM extends SCM implements Serializable {
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
-                        if (git.hasGitModules()) {
+                        if (updateSubmodules && git.hasGitModules()) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1200,7 +1208,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
-                    if (git.hasGitModules()) {
+                    if (updateSubmodules && git.hasGitModules()) {
                         // Git submodule update will only 'fetch' from where it
                         // regards as 'origin'. However,
                         // it is possible that we are building from a
@@ -1457,6 +1465,7 @@ public class GitSCM extends SCM implements Serializable {
             req.getParameter("git.excludedRegions"),
             req.getParameter("git.excludedUsers"),
             req.getParameter("git.localBranch"),
+            req.getParameter("git.updateSubmodules") != null,
             req.getParameter("git.recursiveSubmodules") != null,
             req.getParameter("git.pruneBranches") != null,
             req.getParameter("git.gitConfigName"),
@@ -1584,6 +1593,11 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
     private static final long serialVersionUID = 1L;
+
+
+    public boolean getUpdateSubmodules() {
+        return this.updateSubmodules;
+    }
 
     public boolean getRecursiveSubmodules() {
         return this.recursiveSubmodules;
