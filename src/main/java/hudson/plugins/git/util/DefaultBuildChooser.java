@@ -7,6 +7,7 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.Revision;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.eclipse.jgit.lib.ObjectId;
@@ -227,7 +228,7 @@ public class DefaultBuildChooser extends BuildChooser {
     public static final class DescriptorImpl extends BuildChooserDescriptor {
         @Override
         public String getDisplayName() {
-            return "Default";
+            return Messages.BuildChooser_Default();
         }
 
         @Override
