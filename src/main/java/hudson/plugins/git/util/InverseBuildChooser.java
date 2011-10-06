@@ -36,7 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class InverseBuildChooser extends BuildChooser {
 
     /* Ignore symbolic default branch ref. */
-    private transient final BranchSpec HEAD = new BranchSpec("*/HEAD");
+    private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
 
     @DataBoundConstructor
     public InverseBuildChooser() {
