@@ -78,7 +78,12 @@ public class InverseBuildChooser extends BuildChooser {
         // Filter out branch revisions that aren't leaves
         branchRevs = utils.filterTipBranches(branchRevs);
 
-        // Filter our branch revisions that have already been built
+        // Warn the user that they've done something crazy such as excluding all branches
+        if (branchRevs.isEmpty()) {
+            listener.getLogger().println(Messages.BuildChooser_Inverse_EverythingExcluded());
+        }
+
+        // Filter out branch revisions that have already been built
         for (Iterator<Revision> i = branchRevs.iterator(); i.hasNext(); ) {
             Revision r = i.next();
             if (buildData.hasBeenBuilt(r.getSha1())) {
@@ -87,16 +92,13 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // If we're in a build (not an SCM poll) and nothing new was found, run the last build again
-        if (!isPollCall && branchRevs.isEmpty()) {
-            // Warn the user that they've done something crazy like excluding all branches
-            listener.getLogger().println(Messages.BuildChooser_Inverse_EverythingExcluded());
-            if (buildData.getLastBuiltRevision() != null) {
-                return Collections.singletonList(buildData.getLastBuiltRevision());
-            }
+        if (!isPollCall && branchRevs.isEmpty() && buildData.getLastBuiltRevision() != null) {
+            listener.getLogger().println(Messages.BuildChooser_BuildingLastRevision());
+            return Collections.singletonList(buildData.getLastBuiltRevision());
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
-        Collections.sort(branchRevs,new CommitTimeComparator(utils.git.getRepository()));
+        Collections.sort(branchRevs, new CommitTimeComparator(utils.git.getRepository()));
         return branchRevs;
     }
 
