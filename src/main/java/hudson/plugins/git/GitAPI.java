@@ -42,9 +42,10 @@ public class GitAPI implements IGitAPI {
     TaskListener listener;
     String gitExe;
     EnvVars environment;
+    String reference;
 
     public GitAPI(String gitExe, FilePath workspace,
-                  TaskListener listener, EnvVars environment) {
+                  TaskListener listener, EnvVars environment, String reference) {
 
         //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
 
@@ -52,6 +53,7 @@ public class GitAPI implements IGitAPI {
         this.listener = listener;
         this.gitExe = gitExe;
         this.environment = environment;
+        this.reference = reference;
 
         launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
     }
@@ -62,6 +64,10 @@ public class GitAPI implements IGitAPI {
 
     public EnvVars getEnvironment() {
         return environment;
+    }
+
+    public String getReference() {
+        return reference;
     }
 
     private int[] getGitVersion() {
@@ -222,6 +228,12 @@ public class GitAPI implements IGitAPI {
                         args.add("clone");
                         if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) {
                             args.add("--progress");
+                        }
+                        if (reference != null) {
+                            File referencePath = new File(reference);
+                            if (referencePath.exists() && referencePath.isDirectory()) {
+                                args.add("--reference", reference);
+                            }
                         }
                         args.add("-o", remoteConfig.getName());
                         args.add(source);

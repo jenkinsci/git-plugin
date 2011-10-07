@@ -112,4 +112,6 @@ public interface IGitAPI {
 
     List<String> showRevision(Revision r) throws GitException;
     String getHeadRev(String remoteRepoUrl, String branch) throws GitException;
+
+    String getReference();
 }

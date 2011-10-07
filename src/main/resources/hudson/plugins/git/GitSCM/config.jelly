@@ -78,6 +78,9 @@
     <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir" help="/plugin/git/help-local.html">
       <f:textbox />
     </f:entry>
+    <f:entry title="Path of the reference repo to use during clone (optional)" field="reference" help="/plugin/git/help-reference.html">
+      <f:textbox/>
+    </f:entry>
    <f:entry title="Unique SCM name (optional)" field="scmName">
         <f:textbox />
    </f:entry>

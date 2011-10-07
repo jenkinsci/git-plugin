@@ -190,7 +190,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                                 throws IOException {
-                            IGitAPI git = new GitAPI("git", workspace, listener, environment);
+                            IGitAPI git = new GitAPI("git", workspace, listener, environment, null);
                             String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
                             git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
                             return new Object[]{null, build};
