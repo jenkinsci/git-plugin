@@ -132,6 +132,7 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     private String relativeTargetDir;
+    private String reference;
     private String excludedRegions;
     private String excludedUsers;
     private String gitConfigName;
@@ -167,6 +168,7 @@ public class GitSCM extends SCM implements Serializable {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
+                null,
                 null, null, null, false, false, false, null, null, false);
     }
 
@@ -184,6 +186,7 @@ public class GitSCM extends SCM implements Serializable {
             String gitTool,
             boolean authorOrCommitter,
             String relativeTargetDir,
+            String reference,
             String excludedRegions,
             String excludedUsers,
             String localBranch,
@@ -233,6 +236,7 @@ public class GitSCM extends SCM implements Serializable {
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.relativeTargetDir = relativeTargetDir;
+        this.reference = reference;
         this.excludedRegions = excludedRegions;
         this.excludedUsers = excludedUsers;
         this.recursiveSubmodules = recursiveSubmodules;
@@ -439,6 +443,10 @@ public class GitSCM extends SCM implements Serializable {
         return gitConfigEmail;
     }
 
+    public String getReference() {
+        return reference;
+    }
+
     public String getGitConfigNameToUse() {
         String confName = fixEmptyAndTrim(gitConfigName);
         if (confName == null) {
@@ -625,7 +633,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             }
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
-            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment);
+            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
@@ -673,7 +681,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
-                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
 
                 if (git.hasGitRepo()) {
                     // Repo is there - do a fetch
@@ -725,7 +733,7 @@ public class GitSCM extends SCM implements Serializable {
                 File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
                 IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
-                        listener, parentGit.getEnvironment());
+                        listener, parentGit.getEnvironment(), parentGit.getReference());
 
                 subGit.clean();
             } catch (Exception ex) {
@@ -808,7 +816,7 @@ public class GitSCM extends SCM implements Serializable {
 
                         IGitAPI subGit = new GitAPI(git.getGitExe(),
                                 new FilePath(subdir),
-                                listener, git.getEnvironment());
+                                listener, git.getEnvironment(), git.getReference());
 
                         subGit.fetch(submoduleRemoteRepository);
                     } catch (Exception ex) {
@@ -980,7 +988,7 @@ public class GitSCM extends SCM implements Serializable {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
                 log.println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
-                IGitAPI git = new GitAPI(gitExe, ws, listener, environment);
+                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
 
                 if (wipeOutWorkspace) {
                     log.println("Wiping out workspace first.");
@@ -1117,7 +1125,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
 
                     // Do we need to merge this revision onto MergeTarget
 
@@ -1188,7 +1196,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
