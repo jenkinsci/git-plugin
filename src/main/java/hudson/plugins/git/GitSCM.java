@@ -944,20 +944,7 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        EnvVars tempEnvironment = build.getEnvironment(listener);
-
-        String confName = getGitConfigNameToUse();
-        if ((confName != null) && (!confName.equals(""))) {
-            tempEnvironment.put("GIT_COMMITTER_NAME", confName);
-            tempEnvironment.put("GIT_AUTHOR_NAME", confName);
-        }
-        String confEmail = getGitConfigEmailToUse();
-        if ((confEmail != null) && (!confEmail.equals(""))) {
-            tempEnvironment.put("GIT_COMMITTER_EMAIL", confEmail);
-            tempEnvironment.put("GIT_AUTHOR_EMAIL", confEmail);
-        }
-
-        final EnvVars environment = tempEnvironment;
+        final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
         final String paramLocalBranch = getParamLocalBranch(build);
@@ -1319,6 +1306,17 @@ public class GitSCM extends SCM implements Serializable {
             if (commit != null) {
                 env.put(GIT_COMMIT, commit);
             }
+        }
+
+        String confName = getGitConfigNameToUse();
+        if ((confName != null) && (!confName.equals(""))) {
+            env.put("GIT_COMMITTER_NAME", confName);
+            env.put("GIT_AUTHOR_NAME", confName);
+        }
+        String confEmail = getGitConfigEmailToUse();
+        if ((confEmail != null) && (!confEmail.equals(""))) {
+            env.put("GIT_COMMITTER_EMAIL", confEmail);
+            env.put("GIT_AUTHOR_EMAIL", confEmail);
         }
 
     }
