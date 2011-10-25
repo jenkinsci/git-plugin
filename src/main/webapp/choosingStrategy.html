@@ -1,4 +1,21 @@
 <div>
- Which strategy to use when selecting revision for building.
- Default will search HEADs for different branches.
+  Specifies the strategy Jenkins will use to decide which revision to build.
+  <dl>
+    <dt>Default</dt>
+    <dd>
+      For each branch which matches the "Branches to build" (or all branches, if none are listed),
+      this strategy will select those whose most recent commit has not already been built.<br>
+      If multiple branches match these criteria, the oldest will be selected.
+    </dd>
+    <dt>Inverse</dt>
+    <dd>
+      This does the opposite of the "Default" strategy &mdash; any branches listed under "Branches
+      to build" will <strong>not</strong> be built. For example, entering the pattern
+      <tt>*/master</tt> will cause Jenkins to build any changes found on any branch, so long as the
+      branch name does <em>not</em> match this pattern.<br>
+      If multiple branches match these criteria, the oldest will be selected.
+    </dd>
+  </dl>
+  For details on any other strategies that may be listed in the drop-down box above, refer to the
+  respective plugin's documentation.
 </div>
