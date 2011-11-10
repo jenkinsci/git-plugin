@@ -112,6 +112,7 @@ public class GitSCM extends SCM implements Serializable {
     /**
      * Use --recursive flag on submodule commands - requires git>=1.6.5
      */
+    private boolean disableSubmodules;
     private boolean recursiveSubmodules;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
@@ -169,7 +170,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, null, null, false);
+                null, null, null, false, false, false, false, null, null, false);
     }
 
     @DataBoundConstructor
@@ -190,6 +191,7 @@ public class GitSCM extends SCM implements Serializable {
             String excludedRegions,
             String excludedUsers,
             String localBranch,
+            boolean disableSubmodules,
             boolean recursiveSubmodules,
             boolean pruneBranches,
             boolean remotePoll,
@@ -239,6 +241,7 @@ public class GitSCM extends SCM implements Serializable {
         this.reference = reference;
         this.excludedRegions = excludedRegions;
         this.excludedUsers = excludedUsers;
+        this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
         if (remotePoll
@@ -1069,7 +1072,7 @@ public class GitSCM extends SCM implements Serializable {
                         log.println("Cleaning workspace");
                         git.clean();
 
-                        if (git.hasGitModules()) {
+                        if (git.hasGitModules() && !disableSubmodules) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1145,7 +1148,7 @@ public class GitSCM extends SCM implements Serializable {
                         throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
                     }
 
-                    if (git.hasGitModules()) {
+                    if (git.hasGitModules() && !disableSubmodules) {
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
@@ -1166,7 +1169,7 @@ public class GitSCM extends SCM implements Serializable {
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
-                        if (git.hasGitModules()) {
+                        if (git.hasGitModules() && !disableSubmodules) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1195,7 +1198,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
-                    if (git.hasGitModules()) {
+                    if (git.hasGitModules() && !disableSubmodules) {
                         // Git submodule update will only 'fetch' from where it
                         // regards as 'origin'. However,
                         // it is possible that we are building from a
@@ -1590,6 +1593,10 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
     private static final long serialVersionUID = 1L;
+
+    public boolean getDisableSubmodules() {
+        return this.disableSubmodules;
+    }
 
     public boolean getRecursiveSubmodules() {
         return this.recursiveSubmodules;
