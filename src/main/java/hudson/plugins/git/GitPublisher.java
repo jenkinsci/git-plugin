@@ -10,8 +10,10 @@ import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.remoting.VirtualChannel;
@@ -444,7 +446,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         }
     }
 
-    public static abstract class PushConfig implements Serializable {
+    public static abstract class PushConfig extends AbstractDescribableImpl<PushConfig> implements Serializable {
         private static final long serialVersionUID = 1L;
         
         private String targetRepoName;
@@ -474,6 +476,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             super(targetRepoName);
             this.branchName = branchName;
         }
+
+        @Extension
+        public static class DescriptorImpl extends Descriptor<PushConfig> {
+            @Override
+            public String getDisplayName() {
+                return "";
+            }
+        }
     }
 
     public static final class TagToPush extends PushConfig {
@@ -494,7 +504,13 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             this.tagName = tagName;
             this.createTag = createTag;
         }
-    }
 
-    
+        @Extension
+        public static class DescriptorImpl extends Descriptor<PushConfig> {
+            @Override
+            public String getDisplayName() {
+                return "";
+            }
+        }
+    }
 }
