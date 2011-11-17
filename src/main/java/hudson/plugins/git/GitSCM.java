@@ -139,6 +139,7 @@ public class GitSCM extends SCM implements Serializable {
     private String gitConfigName;
     private String gitConfigEmail;
     private boolean skipTag;
+    private String includedRegions;
     private String scmName;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
@@ -170,7 +171,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false);
+                null, null, null, false, false, false, false, null, null, false, null);
     }
 
     @DataBoundConstructor
@@ -197,7 +198,8 @@ public class GitSCM extends SCM implements Serializable {
             boolean remotePoll,
             String gitConfigName,
             String gitConfigEmail,
-            boolean skipTag) {
+            boolean skipTag,
+            String includedRegions) {
 
         this.scmName = scmName;
 
@@ -260,6 +262,7 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
+        this.includedRegions = includedRegions;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -391,6 +394,20 @@ public class GitSCM extends SCM implements Serializable {
         return this;
     }
 
+    public String getIncludedRegions() {
+        return includedRegions;
+    }
+
+    public String[] getIncludedRegionsNormalized() {
+        return (includedRegions == null || includedRegions.trim().equals(""))
+                ? null : includedRegions.split("[\\r\\n]+");
+    }
+
+    private Pattern[] getIncludedRegionsPatterns() {
+        String[] included = getIncludedRegionsNormalized();
+        return getRegionsPatterns(included);
+    }
+
     public String getExcludedRegions() {
         return excludedRegions;
     }
@@ -402,12 +419,16 @@ public class GitSCM extends SCM implements Serializable {
 
     private Pattern[] getExcludedRegionsPatterns() {
         String[] excluded = getExcludedRegionsNormalized();
-        if (excluded != null) {
-            Pattern[] patterns = new Pattern[excluded.length];
+        return getRegionsPatterns(excluded);
+    }
+
+    private Pattern[] getRegionsPatterns(String[] regions) {
+        if (regions != null) {
+            Pattern[] patterns = new Pattern[regions.length];
 
             int i = 0;
-            for (String excludedRegion : excluded) {
-                patterns[i++] = Pattern.compile(excludedRegion);
+            for (String region : regions) {
+                patterns[i++] = Pattern.compile(region);
             }
 
             return patterns;
@@ -1703,6 +1724,7 @@ public class GitSCM extends SCM implements Serializable {
 
             GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
 
+            Pattern[] includedPatterns = getIncludedRegionsPatterns();
             Pattern[] excludedPatterns = getExcludedRegionsPatterns();
             Set<String> excludedUsers = getExcludedUsersNormalized();
 
@@ -1719,9 +1741,25 @@ public class GitSCM extends SCM implements Serializable {
                 return false;
             }
 
+	    // Assemble the list of included paths
+            List<String> includedPaths = new ArrayList<String>();
+            if (includedPatterns.length > 0) {
+                for (String path : paths) {
+                    for (Pattern pattern : includedPatterns) {
+                        if (pattern.matcher(path).matches()) {
+                            includedPaths.add(path);
+                            break;
+                        }
+                    }
+                }
+            } else {
+		includedPaths = paths;
+	    }
+
+	    // Assemble the list of excluded paths
             List<String> excludedPaths = new ArrayList<String>();
             if (excludedPatterns.length > 0) {
-                for (String path : paths) {
+                for (String path : includedPaths) {
                     for (Pattern pattern : excludedPatterns) {
                         if (pattern.matcher(path).matches()) {
                             excludedPaths.add(path);
@@ -1732,7 +1770,7 @@ public class GitSCM extends SCM implements Serializable {
             }
 
             // If every affected path is excluded, return true.
-            if (paths.size() == excludedPaths.size()) {
+            if (includedPaths.size() == excludedPaths.size()) {
                 listener.getLogger().println("Ignored commit " + r.getSha1String()
                         + ": Found only excluded paths: "
                         + Util.join(excludedPaths, ", "));

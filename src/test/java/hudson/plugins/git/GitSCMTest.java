@@ -66,7 +66,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testBasicRemotePoll() throws Exception {
 //        FreeStyleProject project = setupProject("master", true, false);
-        FreeStyleProject project = setupProject("master", false, null, null, null, true);
+        FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -87,9 +87,38 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    public void testBasicIncludedRegion() throws Exception {
+        FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertFalse("scm polling detected commit2 change, which should not have been included", project.pollSCMChanges(listener));
+
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling did not detect commit3 change", project.pollSCMChanges(listener));
+
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have two culprit", 2, culprits.size());
+        assertEquals("", johnDoe.getName(), ((User)culprits.toArray()[0]).getFullName());
+        assertEquals("", janeDoe.getName(), ((User)culprits.toArray()[1]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
 
     public void testBasicExcludedRegion() throws Exception {
-        FreeStyleProject project = setupProject("master", false, null, ".*2", null);
+        FreeStyleProject project = setupProject("master", false, null, ".*2", null, null);
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -145,7 +174,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     */}
 
     public void testBasicExcludedUser() throws Exception {
-        FreeStyleProject project = setupProject("master", false, null, null, "Jane Doe");
+        FreeStyleProject project = setupProject("master", false, null, null, "Jane Doe", null);
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -484,27 +513,30 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, null, null);
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, null, null, null);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir,
                                           String excludedRegions,
-                                          String excludedUsers) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, false);
+                                          String excludedUsers,
+                                          String includedRegions) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, false, includedRegions);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
             String relativeTargetDir,
             String excludedRegions,
             String excludedUsers,
-            boolean fastRemotePoll) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, fastRemotePoll);
+            boolean fastRemotePoll,
+            String includedRegions) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, fastRemotePoll, includedRegions);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir, String excludedRegions,
-                                          String excludedUsers, String localBranch, boolean fastRemotePoll) throws Exception {
+                                          String excludedUsers, String localBranch, boolean fastRemotePoll,
+                                          String includedRegions) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
@@ -513,7 +545,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
-                excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false));
+                excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false,
+                includedRegions));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
