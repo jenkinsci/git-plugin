@@ -12,14 +12,19 @@ import hudson.triggers.SCMTrigger;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
 import java.io.IOException;
 
+import java.net.URISyntaxException;
 import java.util.logging.Logger;
+
+import static javax.servlet.http.HttpServletResponse.*;
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -43,17 +48,18 @@ public class GitStatus extends AbstractModelObject implements RootAction {
         return "git";
     }
 
-    public void doNotifyCommit(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        String urlString = req.getParameter("url");
-	URIish url = null;
+    public HttpResponse doNotifyCommit(@QueryParameter String url) throws ServletException, IOException {
+	    URIish uri;
         try {
-            url = new URIish(urlString);
-        } catch (java.net.URISyntaxException e) { }
+            uri = new URIish(url);
+        } catch (URISyntaxException e) {
+            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Missing the 'url' query parameter",e));
+        }
 
         boolean scmFound = false,
                 triggerFound = false,
                 urlFound = false;
-        for (AbstractProject<?,?> project : Hudson.getInstance().getItems(AbstractProject.class)) {
+        for (AbstractProject<?,?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
             SCM scm = project.getScm();
             if (scm instanceof GitSCM) scmFound = true; else continue;
 
@@ -64,7 +70,7 @@ public class GitStatus extends AbstractModelObject implements RootAction {
             for (RemoteConfig repository : git.getRepositories()) {
                 boolean repositoryMatches = false;
                 for (URIish remoteURL : repository.getURIs()) {
-                    if (url.equals(remoteURL)) { repositoryMatches = true; break; }
+                    if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
                 }
                 if (repositoryMatches) urlFound = true; else continue;
 
@@ -72,12 +78,11 @@ public class GitStatus extends AbstractModelObject implements RootAction {
             }
         }
 
-        if (url == null)    LOGGER.warning("Couldn't read url: " + urlString);
-        else if (!scmFound) LOGGER.warning("No git jobs found");
+        if (!scmFound) LOGGER.warning("No git jobs found");
         else if (!triggerFound) LOGGER.warning("No git jobs using SCM polling");
-        else if (!urlFound) LOGGER.warning("No git jobs using repository: " + url.toString());
+        else if (!urlFound) LOGGER.warning("No git jobs using repository: " + uri.toString());
 
-        rsp.setStatus(SC_OK);
+        return HttpResponses.status(SC_OK);
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
