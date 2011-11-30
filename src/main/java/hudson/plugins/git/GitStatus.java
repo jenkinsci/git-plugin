@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import com.google.common.collect.Lists;
 import hudson.Extension;
 import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
@@ -12,10 +13,14 @@ import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static javax.servlet.http.HttpServletResponse.*;
@@ -50,6 +55,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: "+url,e));
         }
 
+        final List<AbstractProject<?,?>> projects = Lists.newArrayList();
         boolean scmFound = false,
                 triggerFound = false,
                 urlFound = false;
@@ -70,6 +76,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
                 trigger.run();
+                projects.add(project);
                 break;
             }
         }
@@ -78,7 +85,19 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         else if (!triggerFound) LOGGER.warning("No git jobs using SCM polling");
         else if (!urlFound) LOGGER.warning("No git jobs using repository: " + uri.toString());
 
-        return HttpResponses.status(SC_OK);
+        return new HttpResponse() {
+            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+                rsp.setStatus(SC_OK);
+                rsp.setContentType("text/plain");
+                for (AbstractProject<?, ?> p : projects) {
+                    rsp.addHeader("Triggered", p.getAbsoluteUrl());
+                }
+                PrintWriter w = rsp.getWriter();
+                for (AbstractProject<?, ?> p : projects) {
+                    w.println("Scheduled polling of "+p.getFullDisplayName());
+                }
+            }
+        };
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
