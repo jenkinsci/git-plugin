@@ -4,23 +4,17 @@ import hudson.Extension;
 import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
-import hudson.model.RootAction;
-
+import hudson.model.UnprotectedRootAction;
 import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
-
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
@@ -30,7 +24,7 @@ import static javax.servlet.http.HttpServletResponse.*;
  * Information screen for the use of Git in Hudson.
  */
 @Extension
-public class GitStatus extends AbstractModelObject implements RootAction {
+public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
     public String getDisplayName() {
         return "Git";
     }
@@ -48,12 +42,12 @@ public class GitStatus extends AbstractModelObject implements RootAction {
         return "git";
     }
 
-    public HttpResponse doNotifyCommit(@QueryParameter String url) throws ServletException, IOException {
+    public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url) throws ServletException, IOException {
 	    URIish uri;
         try {
             uri = new URIish(url);
         } catch (URISyntaxException e) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Missing the 'url' query parameter",e));
+            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: "+url,e));
         }
 
         boolean scmFound = false,
@@ -74,7 +68,9 @@ public class GitStatus extends AbstractModelObject implements RootAction {
                 }
                 if (repositoryMatches) urlFound = true; else continue;
 
+                LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
                 trigger.run();
+                break;
             }
         }
 
