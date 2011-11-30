@@ -202,7 +202,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testBasicWithSlave() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
-        project.setAssignedLabel(createSlave(null, null).getSelfLabel());
+        project.setAssignedLabel(createSlave().getSelfLabel());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -231,7 +231,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         hudson.setNumExecutors(0);
         hudson.setNodes(hudson.getNodes());
 
-        project.setAssignedLabel(createSlave(null, null).getSelfLabel());
+        project.setAssignedLabel(createSlave().getSelfLabel());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -338,7 +338,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     // For HUDSON-7411
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
-        Node s = createSlave(null,null);
+        Node s = createSlave();
         setVariables(s, new Entry("TESTKEY", "slaveValue"));
         project.setAssignedLabel(s.getSelfLabel());
         final String commitFile1 = "commitFile1";
