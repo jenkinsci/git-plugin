@@ -63,9 +63,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             SCM scm = project.getScm();
             if (scm instanceof GitSCM) scmFound = true; else continue;
 
-            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-            if (trigger!=null) triggerFound = true; else continue;
-
             GitSCM git = (GitSCM) scm;
             for (RemoteConfig repository : git.getRepositories()) {
                 boolean repositoryMatches = false;
@@ -74,6 +71,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 }
                 if (repositoryMatches) urlFound = true; else continue;
 
+                SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                if (trigger!=null) triggerFound = true; else continue;
+
                 LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
                 trigger.run();
                 projects.add(project);
@@ -81,9 +81,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             }
         }
 
-        if (!scmFound) LOGGER.warning("No git jobs found");
-        else if (!triggerFound) LOGGER.warning("No git jobs using SCM polling");
-        else if (!urlFound) LOGGER.warning("No git jobs using repository: " + uri.toString());
+        final String msg;
+        if (!scmFound)  msg = "No git jobs found";
+        else if (!urlFound) msg = "No git jobs using repository: " + url;
+        else if (!triggerFound) msg = "Jobs found but they aren't configured for polling";
+        else msg = null;
 
         return new HttpResponse() {
             public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
@@ -96,6 +98,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 for (AbstractProject<?, ?> p : projects) {
                     w.println("Scheduled polling of "+p.getFullDisplayName());
                 }
+                if (msg!=null)
+                    w.println(msg);
             }
         };
     }
