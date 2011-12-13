@@ -6,6 +6,8 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -20,7 +22,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
     @DataBoundConstructor
     public UserRemoteConfig(String url, String name, String refspec) {
-        this.url = url;
+        this.url = StringUtils.trim(url);
         this.name = name;
         this.refspec = refspec;
     }
