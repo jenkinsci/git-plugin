@@ -13,6 +13,7 @@ apply plugin: 'jpi'
 jenkinsPlugin {
     coreVersion = '1.398'
     displayName = 'Git Plugin'
+    url = 'http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin'
 }
 
 repositories {
@@ -25,7 +26,7 @@ repositories {
 group = "org.jenkinsci.plugins"
 version = "1.1.15-SNAPSHOT"
 archivesBaseName = "git"
-
+description = 'Integrates Jenkins with GIT SCM'
 dependencies {
     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.2'
 
