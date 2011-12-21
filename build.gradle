@@ -1,0 +1,50 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+  dependencies {
+    classpath group: 'org.jenkins-ci.tools', name: 'gradle-jpi-plugin', version: '0.1-SNAPSHOT'
+  }
+}
+
+apply plugin: 'jpi'
+
+jenkinsPlugin {
+    coreVersion = '1.398'
+    displayName = 'Git Plugin'
+}
+
+repositories {
+    maven {
+        name 'jgit-repository'
+        url 'http://download.eclipse.org/jgit/maven'
+    }
+}
+
+group = "org.jenkinsci.plugins"
+version = "1.1.15-SNAPSHOT"
+archivesBaseName = "git"
+
+dependencies {
+    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.2'
+
+    jenkinsPlugins([group: 'org.jenkins-ci.plugins', name: 'token-macro', version: '1.0', ext: 'jar'])
+    jenkinsPlugins([group: 'org.jvnet.hudson.plugins', name: 'parameterized-trigger', version: '2.4', ext: 'jar']) {
+        exclude group: 'org.jvnet.hudson.plugins', module: 'subversion'
+    }
+
+    compile(
+            [group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '0.12.1'],
+            [group: 'joda-time', name: 'joda-time', version: '1.5.1'],
+            [group: 'com.infradna.tool', name: 'bridge-method-annotation', version: '1.4'])
+    
+    testCompile(
+                [group: 'org.mockito', name: 'mockito-all', version: '1.8.5'],
+                [group: 'junit', name: 'junit', version: '3.8.1']
+                )
+}
+
+compileJava.targetCompatibility = "1.6"
+compileJava.sourceCompatibility = "1.6"
+
