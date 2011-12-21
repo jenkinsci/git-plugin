@@ -30,8 +30,8 @@ description = 'Integrates Jenkins with GIT SCM'
 dependencies {
     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.2'
 
-    jenkinsPlugins([group: 'org.jenkins-ci.plugins', name: 'token-macro', version: '1.0', ext: 'jar'])
-    jenkinsPlugins([group: 'org.jvnet.hudson.plugins', name: 'parameterized-trigger', version: '2.4', ext: 'jar']) {
+    optionalJenkinsPlugins([group: 'org.jenkins-ci.plugins', name: 'token-macro', version: '1.0', ext: 'jar'])
+    optionalJenkinsPlugins([group: 'org.jvnet.hudson.plugins', name: 'parameterized-trigger', version: '2.4', ext: 'jar']) {
         exclude group: 'org.jvnet.hudson.plugins', module: 'subversion'
     }
 
