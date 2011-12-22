@@ -7,7 +7,10 @@ import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.model.UnprotectedRootAction;
 import hudson.scm.SCM;
+import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.HttpResponse;
@@ -48,60 +51,67 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url) throws ServletException, IOException {
-	    URIish uri;
+        // run in high privilege to see all the projects anonymous users don't see
+        Authentication old = SecurityContextHolder.getContext().getAuthentication();
+        SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
         try {
-            uri = new URIish(url);
-        } catch (URISyntaxException e) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: "+url,e));
-        }
-
-        final List<AbstractProject<?,?>> projects = Lists.newArrayList();
-        boolean scmFound = false,
-                triggerFound = false,
-                urlFound = false;
-        for (AbstractProject<?,?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
-            SCM scm = project.getScm();
-            if (scm instanceof GitSCM) scmFound = true; else continue;
-
-            GitSCM git = (GitSCM) scm;
-            for (RemoteConfig repository : git.getRepositories()) {
-                boolean repositoryMatches = false;
-                for (URIish remoteURL : repository.getURIs()) {
-                    if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
-                }
-                if (repositoryMatches) urlFound = true; else continue;
-
-                SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                if (trigger!=null) triggerFound = true; else continue;
-
-                LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
-                trigger.run();
-                projects.add(project);
-                break;
+            URIish uri;
+            try {
+                uri = new URIish(url);
+            } catch (URISyntaxException e) {
+                return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: "+url,e));
             }
-        }
 
-        final String msg;
-        if (!scmFound)  msg = "No git jobs found";
-        else if (!urlFound) msg = "No git jobs using repository: " + url;
-        else if (!triggerFound) msg = "Jobs found but they aren't configured for polling";
-        else msg = null;
+            final List<AbstractProject<?,?>> projects = Lists.newArrayList();
+            boolean scmFound = false,
+                    triggerFound = false,
+                    urlFound = false;
+            for (AbstractProject<?,?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
+                SCM scm = project.getScm();
+                if (scm instanceof GitSCM) scmFound = true; else continue;
 
-        return new HttpResponse() {
-            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
-                rsp.setStatus(SC_OK);
-                rsp.setContentType("text/plain");
-                for (AbstractProject<?, ?> p : projects) {
-                    rsp.addHeader("Triggered", p.getAbsoluteUrl());
+                GitSCM git = (GitSCM) scm;
+                for (RemoteConfig repository : git.getRepositories()) {
+                    boolean repositoryMatches = false;
+                    for (URIish remoteURL : repository.getURIs()) {
+                        if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
+                    }
+                    if (repositoryMatches) urlFound = true; else continue;
+
+                    SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                    if (trigger!=null) triggerFound = true; else continue;
+
+                    LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
+                    trigger.run();
+                    projects.add(project);
+                    break;
                 }
-                PrintWriter w = rsp.getWriter();
-                for (AbstractProject<?, ?> p : projects) {
-                    w.println("Scheduled polling of "+p.getFullDisplayName());
-                }
-                if (msg!=null)
-                    w.println(msg);
             }
-        };
+
+            final String msg;
+            if (!scmFound)  msg = "No git jobs found";
+            else if (!urlFound) msg = "No git jobs using repository: " + url;
+            else if (!triggerFound) msg = "Jobs found but they aren't configured for polling";
+            else msg = null;
+
+            return new HttpResponse() {
+                public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+                    rsp.setStatus(SC_OK);
+                    rsp.setContentType("text/plain");
+                    for (AbstractProject<?, ?> p : projects) {
+                        rsp.addHeader("Triggered", p.getAbsoluteUrl());
+                    }
+                    PrintWriter w = rsp.getWriter();
+                    for (AbstractProject<?, ?> p : projects) {
+                        w.println("Scheduled polling of "+p.getFullDisplayName());
+                    }
+                    if (msg!=null)
+                        w.println(msg);
+                }
+            };
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(old);
+        }
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
