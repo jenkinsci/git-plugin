@@ -81,9 +81,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
                     if (trigger!=null) triggerFound = true; else continue;
 
-                    LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
-                    trigger.run();
-                    projects.add(project);
+                    if (!project.isDisabled()) {
+                        LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
+                        trigger.run();
+                        projects.add(project);
+                    }
                     break;
                 }
             }
