@@ -51,7 +51,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url) throws ServletException, IOException {
-        // run in high privilege to see all the projects anonymous users don't see
+        // run in high privilege to see all the projects anonymous users don't see.
+        // this is safe because when we actually schedule a build, it's a build that can
+        // happen at some random time anyway.
         Authentication old = SecurityContextHolder.getContext().getAuthentication();
         SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
         try {
