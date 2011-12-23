@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'jpi'
 
 jenkinsPlugin {
-    coreVersion = '1.398'
+    coreVersion = '1.420'
     displayName = 'Git Plugin'
     url = 'http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin'
 }
