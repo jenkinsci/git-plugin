@@ -765,11 +765,10 @@ public class GitSCM extends SCM implements Serializable {
             git.fetch(remoteRepository);
             return true;
         } catch (GitException ex) {
-            listener.error(
+            ex.printStackTrace(listener.error(
                     "Problem fetching from " + remoteRepository.getName()
                     + " / " + remoteRepository.getName()
-                    + " - could be unavailable. Continuing anyway");
-            listener.error(" (Underlying report) : " + ex.getMessage());
+                    + " - could be unavailable. Continuing anyway"));
         }
         return false;
     }
@@ -823,11 +822,10 @@ public class GitSCM extends SCM implements Serializable {
 
                         subGit.fetch(submoduleRemoteRepository);
                     } catch (Exception ex) {
-                        listener.getLogger().println(
+                        ex.printStackTrace(listener.error(
                                 "Problem fetching from submodule "
                                 + submodule.getFile()
-                                + " - could be unavailable. Continuing anyway");
-                        listener.error(" (Underlying report) : " + ex.getMessage());
+                                + " - could be unavailable. Continuing anyway"));
                     }
                 }
             }
@@ -1032,10 +1030,7 @@ public class GitSCM extends SCM implements Serializable {
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
-                            listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage());
-                            if (ex.getCause() != null) {
-                                listener.error("Cause: %s", ex.getCause().getMessage());
-                            }
+                            ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
                             // Failed. Try the next one
                             log.println("Trying next repository");
                         }
@@ -1054,12 +1049,10 @@ public class GitSCM extends SCM implements Serializable {
                             git.fetch(remoteRepository);
                             fetched = true;
                         } catch (Exception e) {
-                            listener.error(
+                            e.printStackTrace(listener.error(
                                     "Problem fetching from " + remoteRepository.getName()
                                     + " / " + remoteRepository.getName()
-                                    + " - could be unavailable. Continuing anyway.");
-                            listener.error(" (Underlying report) : " + e.getMessage());
-
+                                    + " - could be unavailable. Continuing anyway."));
                         }
                     }
 

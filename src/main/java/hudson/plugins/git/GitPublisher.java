@@ -159,7 +159,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             try {
                 tempEnvironment = build.getEnvironment(listener);
             } catch (IOException e) {
-                listener.error("IOException publishing in git plugin");
+                e.printStackTrace(listener.error("Failed to build up environment"));
                 tempEnvironment = new EnvVars();
             }
 
@@ -217,7 +217,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                             }
                         });
                 } catch (Throwable e) {
-                    listener.error("Failed to push merge to origin repository: " + e.getMessage());
+                    e.printStackTrace(listener.error("Failed to push merge to origin repository"));
                     build.setResult(Result.FAILURE);
                     mergeResult = false;
                     
@@ -280,8 +280,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     }
                                 });
                         } catch (Throwable e) {
-                            listener.error("Failed to push tag " + tagName + " to " + targetRepo
-                                           + ": " + e.getMessage());
+                            e.printStackTrace(listener.error("Failed to push tag " + tagName + " to " + targetRepo));
                             build.setResult(Result.FAILURE);
                             tagResult = false;
                         }
@@ -337,8 +336,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     }
                                 });
                         } catch (Throwable e) {
-                            listener.error("Failed to push branch " + branchName + " to "
-                                           + targetRepo + ": " + e.getMessage());
+                            e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
                             build.setResult(Result.FAILURE);
                             branchResult = false;
                         }
