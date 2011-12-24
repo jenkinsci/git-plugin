@@ -3,6 +3,8 @@ package hudson.plugins.git;
 import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.Hudson;
 import hudson.model.Node;
@@ -44,6 +46,7 @@ public final class GitTool extends ToolInstallation implements NodeSpecific<GitT
         return getHome();
     }
 
+    @Initializer(after=InitMilestone.PLUGINS_STARTED)
     public static void onLoaded() {
         //Creates default tool installation if needed. Uses "git" or migrates data from previous versions
 
