@@ -90,7 +90,10 @@
     <f:entry title="Config user.email Value" field="gitConfigEmail">
       <f:textbox />
     </f:entry>
-    
+    <f:entry title="Change Log Encoding" field="changeLogEncoding">
+      <f:textbox/>
+    </f:entry>
+
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">
     <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
@@ -106,7 +109,6 @@
             <f:textbox name="git.submodule.match" value="${smcfg.branchesString}" />
            </f:entry>
            
-          
            <f:entry>
             <div align="right">
                 <input type="button" value="Delete" class="repeatable-delete" style="margin-left: 1em;" />

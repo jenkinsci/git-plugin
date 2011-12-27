@@ -3,10 +3,7 @@ package hudson.plugins.git;
 import hudson.model.AbstractBuild;
 import hudson.scm.ChangeLogParser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,8 +29,9 @@ public class GitChangeLogParser extends ChangeLogParser {
         Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
         
         // Parse the log file into GitChangeSet items - each one is a commit
-        
-        BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
+
+        GitSCM scm = (GitSCM) build.getProject().getScm();
+        BufferedReader rdr = new BufferedReader(new InputStreamReader(new FileInputStream(changelogFile), scm.getChangeLogEncoding()));
         
         try {
             String line;
