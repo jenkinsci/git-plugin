@@ -141,6 +141,8 @@ public class GitSCM extends SCM implements Serializable {
     private boolean skipTag;
     private String scmName;
 
+    private String changeLogEncoding = "UTF-8";
+    
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -170,7 +172,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false);
+                null, null, null, false, false, false, false, null, null, false, "UTF-8");
     }
 
     @DataBoundConstructor
@@ -197,7 +199,8 @@ public class GitSCM extends SCM implements Serializable {
             boolean remotePoll,
             String gitConfigName,
             String gitConfigEmail,
-            boolean skipTag) {
+            boolean skipTag,
+            String changeLogEncoding) {
 
         this.scmName = scmName;
 
@@ -261,6 +264,8 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
         buildChooser.gitSCM = this; // set the owner
+
+        this.changeLogEncoding = changeLogEncoding;
     }
 
     private void updateFromUserData() throws GitException {
@@ -1740,6 +1745,15 @@ public class GitSCM extends SCM implements Serializable {
         // By default, return false.
         return false;
     }
+
+    public String getChangeLogEncoding() {
+        return changeLogEncoding;
+    }
+
+    public void setChangeLogEncoding(String changeLogEncoding) {
+        this.changeLogEncoding = changeLogEncoding;
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
     /**
      * Set to true to enable more logging to build's {@link TaskListener}.
