@@ -175,7 +175,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
             
             final EnvVars environment = tempEnvironment;
-            final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath);
+            final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath,environment);
             
             boolean pushResult = true;
             // If we're pushing the merge back...

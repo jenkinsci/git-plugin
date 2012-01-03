@@ -665,7 +665,9 @@ public class GitSCM extends SCM implements Serializable {
             }
         }
 
-        FilePath workingDirectory = workingDirectory(workspace);
+        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+
+        FilePath workingDirectory = workingDirectory(workspace,environment);
 
         // Rebuild if the working directory doesn't exist
         // I'm actually not 100% sure about this, but I'll leave it in for now.
@@ -675,7 +677,6 @@ public class GitSCM extends SCM implements Serializable {
             return PollingResult.BUILD_NOW;
         }
 
-        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
 //        final String singleBranch = getSingleBranch(lastBuild);
 
@@ -921,12 +922,14 @@ public class GitSCM extends SCM implements Serializable {
             final FilePath workspace, final BuildListener listener, File _changelogFile)
             throws IOException, InterruptedException {
 
+        final EnvVars environment = build.getEnvironment(listener);
+        
         final FilePath changelogFile = new FilePath(_changelogFile);
 
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final FilePath workingDirectory = workingDirectory(workspace);
+        final FilePath workingDirectory = workingDirectory(workspace,environment);
 
         if (!workingDirectory.exists()) {
             workingDirectory.mkdirs();
@@ -944,8 +947,6 @@ public class GitSCM extends SCM implements Serializable {
         if (buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
-
-        final EnvVars environment = build.getEnvironment(listener);
 
         final String singleBranch = getSingleBranch(build);
         final String paramLocalBranch = getParamLocalBranch(build);
@@ -1648,18 +1649,25 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
+     * @deprecated
+     *      Use {@link #workingDirectory(FilePath, EnvVars)}
+     */
+    protected FilePath workingDirectory(final FilePath workspace) {
+        return workingDirectory(workspace,null);
+    }
+    
+    /**
      * Given the workspace, gets the working directory, which will be the workspace
      * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
      *
      * @param workspace
      * @return working directory
      */
-    protected FilePath workingDirectory(final FilePath workspace) {
-
+    protected FilePath workingDirectory(final FilePath workspace, EnvVars environment) {
         if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
             return workspace;
         }
-        return workspace.child(relativeTargetDir);
+        return workspace.child(environment.expand(relativeTargetDir));
     }
 
     public String getLocalBranch() {
