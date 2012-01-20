@@ -6,7 +6,6 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
-import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
@@ -35,36 +34,24 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getDiffLink(Path path) throws IOException {
-        //TODO Handle DELETE and ADD
-        if (path.getEditType() != EditType.EDIT) {
-            return null;
-        }
-
         return new URL(url,
-                url.getPath() + "blobdiff/" + buildCommitPath(path) + "?hb=" + path.getChangeSet().getParentCommit());
+                String.format(url.getPath() + "blobdiff?r=%s&h=%s&hb=%s", encodeString(projectName), path.getChangeSet().getId(),
+                        path.getChangeSet().getParentCommit()));
     }
 
     @Override
     public URL getFileLink(Path path) throws IOException {
-        return new URL(url, url.getPath() + "blob/" + buildCommitPath(path));
+        if (path.getEditType().equals(EditType.DELETE)) {
+            return null;
+        }
+        return new URL(url,
+                String.format(url.getPath() + "blob?r=%s&h=%s&f=%s", encodeString(projectName), path.getChangeSet().getId(),
+                        encodeString(path.getPath())));
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + "commit/" + projectName + "/" + changeSet.getId().toString());
-    }
-
-    private QueryBuilder param() {
-        return new QueryBuilder(url.getQuery());
-    }
-
-    private String buildCommitPath(final Path path) throws UnsupportedEncodingException {
-        return projectName + "/" + path.getChangeSet().getId() + "/" + encodePath(path);
-    }
-
-    private String encodePath(final Path path) throws UnsupportedEncodingException {
-        // TODO Is there really no better way to do this?
-        return URLEncoder.encode(path.getPath(), "UTF-8").replaceAll("\\+", "%20");
+        return new URL(url, String.format(url.getPath() + "commit?r=%s&h=%s", encodeString(projectName), changeSet.getId()));
     }
 
     public URL getUrl() {
@@ -75,6 +62,9 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         return projectName;
     }
 
+     private String encodeString(final String s) throws UnsupportedEncodingException {
+        return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
+    }
     @Extension
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         public String getDisplayName() {
