@@ -64,8 +64,10 @@ import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -915,6 +917,22 @@ public class GitSCM extends SCM implements Serializable {
      */
     public boolean getAuthorOrCommitter() {
         return authorOrCommitter;
+    }
+
+    /**
+     * Web-bound method to let people look up a build by their SHA1 commit.
+     */
+    public AbstractBuild<?,?> getBySHA1(String sha1) {
+        AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+        for (AbstractBuild b : p.getBuilds()) {
+            BuildData d = b.getAction(BuildData.class);
+            if (d!=null && d.lastBuild!=null) {
+                Build lb = d.lastBuild;
+                if (lb.revision!=null      && lb.revision.getSha1String().startsWith(sha1))  return b;
+                if (lb.mergeRevision!=null && lb.mergeRevision.getSha1String().startsWith(sha1))  return b;
+            }
+        }
+        return null;
     }
 
     @Override
