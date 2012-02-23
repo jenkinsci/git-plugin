@@ -66,6 +66,9 @@
   </f:entry>
 
   <f:advanced>
+    <f:entry title="${%Included Regions}" field="includedRegions" help="/plugin/git/help-includedRegions.html">
+        <f:textarea />
+    </f:entry>
     <f:entry title="${%Excluded Regions}" field="excludedRegions" help="/plugin/git/help-excludedRegions.html">
         <f:textarea />
     </f:entry>
