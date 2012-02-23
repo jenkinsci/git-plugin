@@ -65,6 +65,19 @@
     </repository>
   </repositories>
 
+	<developers>
+		<developer>
+			<id>kohsuke</id>
+			<name>Kohsuke Kawaguchi</name>
+		</developer>
+		<developer>
+			<id>ndeloof</id>
+			<name>Nicolas De Loof</name>
+			<email>nicolas.deloof@gmail.com</email>
+		</developer>
+	</developers>
+
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jgit</groupId>
