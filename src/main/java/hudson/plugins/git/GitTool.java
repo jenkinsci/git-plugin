@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
  * Information about Git installation.
  *

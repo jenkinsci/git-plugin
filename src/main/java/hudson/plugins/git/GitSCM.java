@@ -1,6 +1,8 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
+import static hudson.init.InitMilestone.PLUGINS_PREPARED;
+import static hudson.init.InitMilestone.PLUGINS_STARTED;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -9,6 +11,8 @@ import hudson.FilePath;
 import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
@@ -1391,11 +1395,6 @@ public class GitSCM extends SCM implements Serializable {
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
-            Run.XSTREAM.registerConverter(new ObjectIdConverter());
-            Items.XSTREAM.registerConverter(new RemoteConfigConverter(
-                    Items.XSTREAM));
-            Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig",
-                    RemoteConfig.class);
             load();
         }
 
@@ -1804,7 +1803,16 @@ public class GitSCM extends SCM implements Serializable {
         // By default, return false.
         return false;
     }
+
+    @Initializer(before = InitMilestone.JOB_LOADED)
+    public static void configureXtream() {
+        Run.XSTREAM.registerConverter(new ObjectIdConverter());
+        Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));
+        Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig", RemoteConfig.class);
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
+
     /**
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
