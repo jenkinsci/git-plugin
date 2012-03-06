@@ -50,7 +50,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return "git";
     }
 
-    public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url) throws ServletException, IOException {
+    public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url, @QueryParameter(required=false) String branches) throws ServletException, IOException {
         // run in high privilege to see all the projects anonymous users don't see.
         // this is safe because when we actually schedule a build, it's a build that can
         // happen at some random time anyway.
@@ -64,6 +64,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: "+url,e));
             }
 
+            if (branches == null) branches = "";
+            String[] branchesArray = branches.split(",");
+
             final List<AbstractProject<?,?>> projects = Lists.newArrayList();
             boolean scmFound = false,
                     triggerFound = false,
@@ -74,11 +77,27 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 GitSCM git = (GitSCM) scm;
                 for (RemoteConfig repository : git.getRepositories()) {
-                    boolean repositoryMatches = false;
+                    boolean repositoryMatches = false,
+                            branchMatches = false;
                     for (URIish remoteURL : repository.getURIs()) {
                         if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
                     }
-                    if (repositoryMatches) urlFound = true; else continue;
+
+                    if (!repositoryMatches) continue;
+
+                    if (branchesArray.length == 1 && branchesArray[0] == "") {
+                        branchMatches = true;
+                    } else {
+                        for (BranchSpec branchSpec : git.getBranches()) {
+                            for (int i=0; i < branchesArray.length; i++) {
+                                if (branchSpec.matches(repository.getName() + "/" + branchesArray[i])) { branchMatches = true; break; }
+                            }
+                            if (branchMatches) break;
+                        }
+                    }
+
+                    if (branchMatches) urlFound = true; else continue;
+
 
                     SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
                     if (trigger!=null) triggerFound = true; else continue;
@@ -94,7 +113,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
             final String msg;
             if (!scmFound)  msg = "No git jobs found";
-            else if (!urlFound) msg = "No git jobs using repository: " + url;
+            else if (!urlFound) msg = "No git jobs using repository: " + url + " and branches: " + branches;
             else if (!triggerFound) msg = "Jobs found but they aren't configured for polling";
             else msg = null;
 
