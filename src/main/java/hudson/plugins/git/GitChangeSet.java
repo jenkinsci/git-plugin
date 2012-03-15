@@ -184,8 +184,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
         return dateStr;
     }
-        
-            
+
+    @Override
+    public long getTimestamp() {
+        return Long.parseLong(authorOrCommitter ? authorTime : committerTime) * 1000L;
+    }
+
+    @Override
+    public String getCommitId() {
+        return id;
+    }
+
     @Override
     public void setParent(ChangeLogSet parent) {
         super.setParent(parent);
