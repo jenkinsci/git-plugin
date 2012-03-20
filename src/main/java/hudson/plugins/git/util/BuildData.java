@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
@@ -61,7 +62,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         return "Git Build Data";
     }
     public String getIconFileName() {
-        return "/plugin/git/icons/git-32x32.png";
+        return Functions.getResourcePath()+"/plugin/git/icons/git-32x32.png";
     }
     public String getUrlName() {
         return "git";
