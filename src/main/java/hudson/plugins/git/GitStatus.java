@@ -83,7 +83,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
                     }
 
-                    if (!repositoryMatches) continue;
+                    if (!repositoryMatches || git.isIgnoreNotifyCommit()) continue;
 
                     if (branchesArray.length == 1 && branchesArray[0] == "") {
                         branchMatches = true;

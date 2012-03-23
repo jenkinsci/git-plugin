@@ -37,17 +37,17 @@ public class GitStatusTest extends HudsonTestCase {
 
     public void testGetIconFileName() {
         assertNull(this.gitStatus.getIconFileName());
-   }
+    }
 
     public void testGetUrlName() {
         assertEquals("git", this.gitStatus.getUrlName());
     }
 
     public void testDoNotifyCommitWithNoBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master");
-        SCMTrigger aTopicTrigger = setupProject("a", "topic");
-        SCMTrigger bMasterTrigger = setupProject("b", "master");
-        SCMTrigger bTopicTrigger = setupProject("b", "topic");
+        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
         this.gitStatus.doNotifyCommit("a", "");
         Mockito.verify(aMasterTrigger).run();
@@ -57,10 +57,10 @@ public class GitStatusTest extends HudsonTestCase {
     }
 
     public void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master");
-        SCMTrigger aTopicTrigger = setupProject("a", "topic");
-        SCMTrigger bMasterTrigger = setupProject("b", "master");
-        SCMTrigger bTopicTrigger = setupProject("b", "topic");
+        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
         this.gitStatus.doNotifyCommit("nonexistent", "");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
@@ -70,10 +70,10 @@ public class GitStatusTest extends HudsonTestCase {
     }
 
     public void testDoNotifyCommitWithOneBranch() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master");
-        SCMTrigger aTopicTrigger = setupProject("a", "topic");
-        SCMTrigger bMasterTrigger = setupProject("b", "master");
-        SCMTrigger bTopicTrigger = setupProject("b", "topic");
+        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
         this.gitStatus.doNotifyCommit("a", "master");
         Mockito.verify(aMasterTrigger).run();
@@ -83,10 +83,10 @@ public class GitStatusTest extends HudsonTestCase {
     }
 
     public void testDoNotifyCommitWithTwoBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master");
-        SCMTrigger aTopicTrigger = setupProject("a", "topic");
-        SCMTrigger bMasterTrigger = setupProject("b", "master");
-        SCMTrigger bTopicTrigger = setupProject("b", "topic");
+        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
         this.gitStatus.doNotifyCommit("a", "master,topic");
         Mockito.verify(aMasterTrigger).run();
@@ -96,10 +96,10 @@ public class GitStatusTest extends HudsonTestCase {
     }
 
     public void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master");
-        SCMTrigger aTopicTrigger = setupProject("a", "topic");
-        SCMTrigger bMasterTrigger = setupProject("b", "master");
-        SCMTrigger bTopicTrigger = setupProject("b", "topic");
+        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
         this.gitStatus.doNotifyCommit("a", "nonexistent");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
@@ -108,7 +108,14 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
-    private SCMTrigger setupProject(String url, String branchString) throws Exception {
+    public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
+        SCMTrigger aMasterTrigger = setupProject("a", "master", true);
+
+        this.gitStatus.doNotifyCommit("a", "");
+        Mockito.verify(aMasterTrigger, Mockito.never()).run();
+    }
+
+    private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
@@ -118,7 +125,7 @@ public class GitStatusTest extends HudsonTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null));
+                null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit));
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;

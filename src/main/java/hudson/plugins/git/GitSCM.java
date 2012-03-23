@@ -126,6 +126,7 @@ public class GitSCM extends SCM implements Serializable {
     private boolean wipeOutWorkspace;
     private boolean pruneBranches;
     private boolean remotePoll;
+    private boolean ignoreNotifyCommit;
 
     /**
      * @deprecated
@@ -177,7 +178,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null);
+                null, null, null, false, false, false, false, null, null, false, null, false);
     }
 
     @DataBoundConstructor
@@ -205,7 +206,8 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigName,
             String gitConfigEmail,
             boolean skipTag,
-            String includedRegions) {
+            String includedRegions,
+            boolean ignoreNotifyCommit) {
 
         this.scmName = scmName;
 
@@ -252,6 +254,7 @@ public class GitSCM extends SCM implements Serializable {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
+        this.ignoreNotifyCommit = ignoreNotifyCommit;
         if (remotePoll
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
@@ -513,6 +516,10 @@ public class GitSCM extends SCM implements Serializable {
 
     public boolean getClean() {
         return this.clean;
+    }
+
+    public boolean isIgnoreNotifyCommit() {
+        return ignoreNotifyCommit;
     }
 
     public BuildChooser getBuildChooser() {
