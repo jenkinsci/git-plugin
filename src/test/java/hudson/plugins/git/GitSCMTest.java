@@ -546,7 +546,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
                 excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false,
-                includedRegions));
+                includedRegions, false));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
