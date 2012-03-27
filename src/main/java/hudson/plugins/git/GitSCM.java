@@ -498,6 +498,11 @@ public class GitSCM extends SCM implements Serializable {
         return confEmail;
     }
 
+    public boolean isCreateAccountBasedOnCommitterEmail() {
+        DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
+        return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnCommitterEmail());
+    }
+
     public boolean getSkipTag() {
         return this.skipTag;
     }
@@ -973,7 +978,7 @@ public class GitSCM extends SCM implements Serializable {
             throws IOException, InterruptedException {
 
         final EnvVars environment = build.getEnvironment(listener);
-        
+
         final FilePath changelogFile = new FilePath(_changelogFile);
 
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
@@ -1399,6 +1404,7 @@ public class GitSCM extends SCM implements Serializable {
         private String gitExe;
         private String globalConfigName;
         private String globalConfigEmail;
+        private boolean createAccountBasedOnCommitterEmail;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1452,6 +1458,14 @@ public class GitSCM extends SCM implements Serializable {
 
         public void setGlobalConfigEmail(String globalConfigEmail) {
             this.globalConfigEmail = globalConfigEmail;
+        }
+
+        public boolean isCreateAccountBasedOnCommitterEmail() {
+            return createAccountBasedOnCommitterEmail;
+        }
+
+        public void setCreateAccountBasedOnCommitterEmail(boolean createAccountBasedOnCommitterEmail) {
+            this.createAccountBasedOnCommitterEmail = createAccountBasedOnCommitterEmail;
         }
 
         /**
@@ -1700,7 +1714,7 @@ public class GitSCM extends SCM implements Serializable {
     protected FilePath workingDirectory(final FilePath workspace) {
         return workingDirectory(workspace,null);
     }
-    
+
     /**
      * Given the workspace, gets the working directory, which will be the workspace
      * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
