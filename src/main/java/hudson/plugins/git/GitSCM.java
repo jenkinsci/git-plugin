@@ -498,9 +498,9 @@ public class GitSCM extends SCM implements Serializable {
         return confEmail;
     }
 
-    public boolean isCreateAccountBasedOnCommitterEmail() {
+    public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
-        return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnCommitterEmail());
+        return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
     public boolean getSkipTag() {
@@ -1404,7 +1404,7 @@ public class GitSCM extends SCM implements Serializable {
         private String gitExe;
         private String globalConfigName;
         private String globalConfigEmail;
-        private boolean createAccountBasedOnCommitterEmail;
+        private boolean createAccountBasedOnEmail;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1460,12 +1460,12 @@ public class GitSCM extends SCM implements Serializable {
             this.globalConfigEmail = globalConfigEmail;
         }
 
-        public boolean isCreateAccountBasedOnCommitterEmail() {
-            return createAccountBasedOnCommitterEmail;
+        public boolean isCreateAccountBasedOnEmail() {
+            return createAccountBasedOnEmail;
         }
 
-        public void setCreateAccountBasedOnCommitterEmail(boolean createAccountBasedOnCommitterEmail) {
-            this.createAccountBasedOnCommitterEmail = createAccountBasedOnCommitterEmail;
+        public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
+            this.createAccountBasedOnEmail = createAccountBasedOnEmail;
         }
 
         /**

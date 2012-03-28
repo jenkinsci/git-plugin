@@ -234,12 +234,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      *
      * @param csAuthor user name.
      * @param csAuthorEmail user email.
-     * @param createAccountBasedOnCommitterEmail true if create new user based on committer's email.
+     * @param createAccountBasedOnEmail true if create new user based on committer's email.
      * @return {@link User}
      */
-    public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnCommitterEmail) {
+    public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
         User user;
-        if (createAccountBasedOnCommitterEmail) {
+        if (createAccountBasedOnEmail) {
             user = User.get(csAuthorEmail, true);
             try {
                 user.setFullName(csAuthor);
@@ -264,14 +264,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
-    private boolean isCreateAccountBasedOnCommitterEmail() {
+    private boolean isCreateAccountBasedOnEmail() {
         ChangeLogSet parent = getParent();
-        boolean createAccountBasedOnCommitterEmail = false;
+        boolean createAccountBasedOnEmail = false;
         if (parent != null) {
-            createAccountBasedOnCommitterEmail = ((GitSCM) parent.build.getProject().getScm()).
-                isCreateAccountBasedOnCommitterEmail();
+            createAccountBasedOnEmail = ((GitSCM) parent.build.getProject().getScm()).
+                isCreateAccountBasedOnEmail();
         }
-        return createAccountBasedOnCommitterEmail;
+        return createAccountBasedOnEmail;
     }
 
     @Override
@@ -294,7 +294,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             throw new RuntimeException("No author in changeset " + id);
         }
 
-        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnCommitterEmail());
+        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail());
     }
 
     /**
