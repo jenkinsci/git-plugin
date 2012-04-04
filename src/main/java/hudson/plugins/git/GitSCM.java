@@ -1028,7 +1028,6 @@ public class GitSCM extends SCM implements Serializable {
                     throws IOException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
-                log.println("Checkout:" + ws.getName() + " / " + ws.getRemote() + " - " + ws.getChannel());
                 IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
 
                 if (wipeOutWorkspace) {
