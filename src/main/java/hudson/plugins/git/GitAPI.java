@@ -780,9 +780,10 @@ public class GitAPI implements IGitAPI {
             }
 
             return result;
+        } catch (GitException e) {
+            throw e;
         } catch (Exception e) {
-            throw new GitException("Error performing command: " + StringUtils.join(args.toCommandArray(), " ")
-                                   + "\n" + e.getMessage(), e);
+            throw new GitException("Error performing command: " + StringUtils.join(args.toCommandArray()," "), e);
         }
     }
 
