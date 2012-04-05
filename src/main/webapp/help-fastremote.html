@@ -1,3 +1,5 @@
 <div>
-       Use git ls-remote polling mechanism. This will compare latest built commit SHA with remote branch without cloning a local copy of the repo
+       Use git ls-remote polling mechanism. This will compare the latest built commit SHA with the remote branch without cloning a local copy of the repo.<br><br>
+       If you want to use this, you can have only one repository with one branch (no wildcards!), and you can not use any excluded regions, excluded users or submodules, otherwise this option will disable itself after save.<br><br>
+       If this is turned off though, polling will require a workspace and might trigger unwanted builds (see <a href="https://issues.jenkins-ci.org/browse/JENKINS-10131" target="_blank">JENKINS-10131</a>).
 </div>

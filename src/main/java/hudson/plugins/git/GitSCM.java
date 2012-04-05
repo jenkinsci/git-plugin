@@ -707,7 +707,9 @@ public class GitSCM extends SCM implements Serializable {
         // I'm actually not 100% sure about this, but I'll leave it in for now.
         // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
         // for whether we'd ever been built before. But I'm fixing that right now anyway.
-        if (!workingDirectory.exists()) {
+        
+        // JENKINS-10880: workingDirectory can be null
+        if (workingDirectory == null || !workingDirectory.exists()) {
             return PollingResult.BUILD_NOW;
         }
 
@@ -1706,9 +1708,13 @@ public class GitSCM extends SCM implements Serializable {
      * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
      *
      * @param workspace
-     * @return working directory
+     * @return working directory or null if workspace is null
      */
     protected FilePath workingDirectory(final FilePath workspace, EnvVars environment) {
+        // JENKINS-10880: workspace can be null
+        if (workspace == null) {
+            return null;
+        }
         if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
             return workspace;
         }
