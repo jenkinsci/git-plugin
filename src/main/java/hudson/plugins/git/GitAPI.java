@@ -759,16 +759,23 @@ public class GitAPI implements IGitAPI {
      */
     private String launchCommandIn(ArgumentListBuilder args, FilePath workDir) throws GitException {
         ByteArrayOutputStream fos = new ByteArrayOutputStream();
+        // JENKINS-13356: capture the output of stderr separately
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         try {
             args.prepend(getGitExe());
             int status = launcher.launch().cmds(args.toCommandArray()).
-                envs(environment).stdout(fos).pwd(workDir).join();
+                envs(environment).stdout(fos).stderr(err).pwd(workDir).join();
 
             String result = fos.toString();
+            
+            // JENKINS-13356: do not return the output of stderr, but at least print it somewhere
+            if (err.size() > 0) {
+                listener.getLogger().print("Command \""+StringUtils.join(args.toCommandArray(), " ")+"printed on stderr: "+err.toString());
+            }
 
             if (status != 0) {
-                throw new GitException("Command \""+StringUtils.join(args.toCommandArray(), " ")+"\" returned status code " + status + ": " + result);
+                throw new GitException("Command \""+StringUtils.join(args.toCommandArray(), " ")+"\" returned status code " + status + ": " + result + err.toString());
             }
 
             return result;
