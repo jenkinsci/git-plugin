@@ -749,7 +749,7 @@ public class GitSCM extends SCM implements Serializable {
                     List<Revision> candidates = new ArrayList<Revision>();
 
                     for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, c, listener)) {
+                        if (!isRevExcluded(git, c, listener, buildData)) {
                             candidates.add(c);
                         }
                     }
@@ -1782,9 +1782,11 @@ public class GitSCM extends SCM implements Serializable {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener) {
-        try {
-            List<String> revShow = git.showRevision(r);
+    private boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener, BuildData buildData) {
+        
+    	
+    	try {
+            List<String> revShow = git.showRevision(r, buildData);
 
             // If the revision info is empty, something went weird, so we'll just
             // return false.

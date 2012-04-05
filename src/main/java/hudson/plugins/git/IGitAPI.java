@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
+import hudson.plugins.git.util.BuildData;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,7 +111,7 @@ public interface IGitAPI {
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);
 
-    List<String> showRevision(Revision r) throws GitException;
+    List<String> showRevision(Revision r, BuildData buildData) throws GitException;
     String getHeadRev(String remoteRepoUrl, String branch) throws GitException;
 
     String getReference();
