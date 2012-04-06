@@ -15,9 +15,12 @@ import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
+
+import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -505,6 +508,38 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild db = d.getLastBuild();
         assertNotNull("downstream build didn't happen",db);
         assertBuildStatusSuccess(db);
+    }
+
+    public void testEmailCommitter() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // setup global config
+        final DescriptorImpl descriptor = (DescriptorImpl) project.getScm().getDescriptor();
+        descriptor.setCreateAccountBasedOnEmail(true);
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+
+        final PersonIdent jeffDoe = new PersonIdent("Jeff Doe", "jeff@doe.com");
+        commit(commitFile2, jeffDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+        //... and build it...
+
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        User culprit = culprits.iterator().next();
+        assertEquals("", jeffDoe.getEmailAddress(), culprit.getId());
+        assertEquals("", jeffDoe.getName(), culprit.getFullName());
+
+        assertBuildStatusSuccess(build);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
