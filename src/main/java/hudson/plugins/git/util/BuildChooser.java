@@ -40,7 +40,6 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     
     /**
      * Get a list of revisions that are candidates to be built.
-     * May be an empty set.
      *
      * <p>
      * This method is invoked on the node where the workspace exists, which may not be the master.
@@ -50,13 +49,35 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        this will be non-null only in the simple case, in advanced
      *        cases with multiple repositories and/or branches specified
      *        then this value will be null.
-     * @return the candidate revision.
+     * @param context
+     *      Object that provides access back to the model object. This is because
+     *      the build chooser can be invoked on a slave where there's no direct access
+     *      to the build/project for which this is invoked.
+     *
+     *      If {@code isPollCall} is false, then call back to both project and build are available.
+     *      If {@code isPollCall} is true, then only the callback to the project is available as there's
+     *      no contextual build object.
+     * @return
+     *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
      *
      * @throws IOException
      * @throws GitException
      */
-    public abstract Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                               IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException;
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                               IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException {
+        // fallback to the previous signature
+        return getCandidateRevisions(isPollCall,singleBranch,git,listener,buildData);
+    }
+
+
+    /**
+     * @deprecated as of 1.1.17
+     *      Use and override {@link #getCandidateRevisions(boolean, String, IGitAPI, TaskListener, BuildData, BuildChooserContext)}
+     */
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                               IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {
+        throw new UnsupportedOperationException("getCandidateRevisions method must be overridden");
+    }
 
     /**
      * What was the last SHA1 that a named branch was built with?

@@ -20,6 +20,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson;
+import hudson.model.Hudson.MasterComputer;
 import hudson.model.Items;
 import hudson.model.Label;
 import hudson.model.Node;
@@ -32,12 +33,15 @@ import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
+import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
+import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
@@ -715,6 +719,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
 //        final String singleBranch = getSingleBranch(lastBuild);
+        final BuildChooserContext context = new BuildChooserContextImpl(project,null);
 
         boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
 
@@ -735,7 +740,7 @@ public class GitSCM extends SCM implements Serializable {
                     listener.getLogger().println("Polling for changes in");
 
                     Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
-                            true, singleBranch, git, listener, buildData);
+                            true, singleBranch, git, listener, buildData, context);
 
                     List<Revision> candidates = new ArrayList<Revision>();
 
@@ -969,6 +974,36 @@ public class GitSCM extends SCM implements Serializable {
         return null;
     }
 
+    /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
+        final AbstractProject project;
+        final AbstractBuild build;
+
+        BuildChooserContextImpl(AbstractProject project, AbstractBuild build) {
+            this.project = project;
+            this.build = build;
+        }
+
+        public <T> T actOnBuild(ContextCallable<AbstractBuild, T> callable) throws IOException, InterruptedException {
+            return callable.invoke(build,Hudson.MasterComputer.localChannel);
+        }
+
+        public <T> T actOnProject(ContextCallable<AbstractProject, T> callable) throws IOException, InterruptedException {
+            return callable.invoke(project, MasterComputer.localChannel);
+        }
+
+        private Object writeReplace() {
+            return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
+                public <T> T actOnBuild(ContextCallable<AbstractBuild, T> callable) throws IOException, InterruptedException {
+                    return callable.invoke(build,Channel.current());
+                }
+
+                public <T> T actOnProject(ContextCallable<AbstractProject, T> callable) throws IOException, InterruptedException {
+                    return callable.invoke(project,Channel.current());
+                }
+            });
+        }
+    }
+
     @Override
     public boolean checkout(final AbstractBuild build, Launcher launcher,
             final FilePath workspace, final BuildListener listener, File _changelogFile)
@@ -1019,6 +1054,7 @@ public class GitSCM extends SCM implements Serializable {
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
 
         final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
 
@@ -1132,7 +1168,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
 
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions(
-                        false, singleBranch, git, listener, buildData);
+                        false, singleBranch, git, listener, buildData, context);
                 if (candidates.size() == 0) {
                     return null;
                 }

@@ -3,20 +3,31 @@ package hudson.plugins.git;
 import hudson.BulkChange;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.User;
+import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.util.BuildChooserContext;
+import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
+import hudson.remoting.Callable;
+import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
 
 import org.jvnet.hudson.test.Bug;
@@ -505,6 +516,49 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild db = d.getLastBuild();
         assertNotNull("downstream build didn't happen",db);
         assertBuildStatusSuccess(db);
+    }
+
+    public void testBuildChooserContext() throws Exception {
+        final FreeStyleProject p = createFreeStyleProject();
+        final FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
+
+        BuildChooserContextImpl c = new BuildChooserContextImpl(p, b);
+        c.actOnBuild(new ContextCallable<AbstractBuild, Object>() {
+            public Object invoke(AbstractBuild param, VirtualChannel channel) throws IOException, InterruptedException {
+                assertSame(param,b);
+                return null;
+            }
+        });
+        c.actOnProject(new ContextCallable<AbstractProject, Object>() {
+            public Object invoke(AbstractProject param, VirtualChannel channel) throws IOException, InterruptedException {
+                assertSame(param,p);
+                return null;
+            }
+        });
+        DumbSlave s = createOnlineSlave();
+        assertEquals(p.toString(), s.getChannel().call(new BuildChooserContextTestCallable(c)));
+    }
+
+    private static class BuildChooserContextTestCallable implements Callable<String,IOException> {
+        private final BuildChooserContext c;
+
+        public BuildChooserContextTestCallable(BuildChooserContext c) {
+            this.c = c;
+        }
+
+        public String call() throws IOException {
+            try {
+                return c.actOnProject(new ContextCallable<AbstractProject, String>() {
+                    public String invoke(AbstractProject param, VirtualChannel channel) throws IOException, InterruptedException {
+                        assertTrue(channel instanceof Channel);
+                        assertTrue(Hudson.getInstance()!=null);
+                        return param.toString();
+                    }
+                });
+            } catch (InterruptedException e) {
+                throw new IOException2(e);
+            }
+        }
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
