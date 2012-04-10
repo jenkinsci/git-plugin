@@ -18,8 +18,8 @@ import java.io.Serializable;
  * @author Kohsuke Kawaguchi
  */
 public interface BuildChooserContext {
-    public <T> T actOnBuild(ContextCallable<AbstractBuild,T> callable) throws IOException,InterruptedException;
-    public <T> T actOnProject(ContextCallable<AbstractProject,T> callable) throws IOException,InterruptedException;
+    public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>,T> callable) throws IOException,InterruptedException;
+    public <T> T actOnProject(ContextCallable<AbstractProject<?,?>,T> callable) throws IOException,InterruptedException;
 
 
     public static interface ContextCallable<P,T> extends Serializable {

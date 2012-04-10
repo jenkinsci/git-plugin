@@ -725,7 +725,7 @@ public class GitSCM extends SCM implements Serializable {
 
             private static final long serialVersionUID = 1L;
 
-            public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException {
+            public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
                 IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
 
                 if (git.hasGitRepo()) {
@@ -983,21 +983,21 @@ public class GitSCM extends SCM implements Serializable {
             this.build = build;
         }
 
-        public <T> T actOnBuild(ContextCallable<AbstractBuild, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build,Hudson.MasterComputer.localChannel);
         }
 
-        public <T> T actOnProject(ContextCallable<AbstractProject, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnProject(ContextCallable<AbstractProject<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(project, MasterComputer.localChannel);
         }
 
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
-                public <T> T actOnBuild(ContextCallable<AbstractBuild, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
 
-                public <T> T actOnProject(ContextCallable<AbstractProject, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnProject(ContextCallable<AbstractProject<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(project,Channel.current());
                 }
             });
@@ -1061,7 +1061,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Revision invoke(File localWorkspace, VirtualChannel channel)
-                    throws IOException {
+                    throws IOException, InterruptedException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
                 IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
