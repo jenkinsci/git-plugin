@@ -41,6 +41,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     /**
      * Get a list of revisions that are candidates to be built.
      * May be an empty set.
+     *
+     * <p>
+     * This method is invoked on the node where the workspace exists, which may not be the master.
+     *
      * @param isPollCall true if this method is called from pollChanges.
      * @param singleBranch contains the name of a single branch to be built
      *        this will be non-null only in the simple case, in advanced
