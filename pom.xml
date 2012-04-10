@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.409</version>
+    <version>1.424</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -122,7 +122,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>1.0</version>
+      <version>1.1</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
