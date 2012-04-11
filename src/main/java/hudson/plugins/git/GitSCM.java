@@ -530,6 +530,10 @@ public class GitSCM extends SCM implements Serializable {
         return buildChooser;
     }
 
+    public void setBuildChooser(BuildChooser buildChooser) {
+        this.buildChooser = buildChooser;
+    }
+
     /**
      * Expand parameters in {@link #remoteRepositories} with the parameter values provided in the given build
      * and return them.
