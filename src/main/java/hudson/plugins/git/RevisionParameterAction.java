@@ -47,6 +47,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     public Revision toRevision(IGitAPI git) {
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
+        // TODO: if commit is a branch, retain that information instead of making it 'detached'
         revision.getBranches().add(new Branch("detached", sha1));
         return revision;
     }
