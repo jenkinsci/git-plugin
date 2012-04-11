@@ -12,10 +12,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * A specification of branches to build. Rather like a refspec.
  *
  * eg:
+ * <pre>
  * master
  * origin/master
- * origin/ *
- * origin/ * /thing
+ * origin/&#42;
+ * origin/&#42;/thing
+ * </pre>
  */
 public class BranchSpec implements Serializable {
     private static final long serialVersionUID = -6177158367915899356L;
