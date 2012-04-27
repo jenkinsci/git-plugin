@@ -11,6 +11,7 @@ import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.HttpResponse;
@@ -80,7 +81,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     boolean repositoryMatches = false,
                             branchMatches = false;
                     for (URIish remoteURL : repository.getURIs()) {
-                        if (uri.equals(remoteURL)) { repositoryMatches = true; break; }
+                        if (looselyMatches(uri, remoteURL)) {
+                            repositoryMatches = true;
+                            break;
+                        }
                     }
 
                     if (!repositoryMatches || git.isIgnoreNotifyCommit()) continue;
@@ -135,6 +139,23 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         } finally {
             SecurityContextHolder.getContext().setAuthentication(old);
         }
+    }
+
+    /**
+     * Used to test if what we have in the job configuration matches what was submitted to the notification endpoint.
+     * It is better to match loosely and wastes a few polling calls than to be pedantic and miss the push notification,
+     * especially given that Git tends to support multiple access protocols.
+     */
+    boolean looselyMatches(URIish lhs, URIish rhs) {
+        return StringUtils.equals(lhs.getHost(),rhs.getHost())
+            && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    private String normalizePath(String path) {
+        if (path.startsWith("/"))   path=path.substring(1);
+        if (path.endsWith("/"))     path=path.substring(0,path.length()-1);
+        if (path.endsWith(".git"))  path=path.substring(0,path.length()-4);
+        return path;
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());

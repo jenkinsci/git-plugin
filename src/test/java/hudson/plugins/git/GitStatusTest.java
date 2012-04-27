@@ -8,9 +8,14 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.triggers.SCMTrigger;
 
+import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.HttpResponse;
 
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.mockito.Mockito;
 
@@ -129,5 +134,25 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;
+    }
+
+    public void testLooseMatch() throws URISyntaxException {
+        String[] list = new String[]{
+            "https://github.com/jenkinsci/git-plugin.git",
+            "git://github.com/jenkinsci/git-plugin.git",
+            "ssh://git@github.com/jenkinsci/git-plugin.git",
+            "https://someone@github.com/jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin.git"
+        };
+        List<URIish> uris = new ArrayList<URIish>();
+        for (String s : list) {
+            uris.add(new URIish(s));
+        }
+
+        for (URIish lhs : uris) {
+            for (URIish rhs : uris) {
+                assertTrue(lhs+" and "+rhs+" didn't match",new GitStatus().looselyMatches(lhs,rhs));
+            }
+        }
     }
 }
