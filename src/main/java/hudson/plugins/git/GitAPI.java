@@ -251,7 +251,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public ObjectId revParse(String revName) throws GitException {
-        String result = launchCommand("rev-parse", revName + "^{commit}");
+        String result = launchCommand("rev-parse", "\"" + revName + "^{commit}\"");
         return ObjectId.fromString(firstLine(result).trim());
     }
 
