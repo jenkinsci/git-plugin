@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
 	xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-	<t:summary icon="${resURL}/plugin/git/icons/git-48x48.png">
+	<t:summary icon="/plugin/git/icons/git-48x48.png">
 
  	<b>Revision</b>: ${it.lastBuiltRevision.sha1.name()}
         <j:if test="${it.scmName}"> from <b>SCM:</b> ${it.scmName}</j:if>
