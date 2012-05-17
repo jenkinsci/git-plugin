@@ -259,7 +259,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             listener.getLogger().println("No repository found for target repo name " + targetRepo);
                                             return false;
                                         }
-                                        
+                                        // What about when you want to update a tag that already exists in the repo
+                                        // to the most recent successful build?
+                                        // ie: git tag -f tagname
+                                        // I propose a isForceTag boolean instead of CreateTag
                                         if (t.isCreateTag()) {
                                             if (git.tagExists(tagName)) {
                                                 listener.getLogger().println("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
