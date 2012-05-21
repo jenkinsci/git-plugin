@@ -326,7 +326,7 @@ public class GitAPI implements IGitAPI {
         String result = "";
 
         if (revName != null) {
-            result = launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName);
+            result = launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName);
         }
 
         List<String> revShow = new ArrayList<String>();
