@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
@@ -251,7 +252,8 @@ public class GitAPI implements IGitAPI {
     }
 
     public ObjectId revParse(String revName) throws GitException {
-        String result = launchCommand("rev-parse", revName + "^{commit}");
+        String rpCommit = Functions.isWindows() ? "^^\\{commit\\}" : "^{commit}";
+        String result = launchCommand("rev-parse", revName + rpCommit);
         return ObjectId.fromString(firstLine(result).trim());
     }
 
