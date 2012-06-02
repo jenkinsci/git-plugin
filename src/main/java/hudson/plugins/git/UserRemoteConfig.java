@@ -45,7 +45,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
         public FormValidation doCheckUrl(@QueryParameter String value) {
-            if (value == null || value.isEmpty()) {
+            if (value == null || value.length() == 0) {
                 return FormValidation.error("Please enter Git repository.");
             } else {
                 return FormValidation.ok();
