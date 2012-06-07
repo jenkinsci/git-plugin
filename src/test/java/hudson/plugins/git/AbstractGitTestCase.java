@@ -42,7 +42,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         setAuthor(johnDoe);
         setCommitter(johnDoe);
         workspace = new FilePath(workDir);
-        git = new GitAPI("git", workspace, listener, envVars, null);
+        git = new GitAPI("git", workspace, listener, envVars);
         git.init();
     }
 

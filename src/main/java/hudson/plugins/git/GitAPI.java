@@ -46,6 +46,11 @@ public class GitAPI implements IGitAPI {
     String reference;
 
     public GitAPI(String gitExe, FilePath workspace,
+                  TaskListener listener, EnvVars environment) {
+        this(gitExe, workspace, listener, environment, null);
+    }
+
+    public GitAPI(String gitExe, FilePath workspace,
                   TaskListener listener, EnvVars environment, String reference) {
 
         //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
