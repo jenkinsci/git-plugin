@@ -2,9 +2,10 @@ package hudson.plugins.git;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.Launcher;
 import hudson.FilePath;
 import hudson.FilePath.FileCallable;
+import hudson.Launcher;
+import hudson.Util;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
@@ -23,24 +24,18 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.servlet.ServletException;
-
-
 import org.apache.commons.lang.StringUtils;
-
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;
@@ -450,7 +445,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         private String targetRepoName;
 
         public PushConfig(String targetRepoName) {
-            this.targetRepoName = targetRepoName;
+            this.targetRepoName = Util.fixEmptyAndTrim(targetRepoName);
         }
         
         public String getTargetRepoName() {
@@ -472,7 +467,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         @DataBoundConstructor
         public BranchToPush(String targetRepoName, String branchName) {
             super(targetRepoName);
-            this.branchName = branchName;
+            this.branchName = Util.fixEmptyAndTrim(branchName);
         }
 
         @Extension
@@ -499,7 +494,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         @DataBoundConstructor
         public TagToPush(String targetRepoName, String tagName, boolean createTag) {
             super(targetRepoName);
-            this.tagName = tagName;
+            this.tagName = Util.fixEmptyAndTrim(tagName);
             this.createTag = createTag;
         }
 
