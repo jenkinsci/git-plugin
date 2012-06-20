@@ -34,6 +34,7 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
+import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.jvnet.hudson.test.Bug;
@@ -57,7 +58,9 @@ public class GitPublisherTest extends AbstractGitTestCase {
         mp.setScm(new GitSCM(workDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo",true)),
-                Collections.<BranchToPush>emptyList(), true, true) {
+                Collections.<BranchToPush>emptyList(),
+                Collections.<NoteToPush>emptyList(),
+                true, true) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
                 run[0]++;
