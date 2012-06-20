@@ -78,6 +78,11 @@ public interface IGitAPI {
     List<Tag> getTagsOnCommit(String revName) throws GitException, IOException;
 
     void tag(String tagName, String comment) throws GitException;
+    
+    void appendNote(String note, String namespace ) throws GitException;
+    void addNote(String note, String namespace ) throws GitException;
+    	
+   
     boolean tagExists(String tagName) throws GitException;
     void deleteTag(String tagName) throws GitException;
     Set<String> getTagNames(String tagPattern) throws GitException;
