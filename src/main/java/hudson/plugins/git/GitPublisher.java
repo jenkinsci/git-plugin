@@ -52,14 +52,18 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     private List<TagToPush> tagsToPush;
     // Pushes HEAD to these locations
     private List<BranchToPush> branchesToPush;
+    // notes support
+    private List<NoteToPush> notesToPush;
     
     @DataBoundConstructor
     public GitPublisher(List<TagToPush> tagsToPush,
                         List<BranchToPush> branchesToPush,
+                        List<NoteToPush> notesToPush,
                         boolean pushOnlyIfSuccess,
                         boolean pushMerge) {
         this.tagsToPush = tagsToPush;
         this.branchesToPush = branchesToPush;
+        this.notesToPush = notesToPush;
         this.pushMerge = pushMerge;
         this.pushOnlyIfSuccess = pushOnlyIfSuccess;
         this.configVersion = 2L;
@@ -87,6 +91,13 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         return !branchesToPush.isEmpty();
     }
 
+    public boolean isPushNotes() {
+        if (notesToPush == null) {
+            return false;
+        }
+        return !notesToPush.isEmpty();
+    }
+    
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
             tagsToPush = new ArrayList<TagToPush>();
@@ -102,6 +113,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         return branchesToPush;
     }
+    
+    public List<NoteToPush> getNotesToPush() {
+        if (notesToPush == null) {
+            notesToPush = new ArrayList<NoteToPush>();
+        }
+
+        return notesToPush;
+    }
+    
     
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
@@ -346,6 +366,71 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                 }
                 
             }
+                     
+            if (isPushNotes()) {
+                boolean allNotesResult = true;
+                for (final NoteToPush b : notesToPush) {
+                    boolean noteResult = true;
+                    if (b.getnoteMsg() == null) {
+                        listener.getLogger().println("No note to push defined");
+                        return false;
+                    }
+                    
+                    b.setEmptyTargetRepoToOrigin();
+                    final String noteMsg = environment.expand(b.getnoteMsg());
+                    final String noteNamespace = environment.expand(b.getnoteNamespace());
+                    final String targetRepo = environment.expand(b.getTargetRepoName());
+                    final boolean noteReplace = b.getnoteReplace();
+                    
+                    if (noteResult) {
+                        try {
+                            noteResult = workingDirectory.act(new FileCallable<Boolean>() {
+                                    private static final long serialVersionUID = 1L;
+   
+                                    
+                                    public Boolean invoke(File workspace,
+                                                          VirtualChannel channel) throws IOException {
+                                        
+                                        IGitAPI git = new GitAPI(gitExe, new FilePath(workspace),
+                                                                 listener, environment);
+
+                                        
+                                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+
+                                        if (remote == null) {
+                                            listener.getLogger().println("No repository found for target repo name " + targetRepo);
+                                            return false;
+                                        }
+                                        
+                                        listener.getLogger().println("Adding note \"" + noteMsg + "\" to namespace \""+noteNamespace +"\"" );
+
+                                        if ( noteReplace )
+                                        	git.addNote(    noteMsg, noteNamespace );
+                                        else
+                                        	git.appendNote( noteMsg, noteNamespace );
+                                        
+                                        
+                                        git.push(remote, "refs/notes/*" );
+                                        
+                                        return true;
+                                    }
+                                });
+                        } catch (Throwable e) {
+                            e.printStackTrace(listener.error("Failed to add note \"" + noteMsg + "\" to \"" + noteNamespace+"\""));
+                            build.setResult(Result.FAILURE);
+                            noteResult = false;
+                        }
+                    }
+                    
+                    if (!noteResult) {
+                        allNotesResult = false;
+                    }
+                }
+                if (!allNotesResult) {
+                    pushResult = false;
+                }
+                
+            }
             
             return pushResult;
         }
@@ -398,6 +483,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         public FormValidation doCheckBranchName(@QueryParameter String value) {
             return checkFieldNotEmpty(value, "Branch Name");
+        }
+        
+        public FormValidation doCheckNoteMsg(@QueryParameter String value) {
+            return checkFieldNotEmpty(value, "Note");
         }
         
         public FormValidation doCheckRemote(
@@ -455,6 +544,12 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         public void setTargetRepoName() {
             this.targetRepoName = targetRepoName;
         }
+        
+        public void setEmptyTargetRepoToOrigin(){
+            if (targetRepoName == null || targetRepoName.trim().isEmpty() ){
+            	targetRepoName = "origin";
+            }
+        }
     }
 
     public static final class BranchToPush extends PushConfig {
@@ -506,4 +601,47 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
         }
     }
+    
+
+    public static final class NoteToPush extends PushConfig {
+
+        private String noteMsg;
+        private String noteNamespace;
+        private boolean noteReplace;
+
+        public String getnoteMsg() {
+            return noteMsg;
+        }
+        
+        public String getnoteNamespace() {
+        	return noteNamespace;
+        }
+        
+        public boolean getnoteReplace() {
+        	return noteReplace;
+        }
+
+        @DataBoundConstructor
+        public NoteToPush( String targetRepoName, String noteMsg, String noteNamespace, boolean noteReplace ) {
+        	super(targetRepoName);
+            this.noteMsg = Util.fixEmptyAndTrim(noteMsg);
+            this.noteReplace = noteReplace;
+            
+            if ( noteNamespace != null && !noteNamespace.trim().isEmpty() )
+    			this.noteNamespace = Util.fixEmptyAndTrim(noteNamespace);
+    		else
+    			this.noteNamespace = "master";
+            
+        //    throw new GitException("Toimii2 " + this.noteMsg + "   namespace: "+this.noteNamespace );
+        }
+
+        @Extension
+        public static class DescriptorImpl extends Descriptor<PushConfig> {
+            @Override
+            public String getDisplayName() {
+                return "";
+            }
+        }
+    }
+    
 }

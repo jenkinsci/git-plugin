@@ -738,6 +738,24 @@ public class GitAPI implements IGitAPI {
         }
     }
 
+    public void appendNote(String note, String namespace ) throws GitException {
+        try {
+        	launchCommand("notes", "--ref="+namespace, "append", "-m", "\'"+note+"\'" );
+        } catch (GitException e) {
+            throw new GitException("Could not apply note " + note, e);
+        }
+
+    }
+
+    public void addNote(String note, String namespace ) throws GitException {
+        try {
+            launchCommand("notes", "--ref="+namespace,"add", "-m", "\'"+note+"\'" );
+        } catch (GitException e) {
+            throw new GitException("Could not apply note " + note, e);
+        }
+
+    }
+    
     /**
      * Launch command using the workspace as working directory
      * @param args
