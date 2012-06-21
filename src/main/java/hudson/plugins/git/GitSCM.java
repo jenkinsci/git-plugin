@@ -749,7 +749,7 @@ public class GitSCM extends SCM implements Serializable {
                     List<Revision> candidates = new ArrayList<Revision>();
 
                     for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, c, listener)) {
+                        if (!isRevExcluded(git, buildData.getLastBuiltRevision(), c, listener)) {
                             candidates.add(c);
                         }
                     }
@@ -1778,17 +1778,19 @@ public class GitSCM extends SCM implements Serializable {
      * Given a Revision, check whether it matches any exclusion rules.
      *
      * @param git IGitAPI object
-     * @param r Revision object
+     * @param from Revision object for the last known build
+	 * @param to Revision object for the current commit
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener) {
+    private boolean isRevExcluded(IGitAPI git, Revision from, Revision to,  TaskListener listener) {
         try {
-            List<String> revShow = git.showRevision(r);
+		    List<String> revShow = git.showDeltas(from, to);
 
             // If the revision info is empty, something went weird, so we'll just
             // return false.
             if (revShow.size() == 0) {
+				listener.getLogger().println("No revision information found");
                 return false;
             }
 
@@ -1801,13 +1803,14 @@ public class GitSCM extends SCM implements Serializable {
             String author = change.getAuthorName();
             if (excludedUsers.contains(author)) {
                 // If the author is an excluded user, don't count this entry as a change
-                listener.getLogger().println("Ignored commit " + r.getSha1String() + ": Found excluded author: " + author);
+                listener.getLogger().println("Ignored commit " + to.getSha1String() + ": Found excluded author: " + author);
                 return true;
             }
 
             List<String> paths = new ArrayList<String>(change.getAffectedPaths());
             if (paths.isEmpty()) {
                 // If there weren't any changed files here, we're just going to return false.
+				listener.getLogger().println("No paths found"); 
                 return false;
             }
 
@@ -1841,7 +1844,7 @@ public class GitSCM extends SCM implements Serializable {
 
             // If every affected path is excluded, return true.
             if (includedPaths.size() == excludedPaths.size()) {
-                listener.getLogger().println("Ignored commit " + r.getSha1String()
+                listener.getLogger().println("Ignored commit " + to.getSha1String()
                         + ": Found only excluded paths: "
                         + Util.join(excludedPaths, ", "));
                 return true;

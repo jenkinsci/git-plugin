@@ -320,6 +320,40 @@ public class GitAPI implements IGitAPI {
         }
     }
 
+        
+    /**
+	 * Produces the set of changes between revisions so that it can be parsed by GitChangeLogParser.
+	 * This does not use git show or whatchanged, since both of those have bugs in their tree-walking
+	 * code.  Instead it uses 'log', which appears to be fine in that respect.
+     *
+	 * @param from The starting revision
+	 * @param to The end revision
+	 * @return the git log output in standard form
+	 * @throws GitException if errors are encountered running git log
+	 */
+    public List<String> showDeltas(Revision from, Revision to) throws GitException {                              
+         if ( from == null) {                                                                                      
+             return showRevision( to );                                                                            
+         }                                                                                                         
+                                                                                                              
+        String to_name = to.getSha1String();                                                                      
+        String from_name = from.getSha1String();                                                                  
+        String result = "";                                                                                       
+                                                                                                                  
+        if ( from_name != null && to_name != null )                                                               
+        {                                                                                                         
+            result = launchCommand("log", "--no-abbrev", "--format=raw", "--raw", from_name + ".." + to_name );   
+        }                                                                                                         
+                                                                                                                  
+        List<String> revShow = new ArrayList<String>();                                                           
+                                                                                                                  
+        if (result != null) {                                                                                     
+            revShow = new ArrayList<String>(Arrays.asList(result.split("\\n")));                                  
+        }                                                                                                         
+                                                                                                                  
+        return revShow;                                                                                           
+	}
+
     /**
      * Given a Revision, show it as if it were an entry from git whatchanged, so that it
      * can be parsed by GitChangeLogParser.
