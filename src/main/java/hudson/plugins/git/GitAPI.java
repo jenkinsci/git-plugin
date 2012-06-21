@@ -257,7 +257,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public ObjectId revParse(String revName) throws GitException {
-        String rpCommit = Functions.isWindows() ? "^^\\{commit\\}" : "^{commit}";
+        String rpCommit = Functions.isWindows() ? "^^{commit}" : "^{commit}";
         String result = launchCommand("rev-parse", revName + rpCommit);
         return ObjectId.fromString(firstLine(result).trim());
     }
