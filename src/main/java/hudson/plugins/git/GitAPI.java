@@ -6,6 +6,7 @@ import hudson.Functions;
 import hudson.Launcher;
 import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
+import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
@@ -263,16 +264,35 @@ public class GitAPI implements IGitAPI {
             but if 'git' we are executing is git.cmd (which is the case of msysgit), then the arguments we pass in here ends up getting
             processed by the command processor, and so 'xyz^{commit}' becomes 'xyz{commit}' and fails.
 
-            Since we can't really tell if we are calling into git.exe or git.cmd, the best we can do for Windows
-            is not to use '^{commit}'. This reverts 13f6038acc4fa5b5a62413155da6fc8cfcad3fe0
-            and it will not dereference tags, but it's far better than having this method completely broken.
+            We work around this problem by surrounding this with double-quote on Windows.
+            Unlike POSIX, where the arguments of a process is modeled as String[], Win32 API models the
+            arguments of a process as a single string (see CreateProcess). When we surround one argument with a quote,
+            java.lang.ProcessImpl on Windows preserve as-is and generate a single string like the following to pass to CreateProcess:
+
+                git rev-parse "tag^{commit}"
+
+            If we invoke git.exe, MSVCRT startup code in git.exe will handle escape and executes it as we expect.
+            If we invoke git.cmd, cmd.exe will not eats this ^ that's in double-quote. So it works on both cases.
+
+            Note that this is a borderline-buggy behaviour arguably. If I were implementing ProcessImpl for Windows
+            in JDK, My passing a string with double-quotes around it to be expanded to the following:
+
+               git rev-parse "\"tag^{commit}\""
+
+            So this work around that we are doing for Windows relies on the assumption that Java runtime will not
+            change this behaviour.
+
+            Also note that on Unix we cannot do this. Similarly, other ways of quoting (like using '^^' instead of '^'
+            that you do on interactive command prompt) do not work either, because MSVCRT startup won't handle
+            those in the same way cmd.exe does.
 
             See JENKINS-13007 where this blew up on Windows users.
-
-            I filed https://github.com/msysgit/msysgit/issues/36 as a bug in msysgit.
+            See https://github.com/msysgit/msysgit/issues/36 where I filed this as a bug to msysgit.
          */
-        String rpCommit = Functions.isWindows() ? "" : "^{commit}";
-        String result = launchCommand("rev-parse", revName + rpCommit);
+        String arg = revName + "^{commit}";
+        if (Functions.isWindows())
+            arg = '"'+arg+'"';
+        String result = launchCommand("rev-parse", arg);
         return ObjectId.fromString(firstLine(result).trim());
     }
 
