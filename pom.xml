@@ -46,7 +46,7 @@
       </plugin>
     </plugins>
   </build>
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -58,7 +58,7 @@
       <name>Eclipse JGit Repository</name>
       <url>http://download.eclipse.org/jgit/maven</url>
     </repository>
-    
+
     <repository>
       <id>guice-maven</id>
       <name>guice maven</name>
@@ -134,7 +134,7 @@
       <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
     </repository>
   </distributionManagement>
-  
+
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/git-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/git-plugin.git</developerConnection>
