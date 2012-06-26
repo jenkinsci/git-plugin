@@ -122,7 +122,7 @@ public class GitAPI implements IGitAPI {
             }
             catch(Exception ex)
             {
-                listener.getLogger().println("Workspace has a .git repository, but it appears to be corrupt.");
+                ex.printStackTrace(listener.error("Workspace has a .git repository, but it appears to be corrupt."));
                 return false;
             }
             return true;
