@@ -257,7 +257,21 @@ public class GitAPI implements IGitAPI {
     }
 
     public ObjectId revParse(String revName) throws GitException {
-        String rpCommit = Functions.isWindows() ? "^^{commit}" : "^{commit}";
+        /*
+            On Windows command prompt, '^' is an escape character (http://en.wikipedia.org/wiki/Escape_character#Windows_Command_Prompt)
+            This isn't a problem if 'git' we are executing is git.exe, because '^' is a special character only for the command processor,
+            but if 'git' we are executing is git.cmd (which is the case of msysgit), then the arguments we pass in here ends up getting
+            processed by the command processor, and so 'xyz^{commit}' becomes 'xyz{commit}' and fails.
+
+            Since we can't really tell if we are calling into git.exe or git.cmd, the best we can do for Windows
+            is not to use '^{commit}'. This reverts 13f6038acc4fa5b5a62413155da6fc8cfcad3fe0
+            and it will not dereference tags, but it's far better than having this method completely broken.
+
+            See JENKINS-13007 where this blew up on Windows users.
+
+            I filed https://github.com/msysgit/msysgit/issues/36 as a bug in msysgit.
+         */
+        String rpCommit = Functions.isWindows() ? "" : "^{commit}";
         String result = launchCommand("rev-parse", revName + rpCommit);
         return ObjectId.fromString(firstLine(result).trim());
     }
