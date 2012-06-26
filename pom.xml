@@ -28,6 +28,7 @@
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
+        <version>1.4</version>
         <executions>
           <execution>
             <goals>
