@@ -662,13 +662,14 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
 
-        if (buildData != null && buildData.lastBuild != null) {
+        if (buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
         final String singleBranch = getSingleBranch(lastBuild);
 
-        if (singleBranch != null && this.remotePoll) {
+        // fast remote polling needs a single branch and an existing last build
+        if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
             String gitExe = "";
             GitTool[] installations = ((hudson.plugins.git.GitTool.DescriptorImpl)Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)).getInstallations();
             for(GitTool i : installations) {
