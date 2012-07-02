@@ -9,6 +9,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.Revision;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -73,14 +74,23 @@ public class DefaultBuildChooser extends BuildChooser {
         if (!singleBranch.contains("/")) {
             // the 'branch' could actually be a tag:
             Set<String> tags = git.getTagNames(singleBranch);
-            if(tags.size() == 0) {
-                // its not a tag, so lets fully qualify the branch
-                String repository = gitSCM.getRepositories().get(0).getName();
-                singleBranch = repository + "/" + singleBranch;
-                verbose(listener, "{0} is not a tag. Qualifying with the repository {1} a a branch", singleBranch, repository);
+            if(tags.size() != 0) {
+                verbose(listener, "{0} is a tag");
+                return getHeadRevision(isPollCall, singleBranch, git, listener, data);
             }
         }
 
+        Collection<Revision> revisions = new ArrayList<Revision>();
+        for (RemoteConfig config : gitSCM.getRepositories()) {
+            String repository = config.getName();
+            singleBranch = repository + "/" + singleBranch;
+            verbose(listener, "Qualifying {0} with the repository {1} a a branch", singleBranch, repository);
+            revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
+        }
+        return revisions;
+    }
+
+    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, IGitAPI git, TaskListener listener, BuildData data) {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
