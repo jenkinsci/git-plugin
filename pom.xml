@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
-  <version>1.1.21</version>
+  <version>1.1.22-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
