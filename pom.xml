@@ -64,6 +64,12 @@
       <name>guice maven</name>
       <url>http://guice-maven.googlecode.com/svn/trunk</url>
     </repository>
+
+    <repository>
+      <id>jenkins</id>
+      <name>jenkins repository</name>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
   </repositories>
 
 	<developers>
