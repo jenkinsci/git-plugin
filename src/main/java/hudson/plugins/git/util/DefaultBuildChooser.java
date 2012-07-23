@@ -70,6 +70,8 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
+        Collection<Revision> revisions = new ArrayList<Revision>();
+
         // if it doesn't contain '/' then it could be either a tag or an unqualified branch
         if (!singleBranch.contains("/")) {
             // the 'branch' could actually be a tag:
@@ -78,15 +80,21 @@ public class DefaultBuildChooser extends BuildChooser {
                 verbose(listener, "{0} is a tag");
                 return getHeadRevision(isPollCall, singleBranch, git, listener, data);
             }
-        }
 
-        Collection<Revision> revisions = new ArrayList<Revision>();
-        for (RemoteConfig config : gitSCM.getRepositories()) {
-            String repository = config.getName();
-            singleBranch = repository + "/" + singleBranch;
-            verbose(listener, "Qualifying {0} with the repository {1} a a branch", singleBranch, repository);
+            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // so check all remotes to fully qualify this branch spec
+            for (RemoteConfig config : gitSCM.getRepositories()) {
+                String repository = config.getName();
+                String fqbn = repository + "/" + singleBranch;
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", singleBranch, repository, fqbn);
+                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+            }
+        } else {
+            // singleBranch contains a '/', so is in most case a fully qualified branch
+            // doesn't seem we can distinguish unqualified branch with '/' in name, so expect users to fully qualify
             revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
         }
+
         return revisions;
     }
 
