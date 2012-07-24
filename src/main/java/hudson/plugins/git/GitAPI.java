@@ -186,7 +186,7 @@ public class GitAPI implements IGitAPI {
                                      + (repository != null ? " from " + repository : ""));
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("fetch", "-t");
+        args.add("fetch");
 
         if (repository != null) {
             args.add(repository);
