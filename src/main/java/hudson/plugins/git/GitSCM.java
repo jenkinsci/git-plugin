@@ -1246,7 +1246,7 @@ public class GitSCM extends SCM implements Serializable {
                         git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
 
-                    computeChangeLog(git, revToBuild, listener, buildData, changelogFile);
+                    computeMergeChangeLog(git, revToBuild, mergeOptions.getRemoteBranchName(), listener, changelogFile);
 
                     Build build = new Build(revToBuild, buildNumber, null);
                     buildData.saveBuild(build);
@@ -1377,6 +1377,31 @@ public class GitSCM extends SCM implements Serializable {
 
         if (histories > 1) {
             listener.getLogger().println("Warning : There are multiple branch changesets here");
+        }
+    }
+
+    private void computeMergeChangeLog(IGitAPI git, Revision revToBuild, String revFrom, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
+        if (!git.isCommitInRepo(revFrom)) {
+            listener.getLogger().println("Could not record history. Previous build's commit, " + revFrom
+                                         + ", does not exist in the current repository.");
+        } else {
+            int histories = 0;
+
+            PrintStream out = new PrintStream(changelogFile.write());
+            try {
+                for (Branch b : revToBuild.getBranches()) {
+                    putChangelogDiffs(git, b.name, revFrom, revToBuild.getSha1().name(), out);
+                    histories++;
+                }
+            } catch (GitException ge) {
+                out.println("Unable to retrieve changeset");
+            } finally {
+                IOUtils.closeQuietly(out);
+            }
+
+            if (histories > 1) {
+                listener.getLogger().println("Warning : There are multiple branch changesets here");
+            }
         }
     }
 
