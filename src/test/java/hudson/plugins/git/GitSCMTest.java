@@ -30,12 +30,18 @@ import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+
+import org.eclipse.jgit.lib.PersonIdent;
+
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -120,8 +126,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        assertEquals("", johnDoe.getName(), ((User)culprits.toArray()[0]).getFullName());
-        assertEquals("", janeDoe.getName(), ((User)culprits.toArray()[1]).getFullName());
+        
+        PersonIdent[] expected = {johnDoe, janeDoe};
+        assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
+
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         assertBuildStatusSuccess(build2);
@@ -149,8 +157,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        assertEquals("", johnDoe.getName(), ((User)culprits.toArray()[0]).getFullName());
-        assertEquals("", janeDoe.getName(), ((User)culprits.toArray()[1]).getFullName());
+
+        PersonIdent[] expected = {johnDoe, janeDoe};
+        assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
+
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         assertBuildStatusSuccess(build2);
@@ -204,8 +214,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have two culprit", 2, culprits.size());
-        assertEquals("", johnDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
-        assertEquals("", janeDoe.getName(), ((User) culprits.toArray()[1]).getFullName());
+
+        PersonIdent[] expected = {johnDoe, janeDoe};
+        assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
+
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         assertBuildStatusSuccess(build2);
@@ -558,6 +570,32 @@ public class GitSCMTest extends AbstractGitTestCase {
             } catch (InterruptedException e) {
                 throw new IOException2(e);
             }
+        }
+    }
+
+    // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])
+    static public void assertCulprits(String assertMsg, Set<User> actual, PersonIdent[] expected)
+    {
+        Collection<String> fullNames = Collections2.transform(actual, new Function<User,String>() {
+            public String apply(User u)
+            {
+                return u.getFullName();
+            }
+        });
+
+        for(PersonIdent p : expected)
+        {
+            // For an unknown reason the following fails.
+            // assertTrue(assertMsg, fullnames.contains(p.getName()));
+            boolean found = false;
+            /*
+            for(String fullName : fullNames)
+            {
+                if(fullName == p.getName())
+                    found = true;
+            }
+            */
+            assertTrue(assertMsg, found);
         }
     }
 
