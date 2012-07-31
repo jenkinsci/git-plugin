@@ -135,8 +135,13 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>multiple-scms</artifactId>
-            <version>0.2</version>
+            <version>0.3-ooyala</version>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r09</version>
         </dependency>
     </dependencies>
 
