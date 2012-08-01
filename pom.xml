@@ -135,7 +135,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>multiple-scms</artifactId>
-            <version>0.3-ooyala</version>
+            <version>0.3-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
         <dependency>
