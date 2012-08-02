@@ -585,18 +585,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         for(PersonIdent p : expected)
         {
-            // For an unknown reason the following fails.
             assertTrue(assertMsg, fullNames.contains(p.getName()));
-            /*
-            boolean found = false;
-            for(String fullName : fullNames)
-            {
-                if(fullName == p.getName())
-                    found = true;
-            }
-            assertTrue(assertMsg, found);
-            */
-            }
+        }
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
