@@ -62,6 +62,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
     }
 
     protected List<UserRemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
-        return testRepo.createRemoteRepositories(relativeTargetDir);
+        return testRepo.remoteConfigs();
     }
 }

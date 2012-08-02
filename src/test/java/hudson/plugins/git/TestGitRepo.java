@@ -89,7 +89,7 @@ public class TestGitRepo {
         git.launchCommand("commit", "-m", message);
     }
 
-    public List<UserRemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
+    public List<UserRemoteConfig> remoteConfigs() throws IOException {
         List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", ""));
         return list;
