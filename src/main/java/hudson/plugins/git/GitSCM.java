@@ -1009,39 +1009,13 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
 
-    @Override
-    public boolean checkout(final AbstractBuild build, Launcher launcher,
-            final FilePath workspace, final BuildListener listener, File _changelogFile)
-            throws IOException, InterruptedException {
-
-        final EnvVars environment = build.getEnvironment(listener);
-        
-        final FilePath changelogFile = new FilePath(_changelogFile);
-
-        listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
-        listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
-
-        final FilePath workingDirectory = workingDirectory(workspace,environment);
-
-        if (!workingDirectory.exists()) {
-            workingDirectory.mkdirs();
-        }
-
-        final String projectName = build.getProject().getName();
-        final int buildNumber = build.getNumber();
-
-        final String gitExe = getGitExe(build.getBuiltOn(), listener);
-
-        final String buildnumber = "jenkins-" + projectName + "-" + buildNumber;
-
-        final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
-
-        if (buildData.lastBuild != null) {
-            listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
-        }
-
-        final String singleBranch = environment.expand( getSingleBranch(build) );
-        final String paramLocalBranch = getParamLocalBranch(build);
+    private Revision determineRevisionToBuild(final AbstractBuild build,
+                                              final BuildData buildData,
+                                              final List<RemoteConfig> repos,
+                                              final FilePath workingDirectory,
+                                              final EnvVars environment,
+                                              final String gitExe,
+                                              final BuildListener listener) throws IOException, InterruptedException {
         Revision tempParentLastBuiltRev = null;
 
         if (build instanceof MatrixRun) {
@@ -1054,14 +1028,14 @@ public class GitSCM extends SCM implements Serializable {
             }
         }
 
-        final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
-
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
+
+        final String singleBranch = environment.expand( getSingleBranch(build) );
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
 
-        final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
+        return workingDirectory.act(new FileCallable<Revision>() {
 
             private static final long serialVersionUID = 1L;
 
@@ -1083,16 +1057,16 @@ public class GitSCM extends SCM implements Serializable {
                 if (git.hasGitRepo()) {
                     // It's an update
 
-                    if (paramRepos.size() == 1)
+                    if (repos.size() == 1)
                         log.println("Fetching changes from 1 remote Git repository");
                     else
                         log.println(MessageFormat
                                 .format("Fetching changes from {0} remote Git repositories",
-                                        paramRepos));
+                                        repos));
 
                     boolean fetched = false;
 
-                    for (RemoteConfig remoteRepository : paramRepos) {
+                    for (RemoteConfig remoteRepository : repos) {
                         if (fetchFrom(git, listener, remoteRepository)) {
                             fetched = true;
                         }
@@ -1105,7 +1079,7 @@ public class GitSCM extends SCM implements Serializable {
                     // Do we want to prune first?
                     if (pruneBranches) {
                         log.println("Pruning obsolete local branches");
-                        for (RemoteConfig remoteRepository : paramRepos) {
+                        for (RemoteConfig remoteRepository : repos) {
                             git.prune(remoteRepository);
                         }
                     }
@@ -1117,7 +1091,7 @@ public class GitSCM extends SCM implements Serializable {
                     // Go through the repositories, trying to clone from one
                     //
                     boolean successfullyCloned = false;
-                    for (RemoteConfig rc : paramRepos) {
+                    for (RemoteConfig rc : repos) {
                         try {
                             git.clone(rc);
                             successfullyCloned = true;
@@ -1137,15 +1111,15 @@ public class GitSCM extends SCM implements Serializable {
                     boolean fetched = false;
 
                     // Also do a fetch
-                    for (RemoteConfig remoteRepository : paramRepos) {
+                    for (RemoteConfig remoteRepository : repos) {
                         try {
                             git.fetch(remoteRepository);
                             fetched = true;
                         } catch (Exception e) {
                             e.printStackTrace(listener.error(
                                     "Problem fetching from " + remoteRepository.getName()
-                                    + " / " + remoteRepository.getName()
-                                    + " - could be unavailable. Continuing anyway."));
+                                            + " / " + remoteRepository.getName()
+                                            + " - could be unavailable. Continuing anyway."));
                         }
                     }
 
@@ -1180,7 +1154,44 @@ public class GitSCM extends SCM implements Serializable {
                 return candidates.iterator().next();
             }
         });
+    }
 
+    @Override
+    public boolean checkout(final AbstractBuild build, Launcher launcher,
+            final FilePath workspace, final BuildListener listener, File _changelogFile)
+            throws IOException, InterruptedException {
+
+        final EnvVars environment = build.getEnvironment(listener);
+        
+        final FilePath changelogFile = new FilePath(_changelogFile);
+
+        listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
+        listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
+
+        final FilePath workingDirectory = workingDirectory(workspace,environment);
+
+        if (!workingDirectory.exists()) {
+            workingDirectory.mkdirs();
+        }
+
+        final String projectName = build.getProject().getName();
+        final int buildNumber = build.getNumber();
+
+        final String gitExe = getGitExe(build.getBuiltOn(), listener);
+
+        final String buildnumber = "jenkins-" + projectName + "-" + buildNumber;
+
+        final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
+
+        if (buildData.lastBuild != null) {
+            listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
+        }
+
+        final String paramLocalBranch = getParamLocalBranch(build);
+        final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
+
+        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
+                environment, gitExe, listener);
 
         if (revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
@@ -1702,8 +1713,10 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * Look back as far as needed to find a valid BuildData.  BuildData
+     * Determine the state of the last build that completed. BuildData
      * may not be recorded if an exception occurs in the plugin logic.
+     * For instance, if a build failed due to a SCM failure no build data would be recorded.
+     * 
      * @param build
      * @param clone
      * @return the last recorded build data

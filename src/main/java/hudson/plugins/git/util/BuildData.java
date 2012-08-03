@@ -22,8 +22,8 @@ import static hudson.Util.fixNull;
  * Captures the Git related information for a build.
  *
  * <p>
- * This object is added to {@link AbstractBuild#getActions()} and
- * remember the Git related information of that build.
+ * This object is added to {@link AbstractBuild#getActions()}.
+ * This persists the Git related information of that build.
  */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
