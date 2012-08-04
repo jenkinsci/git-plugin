@@ -197,7 +197,11 @@ public class GitAPI implements IGitAPI {
         launchCommand(args);
     }
 
-    public void reset(boolean hard) {
+    public void fetch() throws GitException {
+        fetch(null, null);
+    }
+
+    public void reset(boolean hard) throws GitException {
         listener.getLogger().println("Resetting working tree");
 
         ArgumentListBuilder args = new ArgumentListBuilder();
@@ -209,12 +213,8 @@ public class GitAPI implements IGitAPI {
         launchCommand(args);
     }
 
-    public void reset() {
+    public void reset() throws GitException {
         reset(false);
-    }
-
-    public void fetch() throws GitException {
-        fetch(null, null);
     }
 
     /**
