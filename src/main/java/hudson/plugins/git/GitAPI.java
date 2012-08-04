@@ -197,6 +197,22 @@ public class GitAPI implements IGitAPI {
         launchCommand(args);
     }
 
+    public void reset(boolean hard) {
+        listener.getLogger().println("Resetting working tree");
+
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("fetch");
+        if (hard) {
+            args.add("--hard");
+        }
+
+        launchCommand(args);
+    }
+
+    public void reset() {
+        reset(false);
+    }
+
     public void fetch() throws GitException {
         fetch(null, null);
     }
