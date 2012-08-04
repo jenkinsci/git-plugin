@@ -785,7 +785,6 @@ public class GitSCM extends SCM implements Serializable {
                 IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
                         listener, parentGit.getEnvironment(), parentGit.getReference());
 
-                subGit.reset(true);
                 subGit.clean();
             } catch (Exception ex) {
                 listener.getLogger().println(
@@ -1157,7 +1156,6 @@ public class GitSCM extends SCM implements Serializable {
 
                     if (getClean()) {
                         log.println("Cleaning workspace");
-                        git.reset(true);
                         git.clean();
 
                         if (git.hasGitModules() && !disableSubmodules) {
@@ -1256,7 +1254,6 @@ public class GitSCM extends SCM implements Serializable {
                     build.mergeRevision = gu.getRevisionForSHA1(target);
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
-                        git.reset(true);
                         git.clean();
                         if (git.hasGitModules() && !disableSubmodules) {
                             git.submoduleClean(recursiveSubmodules);
@@ -1282,7 +1279,6 @@ public class GitSCM extends SCM implements Serializable {
 
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
-                        git.reset(true);
                         git.clean();
                     }
 

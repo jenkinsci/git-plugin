@@ -270,6 +270,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public void clean() throws GitException {
+        reset(true);
         launchCommand("clean", "-fdx");
     }
 
