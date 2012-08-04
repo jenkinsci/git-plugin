@@ -201,7 +201,7 @@ public class GitAPI implements IGitAPI {
         listener.getLogger().println("Resetting working tree");
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("fetch");
+        args.add("reset");
         if (hard) {
             args.add("--hard");
         }
