@@ -767,7 +767,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName()) /*dummy*/;
+        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
     private void cleanSubmodules(IGitAPI parentGit,
@@ -1149,6 +1149,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions(
                         false, singleBranch, git, listener, buildData, context);
                 if (candidates.size() == 0) {
+                    log.println("No candidate revisions");
                     return null;
                 }
                 return candidates.iterator().next();
@@ -1438,14 +1439,7 @@ public class GitSCM extends SCM implements Serializable {
     public String getScmName() {
         return scmName;
     }
-
-    /** Compares the SCM names for equality even if they're null. */
-    private boolean sameScm(String scmName1, String scmName2) {
-        scmName1 = (scmName1 == null ? "" : scmName1);
-        scmName2 = (scmName2 == null ? "" : scmName2);
-        return scmName1.equals(scmName2);
-    }
-
+    
     @Extension
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
@@ -1712,11 +1706,19 @@ public class GitSCM extends SCM implements Serializable {
         return userMergeOptions;
     }
 
+    private boolean isRelevantBuildData(BuildData bd) {
+        for(UserRemoteConfig c : getUserRemoteConfigs()) {
+            if(bd.hasBeenReferenced(c.getUrl())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
-     * Determine the state of the last build that completed. BuildData
+     * Find the build log (BuildData) recorded with the last build that completed. BuildData
      * may not be recorded if an exception occurs in the plugin logic.
-     * For instance, if a build failed due to a SCM failure no build data would be recorded.
-     * 
+     *
      * @param build
      * @param clone
      * @return the last recorded build data
@@ -1726,7 +1728,7 @@ public class GitSCM extends SCM implements Serializable {
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
             for (BuildData bd : buildDataList) {
-                if (bd != null && sameScm(bd.getScmName(), scmName)) {
+                if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
                     break;
                 }
@@ -1738,7 +1740,7 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         if (buildData == null) {
-            return clone ? new BuildData(getScmName()) : null;
+            return clone ? new BuildData(getScmName(), getUserRemoteConfigs()) : null;
         }
 
         if (clone) {

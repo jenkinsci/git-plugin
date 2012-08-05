@@ -41,6 +41,10 @@ public class MultipleSCMTest extends HudsonTestCase {
 	public void testBasic() throws Exception
 	{
 		FreeStyleProject project = setupBasicProject("master");
+
+        repo0.commit("repo0-init", repo0.johnDoe, "repo0 initial commit");
+        repo1.commit("repo1-init", repo1.janeDoe, "repo1 initial commit");
+
 		build(project, Result.SUCCESS);
 		
 		assertFalse("scm polling should not detect any more changes after build", 
