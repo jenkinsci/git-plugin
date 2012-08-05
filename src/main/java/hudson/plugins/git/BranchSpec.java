@@ -42,7 +42,11 @@ public class BranchSpec implements Serializable {
         else
             this.name = name;
     }
-    
+
+    public String toString() {
+        return pattern + " (" + name + ")";
+    }
+
     public boolean matches(String item) {
         return getPattern().matcher(item).matches();
     }
