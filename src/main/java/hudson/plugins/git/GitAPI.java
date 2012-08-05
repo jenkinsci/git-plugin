@@ -83,6 +83,7 @@ public class GitAPI implements IGitAPI {
 
         try {
             String v = firstLine(launchCommand("--version")).trim();
+            listener.getLogger().println("git --version\n" + v);
             Pattern p = Pattern.compile("git version ([0-9]+)\\.([0-9+])\\..*");
             Matcher m = p.matcher(v);
             if (m.matches() && m.groupCount() >= 2) {
