@@ -100,6 +100,9 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         this.buildsByBranchName = newBuildsByBranchName;
 
+        if(this.remoteUrls == null)
+            this.remoteUrls = new HashSet<String>();
+
         return this;
     }
     
@@ -185,6 +188,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
 
         clone.buildsByBranchName = new HashMap<String, Build>();
+        clone.remoteUrls = new HashSet<String>();
+
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();
             if (branchName == null) {
