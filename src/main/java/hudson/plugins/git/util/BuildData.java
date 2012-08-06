@@ -51,7 +51,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     public String scmName;
 
     /**
-     * The URLs that have contributed code to the test.
+     * The URLs that have been referenced.
      */
     public Set<String> remoteUrls;
 
