@@ -53,19 +53,17 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * The URLs that have been referenced.
      */
-    public Set<String> remoteUrls;
+    public Set<String> remoteUrls = new HashSet<String>();
 
     public BuildData() {
     }
 
     public BuildData(String scmName) {
         this.scmName = scmName;
-        this.remoteUrls = new HashSet<String>();
     }
 
     public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
         this.scmName = scmName;
-        this.remoteUrls = new HashSet<String>();
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
         }
