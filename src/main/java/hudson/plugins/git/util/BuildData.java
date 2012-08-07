@@ -160,7 +160,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         return scmName;
     }
 
-    @Exported
     public void addRemoteUrl(String remoteUrl) {
         remoteUrls.add(remoteUrl);
     }
@@ -170,7 +169,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         return remoteUrls;
     }
 
-    @Exported
     public boolean hasBeenReferenced(String remoteUrl) {
         return remoteUrls.contains(remoteUrl);
     }
