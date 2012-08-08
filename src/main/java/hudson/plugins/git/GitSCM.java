@@ -1,8 +1,6 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
-import static hudson.init.InitMilestone.PLUGINS_PREPARED;
-import static hudson.init.InitMilestone.PLUGINS_STARTED;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -41,7 +39,6 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
-import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
@@ -56,13 +53,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -72,9 +63,7 @@ import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
-import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -749,7 +738,7 @@ public class GitSCM extends SCM implements Serializable {
                     List<Revision> candidates = new ArrayList<Revision>();
 
                     for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, buildData.getLastBuiltRevision(), c, listener)) {
+                        if (!isRangeExcluded(git, buildData.getLastBuiltRevision(), c, listener)) {
                             candidates.add(c);
                         }
                     }
@@ -1775,88 +1764,99 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * Given a Revision, check whether it matches any exclusion rules.
+     * Given a range of Revisions, check whether it should be excluded.
+     * We exclude a range if and only if every revision within it can be
+     * excluded.  We can exclude a revision if every path within it is
+     * excluded, or its the author is excluded.
      *
      * @param git IGitAPI object
      * @param from Revision object for the last known build
 	 * @param to Revision object for the current commit
      * @param listener
-     * @return true if any exclusion files are matched, false otherwise.
+     * @return true if any exclusion rules are matched, false otherwise.
      */
-    private boolean isRevExcluded(IGitAPI git, Revision from, Revision to,  TaskListener listener) {
+    private boolean isRangeExcluded(IGitAPI git, Revision from, Revision to,  TaskListener listener) {
         try {
 		    List<String> revShow = git.showDeltas(from, to);
 
-            // If the revision info is empty, something went weird, so we'll just
-            // return false.
+            // If the revision info is empty then something weird happened: return false to be safe.
             if (revShow.size() == 0) {
 				listener.getLogger().println("No revision information found");
                 return false;
             }
 
-            GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
+            // If we can't parse the revision info then something weird has happened: return false to be safe.
+            List<GitChangeSet> changes = GitChangeSet.parseCommitList(revShow, authorOrCommitter);
+            if (changes == null) {
+                listener.getLogger().println("Unable to parse commit list");
+                return false;
+            }
 
             Pattern[] includedPatterns = getIncludedRegionsPatterns();
             Pattern[] excludedPatterns = getExcludedRegionsPatterns();
             Set<String> excludedUsers = getExcludedUsersNormalized();
 
-            String author = change.getAuthorName();
-            if (excludedUsers.contains(author)) {
-                // If the author is an excluded user, don't count this entry as a change
-                listener.getLogger().println("Ignored commit " + to.getSha1String() + ": Found excluded author: " + author);
-                return true;
-            }
+            StringBuilder reasons = new StringBuilder();
 
-            List<String> paths = new ArrayList<String>(change.getAffectedPaths());
-            if (paths.isEmpty()) {
-                // If there weren't any changed files here, we're just going to return false.
-				listener.getLogger().println("No paths found"); 
-                return false;
-            }
+            for(GitChangeSet change : changes) {
 
-	    // Assemble the list of included paths
-            List<String> includedPaths = new ArrayList<String>();
-            if (includedPatterns.length > 0) {
-                for (String path : paths) {
-                    for (Pattern pattern : includedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            includedPaths.add(path);
-                            break;
+                // Check for excluded authors
+                String author = change.getAuthorName();
+                if (excludedUsers.contains(author)) {
+                    reasons.append("\t" + change.getCommitId() + " has excluded author:" + author + "\n");
+                    continue;
+                }
+
+                List<String> paths = new ArrayList<String>(change.getAffectedPaths());
+                if (paths.isEmpty()) {
+                    // There weren't any changed files here: play safe and return false.
+                    listener.getLogger().println("No paths found");
+                    return false;
+                }
+
+                // Assemble the list of included paths
+                List<String> includedPaths = new ArrayList<String>();
+                if (includedPatterns.length > 0) {
+                    for (String path : paths) {
+                        for (Pattern pattern : includedPatterns) {
+                            if (pattern.matcher(path).matches()) {
+                                includedPaths.add(path);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    includedPaths = paths;
+                }
+
+                // Check for excluded paths
+                int excludedPathCount = 0;
+                if (excludedPatterns.length > 0) {
+                    for (String path : includedPaths) {
+                        for (Pattern pattern : excludedPatterns) {
+                            if (pattern.matcher(path).matches()) {
+                                reasons.append("\t" + change.getCommitId() + " has excluded path:" + path + "\n");
+                                excludedPathCount++;
+                                break;
+                            }
                         }
                     }
                 }
-            } else {
-		includedPaths = paths;
-	    }
 
-	    // Assemble the list of excluded paths
-            List<String> excludedPaths = new ArrayList<String>();
-            if (excludedPatterns.length > 0) {
-                for (String path : includedPaths) {
-                    for (Pattern pattern : excludedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            excludedPaths.add(path);
-                            break;
-                        }
-                    }
-                }
+                // If not all paths are excluded we're going to have to build and our work here is done.
+                if (excludedPathCount != includedPaths.size())
+                    return false;
             }
 
-            // If every affected path is excluded, return true.
-            if (includedPaths.size() == excludedPaths.size()) {
-                listener.getLogger().println("Ignored commit " + to.getSha1String()
-                        + ": Found only excluded paths: "
-                        + Util.join(excludedPaths, ", "));
-                return true;
-            }
+            // We've now looped over all the change sets, and every one has a reason to be excluded
+            listener.getLogger().print("Range excluded:\n" + reasons.toString());
+            return true;
+
         } catch (GitException e) {
             // If an error was hit getting the revision info, assume something
             // else entirely is wrong and we don't care, so return false.
             return false;
         }
-
-        // By default, return false.
-        return false;
     }
 
     @Initializer(before = InitMilestone.JOB_LOADED)

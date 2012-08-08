@@ -355,11 +355,11 @@ public class GitAPI implements IGitAPI {
 	}
 
     /**
-     * Given a Revision, show it as if it were an entry from git whatchanged, so that it
+     * Given a Revision, show it as if it were an entry from git log, so that it
      * can be parsed by GitChangeLogParser.
      *
      * @param r The Revision object
-     * @return The git show output, in List form.
+     * @return The git log output, in List form.
      * @throws GitException if errors were encountered running git show.
      */
     public List<String> showRevision(Revision r) throws GitException {
@@ -367,7 +367,7 @@ public class GitAPI implements IGitAPI {
         String result = "";
 
         if (revName != null) {
-            result = launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName);
+            result = launchCommand("log", "--no-abbrev", "--format=raw", "--raw", revName );
         }
 
         List<String> revShow = new ArrayList<String>();

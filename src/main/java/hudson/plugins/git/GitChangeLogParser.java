@@ -26,6 +26,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         super();
         this.authorOrCommitter = authorOrCommitter;
     }
+
     public GitChangeSetList parse(AbstractBuild build, File changelogFile)
         throws IOException, SAXException {
         

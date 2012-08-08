@@ -4,6 +4,7 @@ import static hudson.Util.fixEmpty;
 
 import hudson.MarkupText;
 import hudson.model.User;
+import hudson.model.AbstractBuild;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
@@ -12,14 +13,15 @@ import hudson.tasks.Mailer;
 
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -150,6 +152,31 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         } else {
             this.title = this.comment.substring(0, endOfFirstLine);
         }
+    }
+
+    public static List<GitChangeSet> parseCommitList(List<String> lines, boolean authorOrCommiter)
+    {
+        List<GitChangeSet> results = new LinkedList<GitChangeSet>();
+
+        LinkedList<String> subset = new LinkedList<String>();
+        for (String line : lines)
+        {
+            if (line.startsWith("commit "))
+            {
+                if (!subset.isEmpty()) {
+                    results.add(new GitChangeSet(subset, authorOrCommiter));
+                }
+                subset = new LinkedList<String>();
+            }
+
+            subset.add(line);
+        }
+
+        if (!subset.isEmpty()) {
+            results.add(new GitChangeSet(subset, authorOrCommiter));
+        }
+
+        return results.isEmpty() ? null : results;
     }
 
     private String parseHash(String hash) {
