@@ -201,6 +201,22 @@ public class GitAPI implements IGitAPI {
         fetch(null, null);
     }
 
+    public void reset(boolean hard) throws GitException {
+        listener.getLogger().println("Resetting working tree");
+
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("reset");
+        if (hard) {
+            args.add("--hard");
+        }
+
+        launchCommand(args);
+    }
+
+    public void reset() throws GitException {
+        reset(false);
+    }
+
     /**
      * Start from scratch and clone the whole repository. Cloning into an
      * existing directory is not allowed, so the workspace is first deleted
@@ -254,6 +270,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public void clean() throws GitException {
+        reset(true);
         launchCommand("clean", "-fdx");
     }
 
