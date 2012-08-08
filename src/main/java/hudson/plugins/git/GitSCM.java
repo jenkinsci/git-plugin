@@ -678,7 +678,7 @@ public class GitSCM extends SCM implements Serializable {
                     break;
                 }
             }
-            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+            final EnvVars environment = new EnvVars(System.getenv());
             IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
