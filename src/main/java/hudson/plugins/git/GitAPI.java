@@ -846,6 +846,7 @@ public class GitAPI implements IGitAPI {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         try {
+            environment.put("GIT_ASKPASS", launcher.isUnix() ? "/bin/echo" : "echo.exe");
             args.prepend(getGitExe());
             int status = launcher.launch().cmds(args.toCommandArray()).
                 envs(environment).stdout(fos).stderr(err).pwd(workDir).join();

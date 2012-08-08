@@ -1,15 +1,20 @@
 package hudson.plugins.git;
 
+import java.io.IOException;
 import java.io.Serializable;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
+import hudson.Util;
+import hudson.model.*;
 import hudson.util.FormValidation;
 
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -48,12 +53,34 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
-        public FormValidation doCheckUrl(@QueryParameter String value) {
-            if (value == null || value.length() == 0) {
+
+        public FormValidation doCheckUrl(@QueryParameter String value) throws IOException, InterruptedException {
+
+            String url = Util.fixEmptyAndTrim(value);
+            if (url == null)
                 return FormValidation.error("Please enter Git repository.");
-            } else {
+
+            if (url.indexOf('$') >= 0)
+                // set by variable, can't validate
                 return FormValidation.ok();
+
+            if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE))
+                return FormValidation.ok();
+
+            // get git executable on master
+            final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
+            GitTool.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
+            String gitExe = descriptor.getInstallations()[0].forNode(Jenkins.getInstance(), TaskListener.NULL).getGitExe();
+            IGitAPI git = new GitAPI(gitExe, null, TaskListener.NULL, environment, null);
+
+            // attempt to connect the provided URL
+            try {
+                String headRevision = git.getHeadRev(url, "HEAD");
+            } catch (GitException e) {
+                return FormValidation.error("Failed to connect", e.getMessage());
             }
+
+            return FormValidation.ok();
         }
 
         @Override
