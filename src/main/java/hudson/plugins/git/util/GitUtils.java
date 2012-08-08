@@ -171,11 +171,17 @@ public class GitUtils {
         return l;
     }
 
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+        throws IOException, InterruptedException {
+        return getPollEnvironment(p, ws, launcher, listener, true);
+    }
+
+
     /**
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
      * Cribbed from various places.
      */
-    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
         EnvVars env;
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
