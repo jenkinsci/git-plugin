@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
-  <version>1.1.20-SNAPSHOT</version>
+  <version>1.1.23-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -28,6 +28,7 @@
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
+        <version>1.4</version>
         <executions>
           <execution>
             <goals>
@@ -62,6 +63,11 @@
       <id>guice-maven</id>
       <name>guice maven</name>
       <url>http://guice-maven.googlecode.com/svn/trunk</url>
+    </repository>
+
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
 
@@ -122,7 +128,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>1.1</version>
+      <version>1.5.1</version>
       <optional>true</optional>
     </dependency>
   </dependencies>

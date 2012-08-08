@@ -34,6 +34,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String PREFIX_AUTHOR = "author ";
     private static final String PREFIX_COMMITTER = "committer ";
     private static final String IDENTITY = "(.*)<(.*)> (.*) (.*)";
+    private static final String PREFIX_BRANCH = "Changes in branch ";
+    private static final String BRANCH_PATTERN = "([-_a-zA-Z0-9/]*),";
     
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
@@ -42,8 +44,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final Pattern COMMITTER_ENTRY = Pattern.compile("^"
             + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
+    private static final Pattern BRANCH_ENTRY = Pattern.compile("^"
+            + PREFIX_BRANCH + BRANCH_PATTERN + " .*$");
     
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
+    private String branch;
     private String committer;
     private String committerEmail;
     private String committerTime;
@@ -84,6 +89,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             } else if (line.startsWith("tree ")) {
             } else if (line.startsWith("parent ")) {
                 this.parentCommit = line.split(" ")[1];
+            } else if (line.startsWith(PREFIX_BRANCH)) {
+                Matcher branchMatcher = BRANCH_ENTRY.matcher(line);
+                if (branchMatcher.matches()
+                        && branchMatcher.groupCount() >= 1) {
+                    this.branch = branchMatcher.group(1).trim();
+                }
             } else if (line.startsWith(PREFIX_COMMITTER)) {
                 Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
                 if (committerMatcher.matches()
@@ -337,6 +348,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             a.annotate(getParent().build,this,markup);
 
         return markup.toString(false);
+    }
+
+    public String getBranch() {
+        return this.branch;
     }
 
     @ExportedBean(defaultVisibility=999)

@@ -27,6 +27,9 @@
               </j:if>
               by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
             </b>
+            <j:if test="${cs.branch!=null}">
+              <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
+            </j:if>
             <pre>${cs.commentAnnotated}</pre>
           </div>
         </td>

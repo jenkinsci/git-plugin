@@ -651,13 +651,14 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
 
-        if (buildData != null && buildData.lastBuild != null) {
+        if (buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
         final String singleBranch = getSingleBranch(lastBuild);
 
-        if (singleBranch != null && this.remotePoll) {
+        // fast remote polling needs a single branch and an existing last build
+        if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
             String gitExe = "";
             GitTool[] installations = ((hudson.plugins.git.GitTool.DescriptorImpl)Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)).getInstallations();
             for(GitTool i : installations) {
@@ -666,7 +667,7 @@ public class GitSCM extends SCM implements Serializable {
                     break;
                 }
             }
-            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
             IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
@@ -1028,7 +1029,7 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(build);
+        final String singleBranch = environment.expand( getSingleBranch(build) );
         final String paramLocalBranch = getParamLocalBranch(build);
         Revision tempParentLastBuiltRev = null;
 

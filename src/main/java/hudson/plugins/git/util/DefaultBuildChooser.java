@@ -9,6 +9,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.Revision;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -69,18 +70,35 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
+        Collection<Revision> revisions = new ArrayList<Revision>();
+
         // if it doesn't contain '/' then it could be either a tag or an unqualified branch
         if (!singleBranch.contains("/")) {
             // the 'branch' could actually be a tag:
             Set<String> tags = git.getTagNames(singleBranch);
-            if(tags.size() == 0) {
-                // its not a tag, so lets fully qualify the branch
-                String repository = gitSCM.getRepositories().get(0).getName();
-                singleBranch = repository + "/" + singleBranch;
-                verbose(listener, "{0} is not a tag. Qualifying with the repository {1} a a branch", singleBranch, repository);
+            if(tags.size() != 0) {
+                verbose(listener, "{0} is a tag");
+                return getHeadRevision(isPollCall, singleBranch, git, listener, data);
             }
+
+            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // so check all remotes to fully qualify this branch spec
+            for (RemoteConfig config : gitSCM.getRepositories()) {
+                String repository = config.getName();
+                String fqbn = repository + "/" + singleBranch;
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", singleBranch, repository, fqbn);
+                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+            }
+        } else {
+            // singleBranch contains a '/', so is in most case a fully qualified branch
+            // doesn't seem we can distinguish unqualified branch with '/' in name, so expect users to fully qualify
+            revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
         }
 
+        return revisions;
+    }
+
+    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, IGitAPI git, TaskListener listener, BuildData data) {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);

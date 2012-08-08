@@ -57,6 +57,8 @@ public interface IGitAPI {
     void fetch(RemoteConfig remoteRepository);
 
     void fetch() throws GitException;
+    void reset(boolean hard) throws GitException;
+    void reset() throws GitException;
     void push(RemoteConfig repository, String revspec) throws GitException;
     void merge(String revSpec) throws GitException;
     void clone(RemoteConfig source) throws GitException;

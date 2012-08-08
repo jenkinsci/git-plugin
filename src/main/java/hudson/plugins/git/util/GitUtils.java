@@ -171,14 +171,20 @@ public class GitUtils {
         return l;
     }
 
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+        throws IOException, InterruptedException {
+        return getPollEnvironment(p, ws, launcher, listener, true);
+    }
+
+
     /**
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
      * Cribbed from various places.
      */
-    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
         EnvVars env;
-
+        StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = (AbstractBuild)p.getLastBuild();
 
         if (b != null) {
@@ -186,52 +192,51 @@ public class GitUtils {
 
             if (lastBuiltOn != null) {
                 env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
-            } else {
-                env = new EnvVars(System.getenv());
-            }
-
-            String rootUrl = Hudson.getInstance().getRootUrl();
-            if(rootUrl!=null) {
-                env.put("HUDSON_URL", rootUrl); // Legacy.
-                env.put("JENKINS_URL", rootUrl);
-                env.put("BUILD_URL", rootUrl+b.getUrl());
-                env.put("JOB_URL", rootUrl+p.getUrl());
-            }
-            
-            if(!env.containsKey("HUDSON_HOME")) // Legacy
-                env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
-
-            if(!env.containsKey("JENKINS_HOME"))
-                env.put("JENKINS_HOME", Hudson.getInstance().getRootDir().getPath() );
-
-            if (ws != null)
-                env.put("WORKSPACE", ws.getRemote());
-            
-            
-            p.getScm().buildEnvVars(b,env);
-
-            StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
-            
-            for (NodeProperty nodeProperty: Hudson.getInstance().getGlobalNodeProperties()) {
-                Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
-                if (environment != null) {
-                    environment.buildEnvVars(env);
-                }
-            }
-
-            if (lastBuiltOn != null) {
                 for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
                     Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
                     if (environment != null) {
                         environment.buildEnvVars(env);
                     }
                 }
+            } else {
+                env = new EnvVars(System.getenv());
+            }
+            
+            p.getScm().buildEnvVars(b,env);
+
+            if (lastBuiltOn != null) {
+
             }
 
-            EnvVars.resolve(env);
         } else {
             env = new EnvVars(System.getenv());
         }
+
+        String rootUrl = Hudson.getInstance().getRootUrl();
+        if(rootUrl!=null) {
+            env.put("HUDSON_URL", rootUrl); // Legacy.
+            env.put("JENKINS_URL", rootUrl);
+            env.put("BUILD_URL", rootUrl+b.getUrl());
+            env.put("JOB_URL", rootUrl+p.getUrl());
+        }
+
+        if(!env.containsKey("HUDSON_HOME")) // Legacy
+            env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
+
+        if(!env.containsKey("JENKINS_HOME"))
+            env.put("JENKINS_HOME", Hudson.getInstance().getRootDir().getPath() );
+
+        if (ws != null)
+            env.put("WORKSPACE", ws.getRemote());
+
+        for (NodeProperty nodeProperty: Hudson.getInstance().getGlobalNodeProperties()) {
+            Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
+            if (environment != null) {
+                environment.buildEnvVars(env);
+            }
+        }
+
+        EnvVars.resolve(env);
 
         return env;
     }
