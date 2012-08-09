@@ -207,9 +207,10 @@ public class GitAPI implements IGitAPI {
      * entirely, then <tt>git clone</tt> is performed.
      *
      * @param remoteConfig remote config
+     * @param boolean useShallowClone perform shallow clone using --depth 1
      * @throws GitException if deleting or cloning the workspace fails
      */
-    public void clone(final RemoteConfig remoteConfig) throws GitException {
+    public void clone(final RemoteConfig remoteConfig, final boolean useShallowClone) throws GitException {
         listener.getLogger().println("Cloning repository " + remoteConfig.getName());
         final int[] gitVer = getGitVersion();
 
@@ -243,6 +244,7 @@ public class GitAPI implements IGitAPI {
                             }
                         }
                         args.add("-o", remoteConfig.getName());
+                        if(useShallowClone) args.add("--depth", "1");
                         args.add(source);
                         args.add(workspace.getAbsolutePath());
                         return launchCommandIn(args, null);
@@ -251,6 +253,10 @@ public class GitAPI implements IGitAPI {
         } catch (Exception e) {
             throw new GitException("Could not clone " + source, e);
         }
+    }
+    
+    public void clone(final RemoteConfig remoteConfig) throws GitException {
+    	clone(remoteConfig, false);    	
     }
 
     public void clean() throws GitException {

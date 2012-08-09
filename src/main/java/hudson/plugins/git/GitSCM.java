@@ -1120,13 +1120,15 @@ public class GitSCM extends SCM implements Serializable {
                 } else {
 
                     log.println("Cloning the remote Git repository");
+                    
+                    if(useShallowClone) log.println("Using shallow clone");
 
                     // Go through the repositories, trying to clone from one
                     //
                     boolean successfullyCloned = false;
                     for (RemoteConfig rc : paramRepos) {
                         try {
-                            git.clone(rc);
+                            git.clone(rc, useShallowClone);
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
