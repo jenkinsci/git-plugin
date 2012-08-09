@@ -62,6 +62,7 @@ public interface IGitAPI {
     void push(RemoteConfig repository, String revspec) throws GitException;
     void merge(String revSpec) throws GitException;
     void clone(RemoteConfig source) throws GitException;
+    void clone(RemoteConfig rc, boolean useShallowClone) throws GitException;
     void clean() throws GitException;
     void prune(RemoteConfig repository) throws GitException;
 
