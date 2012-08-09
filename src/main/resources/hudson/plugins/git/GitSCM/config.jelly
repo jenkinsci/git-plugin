@@ -156,6 +156,10 @@
     <f:entry title="Ignore this repository during notify commit" field="ignoreNotifyCommit" help="/plugin/git/ignoreNotifyCommit.html">
       <f:checkbox/>
     </f:entry>
+    <!-- TODO move to appropriate location if necessary -->
+    <f:entry title="Use shallow clone" field="useShallowClone" help="/plugin/git/useShallowClone.html">
+      <f:checkbox/>
+    </f:entry>
 
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
       <j:scope>
