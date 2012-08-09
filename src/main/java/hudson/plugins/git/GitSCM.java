@@ -131,6 +131,7 @@ public class GitSCM extends SCM implements Serializable {
     private boolean pruneBranches;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
+    private boolean useShallowClone;
 
     /**
      * @deprecated
@@ -182,7 +183,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false);
+                null, null, null, false, false, false, false, null, null, false, null, false, false);
     }
 
     @DataBoundConstructor
@@ -211,7 +212,8 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigEmail,
             boolean skipTag,
             String includedRegions,
-            boolean ignoreNotifyCommit) {
+            boolean ignoreNotifyCommit,
+            boolean useShallowClone) {
 
         this.scmName = scmName;
 
@@ -259,6 +261,7 @@ public class GitSCM extends SCM implements Serializable {
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
+        this.useShallowClone = useShallowClone;
         if (remotePoll
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
@@ -524,6 +527,10 @@ public class GitSCM extends SCM implements Serializable {
 
     public boolean isIgnoreNotifyCommit() {
         return ignoreNotifyCommit;
+    }
+    
+    public boolean getUseShallowClone() {
+    	return useShallowClone;
     }
 
     public BuildChooser getBuildChooser() {
