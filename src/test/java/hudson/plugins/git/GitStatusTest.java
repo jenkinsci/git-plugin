@@ -130,7 +130,7 @@ public class GitStatusTest extends HudsonTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit));
+                null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit, false));
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;
