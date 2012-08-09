@@ -1041,6 +1041,14 @@ public class GitSCM extends SCM implements Serializable {
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        
+        if(useShallowClone) {
+        	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
+        		listener.getLogger().println("Using shallow clone");
+        	} else {
+        		useShallowClone = false;
+        	}
+        }
 
         return workingDirectory.act(new FileCallable<Revision>() {
 
@@ -1095,8 +1103,6 @@ public class GitSCM extends SCM implements Serializable {
 
                     log.println("Cloning the remote Git repository");
                     
-                    if(useShallowClone) log.println("Using shallow clone");
-
                     // Go through the repositories, trying to clone from one
                     //
                     boolean successfullyCloned = false;
