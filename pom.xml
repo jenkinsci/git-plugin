@@ -1,157 +1,150 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>plugin</artifactId>
-        <version>1.424</version>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>1.424</version>
+  </parent>
 
-    <groupId>org.jenkinsci.plugins</groupId>
-    <artifactId>git</artifactId>
-    <version>1.1.23-SNAPSHOT</version>
-    <packaging>hpi</packaging>
-    <name>Jenkins GIT plugin</name>
-    <description>Integrates Jenkins with GIT SCM</description>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  <groupId>org.jenkinsci.plugins</groupId>
+  <artifactId>git</artifactId>
+  <version>1.1.23-SNAPSHOT</version>
+  <packaging>hpi</packaging>
+  <name>Jenkins GIT plugin</name>
+  <description>Integrates Jenkins with GIT SCM</description>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.0-beta-1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>com.infradna.tool</groupId>
-                <artifactId>bridge-method-injector</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <goals>deploy</goals>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>1.0-beta-1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.infradna.tool</groupId>
+        <artifactId>bridge-method-injector</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <goals>deploy</goals>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
+  <repositories>
+    <repository>
+      <id>jgit-repository</id>
+      <name>Eclipse JGit Repository</name>
+      <url>http://download.eclipse.org/jgit/maven</url>
+    </repository>
+    
+    <repository>
+      <id>guice-maven</id>
+      <name>guice maven</name>
+      <url>http://guice-maven.googlecode.com/svn/trunk</url>
+    </repository>
 
-    <repositories>
-        <repository>
-            <id>jgit-repository</id>
-            <name>Eclipse JGit Repository</name>
-            <url>http://download.eclipse.org/jgit/maven</url>
-        </repository>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
 
-        <repository>
-            <id>guice-maven</id>
-            <name>guice maven</name>
-            <url>http://guice-maven.googlecode.com/svn/trunk</url>
-        </repository>
-
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
-
-    <developers>
-        <developer>
-            <id>kohsuke</id>
-            <name>Kohsuke Kawaguchi</name>
-        </developer>
-        <developer>
-            <id>ndeloof</id>
-            <name>Nicolas De Loof</name>
-            <email>nicolas.deloof@gmail.com</email>
-        </developer>
-    </developers>
+	<developers>
+		<developer>
+			<id>kohsuke</id>
+			<name>Kohsuke Kawaguchi</name>
+		</developer>
+		<developer>
+			<id>ndeloof</id>
+			<name>Nicolas De Loof</name>
+			<email>nicolas.deloof@gmail.com</email>
+		</developer>
+	</developers>
 
 
-    <dependencies>
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>0.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>1.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.infradna.tool</groupId>
-            <artifactId>bridge-method-annotation</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.5</version>
-            <scope>test</scope>
-        </dependency>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>0.12.1</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>1.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.infradna.tool</groupId>
+      <artifactId>bridge-method-annotation</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.8.5</version>
+      <scope>test</scope>
+    </dependency>
 
-        <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
-            <groupId>org.jvnet.hudson.plugins</groupId>
-            <artifactId>parameterized-trigger</artifactId>
-            <version>2.4</version>
-            <optional>true</optional>
-            <exclusions> <!-- Excluding subversion to make sure we don't inadvertently pick up the Oracle Hudson "2.0" svn plugin and break the build. -->
-                <exclusion>
-                    <groupId>org.jvnet.hudson.plugins</groupId>
-                    <artifactId>subversion</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>token-macro</artifactId>
-            <version>1.5.1</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>multiple-scms</artifactId>
-            <version>0.2</version>
-            <optional>true</optional>
-        </dependency>
-    </dependencies>
+    <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
+      <groupId>org.jvnet.hudson.plugins</groupId>
+      <artifactId>parameterized-trigger</artifactId>
+      <version>2.4</version>
+      <optional>true</optional>
+      <exclusions> <!-- Excluding subversion to make sure we don't inadvertently pick up the Oracle Hudson "2.0" svn plugin and break the build. -->
+        <exclusion>
+          <groupId>org.jvnet.hudson.plugins</groupId>
+          <artifactId>subversion</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>token-macro</artifactId>
+      <version>1.5.1</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
 
-    <distributionManagement>
-        <repository>
-            <id>maven.jenkins-ci.org</id>
-            <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
-        </repository>
-    </distributionManagement>
-
-    <scm>
-        <connection>scm:git:git://github.com/jenkinsci/git-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/git-plugin.git</developerConnection>
-        <url>http://github.com/jenkinsci/git-plugin</url>
-    </scm>
+  <distributionManagement>
+    <repository>
+      <id>maven.jenkins-ci.org</id>
+      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
+    </repository>
+  </distributionManagement>
+  
+  <scm>
+    <connection>scm:git:git://github.com/jenkinsci/git-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/git-plugin.git</developerConnection>
+    <url>http://github.com/jenkinsci/git-plugin</url>
+  </scm>
 
 
     <pluginRepositories>
