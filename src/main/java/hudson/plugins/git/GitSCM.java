@@ -131,6 +131,7 @@ public class GitSCM extends SCM implements Serializable {
     private boolean pruneBranches;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
+    private boolean useShallowClone;
 
     /**
      * @deprecated
@@ -182,7 +183,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false);
+                null, null, null, false, false, false, false, null, null, false, null, false, false);
     }
 
     @DataBoundConstructor
@@ -211,7 +212,8 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigEmail,
             boolean skipTag,
             String includedRegions,
-            boolean ignoreNotifyCommit) {
+            boolean ignoreNotifyCommit,
+            boolean useShallowClone) {
 
         this.scmName = scmName;
 
@@ -259,6 +261,7 @@ public class GitSCM extends SCM implements Serializable {
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
+        this.useShallowClone = useShallowClone;
         if (remotePoll
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
@@ -524,6 +527,10 @@ public class GitSCM extends SCM implements Serializable {
 
     public boolean isIgnoreNotifyCommit() {
         return ignoreNotifyCommit;
+    }
+    
+    public boolean getUseShallowClone() {
+    	return useShallowClone;
     }
 
     public BuildChooser getBuildChooser() {
@@ -1060,6 +1067,14 @@ public class GitSCM extends SCM implements Serializable {
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        
+        if(useShallowClone) {
+        //	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
+        		listener.getLogger().println("Using shallow clone");
+        //	} else {
+        //		useShallowClone = false;
+        //	}
+        }
 
         final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
 
@@ -1113,13 +1128,13 @@ public class GitSCM extends SCM implements Serializable {
                 } else {
 
                     log.println("Cloning the remote Git repository");
-
+                    
                     // Go through the repositories, trying to clone from one
                     //
                     boolean successfullyCloned = false;
                     for (RemoteConfig rc : paramRepos) {
                         try {
-                            git.clone(rc);
+                            git.clone(rc, useShallowClone);
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
