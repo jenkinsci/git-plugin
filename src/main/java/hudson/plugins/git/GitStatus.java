@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
@@ -9,6 +10,7 @@ import hudson.model.UnprotectedRootAction;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
@@ -24,7 +26,9 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static javax.servlet.http.HttpServletResponse.*;
@@ -73,48 +77,48 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     triggerFound = false,
                     urlFound = false;
             for (AbstractProject<?,?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
-                SCM scm = project.getScm();
-                if (scm instanceof GitSCM) scmFound = true; else continue;
+                Collection<GitSCM> projectSCMs = getProjectScms(project);
+                for (GitSCM git : projectSCMs) {
 
-                GitSCM git = (GitSCM) scm;
-                for (RemoteConfig repository : git.getRepositories()) {
-                    boolean repositoryMatches = false,
-                            branchMatches = false;
-                    for (URIish remoteURL : repository.getURIs()) {
-                        if (looselyMatches(uri, remoteURL)) {
-                            repositoryMatches = true;
-                            break;
-                        }
-                    }
+                  for (RemoteConfig repository : git.getRepositories()) {
+                      boolean repositoryMatches = false,
+                              branchMatches = false;
+                      for (URIish remoteURL : repository.getURIs()) {
+                          if (looselyMatches(uri, remoteURL)) {
+                              repositoryMatches = true;
+                              break;
+                          }
+                      }
 
-                    if (!repositoryMatches || git.isIgnoreNotifyCommit()) continue;
+                      if (!repositoryMatches || git.isIgnoreNotifyCommit()) continue;
 
-                    if (branchesArray.length == 1 && branchesArray[0] == "") {
-                        branchMatches = true;
-                    } else {
-                        for (BranchSpec branchSpec : git.getBranches()) {
-                            for (int i=0; i < branchesArray.length; i++) {
-                                if (branchSpec.matches(repository.getName() + "/" + branchesArray[i])) { branchMatches = true; break; }
-                            }
-                            if (branchMatches) break;
-                        }
-                    }
+                      if (branchesArray.length == 1 && branchesArray[0] == "") {
+                          branchMatches = true;
+                      } else {
+                          for (BranchSpec branchSpec : git.getBranches()) {
+                              for (int i=0; i < branchesArray.length; i++) {
+                                  if (branchSpec.matches(repository.getName() + "/" + branchesArray[i])) { branchMatches = true; break; }
+                              }
+                              if (branchMatches) break;
+                          }
+                      }
 
-                    if (branchMatches) urlFound = true; else continue;
+                      if (branchMatches) urlFound = true; else continue;
 
 
-                    SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                    if (trigger!=null) triggerFound = true; else continue;
+                      SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                      if (trigger!=null) triggerFound = true; else continue;
 
-                    if (!project.isDisabled()) {
-                        LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
-                        trigger.run();
-                        projects.add(project);
-                    }
-                    break;
-                }
+                      if (!project.isDisabled()) {
+                          LOGGER.info("Triggering the polling of "+project.getFullDisplayName());
+                          trigger.run();
+                          projects.add(project);
+                      }
+                      break;
+                  }
+
+               }
             }
-
             final String msg;
             if (!scmFound)  msg = "No git jobs found";
             else if (!urlFound) msg = "No git jobs using repository: " + url + " and branches: " + branches;
@@ -139,6 +143,21 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         } finally {
             SecurityContextHolder.getContext().setAuthentication(old);
         }
+    }
+
+    private Collection<GitSCM> getProjectScms(AbstractProject<?, ?> project) {
+        Set<GitSCM> projectScms = Sets.newHashSet();
+        if (Jenkins.getInstance().getPlugin("multiple-scms") != null) {
+            MultipleScmResolver multipleScmResolver = new MultipleScmResolver();
+            multipleScmResolver.resolveMultiScmIfConfigured(project, projectScms);
+        }
+        if (projectScms.isEmpty()) {
+            SCM scm = project.getScm();
+            if (scm instanceof GitSCM) {
+                projectScms.add(((GitSCM) scm));
+            }
+        }
+        return projectScms;
     }
 
     /**
