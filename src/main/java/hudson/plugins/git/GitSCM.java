@@ -1069,11 +1069,11 @@ public class GitSCM extends SCM implements Serializable {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
         
         if(useShallowClone) {
-        	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
+        //	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
         		listener.getLogger().println("Using shallow clone");
-        	} else {
-        		useShallowClone = false;
-        	}
+        //	} else {
+        //		useShallowClone = false;
+        //	}
         }
 
         final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
