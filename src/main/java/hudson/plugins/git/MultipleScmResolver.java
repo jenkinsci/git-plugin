@@ -12,13 +12,13 @@ import java.util.Set;
  */
 public class MultipleScmResolver {
 
-    public void resolveMultiScmIfConfigured(AbstractProject<?, ?> project, Set<SCM> projectScms) {
+    public void resolveMultiScmIfConfigured(AbstractProject<?, ?> project, Set<GitSCM> projectScms) {
         SCM projectScm = project.getScm();
         if (projectScm instanceof MultiSCM) {
             List<SCM> configuredSCMs = ((MultiSCM) projectScm).getConfiguredSCMs();
             for (SCM configuredSCM : configuredSCMs) {
                 if (configuredSCM instanceof GitSCM) {
-                    projectScms.add(configuredSCM);
+                    projectScms.add(((GitSCM) configuredSCM));
                 }
             }
 
