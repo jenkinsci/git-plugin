@@ -5,25 +5,27 @@ import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.Revision;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.*;
 
+import hudson.plugins.git.UserRemoteConfig;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.eclipse.jgit.lib.ObjectId;
 
 import static hudson.Util.fixNull;
+import static hudson.Util.intern;
+import static hudson.Util.nullify;
 
 /**
  * Captures the Git related information for a build.
  *
  * <p>
- * This object is added to {@link AbstractBuild#getActions()} and
- * remember the Git related information of that build.
+ * This object is added to {@link AbstractBuild#getActions()}.
+ * This persists the Git related information of that build.
  */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
@@ -48,22 +50,41 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public String scmName;
 
+    /**
+     * The URLs that have been referenced.
+     */
+    public Set<String> remoteUrls = new HashSet<String>();
+
     public BuildData() {
     }
-    
+
     public BuildData(String scmName) {
         this.scmName = scmName;
     }
 
+    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+        this.scmName = scmName;
+        for(UserRemoteConfig c : remoteConfigs) {
+            remoteUrls.add(c.getUrl());
+        }
+    }
 
     public String getDisplayName() {
+        String out_name = "Git Build Data";
+
+        if (!remoteUrls.isEmpty())
+            out_name = out_name + " - " + remoteUrls;
+
         if (scmName != null && !scmName.isEmpty())
-            return "Git Build Data:" + scmName;
-        return "Git Build Data";
+            out_name = out_name + " (" + scmName + ")";
+
+        return out_name;
     }
+
     public String getIconFileName() {
         return Functions.getResourcePath()+"/plugin/git/icons/git-32x32.png";
     }
+
     public String getUrlName() {
         return "git";
     }
@@ -78,6 +99,9 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
 
         this.buildsByBranchName = newBuildsByBranchName;
+
+        if(this.remoteUrls == null)
+            this.remoteUrls = new HashSet<String>();
 
         return this;
     }
@@ -131,8 +155,24 @@ public class BuildData implements Action, Serializable, Cloneable {
     @Exported
     public String getScmName()
     {
+        if (scmName == null)
+            scmName = "";
         return scmName;
     }
+
+    public void addRemoteUrl(String remoteUrl) {
+        remoteUrls.add(remoteUrl);
+    }
+
+    @Exported
+    public  Set<String> getRemoteUrls() {
+        return remoteUrls;
+    }
+
+    public boolean hasBeenReferenced(String remoteUrl) {
+        return remoteUrls.contains(remoteUrl);
+    }
+
     @Override
     public BuildData clone() {
         BuildData clone;
@@ -146,6 +186,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
 
         clone.buildsByBranchName = new HashMap<String, Build>();
+        clone.remoteUrls = new HashSet<String>();
+
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();
             if (branchName == null) {
@@ -168,6 +210,11 @@ public class BuildData implements Action, Serializable, Cloneable {
             }
         }
 
+        for(String remoteUrl : getRemoteUrls())
+        {
+            clone.addRemoteUrl(remoteUrl);
+        }
+
         return clone;
     }
 
@@ -178,6 +225,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     @Override
     public String toString() {
         return super.toString()+"[scmName="+scmName==null?"<null>":scmName+
+                ",remoteUrls="+remoteUrls+
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
     }

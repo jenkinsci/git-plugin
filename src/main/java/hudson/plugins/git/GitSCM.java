@@ -767,7 +767,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName()) /*dummy*/;
+        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
     private void cleanSubmodules(IGitAPI parentGit,
@@ -1009,6 +1009,154 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
 
+    private Revision determineRevisionToBuild(final AbstractBuild build,
+                                              final BuildData buildData,
+                                              final List<RemoteConfig> repos,
+                                              final FilePath workingDirectory,
+                                              final EnvVars environment,
+                                              final String gitExe,
+                                              final BuildListener listener) throws IOException, InterruptedException {
+        Revision tempParentLastBuiltRev = null;
+
+        if (build instanceof MatrixRun) {
+            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
+            if (parentBuild != null) {
+                BuildData parentBuildData = getBuildData(parentBuild, false);
+                if (parentBuildData != null) {
+                    tempParentLastBuiltRev = parentBuildData.getLastBuiltRevision();
+                }
+            }
+        }
+
+        final Revision parentLastBuiltRev = tempParentLastBuiltRev;
+
+        final String singleBranch = environment.expand( getSingleBranch(build) );
+
+        final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+
+        return workingDirectory.act(new FileCallable<Revision>() {
+
+            private static final long serialVersionUID = 1L;
+
+            public Revision invoke(File localWorkspace, VirtualChannel channel)
+                    throws IOException, InterruptedException {
+                FilePath ws = new FilePath(localWorkspace);
+                final PrintStream log = listener.getLogger();
+                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
+
+                if (wipeOutWorkspace) {
+                    log.println("Wiping out workspace first.");
+                    try {
+                        ws.deleteContents();
+                    } catch (InterruptedException e) {
+                        // I don't really care if this fails.
+                    }
+                }
+
+                if (git.hasGitRepo()) {
+                    // It's an update
+
+                    if (repos.size() == 1)
+                        log.println("Fetching changes from 1 remote Git repository");
+                    else
+                        log.println(MessageFormat
+                                .format("Fetching changes from {0} remote Git repositories",
+                                        repos));
+
+                    boolean fetched = false;
+
+                    for (RemoteConfig remoteRepository : repos) {
+                        if (fetchFrom(git, listener, remoteRepository)) {
+                            fetched = true;
+                        }
+                    }
+
+                    if (!fetched) {
+                        listener.error("Could not fetch from any repository");
+                        throw new GitException("Could not fetch from any repository");
+                    }
+                    // Do we want to prune first?
+                    if (pruneBranches) {
+                        log.println("Pruning obsolete local branches");
+                        for (RemoteConfig remoteRepository : repos) {
+                            git.prune(remoteRepository);
+                        }
+                    }
+
+                } else {
+
+                    log.println("Cloning the remote Git repository");
+
+                    // Go through the repositories, trying to clone from one
+                    //
+                    boolean successfullyCloned = false;
+                    for (RemoteConfig rc : repos) {
+                        try {
+                            git.clone(rc);
+                            successfullyCloned = true;
+                            break;
+                        } catch (GitException ex) {
+                            ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
+                            // Failed. Try the next one
+                            log.println("Trying next repository");
+                        }
+                    }
+
+                    if (!successfullyCloned) {
+                        listener.error("Could not clone repository");
+                        throw new GitException("Could not clone");
+                    }
+
+                    boolean fetched = false;
+
+                    // Also do a fetch
+                    for (RemoteConfig remoteRepository : repos) {
+                        try {
+                            git.fetch(remoteRepository);
+                            fetched = true;
+                        } catch (Exception e) {
+                            e.printStackTrace(listener.error(
+                                    "Problem fetching from " + remoteRepository.getName()
+                                            + " / " + remoteRepository.getName()
+                                            + " - could be unavailable. Continuing anyway."));
+                        }
+                    }
+
+                    if (!fetched) {
+                        listener.error("Could not fetch from any repository");
+                        throw new GitException("Could not fetch from any repository");
+                    }
+
+                    if (getClean()) {
+                        log.println("Cleaning workspace");
+                        git.clean();
+
+                        if (git.hasGitModules() && !disableSubmodules) {
+                            git.submoduleClean(recursiveSubmodules);
+                        }
+                    }
+                }
+
+                if (parentLastBuiltRev != null) {
+                    return parentLastBuiltRev;
+                }
+
+                if (rpa != null) {
+                    return rpa.toRevision(git);
+                }
+
+                Collection<Revision> candidates = buildChooser.getCandidateRevisions(
+                        false, singleBranch, git, listener, buildData, context);
+                if (candidates.size() == 0) {
+                    log.println("No candidate revisions");
+                    return null;
+                }
+                return candidates.iterator().next();
+            }
+        });
+    }
+
     @Override
     public boolean checkout(final AbstractBuild build, Launcher launcher,
             final FilePath workspace, final BuildListener listener, File _changelogFile)
@@ -1040,147 +1188,11 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = environment.expand( getSingleBranch(build) );
         final String paramLocalBranch = getParamLocalBranch(build);
-        Revision tempParentLastBuiltRev = null;
-
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild, false);
-                if (parentBuildData != null) {
-                    tempParentLastBuiltRev = parentBuildData.getLastBuiltRevision();
-                }
-            }
-        }
-
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
 
-        final Revision parentLastBuiltRev = tempParentLastBuiltRev;
-
-        final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
-
-        final Revision revToBuild = workingDirectory.act(new FileCallable<Revision>() {
-
-            private static final long serialVersionUID = 1L;
-
-            public Revision invoke(File localWorkspace, VirtualChannel channel)
-                    throws IOException, InterruptedException {
-                FilePath ws = new FilePath(localWorkspace);
-                final PrintStream log = listener.getLogger();
-                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
-
-                if (wipeOutWorkspace) {
-                    log.println("Wiping out workspace first.");
-                    try {
-                        ws.deleteContents();
-                    } catch (InterruptedException e) {
-                        // I don't really care if this fails.
-                    }
-                }
-
-                if (git.hasGitRepo()) {
-                    // It's an update
-
-                    if (paramRepos.size() == 1)
-                        log.println("Fetching changes from 1 remote Git repository");
-                    else
-                        log.println(MessageFormat
-                                .format("Fetching changes from {0} remote Git repositories",
-                                        paramRepos));
-
-                    boolean fetched = false;
-
-                    for (RemoteConfig remoteRepository : paramRepos) {
-                        if (fetchFrom(git, listener, remoteRepository)) {
-                            fetched = true;
-                        }
-                    }
-
-                    if (!fetched) {
-                        listener.error("Could not fetch from any repository");
-                        throw new GitException("Could not fetch from any repository");
-                    }
-                    // Do we want to prune first?
-                    if (pruneBranches) {
-                        log.println("Pruning obsolete local branches");
-                        for (RemoteConfig remoteRepository : paramRepos) {
-                            git.prune(remoteRepository);
-                        }
-                    }
-
-                } else {
-
-                    log.println("Cloning the remote Git repository");
-
-                    // Go through the repositories, trying to clone from one
-                    //
-                    boolean successfullyCloned = false;
-                    for (RemoteConfig rc : paramRepos) {
-                        try {
-                            git.clone(rc);
-                            successfullyCloned = true;
-                            break;
-                        } catch (GitException ex) {
-                            ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
-                            // Failed. Try the next one
-                            log.println("Trying next repository");
-                        }
-                    }
-
-                    if (!successfullyCloned) {
-                        listener.error("Could not clone repository");
-                        throw new GitException("Could not clone");
-                    }
-
-                    boolean fetched = false;
-
-                    // Also do a fetch
-                    for (RemoteConfig remoteRepository : paramRepos) {
-                        try {
-                            git.fetch(remoteRepository);
-                            fetched = true;
-                        } catch (Exception e) {
-                            e.printStackTrace(listener.error(
-                                    "Problem fetching from " + remoteRepository.getName()
-                                    + " / " + remoteRepository.getName()
-                                    + " - could be unavailable. Continuing anyway."));
-                        }
-                    }
-
-                    if (!fetched) {
-                        listener.error("Could not fetch from any repository");
-                        throw new GitException("Could not fetch from any repository");
-                    }
-
-                    if (getClean()) {
-                        log.println("Cleaning workspace");
-                        git.clean();
-
-                        if (git.hasGitModules() && !disableSubmodules) {
-                            git.submoduleClean(recursiveSubmodules);
-                        }
-                    }
-                }
-
-                if (parentLastBuiltRev != null) {
-                    return parentLastBuiltRev;
-                }
-
-                if (rpa != null) {
-                    return rpa.toRevision(git);
-                }
-
-                Collection<Revision> candidates = buildChooser.getCandidateRevisions(
-                        false, singleBranch, git, listener, buildData, context);
-                if (candidates.size() == 0) {
-                    return null;
-                }
-                return candidates.iterator().next();
-            }
-        });
-
+        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
+                environment, gitExe, listener);
 
         if (revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
@@ -1427,14 +1439,7 @@ public class GitSCM extends SCM implements Serializable {
     public String getScmName() {
         return scmName;
     }
-
-    /** Compares the SCM names for equality even if they're null. */
-    private boolean sameScm(String scmName1, String scmName2) {
-        scmName1 = (scmName1 == null ? "" : scmName1);
-        scmName2 = (scmName2 == null ? "" : scmName2);
-        return scmName1.equals(scmName2);
-    }
-
+    
     @Extension
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
@@ -1701,9 +1706,19 @@ public class GitSCM extends SCM implements Serializable {
         return userMergeOptions;
     }
 
+    private boolean isRelevantBuildData(BuildData bd) {
+        for(UserRemoteConfig c : getUserRemoteConfigs()) {
+            if(bd.hasBeenReferenced(c.getUrl())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
-     * Look back as far as needed to find a valid BuildData.  BuildData
+     * Find the build log (BuildData) recorded with the last build that completed. BuildData
      * may not be recorded if an exception occurs in the plugin logic.
+     *
      * @param build
      * @param clone
      * @return the last recorded build data
@@ -1713,7 +1728,7 @@ public class GitSCM extends SCM implements Serializable {
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
             for (BuildData bd : buildDataList) {
-                if (bd != null && sameScm(bd.getScmName(), scmName)) {
+                if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
                     break;
                 }
@@ -1725,7 +1740,7 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         if (buildData == null) {
-            return clone ? new BuildData(getScmName()) : null;
+            return clone ? new BuildData(getScmName(), getUserRemoteConfigs()) : null;
         }
 
         if (clone) {

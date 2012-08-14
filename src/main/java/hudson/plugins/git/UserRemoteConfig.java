@@ -42,6 +42,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         return url;
     }
 
+    public String toString() {
+        return getRefspec() + " => " + getUrl() + " (" + getName() + ")";
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
         public FormValidation doCheckUrl(@QueryParameter String value) {

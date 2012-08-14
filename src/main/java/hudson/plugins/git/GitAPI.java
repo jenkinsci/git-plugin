@@ -83,6 +83,7 @@ public class GitAPI implements IGitAPI {
 
         try {
             String v = firstLine(launchCommand("--version")).trim();
+            listener.getLogger().println("git --version\n" + v);
             Pattern p = Pattern.compile("git version ([0-9]+)\\.([0-9+])\\..*");
             Matcher m = p.matcher(v);
             if (m.matches() && m.groupCount() >= 2) {
@@ -226,7 +227,10 @@ public class GitAPI implements IGitAPI {
      * @throws GitException if deleting or cloning the workspace fails
      */
     public void clone(final RemoteConfig remoteConfig) throws GitException {
-        listener.getLogger().println("Cloning repository " + remoteConfig.getName());
+        // Assume only 1 URL for this repository
+        final String source = remoteConfig.getURIs().get(0).toPrivateString();
+
+        listener.getLogger().println("Cloning repository " + source);
         final int[] gitVer = getGitVersion();
 
         // TODO: Not here!
@@ -236,9 +240,6 @@ public class GitAPI implements IGitAPI {
             e.printStackTrace(listener.error("Failed to clean the workspace"));
             throw new GitException("Failed to delete workspace", e);
         }
-
-        // Assume only 1 URL for this repository
-        final String source = remoteConfig.getURIs().get(0).toPrivateString();
 
         try {
             workspace.act(new FileCallable<String>() {
