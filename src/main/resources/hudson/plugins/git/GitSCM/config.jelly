@@ -93,6 +93,9 @@
     <f:entry title="Config user.email Value" field="gitConfigEmail">
       <f:textbox />
     </f:entry>
+    <f:entry title="Commit Environment Variable Name" field="gitCommitEnvVarName">
+      <f:textbox />
+    </f:entry>
 
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">
