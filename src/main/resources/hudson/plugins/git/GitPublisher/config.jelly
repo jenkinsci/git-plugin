@@ -79,7 +79,7 @@
         <table width="100%">
           <br/>
           <f:entry title="${%Note to push}"    field="noteMsg" >
-            <f:textbox checkUrl="'descriptorByName/GitPublisher/checkNoteMsg?value='+escape(this.value)" />
+            <f:textarea checkUrl="'descriptorByName/GitPublisher/checkNoteMsg?value='+escape(this.value)" />
           </f:entry>
           
           <f:entry field="targetRepoName" title="${%Target remote name}">
