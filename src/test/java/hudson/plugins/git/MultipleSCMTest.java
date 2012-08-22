@@ -100,7 +100,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  null,
 				  false,
 				  null,
-				  false);
+				  false, false);
 
 		SCM repo1Scm = new GitSCM("repo1",
 				  repo1.remoteConfigs(),
@@ -127,7 +127,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  null,
 				  false,
 				  null,
-				  false);
+				  false, false);
 		
 		List<SCM> testScms = new ArrayList<SCM>();
 		testScms.add(repo0Scm);
