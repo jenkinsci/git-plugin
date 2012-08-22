@@ -266,7 +266,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             user = User.get(csAuthorEmail.split("@")[0], true);
     
         // set email address for user if none is already available
-        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class)==null) {
+        if (fixEmpty(csAuthorEmail) != null) { // && user.getProperty(Mailer.UserProperty.class)==null) {
             try {
                 user.addProperty(new Mailer.UserProperty(csAuthorEmail));
             } catch (IOException e) {
