@@ -16,6 +16,7 @@ import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
@@ -83,7 +84,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testBasicRemotePoll() throws Exception {
 //        FreeStyleProject project = setupProject("master", true, false);
-        FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
+        FreeStyleProject project = setupProject("master", false, null, null, null, true, null, null);
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -328,7 +329,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
         assertEquals("Did not get the committer as the change author with authorOrCommiter==false",
-                     janeDoe.getName(), secondCulprits.iterator().next().getFullName());
+                janeDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
     public void testAuthorOrCommitterTrue() throws Exception {
@@ -385,6 +386,17 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+    }
+
+    public void testCustomizedCommitEnvVar() throws Exception {
+        FreeStyleProject project = setupProject("master", false, null, null, null, false, null, "CUSTOM_COMMIT");
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
+        BuildData buildData = build.getAction(BuildData.class);
+        String lastBuiltRev = buildData.getLastBuiltRevision().getSha1String();
+        assertEquals(lastBuiltRev, getEnvVars(project).get("CUSTOM_COMMIT"));
     }
 
     // For HUDSON-7411
@@ -603,7 +615,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String excludedRegions,
                                           String excludedUsers,
                                           String includedRegions) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, false, includedRegions);
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null,
+                false, includedRegions, null);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
@@ -611,14 +624,16 @@ public class GitSCMTest extends AbstractGitTestCase {
             String excludedRegions,
             String excludedUsers,
             boolean fastRemotePoll,
-            String includedRegions) throws Exception {
-        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null, fastRemotePoll, includedRegions);
+            String includedRegions,
+            String commitEnvVarName) throws Exception {
+        return setupProject(branchString, authorOrCommitter, relativeTargetDir, excludedRegions, excludedUsers, null,
+                fastRemotePoll, includedRegions, commitEnvVarName);
     }
 
     private FreeStyleProject setupProject(String branchString, boolean authorOrCommitter,
                                           String relativeTargetDir, String excludedRegions,
                                           String excludedUsers, String localBranch, boolean fastRemotePoll,
-                                          String includedRegions) throws Exception {
+                                          String includedRegions, String commitEnvVarName) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
@@ -628,7 +643,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
                 excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false,
-                includedRegions, false));
+                includedRegions, false, commitEnvVarName));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }

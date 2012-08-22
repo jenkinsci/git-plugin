@@ -68,6 +68,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -142,7 +143,7 @@ public class GitSCM extends SCM implements Serializable {
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
-    public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String DEFAULT_GIT_COMMIT = "GIT_COMMIT";
     private String relativeTargetDir;
     private String reference;
     private String excludedRegions;
@@ -152,6 +153,7 @@ public class GitSCM extends SCM implements Serializable {
     private boolean skipTag;
     private String includedRegions;
     private String scmName;
+    private String gitCommitEnvVarName;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -182,7 +184,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false);
+                null, null, null, false, false, false, false, null, null, false, null, false, null);
     }
 
     @DataBoundConstructor
@@ -211,7 +213,8 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigEmail,
             boolean skipTag,
             String includedRegions,
-            boolean ignoreNotifyCommit) {
+            boolean ignoreNotifyCommit,
+            String gitCommitEnvVarName) {
 
         this.scmName = scmName;
 
@@ -276,6 +279,7 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
         this.includedRegions = includedRegions;
+        this.gitCommitEnvVarName = gitCommitEnvVarName;
         buildChooser.gitSCM = this; // set the owner
     }
 
@@ -524,6 +528,17 @@ public class GitSCM extends SCM implements Serializable {
 
     public boolean isIgnoreNotifyCommit() {
         return ignoreNotifyCommit;
+    }
+
+    public String getGitCommitEnvVarName() {
+        return gitCommitEnvVarName;
+    }
+
+    public String getActualCommitEnvVarName() {
+        if (StringUtils.isNotBlank(gitCommitEnvVarName)) {
+            return gitCommitEnvVarName;
+        }
+        return DEFAULT_GIT_COMMIT;
     }
 
     public BuildChooser getBuildChooser() {
@@ -1201,7 +1216,7 @@ public class GitSCM extends SCM implements Serializable {
             return false;
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
-        environment.put(GIT_COMMIT, revToBuild.getSha1String());
+        environment.put(getActualCommitEnvVarName(), revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
@@ -1405,7 +1420,7 @@ public class GitSCM extends SCM implements Serializable {
         if (rev != null) {
             String commit = rev.getSha1String();
             if (commit != null) {
-                env.put(GIT_COMMIT, commit);
+                env.put(getActualCommitEnvVarName(), commit);
             }
         }
 
