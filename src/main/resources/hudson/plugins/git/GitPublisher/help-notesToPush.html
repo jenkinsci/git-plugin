@@ -1,3 +1,8 @@
 Specify notes to push at the completion of the build.
 Environment variables may be used in notes - they will be replaced at build time.
 Note's namespace and remote repository's name are optional. Those are master and origin by default.
+
+<br /> <br />
+Note messages additional environment variables:<br />
+$BUILDRESULT = Build result so far. This doesn't pay attention to all post-build actions <br />
+$BUILDDURATION = Says how long the build took to run. This doesn't include time which is spent to post-build actions. <br />

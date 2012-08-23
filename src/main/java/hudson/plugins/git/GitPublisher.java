@@ -138,7 +138,29 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
         };
     }
+    
+    private String replaceAdditionalEnvironmentalVariables(String input, AbstractBuild<?, ?> build){
+    	if (build == null){
+    		return input;
+    	}
+        String buildResult = build.getResult().toString();
+        String buildDuration = build.getDurationString();
 
+        if ( buildResult == null){ 
+        	buildResult = ""; 
+        }
+        if ( buildDuration == null){ 
+        	buildDuration = ""; 
+        }
+        else{
+        	buildDuration = buildDuration.replaceAll("and counting", "");
+        }
+        
+        input = input.replaceAll("\\$BUILDRESULT", buildResult);
+        input = input.replaceAll("\\$BUILDDURATION", buildDuration);
+        return input;
+    }
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
                            Launcher launcher, final BuildListener listener)
@@ -377,7 +399,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     }
                     
                     b.setEmptyTargetRepoToOrigin();
-                    final String noteMsg = environment.expand(b.getnoteMsg());
+                    String noteMsgTmp = environment.expand(b.getnoteMsg());
+                    final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
                     final String noteNamespace = environment.expand(b.getnoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
                     final boolean noteReplace = b.getnoteReplace();
