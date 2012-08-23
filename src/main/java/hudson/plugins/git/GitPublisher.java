@@ -425,7 +425,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             return false;
                                         }
                                         
-                                        listener.getLogger().println("Adding note \"" + noteMsg + "\" to namespace \""+noteNamespace +"\"" );
+                                        listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
                                         if ( noteReplace )
                                         	git.addNote(    noteMsg, noteNamespace );
@@ -439,7 +439,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     }
                                 });
                         } catch (Throwable e) {
-                            e.printStackTrace(listener.error("Failed to add note \"" + noteMsg + "\" to \"" + noteNamespace+"\""));
+                            e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
                             build.setResult(Result.FAILURE);
                             noteResult = false;
                         }
@@ -655,7 +655,6 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     		else
     			this.noteNamespace = "master";
             
-        //    throw new GitException("Toimii2 " + this.noteMsg + "   namespace: "+this.noteNamespace );
         }
 
         @Extension
