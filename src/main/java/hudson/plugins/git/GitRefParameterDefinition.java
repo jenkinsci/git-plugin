@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,17 +29,18 @@ public class GitRefParameterDefinition extends SimpleParameterDefinition {
 
     private static final long serialVersionUID = 7966621119782624226L;
     private String repo;
+    private boolean reverse;
 
     @DataBoundConstructor
-    public GitRefParameterDefinition(String name, String repo) {
+    public GitRefParameterDefinition(String name, String repo, boolean reverse) {
         super(name, "Select a Git reference (Repository URL: " + repo + ")");
         this.repo = repo;
+        this.reverse = reverse;
     }
 
     @Override
     public ParameterValue createValue(StaplerRequest req, JSONObject jo) {
-        GitRefParameterValue value = req.bindJSON(GitRefParameterValue.class,
-                jo);
+        GitRefParameterValue value = req.bindJSON(GitRefParameterValue.class, jo);
         return value;
     }
 
@@ -113,6 +115,11 @@ public class GitRefParameterDefinition extends SimpleParameterDefinition {
             throw new GitException("Error parsing ref list", e);
         }
 
+        // Display the refs in reverse order?
+        if (reverse) {
+            Collections.reverse(refs);
+        }
+
         return refs;
     }
 
@@ -122,6 +129,14 @@ public class GitRefParameterDefinition extends SimpleParameterDefinition {
 
     public void setRepo(String repo) {
         this.repo = repo;
+    }
+
+    public boolean getReverse() {
+        return reverse;
+    }
+
+    public void setReverse(boolean reverse) {
+        this.reverse = reverse;
     }
 
 }

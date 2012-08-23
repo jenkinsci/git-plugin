@@ -5,4 +5,7 @@
     <f:entry title="Repository URL" field="repo">
         <f:textbox name="parameter.repo" value="${instance.repo}" />
     </f:entry>
+    <f:entry title="List references in reverse order" field="reverse">
+        <f:checkbox name="parameter.reverse" checked="${instance.reverse}" />
+    </f:entry>
 </j:jelly>
