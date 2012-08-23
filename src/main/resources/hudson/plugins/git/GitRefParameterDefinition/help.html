@@ -1,0 +1,18 @@
+<div>
+    Defines a Git repository reference ("ref") build parameter, enabling
+    selection from a dynamic list of a remote Git repository's
+    <strong>head</strong> and <strong>tag</strong> refs.
+
+    If you wish to see what a ref looks like, or see the list of refs for a
+    given Git repository, you can use the following Git command:
+    <p><pre>    git ls-remote http://www.kernel.org/pub/scm/git/git.git</pre></p>
+    The resulting list of SHA-1 & ref tuples indicates how ref values appear, i.e.:
+    <p><pre>    fc98289584956de9ab1402a4cd607415926f5e68        refs/tags/v1.7.11.4</pre></p>
+
+    This parameter is particularly useful in conjunction with Git Source Code
+    Management by way of parameterizing the repository
+    <strong>refspec</strong>, thus controlling which head or tag is built.
+    For example, if Name is set to <code>GIT_REF</code>,
+    its value can be utilized in each build by setting the Git repository
+    Refspec to <code>+${GIT_REF}:refs/remotes/origin/master</code>.
+</div>

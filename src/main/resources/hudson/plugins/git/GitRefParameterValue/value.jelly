@@ -1,0 +1,8 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry title="Git Repository">
+        <f:textbox name="repo" value="${it.repo}" />
+    </f:entry>
+    <f:entry title="Git Ref">
+        <f:textbox name="ref" value="${it.ref}" />
+    </f:entry>
+</j:jelly>
