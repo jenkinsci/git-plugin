@@ -41,6 +41,7 @@ import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -168,10 +169,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Bug(value = 8342)
-    public void testExcludedRegionMultiCommit() throws Exception {/*
+    public void testExcludedRegionMultiCommit() throws Exception {
         // Got 2 projects, each one should only build if changes in its own file
-        FreeStyleProject clientProject = setupProject("master", false, null, ".*serverFile", null);
-        FreeStyleProject serverProject = setupProject("master", false, null, ".*clientFile", null);
+        FreeStyleProject clientProject = setupProject("master", false, null, ".*serverFile", null, null);
+        FreeStyleProject serverProject = setupProject("master", false, null, ".*clientFile", null, null);
         String initialCommitFile = "initialFile";
         commit(initialCommitFile, johnDoe, "initial commit");
         build(clientProject, Result.SUCCESS, initialCommitFile);
@@ -192,7 +193,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertTrue("scm polling did not detect changes in client project", clientProject.poll(listener).hasChanges());
         assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
-    */}
+    }
 
     public void testBasicExcludedUser() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, "Jane Doe", null);
@@ -493,6 +494,80 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.pollSCMChanges(listener));
     }
 
+    /**
+     * With multiple branches specified in the project and having commits from a user
+     * excluded should not build the excluded revisions when another branch changes.
+     */
+    public void testMultipleBranchWithExcludedUser() throws Exception {
+        final String branch1 = "Branch1";
+        final String branch2 = "Branch2";
+
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("master"));
+        branches.add(new BranchSpec(branch1));
+        branches.add(new BranchSpec(branch2));
+        final FreeStyleProject project = setupProject(branches, false, null,
+                                                      null, janeDoe.getName(),
+                                                      null, false, null);
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        // create branches here so we can get back to them later...
+        git.branch(branch1);
+        git.branch(branch2);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling should detect changes in 'master' branch", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile1, commitFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+
+        // Add excluded commit
+        final String commitFile4 = "commitFile4";
+        commit(commitFile4, janeDoe, "Commit number 4");
+        assertFalse("scm polling detected change in 'master', which should have been excluded", project.poll(listener).hasChanges());
+
+        // now jump back...
+        git.checkout(branch1);
+        final String branch1File1 = "branch1File1";
+        commit(branch1File1, janeDoe, "Branch1 commit number 1");
+        assertFalse("scm polling detected change in 'Branch1', which should have been excluded", project.poll(listener).hasChanges());
+
+        // and the other branch...
+        git.checkout(branch2);
+
+        final String branch2File1 = "branch2File1";
+        commit(branch2File1, janeDoe, "Branch2 commit number 1");
+        assertFalse("scm polling detected change in 'Branch2', which should have been excluded", project.poll(listener).hasChanges());
+
+        final String branch2File2 = "branch2File2";
+        commit(branch2File2, johnDoe, "Branch2 commit number 2");
+        assertTrue("scm polling should detect changes in 'Branch2' branch", project.poll(listener).hasChanges());
+
+        //... and build it...
+        build(project, Result.SUCCESS, branch2File1, branch2File2);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        // now jump back again...
+        git.checkout(branch1);
+
+        // Commit excluded after non-excluded commit, should trigger build.
+        final String branch1File2 = "branch1File2";
+        commit(branch1File2, johnDoe, "Branch1 commit number 2");
+        final String branch1File3 = "branch1File3";
+        commit(branch1File3, janeDoe, "Branch1 commit number 3");
+        assertTrue("scm polling should detect changes in 'Branch1' branch", project.poll(listener).hasChanges());
+
+        build(project, Result.SUCCESS, branch1File1, branch1File2, branch1File3);
+    }
+
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
         FilePath moduleWs = new FilePath(createTmpDir());
@@ -619,11 +694,21 @@ public class GitSCMTest extends AbstractGitTestCase {
                                           String relativeTargetDir, String excludedRegions,
                                           String excludedUsers, String localBranch, boolean fastRemotePoll,
                                           String includedRegions) throws Exception {
+        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
+                            authorOrCommitter, relativeTargetDir, excludedRegions,
+                            excludedUsers, localBranch, fastRemotePoll,
+                            includedRegions);
+    }
+
+    private FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
+                                          String relativeTargetDir, String excludedRegions,
+                                          String excludedUsers, String localBranch, boolean fastRemotePoll,
+                                          String includedRegions) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
                 createRemoteRepositories(relativeTargetDir),
-                Collections.singletonList(new BranchSpec(branchString)),
+                branches,
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
