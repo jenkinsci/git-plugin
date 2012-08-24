@@ -27,7 +27,7 @@ public class GitRefParameterDefinition extends SimpleParameterDefinition {
 
     @Override
     public ParameterValue createValue(StaplerRequest req, JSONObject jo) {
-        GitRefParameterValue value = req.bindJSON(GitRefParameterValue.class, jo);
+        final GitRefParameterValue value = req.bindJSON(GitRefParameterValue.class, jo);
         return value;
     }
 
@@ -45,7 +45,7 @@ public class GitRefParameterDefinition extends SimpleParameterDefinition {
     }
 
     public List<String> getRefs() {
-        ArrayList<String> refs = GitStandaloneAPI.gitListReferences(GitStandaloneAPI.anyGitTool(), repo);
+        final ArrayList<String> refs = GitStandaloneAPI.gitListReferences(GitStandaloneAPI.anyGitTool(), repo);
 
         // Display the refs in reverse order?
         if (reverse) {

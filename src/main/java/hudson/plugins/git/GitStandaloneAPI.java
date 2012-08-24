@@ -22,33 +22,33 @@ import org.apache.commons.lang.StringUtils;
  */
 public class GitStandaloneAPI {
 
-    public static Pattern SHA1_REF_ENTRY = Pattern.compile("^([0-9a-f]{40})\t(refs/.*)$");
+    public static final Pattern SHA1_REF_ENTRY = Pattern.compile("^([0-9a-f]{40})[ \t]+(refs/.*)$");
 
     public static GitTool anyGitTool() {
-        hudson.plugins.git.GitTool.DescriptorImpl descriptor = (hudson.plugins.git.GitTool.DescriptorImpl) Hudson.getInstance().getDescriptor(GitTool.class);
-        GitTool[] tools = descriptor.getInstallations();
+        final hudson.plugins.git.GitTool.DescriptorImpl descriptor = (hudson.plugins.git.GitTool.DescriptorImpl) Hudson.getInstance().getDescriptor(GitTool.class);
+        final GitTool[] tools = descriptor.getInstallations();
         if (tools.length < 1) {
             throw new GitException ("No GitTool found.");
         }
 
-        GitTool tool = tools[0]; // Arbitrarily use the first tool presented.
+        final GitTool tool = tools[0]; // Arbitrarily use the first tool presented.
 
         return tool;
     }
 
-    public static String gitExecuteCommand(GitTool tool, ArgumentListBuilder args) {
+    public static String gitExecuteCommand(final GitTool tool, final ArgumentListBuilder args) {
         String result = null;
 
-        ByteArrayOutputStream fos = new ByteArrayOutputStream();
-        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        final ByteArrayOutputStream fos = new ByteArrayOutputStream();
+        final ByteArrayOutputStream err = new ByteArrayOutputStream();
         try {
-            Launcher launcher = new LocalLauncher(TaskListener.NULL);
-            String gitExe = tool.getGitExe();
+            final Launcher launcher = new LocalLauncher(TaskListener.NULL);
+            final String gitExe = tool.getGitExe();
             if (gitExe == null) {
                 throw new GitException("gitExe is null");
             }
             args.prepend(gitExe);
-            int status = launcher.launch().cmds(args.toCommandArray()).stdout(fos).stderr(err).join();
+            final int status = launcher.launch().cmds(args.toCommandArray()).stdout(fos).stderr(err).join();
             if (status != 0) {
                 throw new GitException("Command \""
                         + StringUtils.join(args.toCommandArray(), " ")
@@ -65,22 +65,22 @@ public class GitStandaloneAPI {
         return result;
     }
 
-    public static ArrayList<String> gitListReferences(GitTool tool, String repositoryURL) {
-        ArrayList<String> refs = new ArrayList<String>();
+    public static ArrayList<String> gitListReferences(final GitTool tool, final String repositoryURL) {
+        final ArrayList<String> refs = new ArrayList<String>();
 
         // Assemble Git command
-        ArgumentListBuilder args = new ArgumentListBuilder("ls-remote", "--heads", "--tags", repositoryURL);
+        final ArgumentListBuilder args = new ArgumentListBuilder("ls-remote", "--heads", "--tags", repositoryURL);
 
-        String result = gitExecuteCommand(tool, args);
+        final String result = gitExecuteCommand(tool, args);
 
         // Match refs
-        BufferedReader rdr = new BufferedReader(new StringReader(result));
+        final BufferedReader rdr = new BufferedReader(new StringReader(result));
         String line;
         try {
             while ((line = rdr.readLine()) != null) {
-                Matcher matcher = GitStandaloneAPI.SHA1_REF_ENTRY.matcher(line);
+                final Matcher matcher = GitStandaloneAPI.SHA1_REF_ENTRY.matcher(line);
                 if (matcher.matches()) {
-                    String ref = matcher.group(2);
+                    final String ref = matcher.group(2);
                     refs.add(ref);
                 }
             }
