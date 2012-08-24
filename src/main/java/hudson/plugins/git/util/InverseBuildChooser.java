@@ -91,6 +91,9 @@ public class InverseBuildChooser extends BuildChooser {
             }
         }
 
+        // Don't want branches with only excluded revisions
+        branchRevs = utils.filterExcludedRevs(branchRevs, gitSCM, buildData);
+
         // If we're in a build (not an SCM poll) and nothing new was found, run the last build again
         if (!isPollCall && branchRevs.isEmpty() && buildData.getLastBuiltRevision() != null) {
             listener.getLogger().println(Messages.BuildChooser_BuildingLastRevision());

@@ -744,16 +744,8 @@ public class GitSCM extends SCM implements Serializable {
 
                     listener.getLogger().println("Polling for changes in");
 
-                    Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
+                    Collection<Revision> candidates = buildChooser.getCandidateRevisions(
                             true, singleBranch, git, listener, buildData, context);
-
-                    List<Revision> candidates = new ArrayList<Revision>();
-
-                    for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, c, listener)) {
-                            candidates.add(c);
-                        }
-                    }
 
                     return (candidates.size() > 0);
                 } else {
@@ -1816,6 +1808,16 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
+     * Is there any exclusion rule?
+     */
+    public boolean hasExclusionRule() {
+        String[] includedRegions = getIncludedRegionsNormalized();
+        String[] excludedRegions = getExcludedRegionsNormalized();
+        Set<String> excludedUsers = getExcludedUsersNormalized();
+        return excludedRegions != null || !excludedUsers.isEmpty() || includedRegions != null;
+    }
+
+    /**
      * Given a Revision, check whether it matches any exclusion rules.
      *
      * @param git IGitAPI object
@@ -1823,7 +1825,7 @@ public class GitSCM extends SCM implements Serializable {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener) {
+    public boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener) {
         try {
             List<String> revShow = git.showRevision(r);
 

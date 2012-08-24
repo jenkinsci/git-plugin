@@ -17,6 +17,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.GitSCM;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,8 +34,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.eclipse.jgit.errors.MissingObjectException;
 
 public class GitUtils {
     IGitAPI git;
@@ -166,6 +170,99 @@ public class GitUtils {
         if (log)
             LOGGER.fine(MessageFormat.format(
                     "Computed {0} merge bases in {1} ms", calls,
+                    (System.currentTimeMillis() - start)));
+
+        return l;
+    }
+
+    /**
+     * Return a list of commits that have non excluded changes since the last build.
+     *
+     * @param revisions
+     * @param gitSCM
+     * @param data
+     * @return filtered revisions
+     */
+    @WithBridgeMethods(Collection.class)
+    public List<Revision> filterExcludedRevs(Collection<Revision> revisions,
+                                             GitSCM gitSCM, BuildData data) {
+
+        final List<Revision> l = new ArrayList<Revision>(revisions);
+
+        // Nothing to exclude, skip the rev walk.
+        if (!gitSCM.hasExclusionRule() || l.isEmpty())
+            return l;
+
+        Revision revBranch;
+        ObjectId shaBranch;
+        RevWalk walk = null;
+        RevCommit c;
+        final long start = System.currentTimeMillis();
+        long calls = 0;
+
+        LOGGER.fine(MessageFormat.format(
+                    "Computing new revs of {0} branches", l.size()));
+        try {
+            walk = new RevWalk(git.getRepository());
+            walk.setRetainBody(false);
+            for (int i = 0; i < l.size(); i++) {
+                revBranch = l.get(i);
+                shaBranch = revBranch.getSha1();
+
+                LOGGER.finest(MessageFormat.format(
+                            "Starting rev-walk from {0}", shaBranch));
+
+                walk.reset();
+                walk.markStart(walk.parseCommit(shaBranch));
+
+                // Skip all previously built commits.
+                for (Build b : data.getBuildsByBranchName().values()) {
+                    try {
+                        walk.markUninteresting(walk.parseCommit(b.revision.getSha1()));
+                    }
+                    catch (MissingObjectException ex) {
+                        LOGGER.fine(MessageFormat.format(
+                                    "Commit object for build of {0} not found",
+                                    b.revision.getSha1()));
+                    }
+                }
+
+                boolean hasChanges = false;
+
+                while ((c = walk.next()) != null) {
+                    calls++;
+                    LOGGER.finest(MessageFormat.format(
+                                "At revision {0}", c.getId()));
+
+                    Revision r = new Revision(c.getId());
+                    if (!gitSCM.isRevExcluded(git, r, listener)) {
+                        hasChanges = true;
+                        break;
+                    }
+
+                    LOGGER.finest(MessageFormat.format(
+                                "Revision {0} excluded", c.getId()));
+                }
+
+                if (!hasChanges) {
+                    LOGGER.fine("filterExcludedRevs: " + revBranch
+                                + " does not have any changes");
+                    l.remove(i);
+                    i--;
+                } else {
+                    LOGGER.fine("filterExcludedRevs: " + revBranch
+                                + " has changes");
+                }
+            }
+        } catch (IOException e) {
+            throw new GitException("Error walking revs", e);
+        } finally {
+            if (walk != null)
+                walk.release();
+        }
+
+        LOGGER.fine(MessageFormat.format(
+                    "Computed {0} revs in {1} ms", calls,
                     (System.currentTimeMillis() - start)));
 
         return l;

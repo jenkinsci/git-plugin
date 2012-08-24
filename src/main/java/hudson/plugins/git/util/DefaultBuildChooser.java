@@ -95,6 +95,13 @@ public class DefaultBuildChooser extends BuildChooser {
             revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
         }
 
+        // Don't want a HEAD revision with only excluded revisions when polling.
+        if (isPollCall) {
+            GitUtils utils = new GitUtils(listener, git);
+            revisions = utils.filterExcludedRevs(revisions, gitSCM, data);
+            verbose(listener, "After exclusion filtering: {0}", revisions);
+        }
+
         return revisions;
     }
 
@@ -220,6 +227,10 @@ public class DefaultBuildChooser extends BuildChooser {
         }
         verbose(listener, "After filtering out what''s already been built: {0}", revs);
 
+        // 5. Don't want branches with only excluded revisions
+        revs = utils.filterExcludedRevs(revs, gitSCM, data);
+        verbose(listener, "After exclusion filtering: {0}", revs);
+
         // if we're trying to run a build (not an SCM poll) and nothing new
         // was found then just run the last build again
         if (!isPollCall && revs.isEmpty() && data.getLastBuiltRevision() != null) {
@@ -227,7 +238,7 @@ public class DefaultBuildChooser extends BuildChooser {
             return Collections.singletonList(data.getLastBuiltRevision());
         }
 
-        // 5. sort them by the date of commit, old to new
+        // 6. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
         Collections.sort(revs,new CommitTimeComparator(utils.git.getRepository()));
 
