@@ -315,7 +315,7 @@ public class GitAPI implements IGitAPI {
 
     public ObjectId validateRevision(String revName) throws GitException {
         String result = launchCommand("rev-parse", "--verify", revName);
-        return ObjectId.fromString(firstLine(result).trim());
+        return ObjectId.fromString(lastLine(result).trim());
     }
 
     public String describe(String commitIsh) throws GitException {
@@ -342,6 +342,29 @@ public class GitAPI implements IGitAPI {
                 return null;
             if (reader.readLine() != null)
                 throw new GitException("Result has multiple lines");
+        } catch (IOException e) {
+            throw new GitException("Error parsing result", e);
+        }
+
+        return line;
+    }
+
+    private String lastLine(String result) {
+        BufferedReader reader = new BufferedReader(new StringReader(result));
+        String line;
+        try {
+            line = reader.readLine();
+            if (line == null)
+                return null;
+            String next = reader.readLine();
+            if (next != null) {
+                listener.getLogger().println("Result has multiple lines:");
+                listener.getLogger().println(result);
+            }
+            while (next != null) {
+                line = next;
+                next = reader.readLine();
+            }
         } catch (IOException e) {
             throw new GitException("Error parsing result", e);
         }
