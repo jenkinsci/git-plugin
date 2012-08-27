@@ -70,6 +70,22 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         git.launchCommand("commit", "-m", message);
     }
 
+    protected void commit(final String fileNames[], final PersonIdent committer, final String message) throws GitException {
+        setAuthor(committer);
+        setCommitter(committer);
+        for (String fileName: fileNames) {
+            FilePath file = workspace.child(fileName);
+            try {
+                file.write(fileName, null);
+            } catch (Exception e) {
+                throw new GitException("unable to write file", e);
+            }
+
+            git.add(fileName);
+        }
+        git.launchCommand("commit", "-m", message);
+    }
+
     protected void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
                         final String message) throws GitException {
         setAuthor(author);
