@@ -157,6 +157,35 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
 
+    public void testMultiCommitInclude() throws Exception {
+        FreeStyleProject project = setupProject("master", false, null, null, null, ".*2");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        // polling originally checked only the head, so ensure that the included commit is not last
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have two culprit", 2, culprits.size());
+        assertEquals("", johnDoe.getName(), ((User)culprits.toArray()[0]).getFullName());
+        assertEquals("", janeDoe.getName(), ((User)culprits.toArray()[1]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
     public void testIncludeAndExclude() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, ".*2", null, ".*2");
 

@@ -742,20 +742,29 @@ public class GitSCM extends SCM implements Serializable {
                         fetchFrom(git, listener, remoteRepository);
                     }
 
-                    listener.getLogger().println("Polling for changes in");
+                    listener.getLogger().println("Polling for changes");
 
                     Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
                             true, singleBranch, git, listener, buildData, context);
 
-                    List<Revision> candidates = new ArrayList<Revision>();
-
-                    for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, c, listener)) {
-                            candidates.add(c);
+                    for (Revision r : origCandidates) {
+                        final List<ObjectId> commits;
+                        if (buildData.lastBuild != null) {
+                            commits = git.revList(buildData.lastBuild.getRevision().getSha1String() + ".." + r.getSha1String());
+                        } else {
+                            commits = git.revList(r.getSha1String());
+                        }
+                        for (ObjectId commit : commits) {
+                            Revision c = new Revision(commit);
+                            if (!isRevExcluded(git, c, listener)) {
+                                // we only need one included rev to build, so avoid
+                                // unnecessary work and return now.
+                                return true;
+                            }
                         }
                     }
 
-                    return (candidates.size() > 0);
+                    return false;
                 } else {
                     listener.getLogger().println("No Git repository yet, an initial checkout is required");
                     return true;

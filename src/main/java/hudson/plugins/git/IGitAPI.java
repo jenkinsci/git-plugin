@@ -74,6 +74,7 @@ public interface IGitAPI {
 
     List<ObjectId> revListBranch(String branchId) throws GitException;
     List<ObjectId> revListAll() throws GitException;
+    List<ObjectId> revList(String... args) throws GitException;
 
     String describe(String commitIsh) throws GitException;
 
