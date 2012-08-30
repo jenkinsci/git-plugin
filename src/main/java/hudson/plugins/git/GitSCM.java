@@ -1808,8 +1808,6 @@ public class GitSCM extends SCM implements Serializable {
             Pattern[] excludedPatterns = getExcludedRegionsPatterns();
             Set<String> excludedUsers = getExcludedUsersNormalized();
 
-            listener.getLogger().println("Examining commit: " + r.getSha1String());
-            
             String author = change.getAuthorName();
             if (excludedUsers.contains(author)) {
                 // If the author is an excluded user, don't count this entry as a change
@@ -1820,7 +1818,6 @@ public class GitSCM extends SCM implements Serializable {
             List<String> paths = new ArrayList<String>(change.getAffectedPaths());
             if (paths.isEmpty()) {
                 // If there weren't any changed files here, we're just going to return false.
-                listener.getLogger().println("no changed files found");
                 return false;
             }
 
@@ -1831,15 +1828,12 @@ public class GitSCM extends SCM implements Serializable {
                     for (Pattern pattern : includedPatterns) {
                         if (pattern.matcher(path).matches()) {
                             includedPaths.add(path);
-                            listener.getLogger().println("included path: " + path);
                             break;
                         }
                     }
-                    listener.getLogger().println("path NOT included: " + path);
                 }
             } else {
                 includedPaths = paths;
-                listener.getLogger().println("included all paths");
             }
 
             // Assemble the list of excluded paths
@@ -1850,7 +1844,6 @@ public class GitSCM extends SCM implements Serializable {
                     for (Pattern pattern : excludedPatterns) {
                         if (pattern.matcher(path).matches()) {
                             excludedPaths.add(path);
-                            listener.getLogger().println("excluded path: " + path);
                             break;
                         }
                     }
