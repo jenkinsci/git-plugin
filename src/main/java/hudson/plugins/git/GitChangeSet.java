@@ -240,12 +240,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
         User user;
         if (createAccountBasedOnEmail) {
-            user = User.get(csAuthorEmail, true);
-            try {
-                user.setFullName(csAuthor);
-                user.save();
-            } catch (IOException e) {
-                // add logging statement?
+            user = User.get(csAuthorEmail, false);
+
+            if (user == null) {
+                try {
+                    user = User.get(csAuthorEmail, true);
+                    user.setFullName(csAuthor);
+                    user.save();
+                } catch (IOException e) {
+                    // add logging statement?
+                }
             }
         } else {
             user = User.get(csAuthor, false);
