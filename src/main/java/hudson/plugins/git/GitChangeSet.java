@@ -2,7 +2,9 @@ package hudson.plugins.git;
 
 import static hudson.Util.fixEmpty;
 
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.MarkupText;
+import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
@@ -269,13 +271,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     private boolean isCreateAccountBasedOnEmail() {
-        ChangeLogSet parent = getParent();
-        boolean createAccountBasedOnEmail = false;
-        if (parent != null) {
-            createAccountBasedOnEmail = ((GitSCM) parent.build.getProject().getScm()).
-                isCreateAccountBasedOnEmail();
-        }
-        return createAccountBasedOnEmail;
+        DescriptorImpl descriptor = (DescriptorImpl) Hudson.getInstance().getDescriptor(GitSCM.class);
+
+        return descriptor.isCreateAccountBasedOnEmail();
     }
 
     @Override
