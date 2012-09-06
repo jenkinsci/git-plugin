@@ -748,18 +748,24 @@ public class GitSCM extends SCM implements Serializable {
                             true, singleBranch, git, listener, buildData, context);
 
                     for (Revision r : origCandidates) {
-                        final List<ObjectId> commits;
-                        if (buildData.lastBuild != null) {
-                            commits = git.revList(buildData.lastBuild.getRevision().getSha1String() + ".." + r.getSha1String());
-                        } else {
-                            commits = git.revList(r.getSha1String());
-                        }
-                        for (ObjectId commit : commits) {
-                            Revision c = new Revision(commit);
-                            if (!isRevExcluded(git, c, listener)) {
-                                // we only need one included rev to build, so avoid
-                                // unnecessary work and return now.
-                                return true;
+                        // there should normally be only one branch
+                        // multiple branches here will have the same history,
+                        // but check them all anyway in case we haven't built some of them before
+                        for (Branch b: r.getBranches()) {
+                            final List<ObjectId> commits;
+                            Build lastBranchBuild = buildData.getLastBuildOfBranch(b.getName());
+                            if (lastBranchBuild != null) {
+                                commits = git.revList(lastBranchBuild.getRevision().getSha1String() + ".." + r.getSha1String());
+                            } else {
+                                commits = git.revList(r.getSha1String());
+                            }
+                            for (ObjectId commit : commits) {
+                                Revision c = new Revision(commit);
+                                if (!isRevExcluded(git, c, listener)) {
+                                    // we only need one included rev to build, so avoid
+                                    // unnecessary work and return now.
+                                    return true;
+                                }
                             }
                         }
                     }
