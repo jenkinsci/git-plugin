@@ -69,16 +69,19 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
     }
 
+    /**
+     * Returns the build data display name, optionally with SCM name.
+     * This string needs to be relatively short because it is
+     * displayed in a column with other short links.  If it is
+     * lengthened, it causes the other data on the page to shift
+     * right.  The page is then difficult to read.
+     *
+     * @return build data display name
+     */
     public String getDisplayName() {
-        String out_name = "Git Build Data";
-
-        if (!remoteUrls.isEmpty())
-            out_name = out_name + " - " + remoteUrls;
-
         if (scmName != null && !scmName.isEmpty())
-            out_name = out_name + " (" + scmName + ")";
-
-        return out_name;
+            return "Git Build Data:" + scmName;
+        return "Git Build Data";
     }
 
     public String getIconFileName() {
