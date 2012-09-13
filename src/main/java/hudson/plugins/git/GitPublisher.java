@@ -261,6 +261,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     }
                     if (tagResult) {
                         final String tagName = environment.expand(t.getTagName());
+                        final String tagMessage = environment.expand(t.getTagMessage());
                         final String targetRepo = environment.expand(t.getTargetRepoName());
                         
                         try {
@@ -285,7 +286,12 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                                 listener.getLogger().println("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
                                                 return false;
                                             }
-                                            git.tag(tagName, "Jenkins Git plugin tagging with " + tagName);
+
+                                            if (tagMessage.isEmpty()) {
+                                                git.tag(tagName, "Jenkins Git plugin tagging with " + tagName);
+                                            } else {
+                                                git.tag(tagName, tagMessage);
+                                            }
                                         }
                                         else if (!git.tagExists(tagName)) {
                                             listener.getLogger().println("Tag " + tagName + " does not exist and Create Tag is not specified, so failing.");
@@ -581,10 +587,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     public static final class TagToPush extends PushConfig {
         private String tagName;
+        private String tagMessage;
         private boolean createTag;
 
         public String getTagName() {
             return tagName;
+        }
+
+        public String getTagMessage() {
+            return tagMessage;
         }
 
         public boolean isCreateTag() {
@@ -592,9 +603,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         }
 
         @DataBoundConstructor
-        public TagToPush(String targetRepoName, String tagName, boolean createTag) {
+        public TagToPush(String targetRepoName, String tagName, String tagMessage, boolean createTag) {
             super(targetRepoName);
             this.tagName = Util.fixEmptyAndTrim(tagName);
+            this.tagMessage = tagMessage;
             this.createTag = createTag;
         }
 

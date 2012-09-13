@@ -57,7 +57,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(workDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
-                Collections.singletonList(new TagToPush("origin","foo",true)),
+                Collections.singletonList(new TagToPush("origin","foo","message",true)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
                 true, true) {
@@ -86,6 +86,8 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
         assertTrue(existsTag("foo"));
 
+        assertTrue(containsTagMessage("foo", "message"));
+
         // twice for MatrixRun, which is to be ignored, then once for matrix completion
         assertEquals(3,run[0]);
     }
@@ -94,5 +96,11 @@ public class GitPublisherTest extends AbstractGitTestCase {
         String tags = git.launchCommand("tag");
         System.out.println(tags);
         return tags.contains(tag);
+    }
+
+    private boolean containsTagMessage(String tag, String str) {
+        String msg = git.launchCommand("tag", "-l", tag, "-n");
+        System.out.println(msg);
+        return msg.contains(str);
     }
 }
