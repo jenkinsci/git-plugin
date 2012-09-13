@@ -34,6 +34,10 @@
                    title="${%Tag to push}">
             <f:textbox checkUrl="'descriptorByName/GitPublisher/checkTagName?value='+escape(this.value)" />
           </f:entry>
+          <f:entry field="tagMessage"
+                   title="${%Tag message}">
+            <f:textarea/>
+          </f:entry>
           <f:entry field="createTag"
                    title="${%Create new tag}">
             <f:checkbox />
