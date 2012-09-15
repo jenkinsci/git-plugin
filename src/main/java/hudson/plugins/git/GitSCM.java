@@ -777,7 +777,6 @@ public class GitSCM extends SCM implements Serializable {
 
         for (IndexEntry submodule : submodules) {
             try {
-                RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(parentGit, remoteRepository, submodule.getFile());
                 File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
                 IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
@@ -819,73 +818,12 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * Fetch submodule information from relative to a particular remote repository.
+     * This does not yield the correct RemoteConfig - the refspec is taken from
+     * the parent repository, which is probably not valid inside the submodule.
      *
-     * @param git
-     * @param listener
-     * @param remoteRepository
-     * @return true if fetch goes through, false otherwise.
-     * @throws
+     * @deprecated
      */
-    private boolean fetchSubmodulesFrom(IGitAPI git,
-            File workspace,
-            TaskListener listener,
-            RemoteConfig remoteRepository) {
-        boolean fetched = true;
-
-        try {
-            // This ensures we don't miss changes to submodule paths and allows
-            // seamless use of bare and non-bare superproject repositories.
-            git.setupSubmoduleUrls(remoteRepository.getName(), listener);
-
-            /* with the new re-ordering of "git checkout" and the submodule
-             * commands, it appears that this test will always succeed... But
-             * we'll keep it anyway for now. */
-            boolean hasHead = true;
-            try {
-                git.revParse("HEAD");
-            } catch (GitException e) {
-                hasHead = false;
-            }
-
-            if (hasHead) {
-                List<IndexEntry> submodules = git.getSubmodules("HEAD");
-
-                for (IndexEntry submodule : submodules) {
-                    try {
-                        RemoteConfig submoduleRemoteRepository = getSubmoduleRepository(git,
-                                remoteRepository,
-                                submodule.getFile());
-                        File subdir = new File(workspace, submodule.getFile());
-
-                        listener.getLogger().println(
-                                "Trying to fetch " + submodule.getFile() + " into " + subdir);
-
-                        IGitAPI subGit = new GitAPI(git.getGitExe(),
-                                new FilePath(subdir),
-                                listener, git.getEnvironment(), git.getReference());
-
-                        subGit.fetch(submoduleRemoteRepository);
-                    } catch (Exception ex) {
-                        ex.printStackTrace(listener.error(
-                                "Problem fetching from submodule "
-                                + submodule.getFile()
-                                + " - could be unavailable. Continuing anyway"));
-                    }
-                }
-            }
-        } catch (GitException ex) {
-            ex.printStackTrace(listener.error(
-                    "Problem fetching submodules from a path relative to "
-                    + remoteRepository.getName()
-                    + " / " + remoteRepository.getName()
-                    + " - could be unavailable. Continuing anyway"));
-            fetched = false;
-        }
-
-        return fetched;
-    }
-
+    @Deprecated
     public RemoteConfig getSubmoduleRepository(IGitAPI parentGit,
             RemoteConfig orig,
             String name) throws GitException {
@@ -1303,23 +1241,6 @@ public class GitSCM extends SCM implements Serializable {
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
 
                     if (git.hasGitModules() && !disableSubmodules) {
-                        // Git submodule update will only 'fetch' from where it
-                        // regards as 'origin'. However,
-                        // it is possible that we are building from a
-                        // RemoteRepository with changes
-                        // that are not in 'origin' AND it may be a new module that
-                        // we've only just discovered.
-                        // So - try updating from all RRs, then use the submodule
-                        // Update to do the checkout
-                        //
-                        // Also, only do this if we're not doing recursive submodules, since that'll
-                        // theoretically be dealt with there anyway.
-                        if (!recursiveSubmodules) {
-                            for (RemoteConfig remoteRepository : paramRepos) {
-                                fetchSubmodulesFrom(git, localWorkspace, listener, remoteRepository);
-                            }
-                        }
-
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
