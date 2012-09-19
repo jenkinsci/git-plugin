@@ -568,6 +568,119 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS, branch1File1, branch1File2, branch1File3);
     }
 
+    public void testIncExcRegionMergeCommit() throws Exception {
+        final String master = "master";
+        final String branch1 = "Branch1";
+        final String branch2 = "Branch2";
+
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec(master));
+        branches.add(new BranchSpec(branch1));
+        branches.add(new BranchSpec(branch2));
+
+        // Got 2 projects, each one should only build if changes in its own file
+        FreeStyleProject projectA = setupProject(branches, false, null, ".*B", null, null, false, null);
+        FreeStyleProject projectB = setupProject(branches, false, null, null, null, null, false, ".*B");
+
+        final String commitFileA = "commitFile.A";
+        final String commitFileB = "commitFile.B";
+        commit(commitFileA, johnDoe, "Commit number 1");
+        commit(commitFileB, johnDoe, "Commit number 2");
+
+        // create a branch so we can get back to it later...
+        git.branch(branch1);
+
+        build(projectA, Result.SUCCESS, commitFileA, commitFileB);
+        build(projectB, Result.SUCCESS, commitFileA, commitFileB);
+
+        assertFalse("scm polling should not detect changes in projectA after initial build", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after initial build", projectB.poll(listener).hasChanges());
+
+        final String masterFile1A = "masterFile1.A";
+        final String masterFile2A = "masterFile2.A";
+        commit(masterFile1A, johnDoe, "Commit number 3");
+        commit(masterFile2A, johnDoe, "Commit number 4");
+
+        assertTrue("scm polling should detect changes in projectA after commit 4", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after commit 4", projectB.poll(listener).hasChanges());
+
+        build(projectA, Result.SUCCESS, masterFile1A, masterFile2A);
+
+        assertFalse("scm polling should not detect changes in projectA after commit 4 build", projectA.poll(listener).hasChanges());
+
+        // Change only B on this branch.
+        git.checkout(branch1);
+
+        final String branch1File1B = "branch1File1.B";
+        final String branch1File2B = "branch1File2.B";
+        commit(branch1File1B, johnDoe, "Commit number 5");
+        commit(branch1File2B, johnDoe, "Commit number 6");
+
+        assertFalse("scm polling should not detect changes in projectA on branch1", projectA.poll(listener).hasChanges());
+        assertTrue("scm polling should detect changes in projectB on branch1", projectB.poll(listener).hasChanges());
+
+        build(projectB, Result.SUCCESS, branch1File1B, branch1File2B);
+
+        assertFalse("scm polling should not detect changes in projectB after branch1 build", projectB.poll(listener).hasChanges());
+
+        // Merge the B changes back to master
+        git.checkout(master);
+        git.merge(branch1);
+
+        assertFalse("scm polling should not detect changes in projectA after branch1 merge", projectA.poll(listener).hasChanges());
+        assertTrue("scm polling should detect changes in projectB after branch1 merge", projectB.poll(listener).hasChanges());
+
+        // create a branch so we can get back to it later...
+        git.branch(branch2);
+
+        build(projectB, Result.SUCCESS, branch1File1B, branch1File2B);
+
+        assertFalse("scm polling should not detect changes in projectA after branch1 merge build", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after branch1 merge build", projectB.poll(listener).hasChanges());
+
+        final String masterFile3A = "masterFile3.A";
+        final String masterFile4A = "masterFile4.A";
+        commit(masterFile3A, johnDoe, "Commit number 7");
+        commit(masterFile4A, johnDoe, "Commit number 8");
+
+        assertTrue("scm polling should detect changes in projectA after commit 8", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after commit 8", projectB.poll(listener).hasChanges());
+
+        build(projectA, Result.SUCCESS, masterFile3A, masterFile4A);
+
+        assertFalse("scm polling should not detect changes in projectA after commit 8 build", projectA.poll(listener).hasChanges());
+
+        // Change both A and B on this branch
+        git.checkout(branch2);
+
+        final String branch2File1A = "branch2File1.A";
+        final String branch2File2B = "branch2File2.B";
+        commit(branch2File1A, johnDoe, "Commit number 9");
+        commit(branch2File2B, johnDoe, "Commit number 10");
+
+        assertTrue("scm polling should detect changes in projectA on branch2", projectA.poll(listener).hasChanges());
+        assertTrue("scm polling should detect changes in projectB on branch2", projectB.poll(listener).hasChanges());
+
+        build(projectA, Result.SUCCESS, branch2File1A, branch2File2B);
+        build(projectB, Result.SUCCESS, branch2File1A, branch2File2B);
+
+        assertFalse("scm polling should not detect changes in projectA after branch2 build", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after branch2 build", projectB.poll(listener).hasChanges());
+
+        // Merge A and B changes back to master
+        git.checkout(master);
+        git.merge(branch2);
+
+        assertTrue("scm polling should detect changes in projectA after branch2 merge", projectA.poll(listener).hasChanges());
+        assertTrue("scm polling should detect changes in projectB after branch2 merge", projectB.poll(listener).hasChanges());
+
+        build(projectA, Result.SUCCESS, branch2File1A, branch2File2B);
+        build(projectB, Result.SUCCESS, branch2File1A, branch2File2B);
+
+        assertFalse("scm polling should not detect changes in projectA after branch2 merge build", projectA.poll(listener).hasChanges());
+        assertFalse("scm polling should not detect changes in projectB after branch2 merge build", projectB.poll(listener).hasChanges());
+    }
+
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
         FilePath moduleWs = new FilePath(createTmpDir());
@@ -597,7 +710,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         FreeStyleBuild ub = assertBuildStatusSuccess(u.scheduleBuild2(0));
         System.out.println(ub.getLog());
-        for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
+        for (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<1200; i++) // wait only up to 2 mins to avoid infinite loop
             Thread.sleep(100);
 
         FreeStyleBuild db = d.getLastBuild();
