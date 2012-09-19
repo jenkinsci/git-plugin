@@ -79,6 +79,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             for (AbstractProject<?,?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
                 Collection<GitSCM> projectSCMs = getProjectScms(project);
                 for (GitSCM git : projectSCMs) {
+                  scmFound = true;
 
                   for (RemoteConfig repository : git.getRepositories()) {
                       boolean repositoryMatches = false,
