@@ -1,7 +1,9 @@
 package hudson.plugins.git;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 
 import org.jvnet.hudson.test.HudsonTestCase;
 
@@ -10,6 +12,17 @@ import org.jvnet.hudson.test.HudsonTestCase;
  */
 public class GitChangeLogParserTest extends HudsonTestCase {
 
+    private File createChangeLogFile(String firstLine, String... restLines) throws Exception {
+        File log = File.createTempFile(getClass().getName(), ".tmp");
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(log), "utf-8"));
+        writer.write(firstLine);
+        for (String line : restLines) {
+            writer.write("\n" + line);
+        }
+        writer.close();
+        return log;
+    }
+
     /**
      * Test duplicate changes filtered from parsed change set list.
      * 
@@ -17,13 +30,13 @@ public class GitChangeLogParserTest extends HudsonTestCase {
      */
     public void testDuplicatesFiltered() throws Exception {
         GitChangeLogParser parser = new GitChangeLogParser(true);
-        File log = File.createTempFile(getClass().getName(), ".tmp");
-        FileWriter writer = new FileWriter(log);
-        writer.write("commit 123abc456def\n");
-        writer.write("    first message\n");
-        writer.write("commit 123abc456def\n");
-        writer.write("    second message");
-        writer.close();
+        File log = createChangeLogFile(
+            "commit 123abc456def",
+            "    first message",
+            "commit 123abc456def",
+            "    second message"
+        );
+
         GitChangeSetList list = parser.parse(null, log);
         assertNotNull(list);
         assertNotNull(list.getLogs());
@@ -32,5 +45,17 @@ public class GitChangeLogParserTest extends HudsonTestCase {
         assertNotNull(first);
         assertEquals("123abc456def", first.getId());
         assertEquals("first message", first.getMsg());
+    }
+
+    public void testCharacterCorruptionProblem() throws Exception {
+        GitChangeLogParser parser = new GitChangeLogParser(true);
+        File log = createChangeLogFile(
+            "commit 123abc456def",
+            "    “ú–{Œê"
+        );
+
+        GitChangeSetList list = parser.parse(null, log);
+        GitChangeSet changeSet = list.getLogs().get(0);
+        assertEquals("“ú–{Œê", changeSet.getMsg());
     }
 }
