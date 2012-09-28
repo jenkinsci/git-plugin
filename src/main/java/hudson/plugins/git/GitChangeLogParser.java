@@ -5,7 +5,8 @@ import hudson.scm.ChangeLogParser;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -33,7 +34,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         
         // Parse the log file into GitChangeSet items - each one is a commit
         
-        BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
+        BufferedReader rdr = new BufferedReader(new InputStreamReader(new FileInputStream(changelogFile), "utf-8"));
         
         try {
             String line;
