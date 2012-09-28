@@ -51,11 +51,11 @@ public class GitChangeLogParserTest extends HudsonTestCase {
         GitChangeLogParser parser = new GitChangeLogParser(true);
         File log = createChangeLogFile(
             "commit 123abc456def",
-            "    “ú–{Œê"
+            "    æ—¥æœ¬èªž"
         );
 
         GitChangeSetList list = parser.parse(null, log);
         GitChangeSet changeSet = list.getLogs().get(0);
-        assertEquals("“ú–{Œê", changeSet.getMsg());
+        assertEquals("æ—¥æœ¬èªž", changeSet.getMsg());
     }
 }
