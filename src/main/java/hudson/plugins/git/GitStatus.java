@@ -11,6 +11,8 @@ import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
@@ -53,6 +55,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     public String getUrlName() {
         return "git";
+    }
+
+    public HttpResponse doGitoriousNotifyCommit(@QueryParameter String payload)  throws ServletException, IOException {
+    	JSONObject jsonObject = JSONObject.fromObject( payload );
+    	String url = jsonObject.getJSONObject("repository").getString("url");
+    	return doNotifyCommit(url + ".git", null);
     }
 
     public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url, @QueryParameter(required=false) String branches) throws ServletException, IOException {
@@ -167,7 +175,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * especially given that Git tends to support multiple access protocols.
      */
     boolean looselyMatches(URIish lhs, URIish rhs) {
-        return StringUtils.equals(lhs.getHost(),rhs.getHost())
+        return (StringUtils.equals(lhs.getHost(),rhs.getHost()) || StringUtils.equals("git." + lhs.getHost(),rhs.getHost()))
             && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
     }
 
