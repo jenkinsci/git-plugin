@@ -454,6 +454,27 @@ public class GitAPI implements IGitAPI {
     }
 
     /**
+     * Reset submodules
+     *
+     * @param recursive if true, will recursively reset submodules (requres git>=1.6.5)
+     *
+     * @throws GitException if executing the git command fails
+     */
+    public void submoduleReset(boolean recursive, boolean hard) throws GitException {
+        ArgumentListBuilder args = new ArgumentListBuilder();
+        args.add("submodule", "foreach");
+        if (recursive) {
+            args.add("--recursive");
+        }
+        args.add("git reset");
+        if (hard) {
+            args.add("--hard");
+        }
+
+        launchCommand(args);
+    }
+
+    /**
      * Cleans submodules
      *
      * @param recursive if true, will recursively clean submodules (requres git>=1.6.5)
@@ -461,6 +482,7 @@ public class GitAPI implements IGitAPI {
      * @throws GitException if executing the git command fails
      */
     public void submoduleClean(boolean recursive) throws GitException {
+        submoduleReset(true, true);
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add("submodule", "foreach");
     	if (recursive) {
