@@ -187,7 +187,7 @@ public class GitUtils {
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = (AbstractBuild)p.getLastBuild();
 
-        if (b != null) {
+        if (reuseLastBuildEnv && b != null) {
             Node lastBuiltOn = b.getBuiltOn();
 
             if (lastBuiltOn != null) {
