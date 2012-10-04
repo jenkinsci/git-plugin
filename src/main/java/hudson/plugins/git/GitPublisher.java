@@ -261,7 +261,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     }
                     if (tagResult) {
                         final String tagName = environment.expand(t.getTagName());
-                        final String tagMessage = environment.expand(t.getTagMessage());
+                        final String tagMessage = hudson.Util.fixNull(environment.expand(t.getTagMessage()));
                         final String targetRepo = environment.expand(t.getTargetRepoName());
                         
                         try {
