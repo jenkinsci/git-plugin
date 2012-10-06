@@ -21,6 +21,10 @@ repositories {
         name 'jgit-repository'
         url 'http://download.eclipse.org/jgit/maven'
     }
+    maven {
+        name "jenkins"
+        delegate.url("http://repo.jenkins-ci.org/public/")
+    }
 }
 
 group = "org.jenkinsci.plugins"
