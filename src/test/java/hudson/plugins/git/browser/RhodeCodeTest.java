@@ -82,7 +82,7 @@ public class RhodeCodeTest extends TestCase {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = rhodecode.getFileLink(path);
-        assertEquals(RHODECODE_URL  + "/blobs/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
+        assertEquals(RHODECODE_URL  + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
     /**
