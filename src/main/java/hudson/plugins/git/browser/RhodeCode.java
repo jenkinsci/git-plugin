@@ -37,7 +37,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the change set
-     * http://[RhodeCode URL]/commits/[commit]
+     * http://[RhodeCode URL]/files/[commit]
      *
      * @param changeSet commit hash
      * @return change set link
@@ -45,7 +45,7 @@ public class RhodeCode extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + "commits/" + changeSet.getId());
+        return new URL(url, url.getPath() + "files/" + changeSet.getId() + "/");
     }
 
     /**
@@ -80,9 +80,9 @@ public class RhodeCode extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "files/" + changeSet.getParentCommit()).toString() + '/' + path.getPath());
+            return new URL(url, url.getPath() + "files/" + changeSet.getParentCommit().toString() + '/' + path.getPath());
         } else {
-            return new URL(url, url.getPath() + "files/" + changeSet.getId()).toString() + '/' + path.getPath());
+            return new URL(url, url.getPath() + "files/" + changeSet.getId().toString() + '/' + path.getPath());
         }
     }
 

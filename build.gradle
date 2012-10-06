@@ -17,9 +17,13 @@ jenkinsPlugin {
 }
 
 repositories {
+//    maven {
+//        name 'jgit-repository'
+//        url 'http://download.eclipse.org/jgit/maven'
+//    }
     maven {
-        name 'jgit-repository'
-        url 'http://download.eclipse.org/jgit/maven'
+        name "jenkins"
+        delegate.url("http://repo.jenkins-ci.org/releases")
     }
 }
 
