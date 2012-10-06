@@ -50,7 +50,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     * http://[RhodeCode URL]/diff/[path]?diff2=[commit]&diff1=[commit]=diff+to+revision
+     * http://[RhodeCode URL]/diff/[path]?diff2=[commit]&diff1=[commit]&diff=diff+to+revision
      *
      * @param path affected file path
      * @return diff link
@@ -61,9 +61,9 @@ public class RhodeCode extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
 
         if (path.getEditType() == EditType.DELETE) {
-	    return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()).toString() + "=diff+to+revision");
+	    return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()).toString() + "&diff=diff+to+revision");
         } else {
-            return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("diff2=" + changeSet.getId()).add("diff1=" + changeSet.getId()).toString()  + "=diff+to+revision");
+            return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("diff2=" + changeSet.getId()).add("diff1=" + changeSet.getId()).toString()  + "&diff=diff+to+revision");
         }
     }
 

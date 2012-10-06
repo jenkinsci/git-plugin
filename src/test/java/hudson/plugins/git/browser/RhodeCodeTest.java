@@ -56,7 +56,7 @@ public class RhodeCodeTest extends TestCase {
      */
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = rhodecode.getChangeSetLink(createChangeSet("rawchangelog"));
-        assertEquals(RHODECODE_URL + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
+        assertEquals(RHODECODE_URL + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d/", changeSetLink.toString());
     }
 
     /**
@@ -67,10 +67,10 @@ public class RhodeCodeTest extends TestCase {
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(RHODECODE_URL + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/main/java/hudson/plugins/git/browser/GithubWeb.java", rhodecode.getDiffLink(modified1).toString());
+        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(modified1).toString());
         // For added files returns a link to the commit.
-        final Path added = pathMap.get("src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file");
-        assertEquals(RHODECODE_URL + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file", rhodecode.getDiffLink(added).toString());
+        final Path added = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
+        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(added).toString());
     }
 
     /**
@@ -94,7 +94,7 @@ public class RhodeCodeTest extends TestCase {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = rhodecode.getFileLink(path);
-        assertEquals(RHODECODE_URL + "/files/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f/diffs?diffmode=sidebyside&fragment=1#bar", String.valueOf(fileLink));
+        assertEquals(RHODECODE_URL + "/files/b547aa10c3f06710c6fdfcdb2a9149c81662923b/bar", String.valueOf(fileLink));
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
