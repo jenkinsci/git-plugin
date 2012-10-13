@@ -152,11 +152,10 @@
   </distributionManagement>
   
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/git-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/git-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/git-plugin</url>
+    <connection>scm:git:git://github.com/jenkinsci/${project.artifctId}-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+    <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
   </scm>
-
 
     <pluginRepositories>
         <pluginRepository>
