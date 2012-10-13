@@ -57,18 +57,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return "git";
     }
 
-    /**
-     * @deprecated
-     *      Gitorius integration should be moved to a separate plugin. This feature was not advertised in the documentation,
-     *      so we should be able to remove this. When we remove this method, see e57e59b05a12ff8a0240a9af3555b81f0f460bb8
-     *      for how to revert {@link #looselyMatches(URIish, URIish)} changes.
-     */
-    public HttpResponse doGitoriousNotifyCommit(@QueryParameter String payload)  throws ServletException, IOException {
-    	JSONObject jsonObject = JSONObject.fromObject( payload );
-    	String url = jsonObject.getJSONObject("repository").getString("url");
-    	return doNotifyCommit(url + ".git", null);
-    }
-
     public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url, @QueryParameter(required=false) String branches) throws ServletException, IOException {
         // run in high privilege to see all the projects anonymous users don't see.
         // this is safe because when we actually schedule a build, it's a build that can
@@ -180,8 +168,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * It is better to match loosely and wastes a few polling calls than to be pedantic and miss the push notification,
      * especially given that Git tends to support multiple access protocols.
      */
-    boolean looselyMatches(URIish lhs, URIish rhs) {
-        return (StringUtils.equals(lhs.getHost(),rhs.getHost()) || StringUtils.equals("git." + lhs.getHost(),rhs.getHost()))
+    protected boolean looselyMatches(URIish lhs, URIish rhs) {
+        return StringUtils.equals(lhs.getHost(),rhs.getHost())
             && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
     }
 
