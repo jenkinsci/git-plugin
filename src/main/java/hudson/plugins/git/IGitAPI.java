@@ -90,6 +90,9 @@ public interface IGitAPI {
     void deleteTag(String tagName) throws GitException;
     Set<String> getTagNames(String tagPattern) throws GitException;
 
+    /**
+     * Adds the changelog entries for commits in the range revFrom..revTo.
+     */
     void changelog(String revFrom, String revTo, OutputStream fos) throws GitException;
 
     /**

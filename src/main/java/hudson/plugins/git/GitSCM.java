@@ -1,8 +1,6 @@
 package hudson.plugins.git;
 
 import static hudson.Util.fixEmptyAndTrim;
-import static hudson.init.InitMilestone.PLUGINS_PREPARED;
-import static hudson.init.InitMilestone.PLUGINS_STARTED;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -31,7 +29,6 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogParser;
-import hudson.scm.NullSCM;
 import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
@@ -58,7 +55,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 
-import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -1149,6 +1145,8 @@ public class GitSCM extends SCM implements Serializable {
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
+
         BuildData returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
             returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
@@ -1260,7 +1258,7 @@ public class GitSCM extends SCM implements Serializable {
                         git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
 
-                    computeChangeLog(git, revToBuild, listener, buildData,changelogFile);
+                    computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
 
                     buildData.saveBuild(new Build(revToBuild, buildNumber, null));
 
@@ -1289,13 +1287,13 @@ public class GitSCM extends SCM implements Serializable {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile) throws IOException, InterruptedException {
+    private void computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         int histories = 0;
 
         PrintStream out = new PrintStream(changelogFile.write());
         try {
             for (Branch b : revToBuild.getBranches()) {
-                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git);
+                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
                 if (lastRevWas != null) {
                     if (git.isCommitInRepo(lastRevWas.getSHA1().name())) {
                         putChangelogDiffs(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);

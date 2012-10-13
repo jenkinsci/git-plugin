@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
@@ -80,17 +81,38 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     }
 
     /**
-     * What was the last SHA1 that a named branch was built with?
-     * @param branch
-     * @return ObjectId, or NULL
+     * @deprecated as of 1.1.25
+     *      Use and override {@link #prevBuildForChangelog(String, BuildData, IGitAPI, BuildChooserContext)}
      */
-    //Build getLastBuiltRevisionOfBranch(String branch);
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git) {
+        return data==null?null:data.getLastBuildOfBranch(branch);
+    }
 
     /**
-     * What was the last revision to be built?
-     * @return
+     * Determines the baseline to compute the changelog against.
+     *
+     * <p>
+     * {@link #getCandidateRevisions(boolean, String, IGitAPI, TaskListener, BuildData, BuildChooserContext)} determine
+     * what commits can be subject for a build, and for each commit it determines the branches that contribute to them.
+     *
+     * <p>
+     * Once {@link GitSCM} picks up a specific {@link Revision} to build, {@linkplain Revision#getBranches() for each branch},
+     * in that revision, this method is called to compute the changelog.
+     *
+     * @param branch
+     *      The branch name.
+     * @param data
+     *      Information that captures what we did during the last build.
+     * @param git
+     *      Used for invoking Git
+     * @param context
+     *      Object that provides access back to the model object. This is because
+     *      the build chooser can be invoked on a slave where there's no direct access
+     *      to the build/project for which this is invoked.
      */
-    //public Revision getLastBuiltRevision();
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
+        return prevBuildForChangelog(branch,data,git);
+    }
 
     public BuildChooserDescriptor getDescriptor() {
         return (BuildChooserDescriptor)Hudson.getInstance().getDescriptorOrDie(getClass());
@@ -102,10 +124,6 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
         return Hudson.getInstance()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
-    }
-
-    public Build prevBuildForChangelog(String singleBranch, BuildData data, IGitAPI git) {
-        return data==null?null:data.getLastBuildOfBranch(singleBranch);
     }
 
     private static final long serialVersionUID = 1L;
