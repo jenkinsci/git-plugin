@@ -1234,6 +1234,10 @@ public class GitSCM extends SCM implements Serializable {
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
+
+                        if (git.hasGitModules() && !disableSubmodules) {
+                            git.submoduleClean(recursiveSubmodules);
+                        }
                     }
 
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
