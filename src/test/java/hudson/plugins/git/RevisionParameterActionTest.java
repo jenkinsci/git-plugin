@@ -37,8 +37,8 @@ import java.util.Collections;
 public class RevisionParameterActionTest extends HudsonTestCase {
     
     /**
-     * Test covering the behaviour until 1.1.25 where passing different revision 
-     * actions to a job in the queue combines them and ignores the later revisions.
+     * Test covering the behaviour after 1.1.26 where passing different revision 
+     * actions to a job in the queue creates seperate builds
      */
     public void testCombiningScheduling() throws Exception {
 
@@ -48,9 +48,24 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
         Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("FREED456")));
 
-        //System.out.println(b1);
-        //System.out.println(b2);
+        // Check that we have the correct futures.
+        assertNotNull(b1);
+        assertNotNull(b2);
         
+        // Check that only one build occured
+        waitUntilNoActivity();
+        assertEquals(fs.getBuilds().size(),2);
+    }
+    /** test when existing revision is already in the queue
+    */
+    public void testCombiningScheduling2() throws Exception {
+
+        FreeStyleProject fs = createFreeStyleProject("freestyle");
+
+        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
+        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+
         // Check that we have the correct futures.
         assertNotNull(b1);
         assertNull(b2);
@@ -59,5 +74,22 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
     }
+    /** test when there is no revision on the item in the queue
+    */
+    public void testCombiningScheduling3() throws Exception {
 
+        FreeStyleProject fs = createFreeStyleProject("freestyle");
+
+        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
+        Future b1 = fs.scheduleBuild2(20);
+        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+
+        // Check that we have the correct futures.
+        assertNotNull(b1);
+        assertNotNull(b2);
+        
+        // Check that only one build occured
+        waitUntilNoActivity();
+        assertEquals(fs.getBuilds().size(),2);
+    }
 }

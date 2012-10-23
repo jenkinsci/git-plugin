@@ -23,18 +23,24 @@
  */
 package hudson.plugins.git;
 
+import hudson.model.Action;
 import hudson.model.InvisibleAction;
-import org.eclipse.jgit.lib.ObjectId;
+import hudson.model.Queue.QueueAction;
+import hudson.Util;
 
+import org.eclipse.jgit.lib.ObjectId;
 import java.io.Serializable;
+import java.util.List;
 import java.util.logging.Logger;
+
 
 /**
  * Used as a build parameter to specify the revision to be built.
  *
  * @author Kohsuke Kawaguchi
+ * @author Chris Johnson
  */
-public class RevisionParameterAction extends InvisibleAction implements Serializable {
+public class RevisionParameterAction extends InvisibleAction implements Serializable,QueueAction {
     /**
      * SHA1, ref name, etc. that can be "git rev-parse"d into a specific commit.
      */
@@ -56,6 +62,30 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
 	public String toString() {
 		return super.toString()+"[commit="+commit+"]";
 	}
+
+   	/**
+   	 * Returns whether the new item should be scheduled. 
+   	 * An action should return true if the associated task is 'different enough' to warrant a separate execution.
+     * from {@link #QueueAction}
+   	 */
+    public boolean shouldSchedule(List<Action> actions) {
+        /* Called in two cases 
+        1. On the action attached to an existing queued item 
+        2. On the action attached to the new item to add.
+        Behaviour 
+        If actions contain a RevisionParameterAction with a matching commit to this one, we do not need to schedule
+        in all other cases we do.
+        */
+        List<RevisionParameterAction> otherActions = Util.filter(actions,RevisionParameterAction.class);
+        
+        for (RevisionParameterAction action: otherActions) {
+            if(this.commit.equals(action.commit))
+                return false;
+        }
+
+        // if we get to this point there were no matching actions so a new build is required
+        return true;
+    }
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(RevisionParameterAction.class.getName());
