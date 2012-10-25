@@ -8,6 +8,7 @@ import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
 import hudson.Util;
 import hudson.model.TaskListener;
+import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
@@ -386,12 +387,19 @@ public class GitAPI implements IGitAPI {
      * @return The git show output, in List form.
      * @throws GitException if errors were encountered running git show.
      */
-    public List<String> showRevision(Revision r) throws GitException {
-        String revName = r.getSha1String();
+    public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
+    	String revName = r.getSha1String();
+    	if (buildData != null){
+    		revName = buildData.lastBuild.revision.sha1.name() +".." + r.getSha1String();
+    	}
         String result = "";
 
         if (revName != null) {
-            result = launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName);
+        	if (buildData != null){
+        		result = launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName);
+        	} else {
+        		result = launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName);
+        	}
         }
 
         List<String> revShow = new ArrayList<String>();
