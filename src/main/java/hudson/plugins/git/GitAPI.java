@@ -390,7 +390,7 @@ public class GitAPI implements IGitAPI {
     public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
     	String revName = r.getSha1String();
     	if (buildData != null){
-    		revName = buildData.lastBuild.revision.sha1.name() +".." + r.getSha1String();
+    		revName = buildData.lastBuild.revision.getSha1String() + ".." + r.getSha1String();
     	}
         String result = "";
 
