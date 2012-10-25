@@ -25,6 +25,8 @@ package hudson.plugins.git;
 
 import hudson.model.Action;
 import hudson.model.InvisibleAction;
+import hudson.model.queue.FoldableAction;
+import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
 import hudson.Util;
 
@@ -40,14 +42,20 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  * @author Chris Johnson
  */
-public class RevisionParameterAction extends InvisibleAction implements Serializable,QueueAction {
+public class RevisionParameterAction extends InvisibleAction implements Serializable,QueueAction,FoldableAction {
     /**
      * SHA1, ref name, etc. that can be "git rev-parse"d into a specific commit.
      */
-	public final String commit;
+    public final String commit;
+    public final boolean combineCommits;
 
     public RevisionParameterAction(String commit) {
+        this(commit, false);
+    }
+
+    public RevisionParameterAction(String commit, boolean combineCommits) {
         this.commit = commit;
+        this.combineCommits = combineCommits;
     }
 
     public Revision toRevision(IGitAPI git) {
@@ -58,16 +66,16 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         return revision;
     }
 
-	@Override
-	public String toString() {
-		return super.toString()+"[commit="+commit+"]";
-	}
+    @Override
+    public String toString() {
+        return super.toString()+"[commit="+commit+"]";
+    }
 
-   	/**
-   	 * Returns whether the new item should be scheduled. 
-   	 * An action should return true if the associated task is 'different enough' to warrant a separate execution.
+    /**
+     * Returns whether the new item should be scheduled. 
+     * An action should return true if the associated task is 'different enough' to warrant a separate execution.
      * from {@link #QueueAction}
-   	 */
+      */
     public boolean shouldSchedule(List<Action> actions) {
         /* Called in two cases 
         1. On the action attached to an existing queued item 
@@ -77,14 +85,38 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         in all other cases we do.
         */
         List<RevisionParameterAction> otherActions = Util.filter(actions,RevisionParameterAction.class);
-        
-        for (RevisionParameterAction action: otherActions) {
-            if(this.commit.equals(action.commit))
+        if(combineCommits) {
+            // we are combining commits so we never need to schedule another run.
+            // unless other job does not have a RevisionParameterAction (manual build)
+            if(otherActions.size() != 0)
                 return false;
+        } else {
+            for (RevisionParameterAction action: otherActions) {
+                if(this.commit.equals(action.commit))
+                    return false;
+            }
         }
-
         // if we get to this point there were no matching actions so a new build is required
         return true;
+    }
+
+    /**
+     * Folds this Action into another action already associated with item
+     * from {@link #FoldableAction}
+     */
+    public void foldIntoExisting(Queue.Item item, Queue.Task owner, List<Action> otherActions) {
+        // only do this if we are asked to.
+        if(combineCommits) {
+            RevisionParameterAction existing = item.getAction(RevisionParameterAction.class);
+            if (existing!=null) {
+                //because we cannot modify the commit in the existing action remove it and add self
+                item.getActions().remove(existing);
+                item.getActions().add(this);
+                return;
+            }
+            // no CauseAction found, so add a copy of this one
+            item.getActions().add(this);
+        }
     }
 
     private static final long serialVersionUID = 1L;

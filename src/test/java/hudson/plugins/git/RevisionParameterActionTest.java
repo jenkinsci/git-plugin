@@ -92,4 +92,72 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
     }
+
+    /** test when a different revision is already in the queue, and combine requests is required.
+    */
+    public void testCombiningScheduling4() throws Exception {
+
+        FreeStyleProject fs = createFreeStyleProject("freestyle");
+
+        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
+        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("FFEEFFEE", true)));
+
+        // Check that we have the correct futures.
+        assertNotNull(b1);
+        assertNull(b2);
+
+        // Check that only one build occured
+        waitUntilNoActivity();
+        assertEquals(fs.getBuilds().size(),1);
+
+        //check that the correct commit id is present in build
+        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "FFEEFFEE");
+
+    }
+
+    /** test when a same revision is already in the queue, and combine requests is required.
+    */
+    public void testCombiningScheduling5() throws Exception {
+
+        FreeStyleProject fs = createFreeStyleProject("freestyle");
+
+        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
+        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+
+        // Check that we have the correct futures.
+        assertNotNull(b1);
+        assertNull(b2);
+
+        // Check that only one build occured
+        waitUntilNoActivity();
+        assertEquals(fs.getBuilds().size(),1);
+
+        //check that the correct commit id is present in build
+        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "DEADBEEF");
+    }
+
+    /** test when a job already in the queue with no revision(manually started), and combine requests is required.
+    */
+    public void testCombiningScheduling6() throws Exception {
+
+        FreeStyleProject fs = createFreeStyleProject("freestyle");
+
+        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
+        Future b1 = fs.scheduleBuild2(20);
+        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+
+        // Check that we have the correct futures.
+        assertNotNull(b1);
+        assertNotNull(b2);
+
+        // Check that only one build occured
+        waitUntilNoActivity();
+        assertEquals(fs.getBuilds().size(),2);
+
+        //check that the correct commit id is present in 2nd build
+        // list is reversed indexed so first item is latest build
+        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "DEADBEEF");
+    }
 }
