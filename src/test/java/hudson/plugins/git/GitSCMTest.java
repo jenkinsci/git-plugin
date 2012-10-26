@@ -136,6 +136,42 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
     }
+    
+    public void testIncludedRegionWithDeeperCommits() throws Exception {
+        FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertFalse("scm polling detected commit2 change, which should not have been included", project.pollSCMChanges(listener));
+        
+
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        
+        final String commitFile4 = "commitFile4";
+        commit(commitFile4, janeDoe, "Commit number 4");
+        assertTrue("scm polling did not detect commit3 change", project.pollSCMChanges(listener));
+
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have two culprit", 2, culprits.size());
+        
+        PersonIdent[] expected = {johnDoe, janeDoe};
+        assertCulprits("jane doe and john doe should be the culprits", culprits, expected);
+
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
 
     public void testBasicExcludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, ".*2", null, null);
