@@ -8,6 +8,7 @@ import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
 import hudson.Util;
 import hudson.model.TaskListener;
+import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -386,13 +388,23 @@ public class GitAPI implements IGitAPI {
      * @return The git show output, in List form.
      * @throws GitException if errors were encountered running git show.
      */
-    public List<String> showRevision(Revision r) throws GitException {
-        String revName = r.getSha1String();
-        String result = "";
+    public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
+    	StringWriter writer = new StringWriter();
+    	String revName = ""; 
+    	
 
-        if (revName != null) {
-            result = launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName);
-        }
+    	if (buildData != null && buildData.lastBuild != null){
+    		revName = buildData.lastBuild.revision.getSha1String() + ".." + r.getSha1String();
+    		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName));
+    		writer.write("\\n");
+    	}
+    	
+    	revName = r.getSha1String();
+    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName));
+
+        String result = "";
+        
+        result = writer.toString();
 
         List<String> revShow = new ArrayList<String>();
 
