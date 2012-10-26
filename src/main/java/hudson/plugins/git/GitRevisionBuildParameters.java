@@ -39,7 +39,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  */
 public class GitRevisionBuildParameters extends AbstractBuildParameters {
+
+	private boolean combineQueuedCommits = false;
+
 	@DataBoundConstructor
+	public GitRevisionBuildParameters(boolean combineQueuedCommits) {
+		this.combineQueuedCommits = combineQueuedCommits;
+	}
+
 	public GitRevisionBuildParameters() {
 	}
 
@@ -52,6 +59,10 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		}
 
 		return new RevisionParameterAction(data.getLastBuiltRevision().getSha1String());
+	}
+
+	public boolean getCombineQueuedCommits() {
+		return combineQueuedCommits;
 	}
 
 	@Extension(optional=true)
