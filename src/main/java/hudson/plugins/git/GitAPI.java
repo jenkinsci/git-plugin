@@ -393,7 +393,7 @@ public class GitAPI implements IGitAPI {
     	String revName = ""; 
     	
 
-    	if (buildData != null){
+    	if (buildData != null && buildData.lastBuild != null){
     		revName = buildData.lastBuild.revision.getSha1String() + ".." + r.getSha1String();
     		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName));
     		writer.write("\\n");
