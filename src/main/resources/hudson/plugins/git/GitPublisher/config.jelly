@@ -42,6 +42,10 @@
                    title="${%Create new tag}">
             <f:checkbox />
           </f:entry>
+          <f:entry field="updateTag"
+                   title="${%Update new tag}">
+            <f:checkbox />
+          </f:entry>
           <f:entry field="targetRepoName"
                    title="${%Target remote name}">
             <f:textbox
