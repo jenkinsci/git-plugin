@@ -31,10 +31,9 @@ import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
-import hudson.model.Result;
 import hudson.plugins.git.GitPublisher.BranchToPush;
-import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
+import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.jvnet.hudson.test.Bug;
@@ -57,7 +56,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(workDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
-                Collections.singletonList(new TagToPush("origin","foo","message",true)),
+                Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
                 true, true) {
