@@ -1,21 +1,12 @@
 package hudson.plugins.git;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
+import hudson.*;
 import hudson.FilePath.FileCallable;
-import hudson.Launcher;
-import hudson.Util;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
@@ -24,18 +15,19 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import javax.servlet.ServletException;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;
@@ -281,8 +273,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             return false;
                                         }
                                         
-                                        if (t.isCreateTag()) {
-                                            if (git.tagExists(tagName)) {
+                                        if (t.isCreateTag() || t.isUpdateTag()) {
+                                            if (git.tagExists(tagName) && !t.isUpdateTag()) {
                                                 listener.getLogger().println("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
                                                 return false;
                                             }
@@ -297,7 +289,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             listener.getLogger().println("Tag " + tagName + " does not exist and Create Tag is not specified, so failing.");
                                             return false;
                                         }
-                                        
+
                                         listener.getLogger().println("Pushing tag " + tagName + " to repo "
                                                                      + targetRepo);
                                         git.push(remote, tagName);
@@ -589,6 +581,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         private String tagName;
         private String tagMessage;
         private boolean createTag;
+        private boolean updateTag;
 
         public String getTagName() {
             return tagName;
@@ -602,12 +595,17 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             return createTag;
         }
 
+        public boolean isUpdateTag() {
+            return updateTag;
+        }
+
         @DataBoundConstructor
-        public TagToPush(String targetRepoName, String tagName, String tagMessage, boolean createTag) {
+        public TagToPush(String targetRepoName, String tagName, String tagMessage, boolean createTag, boolean updateTag) {
             super(targetRepoName);
             this.tagName = Util.fixEmptyAndTrim(tagName);
             this.tagMessage = tagMessage;
             this.createTag = createTag;
+            this.updateTag = updateTag;
         }
 
         @Extension
