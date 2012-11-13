@@ -640,6 +640,14 @@ public class GitSCM extends SCM implements Serializable {
 
     @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+        try {
+            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener, baseline);
+        } catch (GitException e){
+            throw new IOException(e);
+        }
+    }
+
+    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
