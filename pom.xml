@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
-  <version>1.1.26-SNAPSHOT</version>
+  <version>1.1.26</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -166,6 +166,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifctId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <tag>git-1.1.26</tag>
   </scm>
 
     <pluginRepositories>
