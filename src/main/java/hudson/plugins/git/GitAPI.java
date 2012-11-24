@@ -118,11 +118,11 @@ public class GitAPI implements IGitAPI {
     public boolean hasGitRepo() throws GitException {
         if( hasGitRepo(".git") )
         {
-            // Check if this is actually a valid git repo by parsing the HEAD revision. If it's duff, this will
-            // fail.
+            // Check if this is actually a valid git repo by checking ls-files. If it's duff, this will
+            // fail. HEAD is not guaranteed to be valid (e.g. new repo).
             try
             {
-                validateRevision("HEAD");
+            	launchCommand("ls-files");
             }
             catch(Exception ex)
             {
@@ -205,6 +205,12 @@ public class GitAPI implements IGitAPI {
     }
 
     public void reset(boolean hard) throws GitException {
+    	try {
+    		validateRevision("HEAD");
+    	} catch (GitException e) {
+    		listener.getLogger().println("No valid HEAD. Skipping the resetting");
+    		return;
+    	}
         listener.getLogger().println("Resetting working tree");
 
         ArgumentListBuilder args = new ArgumentListBuilder();
