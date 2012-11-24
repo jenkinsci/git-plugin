@@ -108,15 +108,15 @@ public class GitAPI implements IGitAPI {
         }
         Repository repo = null;
         try {
-			repo = new FileRepository(new File(workspace
-					.child(Constants.DOT_GIT).getRemote()));
+            repo = new FileRepository(new File(workspace
+                    .child(Constants.DOT_GIT).getRemote()));
             repo.create();
         } catch (IOException ioe) {
             throw new GitException("Error initiating git repo.", ioe);
         } finally {
-        	if (repo != null) {
-        		repo.close();
-        	}
+            if (repo != null) {
+                repo.close();
+            }
         }
     }
 
@@ -952,25 +952,22 @@ public class GitAPI implements IGitAPI {
     }
 
     public List<Branch> getRemoteBranches() throws GitException, IOException {
-        Repository db = null;
+        Repository db = getRepository();
         try {
-        	db = getRepository();
-	        Map<String, Ref> refs = db.getAllRefs();
-	        List<Branch> branches = new ArrayList<Branch>();
-	
-	        for(Ref candidate : refs.values()) {
-	            if(candidate.getName().startsWith(Constants.R_REMOTES)) {
-	                Branch buildBranch = new Branch(candidate);
-	                listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
-	                branches.add(buildBranch);
-	            }
-	        }
-	
-	        return branches;
+            Map<String, Ref> refs = db.getAllRefs();
+            List<Branch> branches = new ArrayList<Branch>();
+
+            for(Ref candidate : refs.values()) {
+                if(candidate.getName().startsWith(Constants.R_REMOTES)) {
+                    Branch buildBranch = new Branch(candidate);
+                    listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
+                    branches.add(buildBranch);
+                }
+            }
+
+            return branches;
         } finally {
-        	if (db!= null) {
-        		db.close();
-        	}
+            db.close();
         }
     }
 
@@ -1152,22 +1149,19 @@ public class GitAPI implements IGitAPI {
 
     public List<Tag> getTagsOnCommit(final String revName) throws GitException,
             IOException {
-        Repository db = null;
+        Repository db = getRepository();
         try {
-			db = getRepository();
-	        final ObjectId commit = db.resolve(revName);
-	        final List<Tag> ret = new ArrayList<Tag>();
-	
-	        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-	            final ObjectId tagId = tag.getValue().getObjectId();
-	            if (commit.equals(tagId))
-	                ret.add(new Tag(tag.getKey(), tagId));
-	        }
-	        return ret;
+            final ObjectId commit = db.resolve(revName);
+            final List<Tag> ret = new ArrayList<Tag>();
+
+            for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
+                final ObjectId tagId = tag.getValue().getObjectId();
+                if (commit.equals(tagId))
+                    ret.add(new Tag(tag.getKey(), tagId));
+            }
+            return ret;
         } finally {
-        	if (db != null) {
-        		db.close();
-        	}
+            db.close();
         }
     }
 

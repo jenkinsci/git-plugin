@@ -46,9 +46,9 @@ public class CommitTimeComparatorTest extends AbstractGitTestCase {
             Collections.shuffle(revs);
             Repository repository = git.getRepository();
             try {
-            	Collections.sort(revs, new CommitTimeComparator(repository));
+                Collections.sort(revs, new CommitTimeComparator(repository));
             } finally {
-            	repository.close();
+                repository.close();
             }
 
             // it should be always branch1, branch2, branch3

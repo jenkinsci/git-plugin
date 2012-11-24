@@ -232,9 +232,9 @@ public class DefaultBuildChooser extends BuildChooser {
         // this ensures the fairness in scheduling.
         Repository repository = utils.git.getRepository();
         try {
-        	Collections.sort(revs,new CommitTimeComparator(repository));
+            Collections.sort(revs,new CommitTimeComparator(repository));
         } finally {
-        	repository.close();
+            repository.close();
         }
 
         return revs;

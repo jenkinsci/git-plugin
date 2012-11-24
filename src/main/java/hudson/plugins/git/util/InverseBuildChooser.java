@@ -101,9 +101,9 @@ public class InverseBuildChooser extends BuildChooser {
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
         Repository repository = utils.git.getRepository();
         try {
-        	Collections.sort(branchRevs, new CommitTimeComparator(repository));
+            Collections.sort(branchRevs, new CommitTimeComparator(repository));
         } finally {
-        	repository.close();
+            repository.close();
         }
         return branchRevs;
     }

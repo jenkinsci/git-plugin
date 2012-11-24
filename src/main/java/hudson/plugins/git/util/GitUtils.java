@@ -125,8 +125,8 @@ public class GitUtils {
             LOGGER.fine(MessageFormat.format(
                     "Computing merge base of {0}  branches", l.size()));
         try {
-			repository = git.getRepository();
-			walk = new RevWalk(repository);
+            repository = git.getRepository();
+            walk = new RevWalk(repository);
             walk.setRetainBody(false);
             walk.setRevFilter(RevFilter.MERGE_BASE);
             for (int i = 0; i < l.size(); i++)
@@ -166,7 +166,7 @@ public class GitUtils {
             if (walk != null)
                 walk.release();
             if (repository != null) {
-            	repository.close();
+                repository.close();
             }
         }
         if (log)
