@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.jgit.lib.Repository;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -98,7 +99,12 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
-        Collections.sort(branchRevs, new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+            Collections.sort(branchRevs, new CommitTimeComparator(repository));
+        } finally {
+            repository.close();
+        }
         return branchRevs;
     }
 
