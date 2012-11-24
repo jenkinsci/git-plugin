@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jgit.lib.Repository;
+
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -42,7 +44,12 @@ public class CommitTimeComparatorTest extends AbstractGitTestCase {
         for (int i=0; i<16; i++) {
             // shuffle, then sort.
             Collections.shuffle(revs);
-            Collections.sort(revs, new CommitTimeComparator(git.getRepository()));
+            Repository repository = git.getRepository();
+            try {
+            	Collections.sort(revs, new CommitTimeComparator(repository));
+            } finally {
+            	repository.close();
+            }
 
             // it should be always branch1, branch2, branch3
             for (int j=0; j<3; j++)

@@ -106,12 +106,17 @@ public class GitAPI implements IGitAPI {
         if (hasGitRepo()) {
             throw new GitException(".git directory already exists! Has it already been initialised?");
         }
+        Repository repo = null;
         try {
-			final Repository repo = new FileRepository(new File(workspace
+			repo = new FileRepository(new File(workspace
 					.child(Constants.DOT_GIT).getRemote()));
             repo.create();
         } catch (IOException ioe) {
             throw new GitException("Error initiating git repo.", ioe);
+        } finally {
+        	if (repo != null) {
+        		repo.close();
+        	}
         }
     }
 
@@ -947,19 +952,26 @@ public class GitAPI implements IGitAPI {
     }
 
     public List<Branch> getRemoteBranches() throws GitException, IOException {
-        Repository db = getRepository();
-        Map<String, Ref> refs = db.getAllRefs();
-        List<Branch> branches = new ArrayList<Branch>();
-
-        for(Ref candidate : refs.values()) {
-            if(candidate.getName().startsWith(Constants.R_REMOTES)) {
-                Branch buildBranch = new Branch(candidate);
-                listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
-                branches.add(buildBranch);
-            }
+        Repository db = null;
+        try {
+        	db = getRepository();
+	        Map<String, Ref> refs = db.getAllRefs();
+	        List<Branch> branches = new ArrayList<Branch>();
+	
+	        for(Ref candidate : refs.values()) {
+	            if(candidate.getName().startsWith(Constants.R_REMOTES)) {
+	                Branch buildBranch = new Branch(candidate);
+	                listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
+	                branches.add(buildBranch);
+	            }
+	        }
+	
+	        return branches;
+        } finally {
+        	if (db!= null) {
+        		db.close();
+        	}
         }
-
-        return branches;
     }
 
     public List<Branch> getBranchesContaining(String revspec)
@@ -1140,16 +1152,23 @@ public class GitAPI implements IGitAPI {
 
     public List<Tag> getTagsOnCommit(final String revName) throws GitException,
             IOException {
-        final Repository db = getRepository();
-        final ObjectId commit = db.resolve(revName);
-        final List<Tag> ret = new ArrayList<Tag>();
-
-        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-            final ObjectId tagId = tag.getValue().getObjectId();
-            if (commit.equals(tagId))
-                ret.add(new Tag(tag.getKey(), tagId));
+        Repository db = null;
+        try {
+			db = getRepository();
+	        final ObjectId commit = db.resolve(revName);
+	        final List<Tag> ret = new ArrayList<Tag>();
+	
+	        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
+	            final ObjectId tagId = tag.getValue().getObjectId();
+	            if (commit.equals(tagId))
+	                ret.add(new Tag(tag.getKey(), tagId));
+	        }
+	        return ret;
+        } finally {
+        	if (db != null) {
+        		db.close();
+        	}
         }
-        return ret;
     }
 
     public Set<String> getTagNames(String tagPattern) throws GitException {

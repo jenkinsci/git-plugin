@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 
@@ -117,13 +118,15 @@ public class GitUtils {
         ObjectId shaJ;
         ObjectId commonAncestor;
         RevWalk walk = null;
+        Repository repository = null;
         final long start = System.currentTimeMillis();
         long calls = 0;
         if (log)
             LOGGER.fine(MessageFormat.format(
                     "Computing merge base of {0}  branches", l.size()));
         try {
-            walk = new RevWalk(git.getRepository());
+			repository = git.getRepository();
+			walk = new RevWalk(repository);
             walk.setRetainBody(false);
             walk.setRevFilter(RevFilter.MERGE_BASE);
             for (int i = 0; i < l.size(); i++)
@@ -162,6 +165,9 @@ public class GitUtils {
         } finally {
             if (walk != null)
                 walk.release();
+            if (repository != null) {
+            	repository.close();
+            }
         }
         if (log)
             LOGGER.fine(MessageFormat.format(

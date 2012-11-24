@@ -12,6 +12,7 @@ import hudson.plugins.git.Revision;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -229,7 +230,12 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
-        Collections.sort(revs,new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+        	Collections.sort(revs,new CommitTimeComparator(repository));
+        } finally {
+        	repository.close();
+        }
 
         return revs;
     }
