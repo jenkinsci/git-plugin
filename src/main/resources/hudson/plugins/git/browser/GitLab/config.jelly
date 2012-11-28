@@ -2,4 +2,7 @@
   <f:entry field="url" title="URL">
     <f:textbox/>
   </f:entry>
+  <f:entry field="version" title="Version">
+    <f:textbox/>
+  </f:entry>
 </j:jelly>
