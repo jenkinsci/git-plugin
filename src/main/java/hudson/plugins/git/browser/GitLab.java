@@ -22,9 +22,11 @@ public class GitLab extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
     private final URL url;
+    private final double version;
 
     @DataBoundConstructor
-    public GitLab(String url) throws MalformedURLException {
+    public GitLab(String url, String version) throws MalformedURLException {
+        this.version = Double.valueOf(version);
         this.url = normalizeToEndWithSlash(new URL(url));
     }
 
@@ -32,6 +34,9 @@ public class GitLab extends GitRepositoryBrowser {
         return url;
     }
 
+    public double getVersion() {
+        return version;
+    }
 
     /**
      * Creates a link to the changeset
@@ -44,7 +49,9 @@ public class GitLab extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, "commits/" + changeSet.getId().toString());
+        String  commitPrefix;
+
+        return new URL(url, calculatePrefix() + changeSet.getId().toString());
     }
 
     /**
@@ -59,7 +66,7 @@ public class GitLab extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(url, "commits/" + changeSet.getId().toString() + "#" + path.getPath());
+        return new URL(url, calculatePrefix() + changeSet.getId().toString() + "#" + path.getPath());
     }
 
     /**
@@ -91,5 +98,13 @@ public class GitLab extends GitRepositoryBrowser {
             return req.bindParameters(GitLab.class, "Gitlab.");
         }
     }
+
+    private String calculatePrefix() {
+        if(getVersion() >= 3){
+            return "commit/";
+        }
+
+        return "commits/";
+    } 
 
 }
