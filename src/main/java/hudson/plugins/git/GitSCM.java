@@ -1156,7 +1156,9 @@ public class GitSCM extends SCM implements Serializable {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
         BuildData returnedBuildData;
-        if (mergeOptions.doMerge() && !revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
+        final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
+
+        if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
             returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
 
                 private static final long serialVersionUID = 1L;
@@ -1174,7 +1176,7 @@ public class GitSCM extends SCM implements Serializable {
                             + mergeOptions.getMergeTarget());
 
                     // checkout origin/blah
-                    ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
+                    ObjectId target = git.revParse(remoteBranchName);
 
                     git.checkoutBranch(paramLocalBranch, target.name());
 
@@ -1208,7 +1210,7 @@ public class GitSCM extends SCM implements Serializable {
                         git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
 
-                    computeMergeChangeLog(git, revToBuild, mergeOptions.getRemoteBranchName(), listener, changelogFile);
+                    computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
 
                     Build build = new Build(revToBuild, buildNumber, null);
                     buildData.saveBuild(build);
