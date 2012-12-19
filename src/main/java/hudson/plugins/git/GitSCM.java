@@ -1173,7 +1173,7 @@ public class GitSCM extends SCM implements Serializable {
                     // us..
                     listener.getLogger().println(
                             "Merging " + revToBuild + " onto "
-                            + mergeOptions.getMergeTarget());
+                            + getParameterString(mergeOptions.getMergeTarget(), build));
 
                     // checkout origin/blah
                     ObjectId target = git.revParse(remoteBranchName);
