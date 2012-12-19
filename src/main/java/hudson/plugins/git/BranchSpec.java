@@ -29,18 +29,18 @@ public class BranchSpec implements Serializable {
         return name;
     }
 
-    public void setName(String value) {
-        this.name = value;
-    }
-
-    @DataBoundConstructor
-    public BranchSpec(String name) {
-        if(name == null)
+    public void setName(String name) {
+    	if(name == null)
             throw new IllegalArgumentException();
         else if(name.length() == 0)
             this.name = "**";
         else
-            this.name = name;
+            this.name = name.trim();
+    }
+
+    @DataBoundConstructor
+    public BranchSpec(String name) {
+        setName(name);
     }
 
     public String toString() {

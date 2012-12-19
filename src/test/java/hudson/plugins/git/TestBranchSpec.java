@@ -61,4 +61,11 @@ public class TestBranchSpec extends TestCase {
     	assertTrue(correctExceptionThrown);
     }
     
+    public void testNameTrimming() {
+    	BranchSpec branchSpec = new BranchSpec(" master ");
+    	assertEquals("master",branchSpec.getName());
+    	branchSpec.setName(" other ");
+    	assertEquals("other",branchSpec.getName());
+    }
+    
 }
