@@ -45,4 +45,20 @@ public class TestBranchSpec extends TestCase {
         Assert.assertTrue(p.matches("origin/x"));
         Assert.assertFalse(p.matches("origin/my-branch/b1"));
     }
+    
+    public void testEmptyName() {
+    	BranchSpec branchSpec = new BranchSpec("");
+    	assertEquals("**",branchSpec.getName());
+    }
+    
+    public void testNullName() {
+    	boolean correctExceptionThrown = false;
+    	try {
+    		BranchSpec branchSpec = new BranchSpec(null);
+    	} catch (IllegalArgumentException e) {
+    		correctExceptionThrown = true;
+    	}
+    	assertTrue(correctExceptionThrown);
+    }
+    
 }
