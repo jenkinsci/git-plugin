@@ -135,6 +135,7 @@ public class GitSCM extends SCM implements Serializable {
     private boolean skipTag;
     private String includedRegions;
     private String scmName;
+	private String extraGitLogParameters;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -165,7 +166,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false, false);
+                null, null, null, false, false, false, false, null, null, false, null, false, false, null);
     }
 
     @DataBoundConstructor
@@ -195,7 +196,8 @@ public class GitSCM extends SCM implements Serializable {
             boolean skipTag,
             String includedRegions,
             boolean ignoreNotifyCommit,
-            boolean useShallowClone) {
+            boolean useShallowClone,
+			String extraGitLogParameters) {
 
         this.scmName = scmName;
 
@@ -262,6 +264,8 @@ public class GitSCM extends SCM implements Serializable {
         this.skipTag = skipTag;
         this.includedRegions = includedRegions;
         buildChooser.gitSCM = this; // set the owner
+
+		this.extraGitLogParameters = extraGitLogParameters == null ? "" : extraGitLogParameters;
     }
 
     private void updateFromUserData() throws GitException {
@@ -574,7 +578,26 @@ public class GitSCM extends SCM implements Serializable {
         return gitTool;
     }
 
-    private String getParameterString(String original, AbstractBuild<?, ?> build) {
+	/**
+	 * @return Extra parameters to be passed into the git log command. White-space separated.
+	 */
+	@Exported
+	public String getExtraGitLogParameters() {
+		return extraGitLogParameters;
+	}
+
+	private String[] getExtraGitLogParametersAsArray() {
+		return extraGitLogParameters.trim().split("\\s+");
+	}
+
+	/**
+	 * Set extra parameters to be passed into the git log command. White-space separated.
+	 */
+	public void setExtraGitLogParameters(String extraGitLogParameters) {
+		this.extraGitLogParameters = extraGitLogParameters;
+	}
+
+	private String getParameterString(String original, AbstractBuild<?, ?> build) {
         ParametersAction parameters = build.getAction(ParametersAction.class);
         if (parameters != null) {
             original = parameters.substitute(build, original);
@@ -681,7 +704,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             }
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
-            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
+            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference, getExtraGitLogParametersAsArray());
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
@@ -733,7 +756,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
-                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference, getExtraGitLogParametersAsArray());
 
                 if (git.hasGitRepo()) {
                     // Repo is there - do a fetch
@@ -784,7 +807,7 @@ public class GitSCM extends SCM implements Serializable {
                 File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
                 IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
-                        listener, parentGit.getEnvironment(), parentGit.getReference());
+                        listener, parentGit.getEnvironment(), parentGit.getReference(), getExtraGitLogParametersAsArray());
 
                 subGit.clean();
             } catch (Exception ex) {
@@ -991,7 +1014,7 @@ public class GitSCM extends SCM implements Serializable {
                     throws IOException, InterruptedException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
-                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
+                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference, getExtraGitLogParametersAsArray());
 
                 if (wipeOutWorkspace) {
                     log.println("Wiping out workspace first.");
@@ -1163,7 +1186,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference, getExtraGitLogParametersAsArray());
 
                     // Do we need to merge this revision onto MergeTarget
 
@@ -1234,7 +1257,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference, getExtraGitLogParametersAsArray());
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);

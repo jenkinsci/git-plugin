@@ -47,14 +47,15 @@ public class GitAPI implements IGitAPI {
     String gitExe;
     EnvVars environment;
     String reference;
+	String[] extraGitLogParameters;
 
     public GitAPI(String gitExe, FilePath workspace,
-                  TaskListener listener, EnvVars environment) {
-        this(gitExe, workspace, listener, environment, null);
+                  TaskListener listener, EnvVars environment, String[] extraGitLogParameters) {
+        this(gitExe, workspace, listener, environment, null, extraGitLogParameters);
     }
 
     public GitAPI(String gitExe, FilePath workspace,
-                  TaskListener listener, EnvVars environment, String reference) {
+                  TaskListener listener, EnvVars environment, String reference, String[] extraGitLogParameters) {
 
         //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
 
@@ -65,6 +66,8 @@ public class GitAPI implements IGitAPI {
         this.reference = reference;
 
         launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
+
+		this.extraGitLogParameters = extraGitLogParameters;
     }
 
     public String getGitExe() {
@@ -365,7 +368,13 @@ public class GitAPI implements IGitAPI {
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
-        whatchanged(revFrom, revTo, outputStream, "--no-abbrev", "-M", "--pretty=raw");
+		List<String> parameters = new ArrayList<String>(extraGitLogParameters.length + 4);
+		parameters.add("--no-abbrev");
+		parameters.add("-M");
+		parameters.add("--pretty=raw");
+		parameters.addAll(Arrays.asList(extraGitLogParameters));
+
+        whatchanged(revFrom, revTo, outputStream, parameters.toArray(new String[parameters.size()]));
     }
 
     private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
