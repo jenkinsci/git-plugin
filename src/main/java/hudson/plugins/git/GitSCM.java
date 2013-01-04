@@ -927,6 +927,12 @@ public class GitSCM extends SCM implements Serializable {
             this.project = project;
             this.build = build;
         }
+        public AbstractProject getProject() {
+           return this.project;
+        }
+        public AbstractBuild getBuild() {
+         return this.build;
+      }
 
         public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build,Hudson.MasterComputer.localChannel);
@@ -938,6 +944,12 @@ public class GitSCM extends SCM implements Serializable {
 
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
+               public AbstractProject getProject() {
+                  return project;
+               }
+               public AbstractBuild getBuild() {
+                  return build;
+               }
                 public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
@@ -1210,10 +1222,10 @@ public class GitSCM extends SCM implements Serializable {
 
                     computeMergeChangeLog(git, revToBuild, mergeOptions.getRemoteBranchName(), listener, changelogFile);
 
-                    Build build = new Build(revToBuild, buildNumber, null);
-                    buildData.saveBuild(build);
+                    Build gitBuild = new Build(revToBuild, buildNumber, null);
+                    buildData.saveBuild(gitBuild);
                     GitUtils gu = new GitUtils(listener, git);
-                    build.mergeRevision = gu.getRevisionForSHA1(target);
+                    gitBuild.mergeRevision = gu.getRevisionForSHA1(target);
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
