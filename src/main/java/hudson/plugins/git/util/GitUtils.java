@@ -216,7 +216,7 @@ public class GitUtils {
         if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
-            env.put("BUILD_URL", rootUrl+b.getUrl());
+            if( b != null) env.put("BUILD_URL", rootUrl+b.getUrl());
             env.put("JOB_URL", rootUrl+p.getUrl());
         }
 
