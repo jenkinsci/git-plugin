@@ -263,9 +263,14 @@ public class GitAPI implements IGitAPI {
                             args.add("--progress");
                         }
                         if (reference != null) {
-                            File referencePath = new File(reference);
-                            if (referencePath.exists() && referencePath.isDirectory()) {
-                                args.add("--reference", reference);
+                            String[] references = reference.split(";");
+                            for (int i = 0; i < references.length; i ++)
+                            {
+                                File referencePath = new File(references[i]);
+                                if (referencePath.exists() && referencePath.isDirectory()) {
+                                    args.add("--reference", references[i]);
+                                    break;
+                                }
                             }
                         }
                         args.add("-o", remoteConfig.getName());
