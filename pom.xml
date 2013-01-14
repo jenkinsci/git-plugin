@@ -163,7 +163,7 @@
   </distributionManagement>
   
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/${project.artifctId}-plugin.git</connection>
+    <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <tag>HEAD</tag>
