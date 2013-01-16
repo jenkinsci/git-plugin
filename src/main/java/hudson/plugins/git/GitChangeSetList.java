@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.export.Exported;
+
+
 /**
  * List of changeset that went into a particular build.
  * @author Nigel Magnay
@@ -33,4 +37,10 @@ public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     public List<GitChangeSet> getLogs() {
         return changeSets;
     }
+
+    @Exported
+    public String getKind() {
+        return "git";
+    }
+
 }
