@@ -1771,6 +1771,21 @@ public class GitSCM extends SCM implements Serializable {
      */
     private boolean isRevExcluded(IGitAPI git, Revision r, TaskListener listener, BuildData buildData) {
         try {
+            Pattern[] includedPatterns = getIncludedRegionsPatterns();
+            Pattern[] excludedPatterns = getExcludedRegionsPatterns();
+            Set<String> excludedUsers = getExcludedUsersNormalized();
+
+            // If there are no excluded users, no excluded patterns,
+            // and no included patterns, then the revision cannot be
+            // excluded.
+            //
+            // Assumes it is cheaper to obtain the excluded patterns,
+            // the included patterns and the excluded users than to
+            // call git.
+            if (includedPatterns.length == 0 && excludedPatterns.length == 0 && excludedUsers.isEmpty()) {
+                return false;
+            }
+
             List<String> revShow = git.showRevision(r, buildData);
 
             // If the revision info is empty, something went weird, so we'll just
@@ -1780,10 +1795,6 @@ public class GitSCM extends SCM implements Serializable {
             }
 
             GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
-
-            Pattern[] includedPatterns = getIncludedRegionsPatterns();
-            Pattern[] excludedPatterns = getExcludedRegionsPatterns();
-            Set<String> excludedUsers = getExcludedUsersNormalized();
 
             String author = change.getAuthorName();
             if (excludedUsers.contains(author)) {
