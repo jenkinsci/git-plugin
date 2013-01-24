@@ -291,7 +291,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 	    			isPropertySet = true;
 	    		}				
 			} finally {
-				return false;
+				return isPropertySet;
 			}
     	}
     	 
