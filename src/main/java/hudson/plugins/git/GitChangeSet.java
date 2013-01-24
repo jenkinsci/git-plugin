@@ -12,6 +12,7 @@ import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -271,7 +272,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 user = User.get(csAuthorEmail.split("@")[0], true);
         }
         // set email address for user if none is already available
-        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class).getAddress()) {
+        if (fixEmpty(csAuthorEmail) != null && !isMailerPropertySet(user)) {
             try {
                 user.addProperty(new Mailer.UserProperty(csAuthorEmail));
             } catch (IOException e) {
@@ -281,7 +282,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
-    private boolean isCreateAccountBasedOnEmail() {
+    private boolean isMailerPropertySet(User user) {
+    	boolean isPropertySet = false;
+    	if(user.getProperty(Mailer.UserProperty.class) != null) {
+			try {
+	    		String address = user.getProperty(Mailer.UserProperty.class).getAddress() != null ? user.getProperty(Mailer.UserProperty.class).getAddress() : "";
+	    		if(StringUtils.isNotEmpty(address)) {
+	    			isPropertySet = true;
+	    		}				
+			} finally {
+				return false;
+			}
+    	}
+    	 
+		return isPropertySet;
+	}
+
+	private boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl descriptor = (DescriptorImpl) Hudson.getInstance().getDescriptor(GitSCM.class);
 
         return descriptor.isCreateAccountBasedOnEmail();
