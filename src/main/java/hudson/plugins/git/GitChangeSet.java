@@ -11,6 +11,7 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
+import hudson.tasks.Mailer.UserProperty;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.export.Exported;
@@ -282,19 +283,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
-    private boolean isMailerPropertySet(User user) {
-    	boolean isPropertySet = false;
-    	if(user.getProperty(Mailer.UserProperty.class) != null) {
-			try {
-	    		String address = user.getProperty(Mailer.UserProperty.class).getAddress() != null ? user.getProperty(Mailer.UserProperty.class).getAddress() : "";
-	    		if(StringUtils.isNotEmpty(address)) {
-	    			isPropertySet = true;
-	    		}				
-			} finally {
-				return isPropertySet;
+	private boolean isMailerPropertySet(User user) {
+		boolean isPropertySet = false;
+		UserProperty property = user.getProperty(Mailer.UserProperty.class);
+		if (property != null) {
+			String address = property.getAddress() != null ? property.getAddress() : "";
+			if (StringUtils.isNotEmpty(address)) {
+				isPropertySet = true;
 			}
-    	}
-    	 
+		}
+
 		return isPropertySet;
 	}
 
