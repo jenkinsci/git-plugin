@@ -587,6 +587,9 @@ public class GitSCM extends SCM implements Serializable {
 	}
 
 	private String[] getExtraGitLogParametersAsArray() {
+		if(extraGitLogParameters == null) {
+			return new String[0];
+		}
 		return extraGitLogParameters.trim().split("\\s+");
 	}
 
