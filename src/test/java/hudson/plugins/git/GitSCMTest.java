@@ -533,7 +533,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
         FilePath moduleWs = new FilePath(createTmpDir());
-        GitAPI moduleRepo = new GitAPI("git", moduleWs, listener, new EnvVars());
+        GitAPI moduleRepo = new GitAPI("git", moduleWs, listener, new EnvVars(), new String[0]);
 
         {// first we create a Git repository with submodule
             moduleRepo.init();
@@ -698,7 +698,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
                 excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false,
-                includedRegions, false, false));
+                includedRegions, false, false, null));
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
         return project;
     }
