@@ -261,6 +261,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 try {
                     user = User.get(csAuthorEmail, true);
                     user.setFullName(csAuthor);
+                    user.addProperty(new Mailer.UserProperty(csAuthorEmail));
                     user.save();
                 } catch (IOException e) {
                     // add logging statement?
@@ -287,10 +288,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 		boolean isPropertySet = false;
 		UserProperty property = user.getProperty(Mailer.UserProperty.class);
 		if (property != null) {
-			String address = property.getAddress() != null ? property.getAddress() : "";
-			if (StringUtils.isNotEmpty(address)) {
+			if(!StringUtils.isEmpty(property.getAddress())) {
 				isPropertySet = true;
-			}
+			} 
 		}
 
 		return isPropertySet;
