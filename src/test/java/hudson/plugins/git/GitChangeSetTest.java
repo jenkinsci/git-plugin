@@ -1,14 +1,21 @@
 package hudson.plugins.git;
 
+import hudson.model.User;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
+import hudson.tasks.Mailer;
+import hudson.tasks.Mailer.UserProperty;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+
+import org.jvnet.hudson.test.HudsonTestCase;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-public class GitChangeSetTest extends TestCase {
+public class GitChangeSetTest extends HudsonTestCase {
     
     public GitChangeSetTest(String testName) {
         super(testName);
@@ -105,5 +112,22 @@ public class GitChangeSetTest extends TestCase {
         GitChangeSet authorCS = genChangeSet(true, false);
 
         Assert.assertEquals("John Author", authorCS.getAuthorName());
+    }
+    
+    public void testFindOrCreateUser() {
+    	GitChangeSet committerCS = genChangeSet(false, false);
+    	String csAuthor = "John Author";
+		String csAuthorEmail = "jauthor@nospam.com";
+		boolean createAccountBasedOnEmail = true;
+		
+		User user = committerCS.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail);
+		Assert.assertNotNull(user);
+		
+		UserProperty property = user.getProperty(Mailer.UserProperty.class);
+		Assert.assertNotNull(property);
+		
+		String address = property.getAddress();
+		Assert.assertNotNull(address);
+		Assert.assertEquals(csAuthorEmail, address);
     }
 }

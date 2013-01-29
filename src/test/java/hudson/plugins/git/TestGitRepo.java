@@ -3,7 +3,9 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.tasks.Mailer;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,8 +38,13 @@ public class TestGitRepo {
 		envVars = new EnvVars();
 		
 		gitDir = forTest.createTmpDir();
-		User.get(johnDoe.getName(), true);
-		User.get(janeDoe.getName(), true);
+		User john = User.get(johnDoe.getName(), true);
+		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
+		john.addProperty(johnsMailerProperty);
+		
+		User jane = User.get(janeDoe.getName(), true);
+		UserProperty janesMailerProperty = new Mailer.UserProperty(janeDoe.getEmailAddress());
+		jane.addProperty(janesMailerProperty);
 		
 		// initialize the environment
 		setAuthor(johnDoe);
