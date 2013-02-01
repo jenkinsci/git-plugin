@@ -49,4 +49,25 @@ public class GitAPITest extends HudsonTestCase {
         assertEquals(2, names.size());
 	}
 
+	public void testGetRemoteTagNames() throws IOException, InterruptedException, URISyntaxException {
+		StreamTaskListener listener = StreamTaskListener.fromStderr();
+        FilePath moduleRemoteWs = new FilePath(createTmpDir());
+        GitAPI moduleRemoteRepo = new GitAPI("git", moduleRemoteWs, listener, new EnvVars());
+        moduleRemoteRepo.init();
+        FilePath fileA=moduleRemoteWs.child("a");
+        fileA.touch(0);
+        moduleRemoteRepo.add("a");
+        moduleRemoteRepo.launchCommand("commit", "-m", "Initial commit");
+        moduleRemoteRepo.tag("foo", "foo comment");
+        moduleRemoteRepo.tag("foo1", "foo1 comment");
+        moduleRemoteRepo.tag("bar", "bar comment");
+        // there must be an easier way to clone another file repo ...
+        FilePath moduleLocalWs = new FilePath(createTmpDir());
+        GitAPI moduleLocalRepo = new GitAPI("git", moduleLocalWs, listener, new EnvVars());
+        Set<String> names=moduleLocalRepo.getRemoteTagNames("file://"+moduleRemoteWs.getRemote(), "foo*");
+        assertEquals(2, names.size());
+        assertEquals(true, names.contains("foo"));
+        assertEquals(true, names.contains("foo1"));    
+	}
+
 }

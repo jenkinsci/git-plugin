@@ -90,7 +90,7 @@ public interface IGitAPI {
     boolean tagExists(String tagName) throws GitException;
     void deleteTag(String tagName) throws GitException;
     Set<String> getTagNames(String tagPattern) throws GitException;
-
+    Set<String> getRemoteTagNames(String remoteRepoUrl, String tagPattern) throws GitException;
     /**
      * Adds the changelog entries for commits in the range revFrom..revTo.
      */
