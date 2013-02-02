@@ -52,8 +52,8 @@ public class TestGitRepo {
 		
 		// initialize the git interface.
 		gitDirPath = new FilePath(gitDir);
-		git = new GitAPI("git", gitDirPath, listener, envVars);
-		
+		git = new GitAPI("git", gitDir, listener, envVars);
+
 		// finally: initialize the repo
 		git.init();
 	}

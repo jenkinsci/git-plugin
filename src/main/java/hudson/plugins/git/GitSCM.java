@@ -681,7 +681,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             }
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
-            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
+            IGitAPI git = new GitAPI(gitExe, null, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
@@ -733,7 +733,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
-                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                IGitAPI git = new GitAPI(gitExe, localWorkspace, listener, environment, reference);
 
                 if (git.hasGitRepo()) {
                     // Repo is there - do a fetch
@@ -783,7 +783,7 @@ public class GitSCM extends SCM implements Serializable {
             try {
                 File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
-                IGitAPI subGit = new GitAPI(parentGit.getGitExe(), new FilePath(subdir),
+                IGitAPI subGit = new GitAPI(parentGit.getGitExe(), subdir,
                         listener, parentGit.getEnvironment(), parentGit.getReference());
 
                 subGit.clean();
@@ -991,7 +991,7 @@ public class GitSCM extends SCM implements Serializable {
                     throws IOException, InterruptedException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
-                IGitAPI git = new GitAPI(gitExe, ws, listener, environment, reference);
+                IGitAPI git = new GitAPI(gitExe, localWorkspace, listener, environment, reference);
 
                 if (wipeOutWorkspace) {
                     log.println("Wiping out workspace first.");
@@ -1163,7 +1163,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, localWorkspace, listener, environment, reference);
 
                     // Do we need to merge this revision onto MergeTarget
 
@@ -1234,7 +1234,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, localWorkspace, listener, environment, reference);
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);

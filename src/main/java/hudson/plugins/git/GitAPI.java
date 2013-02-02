@@ -1,15 +1,12 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.Functions;
 import hudson.Launcher;
-import hudson.FilePath.FileCallable;
 import hudson.Launcher.LocalLauncher;
 import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
-import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.BufferedReader;
@@ -42,18 +39,18 @@ import org.eclipse.jgit.transport.RemoteConfig;
 public class GitAPI implements IGitAPI {
 
     Launcher launcher;
-    FilePath workspace;
+    File workspace;
     TaskListener listener;
     String gitExe;
     EnvVars environment;
     String reference;
 
-    public GitAPI(String gitExe, FilePath workspace,
+    public GitAPI(String gitExe, File workspace,
                   TaskListener listener, EnvVars environment) {
         this(gitExe, workspace, listener, environment, null);
     }
 
-    public GitAPI(String gitExe, FilePath workspace,
+    public GitAPI(String gitExe, File workspace,
                   TaskListener listener, EnvVars environment, String reference) {
 
         //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
@@ -107,8 +104,7 @@ public class GitAPI implements IGitAPI {
             throw new GitException(".git directory already exists! Has it already been initialised?");
         }
         try {
-			final Repository repo = new FileRepository(new File(workspace
-					.child(Constants.DOT_GIT).getRemote()));
+			final Repository repo = getRepository();
             repo.create();
         } catch (IOException ioe) {
             throw new GitException("Error initiating git repo.", ioe);
@@ -138,7 +134,7 @@ public class GitAPI implements IGitAPI {
     public boolean hasGitRepo( String GIT_DIR ) throws GitException {
         try {
 
-            FilePath dotGit = workspace.child(GIT_DIR);
+            File dotGit = new File(workspace, GIT_DIR);
 
             return dotGit.exists();
 
@@ -154,7 +150,7 @@ public class GitAPI implements IGitAPI {
     public boolean hasGitModules() throws GitException {
         try {
 
-            FilePath dotGit = workspace.child(".gitmodules");
+            File dotGit = new File(workspace, ".gitmodules");
 
             return dotGit.exists();
 
@@ -244,37 +240,29 @@ public class GitAPI implements IGitAPI {
 
         // TODO: Not here!
         try {
-            workspace.deleteRecursive();
+            Util.deleteRecursive(workspace);
         } catch (Exception e) {
             e.printStackTrace(listener.error("Failed to clean the workspace"));
             throw new GitException("Failed to delete workspace", e);
         }
 
         try {
-            workspace.act(new FileCallable<String>() {
-
-                    private static final long serialVersionUID = 1L;
-
-                    public String invoke(File workspace,
-                                         VirtualChannel channel) throws IOException {
-                        final ArgumentListBuilder args = new ArgumentListBuilder();
-                        args.add("clone");
-                        if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) {
-                            args.add("--progress");
-                        }
-                        if (reference != null) {
-                            File referencePath = new File(reference);
-                            if (referencePath.exists() && referencePath.isDirectory()) {
-                                args.add("--reference", reference);
-                            }
-                        }
-                        args.add("-o", remoteConfig.getName());
-                        if(useShallowClone) args.add("--depth", "1");
-                        args.add(source);
-                        args.add(workspace.getAbsolutePath());
-                        return launchCommandIn(args, null);
-                    }
-                });
+            final ArgumentListBuilder args = new ArgumentListBuilder();
+            args.add("clone");
+            if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) {
+                args.add("--progress");
+            }
+            if (reference != null) {
+                File referencePath = new File(reference);
+                if (referencePath.exists() && referencePath.isDirectory()) {
+                    args.add("--reference", reference);
+                }
+            }
+            args.add("-o", remoteConfig.getName());
+            if(useShallowClone) args.add("--depth", "1");
+            args.add(source);
+            args.add(workspace.getAbsolutePath());
+            launchCommandIn(args, null);
         } catch (Exception e) {
             throw new GitException("Could not clone " + source, e);
         }
@@ -880,7 +868,7 @@ public class GitAPI implements IGitAPI {
      * @return command output
      * @throws GitException
      */
-    private String launchCommandIn(ArgumentListBuilder args, FilePath workDir) throws GitException {
+    private String launchCommandIn(ArgumentListBuilder args, File workDir) throws GitException {
         ByteArrayOutputStream fos = new ByteArrayOutputStream();
         // JENKINS-13356: capture the output of stderr separately
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -888,8 +876,10 @@ public class GitAPI implements IGitAPI {
         try {
             environment.put("GIT_ASKPASS", launcher.isUnix() ? "/bin/echo" : "echo");
             args.prepend(getGitExe());
-            int status = launcher.launch().cmds(args.toCommandArray()).
-                envs(environment).stdout(fos).stderr(err).pwd(workDir).join();
+            Launcher.ProcStarter p = launcher.launch().cmds(args.toCommandArray()).
+                    envs(environment).stdout(fos).stderr(err);
+            if (workDir != null) p.pwd(workDir);
+            int status = p.join();
 
             String result = fos.toString();
             
@@ -1141,7 +1131,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public Repository getRepository() throws IOException {
-        return new FileRepository(new File(workspace.getRemote(), Constants.DOT_GIT));
+        return new FileRepository(new File(workspace, Constants.DOT_GIT));
     }
 
     public List<Tag> getTagsOnCommit(final String revName) throws GitException,

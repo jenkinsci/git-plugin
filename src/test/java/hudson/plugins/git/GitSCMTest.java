@@ -532,8 +532,9 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
-        FilePath moduleWs = new FilePath(createTmpDir());
-        GitAPI moduleRepo = new GitAPI("git", moduleWs, listener, new EnvVars());
+        File repo = createTmpDir();
+        FilePath moduleWs = new FilePath(repo);
+        GitAPI moduleRepo = new GitAPI("git", repo, listener, new EnvVars());
 
         {// first we create a Git repository with submodule
             moduleRepo.init();
