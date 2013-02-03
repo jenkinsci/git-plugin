@@ -469,6 +469,10 @@ public class GitSCM extends SCM implements Serializable {
         return reference;
     }
 
+    public String getParamExpandedReference(AbstractBuild<?, ?> build) {
+        return getParameterString(reference, build);
+    }
+
     public String getGitConfigNameToUse() {
         String confName = fixEmptyAndTrim(gitConfigName);
         if (confName == null) {
@@ -681,7 +685,7 @@ public class GitSCM extends SCM implements Serializable {
                 }
             }
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
-            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, reference);
+            IGitAPI git = new GitAPI(gitExe, workspace, listener, environment, getParamExpandedReference(lastBuild));
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
@@ -733,7 +737,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
-                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, getParamExpandedReference(lastBuild));
 
                 if (git.hasGitRepo()) {
                     // Repo is there - do a fetch
@@ -952,6 +956,7 @@ public class GitSCM extends SCM implements Serializable {
     private Revision determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final List<RemoteConfig> repos,
+                                              final String reference,
                                               final FilePath workingDirectory,
                                               final EnvVars environment,
                                               final String gitExe,
@@ -1138,9 +1143,10 @@ public class GitSCM extends SCM implements Serializable {
 
         final String paramLocalBranch = getParamLocalBranch(build);
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
+        final String paramReference = getParamExpandedReference(build);
 
-        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
-                environment, gitExe, listener);
+        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos,
+                paramReference, workingDirectory, environment, gitExe, listener);
 
         if (revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
@@ -1163,7 +1169,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, paramReference);
 
                     // Do we need to merge this revision onto MergeTarget
 
@@ -1234,7 +1240,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, reference);
+                    IGitAPI git = new GitAPI(gitExe, new FilePath(localWorkspace), listener, environment, paramReference);
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
