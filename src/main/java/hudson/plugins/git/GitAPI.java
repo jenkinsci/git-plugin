@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.Functions;
 import hudson.Launcher;
 import hudson.Launcher.LocalLauncher;
-import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
 import hudson.util.ArgumentListBuilder;
@@ -1168,7 +1167,31 @@ public class GitAPI implements IGitAPI {
         }
     }
 
-    public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
+	public Set<String> getRemoteTagNames(String remoteRepoUrl, String tagPattern) throws GitException{
+        try {
+            ArgumentListBuilder args = new ArgumentListBuilder();
+            args.add("ls-remote", "--tags", remoteRepoUrl, tagPattern);
+
+            String result = launchCommandIn(args, workspace);
+
+            Set<String> tags = new HashSet<String>();
+            BufferedReader rdr = new BufferedReader(new StringReader(result));
+            String line;
+            while ((line = rdr.readLine()) != null) {
+            	// ignore tag commits
+                if (line.endsWith("^{}")){
+                	continue;
+                }
+                String[] items=line.split("\\s+");
+                tags.add(items[1].substring("refs/tags/".length()));
+            }
+            return tags;
+        } catch (Exception e) {
+            throw new GitException("Error retrieving remote tag names", e);
+        }
+	}
+
+	public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
         String[] branchExploded = branch.split("/");
         branch = branchExploded[branchExploded.length-1];
         ArgumentListBuilder args = new ArgumentListBuilder("ls-remote");
@@ -1178,4 +1201,5 @@ public class GitAPI implements IGitAPI {
         String result = launchCommand(args);
         return result.length()>=40 ? result.substring(0,40) : "";
     }
+
 }
