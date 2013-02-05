@@ -40,6 +40,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     private boolean pushMerge;
     private boolean pushOnlyIfSuccess;
+    private boolean pushEvenUnstable;
     
     private List<TagToPush> tagsToPush;
     // Pushes HEAD to these locations
@@ -52,12 +53,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
                         boolean pushOnlyIfSuccess,
+                        boolean pushEvenUnstable,
                         boolean pushMerge) {
         this.tagsToPush = tagsToPush;
         this.branchesToPush = branchesToPush;
         this.notesToPush = notesToPush;
         this.pushMerge = pushMerge;
         this.pushOnlyIfSuccess = pushOnlyIfSuccess;
+        this.pushEvenUnstable = pushEvenUnstable;
         this.configVersion = 2L;
     }
 
@@ -160,12 +163,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         final int buildNumber = build.getNumber();
         final Result buildResult = build.getResult();
 
-        // If pushOnlyIfSuccess is selected and the build is not a success, don't push.
-        if (pushOnlyIfSuccess && buildResult.isWorseThan(Result.SUCCESS)) {
+        if (!(pushEvenUnstable && buildResult.isBetterOrEqualTo(Result.UNSTABLE) || (pushOnlyIfSuccess && buildResult.isBetterOrEqualTo(Result.SUCCESS)))) {
             listener.getLogger().println("Build did not succeed and the project is configured to only push after a successful build, so no pushing will occur.");
             return true;
-        }
-        else {
+        } else {
             final String gitExe = gitSCM.getGitExe(build.getBuiltOn(), listener);
             EnvVars tempEnvironment;
             try {
