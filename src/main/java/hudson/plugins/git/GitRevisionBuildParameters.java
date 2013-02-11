@@ -58,7 +58,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 			return null;
 		}
 
-		return new RevisionParameterAction(data.getLastBuiltRevision().getSha1String());
+		return new RevisionParameterAction(data.getLastBuiltRevision().getSha1String(), getCombineQueuedCommits());
 	}
 
 	public boolean getCombineQueuedCommits() {
