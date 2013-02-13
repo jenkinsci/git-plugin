@@ -10,13 +10,7 @@ import hudson.plugins.git.*;
 import hudson.plugins.git.util.BuildData;
 import hudson.util.ArgumentListBuilder;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -1089,11 +1083,28 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    public void commit(File f) throws GitException {
+    public void commit(String message) throws GitException {
+        File f = null;
         try {
+            f = File.createTempFile("gitcommit", ".txt");
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(f);
+                fos.write(message.getBytes());
+            } finally {
+                if (fos != null)
+                    fos.close();
+            }
             launchCommand("commit", "-F", f.getAbsolutePath());
+
         } catch (GitException e) {
-            throw new GitException("Cannot commit " + f, e);
+            throw new GitException("Cannot commit " + message, e);
+        } catch (FileNotFoundException e) {
+            throw new GitException("Cannot commit " + message, e);
+        } catch (IOException e) {
+            throw new GitException("Cannot commit " + message, e);
+        } finally {
+            if (f != null) f.delete();
         }
     }
 

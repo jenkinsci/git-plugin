@@ -117,7 +117,7 @@ public interface IGitAPI {
     void branch(String name) throws GitException;
     void deleteBranch(String name) throws GitException;
 
-    void commit(File f) throws GitException;
+    void commit(String message) throws GitException;
 
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);

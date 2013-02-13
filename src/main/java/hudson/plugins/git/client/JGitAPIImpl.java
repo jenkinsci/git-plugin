@@ -4,8 +4,6 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.plugins.git.util.BuildData;
-import org.eclipse.jgit.JGitText;
-import org.eclipse.jgit.api.CheckoutResult;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.dircache.DirCache;
@@ -19,7 +17,6 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -73,6 +70,29 @@ public class JGitAPIImpl implements IGitAPI {
         }
     }
 
+    public void add(String filePattern) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.add().addFilepattern(filePattern).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public void commit(String message) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.commit().setMessage(message).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+    }
+
+
     private void checkoutDetachedHead(Repository repo, String commitish) throws IOException {
         Ref head = repo.getRef(HEAD);
         RevWalk revWalk = new RevWalk(repo);
@@ -98,12 +118,7 @@ public class JGitAPIImpl implements IGitAPI {
         refUpdate.forceUpdate();
     }
 
-
     // --- delegates
-
-    public void add(String filePattern) throws GitException {
-        delegate.add(filePattern);
-    }
 
     public void addNote(String note, String namespace) throws GitException {
         delegate.addNote(note, namespace);
@@ -131,10 +146,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void clone(RemoteConfig source) throws GitException {
         delegate.clone(source);
-    }
-
-    public void commit(File f) throws GitException {
-        delegate.commit(f);
     }
 
     public void deleteBranch(String name) throws GitException {

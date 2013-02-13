@@ -177,24 +177,7 @@ public class SubmoduleCombinator {
             git.add(submodule.file);
         }
     
-        try {
-            File f = File.createTempFile("gitcommit", ".txt");
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(f);
-                fos.write(commit.toString().getBytes());
-            } finally {
-                if (fos != null)
-                    fos.close();
-            }
-            git.commit(f);
-            f.delete();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
+        git.commit(commit.toString());
     }
 
     public int difference(Map<IndexEntry, Revision> item, List<IndexEntry> entries) {
