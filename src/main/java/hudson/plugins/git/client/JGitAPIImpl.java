@@ -4,22 +4,34 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.plugins.git.util.BuildData;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.JGitText;
+import org.eclipse.jgit.api.CheckoutResult;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.*;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheCheckout;
+import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RemoteConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
+
+import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class JGitAPIImpl implements IGitAPI {
 
-    private IGitAPI delegate;
+    private final IGitAPI delegate;
+    private final File workspace;
 
     public JGitAPIImpl(String gitExe, File workspace,
                        TaskListener listener, EnvVars environment) {
@@ -29,7 +41,65 @@ public class JGitAPIImpl implements IGitAPI {
     public JGitAPIImpl(String gitExe, File workspace,
                          TaskListener listener, EnvVars environment, String reference) {
         this.delegate = new CliGitAPIImpl(gitExe, workspace, listener, environment, reference);
+        this.workspace = workspace;
     }
+
+
+    public void checkout(String commitish) throws GitException {
+        checkoutBranch(null,commitish);
+    }
+
+    public void checkoutBranch(String branch, String commitish) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+
+            // First, checkout to detached HEAD, so we can delete the branch.
+            checkoutDetachedHead(git.getRepository(), commitish);
+
+            if (branch!=null) {
+                // Second, check to see if the branch actually exists, and then delete it if it does.
+                for (Branch b : getBranches()) {
+                    if (b.getName().equals(branch)) {
+                        deleteBranch(branch);
+                    }
+                }
+                // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
+                git.checkout().setName(branch).setForce(true).setStartPoint(commitish).call();
+            }
+        } catch (IOException e) {
+            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
+        } catch (GitAPIException e) {
+            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
+        }
+    }
+
+    private void checkoutDetachedHead(Repository repo, String commitish) throws IOException {
+        Ref head = repo.getRef(HEAD);
+        RevWalk revWalk = new RevWalk(repo);
+        AnyObjectId headId = head.getObjectId();
+        RevCommit headCommit = headId == null ? null : revWalk.parseCommit(headId);
+        RevTree headTree = headCommit == null ? null : headCommit.getTree();
+
+        ObjectId target = ObjectId.fromString(commitish);
+        RevCommit newCommit = revWalk.parseCommit(target);
+
+        DirCache dc = repo.lockDirCache();
+        try {
+            DirCacheCheckout dco = new DirCacheCheckout(repo, headTree, dc, newCommit.getTree());
+            dco.setFailOnConflict(true);
+            dco.checkout();
+        } finally {
+            dc.unlock();
+        }
+        RefUpdate refUpdate = repo.updateRef(HEAD, true);
+        refUpdate.setForceUpdate(true);
+        refUpdate.setRefLogMessage("checkout: moving to " + commitish, false);
+        refUpdate.setNewObjectId(newCommit);
+        refUpdate.forceUpdate();
+    }
+
+
+    // --- delegates
 
     public void add(String filePattern) throws GitException {
         delegate.add(filePattern);
@@ -49,14 +119,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void changelog(String revFrom, String revTo, OutputStream fos) throws GitException {
         delegate.changelog(revFrom, revTo, fos);
-    }
-
-    public void checkout(String commitish) throws GitException {
-        delegate.checkout(commitish);
-    }
-
-    public void checkoutBranch(String branch, String commitish) throws GitException {
-        delegate.checkoutBranch(branch, commitish);
     }
 
     public void clean() throws GitException {
