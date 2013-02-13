@@ -1,7 +1,7 @@
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.plugins.git.util.GitUtils;
 
 import java.io.File;
@@ -49,7 +49,7 @@ public class SubmoduleCombinator {
 
         for (IndexEntry submodule : git.getSubmodules("HEAD")) {
             File subdir = new File(workspace, submodule.getFile());
-            IGitAPI subGit = new GitAPI(git.getGitExe(), subdir, listener, git.getEnvironment(), git.getReference());
+            IGitAPI subGit = new JGitAPIImpl(git.getGitExe(), subdir, listener, git.getEnvironment(), git.getReference());
       
             GitUtils gu = new GitUtils(listener, subGit);
             Collection<Revision> items = gu.filterTipBranches(gu.getAllBranchRevisions());
@@ -170,7 +170,7 @@ public class SubmoduleCombinator {
             IndexEntry submodule = setting.getKey();
             Revision branch = setting.getValue();
             File subdir = new File(workspace, submodule.getFile());
-            IGitAPI subGit = new GitAPI(git.getGitExe(), subdir,
+            IGitAPI subGit = new JGitAPIImpl(git.getGitExe(), subdir,
                     listener, git.getEnvironment(), git.getReference());
 
             subGit.checkout(branch.sha1.name());

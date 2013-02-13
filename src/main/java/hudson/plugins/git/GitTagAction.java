@@ -9,6 +9,7 @@ import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.model.TaskThread;
+import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.AbstractScmTagAction;
@@ -190,7 +191,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                                 throws IOException {
-                            IGitAPI git = new GitAPI("git", localWorkspace, listener, environment);
+                            IGitAPI git = new JGitAPIImpl("git", localWorkspace, listener, environment);
                             String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
                             git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
                             return new Object[]{null, build};

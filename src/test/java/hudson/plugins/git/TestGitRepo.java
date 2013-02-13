@@ -5,6 +5,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.tasks.Mailer;
 
 import java.io.File;
@@ -24,7 +25,7 @@ public class TestGitRepo {
      */
 	public File gitDir; // was "workDir"
 	public FilePath gitDirPath; // was "workspace"
-	public GitAPI git;
+	public CliGitAPIImpl git;
 	
 	private EnvVars envVars;
 	
@@ -52,7 +53,7 @@ public class TestGitRepo {
 		
 		// initialize the git interface.
 		gitDirPath = new FilePath(gitDir);
-		git = new GitAPI("git", gitDir, listener, envVars);
+		git = new CliGitAPIImpl("git", gitDir, listener, envVars);
 
 		// finally: initialize the repo
 		git.init();

@@ -1,6 +1,5 @@
 package hudson.plugins.git;
 
-import hudson.BulkChange;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
@@ -11,9 +10,9 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -26,10 +25,8 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.IOException2;
-import hudson.util.StreamTaskListener;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -38,13 +35,11 @@ import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
-import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -534,7 +529,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSubmoduleFixup() throws Exception {
         File repo = createTmpDir();
         FilePath moduleWs = new FilePath(repo);
-        GitAPI moduleRepo = new GitAPI("git", repo, listener, new EnvVars());
+        CliGitAPIImpl moduleRepo = new CliGitAPIImpl("git", repo, listener, new EnvVars());
 
         {// first we create a Git repository with submodule
             moduleRepo.init();

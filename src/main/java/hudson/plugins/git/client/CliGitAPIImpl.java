@@ -1,4 +1,4 @@
-package hudson.plugins.git;
+package hudson.plugins.git.client;
 
 import hudson.EnvVars;
 import hudson.Functions;
@@ -6,6 +6,7 @@ import hudson.Launcher;
 import hudson.Launcher.LocalLauncher;
 import hudson.Util;
 import hudson.model.TaskListener;
+import hudson.plugins.git.*;
 import hudson.plugins.git.util.BuildData;
 import hudson.util.ArgumentListBuilder;
 
@@ -36,7 +37,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.RemoteConfig;
 
-public class GitAPI implements IGitAPI {
+public class CliGitAPIImpl implements IGitAPI {
 
     Launcher launcher;
     File workspace;
@@ -45,13 +46,13 @@ public class GitAPI implements IGitAPI {
     EnvVars environment;
     String reference;
 
-    public GitAPI(String gitExe, File workspace,
-                  TaskListener listener, EnvVars environment) {
+    public CliGitAPIImpl(String gitExe, File workspace,
+                         TaskListener listener, EnvVars environment) {
         this(gitExe, workspace, listener, environment, null);
     }
 
-    public GitAPI(String gitExe, File workspace,
-                  TaskListener listener, EnvVars environment, String reference) {
+    public CliGitAPIImpl(String gitExe, File workspace,
+                         TaskListener listener, EnvVars environment, String reference) {
 
         //listener.getLogger().println("Git API @ " + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
 
@@ -975,7 +976,7 @@ public class GitAPI implements IGitAPI {
             if (branch!=null) {
                 // Second, check to see if the branch actually exists, and then delete it if it does.
                 for (Branch b : getBranches()) {
-                    if (b.name.equals(branch)) {
+                    if (b.getName().equals(branch)) {
                         deleteBranch(branch);
                     }
                 }

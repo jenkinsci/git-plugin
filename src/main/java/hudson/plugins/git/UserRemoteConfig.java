@@ -7,14 +7,13 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
+import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.util.FormValidation;
 
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -71,7 +70,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
             GitTool.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
             String gitExe = descriptor.getInstallations()[0].forNode(Jenkins.getInstance(), TaskListener.NULL).getGitExe();
-            IGitAPI git = new GitAPI(gitExe, null, TaskListener.NULL, environment, null);
+            IGitAPI git = new JGitAPIImpl(gitExe, null, TaskListener.NULL, environment, null);
 
             // attempt to connect the provided URL
             try {

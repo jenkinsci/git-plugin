@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
@@ -28,7 +29,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
 	protected PersonIdent janeDoe;
 	protected File workDir; // aliases "gitDir"
 	protected FilePath workspace; // aliases "gitDirPath"
-	protected GitAPI git;
+	protected CliGitAPIImpl git;
 	
     @Override
     protected void setUp() throws Exception {
