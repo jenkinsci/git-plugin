@@ -852,20 +852,6 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
 
-    private boolean changeLogResult(String changeLog, File changelogFile) throws IOException {
-        if (changeLog == null) {
-            return false;
-        } else {
-            changelogFile.delete();
-
-            FileOutputStream fos = new FileOutputStream(changelogFile);
-            fos.write(changeLog.getBytes());
-            fos.close();
-            // Write to file
-            return true;
-        }
-    }
-
     /**
      * Exposing so that we can get this from GitPublisher.
      */
