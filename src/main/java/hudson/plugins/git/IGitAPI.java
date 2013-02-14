@@ -18,7 +18,9 @@ import org.eclipse.jgit.transport.RemoteConfig;
  * Encapsulates Git operations on a particular directory through git(1).
  */
 public interface IGitAPI {
-    String getGitExe();
+
+    IGitAPI subGit(String subdir);
+
     EnvVars getEnvironment();
     Repository getRepository() throws IOException;
 
@@ -54,7 +56,7 @@ public interface IGitAPI {
     void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException;
     void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException;
 
-    public void fetch(String repository, String refspec) throws GitException;
+    void fetch(String repository, String refspec) throws GitException;
     void fetch(RemoteConfig remoteRepository);
 
     void fetch() throws GitException;

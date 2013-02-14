@@ -29,6 +29,7 @@ public class JGitAPIImpl implements IGitAPI {
 
     private final IGitAPI delegate;
     private final File workspace;
+    private final TaskListener listener;
 
     public JGitAPIImpl(String gitExe, File workspace,
                        TaskListener listener, EnvVars environment) {
@@ -37,10 +38,23 @@ public class JGitAPIImpl implements IGitAPI {
 
     public JGitAPIImpl(String gitExe, File workspace,
                          TaskListener listener, EnvVars environment, String reference) {
-        this.delegate = new CliGitAPIImpl(gitExe, workspace, listener, environment, reference);
-        this.workspace = workspace;
+        this(new CliGitAPIImpl(gitExe, workspace, listener, environment, reference),
+             workspace, listener);
     }
 
+    private JGitAPIImpl(IGitAPI delegate, File workspace, TaskListener listener) {
+        this.delegate = delegate;
+        this.workspace = workspace;
+        this.listener = listener;
+    }
+
+    public IGitAPI subGit(String subdir) {
+        return new JGitAPIImpl(delegate, new File(workspace, subdir), listener);
+    }
+
+    public void init() throws GitException {
+        Git.init().setDirectory(workspace).call();
+    }
 
     public void checkout(String commitish) throws GitException {
         checkoutBranch(null,commitish);

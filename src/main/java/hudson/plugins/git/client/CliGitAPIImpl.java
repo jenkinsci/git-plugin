@@ -59,8 +59,8 @@ public class CliGitAPIImpl implements IGitAPI {
         launcher = new LocalLauncher(GitSCM.VERBOSE?listener:TaskListener.NULL);
     }
 
-    public String getGitExe() {
-        return gitExe;
+    public IGitAPI subGit(String subdir) {
+        return new CliGitAPIImpl(gitExe, new File(workspace, subdir), listener, environment, reference);
     }
 
     public EnvVars getEnvironment() {
@@ -355,7 +355,7 @@ public class CliGitAPIImpl implements IGitAPI {
         String revSpec = revFrom + ".." + revTo;
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "whatchanged");
+        args.add(gitExe, "whatchanged");
         args.add(extraargs);
         args.add(revSpec);
 
@@ -870,7 +870,7 @@ public class CliGitAPIImpl implements IGitAPI {
 
         try {
             environment.put("GIT_ASKPASS", launcher.isUnix() ? "/bin/echo" : "echo");
-            args.prepend(getGitExe());
+            args.prepend(gitExe);
             Launcher.ProcStarter p = launcher.launch().cmds(args.toCommandArray()).
                     envs(environment).stdout(fos).stderr(err);
             if (workDir != null) p.pwd(workDir);

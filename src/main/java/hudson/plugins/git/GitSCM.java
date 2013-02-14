@@ -781,20 +781,17 @@ public class GitSCM extends SCM implements Serializable {
         List<IndexEntry> submodules = parentGit.getSubmodules("HEAD");
 
         for (IndexEntry submodule : submodules) {
+            String subdir = submodule.getFile();
             try {
-                File subdir = new File(workspace, submodule.getFile());
                 listener.getLogger().println("Trying to clean submodule in " + subdir);
-                IGitAPI subGit = new JGitAPIImpl(parentGit.getGitExe(), subdir,
-                        listener, parentGit.getEnvironment(), parentGit.getReference());
-
+                IGitAPI subGit = parentGit.subGit(subdir);
                 subGit.clean();
             } catch (Exception ex) {
                 listener.getLogger().println(
                         "Problem cleaning submodule in "
-                        + submodule.getFile()
+                        + subdir
                         + " - could be unavailable. Continuing anyway");
             }
-
         }
     }
 
