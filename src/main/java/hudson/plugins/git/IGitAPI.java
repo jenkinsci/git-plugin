@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
@@ -56,7 +57,7 @@ public interface IGitAPI {
     void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException;
     void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException;
 
-    void fetch(String repository, String refspec) throws GitException;
+    void fetch(String repository, RefSpec refspec) throws GitException;
     void fetch(RemoteConfig remoteRepository);
 
     void fetch() throws GitException;

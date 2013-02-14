@@ -4,7 +4,10 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.plugins.git.util.BuildData;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
@@ -12,11 +15,14 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.TagOpt;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -57,7 +63,7 @@ public class JGitAPIImpl implements IGitAPI {
     }
 
     public void checkout(String commitish) throws GitException {
-        checkoutBranch(null,commitish);
+        checkoutBranch(null, commitish);
     }
 
     public void checkoutBranch(String branch, String commitish) throws GitException {
@@ -106,6 +112,105 @@ public class JGitAPIImpl implements IGitAPI {
         }
     }
 
+    public void branch(String name) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.branchCreate().setName(name).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public void deleteBranch(String name) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.branchDelete().setBranchNames(name).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public List<Branch> getBranches() throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
+            List<Branch> branches = new ArrayList<Branch>(refs.size());
+            for (Ref ref : refs) {
+                branches.add(new Branch(ref));
+            }
+            return branches;
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public void tag(String name, String message) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.tag().setName(name).setMessage(message).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public void reset() throws GitException {
+        reset(false);
+    }
+
+    public void reset(boolean hard) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.reset()
+                    .setMode(hard ? ResetCommand.ResetType.HARD : ResetCommand.ResetType.MIXED)
+                    .call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public void fetch() throws GitException {
+        fetch(null, null);
+    }
+
+    public void fetch(RemoteConfig remoteRepository) {
+        // Assume there is only 1 URL / refspec for simplicity
+        fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
+    }
+
+    public void fetch(String remote, RefSpec refspec) throws GitException {
+
+        delegate.fetch(remote, refspec);
+
+        /**
+         * not working, as demonstrated by hudson.plugins.git.GitSCMTest#testMultipleBranchBuild
+         * JGit FecthProcess don't let us set RefUpdate.force=true
+         * @see http://stackoverflow.com/questions/14876321/jgit-fetch-dont-update-tag
+         *
+        listener.getLogger().println(
+                "Fetching upstream changes"
+                        + (remote != null ? " from " + remote : ""));
+
+        try {
+            Git git = Git.open(workspace);
+            FetchCommand fetch = git.fetch().setTagOpt(TagOpt.FETCH_TAGS);
+            if (remote != null) fetch.setRemote(remote);
+            if (refspec != null) fetch.setRefSpecs(refspec));
+            fetch.call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
+         */
+    }
+
+    // --- low-level JGit stuff
 
     private void checkoutDetachedHead(Repository repo, String commitish) throws IOException {
         Ref head = repo.getRef(HEAD);
@@ -142,10 +247,6 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.appendNote(note, namespace);
     }
 
-    public void branch(String name) throws GitException {
-        delegate.branch(name);
-    }
-
     public void changelog(String revFrom, String revTo, OutputStream fos) throws GitException {
         delegate.changelog(revFrom, revTo, fos);
     }
@@ -162,10 +263,6 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.clone(source);
     }
 
-    public void deleteBranch(String name) throws GitException {
-        delegate.deleteBranch(name);
-    }
-
     public void deleteTag(String tagName) throws GitException {
         delegate.deleteTag(tagName);
     }
@@ -174,28 +271,12 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.describe(commitIsh);
     }
 
-    public void fetch() throws GitException {
-        delegate.fetch();
-    }
-
-    public void fetch(RemoteConfig remoteRepository) {
-        delegate.fetch(remoteRepository);
-    }
-
-    public void fetch(String repository, String refspec) throws GitException {
-        delegate.fetch(repository, refspec);
-    }
-
     public void fixSubmoduleUrls(String remote, TaskListener listener) throws GitException {
         delegate.fixSubmoduleUrls(remote, listener);
     }
 
     public String getAllLogEntries(String branch) {
         return delegate.getAllLogEntries(branch);
-    }
-
-    public List<Branch> getBranches() throws GitException {
-        return delegate.getBranches();
     }
 
     public List<Branch> getBranchesContaining(String revspec) throws GitException {
@@ -208,10 +289,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public EnvVars getEnvironment() {
         return delegate.getEnvironment();
-    }
-
-    public String getGitExe() {
-        return delegate.getGitExe();
     }
 
     public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
@@ -235,7 +312,12 @@ public class JGitAPIImpl implements IGitAPI {
     }
 
     public Repository getRepository() throws IOException {
-        return delegate.getRepository();
+        try {
+            Git git = Git.open(workspace);
+            return git.getRepository();
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
     }
 
     public List<IndexEntry> getSubmodules(String treeIsh) throws GitException {
@@ -264,10 +346,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public boolean hasGitRepo() throws GitException {
         return delegate.hasGitRepo();
-    }
-
-    public void init() throws GitException {
-        delegate.init();
     }
 
     public boolean isBareRepository() throws GitException {
@@ -300,14 +378,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void push(RemoteConfig repository, String revspec) throws GitException {
         delegate.push(repository, revspec);
-    }
-
-    public void reset() throws GitException {
-        delegate.reset();
-    }
-
-    public void reset(boolean hard) throws GitException {
-        delegate.reset(hard);
     }
 
     public List<ObjectId> revListAll() throws GitException {
@@ -360,10 +430,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void submoduleUpdate(boolean recursive) throws GitException {
         delegate.submoduleUpdate(recursive);
-    }
-
-    public void tag(String tagName, String comment) throws GitException {
-        delegate.tag(tagName, comment);
     }
 
     public boolean tagExists(String tagName) throws GitException {

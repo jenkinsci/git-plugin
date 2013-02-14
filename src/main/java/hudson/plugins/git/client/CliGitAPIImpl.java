@@ -29,6 +29,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepository;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 
 public class CliGitAPIImpl implements IGitAPI {
@@ -174,7 +175,7 @@ public class CliGitAPIImpl implements IGitAPI {
         return hasGitModules() && ( getSubmodules(treeIsh).size() > 0 );
     }
 
-    public void fetch(String repository, String refspec) throws GitException {
+    public void fetch(String repository, RefSpec refspec) throws GitException {
         listener.getLogger().println(
                                      "Fetching upstream changes"
                                      + (repository != null ? " from " + repository : ""));
@@ -185,7 +186,7 @@ public class CliGitAPIImpl implements IGitAPI {
         if (repository != null) {
             args.add(repository);
             if (refspec != null)
-                args.add(refspec);
+                args.add(refspec.toString());
         }
 
         launchCommand(args);
@@ -1110,7 +1111,7 @@ public class CliGitAPIImpl implements IGitAPI {
 
     public void fetch(RemoteConfig remoteRepository) throws GitException {
         // Assume there is only 1 URL / refspec for simplicity
-        fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0).toString());
+        fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0));
 
     }
 
