@@ -7,7 +7,6 @@ import hudson.Launcher.LocalLauncher;
 import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
-import hudson.plugins.git.util.BuildData;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.*;
@@ -374,34 +373,29 @@ public class CliGitAPIImpl implements IGitAPI {
      * Given a Revision, show it as if it were an entry from git whatchanged, so that it
      * can be parsed by GitChangeLogParser.
      *
+     *
+     *
      * @param r The Revision object
+     * @param from
      * @return The git show output, in List form.
      * @throws GitException if errors were encountered running git show.
      */
-    public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
+    public List<String> showRevision(ObjectId r, ObjectId from) throws GitException {
     	StringWriter writer = new StringWriter();
-    	String revName = ""; 
-    	
 
-    	if (buildData != null && buildData.lastBuild != null){
-    		revName = buildData.lastBuild.revision.getSha1String() + ".." + r.getSha1String();
-    		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName));
+    	if (from != null){
+    		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw",
+                    from.name() + ".." + r.name()));
     		writer.write("\\n");
     	}
     	
-    	revName = r.getSha1String();
-    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName));
+    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", r.name()));
 
-        String result = "";
-        
-        result = writer.toString();
-
+        String result = writer.toString();
         List<String> revShow = new ArrayList<String>();
-
         if (result != null) {
             revShow = new ArrayList<String>(Arrays.asList(result.split("\\n")));
         }
-
         return revShow;
     }
 

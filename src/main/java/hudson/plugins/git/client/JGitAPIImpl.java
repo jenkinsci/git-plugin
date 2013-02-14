@@ -3,8 +3,6 @@ package hudson.plugins.git.client;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
-import hudson.plugins.git.util.BuildData;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ResetCommand;
@@ -17,7 +15,6 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.TagOpt;
 
 import java.io.File;
 import java.io.IOException;
@@ -412,8 +409,8 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.setupSubmoduleUrls(rev, listener);
     }
 
-    public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
-        return delegate.showRevision(r, buildData);
+    public List<String> showRevision(ObjectId r, ObjectId from) throws GitException {
+        return delegate.showRevision(r, from);
     }
 
     public void submoduleClean(boolean recursive) throws GitException {

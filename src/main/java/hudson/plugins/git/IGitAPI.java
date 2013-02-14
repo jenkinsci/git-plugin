@@ -125,7 +125,7 @@ public interface IGitAPI {
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);
 
-    List<String> showRevision(Revision r, BuildData buildData) throws GitException;
+    List<String> showRevision(ObjectId r, ObjectId from) throws GitException;
     String getHeadRev(String remoteRepoUrl, String branch) throws GitException;
 
     String getReference();
