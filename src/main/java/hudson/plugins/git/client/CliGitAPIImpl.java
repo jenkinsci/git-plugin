@@ -174,16 +174,16 @@ public class CliGitAPIImpl implements IGitAPI {
         return hasGitModules() && ( getSubmodules(treeIsh).size() > 0 );
     }
 
-    public void fetch(String repository, RefSpec refspec) throws GitException {
+    public void fetch(String remote, RefSpec refspec) throws GitException {
         listener.getLogger().println(
                                      "Fetching upstream changes"
-                                     + (repository != null ? " from " + repository : ""));
+                                     + (remote != null ? " from " + remote : ""));
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add("fetch", "-t");
 
-        if (repository != null) {
-            args.add(repository);
+        if (remote != null) {
+            args.add(remote);
             if (refspec != null)
                 args.add(refspec.toString());
         }
@@ -514,40 +514,16 @@ public class CliGitAPIImpl implements IGitAPI {
         launchCommand( "config", "submodule."+name+".url", url );
     }
 
-    /**
-     * Get a remote's URL
-     *
-     * @param name The name of the remote (e.g. origin)
-     *
-     * @throws GitException if executing the git command fails
-     */
     public String getRemoteUrl(String name) throws GitException {
         String result = launchCommand( "config", "--get", "remote."+name+".url" );
         return firstLine(result).trim();
     }
 
-    /**
-     * Set a remote's URL
-     *
-     * @param name The name of the remote (e.g. origin)
-     *
-     * @param url The new value of the remote's URL
-     *
-     * @throws GitException if executing the git command fails
-     */
     public void setRemoteUrl(String name, String url) throws GitException {
         launchCommand( "config", "remote."+name+".url", url );
     }
 
-    /**
-     * From a given repository, get a remote's URL
-     *
-     * @param name The name of the remote (e.g. origin)
-     *
-     * @param GIT_DIR The path to the repository (must be to .git dir)
-     *
-     * @throws GitException if executing the git command fails
-     */
+
     public String getRemoteUrl(String name, String GIT_DIR) throws GitException {
         String result
             = launchCommand( "--git-dir=" + GIT_DIR,
@@ -555,31 +531,12 @@ public class CliGitAPIImpl implements IGitAPI {
         return firstLine(result).trim();
     }
 
-    /**
-     * For a given repository, set a remote's URL
-     *
-     * @param name The name of the remote (e.g. origin)
-     *
-     * @param url The new value of the remote's URL
-     *
-     * @param GIT_DIR The path to the repository (must be to .git dir)
-     *
-     * @throws GitException if executing the git command fails
-     */
     public void setRemoteUrl(String name, String url, String GIT_DIR ) throws GitException {
         launchCommand( "--git-dir=" + GIT_DIR,
                        "config", "remote."+name+".url", url );
     }
 
-    /**
-     * Get the default remote.
-     *
-     * @param _default_ The default remote to use if more than one exists.
-     *
-     * @return _default_ if it exists, otherwise return the first remote.
-     *
-     * @throws GitException if executing the git command fails
-     */
+
     public String getDefaultRemote( String _default_ ) throws GitException {
         BufferedReader rdr =
             new BufferedReader(
@@ -1048,9 +1005,9 @@ public class CliGitAPIImpl implements IGitAPI {
         return entries;
     }
 
-    public boolean isCommitInRepo(String sha1) {
+    public boolean isCommitInRepo(ObjectId commit) {
         try {
-            List<ObjectId> revs = revList(sha1);
+            List<ObjectId> revs = revList(commit.name());
 
             if (revs.size() == 0) {
                 return false;
@@ -1101,12 +1058,6 @@ public class CliGitAPIImpl implements IGitAPI {
         } finally {
             if (f != null) f.delete();
         }
-    }
-
-    public void fetch(RemoteConfig remoteRepository) throws GitException {
-        // Assume there is only 1 URL / refspec for simplicity
-        fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0));
-
     }
 
     public ObjectId mergeBase(ObjectId id1, ObjectId id2) {

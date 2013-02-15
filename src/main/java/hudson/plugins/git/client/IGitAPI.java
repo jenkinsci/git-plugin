@@ -1,10 +1,9 @@
-package hudson.plugins.git;
+package hudson.plugins.git.client;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -20,18 +19,52 @@ import org.eclipse.jgit.transport.RemoteConfig;
  */
 public interface IGitAPI {
 
-    IGitAPI subGit(String subdir);
-
-    EnvVars getEnvironment();
     Repository getRepository() throws IOException;
 
     public void init() throws GitException;
 
-    /**
-     * Returns true if the encapsulated directory has ".git" directory
-     */
+    void add(String filePattern) throws GitException;
+
+    // TODO way to set commit author/committer
+    void commit(String message) throws GitException;
+
     boolean hasGitRepo() throws GitException;
-    boolean isCommitInRepo(String sha1);
+
+    boolean isCommitInRepo(ObjectId commit) throws GitException;
+
+    /**
+     * From a given repository, get a remote's URL
+     * @param name The name of the remote (e.g. origin)
+     * @throws GitException if executing the git command fails
+     */
+    String getRemoteUrl(String name) throws GitException;
+
+    /**
+     * For a given repository, set a remote's URL
+     * @param name The name of the remote (e.g. origin)
+     * @param url The new value of the remote's URL
+     * @throws GitException if executing the git command fails
+     */
+    void setRemoteUrl(String name, String url) throws GitException;
+
+    void clean() throws GitException;
+
+    void fetch(String remote, RefSpec refspec) throws GitException;
+
+    /**
+     * Creates a new branch that points to the current HEAD.
+     */
+    void branch(String name) throws GitException;
+
+    void deleteBranch(String name) throws GitException;
+
+
+    // --- submodules ----
+
+    /**
+     * @return a IGitAPI implementation to manage git submodule repository
+     */
+    IGitAPI subGit(String subdir);
 
     /**
      * Returns true if the repository has Git submodules.
@@ -39,14 +72,6 @@ public interface IGitAPI {
     boolean hasGitModules() throws GitException;
     boolean hasGitModules( String treeIsh ) throws GitException;
     List<IndexEntry> getSubmodules( String treeIsh ) throws GitException;
-    String getRemoteUrl(String name) throws GitException;
-    void setRemoteUrl(String name, String url) throws GitException;
-    String getRemoteUrl(String name, String GIT_DIR) throws GitException;
-    void setRemoteUrl(String name, String url, String GIT_DIR) throws GitException;
-    String getDefaultRemote( String _default_ ) throws GitException;
-    boolean isBareRepository() throws GitException;
-    boolean isBareRepository(String GIT_DIR) throws GitException;
-
     void submoduleInit()  throws GitException;
     void submoduleUpdate(boolean recursive)  throws GitException;
     void submoduleClean(boolean recursive)  throws GitException;
@@ -57,17 +82,10 @@ public interface IGitAPI {
     void setupSubmoduleUrls( Revision rev, TaskListener listener ) throws GitException;
     void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException;
 
-    void fetch(String repository, RefSpec refspec) throws GitException;
-    void fetch(RemoteConfig remoteRepository);
-
-    void fetch() throws GitException;
-    void reset(boolean hard) throws GitException;
-    void reset() throws GitException;
     void push(RemoteConfig repository, String revspec) throws GitException;
     void merge(String revSpec) throws GitException;
     void clone(RemoteConfig source) throws GitException;
     void clone(RemoteConfig rc, boolean useShallowClone) throws GitException;
-    void clean() throws GitException;
     void prune(RemoteConfig repository) throws GitException;
 
     ObjectId revParse(String revName) throws GitException;
@@ -112,15 +130,6 @@ public interface IGitAPI {
      */
     void checkoutBranch(String branch, String commitish) throws GitException;
 
-    void add(String filePattern) throws GitException;
-
-    /**
-     * Creates a new branch that points to the current HEAD.
-     */
-    void branch(String name) throws GitException;
-    void deleteBranch(String name) throws GitException;
-
-    void commit(String message) throws GitException;
 
     ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
     String getAllLogEntries(String branch);

@@ -18,6 +18,7 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -38,7 +39,6 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
@@ -808,7 +808,8 @@ public class GitSCM extends SCM implements Serializable {
             TaskListener listener,
             RemoteConfig remoteRepository) {
         try {
-            git.fetch(remoteRepository);
+            // Assume there is only 1 URL / refspec for simplicity
+            git.fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
             return true;
         } catch (GitException ex) {
             ex.printStackTrace(listener.error(
@@ -1045,7 +1046,8 @@ public class GitSCM extends SCM implements Serializable {
                     // Also do a fetch
                     for (RemoteConfig remoteRepository : repos) {
                         try {
-                            git.fetch(remoteRepository);
+                            // Assume there is only 1 URL / refspec for simplicity
+                            git.fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
                             fetched = true;
                         } catch (Exception e) {
                             e.printStackTrace(listener.error(
@@ -1291,7 +1293,7 @@ public class GitSCM extends SCM implements Serializable {
             for (Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
                 if (lastRevWas != null) {
-                    if (git.isCommitInRepo(lastRevWas.getSHA1().name())) {
+                    if (git.isCommitInRepo(lastRevWas.getSHA1())) {
                         putChangelogDiffs(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
                         histories++;
                     } else {
@@ -1314,7 +1316,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private void computeMergeChangeLog(IGitAPI git, Revision revToBuild, String revFrom, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
-        if (!git.isCommitInRepo(revFrom)) {
+        if (!git.isCommitInRepo(ObjectId.fromString(revFrom))) {
             listener.getLogger().println("Could not record history. Previous build's commit, " + revFrom
                                          + ", does not exist in the current repository.");
         } else {

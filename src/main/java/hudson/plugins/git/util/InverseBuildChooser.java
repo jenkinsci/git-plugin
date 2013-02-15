@@ -5,7 +5,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.IGitAPI;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.Messages;
 import hudson.plugins.git.Revision;
 

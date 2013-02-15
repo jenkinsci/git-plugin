@@ -171,15 +171,6 @@ public class JGitAPIImpl implements IGitAPI {
         }
     }
 
-    public void fetch() throws GitException {
-        fetch(null, null);
-    }
-
-    public void fetch(RemoteConfig remoteRepository) {
-        // Assume there is only 1 URL / refspec for simplicity
-        fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
-    }
-
     public void fetch(String remote, RefSpec refspec) throws GitException {
 
         delegate.fetch(remote, refspec);
@@ -280,14 +271,6 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.getBranchesContaining(revspec);
     }
 
-    public String getDefaultRemote(String _default_) throws GitException {
-        return delegate.getDefaultRemote(_default_);
-    }
-
-    public EnvVars getEnvironment() {
-        return delegate.getEnvironment();
-    }
-
     public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
         return delegate.getHeadRev(remoteRepoUrl, branch);
     }
@@ -304,11 +287,7 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.getRemoteUrl(name);
     }
 
-    public String getRemoteUrl(String name, String GIT_DIR) throws GitException {
-        return delegate.getRemoteUrl(name, GIT_DIR);
-    }
-
-    public Repository getRepository() throws IOException {
+        public Repository getRepository() throws IOException {
         try {
             Git git = Git.open(workspace);
             return git.getRepository();
@@ -345,16 +324,8 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.hasGitRepo();
     }
 
-    public boolean isBareRepository() throws GitException {
-        return delegate.isBareRepository();
-    }
-
-    public boolean isBareRepository(String GIT_DIR) throws GitException {
-        return delegate.isBareRepository(GIT_DIR);
-    }
-
-    public boolean isCommitInRepo(String sha1) {
-        return delegate.isCommitInRepo(sha1);
+    public boolean isCommitInRepo(ObjectId commit) throws GitException {
+        return delegate.isCommitInRepo(commit);
     }
 
     public List<IndexEntry> lsTree(String treeIsh) throws GitException {
@@ -391,10 +362,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void setRemoteUrl(String name, String url) throws GitException {
         delegate.setRemoteUrl(name, url);
-    }
-
-    public void setRemoteUrl(String name, String url, String GIT_DIR) throws GitException {
-        delegate.setRemoteUrl(name, url, GIT_DIR);
     }
 
     public void setSubmoduleUrl(String name, String url) throws GitException {

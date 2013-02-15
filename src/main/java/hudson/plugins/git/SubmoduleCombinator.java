@@ -1,11 +1,10 @@
 package hudson.plugins.git;
 
 import hudson.model.TaskListener;
-import hudson.plugins.git.client.JGitAPIImpl;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.util.GitUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +25,7 @@ import org.eclipse.jgit.lib.ObjectId;
  * @author nigelmagnay
  */
 public class SubmoduleCombinator {
-    IGitAPI      git;
+    IGitAPI git;
     File         workspace;
     TaskListener listener;
 

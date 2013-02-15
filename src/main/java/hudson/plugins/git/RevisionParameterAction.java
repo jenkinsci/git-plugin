@@ -30,6 +30,7 @@ import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
 import hudson.Util;
 
+import hudson.plugins.git.client.IGitAPI;
 import org.eclipse.jgit.lib.ObjectId;
 import java.io.Serializable;
 import java.util.List;

@@ -9,6 +9,7 @@ import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.model.TaskThread;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;

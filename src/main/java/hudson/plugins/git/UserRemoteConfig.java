@@ -7,6 +7,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.util.FormValidation;
 

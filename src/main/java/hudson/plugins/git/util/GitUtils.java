@@ -15,7 +15,7 @@ import hudson.slaves.NodeProperty;
 import hudson.model.StreamBuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.IGitAPI;
+import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.Revision;
 
 import java.io.IOException;
