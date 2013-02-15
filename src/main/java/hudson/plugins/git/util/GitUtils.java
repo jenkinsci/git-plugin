@@ -53,8 +53,7 @@ public class GitUtils {
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException {
         Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
-        List<Branch> branches = git.getRemoteBranches();
-        for (Branch b : branches) {
+        for (Branch b : git.getRemoteBranches()) {
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
                 r = new Revision(b.getSHA1());

@@ -75,7 +75,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // attempt to connect the provided URL
             try {
-                String headRevision = git.getHeadRev(url, "HEAD");
+                git.getHeadRev(url, "HEAD");
             } catch (GitException e) {
                 return FormValidation.error(Messages.UserRemoteConfig_FailedToConnect(e.getMessage()));
             }

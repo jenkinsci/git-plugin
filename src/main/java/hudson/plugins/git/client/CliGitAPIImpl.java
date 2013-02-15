@@ -170,10 +170,6 @@ public class CliGitAPIImpl implements IGitAPI {
         return submodules;
     }
 
-    public boolean hasGitModules( String treeIsh ) throws GitException {
-        return hasGitModules() && ( getSubmodules(treeIsh).size() > 0 );
-    }
-
     public void fetch(String remote, RefSpec refspec) throws GitException {
         listener.getLogger().println(
                                      "Fetching upstream changes"
@@ -413,11 +409,6 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    /**
-     * Init submodules.
-     *
-     * @throws GitException if executing the Git command fails
-     */
     public void submoduleInit() throws GitException {
         launchCommand("submodule", "init");
     }
@@ -752,7 +743,7 @@ public class CliGitAPIImpl implements IGitAPI {
             setupSubmoduleUrls( remote, listener );
     }
 
-    public void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException {
+    private void setupSubmoduleUrls( String remote, TaskListener listener ) throws GitException {
         // This is to make sure that we don't miss any new submodules or
         // changes in submodule origin paths...
         submoduleInit();
@@ -860,10 +851,10 @@ public class CliGitAPIImpl implements IGitAPI {
         // That are possible.
     }
 
-    private List<Branch> parseBranches(String fos) throws GitException {
+    private Set<Branch> parseBranches(String fos) throws GitException {
         // TODO: git branch -a -v --abbrev=0 would do this in one shot..
 
-        List<Branch> tags = new ArrayList<Branch>();
+        Set<Branch> branches = new HashSet<Branch>();
 
         BufferedReader rdr = new BufferedReader(new StringReader(fos));
         String line;
@@ -875,24 +866,24 @@ public class CliGitAPIImpl implements IGitAPI {
                 // that's just noise
                 if ((!line.startsWith("("))
                     && (line.indexOf(" -> ") == -1)) {
-                    tags.add(new Branch(line, revParse(line)));
+                    branches.add(new Branch(line, revParse(line)));
                 }
             }
         } catch (IOException e) {
             throw new GitException("Error parsing branches", e);
         }
 
-        return tags;
+        return branches;
     }
 
-    public List<Branch> getBranches() throws GitException {
+    public Set<Branch> getBranches() throws GitException {
         return parseBranches(launchCommand("branch", "-a"));
     }
 
-    public List<Branch> getRemoteBranches() throws GitException, IOException {
+    public Set<Branch> getRemoteBranches() throws GitException, IOException {
         Repository db = getRepository();
         Map<String, Ref> refs = db.getAllRefs();
-        List<Branch> branches = new ArrayList<Branch>();
+        Set<Branch> branches = new HashSet<Branch>();
 
         for(Ref candidate : refs.values()) {
             if(candidate.getName().startsWith(Constants.R_REMOTES)) {
@@ -905,16 +896,11 @@ public class CliGitAPIImpl implements IGitAPI {
         return branches;
     }
 
-    public List<Branch> getBranchesContaining(String revspec)
-        throws GitException {
-        return parseBranches(launchCommand("branch", "-a", "--contains", revspec));
-    }
-
     public void checkout(String commitish) throws GitException {
-        checkoutBranch(null,commitish);
+        checkout(commitish, null);
     }
 
-    public void checkoutBranch(String branch, String commitish) throws GitException {
+    public void checkout(String commitish, String branch) throws GitException {
         try {
             // First, checkout to detached HEAD, so we can delete the branch.
             launchCommand("checkout", "-f", commitish);
@@ -1126,7 +1112,7 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
+    public ObjectId getHeadRev(String remoteRepoUrl, String branch) throws GitException {
         String[] branchExploded = branch.split("/");
         branch = branchExploded[branchExploded.length-1];
         ArgumentListBuilder args = new ArgumentListBuilder("ls-remote");
@@ -1134,6 +1120,6 @@ public class CliGitAPIImpl implements IGitAPI {
         args.add(remoteRepoUrl);
         args.add(branch);
         String result = launchCommand(args);
-        return result.length()>=40 ? result.substring(0,40) : "";
+        return result.length()>=40 ? ObjectId.fromString(result.substring(0, 40)) : null;
     }
 }

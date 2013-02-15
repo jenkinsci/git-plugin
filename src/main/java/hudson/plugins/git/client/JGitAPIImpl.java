@@ -19,7 +19,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,10 +60,10 @@ public class JGitAPIImpl implements IGitAPI {
     }
 
     public void checkout(String commitish) throws GitException {
-        checkoutBranch(null, commitish);
+        checkout(commitish, null);
     }
 
-    public void checkoutBranch(String branch, String commitish) throws GitException {
+    public void checkout(String commitish, String branch) throws GitException {
         try {
             Git git = Git.open(workspace);
 
@@ -131,11 +131,11 @@ public class JGitAPIImpl implements IGitAPI {
         }
     }
 
-    public List<Branch> getBranches() throws GitException {
+    public Set<Branch> getBranches() throws GitException {
         try {
             Git git = Git.open(workspace);
             List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
-            List<Branch> branches = new ArrayList<Branch>(refs.size());
+            Set<Branch> branches = new HashSet<Branch>(refs.size());
             for (Ref ref : refs) {
                 branches.add(new Branch(ref));
             }
@@ -247,39 +247,19 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.clone(rc, useShallowClone);
     }
 
-    public void clone(RemoteConfig source) throws GitException {
-        delegate.clone(source);
-    }
-
     public void deleteTag(String tagName) throws GitException {
         delegate.deleteTag(tagName);
-    }
-
-    public String describe(String commitIsh) throws GitException {
-        return delegate.describe(commitIsh);
-    }
-
-    public void fixSubmoduleUrls(String remote, TaskListener listener) throws GitException {
-        delegate.fixSubmoduleUrls(remote, listener);
     }
 
     public String getAllLogEntries(String branch) {
         return delegate.getAllLogEntries(branch);
     }
 
-    public List<Branch> getBranchesContaining(String revspec) throws GitException {
-        return delegate.getBranchesContaining(revspec);
-    }
-
-    public String getHeadRev(String remoteRepoUrl, String branch) throws GitException {
+    public ObjectId getHeadRev(String remoteRepoUrl, String branch) throws GitException {
         return delegate.getHeadRev(remoteRepoUrl, branch);
     }
 
-    public String getReference() {
-        return delegate.getReference();
-    }
-
-    public List<Branch> getRemoteBranches() throws GitException, IOException {
+    public Set<Branch> getRemoteBranches() throws GitException, IOException {
         return delegate.getRemoteBranches();
     }
 
@@ -300,24 +280,12 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.getSubmodules(treeIsh);
     }
 
-    public String getSubmoduleUrl(String name) throws GitException {
-        return delegate.getSubmoduleUrl(name);
-    }
-
     public Set<String> getTagNames(String tagPattern) throws GitException {
         return delegate.getTagNames(tagPattern);
     }
 
-    public List<Tag> getTagsOnCommit(String revName) throws GitException, IOException {
-        return delegate.getTagsOnCommit(revName);
-    }
-
     public boolean hasGitModules() throws GitException {
         return delegate.hasGitModules();
-    }
-
-    public boolean hasGitModules(String treeIsh) throws GitException {
-        return delegate.hasGitModules(treeIsh);
     }
 
     public boolean hasGitRepo() throws GitException {
@@ -326,10 +294,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public boolean isCommitInRepo(ObjectId commit) throws GitException {
         return delegate.isCommitInRepo(commit);
-    }
-
-    public List<IndexEntry> lsTree(String treeIsh) throws GitException {
-        return delegate.lsTree(treeIsh);
     }
 
     public void merge(String revSpec) throws GitException {
@@ -352,24 +316,12 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.revListAll();
     }
 
-    public List<ObjectId> revListBranch(String branchId) throws GitException {
-        return delegate.revListBranch(branchId);
-    }
-
     public ObjectId revParse(String revName) throws GitException {
         return delegate.revParse(revName);
     }
 
     public void setRemoteUrl(String name, String url) throws GitException {
         delegate.setRemoteUrl(name, url);
-    }
-
-    public void setSubmoduleUrl(String name, String url) throws GitException {
-        delegate.setSubmoduleUrl(name, url);
-    }
-
-    public void setupSubmoduleUrls(String remote, TaskListener listener) throws GitException {
-        delegate.setupSubmoduleUrls(remote, listener);
     }
 
     public void setupSubmoduleUrls(Revision rev, TaskListener listener) throws GitException {
@@ -382,14 +334,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void submoduleClean(boolean recursive) throws GitException {
         delegate.submoduleClean(recursive);
-    }
-
-    public void submoduleInit() throws GitException {
-        delegate.submoduleInit();
-    }
-
-    public void submoduleSync() throws GitException {
-        delegate.submoduleSync();
     }
 
     public void submoduleUpdate(boolean recursive) throws GitException {

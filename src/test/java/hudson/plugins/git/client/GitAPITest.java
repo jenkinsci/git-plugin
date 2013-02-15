@@ -1,25 +1,28 @@
 package hudson.plugins.git.client;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
 import hudson.util.StreamTaskListener;
-import org.codehaus.plexus.util.StringOutputStream;
+import junit.framework.TestCase;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.junit.Test;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class GitAPITest extends HudsonTestCase {
+public class GitAPITest extends TestCase {
 
+    public final TemporaryDirectoryAllocator temporaryDirectoryAllocator = new TemporaryDirectoryAllocator();
+    
     private hudson.EnvVars env = new hudson.EnvVars();
     private TaskListener listener = StreamTaskListener.fromStderr();
     private File repo;
@@ -27,19 +30,18 @@ public class GitAPITest extends HudsonTestCase {
 
     @Override
     protected void setUp() throws Exception {
-        repo = createTmpDir();
+        repo = temporaryDirectoryAllocator.allocate();
         git = new CliGitAPIImpl("git", repo, listener, env);
     }
 
     @Override
     protected void tearDown() throws Exception {
-        Util.deleteRecursive(repo);
+        temporaryDirectoryAllocator.dispose();
     }
 
     public void test_initialize_repository() throws Exception {
         git.init();
-        assertStringContains(launchCommand("git status"),
-                "On branch master");
+        assertTrue(launchCommand("git status").contains("On branch master"));
     }
 
     public void test_detect_commit_in_repo() throws Exception {
@@ -65,47 +67,159 @@ public class GitAPITest extends HudsonTestCase {
         launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
         git.setRemoteUrl("ndeloof", "git@github.com:ndeloof/git-plugin.git");
         String remotes = launchCommand("git remote -v");
-        assertStringContains(remotes, "origin\tgit@github.com:jenkinsci/git-plugin.git");
-        assertStringContains(remotes, "ndeloof\tgit@github.com:ndeloof/git-plugin.git");
+        assertTrue(remotes.contains("origin\tgit@github.com:jenkinsci/git-plugin.git"));
+        assertTrue(remotes.contains("ndeloof\tgit@github.com:ndeloof/git-plugin.git"));
     }
 
     public void test_clean() throws Exception {
         launchCommand("git init");
-        launchCommand("git commit --allow-empty -m 'init'");
+        launchCommand("git commit --allow-empty -m init");
         launchCommand("touch file1");
         git.clean();
         assertFalse(new File(repo, "file1").exists());
-        assertStringContains(launchCommand("git status"),
-                "nothing to commit, working directory clean");
+        assertTrue(launchCommand("git status").contains("nothing to commit, working directory clean"));
     }
 
     public void test_fecth() throws Exception {
         launchCommand("git init");
         launchCommand("git remote add origin " + System.getProperty("user.dir")); // local git-plugin clone
         git.fetch("origin", null);
-        assertStringContains(launchCommand("git rev-list --max-count=1 45a5d1a0c6857670ea2bec30d632604e02af4195"),
-                "45a5d1a0c6857670ea2bec30d632604e02af4195");
+        assertTrue(launchCommand("git rev-list --max-count=1 45a5d1a0c6857670ea2bec30d632604e02af4195")
+                .contains("45a5d1a0c6857670ea2bec30d632604e02af4195"));
     }
 
-    public void test_branch() throws Exception {
+    public void test_create_branch() throws Exception {
         launchCommand("git init");
-        launchCommand("git commit --allow-empty -m 'init'");
+        launchCommand("git commit --allow-empty -m init");
         git.branch("test");
         String branches = launchCommand("git branch -l");
-        assertStringContains(branches,"master");
-        assertStringContains(branches,"test");
+        assertTrue(branches.contains("master"));
+        assertTrue(branches.contains("test"));
     }
 
-    public void test_remove_branch() throws Exception {
+    public void test_list_branches() throws Exception {
         launchCommand("git init");
-        launchCommand("git commit --allow-empty -m 'init'");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("git branch test");
+        launchCommand("git branch another");
+        Set<Branch> branches = git.getBranches();
+        Collection names = Collections2.transform(branches, new Function<Branch, String>() {
+            public String apply(Branch branch) {
+                return branch.getName();
+            }
+        });
+        assertEquals(3, branches.size());
+        assertTrue(names.contains("master"));
+        assertTrue(names.contains("test"));
+        assertTrue(names.contains("another"));
+    }
+
+    public void test_list_remote_branches() throws Exception {
+        File remote = temporaryDirectoryAllocator.allocate();
+        launchCommand(remote, "git init");
+        launchCommand(remote, "git commit --allow-empty -m init");
+        launchCommand(remote, "git branch test");
+        launchCommand(remote, "git branch another");
+
+        launchCommand("git init");
+        launchCommand("git remote add origin " + remote.getAbsolutePath());
+        launchCommand("git fetch origin");
+        Set<Branch> branches = git.getRemoteBranches();
+        Collection names = Collections2.transform(branches, new Function<Branch, String>() {
+            public String apply(Branch branch) {
+                return branch.getName();
+            }
+        });
+        assertEquals(3, branches.size());
+        assertTrue(names.contains("origin/master"));
+        assertTrue(names.contains("origin/test"));
+        assertTrue(names.contains("origin/another"));
+    }
+
+    public void test_list_branches_containing_ref() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("git branch test");
+        launchCommand("git branch another");
+        Set<Branch> branches = git.getBranches();
+        Collection names = Collections2.transform(branches, new Function<Branch, String>() {
+            public String apply(Branch branch) {
+                return branch.getName();
+            }
+        });
+        assertEquals(3, branches.size());
+        assertTrue(names.contains("master"));
+        assertTrue(names.contains("test"));
+        assertTrue(names.contains("another"));
+    }
+
+    public void test_delete_branch() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
         launchCommand("git branch test");
         git.deleteBranch("test");
         String branches = launchCommand("git branch -l");
-        assertStringContains(branches,"master");
+        assertTrue(branches.contains("master"));
         assertFalse(branches.contains("test"));
     }
 
+    public void test_create_tag() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        git.tag("test", "this is a tag");
+        assertTrue(launchCommand("git tag").contains("test"));
+        assertTrue(launchCommand("git tag -l -n1").contains("this is a tag"));
+    }
+
+    public void test_delete_tag() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("git tag test");
+        launchCommand("git tag another");
+        git.deleteTag("test");
+        String tags = launchCommand("git tag");
+        assertFalse(tags.contains("test"));
+        assertTrue(tags.contains("another"));
+    }
+
+    public void test_list_tags_with_filter() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("git tag test");
+        launchCommand("git tag another_test");
+        launchCommand("git tag yet_another");
+        Set<String> tags = git.getTagNames("*test");
+        assertTrue(tags.contains("test"));
+        assertTrue(tags.contains("another_test"));
+        assertFalse(tags.contains("yet_another"));
+    }
+
+    public void test_tag_exists() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("git tag test");
+        assertTrue(git.tagExists("test"));
+        assertFalse(git.tagExists("unknown"));
+    }
+
+    public void test_get_HEAD_revision() throws Exception {
+        // TODO replace with an embedded JGit server so that test run offline ?
+        String sha1 = launchCommand("git ls-remote --heads git@github.com:jenkinsci/git-plugin.git refs/heads/master").substring(0,40);
+        assertEquals(sha1, git.getHeadRev("git@github.com:jenkinsci/git-plugin.git", "master").name());
+    }
+
+    public void test_revparse_sha1_HEAD_or_tag() throws Exception {
+        launchCommand("git init");
+        launchCommand("git commit --allow-empty -m init");
+        launchCommand("touch file1");
+        launchCommand("git add file1");
+        launchCommand("git commit -m 'commit1'");
+        launchCommand("git tag test");
+        String sha1 = launchCommand("git rev-parse HEAD").substring(0,40);
+        assertEquals(sha1, git.revParse(sha1).name());
+        assertEquals(sha1, git.revParse("HEAD").name());
+        assertEquals(sha1, git.revParse("test").name());
+    }
 
     public void test_hasGitRepo_without_git_directory() throws Exception
     {
@@ -125,10 +239,14 @@ public class GitAPITest extends HudsonTestCase {
     }
 
     private String launchCommand(String args) throws IOException, InterruptedException {
-        return launchCommand(repo, args.split(" "));
+        return launchCommand(repo, args);
     }
 
-    private String launchCommand(File workdir, String ... args) throws IOException, InterruptedException {
+    private String launchCommand(File workdir, String args) throws IOException, InterruptedException {
+        return doLaunchCommand(workdir, args.split(" "));
+    }
+
+    private String doLaunchCommand(File workdir, String ... args) throws IOException, InterruptedException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         new Launcher.LocalLauncher(listener).launch().pwd(workdir).cmds(args).
                 envs(env).stdout(out).join();

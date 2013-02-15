@@ -120,7 +120,7 @@ public class SubmoduleCombinator {
                 if (min == 1) break; // look no further
             }
       
-            git.checkout(sha1.name());
+            git.checkout(null, sha1.name());
             makeCombination(combination);
         }
     
@@ -149,7 +149,7 @@ public class SubmoduleCombinator {
         // Assume we are checked out
         String name = "combine-" + tid + "-" + (idx++); 
         git.branch(name);
-        git.checkout(name);
+        git.checkout(null, name);
 
         StringBuilder commit = new StringBuilder(
                 "Jenkins generated combination of:\n");
@@ -168,7 +168,7 @@ public class SubmoduleCombinator {
             IndexEntry submodule = setting.getKey();
             Revision branch = setting.getValue();
             IGitAPI subGit = git.subGit(submodule.getFile());
-            subGit.checkout(branch.sha1.name());
+            subGit.checkout(null, branch.sha1.name());
             git.add(submodule.file);
         }
     

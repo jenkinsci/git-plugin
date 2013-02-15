@@ -684,9 +684,9 @@ public class GitSCM extends SCM implements Serializable {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
             IGitAPI git = new JGitAPIImpl(gitExe, null, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
-            String headRevision = git.getHeadRev(gitRepo, getBranches().get(0).getName());
+            ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
-            if(buildData.lastBuild.getRevision().getSha1String().equals(headRevision)) {
+            if (head != null && buildData.lastBuild.getRevision().getSha1().name().equals(head.name())) {
                 return PollingResult.NO_CHANGES;
             } else {
                 return PollingResult.BUILD_NOW;
@@ -818,24 +818,6 @@ public class GitSCM extends SCM implements Serializable {
                     + " - could be unavailable. Continuing anyway"));
         }
         return false;
-    }
-
-    /**
-     * This does not yield the correct RemoteConfig - the refspec is taken from
-     * the parent repository, which is probably not valid inside the submodule.
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public RemoteConfig getSubmoduleRepository(IGitAPI parentGit,
-            RemoteConfig orig,
-            String name) throws GitException {
-        // The first attempt at finding the URL in this new code relies on
-        // submoduleInit, submoduleSync, fixSubmoduleUrls already being executed
-        // since the last fetch of the super project.  (This is currently done
-        // by calling git.setupSubmoduleUrls(...). )
-        String refUrl = parentGit.getSubmoduleUrl(name);
-        return newRemoteConfig(name, refUrl, orig.getFetchRefSpecs().get(0));
     }
 
     private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) {
@@ -1162,7 +1144,7 @@ public class GitSCM extends SCM implements Serializable {
                     // checkout origin/blah
                     ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                    git.checkoutBranch(paramLocalBranch, target.name());
+                    git.checkout(target.name(), paramLocalBranch);
 
                     try {
                         git.merge(revToBuild.getSha1().name());
@@ -1171,7 +1153,7 @@ public class GitSCM extends SCM implements Serializable {
                         // repetitive builds from happening - tag the
                         // candidate
                         // branch.
-                        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
+                        git.checkout(revToBuild.getSha1().name(), paramLocalBranch);
 
                         if (!getSkipTag()) {
                             git.tag(buildnumber, "Jenkins Build #"
@@ -1234,7 +1216,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
                     }
 
-                    git.checkoutBranch(paramLocalBranch, revToBuild.getSha1().name());
+                    git.checkout(revToBuild.getSha1().name(), paramLocalBranch);
 
                     if (git.hasGitModules() && !disableSubmodules) {
                         // This ensures we don't miss changes to submodule paths and allows
