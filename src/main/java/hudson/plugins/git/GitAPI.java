@@ -114,11 +114,12 @@ public class GitAPI implements IGitAPI {
     public boolean hasGitRepo() throws GitException {
         if( hasGitRepo(".git") )
         {
-            // Check if this is actually a valid git repo by checking ls-files. If it's duff, this will
-            // fail. HEAD is not guaranteed to be valid (e.g. new repo).
+            // Check if this is actually a valid git repo by checking
+            // rev-parse --is-inside-work-tree. If it's not a valid
+            // repo, this will fail.
             try
             {
-            	launchCommand("ls-files");
+            	launchCommand("rev-parse", "--is-inside-work-tree");
             }
             catch(Exception ex)
             {
