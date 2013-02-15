@@ -6,6 +6,8 @@ import java.io.IOException;
 import hudson.plugins.git.GitAPI;
 import org.jvnet.hudson.test.HudsonTestCase;
 
+import org.eclipse.jgit.lib.ObjectId;
+
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
@@ -52,5 +54,27 @@ public class GitAPITest extends HudsonTestCase {
         /* initialize empty git repo */
         api.launchCommand("init", parentDir.getAbsolutePath());
         assertTrue("Valid Git repo reported as invalid", api.hasGitRepo());
+    }
+
+    /**
+     * Test validateRevision() while trying to duplicate JENKINS-11547.
+     */
+    public void testValidateRevisionTbrowsExceptionOnEmptyRepo() throws IOException
+    {
+        boolean thrown = false;
+        final File parentDir = createTmpDir();
+        final GitAPI api = new GitAPI("git", parentDir, listener, env);
+        /* initialize empty git repo */
+        api.launchCommand("init", parentDir.getAbsolutePath());
+        try {
+            ObjectId id = api.validateRevision("HEAD");
+            System.out.println("***** id is " + id + " *****");
+        } catch (hudson.plugins.git.GitException ex) {
+            /* Expected to throw an exception because the HEAD
+             * revision is not yet defined in a newly created
+             * repository */
+            thrown = true;
+        }
+        assertTrue("Did not throw expected exception", thrown);
     }
 }
