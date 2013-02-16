@@ -107,35 +107,26 @@ public class CliGitAPIImpl implements IGitAPI {
     }
 
     public boolean hasGitRepo() throws GitException {
-        if( hasGitRepo(".git") )
-        {
+        if (hasGitRepo(".git")) {
             // Check if this is actually a valid git repo by checking ls-files. If it's duff, this will
             // fail. HEAD is not guaranteed to be valid (e.g. new repo).
-            try
-            {
-            	launchCommand("ls-files");
-            }
-            catch(Exception ex)
-            {
+            try {
+                launchCommand("rev-parse", "--is-inside-work-tree");
+            } catch (Exception ex) {
                 ex.printStackTrace(listener.error("Workspace has a .git repository, but it appears to be corrupt."));
                 return false;
             }
             return true;
         }
-
         return false;
     }
 
     public boolean hasGitRepo( String GIT_DIR ) throws GitException {
         try {
-
             File dotGit = new File(workspace, GIT_DIR);
-
             return dotGit.exists();
-
         } catch (SecurityException ex) {
-            throw new GitException(
-                                   "Security error when trying to check for .git. Are you sure you have correct permissions?",
+            throw new GitException("Security error when trying to check for .git. Are you sure you have correct permissions?",
                                    ex);
         } catch (Exception e) {
             throw new GitException("Couldn't check for .git", e);

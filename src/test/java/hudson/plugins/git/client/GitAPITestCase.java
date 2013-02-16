@@ -5,6 +5,7 @@ import com.google.common.collect.Collections2;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
 import hudson.util.StreamTaskListener;
 import junit.framework.TestCase;
 import org.eclipse.jgit.lib.ObjectId;
