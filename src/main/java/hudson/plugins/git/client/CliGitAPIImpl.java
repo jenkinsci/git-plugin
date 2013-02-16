@@ -889,8 +889,6 @@ public class CliGitAPIImpl implements IGitAPI {
     }
 
     public boolean tagExists(String tagName) throws GitException {
-        tagName = tagName.replace(' ', '_');
-
         return launchCommand("tag", "-l", tagName).trim().equals(tagName);
     }
 

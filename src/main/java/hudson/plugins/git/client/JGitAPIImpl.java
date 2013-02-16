@@ -56,7 +56,11 @@ public class JGitAPIImpl implements IGitAPI {
     }
 
     public void init() throws GitException {
-        Git.init().setDirectory(workspace).call();
+        try {
+            Git.init().setDirectory(workspace).call();
+        } catch (GitAPIException e) {
+            throw new GitException(e);
+        }
     }
 
     public void checkout(String commit) throws GitException {
@@ -156,6 +160,8 @@ public class JGitAPIImpl implements IGitAPI {
             return branches;
         } catch (IOException e) {
             throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
         }
     }
 
@@ -170,6 +176,8 @@ public class JGitAPIImpl implements IGitAPI {
             return branches;
         } catch (IOException e) {
             throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException(e);
         }
     }
 
@@ -183,6 +191,17 @@ public class JGitAPIImpl implements IGitAPI {
             throw new GitException(e);
         }
     }
+
+    public boolean tagExists(String tagName) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            Ref tag =  git.getRepository().getRefDatabase().getRef(Constants.R_TAGS + tagName);
+            return tag != null;
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
 
     public void fetch(String remote, RefSpec refspec) throws GitException {
 
@@ -334,6 +353,16 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void setRemoteUrl(String name, String url) throws GitException {
         delegate.setRemoteUrl(name, url);
+        /* FIXME doesn't work, need to investigate
+        try {
+            Git git = Git.open(workspace);
+            StoredConfig config = git.getRepository().getConfig();
+            config.setString("remote", name, "url", url);
+            config.save();
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+        */
     }
 
     public void setupSubmoduleUrls(Revision rev, TaskListener listener) throws GitException {
@@ -350,10 +379,6 @@ public class JGitAPIImpl implements IGitAPI {
 
     public void submoduleUpdate(boolean recursive) throws GitException {
         delegate.submoduleUpdate(recursive);
-    }
-
-    public boolean tagExists(String tagName) throws GitException {
-        return delegate.tagExists(tagName);
     }
 
 

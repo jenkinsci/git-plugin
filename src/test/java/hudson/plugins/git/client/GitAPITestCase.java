@@ -67,7 +67,7 @@ public abstract class GitAPITestCase extends TestCase {
     public void test_setRemoteURL() throws Exception {
         launchCommand("git init");
         launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
-        git.setRemoteUrl("ndeloof", "git@github.com:ndeloof/git-plugin.git");
+        git.setRemoteUrl("origin", "git@github.com:ndeloof/git-plugin.git");
         String remotes = launchCommand("git remote -v");
         assertTrue(remotes.contains("origin\tgit@github.com:ndeloof/git-plugin.git"));
     }

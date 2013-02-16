@@ -274,9 +274,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             listener.getLogger().println("No repository found for target repo name " + targetRepo);
                                             return false;
                                         }
-                                        
+
+                                        boolean tagExists = git.tagExists(tagName.replace(' ', '_'));
                                         if (t.isCreateTag() || t.isUpdateTag()) {
-                                            if (git.tagExists(tagName) && !t.isUpdateTag()) {
+                                            if (tagExists && !t.isUpdateTag()) {
                                                 listener.getLogger().println("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
                                                 return false;
                                             }
@@ -287,7 +288,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                                 git.tag(tagName, tagMessage);
                                             }
                                         }
-                                        else if (!git.tagExists(tagName)) {
+                                        else if (!tagExists) {
                                             listener.getLogger().println("Tag " + tagName + " does not exist and Create Tag is not specified, so failing.");
                                             return false;
                                         }
