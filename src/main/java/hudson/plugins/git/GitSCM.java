@@ -1147,7 +1147,7 @@ public class GitSCM extends SCM implements Serializable {
                     checkout(git, target, paramLocalBranch);
 
                     try {
-                        git.merge(revToBuild.getSha1().name());
+                        git.merge(revToBuild.getSha1());
                     } catch (Exception ex) {
                         // We still need to tag something to prevent
                         // repetitive builds from happening - tag the

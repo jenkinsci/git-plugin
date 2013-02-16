@@ -381,9 +381,9 @@ public class CliGitAPIImpl implements IGitAPI {
      * @param revSpec the revision
      * @throws GitException if the emrge fails
      */
-    public void merge(String revSpec) throws GitException {
+    public void merge(ObjectId revSpec) throws GitException {
         try {
-            launchCommand("merge", revSpec);
+            launchCommand("merge", revSpec.name());
         } catch (GitException e) {
             throw new GitException("Could not merge " + revSpec, e);
         }
@@ -860,20 +860,24 @@ public class CliGitAPIImpl implements IGitAPI {
         return parseBranches(launchCommand("branch", "-a"));
     }
 
-    public Set<Branch> getRemoteBranches() throws GitException, IOException {
-        Repository db = getRepository();
-        Map<String, Ref> refs = db.getAllRefs();
-        Set<Branch> branches = new HashSet<Branch>();
+    public Set<Branch> getRemoteBranches() throws GitException {
+        try {
+            Repository db = getRepository();
+            Map<String, Ref> refs = db.getAllRefs();
+            Set<Branch> branches = new HashSet<Branch>();
 
-        for(Ref candidate : refs.values()) {
-            if(candidate.getName().startsWith(Constants.R_REMOTES)) {
-                Branch buildBranch = new Branch(candidate);
-                listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
-                branches.add(buildBranch);
+            for(Ref candidate : refs.values()) {
+                if(candidate.getName().startsWith(Constants.R_REMOTES)) {
+                    Branch buildBranch = new Branch(candidate);
+                    listener.getLogger().println("Seen branch in repository " + buildBranch.getName());
+                    branches.add(buildBranch);
+                }
             }
-        }
 
-        return branches;
+            return branches;
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
     }
 
     public void checkout(String commit) throws GitException {

@@ -19,20 +19,22 @@ import java.util.Set;
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class GitAPITest extends TestCase {
+public abstract class GitAPITestCase extends TestCase {
 
     public final TemporaryDirectoryAllocator temporaryDirectoryAllocator = new TemporaryDirectoryAllocator();
     
-    private hudson.EnvVars env = new hudson.EnvVars();
-    private TaskListener listener = StreamTaskListener.fromStderr();
-    private File repo;
+    protected hudson.EnvVars env = new hudson.EnvVars();
+    protected TaskListener listener = StreamTaskListener.fromStderr();
+    protected File repo;
     private IGitAPI git;
 
     @Override
     protected void setUp() throws Exception {
         repo = temporaryDirectoryAllocator.allocate();
-        git = new CliGitAPIImpl("git", repo, listener, env);
+        git = setupGitAPI();
     }
+
+    protected abstract IGitAPI setupGitAPI();
 
     @Override
     protected void tearDown() throws Exception {
@@ -67,8 +69,7 @@ public class GitAPITest extends TestCase {
         launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
         git.setRemoteUrl("ndeloof", "git@github.com:ndeloof/git-plugin.git");
         String remotes = launchCommand("git remote -v");
-        assertTrue(remotes.contains("origin\tgit@github.com:jenkinsci/git-plugin.git"));
-        assertTrue(remotes.contains("ndeloof\tgit@github.com:ndeloof/git-plugin.git"));
+        assertTrue(remotes.contains("origin\tgit@github.com:ndeloof/git-plugin.git"));
     }
 
     public void test_clean() throws Exception {

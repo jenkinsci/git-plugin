@@ -13,14 +13,14 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
@@ -159,6 +159,20 @@ public class JGitAPIImpl implements IGitAPI {
         }
     }
 
+    public Set<Branch> getRemoteBranches() throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call();
+            Set<Branch> branches = new HashSet<Branch>(refs.size());
+            for (Ref ref : refs) {
+                branches.add(new Branch(ref));
+            }
+            return branches;
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
     public void tag(String name, String message) throws GitException {
         try {
             Git git = Git.open(workspace);
@@ -166,21 +180,6 @@ public class JGitAPIImpl implements IGitAPI {
         } catch (IOException e) {
             throw new GitException(e);
         } catch (GitAPIException e) {
-            throw new GitException(e);
-        }
-    }
-
-    public void reset() throws GitException {
-        reset(false);
-    }
-
-    public void reset(boolean hard) throws GitException {
-        try {
-            Git git = Git.open(workspace);
-            git.reset()
-                    .setMode(hard ? ResetCommand.ResetType.HARD : ResetCommand.ResetType.MIXED)
-                    .call();
-        } catch (IOException e) {
             throw new GitException(e);
         }
     }
@@ -212,32 +211,52 @@ public class JGitAPIImpl implements IGitAPI {
          */
     }
 
-    // --- low-level JGit stuff
+    public ObjectId getHeadRev(String remoteRepoUrl, String branch) throws GitException {
+        return delegate.getHeadRev(remoteRepoUrl, branch);
 
-    private void checkoutDetachedHead(Repository repo, String commitish) throws IOException {
-        Ref head = repo.getRef(HEAD);
-        RevWalk revWalk = new RevWalk(repo);
-        AnyObjectId headId = head.getObjectId();
-        RevCommit headCommit = headId == null ? null : revWalk.parseCommit(headId);
-        RevTree headTree = headCommit == null ? null : headCommit.getTree();
-
-        ObjectId target = ObjectId.fromString(commitish);
-        RevCommit newCommit = revWalk.parseCommit(target);
-
-        DirCache dc = repo.lockDirCache();
+        // Require a local repository, so can't be used in git-plugin context
+        /*
+        // based on org.eclipse.jgit.pgm.LsRemote
         try {
-            DirCacheCheckout dco = new DirCacheCheckout(repo, headTree, dc, newCommit.getTree());
-            dco.setFailOnConflict(true);
-            dco.checkout();
-        } finally {
-            dc.unlock();
-        }
-        RefUpdate refUpdate = repo.updateRef(HEAD, true);
-        refUpdate.setForceUpdate(true);
-        refUpdate.setRefLogMessage("checkout: moving to " + commitish, false);
-        refUpdate.setNewObjectId(newCommit);
-        refUpdate.forceUpdate();
+            final Transport tn = Transport.open(null, new URIish(remoteRepoUrl)); // fail NullPointerException
+            final FetchConnection c = tn.openFetch();
+            try {
+                for (final Ref r : c.getRefs()) {
+                    if (branch.equals(r.getName())) {
+                        return r.getPeeledObjectId() != null ? r.getPeeledObjectId() : r.getObjectId();
+                    }
+                }
+                } finally {
+                    c.close();
+                    tn.close();
+                }
+            } catch (IOException e) {
+                throw new GitException(e);
+            } catch (URISyntaxException e) {
+                throw new GitException(e);
+            }
+        return null;
+        */
     }
+
+    public String getRemoteUrl(String name) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            return git.getRepository().getConfig().getString("remote",name,"url");
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
+    public Repository getRepository() throws IOException {
+        try {
+            Git git = Git.open(workspace);
+            return git.getRepository();
+        } catch (IOException e) {
+            throw new GitException(e);
+        }
+    }
+
 
     // --- delegates
 
@@ -265,27 +284,6 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.deleteTag(tagName);
     }
 
-    public ObjectId getHeadRev(String remoteRepoUrl, String branch) throws GitException {
-        return delegate.getHeadRev(remoteRepoUrl, branch);
-    }
-
-    public Set<Branch> getRemoteBranches() throws GitException, IOException {
-        return delegate.getRemoteBranches();
-    }
-
-    public String getRemoteUrl(String name) throws GitException {
-        return delegate.getRemoteUrl(name);
-    }
-
-        public Repository getRepository() throws IOException {
-        try {
-            Git git = Git.open(workspace);
-            return git.getRepository();
-        } catch (IOException e) {
-            throw new GitException(e);
-        }
-    }
-
     public List<IndexEntry> getSubmodules(String treeIsh) throws GitException {
         return delegate.getSubmodules(treeIsh);
     }
@@ -306,8 +304,16 @@ public class JGitAPIImpl implements IGitAPI {
         return delegate.isCommitInRepo(commit);
     }
 
-    public void merge(String revSpec) throws GitException {
-        delegate.merge(revSpec);
+    public void merge(ObjectId revSpec) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            Repository db = git.getRepository();
+            git.merge().include(revSpec).call();
+        } catch (IOException e) {
+            throw new GitException(e);
+        } catch (GitAPIException e) {
+            throw new GitException("Failed to merge " + revSpec, e);
+        }
     }
 
     public void prune(RemoteConfig repository) throws GitException {

@@ -72,7 +72,7 @@ public interface IGitAPI {
 
     void push(RemoteConfig repository, String revspec) throws GitException;
 
-    void merge(String revSpec) throws GitException;
+    void merge(ObjectId revSpec) throws GitException;
 
     void prune(RemoteConfig repository) throws GitException;
 
@@ -88,7 +88,7 @@ public interface IGitAPI {
 
     Set<Branch> getBranches() throws GitException;
 
-    Set<Branch> getRemoteBranches() throws GitException, IOException;
+    Set<Branch> getRemoteBranches() throws GitException;
 
 
     // --- manage tags
