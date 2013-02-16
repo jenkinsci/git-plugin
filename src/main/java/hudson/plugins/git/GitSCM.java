@@ -978,7 +978,7 @@ public class GitSCM extends SCM implements Serializable {
                     else
                         log.println(MessageFormat
                                 .format("Fetching changes from {0} remote Git repositories",
-                                        repos));
+                                        repos.size()));
 
                     boolean fetched = false;
 
