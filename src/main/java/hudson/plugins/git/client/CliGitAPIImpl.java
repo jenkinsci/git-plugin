@@ -339,15 +339,11 @@ public class CliGitAPIImpl implements IGitAPI {
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
-        whatchanged(revFrom, revTo, outputStream, "--no-abbrev", "-M", "--pretty=raw");
-    }
-
-    private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
         String revSpec = revFrom + ".." + revTo;
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(gitExe, "whatchanged");
-        args.add(extraargs);
+        args.add("--no-abbrev", "-M", "--pretty=raw");
         args.add(revSpec);
 
         try {
@@ -360,27 +356,16 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    /**
-     * Given a Revision, show it as if it were an entry from git whatchanged, so that it
-     * can be parsed by GitChangeLogParser.
-     *
-     *
-     *
-     * @param r The Revision object
-     * @param from
-     * @return The git show output, in List form.
-     * @throws GitException if errors were encountered running git show.
-     */
-    public List<String> showRevision(ObjectId r, ObjectId from) throws GitException {
+    public List<String> showRevision(ObjectId from, ObjectId to) throws GitException {
     	StringWriter writer = new StringWriter();
 
     	if (from != null){
     		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw",
-                    from.name() + ".." + r.name()));
+                    from.name() + ".." + to.name()));
     		writer.write("\\n");
     	}
     	
-    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", r.name()));
+    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", to.name()));
 
         String result = writer.toString();
         List<String> revShow = new ArrayList<String>();
@@ -946,10 +931,6 @@ public class CliGitAPIImpl implements IGitAPI {
         return revList("--all");
     }
 
-    public List<ObjectId> revListBranch(String branchId) throws GitException {
-        return revList(branchId);
-    }
-
     public List<ObjectId> revList(String... extraArgs) throws GitException {
         List<ObjectId> entries = new ArrayList<ObjectId>();
         ArgumentListBuilder args = new ArgumentListBuilder("rev-list");
@@ -1025,50 +1006,8 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    public ObjectId mergeBase(ObjectId id1, ObjectId id2) {
-        try {
-            String result;
-            try {
-                result = launchCommand("merge-base", id1.name(), id2.name());
-            } catch (GitException ge) {
-                return null;
-            }
-
-
-            BufferedReader rdr = new BufferedReader(new StringReader(result));
-            String line;
-
-            while ((line = rdr.readLine()) != null) {
-                // Add the SHA1
-                return ObjectId.fromString(line);
-            }
-        } catch (Exception e) {
-            throw new GitException("Error parsing merge base", e);
-        }
-
-        return null;
-    }
-
-    public String getAllLogEntries(String branch) {
-        return launchCommand("log", "--all", "--pretty=format:'%H#%ct'", branch);
-    }
-
     public Repository getRepository() throws IOException {
         return new FileRepository(new File(workspace, Constants.DOT_GIT));
-    }
-
-    public List<Tag> getTagsOnCommit(final String revName) throws GitException,
-            IOException {
-        final Repository db = getRepository();
-        final ObjectId commit = db.resolve(revName);
-        final List<Tag> ret = new ArrayList<Tag>();
-
-        for (final Map.Entry<String, Ref> tag : db.getTags().entrySet()) {
-            final ObjectId tagId = tag.getValue().getObjectId();
-            if (commit.equals(tagId))
-                ret.add(new Tag(tag.getKey(), tagId));
-        }
-        return ret;
     }
 
     public Set<String> getTagNames(String tagPattern) throws GitException {

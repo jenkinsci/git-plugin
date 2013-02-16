@@ -265,10 +265,6 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.deleteTag(tagName);
     }
 
-    public String getAllLogEntries(String branch) {
-        return delegate.getAllLogEntries(branch);
-    }
-
     public ObjectId getHeadRev(String remoteRepoUrl, String branch) throws GitException {
         return delegate.getHeadRev(remoteRepoUrl, branch);
     }
@@ -314,10 +310,6 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.merge(revSpec);
     }
 
-    public ObjectId mergeBase(ObjectId sha1, ObjectId sha12) {
-        return delegate.mergeBase(sha1, sha12);
-    }
-
     public void prune(RemoteConfig repository) throws GitException {
         delegate.prune(repository);
     }
@@ -342,8 +334,8 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.setupSubmoduleUrls(rev, listener);
     }
 
-    public List<String> showRevision(ObjectId r, ObjectId from) throws GitException {
-        return delegate.showRevision(r, from);
+    public List<String> showRevision(ObjectId from, ObjectId to) throws GitException {
+        return delegate.showRevision(from, to);
     }
 
     public void submoduleClean(boolean recursive) throws GitException {

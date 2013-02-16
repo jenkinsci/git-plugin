@@ -149,9 +149,14 @@ public interface IGitAPI {
     void addNote(String note, String namespace ) throws GitException;
 
 
-    ObjectId mergeBase(ObjectId sha1, ObjectId sha12);
-    String getAllLogEntries(String branch);
-
-    List<String> showRevision(ObjectId r, ObjectId from) throws GitException;
+    /**
+     * Given a Revision, show it as if it were an entry from git whatchanged, so that it
+     * can be parsed by GitChangeLogParser.
+     * <p>
+     * Changes are computed on the [from..to] range. If from is <tt>null</tt>, changes for <tt>to</tt> commit are
+     * considered.
+     * @return The git show output, in <tt>raw</tt> format.
+     */
+    List<String> showRevision(ObjectId from, ObjectId to) throws GitException;
 
 }

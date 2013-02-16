@@ -1773,8 +1773,9 @@ public class GitSCM extends SCM implements Serializable {
                 return false;
             }
 
-            List<String> revShow = git.showRevision(r.getSha1(),
-                    (buildData != null && buildData.lastBuild != null) ? buildData.lastBuild.revision.getSha1() : null);
+            List<String> revShow = git.showRevision(
+                    (buildData != null && buildData.lastBuild != null) ? buildData.lastBuild.revision.getSha1() : null,
+                    r.getSha1());
 
             // If the revision info is empty, something went weird, so we'll just
             // return false.
