@@ -1,6 +1,5 @@
 package hudson.plugins.git.client;
 
-import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 
@@ -49,17 +48,25 @@ public interface IGitAPI {
 
     /**
      * Checks out the specified commit/tag/branch into the workspace.
+     * @param ref A git object references expression
      */
-    void checkout(String commitish) throws GitException;
+    void checkout(String ref) throws GitException;
 
     /**
-     * Checks out the specified commit/ref into the workspace.
-     *
-     * @param branch move/create the branch in this name at the specified commit-ish and check out that branch.
+     * Checks out the specified commit/ref into the workspace, creating specified branch
+     * (equivalent to git checkout -b <em>branch</em> <em>commit</em>
+     * @param ref A git object references expression
+     * @param branch name of the branch to create from reference
      */
-    void checkout(String commitish, String branch) throws GitException;
+    void checkout(String ref, String branch) throws GitException;
 
-    void clone(RemoteConfig rc, boolean useShallowClone) throws GitException;
+    /**
+     * Clone a remote repository
+     * @param url URL for remote repository to clone
+     * @param origin upstream track name, defaults to <tt>origin</tt> by convention
+     * @param useShallowClone option to create a shallow clone, that has some restriction but will make clone operation
+     */
+    void clone(String url, String origin, boolean useShallowClone) throws GitException;
 
     void fetch(String remote, RefSpec refspec) throws GitException;
 

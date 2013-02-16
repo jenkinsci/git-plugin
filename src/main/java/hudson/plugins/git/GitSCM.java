@@ -1008,7 +1008,7 @@ public class GitSCM extends SCM implements Serializable {
                     boolean successfullyCloned = false;
                     for (RemoteConfig rc : repos) {
                         try {
-                            git.clone(rc, useShallowClone);
+                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone);
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
@@ -1144,7 +1144,7 @@ public class GitSCM extends SCM implements Serializable {
                     // checkout origin/blah
                     ObjectId target = git.revParse(mergeOptions.getRemoteBranchName());
 
-                    git.checkout(target.name(), paramLocalBranch);
+                    checkout(git, target, paramLocalBranch);
 
                     try {
                         git.merge(revToBuild.getSha1().name());
@@ -1153,7 +1153,7 @@ public class GitSCM extends SCM implements Serializable {
                         // repetitive builds from happening - tag the
                         // candidate
                         // branch.
-                        git.checkout(revToBuild.getSha1().name(), paramLocalBranch);
+                        checkout(git, revToBuild.getSha1(), paramLocalBranch);
 
                         if (!getSkipTag()) {
                             git.tag(buildnumber, "Jenkins Build #"
@@ -1216,7 +1216,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
                     }
 
-                    git.checkout(revToBuild.getSha1().name(), paramLocalBranch);
+                    checkout(git, revToBuild.getSha1(), paramLocalBranch);
 
                     if (git.hasGitModules() && !disableSubmodules) {
                         // This ensures we don't miss changes to submodule paths and allows
@@ -1252,6 +1252,25 @@ public class GitSCM extends SCM implements Serializable {
         build.addAction(new GitTagAction(build, returnedBuildData));
 
         return true;
+    }
+
+    /**
+     * @param branch move/create the branch in this name at the specified commit-ish and check out that branch.
+     */
+    private void checkout(IGitAPI git, ObjectId commit, /* @Nullable */ String branch) throws GitException {
+        // First, checkout to detached HEAD, so we can delete the branch.
+        git.checkout(commit.name());
+
+        if (branch!=null) {
+            // Second, check to see if the branch actually exists, and then delete it if it does.
+            for (Branch b : git.getBranches()) {
+                if (b.getName().equals(branch)) {
+                    git.deleteBranch(branch);
+                }
+            }
+            // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
+            git.checkout(commit.name(), branch);
+        }
     }
 
     /**

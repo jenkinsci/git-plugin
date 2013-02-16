@@ -31,6 +31,7 @@ import hudson.util.IOException2;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jvnet.hudson.test.Bug;
@@ -401,8 +402,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS, commitFile1);
 
         //now create and checkout a new branch:
-        git.branch("untracked");
-        git.checkout("untracked", null);
+        git.checkout(Constants.HEAD, "untracked");
         //.. and commit to it:
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");

@@ -59,31 +59,45 @@ public class JGitAPIImpl implements IGitAPI {
         Git.init().setDirectory(workspace).call();
     }
 
-    public void checkout(String commitish) throws GitException {
-        checkout(commitish, null);
-    }
-
-    public void checkout(String commitish, String branch) throws GitException {
+    public void checkout(String commit) throws GitException {
         try {
             Git git = Git.open(workspace);
+            Repository repo = git.getRepository();
+            Ref head = repo.getRef(HEAD);
+            RevWalk revWalk = new RevWalk(repo);
+            AnyObjectId headId = head.getObjectId();
+            RevCommit headCommit = headId == null ? null : revWalk.parseCommit(headId);
+            RevTree headTree = headCommit == null ? null : headCommit.getTree();
 
-            // First, checkout to detached HEAD, so we can delete the branch.
-            checkoutDetachedHead(git.getRepository(), commitish);
+            ObjectId target = ObjectId.fromString(commit);
+            RevCommit newCommit = revWalk.parseCommit(target);
 
-            if (branch!=null) {
-                // Second, check to see if the branch actually exists, and then delete it if it does.
-                for (Branch b : getBranches()) {
-                    if (b.getName().equals(branch)) {
-                        deleteBranch(branch);
-                    }
-                }
-                // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
-                git.checkout().setName(branch).setForce(true).setStartPoint(commitish).call();
+            DirCache dc = repo.lockDirCache();
+            try {
+                DirCacheCheckout dco = new DirCacheCheckout(repo, headTree, dc, newCommit.getTree());
+                dco.setFailOnConflict(true);
+                dco.checkout();
+            } finally {
+                dc.unlock();
             }
+            RefUpdate refUpdate = repo.updateRef(HEAD, true);
+            refUpdate.setForceUpdate(true);
+            refUpdate.setRefLogMessage("checkout: moving to " + commit, false);
+            refUpdate.setNewObjectId(newCommit);
+            refUpdate.forceUpdate();
         } catch (IOException e) {
-            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
+            throw new GitException("Could not checkout " + commit, e);
+        }
+    }
+
+    public void checkout(String ref, String branch) throws GitException {
+        try {
+            Git git = Git.open(workspace);
+            git.checkout().setName(branch).setForce(true).setStartPoint(ref).call();
+        } catch (IOException e) {
+            throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
         } catch (GitAPIException e) {
-            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
+            throw new GitException("Could not checkout " + branch + " with start point " + ref, e);
         }
     }
 
@@ -243,8 +257,8 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.clean();
     }
 
-    public void clone(RemoteConfig rc, boolean useShallowClone) throws GitException {
-        delegate.clone(rc, useShallowClone);
+    public void clone(String url, String origin, boolean useShallowClone) throws GitException {
+        delegate.clone(url, origin, useShallowClone);
     }
 
     public void deleteTag(String tagName) throws GitException {

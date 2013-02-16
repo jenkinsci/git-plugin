@@ -218,15 +218,14 @@ public class CliGitAPIImpl implements IGitAPI {
      * existing directory is not allowed, so the workspace is first deleted
      * entirely, then <tt>git clone</tt> is performed.
      *
-     * @param remoteConfig remote config
-     * @param boolean useShallowClone perform shallow clone using --depth 1
+     *
+     *
+     * @param url
+     * @param origin
      * @throws GitException if deleting or cloning the workspace fails
      */
-    public void clone(final RemoteConfig remoteConfig, final boolean useShallowClone) throws GitException {
-        // Assume only 1 URL for this repository
-        final String source = remoteConfig.getURIs().get(0).toPrivateString();
-
-        listener.getLogger().println("Cloning repository " + source);
+    public void clone(String url, String origin, final boolean useShallowClone) throws GitException {
+        listener.getLogger().println("Cloning repository " + url);
         final int[] gitVer = getGitVersion();
 
         // TODO: Not here!
@@ -249,20 +248,16 @@ public class CliGitAPIImpl implements IGitAPI {
                     args.add("--reference", reference);
                 }
             }
-            args.add("-o", remoteConfig.getName());
+            args.add("-o", origin);
             if(useShallowClone) args.add("--depth", "1");
-            args.add(source);
+            args.add(url);
             args.add(workspace.getAbsolutePath());
             launchCommandIn(args, null);
         } catch (Exception e) {
-            throw new GitException("Could not clone " + source, e);
+            throw new GitException("Could not clone " + url, e);
         }
     }
     
-    public void clone(final RemoteConfig remoteConfig) throws GitException {
-    	clone(remoteConfig, false);    	
-    }
-
     public void clean() throws GitException {
         reset(true);
         launchCommand("clean", "-fdx");
@@ -896,28 +891,12 @@ public class CliGitAPIImpl implements IGitAPI {
         return branches;
     }
 
-    public void checkout(String commitish) throws GitException {
-        checkout(commitish, null);
+    public void checkout(String commit) throws GitException {
+        launchCommand("checkout", "-f", commit);
     }
 
-    public void checkout(String commitish, String branch) throws GitException {
-        try {
-            // First, checkout to detached HEAD, so we can delete the branch.
-            launchCommand("checkout", "-f", commitish);
-
-            if (branch!=null) {
-                // Second, check to see if the branch actually exists, and then delete it if it does.
-                for (Branch b : getBranches()) {
-                    if (b.getName().equals(branch)) {
-                        deleteBranch(branch);
-                    }
-                }
-                // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
-                launchCommand("checkout", "-b", branch, commitish);
-            }
-        } catch (GitException e) {
-            throw new GitException("Could not checkout " + branch + " with start point " + commitish, e);
-        }
+    public void checkout(String ref, String branch) throws GitException {
+        launchCommand("checkout", "-b", branch, ref);
     }
 
     public boolean tagExists(String tagName) throws GitException {
