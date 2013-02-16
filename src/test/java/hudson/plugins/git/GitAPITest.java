@@ -18,7 +18,9 @@ import hudson.console.ConsoleNote;
 
 import hudson.model.TaskListener;
 
-import hudson.plugins.git.GitAPI;
+import hudson.plugins.git.GitException;
+
+import hudson.plugins.git.client.CliGitAPIImpl;
 
 import hudson.util.AbstractTaskListener;
 import hudson.util.StreamTaskListener;
@@ -49,7 +51,7 @@ public class GitAPITest extends HudsonTestCase {
         if ((dirType == TmpDirType.VALID_GIT_DIR) || (dirType == TmpDirType.VALID_COMMIT)) {
             final EnvVars myEnv = new EnvVars();
             final BufferTaskListener myListener = new BufferTaskListener();
-            final GitAPI api = new GitAPI("git", tmpDir, myListener, myEnv);
+            final CliGitAPIImpl api = new CliGitAPIImpl("git", tmpDir, myListener, myEnv);
             /* initialize empty git repo */
             api.launchCommand("init", tmpDir.getAbsolutePath());
 
@@ -74,7 +76,7 @@ public class GitAPITest extends HudsonTestCase {
     public void testHasGitRepoWithoutGitDirectory() throws IOException {
         final File emptyDir = createTmpDir();
         final BufferTaskListener myListener = new BufferTaskListener();
-        final GitAPI api = new GitAPI("git", emptyDir, myListener, env);
+        final CliGitAPIImpl api = new CliGitAPIImpl("git", emptyDir, myListener, env);
         assertFalse("Empty directory has a Git repo", api.hasGitRepo());
         assertFalse("Unexpected errors on git API task listener", myListener.checkError());
     }
@@ -85,7 +87,7 @@ public class GitAPITest extends HudsonTestCase {
     public void testHasGitRepoWithEmptyGitDirectory() throws IOException {
         final File emptyGitDir = createTmpDir(TmpDirType.EMPTY_GIT_DIR);
         final BufferTaskListener myListener = new BufferTaskListener();
-        final GitAPI api = new GitAPI("git", emptyGitDir, myListener, env);
+        final CliGitAPIImpl api = new CliGitAPIImpl("git", emptyGitDir, myListener, env);
         assertFalse("Invalid Git repo reported as valid", api.hasGitRepo());
         assertTrue("Missing expected errors on git API task listener", myListener.checkError());
     }
@@ -97,7 +99,7 @@ public class GitAPITest extends HudsonTestCase {
         throws IOException {
         final File validGitDirWithNoCommits = createTmpDir(TmpDirType.VALID_GIT_DIR);
         final BufferTaskListener myListener = new BufferTaskListener();
-        final GitAPI api = new GitAPI("git", validGitDirWithNoCommits, myListener, env);
+        final CliGitAPIImpl api = new CliGitAPIImpl("git", validGitDirWithNoCommits, myListener, env);
         assertTrue("Valid Git repo reported as invalid", api.hasGitRepo());
         assertFalse("Unexpected errors on git API task listener", myListener.checkError());
     }
@@ -108,7 +110,7 @@ public class GitAPITest extends HudsonTestCase {
     public void testHasGitRepoWithValidGitDirectory() throws IOException {
         final File validGitDirWithNoCommits = createTmpDir(TmpDirType.VALID_COMMIT);
         final BufferTaskListener myListener = new BufferTaskListener();
-        final GitAPI api = new GitAPI("git", validGitDirWithNoCommits, myListener, env);
+        final CliGitAPIImpl api = new CliGitAPIImpl("git", validGitDirWithNoCommits, myListener, env);
         assertTrue("Valid Git repo reported as invalid", api.hasGitRepo());
         assertFalse("Unexpected errors on git API task listener", myListener.checkError());
     }
@@ -121,12 +123,12 @@ public class GitAPITest extends HudsonTestCase {
         boolean thrown = false;
         final File validGitDirWithNoCommits = createTmpDir(TmpDirType.VALID_GIT_DIR);
         final BufferTaskListener myListener = new BufferTaskListener();
-        final GitAPI api = new GitAPI("git", validGitDirWithNoCommits, myListener, env);
+        final CliGitAPIImpl api = new CliGitAPIImpl("git", validGitDirWithNoCommits, myListener, env);
 
         try {
             ObjectId id = api.validateRevision("HEAD");
             System.out.println("***** id is " + id + " *****");
-        } catch (hudson.plugins.git.GitException ex) {
+        } catch (GitException ex) {
             /* Expected to throw an exception because the HEAD
              * revision is not yet defined in a newly created
              * repository */
