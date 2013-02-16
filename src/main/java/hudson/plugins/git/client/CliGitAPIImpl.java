@@ -229,11 +229,14 @@ public class CliGitAPIImpl implements IGitAPI {
             if ((gitVer[0] >= 1) && (gitVer[1] >= 7)) {
                 args.add("--progress");
             }
-            if (reference != null) {
+            if (reference != null && !reference.equals("")) {
                 File referencePath = new File(reference);
-                if (referencePath.exists() && referencePath.isDirectory()) {
-                    args.add("--reference", reference);
-                }
+                if (!referencePath.exists())
+                    throw new GitException("Reference path does not exist: " + reference);
+                if (!referencePath.isDirectory())
+                    throw new GitException("Reference path is not a directory: " + reference);
+                args.add("--reference", reference);
+
             }
             args.add("-o", origin);
             if(useShallowClone) args.add("--depth", "1");
