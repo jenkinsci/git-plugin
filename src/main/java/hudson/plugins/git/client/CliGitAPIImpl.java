@@ -819,9 +819,9 @@ public class CliGitAPIImpl implements IGitAPI {
         }
     }
 
-    public void push(RemoteConfig repository, String refspec) throws GitException {
+    public void push(String remoteName, String refspec) throws GitException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("push", repository.getURIs().get(0).toPrivateString());
+        args.add("push", remoteName);
 
         if (refspec != null)
             args.add(refspec);

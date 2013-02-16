@@ -70,7 +70,7 @@ public interface IGitAPI {
 
     void fetch(String remote, RefSpec refspec) throws GitException;
 
-    void push(RemoteConfig repository, String revspec) throws GitException;
+    void push(String remoteName, String revspec) throws GitException;
 
     void merge(ObjectId revSpec) throws GitException;
 

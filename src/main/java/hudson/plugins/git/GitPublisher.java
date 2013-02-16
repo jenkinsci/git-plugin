@@ -220,8 +220,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                                     RemoteConfig remote = mergeOptions.getMergeRemote();
                                     listener.getLogger().println("Pushing HEAD to branch " + mergeOptions.getMergeTarget() + " of " + remote.getName() + " repository");
-                                    
-                                    git.push(remote, "HEAD:" + mergeOptions.getMergeTarget());
+
+                                    git.push(remote.getName(), "HEAD:" + mergeOptions.getMergeTarget());
                                 } else {
                                     //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                                     //git.push(null);
@@ -295,7 +295,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                                         listener.getLogger().println("Pushing tag " + tagName + " to repo "
                                                                      + targetRepo);
-                                        git.push(remote, tagName);
+                                        git.push(remote.getName(), tagName);
                                         
                                         return true;
                                     }
@@ -351,7 +351,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                         
                                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                                      + targetRepo);
-                                        git.push(remote, "HEAD:" + branchName);
+                                        git.push(remote.getName(), "HEAD:" + branchName);
                                         
                                         return true;
                                     }
@@ -414,9 +414,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                         	git.addNote(    noteMsg, noteNamespace );
                                         else
                                         	git.appendNote( noteMsg, noteNamespace );
-                                        
-                                        
-                                        git.push(remote, "refs/notes/*" );
+
+                                        git.push(remote.getName(), "refs/notes/*" );
                                         
                                         return true;
                                     }

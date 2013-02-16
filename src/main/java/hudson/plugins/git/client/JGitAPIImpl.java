@@ -5,7 +5,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.*;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
@@ -339,8 +337,8 @@ public class JGitAPIImpl implements IGitAPI {
         delegate.prune(repository);
     }
 
-    public void push(RemoteConfig repository, String revspec) throws GitException {
-        delegate.push(repository, revspec);
+    public void push(String remoteName, String revspec) throws GitException {
+        delegate.push(remoteName, revspec);
     }
 
     public List<ObjectId> revListAll() throws GitException {
