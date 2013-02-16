@@ -128,6 +128,7 @@ public class GitSCM extends SCM implements Serializable {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String relativeTargetDir;
     private String reference;
     private String excludedRegions;
@@ -1353,6 +1354,11 @@ public class GitSCM extends SCM implements Serializable {
             env.put(GIT_BRANCH, branch.getName());
         }
         if (rev != null) {
+            Branch branch = rev.getBranches().iterator().next();
+            String prevCommit = getLastBuiltCommitOfBranch(build, branch);
+            if (prevCommit != null) {
+                env.put(GIT_PREVIOUS_COMMIT, prevCommit);
+            }
             String commit = rev.getSha1String();
             if (commit != null) {
                 env.put(GIT_COMMIT, commit);
@@ -1370,6 +1376,20 @@ public class GitSCM extends SCM implements Serializable {
             env.put("GIT_AUTHOR_EMAIL", confEmail);
         }
 
+    }
+
+    private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
+        String prevCommit = null;
+        if (build.getPreviousBuiltBuild() != null) {
+            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild(), false)).getLastBuildOfBranch(branch.getName());
+            if (lastBuildOfBranch != null) {
+                Revision previousRev = lastBuildOfBranch.getRevision();
+                if (previousRev != null) {
+                    prevCommit = previousRev.getSha1String();
+                }
+            }
+        }
+        return prevCommit;
     }
 
     private void putChangelogDiffs(IGitAPI git, String branchName, String revFrom,
