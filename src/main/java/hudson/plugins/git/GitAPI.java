@@ -343,8 +343,10 @@ public class GitAPI implements IGitAPI {
             line = reader.readLine();
             if (line == null)
                 return null;
-            if (reader.readLine() != null)
-                throw new GitException("Result has multiple lines");
+            if (reader.readLine() != null) {
+                listener.getLogger().println("Result has multiple lines:");
+                listener.getLogger().println(result);
+            }
         } catch (IOException e) {
             throw new GitException("Error parsing result", e);
         }
