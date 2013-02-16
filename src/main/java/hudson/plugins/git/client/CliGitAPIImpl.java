@@ -200,10 +200,6 @@ public class CliGitAPIImpl implements IGitAPI {
         launchCommand(args);
     }
 
-    public void reset() throws GitException {
-        reset(false);
-    }
-
     /**
      * Start from scratch and clone the whole repository. Cloning into an
      * existing directory is not allowed, so the workspace is first deleted
