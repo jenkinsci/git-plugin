@@ -1063,6 +1063,10 @@ public class GitSCM extends SCM implements Serializable {
                     return rpa.toRevision(git);
                 }
 
+                for (BranchSpec b : getBranches()) {
+                    b.expand(environment);
+                }
+
                 Collection<Revision> candidates = buildChooser.getCandidateRevisions(
                         false, singleBranch, git, listener, buildData, context);
                 if (candidates.size() == 0) {

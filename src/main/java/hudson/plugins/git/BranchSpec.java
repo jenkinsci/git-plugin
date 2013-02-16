@@ -1,5 +1,7 @@
 package hudson.plugins.git;
 
+import hudson.EnvVars;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +43,11 @@ public class BranchSpec implements Serializable {
     @DataBoundConstructor
     public BranchSpec(String name) {
         setName(name);
+    }
+
+    public void expand(EnvVars environment) {
+        this.name = environment.expand(this.name);
+        this.pattern = null;
     }
 
     public String toString() {
