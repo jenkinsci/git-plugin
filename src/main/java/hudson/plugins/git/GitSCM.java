@@ -36,6 +36,7 @@ import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.triggers.SCMTrigger;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 
@@ -1068,6 +1069,16 @@ public class GitSCM extends SCM implements Serializable {
                 if (candidates.size() == 0) {
                     log.println("No candidate revisions");
                     return null;
+                }
+                if (candidates.size() > 1) {
+                    log.println("Multiple candidate revisions");
+                    AbstractProject<?, ?> project = build.getProject();
+                    if (!project.isDisabled()) {
+                        log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
+                        if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
+                            log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+                        }
+                    }
                 }
                 return candidates.iterator().next();
             }
