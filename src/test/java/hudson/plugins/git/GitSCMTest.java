@@ -705,6 +705,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     private FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        System.out.println(build.getLog());
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -716,6 +717,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     private FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        System.out.println(build.getLog());
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
