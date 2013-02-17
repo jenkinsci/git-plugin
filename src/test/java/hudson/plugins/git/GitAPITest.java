@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import java.util.UUID;
-
 import org.eclipse.jgit.lib.ObjectId;
 
 import org.jvnet.hudson.test.HudsonTestCase;
