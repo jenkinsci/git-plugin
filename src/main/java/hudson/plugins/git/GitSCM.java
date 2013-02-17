@@ -944,20 +944,21 @@ public class GitSCM extends SCM implements Serializable {
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
-        
+
+        final PrintStream logger = listener.getLogger();
         if(useShallowClone) {
         //	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
-        		listener.getLogger().println("Using shallow clone");
+        		logger.println("Using shallow clone");
         //	} else {
         //		useShallowClone = false;
         //	}
         }
 
-        return workingDirectory.act(new FileCallable<Revision>() {
+        Collection<Revision> candidates = workingDirectory.act(new FileCallable<Collection<Revision>>() {
 
             private static final long serialVersionUID = 1L;
 
-            public Revision invoke(File localWorkspace, VirtualChannel channel)
+            public Collection<Revision> invoke(File localWorkspace, VirtualChannel channel)
                     throws IOException, InterruptedException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
@@ -1058,32 +1059,34 @@ public class GitSCM extends SCM implements Serializable {
                 }
 
                 if (parentLastBuiltRev != null) {
-                    return parentLastBuiltRev;
+                    return Collections.singleton(parentLastBuiltRev);
                 }
 
                 if (rpa != null) {
-                    return rpa.toRevision(git);
+                    return Collections.singleton(rpa.toRevision(git));
                 }
 
-                Collection<Revision> candidates = buildChooser.getCandidateRevisions(
+                return buildChooser.getCandidateRevisions(
                         false, singleBranch, git, listener, buildData, context);
-                if (candidates.size() == 0) {
-                    log.println("No candidate revisions");
-                    return null;
-                }
-                if (candidates.size() > 1) {
-                    log.println("Multiple candidate revisions");
-                    AbstractProject<?, ?> project = build.getProject();
-                    if (!project.isDisabled()) {
-                        log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
-                        if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
-                            log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
-                        }
-                    }
-                }
-                return candidates.iterator().next();
+
             }
         });
+
+        if (candidates.size() == 0) {
+            logger.println("No candidate revisions");
+            return null;
+        }
+        if (candidates.size() > 1) {
+            logger.println("Multiple candidate revisions");
+            AbstractProject<?, ?> project = build.getProject();
+            if (!project.isDisabled()) {
+                logger.println("Scheduling another build to catch up with " + project.getFullDisplayName());
+                if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
+                    logger.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+                }
+            }
+        }
+        return candidates.iterator().next();
     }
 
     @Override

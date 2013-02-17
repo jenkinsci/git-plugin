@@ -44,7 +44,8 @@ public abstract class GitAPITestCase extends TestCase {
 
     public void test_initialize_repository() throws Exception {
         git.init();
-        assertTrue(launchCommand("git status").contains("On branch master"));
+        String status = launchCommand("git status");
+        assertTrue("unexpected status " + status, status.contains("On branch master"));
     }
 
     public void test_detect_commit_in_repo() throws Exception {
@@ -53,7 +54,7 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git add file1");
         launchCommand("git commit -m 'commit1'");
         String sha1 = launchCommand("git rev-parse HEAD").substring(0,40);
-        assertTrue(git.isCommitInRepo(ObjectId.fromString(sha1)));
+        assertTrue("HEAD commit not found", git.isCommitInRepo(ObjectId.fromString(sha1)));
         // this MAY fail if commit has this exact sha1, but please admit this would be unlucky
         assertFalse(git.isCommitInRepo(ObjectId.fromString("1111111111111111111111111111111111111111")));
     }
@@ -62,7 +63,8 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git init");
         launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
         launchCommand("git ndeloof add origin git@github.com:ndeloof/git-plugin.git");
-        assertEquals("git@github.com:jenkinsci/git-plugin.git", git.getRemoteUrl("origin"));
+        String remoteUrl = git.getRemoteUrl("origin");
+        assertEquals("unexepected remote URL " + remoteUrl, "git@github.com:jenkinsci/git-plugin.git", remoteUrl);
     }
 
     public void test_setRemoteURL() throws Exception {
@@ -70,7 +72,7 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
         git.setRemoteUrl("origin", "git@github.com:ndeloof/git-plugin.git");
         String remotes = launchCommand("git remote -v");
-        assertTrue(remotes.contains("origin\tgit@github.com:ndeloof/git-plugin.git"));
+        assertTrue("remote URL has not been updated", remotes.contains("origin\tgit@github.com:ndeloof/git-plugin.git"));
     }
 
     public void test_clean() throws Exception {
@@ -79,7 +81,8 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("touch file1");
         git.clean();
         assertFalse(new File(repo, "file1").exists());
-        assertTrue(launchCommand("git status").contains("nothing to commit, working directory clean"));
+        String status = launchCommand("git status");
+        assertTrue("unexpected status " + status, status.contains("working directory clean"));
     }
 
     public void test_fecth() throws Exception {
@@ -95,8 +98,8 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git commit --allow-empty -m init");
         git.branch("test");
         String branches = launchCommand("git branch -l");
-        assertTrue(branches.contains("master"));
-        assertTrue(branches.contains("test"));
+        assertTrue("master branch not listed", branches.contains("master"));
+        assertTrue("test branch not listed", branches.contains("test"));
     }
 
     public void test_list_branches() throws Exception {
@@ -111,9 +114,9 @@ public abstract class GitAPITestCase extends TestCase {
             }
         });
         assertEquals(3, branches.size());
-        assertTrue(names.contains("master"));
-        assertTrue(names.contains("test"));
-        assertTrue(names.contains("another"));
+        assertTrue("master branch not listed", names.contains("master"));
+        assertTrue("test branch not listed", names.contains("test"));
+        assertTrue("another branch not listed", names.contains("another"));
     }
 
     public void test_list_remote_branches() throws Exception {
@@ -133,9 +136,9 @@ public abstract class GitAPITestCase extends TestCase {
             }
         });
         assertEquals(3, branches.size());
-        assertTrue(names.contains("origin/master"));
-        assertTrue(names.contains("origin/test"));
-        assertTrue(names.contains("origin/another"));
+        assertTrue("origin/master branch not listed", names.contains("origin/master"));
+        assertTrue("origin/test branch not listed", names.contains("origin/test"));
+        assertTrue("origin/another branch not listed", names.contains("origin/another"));
     }
 
     public void test_list_branches_containing_ref() throws Exception {
@@ -161,16 +164,16 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git branch test");
         git.deleteBranch("test");
         String branches = launchCommand("git branch -l");
-        assertTrue(branches.contains("master"));
-        assertFalse(branches.contains("test"));
+        assertFalse("deleted test branch still present", branches.contains("test"));
     }
 
     public void test_create_tag() throws Exception {
         launchCommand("git init");
         launchCommand("git commit --allow-empty -m init");
         git.tag("test", "this is a tag");
-        assertTrue(launchCommand("git tag").contains("test"));
-        assertTrue(launchCommand("git tag -l -n1").contains("this is a tag"));
+        assertTrue("test tag not created", launchCommand("git tag").contains("test"));
+        String message = launchCommand("git tag -l -n1");
+        assertTrue("unexpected test tag message : " + message, message.contains("this is a tag"));
     }
 
     public void test_delete_tag() throws Exception {
@@ -180,8 +183,8 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git tag another");
         git.deleteTag("test");
         String tags = launchCommand("git tag");
-        assertFalse(tags.contains("test"));
-        assertTrue(tags.contains("another"));
+        assertFalse("deleted test tag still present", tags.contains("test"));
+        assertTrue("expected tag not listed", tags.contains("another"));
     }
 
     public void test_list_tags_with_filter() throws Exception {
@@ -191,9 +194,9 @@ public abstract class GitAPITestCase extends TestCase {
         launchCommand("git tag another_test");
         launchCommand("git tag yet_another");
         Set<String> tags = git.getTagNames("*test");
-        assertTrue(tags.contains("test"));
-        assertTrue(tags.contains("another_test"));
-        assertFalse(tags.contains("yet_another"));
+        assertTrue("expected tag not listed", tags.contains("test"));
+        assertTrue("expected tag not listed", tags.contains("another_test"));
+        assertFalse("unexpected tag listed", tags.contains("yet_another"));
     }
 
     public void test_tag_exists() throws Exception {
