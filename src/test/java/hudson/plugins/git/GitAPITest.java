@@ -141,10 +141,10 @@ public class GitAPITest extends HudsonTestCase {
      * later review by test assertions and other test code.
      */
     private class BufferTaskListener extends AbstractTaskListener {
-        final ByteArrayOutputStream outputStream;
-        final PrintStream printStream;
-        final PrintWriter printWriter;
-        int errorCount;
+        private final ByteArrayOutputStream outputStream;
+        private final PrintStream printStream;
+        private final PrintWriter printWriter;
+        private int errorCount;
 
         public BufferTaskListener() {
             outputStream = new ByteArrayOutputStream();
