@@ -50,7 +50,7 @@ public abstract class GitAPITestCase extends TestCase {
 
     public void test_detect_commit_in_repo() throws Exception {
         launchCommand("git init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         launchCommand("git add file1");
         launchCommand("git commit -m 'commit1'");
         String sha1 = launchCommand("git rev-parse HEAD").substring(0,40);
@@ -61,15 +61,15 @@ public abstract class GitAPITestCase extends TestCase {
 
     public void test_getRemoteURL() throws Exception {
         launchCommand("git init");
-        launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
+        launchCommand("git remote add origin git://github.com/jenkinsci/git-plugin.git");
         launchCommand("git ndeloof add origin git@github.com:ndeloof/git-plugin.git");
         String remoteUrl = git.getRemoteUrl("origin");
-        assertEquals("unexepected remote URL " + remoteUrl, "git@github.com:jenkinsci/git-plugin.git", remoteUrl);
+        assertEquals("unexepected remote URL " + remoteUrl, "git://github.com/jenkinsci/git-plugin.git", remoteUrl);
     }
 
     public void test_setRemoteURL() throws Exception {
         launchCommand("git init");
-        launchCommand("git remote add origin git@github.com:jenkinsci/git-plugin.git");
+        launchCommand("git remote add origin git://github.com/jenkinsci/git-plugin.git");
         git.setRemoteUrl("origin", "git@github.com:ndeloof/git-plugin.git");
         String remotes = launchCommand("git remote -v");
         assertTrue("remote URL has not been updated", remotes.contains("origin\tgit@github.com:ndeloof/git-plugin.git"));
@@ -78,7 +78,7 @@ public abstract class GitAPITestCase extends TestCase {
     public void test_clean() throws Exception {
         launchCommand("git init");
         launchCommand("git commit --allow-empty -m init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         git.clean();
         assertFalse(new File(repo, "file1").exists());
         String status = launchCommand("git status");
@@ -209,14 +209,14 @@ public abstract class GitAPITestCase extends TestCase {
 
     public void test_get_HEAD_revision() throws Exception {
         // TODO replace with an embedded JGit server so that test run offline ?
-        String sha1 = launchCommand("git ls-remote --heads git@github.com:jenkinsci/git-plugin.git refs/heads/master").substring(0,40);
-        assertEquals(sha1, git.getHeadRev("git@github.com:jenkinsci/git-plugin.git", "master").name());
+        String sha1 = launchCommand("git ls-remote --heads git://github.com/jenkinsci/git-plugin.git refs/heads/master").substring(0,40);
+        assertEquals(sha1, git.getHeadRev("git://github.com/jenkinsci/git-plugin.git", "master").name());
     }
 
     public void test_revparse_sha1_HEAD_or_tag() throws Exception {
         launchCommand("git init");
         launchCommand("git commit --allow-empty -m init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         launchCommand("git add file1");
         launchCommand("git commit -m 'commit1'");
         launchCommand("git tag test");
