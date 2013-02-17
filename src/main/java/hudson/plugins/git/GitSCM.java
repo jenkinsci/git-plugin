@@ -1303,8 +1303,16 @@ public class GitSCM extends SCM implements Serializable {
      */
     private void computeChangeLog(IGitAPI git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         int histories = 0;
+        PrintStream out = null;
+        listener.getLogger().println("Attempting to write changelog to local file " +
+                                     changelogFile.getName() + ", remotely " + changelogFile.getRemote());
+        try {
+            out = new PrintStream(changelogFile.write());
+        } catch (IOException io) {
+            listener.getLogger().println("Failed to open changelog file for write");
+            return;
+        }
 
-        PrintStream out = new PrintStream(changelogFile.write());
         try {
             for (Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
@@ -1337,8 +1345,16 @@ public class GitSCM extends SCM implements Serializable {
                                          + ", does not exist in the current repository.");
         } else {
             int histories = 0;
+            PrintStream out = null;
+            listener.getLogger().println("Attempting to write merge changelog to local file " +
+                                         changelogFile.getName() + ", remotely " + changelogFile.getRemote());
+            try {
+                out = new PrintStream(changelogFile.write());
+            } catch (IOException io) {
+                listener.getLogger().println("Failed to open changelog file for write");
+                return;
+            }
 
-            PrintStream out = new PrintStream(changelogFile.write());
             try {
                 for (Branch b : revToBuild.getBranches()) {
                     putChangelogDiffs(git, b.name, revFrom, revToBuild.getSha1().name(), out);
