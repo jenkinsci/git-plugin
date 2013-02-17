@@ -28,15 +28,14 @@ import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
+import hudson.model.*;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.UnstableBuilder;
 
 import java.util.Collections;
 
@@ -59,7 +58,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
-                true, true) {
+                true, false, true) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
                 run[0]++;
@@ -89,6 +88,76 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
         // twice for MatrixRun, which is to be ignored, then once for matrix completion
         assertEquals(3,run[0]);
+    }
+
+
+    @Bug(16646)
+    public void testPushEvenBuildUnstable() throws Exception {
+        commit("a", johnDoe, "commit #1");
+
+        FreeStyleProject mp = createFreeStyleProject("testUnstable");
+        mp.setScm(new GitSCM(workDir.getAbsolutePath()));
+        mp.getPublishersList().add(new GitPublisher(
+                Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
+                Collections.<BranchToPush>emptyList(),
+                Collections.<NoteToPush>emptyList(),
+                true, true, true) {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+                return super.perform(build, launcher, listener);
+            }
+
+            @Override
+            public BuildStepDescriptor getDescriptor() {
+                return (BuildStepDescriptor)Hudson.getInstance().getDescriptorOrDie(GitPublisher.class); // fake
+            }
+
+            private Object writeReplace() { return new NullSCM(); }
+        });
+
+        mp.getBuildersList().add(new UnstableBuilder());
+
+        FreeStyleBuild b = assertBuildStatus(Result.UNSTABLE, mp.scheduleBuild2(0).get());
+        System.out.println(b.getLog());
+
+        assertTrue(existsTag("foo"));
+
+        assertTrue(containsTagMessage("foo", "message"));
+
+    }
+
+    public void testPushOnlySuccessOnUnstableBuild() throws Exception {
+        commit("a", johnDoe, "commit #1");
+
+        FreeStyleProject mp = createFreeStyleProject("testSuccess");
+        mp.setScm(new GitSCM(workDir.getAbsolutePath()));
+        mp.getPublishersList().add(new GitPublisher(
+                Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
+                Collections.<BranchToPush>emptyList(),
+                Collections.<NoteToPush>emptyList(),
+                true, false, true) {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+                return super.perform(build, launcher, listener);
+            }
+
+            @Override
+            public BuildStepDescriptor getDescriptor() {
+                return (BuildStepDescriptor)Hudson.getInstance().getDescriptorOrDie(GitPublisher.class); // fake
+            }
+
+            private Object writeReplace() { return new NullSCM(); }
+        });
+
+        mp.getBuildersList().add(new UnstableBuilder());
+
+        FreeStyleBuild b = assertBuildStatus(Result.UNSTABLE, mp.scheduleBuild2(0).get());
+        System.out.println(b.getLog());
+
+        assertFalse(existsTag("foo"));
+
+        assertFalse(containsTagMessage("foo", "message"));
+
     }
 
     private boolean existsTag(String tag) {

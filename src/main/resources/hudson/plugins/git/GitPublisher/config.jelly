@@ -18,6 +18,10 @@
              title="${%Push Only If Build Succeeds}">
       <f:checkbox />
     </f:entry>
+    <f:entry field="pushEvenUnstable"
+             title="${%Push Only Build is Succeeds or Unstable}">
+      <f:checkbox />
+    </f:entry>
     <f:entry field="pushMerge"
              title="${%Merge Results}"
              description="${%If pre-build merging is configured, push the result back to the origin}">
