@@ -50,7 +50,7 @@ public abstract class GitAPITestCase extends TestCase {
 
     public void test_detect_commit_in_repo() throws Exception {
         launchCommand("git init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         launchCommand("git add file1");
         launchCommand("git commit -m 'commit1'");
         String sha1 = launchCommand("git rev-parse HEAD").substring(0,40);
@@ -78,7 +78,7 @@ public abstract class GitAPITestCase extends TestCase {
     public void test_clean() throws Exception {
         launchCommand("git init");
         launchCommand("git commit --allow-empty -m init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         git.clean();
         assertFalse(new File(repo, "file1").exists());
         String status = launchCommand("git status");
@@ -216,7 +216,7 @@ public abstract class GitAPITestCase extends TestCase {
     public void test_revparse_sha1_HEAD_or_tag() throws Exception {
         launchCommand("git init");
         launchCommand("git commit --allow-empty -m init");
-        launchCommand("touch file1");
+        (new File(repo, "file1")).createNewFile();
         launchCommand("git add file1");
         launchCommand("git commit -m 'commit1'");
         launchCommand("git tag test");
