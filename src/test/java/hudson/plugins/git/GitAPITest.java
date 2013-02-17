@@ -125,7 +125,6 @@ public class GitAPITest extends HudsonTestCase {
 
         try {
             ObjectId id = api.validateRevision("HEAD");
-            System.out.println("***** id is " + id + " *****");
         } catch (GitException ex) {
             /* Expected to throw an exception because the HEAD
              * revision is not yet defined in a newly created
