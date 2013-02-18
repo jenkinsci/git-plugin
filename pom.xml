@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
-  <version>1.1.29-SNAPSHOT</version>
+  <version>1.1.29</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -141,7 +141,7 @@
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>1.0.1-SNAPSHOT</version>
+      <version>1.0.1</version>
     </dependency>
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
