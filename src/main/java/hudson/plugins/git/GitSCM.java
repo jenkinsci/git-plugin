@@ -661,7 +661,7 @@ public class GitSCM extends SCM implements Serializable {
             GitTool.DescriptorImpl gitTools = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
             String gitExe = gitTools.getInstallation(gitTool).getGitExe();
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
-            IGitAPI git = new CliGitAPIImpl(gitExe, null, listener, environment, reference);
+            IGitAPI git = new CliGitAPIImpl(gitExe, null, listener, environment);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
@@ -713,7 +713,7 @@ public class GitSCM extends SCM implements Serializable {
             private static final long serialVersionUID = 1L;
 
             public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
-                IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment, reference);
+                IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
                 if (git.hasGitRepo()) {
                     // Repo is there - do a fetch
@@ -938,7 +938,7 @@ public class GitSCM extends SCM implements Serializable {
                     throws IOException, InterruptedException {
                 FilePath ws = new FilePath(localWorkspace);
                 final PrintStream log = listener.getLogger();
-                IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment, reference);
+                IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
                 if (wipeOutWorkspace) {
                     log.println("Wiping out workspace first.");
@@ -988,7 +988,7 @@ public class GitSCM extends SCM implements Serializable {
                     boolean successfullyCloned = false;
                     for (RemoteConfig rc : repos) {
                         try {
-                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone);
+                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, reference);
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
@@ -1125,7 +1125,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment, reference);
+                    IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
                     // Do we need to merge this revision onto MergeTarget
 
@@ -1196,7 +1196,7 @@ public class GitSCM extends SCM implements Serializable {
 
                 public BuildData invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-                    IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment, reference);
+                    IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);

@@ -73,7 +73,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
             GitTool.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
             String gitExe = descriptor.getInstallations()[0].forNode(Jenkins.getInstance(), TaskListener.NULL).getGitExe();
-            IGitAPI git = new CliGitAPIImpl(gitExe, null, TaskListener.NULL, environment, null);
+            IGitAPI git = new CliGitAPIImpl(gitExe, null, TaskListener.NULL, environment);
 
             // attempt to connect the provided URL
             try {
