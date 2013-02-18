@@ -1114,15 +1114,15 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
-        BuildData returnedBuildData;
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
 
+        Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
-            returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
+            returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
 
                 private static final long serialVersionUID = 1L;
 
-                public BuildData invoke(File localWorkspace, VirtualChannel channel)
+                public Build invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
                     IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
@@ -1174,7 +1174,7 @@ public class GitSCM extends SCM implements Serializable {
                     GitUtils gu = new GitUtils(listener, git);
                     Revision mergeRevision = gu.getRevisionForSHA1(target);
                     MergeBuild build = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
-                    buildData.saveBuild(build);
+
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
@@ -1184,16 +1184,16 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     // Fetch the diffs into the changelog file
-                    return buildData;
+                    return build;
                 }
             });
         } else {
             // No merge
-            returnedBuildData = workingDirectory.act(new FileCallable<BuildData>() {
+            returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
 
                 private static final long serialVersionUID = 1L;
 
-                public BuildData invoke(File localWorkspace, VirtualChannel channel)
+                public Build invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
                     IGitAPI git = new CliGitAPIImpl(gitExe, localWorkspace, listener, environment);
 
@@ -1233,16 +1233,14 @@ public class GitSCM extends SCM implements Serializable {
 
                     computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
 
-                    buildData.saveBuild(new Build(revToBuild, buildNumber, null));
-
-                    // Fetch the diffs into the changelog file
-                    return buildData;
+                    return new Build(revToBuild, buildNumber, null);
                 }
             });
         }
 
-        build.addAction(returnedBuildData);
-        build.addAction(new GitTagAction(build, returnedBuildData));
+        buildData.saveBuild(returnedBuildData);
+        build.addAction(buildData);
+        build.addAction(new GitTagAction(build, buildData));
 
         return true;
     }
