@@ -858,8 +858,7 @@ public class GitSCM extends SCM implements Serializable {
             BuildData d = b.getAction(BuildData.class);
             if (d!=null && d.lastBuild!=null) {
                 Build lb = d.lastBuild;
-                if (lb.revision!=null      && lb.revision.getSha1String().startsWith(sha1))  return b;
-                if (lb.mergeRevision!=null && lb.mergeRevision.getSha1String().startsWith(sha1))  return b;
+                if (lb.isFor(sha1)) return b;
             }
         }
         return null;
@@ -1172,10 +1171,10 @@ public class GitSCM extends SCM implements Serializable {
 
                     computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
 
-                    Build build = new Build(revToBuild, buildNumber, null);
-                    buildData.saveBuild(build);
                     GitUtils gu = new GitUtils(listener, git);
-                    build.mergeRevision = gu.getRevisionForSHA1(target);
+                    Revision mergeRevision = gu.getRevisionForSHA1(target);
+                    MergeBuild build = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
+                    buildData.saveBuild(build);
                     if (getClean()) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();

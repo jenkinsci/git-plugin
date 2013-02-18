@@ -17,11 +17,6 @@ public class Build implements Serializable, Cloneable {
      */
     public Revision revision;
 
-    /**
-     * Revision that was subject to a merge.
-     */
-    public Revision mergeRevision;
-
     public int      hudsonBuildNumber;
     public Result   hudsonBuildResult;
 
@@ -53,10 +48,7 @@ public class Build implements Serializable, Cloneable {
     }
 
     public @Override String toString() {
-        String str =  "Build #" + hudsonBuildNumber + " of " + revision.toString();
-        if(mergeRevision != null)
-            str += " merged with " + mergeRevision;
-        return str;
+        return "Build #" + hudsonBuildNumber + " of " + revision.toString();
     }
 
     @Override
@@ -71,9 +63,11 @@ public class Build implements Serializable, Cloneable {
 
         if (revision != null)
             clone.revision = revision.clone();
-        if (mergeRevision != null)
-            clone.mergeRevision = mergeRevision.clone();
-
         return clone;
+    }
+
+    public boolean isFor(String sha1) {
+        if (revision!=null      && revision.getSha1String().startsWith(sha1))  return true;
+        return false;
     }
 }
