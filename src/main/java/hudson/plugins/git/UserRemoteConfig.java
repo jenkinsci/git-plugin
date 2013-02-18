@@ -1,23 +1,24 @@
 package hudson.plugins.git;
 
-import java.io.IOException;
-import java.io.Serializable;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.*;
-import hudson.plugins.git.client.CliGitAPIImpl;
-import hudson.plugins.git.client.IGitAPI;
-import hudson.plugins.git.client.JGitAPIImpl;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.TaskListener;
 import hudson.util.FormValidation;
-
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import hudson.plugins.git.GitTool;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import java.io.IOException;
+import java.io.Serializable;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {

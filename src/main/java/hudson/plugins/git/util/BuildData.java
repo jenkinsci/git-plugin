@@ -5,20 +5,16 @@ import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.UserRemoteConfig;
+import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.Serializable;
 import java.util.*;
 
-import hudson.plugins.git.UserRemoteConfig;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-import org.eclipse.jgit.lib.ObjectId;
-
 import static hudson.Util.fixNull;
-import static hudson.Util.intern;
-import static hudson.Util.nullify;
 
 /**
  * Captures the Git related information for a build.

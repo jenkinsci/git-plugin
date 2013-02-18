@@ -64,17 +64,17 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
         }
 
         Revision lb = data.getLastBuiltRevision();
-        if (lb==null || lb.branches.isEmpty())   return "";
+        if (lb==null || lb.getBranches().isEmpty())   return "";
 
         if (all) {
             StringBuilder buf = new StringBuilder();
-            for (Branch b : lb.branches) {
+            for (Branch b : lb.getBranches()) {
                 if (buf.length()>0) buf.append(',');
                 buf.append(format(b));
             }
             return buf.toString();
         } else {
-            return format(lb.branches.iterator().next());
+            return format(lb.getBranches().iterator().next());
         }
     }
 

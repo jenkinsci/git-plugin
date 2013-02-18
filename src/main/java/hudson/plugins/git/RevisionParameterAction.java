@@ -23,15 +23,14 @@
  */
 package hudson.plugins.git;
 
+import hudson.Util;
 import hudson.model.Action;
 import hudson.model.InvisibleAction;
-import hudson.model.queue.FoldableAction;
 import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
-import hudson.Util;
-
-import hudson.plugins.git.client.IGitAPI;
+import hudson.model.queue.FoldableAction;
 import org.eclipse.jgit.lib.ObjectId;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;

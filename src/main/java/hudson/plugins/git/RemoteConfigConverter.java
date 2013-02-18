@@ -11,22 +11,16 @@ import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.transport.RemoteConfig;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.NotActiveException;
-import java.io.ObjectInput;
-import java.io.ObjectInputValidation;
-import java.io.ObjectOutput;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
  * Remote config converter that handles unmarshaling legacy externalization of

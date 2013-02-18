@@ -2,7 +2,6 @@ package hudson.plugins.git;
 
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.jgit.lib.PersonIdent;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 

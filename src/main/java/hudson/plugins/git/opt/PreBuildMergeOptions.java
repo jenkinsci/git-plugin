@@ -1,10 +1,10 @@
 package hudson.plugins.git.opt;
 
-import java.io.Serializable;
 import org.eclipse.jgit.transport.RemoteConfig;
-
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import java.io.Serializable;
 
 /**
  * Git SCM can optionally perform a merge with another branch (possibly another repository.)

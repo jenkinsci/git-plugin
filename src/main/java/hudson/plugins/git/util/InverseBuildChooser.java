@@ -2,21 +2,11 @@ package hudson.plugins.git.util;
 
 import hudson.Extension;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.client.IGitAPI;
-import hudson.plugins.git.Messages;
-import hudson.plugins.git.Revision;
+import hudson.plugins.git.*;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import org.kohsuke.stapler.DataBoundConstructor;
+import java.util.*;
 
 /**
  * Git build chooser which will select all branches <b>except</b> for those which match the

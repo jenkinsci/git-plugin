@@ -12,7 +12,6 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
-import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -34,6 +33,7 @@ import com.google.common.collect.Collections2;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 

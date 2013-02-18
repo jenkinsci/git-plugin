@@ -9,20 +9,17 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-
-import javax.servlet.ServletException;
-
-import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 
 public class ViewGitWeb extends GitRepositoryBrowser {
 

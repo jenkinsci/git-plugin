@@ -2,6 +2,7 @@ package hudson.plugins.git.browser;
 
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.RepositoryBrowser;
+
 import java.io.IOException;
 import java.net.URL;
 

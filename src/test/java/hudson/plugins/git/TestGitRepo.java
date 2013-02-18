@@ -5,7 +5,6 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.UserProperty;
 import hudson.model.User;
-import hudson.plugins.git.client.CliGitAPIImpl;
 import hudson.tasks.Mailer;
 
 import java.io.File;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jgit.lib.PersonIdent;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 public class TestGitRepo {

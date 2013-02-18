@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.IndexEntry;
+import hudson.plugins.git.Revision;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 

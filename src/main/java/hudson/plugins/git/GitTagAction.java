@@ -3,35 +3,23 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Hudson;
-import hudson.model.TaskListener;
-import hudson.model.TaskThread;
-import hudson.plugins.git.client.CliGitAPIImpl;
-import hudson.plugins.git.client.IGitAPI;
-import hudson.plugins.git.client.JGitAPIImpl;
+import hudson.model.*;
 import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.MultipartFormDataParser;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.ServletException;
-
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author Vivek Pandey
@@ -52,7 +40,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         super(build);
         List<String> val = new ArrayList<String>();
         this.ws = build.getWorkspace().getRemote();
-        for (Branch b : buildData.lastBuild.revision.branches) {
+        for (Branch b : buildData.lastBuild.revision.getBranches()) {
             tags.put(b.getName(), new ArrayList<String>());
         }
     }

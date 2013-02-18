@@ -8,7 +8,7 @@ import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.client.IGitAPI;
+import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 
 import java.io.IOException;

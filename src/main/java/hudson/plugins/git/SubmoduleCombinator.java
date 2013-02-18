@@ -1,21 +1,13 @@
 package hudson.plugins.git;
 
 import hudson.model.TaskListener;
-import hudson.plugins.git.client.IGitAPI;
 import hudson.plugins.git.util.GitUtils;
+import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-
-import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * A common usecase for git submodules is to have child submodules, and a parent 'configuration' project that ties the
@@ -168,8 +160,8 @@ public class SubmoduleCombinator {
             IndexEntry submodule = setting.getKey();
             Revision branch = setting.getValue();
             IGitAPI subGit = git.subGit(submodule.getFile());
-            subGit.checkout(branch.sha1.name());
-            git.add(submodule.file);
+            subGit.checkout(branch.getSha1().name());
+            git.add(submodule.getFile());
         }
     
         git.commit(commit.toString());
@@ -187,7 +179,7 @@ public class SubmoduleCombinator {
 
             if (b == null) return -1;
 
-            if (!entry.object.equals(b.getSha1())) difference++;
+            if (!entry.getObject().equals(b.getSha1())) difference++;
 
         }
         return difference;

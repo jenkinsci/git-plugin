@@ -4,36 +4,22 @@ import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Environment;
-import hudson.model.Hudson;
-import hudson.model.Node;
-import hudson.model.TaskListener;
-import hudson.slaves.NodeProperty;
-import hudson.model.StreamBuildListener;
+import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.client.IGitAPI;
+import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import hudson.slaves.NodeProperty;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.revwalk.filter.RevFilter;
 
 public class GitUtils {
     IGitAPI git;

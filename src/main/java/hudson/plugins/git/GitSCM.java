@@ -1,15 +1,7 @@
 package hudson.plugins.git;
 
-import static hudson.Util.fixEmptyAndTrim;
-
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
+import hudson.*;
 import hudson.FilePath.FileCallable;
-import hudson.Launcher;
-import hudson.Util;
-import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
@@ -18,54 +10,44 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
-import hudson.plugins.git.client.CliGitAPIImpl;
-import hudson.plugins.git.client.IGitAPI;
-import hudson.plugins.git.client.JGitAPIImpl;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.BuildChooser;
-import hudson.plugins.git.util.BuildChooserContext;
-import hudson.plugins.git.util.BuildChooserDescriptor;
-import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
-import hudson.plugins.git.util.GitUtils;
+import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
-import hudson.scm.ChangeLogParser;
-import hudson.scm.PollingResult;
-import hudson.scm.SCM;
-import hudson.scm.SCMDescriptor;
-import hudson.scm.SCMRevisionState;
+import hudson.scm.*;
 import hudson.triggers.SCMTrigger;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import hudson.plugins.git.GitTool;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
 
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.servlet.ServletException;
 
-import org.eclipse.jgit.lib.Config;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.kohsuke.stapler.*;
-import org.kohsuke.stapler.export.Exported;
-
-import net.sf.json.JSONObject;
+import static hudson.Util.fixEmptyAndTrim;
+import static hudson.init.InitMilestone.JOB_LOADED;
+import static hudson.init.InitMilestone.PLUGINS_STARTED;
 
 /**
  * Git SCM.
@@ -676,14 +658,8 @@ public class GitSCM extends SCM implements Serializable {
 
         // fast remote polling needs a single branch and an existing last build
         if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
-            String gitExe = "";
-            GitTool[] installations = ((hudson.plugins.git.GitTool.DescriptorImpl)Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)).getInstallations();
-            for(GitTool i : installations) {
-                if(i.getName().equals(gitTool)) {
-                    gitExe = i.getGitExe();
-                    break;
-                }
-            }
+            GitTool.DescriptorImpl gitTools = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
+            String gitExe = gitTools.getInstallation(gitTool).getGitExe();
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
             IGitAPI git = new CliGitAPIImpl(gitExe, null, listener, environment, reference);
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
@@ -1313,7 +1289,7 @@ public class GitSCM extends SCM implements Serializable {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
                 if (lastRevWas != null) {
                     if (git.isCommitInRepo(lastRevWas.getSHA1())) {
-                        putChangelogDiffs(git, b.name, lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
+                        putChangelogDiffs(git, b.getName(), lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
                         histories++;
                     } else {
                         listener.getLogger().println("Could not record history. Previous build's commit, " + lastRevWas.getSHA1().name()
@@ -1344,7 +1320,7 @@ public class GitSCM extends SCM implements Serializable {
             PrintStream out = new PrintStream(changelogFile.write());
             try {
                 for (Branch b : revToBuild.getBranches()) {
-                    putChangelogDiffs(git, b.name, revFrom, revToBuild.getSha1().name(), out);
+                    putChangelogDiffs(git, b.getName(), revFrom, revToBuild.getSha1().name(), out);
                     histories++;
                 }
             } catch (GitException ge) {
@@ -1881,7 +1857,23 @@ public class GitSCM extends SCM implements Serializable {
         return false;
     }
 
-    @Initializer(before = InitMilestone.JOB_LOADED)
+
+    @Initializer(after=PLUGINS_STARTED)
+    public static void onLoaded() {
+        GitTool.DescriptorImpl gitTools = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
+        DescriptorImpl desc = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
+
+        if (desc.getOldGitExe() != null) {
+            String exe = desc.getOldGitExe();
+            GitTool tool = gitTools.getInstallation(GitTool.DEFAULT);
+            if (tool.getGitExe().equals(exe)) {
+                return;
+            }
+            System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
+        }
+    }
+
+    @Initializer(before=JOB_LOADED)
     public static void configureXtream() {
         Run.XSTREAM.registerConverter(new ObjectIdConverter());
         Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));

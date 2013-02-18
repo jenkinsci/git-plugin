@@ -1,14 +1,12 @@
 package hudson.plugins.git;
 
-import hudson.scm.ChangeLogSet;
 import hudson.model.AbstractBuild;
+import hudson.scm.ChangeLogSet;
+import org.kohsuke.stapler.export.Exported;
 
-import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
-
-import org.kohsuke.stapler.*;
-import org.kohsuke.stapler.export.Exported;
+import java.util.List;
 
 
 /**

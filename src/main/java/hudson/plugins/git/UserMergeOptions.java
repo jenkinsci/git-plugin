@@ -1,13 +1,11 @@
 package hudson.plugins.git;
 
-import java.io.Serializable;
-
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
+
+import java.io.Serializable;
 
 public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions>  implements Serializable {
 

@@ -1,18 +1,15 @@
 package hudson.plugins.git;
 
-import static hudson.Util.fixEmpty;
-
-import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.MarkupText;
 import hudson.model.Hudson;
 import hudson.model.User;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -26,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static hudson.Util.fixEmpty;
 
 /**
  * Represents a change set.
