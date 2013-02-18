@@ -8,3 +8,5 @@ bin
 *.iws
 work
 nbactions.xml
+release.properties
+pom.xml.releaseBackup
