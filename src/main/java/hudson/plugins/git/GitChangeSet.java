@@ -286,10 +286,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 	private boolean isMailerPropertySet(User user) {
 		boolean isPropertySet = false;
 		UserProperty property = user.getProperty(Mailer.UserProperty.class);
-		if (property != null) {
-			if(!StringUtils.isEmpty(property.getAddress())) {
+		if (property == null) {
+			// if(!StringUtils.isEmpty(property.getAddress())) {
 				isPropertySet = true;
-			} 
+			// }
 		}
 
 		return isPropertySet;
