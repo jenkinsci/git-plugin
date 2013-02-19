@@ -39,6 +39,7 @@ import hudson.tasks.BuildStepDescriptor;
 import org.jvnet.hudson.test.Bug;
 
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Tests for {@link GitPublisher}
@@ -92,13 +93,14 @@ public class GitPublisherTest extends AbstractGitTestCase {
     }
 
     private boolean existsTag(String tag) {
-        String tags = git.launchCommand("tag");
+        git.tag("tag", "a tag");
+        Set<String> tags = git.getTagNames("*");
         System.out.println(tags);
         return tags.contains(tag);
     }
 
     private boolean containsTagMessage(String tag, String str) {
-        String msg = git.launchCommand("tag", "-l", tag, "-n");
+        String msg = git.getTagMessage(tag);
         System.out.println(msg);
         return msg.contains(str);
     }

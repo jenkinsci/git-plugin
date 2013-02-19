@@ -6,7 +6,6 @@
     <version>1.424</version>
   </parent>
 
-  <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
   <version>1.2.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
@@ -139,9 +138,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
+      <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->

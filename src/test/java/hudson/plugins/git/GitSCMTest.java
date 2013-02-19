@@ -34,6 +34,8 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
@@ -462,7 +464,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // tag it, then delete the tmp branch
         git.tag(mytag, "mytag initial");
         git.checkout("master");
-        git.launchCommand("branch", "-D", tmpBranch);
+        git.deleteBranch(tmpBranch);
 
         // at this point we're back on master, there are no other branches, tag "mytag" exists but is
         // not part of "master"
@@ -481,7 +483,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // now we're going to force mytag to point to the new commit, if everything goes well, gitSCM should pick the change up:
         git.tag(mytag, "mytag moved");
         git.checkout("master");
-        git.launchCommand("branch", "-D", tmpBranch);
+        git.deleteBranch(tmpBranch);
 
         // at this point we're back on master, there are no other branches, "mytag" has been updated to a new commit:
         assertTrue("scm polling should detect commit3 change in 'mytag'", project.poll(listener).hasChanges());
@@ -529,16 +531,16 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSubmoduleFixup() throws Exception {
         File repo = createTmpDir();
         FilePath moduleWs = new FilePath(repo);
-        CliGitAPIImpl moduleRepo = new CliGitAPIImpl("git", repo, listener, new EnvVars());
+        GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
         {// first we create a Git repository with submodule
             moduleRepo.init();
             moduleWs.child("a").touch(0);
             moduleRepo.add("a");
-            moduleRepo.launchCommand("commit", "-m", "creating a module");
+            moduleRepo.commit("creating a module");
 
-            git.launchCommand("submodule","add",moduleWs.getRemote(),"module1");
-            git.launchCommand("commit", "-m", "creating a super project");
+            git.addSubmodule(repo.getAbsolutePath(), "module1");
+            git.commit("creating a super project");
         }
 
         // configure two uproject 'u' -> 'd' that's chained together.

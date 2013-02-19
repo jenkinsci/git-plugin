@@ -7,12 +7,12 @@ import hudson.Launcher;
 import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import hudson.slaves.NodeProperty;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,10 +22,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GitUtils {
-    IGitAPI git;
+    GitClient git;
     TaskListener listener;
 
-    public GitUtils(TaskListener listener, IGitAPI git) {
+    public GitUtils(TaskListener listener, GitClient git) {
         this.git = git;
         this.listener = listener;
     }

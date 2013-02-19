@@ -10,6 +10,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -65,6 +66,16 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+                                                      GitClient git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+        // fallback to the previous signature
+        return getCandidateRevisions(isPollCall,singleBranch, (IGitAPI) git,listener,buildData);
+    }
+
+    /**
+     * @deprecated as of 1.2.0
+     *     Use and override {@link #getCandidateRevisions(boolean, String, org.jenkinsci.plugins.gitclient.GitClient, hudson.model.TaskListener, BuildData, BuildChooserContext)}
+     */
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
         return getCandidateRevisions(isPollCall,singleBranch,git,listener,buildData);
@@ -109,6 +120,14 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Object that provides access back to the model object. This is because
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
+     */
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
+        return prevBuildForChangelog(branch,data, (IGitAPI) git);
+    }
+
+    /**
+     * @deprecated as of 1.2.0
+     *     Use and override {@link #prevBuildForChangelog(String, BuildData, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data,git);

@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.Map.Entry;
  * @author nigelmagnay
  */
 public class SubmoduleCombinator {
-    IGitAPI git;
+    GitClient git;
     File         workspace;
     TaskListener listener;
 
@@ -26,7 +27,7 @@ public class SubmoduleCombinator {
   
     Collection<SubmoduleConfig> submoduleConfig;
   
-    public SubmoduleCombinator(IGitAPI git, TaskListener listener, File workspace,
+    public SubmoduleCombinator(GitClient git, TaskListener listener, File workspace,
                                Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;
@@ -39,7 +40,7 @@ public class SubmoduleCombinator {
         Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<IndexEntry, Collection<Revision>>();
 
         for (IndexEntry submodule : git.getSubmodules("HEAD")) {
-            IGitAPI subGit = git.subGit(submodule.getFile());
+            GitClient subGit = git.subGit(submodule.getFile());
 
             GitUtils gu = new GitUtils(listener, subGit);
             Collection<Revision> items = gu.filterTipBranches(gu.getAllBranchRevisions());
@@ -159,7 +160,7 @@ public class SubmoduleCombinator {
         for (Entry<IndexEntry, Revision> setting : settings.entrySet()) {
             IndexEntry submodule = setting.getKey();
             Revision branch = setting.getValue();
-            IGitAPI subGit = git.subGit(submodule.getFile());
+            GitClient subGit = git.subGit(submodule.getFile());
             subGit.checkout(branch.getSha1().name());
             git.add(submodule.getFile());
         }

@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.jgit.lib.PersonIdent;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 
@@ -29,7 +29,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
 	protected PersonIdent janeDoe;
 	protected File workDir; // aliases "gitDir"
 	protected FilePath workspace; // aliases "gitDirPath"
-	protected CliGitAPIImpl git;
+	protected GitClient git;
 	
     @Override
     protected void setUp() throws Exception {

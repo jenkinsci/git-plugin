@@ -10,7 +10,8 @@ import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.MultipartFormDataParser;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -181,7 +182,11 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                                 throws IOException {
-                            IGitAPI git = new CliGitAPIImpl("git", localWorkspace, listener, environment);
+
+                            GitClient git = Git.with(listener, environment)
+                                    .in(localWorkspace)
+                                    .getClient();
+
                             String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
                             git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
                             return new Object[]{null, build};

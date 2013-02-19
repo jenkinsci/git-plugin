@@ -12,6 +12,8 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import hudson.plugins.git.GitTool;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -71,9 +73,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // get git executable on master
             final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
-            GitTool.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
-            String gitExe = descriptor.getInstallations()[0].forNode(Jenkins.getInstance(), TaskListener.NULL).getGitExe();
-            IGitAPI git = new CliGitAPIImpl(gitExe, null, TaskListener.NULL, environment);
+
+            GitClient git = Git.with(TaskListener.NULL, environment)
+                    .using(GitTool.getDefaultInstallation().getGitExe())
+                    .getClient();
 
             // attempt to connect the provided URL
             try {

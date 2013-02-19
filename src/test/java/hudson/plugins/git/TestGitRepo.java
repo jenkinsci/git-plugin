@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jgit.lib.PersonIdent;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 public class TestGitRepo {
@@ -25,7 +26,7 @@ public class TestGitRepo {
      */
 	public File gitDir; // was "workDir"
 	public FilePath gitDirPath; // was "workspace"
-	public CliGitAPIImpl git;
+	public GitClient git;
 	
 	private EnvVars envVars;
 	
@@ -53,9 +54,9 @@ public class TestGitRepo {
 		
 		// initialize the git interface.
 		gitDirPath = new FilePath(gitDir);
-		git = new CliGitAPIImpl("git", gitDir, listener, envVars);
+		git = Git.with(listener, envVars).in(gitDir).getClient();
 
-		// finally: initialize the repo
+        // finally: initialize the repo
 		git.init();
 	}
 	
@@ -80,7 +81,7 @@ public class TestGitRepo {
         }
 
         git.add(fileName);
-        git.launchCommand("commit", "-m", message);
+        git.commit(message);
     }
 
     public void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
@@ -94,7 +95,7 @@ public class TestGitRepo {
             throw new GitException("unable to write file", e);
         }
         git.add(fileName);
-        git.launchCommand("commit", "-m", message);
+        git.commit(message);
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
