@@ -821,8 +821,8 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     public GitTool resolveGitTool() {
-        GitTool t = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
-        return t != null ? t : GitTool.getDefaultInstallation();
+        if (gitTool == null) return GitTool.getDefaultInstallation();
+        return Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
     }
 
     public String getGitExe(Node builtOn, TaskListener listener) {
