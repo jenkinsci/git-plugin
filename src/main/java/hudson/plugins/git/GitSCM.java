@@ -1373,7 +1373,18 @@ public class GitSCM extends SCM implements Serializable {
                 env.put(GIT_COMMIT, commit);
             }
         }
-
+       
+      if(userRemoteConfigs.size()==1){
+    	  env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
+      }else{
+    	  int count=1;
+    	  for(UserRemoteConfig config:userRemoteConfigs)   {
+      		env.put("GIT_URL_"+count, config.getUrl());
+      		count++;
+         }  
+      }
+    	  
+    	
         String confName = getGitConfigNameToUse();
         if ((confName != null) && (!confName.equals(""))) {
             env.put("GIT_COMMITTER_NAME", confName);
