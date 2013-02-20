@@ -1376,7 +1376,7 @@ public class GitSCM extends SCM implements Serializable {
       }else{
     	  int count=1;
     	  for(UserRemoteConfig config:userRemoteConfigs)   {
-      		env.put("GIT_URL"+count, config.getUrl());
+      		env.put("GIT_URL_"+count, config.getUrl());
       		count++;
          }  
       }
