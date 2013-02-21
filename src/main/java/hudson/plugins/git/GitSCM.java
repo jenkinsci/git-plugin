@@ -794,7 +794,7 @@ public class GitSCM extends SCM implements Serializable {
             RemoteConfig remoteRepository) {
         try {
             // Assume there is only 1 URL / refspec for simplicity
-            git.fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
+            git.fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0));
             return true;
         } catch (GitException ex) {
             ex.printStackTrace(listener.error(
