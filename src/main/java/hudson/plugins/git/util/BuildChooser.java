@@ -122,7 +122,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      to the build/project for which this is invoked.
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
-        return prevBuildForChangelog(branch,data, (IGitAPI) git);
+        return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
     }
 
     /**
