@@ -998,8 +998,9 @@ public class GitSCM extends SCM implements Serializable {
                     //
                     boolean successfullyCloned = false;
                     for (RemoteConfig rc : repos) {
+                    	final String expandedReference = environment.expand(reference);
                         try {
-                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, reference);
+                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
                             successfullyCloned = true;
                             break;
                         } catch (GitException ex) {
