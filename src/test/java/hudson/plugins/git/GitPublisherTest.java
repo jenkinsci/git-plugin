@@ -93,7 +93,6 @@ public class GitPublisherTest extends AbstractGitTestCase {
     }
 
     private boolean existsTag(String tag) {
-        git.tag("tag", "a tag");
         Set<String> tags = git.getTagNames("*");
         System.out.println(tags);
         return tags.contains(tag);
