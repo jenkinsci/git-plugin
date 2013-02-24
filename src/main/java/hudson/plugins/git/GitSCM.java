@@ -792,14 +792,17 @@ public class GitSCM extends SCM implements Serializable {
     private boolean fetchFrom(GitClient git,
             TaskListener listener,
             RemoteConfig remoteRepository) {
+        String name = remoteRepository.getName();
         try {
             // Assume there is only 1 URL / refspec for simplicity
-            git.fetch(remoteRepository.getURIs().get(0).toPrivateString(), remoteRepository.getFetchRefSpecs().get(0));
+            String url = remoteRepository.getURIs().get(0).toPrivateString();
+            git.setRemoteUrl(name, url);
+            git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
             return true;
         } catch (GitException ex) {
             ex.printStackTrace(listener.error(
-                    "Problem fetching from " + remoteRepository.getName()
-                    + " / " + remoteRepository.getName()
+                    "Problem fetching from " + name
+                    + " / " + name
                     + " - could be unavailable. Continuing anyway"));
         }
         return false;
