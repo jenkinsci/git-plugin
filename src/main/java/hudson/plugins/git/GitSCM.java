@@ -1328,9 +1328,10 @@ public class GitSCM extends SCM implements Serializable {
         }
     }
 
-    private void computeMergeChangeLog(GitClient git, Revision revToBuild, String revFrom, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
-        if (!git.isCommitInRepo(ObjectId.fromString(revFrom))) {
-            listener.getLogger().println("Could not record history. Previous build's commit, " + revFrom
+    private void computeMergeChangeLog(GitClient git, Revision revToBuild, String remoteBranch, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
+        ObjectId objectId = git.getRepository().resolve(remoteBranch);
+        if (!git.isCommitInRepo(objectId)) {
+            listener.getLogger().println("Could not record history. Previous build's commit, " + remoteBranch
                                          + ", does not exist in the current repository.");
         } else {
             int histories = 0;
@@ -1338,7 +1339,7 @@ public class GitSCM extends SCM implements Serializable {
             PrintStream out = new PrintStream(changelogFile.write());
             try {
                 for (Branch b : revToBuild.getBranches()) {
-                    putChangelogDiffs(git, b.getName(), revFrom, revToBuild.getSha1().name(), out);
+                    putChangelogDiffs(git, b.getName(), remoteBranch, revToBuild.getSha1().name(), out);
                     histories++;
                 }
             } catch (GitException ge) {

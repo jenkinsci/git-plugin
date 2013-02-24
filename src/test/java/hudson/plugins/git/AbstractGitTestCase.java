@@ -62,7 +62,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
     	testRepo.commit(fileName, author, committer, message);
     }
 
-    protected List<UserRemoteConfig> createRemoteRepositories(String relativeTargetDir) throws IOException {
+    protected List<UserRemoteConfig> createRemoteRepositories() throws IOException {
         return testRepo.remoteConfigs();
     }
 }
