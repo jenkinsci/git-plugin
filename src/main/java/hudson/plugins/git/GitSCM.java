@@ -1029,7 +1029,7 @@ public class GitSCM extends SCM implements Serializable {
                         log.println("Cleaning workspace");
                         git.clean();
 
-                        if (git.hasGitModules() && !disableSubmodules) {
+                        if (!disableSubmodules && git.hasGitModules()) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1163,7 +1163,7 @@ public class GitSCM extends SCM implements Serializable {
                         throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
                     }
 
-                    if (git.hasGitModules() && !disableSubmodules) {
+                    if (!disableSubmodules && git.hasGitModules()) {
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
@@ -1184,7 +1184,7 @@ public class GitSCM extends SCM implements Serializable {
                     if (clean) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
-                        if (git.hasGitModules() && !disableSubmodules) {
+                        if (!disableSubmodules && git.hasGitModules()) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
@@ -1214,14 +1214,14 @@ public class GitSCM extends SCM implements Serializable {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
 
-                        if (git.hasGitModules() && !disableSubmodules) {
+                        if (!disableSubmodules && git.hasGitModules()) {
                             git.submoduleClean(recursiveSubmodules);
                         }
                     }
 
                     checkout(git, revToBuild.getSha1(), paramLocalBranch);
 
-                    if (git.hasGitModules() && !disableSubmodules) {
+                    if (!disableSubmodules && git.hasGitModules()) {
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
