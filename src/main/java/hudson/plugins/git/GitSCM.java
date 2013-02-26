@@ -974,11 +974,8 @@ public class GitSCM extends SCM implements Serializable {
                                         repos.size()));
 
                     boolean fetched = false;
-
                     for (RemoteConfig remoteRepository : repos) {
-                        if (fetchFrom(git, listener, remoteRepository)) {
-                            fetched = true;
-                        }
+                        fetched |= fetchFrom(git, listener, remoteRepository);
                     }
 
                     if (!fetched) {
@@ -1019,19 +1016,8 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     boolean fetched = false;
-
-                    // Also do a fetch
                     for (RemoteConfig remoteRepository : repos) {
-                        try {
-                            // Assume there is only 1 URL / refspec for simplicity
-                            git.fetch(remoteRepository.getName(), remoteRepository.getFetchRefSpecs().get(0));
-                            fetched = true;
-                        } catch (Exception e) {
-                            e.printStackTrace(listener.error(
-                                    "Problem fetching from " + remoteRepository.getName()
-                                            + " / " + remoteRepository.getName()
-                                            + " - could be unavailable. Continuing anyway."));
-                        }
+                        fetched |= fetchFrom(git, listener, remoteRepository);
                     }
 
                     if (!fetched) {
@@ -1039,7 +1025,7 @@ public class GitSCM extends SCM implements Serializable {
                         throw new GitException("Could not fetch from any repository");
                     }
 
-                    if (getClean()) {
+                    if (clean) {
                         log.println("Cleaning workspace");
                         git.clean();
 
@@ -1195,7 +1181,7 @@ public class GitSCM extends SCM implements Serializable {
                     Revision mergeRevision = gu.getRevisionForSHA1(target);
                     MergeBuild build = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
 
-                    if (getClean()) {
+                    if (clean) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
                         if (git.hasGitModules() && !disableSubmodules) {
@@ -1224,7 +1210,7 @@ public class GitSCM extends SCM implements Serializable {
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
 
-                    if (getClean()) {
+                    if (clean) {
                         listener.getLogger().println("Cleaning workspace");
                         git.clean();
 
