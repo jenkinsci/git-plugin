@@ -10,6 +10,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
 import hudson.slaves.NodeProperty;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -102,13 +103,15 @@ public class GitUtils {
         ObjectId shaJ;
         ObjectId commonAncestor;
         RevWalk walk = null;
+        Repository repository = null;
         final long start = System.currentTimeMillis();
         long calls = 0;
         if (log)
             LOGGER.fine(MessageFormat.format(
                     "Computing merge base of {0}  branches", l.size()));
         try {
-            walk = new RevWalk(git.getRepository());
+            repository = git.getRepository();
+            walk = new RevWalk(repository);
             walk.setRetainBody(false);
             walk.setRevFilter(RevFilter.MERGE_BASE);
             for (int i = 0; i < l.size(); i++)
@@ -145,8 +148,8 @@ public class GitUtils {
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);
         } finally {
-            if (walk != null)
-                walk.release();
+            if (walk != null) walk.release();
+            if (repository != null) repository.close();
         }
         if (log)
             LOGGER.fine(MessageFormat.format(

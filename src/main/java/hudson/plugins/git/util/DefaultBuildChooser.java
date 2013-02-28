@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -218,7 +219,12 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
-        Collections.sort(revs,new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+            Collections.sort(revs,new CommitTimeComparator(repository));
+        } finally {
+            repository.close();
+        }
 
         return revs;
     }

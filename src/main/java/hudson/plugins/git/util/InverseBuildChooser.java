@@ -3,6 +3,7 @@ package hudson.plugins.git.util;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
+import org.eclipse.jgit.lib.Repository;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -88,7 +89,12 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
-        Collections.sort(branchRevs, new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+            Collections.sort(branchRevs, new CommitTimeComparator(repository));
+        } finally {
+            repository.close();
+        }
         return branchRevs;
     }
 
