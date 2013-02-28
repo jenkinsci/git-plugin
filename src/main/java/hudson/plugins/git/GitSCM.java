@@ -619,9 +619,7 @@ public class GitSCM extends SCM implements Serializable {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        if(remotePoll)
-            return false;
-        return true;
+        return !remotePoll;
     }
 
     @Override
@@ -639,17 +637,13 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
         final AbstractBuild lastBuild = project.getLastBuild();
-
-        if (lastBuild != null) {
-            listener.getLogger().println("[poll] Last Build : #" + lastBuild.getNumber());
-        } else {
+        if (lastBuild == null) {
             // If we've never been built before, well, gotta build!
             listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
             return PollingResult.BUILD_NOW;
         }
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
-
         if (buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
@@ -672,7 +666,6 @@ public class GitSCM extends SCM implements Serializable {
             } else {
                 return PollingResult.BUILD_NOW;
             }
-
         }
 
         final String gitExe;
