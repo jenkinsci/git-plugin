@@ -79,6 +79,13 @@ public class BranchSpec implements Serializable {
         if (pattern != null)
             return pattern;
         
+        // use regex syntax directly if name starts with colon
+        if (name.startsWith(":") && name.length() > 1) {
+        	String regexSubstring = name.substring(1, name.length());
+        	pattern = Pattern.compile(regexSubstring);
+        	return pattern;
+        }
+        
         // if an unqualified branch was given add a "*/" so it will match branches
         // from remote repositories as the user probably intended
         String qualifiedName;
