@@ -104,11 +104,21 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                                           String relativeTargetDir, String excludedRegions,
                                           String excludedUsers, String localBranch, boolean fastRemotePoll,
                                           String includedRegions) throws Exception {
+        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
+                            authorOrCommitter, relativeTargetDir, excludedRegions,
+                            excludedUsers, localBranch, fastRemotePoll,
+                            includedRegions);
+    }
+
+    protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
+                                          String relativeTargetDir, String excludedRegions,
+                                          String excludedUsers, String localBranch, boolean fastRemotePoll,
+                                          String includedRegions) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
                 createRemoteRepositories(),
-                Collections.singletonList(new BranchSpec(branchString)),
+                branches,
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
