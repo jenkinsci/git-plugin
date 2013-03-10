@@ -111,7 +111,9 @@ public class GitSCM extends SCM implements Serializable {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String GIT_COMMIT_SHORT = "GIT_COMMIT_SHORT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
+    public static final String GIT_PREVIOUS_COMMIT_SHORT = "GIT_PREVIOUS_COMMIT_SHORT";
     private String relativeTargetDir;
     private String reference;
     private String excludedRegions;
@@ -1103,7 +1105,9 @@ public class GitSCM extends SCM implements Serializable {
             return false;
         }
         listener.getLogger().println("Commencing build of " + revToBuild);
-        environment.put(GIT_COMMIT, revToBuild.getSha1String());
+        final String commit = revToBuild.getSha1String();
+        environment.put(GIT_COMMIT, commit);
+        environment.put(GIT_COMMIT_SHORT, commit.substring(0, 7));
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
@@ -1351,10 +1355,12 @@ public class GitSCM extends SCM implements Serializable {
             String prevCommit = getLastBuiltCommitOfBranch(build, branch);
             if (prevCommit != null) {
                 env.put(GIT_PREVIOUS_COMMIT, prevCommit);
+                env.put(GIT_PREVIOUS_COMMIT_SHORT, prevCommit.substring(0, 7));
             }
             String commit = rev.getSha1String();
             if (commit != null) {
                 env.put(GIT_COMMIT, commit);
+                env.put(GIT_COMMIT_SHORT, commit.substring(0, 7));
             }
         }
        
