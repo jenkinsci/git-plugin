@@ -1875,13 +1875,12 @@ public class GitSCM extends SCM implements Serializable {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        GitTool.DescriptorImpl gitTools = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
         DescriptorImpl desc = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();
-            GitTool tool = gitTools.getInstallation(GitTool.DEFAULT);
-            if (tool.getGitExe().equals(exe)) {
+            String defaultGit = GitTool.getDefaultInstallation().getGitExe();
+            if (defaultGit.equals(exe)) {
                 return;
             }
             System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
