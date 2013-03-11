@@ -52,14 +52,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         git = testRepo.git;
     }
 
-    protected void setAuthor(final PersonIdent author) {
-    	testRepo.setAuthor(author);
-    }
-
-    protected void setCommitter(final PersonIdent committer) {
-    	testRepo.setCommitter(committer);
-    }
-
     protected void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
     	testRepo.commit(fileName, committer, message);
     }
