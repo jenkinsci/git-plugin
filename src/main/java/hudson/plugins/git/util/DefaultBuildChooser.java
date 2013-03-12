@@ -6,6 +6,7 @@ import hudson.plugins.git.*;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -32,8 +33,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
+    @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                                                      IGitAPI git, TaskListener listener, BuildData data)
+                                                      GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
         throws GitException, IOException {
 
         verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,singleBranch,data);
@@ -88,7 +90,7 @@ public class DefaultBuildChooser extends BuildChooser {
         return revisions;
     }
 
-    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, IGitAPI git, TaskListener listener, BuildData data) {
+    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
