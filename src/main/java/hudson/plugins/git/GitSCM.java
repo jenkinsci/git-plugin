@@ -1288,7 +1288,7 @@ public class GitSCM extends SCM implements Serializable {
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         int histories = 0;
 
-        PrintStream out = new PrintStream(changelogFile.write());
+        PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
         try {
             for (Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
@@ -1323,7 +1323,7 @@ public class GitSCM extends SCM implements Serializable {
         } else {
             int histories = 0;
 
-            PrintStream out = new PrintStream(changelogFile.write());
+            PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
             try {
                 for (Branch b : revToBuild.getBranches()) {
                     putChangelogDiffs(git, b.getName(), remoteBranch, revToBuild.getSha1().name(), out);

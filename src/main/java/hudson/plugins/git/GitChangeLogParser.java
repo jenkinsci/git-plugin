@@ -6,8 +6,11 @@ import org.xml.sax.SAXException;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +35,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         
         // Parse the log file into GitChangeSet items - each one is a commit
         
-        BufferedReader rdr = new BufferedReader(new FileReader(changelogFile));
+        BufferedReader rdr = new BufferedReader(new InputStreamReader(new FileInputStream(changelogFile), Charset.forName("UTF-8")));
         
         try {
             String line;
