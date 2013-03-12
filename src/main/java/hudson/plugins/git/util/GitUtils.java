@@ -175,7 +175,7 @@ public class GitUtils {
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = (AbstractBuild)p.getLastBuild();
 
-        if (b != null) {
+        if (reuseLastBuildEnv && b != null) {
             Node lastBuiltOn = b.getBuiltOn();
 
             if (lastBuiltOn != null) {
@@ -204,7 +204,7 @@ public class GitUtils {
         if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
-            env.put("BUILD_URL", rootUrl+b.getUrl());
+            if( b != null) env.put("BUILD_URL", rootUrl+b.getUrl());
             env.put("JOB_URL", rootUrl+p.getUrl());
         }
 
