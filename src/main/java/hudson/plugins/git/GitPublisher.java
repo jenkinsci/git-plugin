@@ -134,7 +134,29 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
         };
     }
+    
+    private String replaceAdditionalEnvironmentalVariables(String input, AbstractBuild<?, ?> build){
+    	if (build == null){
+    		return input;
+    	}
+        String buildResult = build.getResult().toString();
+        String buildDuration = build.getDurationString();
 
+        if ( buildResult == null){ 
+        	buildResult = ""; 
+        }
+        if ( buildDuration == null){ 
+        	buildDuration = ""; 
+        }
+        else{
+        	buildDuration = buildDuration.replaceAll("and counting", "");
+        }
+        
+        input = input.replaceAll("\\$BUILDRESULT", buildResult);
+        input = input.replaceAll("\\$BUILDDURATION", buildDuration);
+        return input;
+    }
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
                            Launcher launcher, final BuildListener listener)
@@ -390,7 +412,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     }
                     
                     b.setEmptyTargetRepoToOrigin();
-                    final String noteMsg = environment.expand(b.getnoteMsg());
+                    String noteMsgTmp = environment.expand(b.getnoteMsg());
+                    final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
                     final String noteNamespace = environment.expand(b.getnoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
                     final boolean noteReplace = b.getnoteReplace();
@@ -416,7 +439,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                             return false;
                                         }
                                         
-                                        listener.getLogger().println("Adding note \"" + noteMsg + "\" to namespace \""+noteNamespace +"\"" );
+                                        listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
                                         if ( noteReplace )
                                         	git.addNote(    noteMsg, noteNamespace );
@@ -429,7 +452,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     }
                                 });
                         } catch (Throwable e) {
-                            e.printStackTrace(listener.error("Failed to add note \"" + noteMsg + "\" to \"" + noteNamespace+"\""));
+                            e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
                             build.setResult(Result.FAILURE);
                             noteResult = false;
                         }
@@ -657,7 +680,6 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     		else
     			this.noteNamespace = "master";
             
-        //    throw new GitException("Toimii2 " + this.noteMsg + "   namespace: "+this.noteNamespace );
         }
 
         @Extension
