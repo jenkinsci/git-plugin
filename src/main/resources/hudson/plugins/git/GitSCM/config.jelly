@@ -16,7 +16,7 @@
     }
     ]]></script>
 
-    <f:entry title="Repositories" help="/plugin/git/help.html">
+    <f:entry title="Repositories" help="/plugin/git/repositories.html">
       <f:repeatable name="repo" field="userRemoteConfigs" minimum="1" noAddButton="false">
         <table width="100%">
 
@@ -46,7 +46,7 @@
       </f:repeatable>
     </f:entry>
 
-  <f:entry title="Branches to build" help="/plugin/git/branch.html">
+  <f:entry title="Branches to build" help="/plugin/git/branches.html">
   <f:repeatable var="branch" name="branches" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">
            <table width="100%">
                <f:entry title="Branch Specifier (blank for default):" field="name">
@@ -66,22 +66,22 @@
   </f:entry>
 
   <f:advanced>
-    <f:entry title="${%Included Regions}" field="includedRegions" help="/plugin/git/help-includedRegions.html">
+    <f:entry title="${%Included Regions}" field="includedRegions">
         <f:textarea />
     </f:entry>
-    <f:entry title="${%Excluded Regions}" field="excludedRegions" help="/plugin/git/help-excludedRegions.html">
+    <f:entry title="${%Excluded Regions}" field="excludedRegions">
         <f:textarea />
     </f:entry>
-    <f:entry title="${%Excluded Users}" field="excludedUsers" help="/plugin/git/help-excludedUsers.html">
+    <f:entry title="${%Excluded Users}" field="excludedUsers">
         <f:textarea />
     </f:entry>
-    <f:entry title="Checkout/merge to local branch (optional)" field="localBranch" help="/plugin/git/help-localBranch.html">
+    <f:entry title="Checkout/merge to local branch (optional)" field="localBranch">
       <f:textbox />
     </f:entry>
-    <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir" help="/plugin/git/help-local.html">
+    <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir">
       <f:textbox />
     </f:entry>
-    <f:entry title="Path of the reference repo to use during clone (optional)" field="reference" help="/plugin/git/help-reference.html">
+    <f:entry title="Path of the reference repo to use during clone (optional)" field="reference">
       <f:textbox/>
     </f:entry>
    <f:entry title="Unique SCM name (optional)" field="scmName">
@@ -128,40 +128,40 @@
       </table>
     </f:entry>
 
-    <f:entry title="Prune remote branches before build" field="pruneBranches" help="/plugin/git/prune.html">
+    <f:entry title="Prune remote branches before build" field="pruneBranches">
       <f:checkbox/>
     </f:entry>
 
-    <f:entry title="Skip internal tag" field="skipTag" help="/plugin/git/help-skipTag.html">
+    <f:entry title="Skip internal tag" field="skipTag">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Clean after checkout" field="clean" help="/plugin/git/clean.html">
+    <f:entry title="Clean after checkout" field="clean">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Fast remote polling" help="/plugin/git/help-fastremote.html">
-      <f:checkbox name="git.remotePoll" checked="${scm.remotePoll}" />
+    <f:entry title="Fast remote polling" field="remotePoll">
+      <f:checkbox/>
     </f:entry>
-    <f:entry title="Disable submodules processing" field="disableSubmodules" help="/plugin/git/help-disableSubmodules.html">
+    <f:entry title="Disable submodules processing" field="disableSubmodules">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Recursively update submodules" field="recursiveSubmodules" help="/plugin/git/help-recursiveSubmodules.html">
+    <f:entry title="Recursively update submodules" field="recursiveSubmodules">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Use commit author in changelog" field="authorOrCommitter" help="/plugin/git/help-authorCommitter.html">
+    <f:entry title="Use commit author in changelog" field="authorOrCommitter">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Wipe out workspace before build" field="wipeOutWorkspace" help="/plugin/git/wipeOutWorkspace.html">
+    <f:entry title="Wipe out workspace before build" field="wipeOutWorkspace">
       <f:checkbox />
     </f:entry>
-    <f:entry title="Ignore this repository during notify commit" field="ignoreNotifyCommit" help="/plugin/git/ignoreNotifyCommit.html">
+    <f:entry title="Ignore this repository during notify commit" field="ignoreNotifyCommit">
       <f:checkbox/>
     </f:entry>
     <!-- TODO move to appropriate location if necessary -->
-    <f:entry title="Use shallow clone" field="useShallowClone" help="/plugin/git/useShallowClone.html">
+    <f:entry title="Use shallow clone" field="useShallowClone">
       <f:checkbox/>
     </f:entry>
 
-    <f:dropdownList name="buildChooser" title="${%Choosing strategy}" help="/plugin/git/choosingStrategy.html">
+    <f:dropdownList name="buildChooser" title="${%Choosing strategy}">
       <j:scope>
         <j:set var="current" value="${instance.buildChooser}"/>
         <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
