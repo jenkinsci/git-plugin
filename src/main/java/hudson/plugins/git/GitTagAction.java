@@ -10,6 +10,7 @@ import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.MultipartFormDataParser;
+import jenkins.model.*;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.StaplerRequest;
@@ -47,7 +48,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     }
 
     public Descriptor<GitTagAction> getDescriptor() {
-        return Hudson.getInstance().getDescriptorOrDie(getClass());
+        return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     @Override
@@ -187,8 +188,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                                     .in(localWorkspace)
                                     .getClient();
 
-                            String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
-                            git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
+                            String buildNum = "jenkins-" 
+                                             + build.getProject().getName().replace(" ", "_") 
+                                             + "-" + tagSet.get(b);
+                            git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
                             return new Object[]{null, build};
                         }
                     });
