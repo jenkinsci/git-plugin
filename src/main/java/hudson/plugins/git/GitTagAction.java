@@ -187,7 +187,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                                     .in(localWorkspace)
                                     .getClient();
 
-                            String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
+                            String buildNum = "hudson-" + build.getProject().getName().replace(" ", "_") + "-" + tagSet.get(b);
                             git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
                             return new Object[]{null, build};
                         }
