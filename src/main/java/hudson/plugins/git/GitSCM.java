@@ -1087,7 +1087,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final String gitExe = getGitExe(build.getBuiltOn(), listener);
 
-        final String buildnumber = "jenkins-" + projectName + "-" + buildNumber;
+        final String buildnumber = "jenkins-" + projectName.replace(" ", "_") + "-" + buildNumber;
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 
