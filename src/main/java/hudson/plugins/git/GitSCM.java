@@ -803,7 +803,7 @@ public class GitSCM extends SCM implements Serializable {
                 retryCount++;
                 if (retryCount >= maxRetryCount) {
                     ex.printStackTrace(listener.error(
-                         "Problem fetching from " + name
+                        "Problem fetching from " + name
                         + " / " + name
                         + " - could be unavailable. Continuing anyway"));
                 } else {
