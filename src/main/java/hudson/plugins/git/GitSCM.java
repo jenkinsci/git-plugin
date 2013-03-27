@@ -786,17 +786,35 @@ public class GitSCM extends SCM implements Serializable {
             TaskListener listener,
             RemoteConfig remoteRepository) {
         String name = remoteRepository.getName();
-        try {
-            // Assume there is only 1 URL / refspec for simplicity
-            String url = remoteRepository.getURIs().get(0).toPrivateString();
-            git.setRemoteUrl(name, url);
-            git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
-            return true;
-        } catch (GitException ex) {
-            ex.printStackTrace(listener.error(
-                    "Problem fetching from " + name
-                    + " / " + name
-                    + " - could be unavailable. Continuing anyway"));
+        Integer maxRetryCount = Jenkins.getInstance().getScmCheckoutRetryCount();
+        Integer retryCount = 0;
+        Integer secondsToSleep = 5;
+        while (retryCount <= maxRetryCount) {
+            try {
+                if (retryCount >= 1) {
+                    listener.getLogger().println("Retrying... " + retryCount);
+                }
+                // Assume there is only 1 URL / refspec for simplicity
+                String url = remoteRepository.getURIs().get(0).toPrivateString();
+                git.setRemoteUrl(name, url);
+                git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
+                return true;
+            } catch (GitException ex) {
+                retryCount++;
+                if (retryCount >= maxRetryCount) {
+                    ex.printStackTrace(listener.error(
+                         "Problem fetching from " + name
+                        + " / " + name
+                        + " - could be unavailable. Continuing anyway"));
+                } else {
+                    // Wait 5 sec after a failure
+                    try {
+                        Thread.sleep(secondsToSleep*1000);
+                    } catch (InterruptedException e) {
+                        listener.getLogger().println("Failed to sleep... " + (secondsToSleep*1000));
+                    }
+                }
+            }
         }
         return false;
     }
