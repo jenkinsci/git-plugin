@@ -786,9 +786,15 @@ public class GitSCM extends SCM implements Serializable {
             TaskListener listener,
             RemoteConfig remoteRepository) {
         String name = remoteRepository.getName();
-        Integer maxRetryCount = Jenkins.getInstance().getScmCheckoutRetryCount();
+        Integer maxRetryCount = 0;
         Integer retryCount = 0;
         Integer secondsToSleep = 5;
+
+        Jenkins j = Jenkins.getInstance();
+        if (j != null) {
+            maxRetryCount = j.getScmCheckoutRetryCount();
+        }
+
         while (retryCount <= maxRetryCount) {
             try {
                 if (retryCount >= 1) {
