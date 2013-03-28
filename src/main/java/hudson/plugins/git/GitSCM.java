@@ -1010,17 +1010,23 @@ public class GitSCM extends SCM implements Serializable {
 
                     if (!successfullyCloned) {
                         listener.error("Could not clone repository");
-                        throw new GitException("Could not clone");
+                        // Throw IOException so the retry will be able to catch it
+                        throw new IOException("Could not clone");
                     }
 
                     boolean fetched = false;
                     for (RemoteConfig remoteRepository : repos) {
-                        fetched |= fetchFrom(git, listener, remoteRepository);
+                        try {
+                            fetched |= fetchFrom(git, listener, remoteRepository);
+                        } catch (GitException ex) {
+                            fetched |= false;
+                        }
                     }
 
                     if (!fetched) {
                         listener.error("Could not fetch from any repository");
-                        throw new GitException("Could not fetch from any repository");
+                        // Throw IOException so the retry will be able to catch it
+                        throw new IOException("Could not fetch from any repository");
                     }
 
                     if (clean) {
