@@ -973,12 +973,17 @@ public class GitSCM extends SCM implements Serializable {
 
                     boolean fetched = false;
                     for (RemoteConfig remoteRepository : repos) {
-                        fetched |= fetchFrom(git, listener, remoteRepository);
+                        try {
+                            fetched |= fetchFrom(git, listener, remoteRepository);
+                        } catch (GitException e) {
+                            fetched |= false;
+                        }
                     }
 
                     if (!fetched) {
                         listener.error("Could not fetch from any repository");
-                        throw new GitException("Could not fetch from any repository");
+                        // Throw IOException so the retry will be able to catch it
+                        throw new IOException("Could not fetch from any repository");
                     }
                     // Do we want to prune first?
                     if (pruneBranches) {
