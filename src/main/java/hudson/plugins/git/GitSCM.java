@@ -1158,6 +1158,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
 
                         buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
+                        build.addAction(buildData);
                         throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
                     }
 
