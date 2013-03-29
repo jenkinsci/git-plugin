@@ -58,14 +58,22 @@ public class TestGitRepo {
 	}
 	
     public void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
-        commit(fileName, committer, committer, message);
+        commit(fileName, fileName, committer, committer, message);
     }
 
-    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws GitException {
+        commit(fileName, fileName, author, committer, message);
+    }
+
+    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message) throws GitException {
+        commit(fileName, fileContent, committer, committer, message);
+    }
+
+    public void commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
                         final String message) throws GitException {
         FilePath file = gitDirPath.child(fileName);
         try {
-            file.write(fileName, null);
+            file.write(fileContent, null);
         } catch (Exception e) {
             throw new GitException("unable to write file", e);
         }
