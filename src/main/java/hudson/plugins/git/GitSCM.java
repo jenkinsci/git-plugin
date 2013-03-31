@@ -1021,11 +1021,7 @@ public class GitSCM extends SCM implements Serializable {
 
                     boolean fetched = false;
                     for (RemoteConfig remoteRepository : repos) {
-                        try {
-                            fetched |= fetchFrom(git, listener, remoteRepository);
-                        } catch (GitException ex) {
-                            fetched |= false;
-                        }
+                        fetched |= fetchFrom(git, listener, remoteRepository);
                     }
 
                     if (!fetched) {
