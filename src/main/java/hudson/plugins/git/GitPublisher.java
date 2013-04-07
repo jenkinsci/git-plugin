@@ -171,6 +171,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         SCM scm = build.getProject().getScm();
 
         if (!(scm instanceof GitSCM)) {
+            listener.getLogger().println("GitPublisher cannot be used with SCMs that are not Git");
             return false;
         }
 
