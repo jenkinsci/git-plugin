@@ -68,6 +68,22 @@ public class MultipleSCMTest extends HudsonTestCase {
         assertFalse("scm polling should not detect any more changes after build",
                 project.pollSCMChanges(listener));
 	}
+
+    public void testGitPublisher() throws Exception
+    {
+        FreeStyleProject project = setupBasicProject("master");
+        repo0.commit("repo0-init", repo0.johnDoe, "repo0 initial commit");
+        repo1.commit("repo1-init", repo1.janeDoe, "repo1 initial commit");
+
+        List<GitPublisher.TagToPush> tagsToPush = new ArrayList<GitPublisher.TagToPush>();
+        List<GitPublisher.BranchToPush> branchesToPush = new ArrayList<GitPublisher.BranchToPush>();
+        List<GitPublisher.NoteToPush> notesToPush = new ArrayList<GitPublisher.NoteToPush>();
+
+        GitPublisher publisher = new GitPublisher(tagsToPush, branchesToPush, notesToPush, true,true);
+        project.getPublishersList().add(publisher);
+
+        build(project, Result.SUCCESS);
+    }
 	
 	private FreeStyleProject setupBasicProject(String name) throws IOException
 	{
