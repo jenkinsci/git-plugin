@@ -1122,6 +1122,7 @@ public class GitSCM extends SCM implements Serializable {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
+        final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), build);
 
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
@@ -1143,7 +1144,7 @@ public class GitSCM extends SCM implements Serializable {
                     // us..
                     listener.getLogger().println(
                             "Merging " + revToBuild + " onto "
-                            + getParameterString(mergeOptions.getMergeTarget(), build));
+                            + mergeTarget);
 
                     // checkout origin/blah
                     ObjectId target = git.revParse(remoteBranchName);
