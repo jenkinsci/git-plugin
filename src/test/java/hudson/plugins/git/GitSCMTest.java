@@ -800,8 +800,86 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testMergeWithSlave() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        project.setAssignedLabel(createSlave().getSelfLabel());
+
+        project.setScm(new GitSCM(
+                null,
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                new UserMergeOptions("origin", "integration"),
+                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, new DefaultBuildChooser(), null, null, true, null, null,
+                null, null, null, false, false, false, false, null, null, false,
+                null, false, false));
+
+        // create initial commit and then run the build against it:
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        testRepo.git.checkout(null, "topic1");
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        // do what the GitPublisher would do
+        testRepo.git.deleteBranch("integration");
+        testRepo.git.checkout("topic1", "integration");
+
+        testRepo.git.checkout("master", "topic2");
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
     public void testMergeFailed() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
+
+        project.setScm(new GitSCM(
+                null,
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                new UserMergeOptions("origin", "integration"),
+                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, new DefaultBuildChooser(), null, null, true, null, null,
+                null, null, null, false, false, false, false, null, null, false,
+                null, false, false));
+
+        // create initial commit and then run the build against it:
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        testRepo.git.checkout(null, "topic1");
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        // do what the GitPublisher would do
+        testRepo.git.deleteBranch("integration");
+        testRepo.git.checkout("topic1", "integration");
+
+        testRepo.git.checkout("master", "topic2");
+        commit(commitFile1, "other content", johnDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        final FreeStyleBuild build2 = build(project, Result.FAILURE);
+        assertBuildStatus(Result.FAILURE, build2);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
+    public void testMergeFailedWithSlave() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        project.setAssignedLabel(createSlave().getSelfLabel());
 
         project.setScm(new GitSCM(
                 null,

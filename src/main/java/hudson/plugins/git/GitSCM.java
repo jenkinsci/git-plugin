@@ -1122,6 +1122,7 @@ public class GitSCM extends SCM implements Serializable {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
+        final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), build);
 
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
@@ -1139,11 +1140,8 @@ public class GitSCM extends SCM implements Serializable {
 
                     // Do we need to merge this revision onto MergeTarget
 
-                    // Only merge if there's a branch to merge that isn't
-                    // us..
-                    listener.getLogger().println(
-                            "Merging " + revToBuild + " onto "
-                            + getParameterString(mergeOptions.getMergeTarget(), build));
+                    // Only merge if there's a branch to merge that isn't us..
+                    listener.getLogger().println("Merging " + revToBuild + " onto " + mergeTarget);
 
                     // checkout origin/blah
                     ObjectId target = git.revParse(remoteBranchName);
@@ -1155,8 +1153,7 @@ public class GitSCM extends SCM implements Serializable {
                     } catch (Exception ex) {
                         // We still need to tag something to prevent
                         // repetitive builds from happening - tag the
-                        // candidate
-                        // branch.
+                        // candidate branch.
                         checkout(git, revToBuild.getSha1(), paramLocalBranch);
 
                         if (!getSkipTag()) {
@@ -1164,9 +1161,8 @@ public class GitSCM extends SCM implements Serializable {
                                     + buildNumber);
                         }
 
-                        buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
-                        build.addAction(buildData);
-                        throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
+                        // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
+                        return new Build(revToBuild, buildNumber, Result.FAILURE);
                     }
 
                     if (!disableSubmodules && git.hasGitModules()) {
@@ -1199,6 +1195,11 @@ public class GitSCM extends SCM implements Serializable {
                     return build;
                 }
             });
+            if (returnedBuildData.getBuildResult() != null && returnedBuildData.getBuildResult().equals(Result.FAILURE)) {
+                buildData.saveBuild(returnedBuildData);
+                build.addAction(buildData);
+                throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
+            }
         } else {
             // No merge
             returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
