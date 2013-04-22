@@ -891,6 +891,10 @@ public class GitSCM extends SCM implements Serializable {
             return callable.invoke(project, MasterComputer.localChannel);
         }
 
+        public AbstractBuild<?, ?> getBuild() {
+            return build;
+        }
+
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
                 public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
@@ -899,6 +903,10 @@ public class GitSCM extends SCM implements Serializable {
 
                 public <T> T actOnProject(ContextCallable<AbstractProject<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(project,Channel.current());
+                }
+
+                public AbstractBuild<?, ?> getBuild() {
+                    return build;
                 }
             });
         }

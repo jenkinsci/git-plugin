@@ -20,7 +20,7 @@ import java.io.Serializable;
 public interface BuildChooserContext {
     public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>,T> callable) throws IOException,InterruptedException;
     public <T> T actOnProject(ContextCallable<AbstractProject<?,?>,T> callable) throws IOException,InterruptedException;
-
+    public AbstractBuild<?,?> getBuild();
 
     public static interface ContextCallable<P,T> extends Serializable {
         /**
