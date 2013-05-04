@@ -140,7 +140,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>1.0.4</version>
+      <version>1.0.6-SNAPSHOT</version>
     </dependency>
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
