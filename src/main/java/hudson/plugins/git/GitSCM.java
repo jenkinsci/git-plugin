@@ -1146,7 +1146,7 @@ public class GitSCM extends SCM implements Serializable {
                     // checkout origin/blah
                     ObjectId target = git.revParse(remoteBranchName);
 
-                    checkout(git, target, paramLocalBranch);
+                    git.checkoutBranch(paramLocalBranch, remoteBranchName);
 
                     try {
                         git.merge(revToBuild.getSha1());
@@ -1154,7 +1154,7 @@ public class GitSCM extends SCM implements Serializable {
                         // We still need to tag something to prevent
                         // repetitive builds from happening - tag the
                         // candidate branch.
-                        checkout(git, revToBuild.getSha1(), paramLocalBranch);
+                        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
                         if (!getSkipTag()) {
                             git.tag(buildnumber, "Jenkins Build #"
@@ -1226,7 +1226,7 @@ public class GitSCM extends SCM implements Serializable {
                         }
                     }
 
-                    checkout(git, revToBuild.getSha1(), paramLocalBranch);
+                    git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
                     if (!disableSubmodules && git.hasGitModules()) {
                         // This ensures we don't miss changes to submodule paths and allows
@@ -1260,25 +1260,6 @@ public class GitSCM extends SCM implements Serializable {
         build.addAction(new GitTagAction(build, buildData));
 
         return true;
-    }
-
-    /**
-     * @param branch move/create the branch in this name at the specified commit-ish and check out that branch.
-     */
-    private void checkout(GitClient git, ObjectId commit, /* @Nullable */ String branch) throws GitException {
-        // First, checkout to detached HEAD, so we can delete the branch.
-        git.checkout(commit.name());
-
-        if (branch!=null) {
-            // Second, check to see if the branch actually exists, and then delete it if it does.
-            for (Branch b : git.getBranches()) {
-                if (b.getName().equals(branch)) {
-                    git.deleteBranch(branch);
-                }
-            }
-            // Lastly, checkout the branch, creating it in the process, using commitish as the start point.
-            git.checkout(commit.name(), branch);
-        }
     }
 
     /**
