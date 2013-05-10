@@ -89,6 +89,16 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         return Collections.unmodifiableMap(tags);
     }
 
+    /**
+     * Register tags added from gitPublisher
+     */
+    public void RegisterTag(String branchName, String tagName)
+    {
+        ArrayList<String> tagArray = new ArrayList<String>();
+        tagArray.add(tagName);
+        this.tags.put(branchName, tagArray);
+    }
+    
     @Exported(name = "tags")
     public List<TagInfo> getTagInfo() {
         List<TagInfo> data = new ArrayList<TagInfo>();
