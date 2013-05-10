@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Tests for {@link GitPublisher}
@@ -54,7 +55,7 @@ import java.util.Set;
 public class GitPublisherTest extends AbstractGitTestCase {
     @Bug(5005)
     public void testMatrixBuild() throws Exception {
-        final int[] run =new  int[1]; // count the number of times the perform is called
+        final AtomicInteger run = new AtomicInteger(); // count the number of times the perform is called
 
         commit("a", johnDoe, "commit #1");
 
@@ -68,12 +69,12 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 true, true) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
-                run[0]++;
+                run.incrementAndGet();
                 try {
                     return super.perform(build, launcher, listener);
                 } finally {
                     // until the 3rd one (which is the last one), we shouldn't create a tag
-                    if (run[0]<3)
+                    if (run.get()<3)
                         assertFalse(existsTag("foo"));
                 }
             }
@@ -94,7 +95,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertTrue(containsTagMessage("foo", "message"));
 
         // twice for MatrixRun, which is to be ignored, then once for matrix completion
-        assertEquals(3,run[0]);
+        assertEquals(3,run.get());
     }
 
     public void testMergeAndPush() throws Exception {
