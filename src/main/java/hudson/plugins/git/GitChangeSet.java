@@ -10,7 +10,6 @@ import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -34,7 +33,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final String PREFIX_AUTHOR = "author ";
     private static final String PREFIX_COMMITTER = "committer ";
-    private static final String IDENTITY = "(.*)<(.*)> (.*) (.*)";
+    private static final String IDENTITY = "([^<]*)<(.*)> (.*) (.*)";//starts with everything-but
     private static final String PREFIX_BRANCH = "Changes in branch ";
     private static final String BRANCH_PATTERN = "([-_a-zA-Z0-9/]*),";
     
