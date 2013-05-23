@@ -110,6 +110,7 @@ public class GitSCM extends SCM implements Serializable {
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String relativeTargetDir;
@@ -1118,6 +1119,7 @@ public class GitSCM extends SCM implements Serializable {
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
+        environment.put(GIT_LOCAL_BRANCH, branch.getName().replaceFirst("origin/", ""));
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
@@ -1337,9 +1339,11 @@ public class GitSCM extends SCM implements Serializable {
         String singleBranch = getSingleBranch(build);
         if (singleBranch != null){
             env.put(GIT_BRANCH, singleBranch);
+            env.put(GIT_LOCAL_BRANCH, singleBranch.replaceFirst("origin/", ""));
         } else if (rev != null) {
             Branch branch = rev.getBranches().iterator().next();
             env.put(GIT_BRANCH, branch.getName());
+            env.put(GIT_LOCAL_BRANCH, branch.getName().replaceFirst("origin/", ""));
         }
         if (rev != null) {
             Branch branch = rev.getBranches().iterator().next();
