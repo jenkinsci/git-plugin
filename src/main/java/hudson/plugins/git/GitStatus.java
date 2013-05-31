@@ -11,7 +11,6 @@ import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -29,6 +28,7 @@ import java.util.logging.Logger;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import org.acegisecurity.context.SecurityContext;
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -56,8 +56,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         // run in high privilege to see all the projects anonymous users don't see.
         // this is safe because when we actually schedule a build, it's a build that can
         // happen at some random time anyway.
-        Authentication old = SecurityContextHolder.getContext().getAuthentication();
-        SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
+        SecurityContext old = ACL.impersonate(ACL.SYSTEM);
         try {
             URIish uri;
             try {
@@ -139,7 +138,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 }
             };
         } finally {
-            SecurityContextHolder.getContext().setAuthentication(old);
+            SecurityContextHolder.setContext(old);
         }
     }
 
