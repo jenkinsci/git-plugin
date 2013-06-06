@@ -30,6 +30,7 @@ import hudson.model.Descriptor;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -53,7 +54,13 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	@Override
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
 		BuildData data = build.getAction(BuildData.class);
-		if (data == null) {
+		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {
+            if (build instanceof hudson.plugins.promoted_builds.Promotion) {
+                // We are running as a build promotion, so have to retrieve the git scm from target job
+                data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);
+            }
+        }
+        if (data == null) {
 			listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
 			return null;
 		}
