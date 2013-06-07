@@ -11,6 +11,7 @@ import hudson.plugins.git.Revision;
 import hudson.slaves.NodeProperty;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -91,72 +92,67 @@ public class GitUtils {
 
         // we only want (B) and (C), as (A) is an ancestor (old).
         final List<Revision> l = new ArrayList<Revision>(revisions);
-        
+
+        final boolean log = LOGGER.isLoggable(Level.FINE);
+
+        if (log)
+            LOGGER.fine(MessageFormat.format(
+                    "Computing merge base of {0}  branches", l.size()));
+
         // Bypass any rev walks if only one branch or less
         if (l.size() <= 1)
             return l;
 
-        final boolean log = LOGGER.isLoggable(Level.FINE);
-        Revision revI;
-        Revision revJ;
-        ObjectId shaI;
-        ObjectId shaJ;
-        ObjectId commonAncestor;
+        // Commit nodes that we have already reached
+        Set<RevCommit> visited = new HashSet<RevCommit>();
+        // Commits nodes that are tips if we don't reach them walking back from
+        // another node
+        Map<RevCommit, Revision> tipCandidates = new HashMap<RevCommit, Revision>();
+
+        long calls = 0;
+        long start = System.currentTimeMillis();
+
         RevWalk walk = null;
         Repository repository = null;
-        final long start = System.currentTimeMillis();
-        long calls = 0;
-        if (log)
-            LOGGER.fine(MessageFormat.format(
-                    "Computing merge base of {0}  branches", l.size()));
+
         try {
             repository = git.getRepository();
             walk = new RevWalk(repository);
             walk.setRetainBody(false);
-            walk.setRevFilter(RevFilter.MERGE_BASE);
-            for (int i = 0; i < l.size(); i++)
-                for (int j = i + 1; j < l.size(); j++) {
-                    revI = l.get(i);
-                    revJ = l.get(j);
-                    shaI = revI.getSha1();
-                    shaJ = revJ.getSha1();
 
-                    walk.reset();
-                    walk.markStart(walk.parseCommit(shaI));
-                    walk.markStart(walk.parseCommit(shaJ));
-                    commonAncestor = walk.next();
+            // Each commit passed in starts as a potential tip.
+            // We walk backwards in the commit's history, until we reach the
+            // beginning or a commit that we have already visited. In that case,
+            // we mark that one as not a potential tip.
+            for (Revision r : revisions) {
+                walk.reset();
+                RevCommit head = walk.parseCommit(r.getSha1());
+
+                tipCandidates.put(head, r);
+
+                walk.markStart(head);
+                for (RevCommit commit : walk) {
                     calls++;
-
-                    if (commonAncestor == null)
-                        continue;
-                    if (commonAncestor.equals(shaI)) {
-                        if (log)
-                            LOGGER.fine("filterTipBranches: " + revJ
-                                    + " subsumes " + revI);
-                        l.remove(i);
-                        i--;
+                    if (visited.contains(commit)) {
+                        tipCandidates.remove(commit);
                         break;
                     }
-                    if (commonAncestor.equals(shaJ)) {
-                        if (log)
-                            LOGGER.fine("filterTipBranches: " + revI
-                                    + " subsumes " + revJ);
-                        l.remove(j);
-                        j--;
-                    }
+                    visited.add(commit);
                 }
+            }
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);
         } finally {
             if (walk != null) walk.release();
             if (repository != null) repository.close();
         }
+
         if (log)
             LOGGER.fine(MessageFormat.format(
-                    "Computed {0} merge bases in {1} ms", calls,
-                    (System.currentTimeMillis() - start)));
+                    "Computed merge bases in {0} commit steps and {1} ms",
+                    calls, (System.currentTimeMillis() - start)));
 
-        return l;
+        return new ArrayList<Revision>(tipCandidates.values());
     }
 
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
