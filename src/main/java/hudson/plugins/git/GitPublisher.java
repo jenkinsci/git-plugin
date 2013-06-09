@@ -214,7 +214,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             
             final EnvVars environment = tempEnvironment;
             final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath,environment);
-            
+
             boolean pushResult = true;
             // If we're pushing the merge back...
             if (pushMerge) {
@@ -241,12 +241,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                                 
                                 PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
-                                
+
+                                String mergeTarget = environment.expand(mergeOptions.getMergeTarget());
+
                                 if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                                     RemoteConfig remote = mergeOptions.getMergeRemote();
-                                    listener.getLogger().println("Pushing HEAD to branch " + mergeOptions.getMergeTarget() + " of " + remote.getName() + " repository");
+                                    listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
 
-                                    git.push(remote.getName(), "HEAD:" + mergeOptions.getMergeTarget());
+                                    git.push(remote.getName(), "HEAD:" + mergeTarget);
                                 } else {
                                     //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                                     //git.push(null);
