@@ -12,9 +12,6 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.extensions.impl.PathRestriction;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -61,15 +58,8 @@ import static hudson.init.InitMilestone.PLUGINS_STARTED;
  *
  * @author Nigel Magnay
  */
-public class GitSCM extends SCM implements Serializable {
+public class GitSCM extends GitSCMBackwardCompatibility {
 
-    // old fields are left so that old config data can be read in, but
-    // they are deprecated. transient so that they won't show up in XML
-    // when writing back
-    @Deprecated
-    transient String source;
-    @Deprecated
-    transient String branch;
     /**
      * Store a config version so we're able to migrate config on various
      * functionality upgrades.
@@ -107,11 +97,6 @@ public class GitSCM extends SCM implements Serializable {
     private boolean ignoreNotifyCommit;
     private boolean useShallowClone;
 
-    /**
-     * @deprecated
-     *      Replaced by {@link #buildChooser} instead.
-     */
-    private transient String choosingStrategy;
     private BuildChooser buildChooser;
     public String gitTool = null;
     private GitRepositoryBrowser browser;
@@ -120,26 +105,6 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String reference;
-    /**
-     * @deprecated
-     *      Moved to {@link RelativePath}
-     */
-    private String relativeTargetDir;
-    /**
-     * @deprecated
-     *      Moved to {@link PathRestriction}.
-     */
-    private transient String includedRegions;
-    /**
-     * @deprecated
-     *      Moved to {@link PathRestriction}.
-     */
-    private transient String excludedRegions;
-    /**
-     * @deprecated
-     *      Moved to {@link UserExclusion}.
-     */
-    private transient String excludedUsers;
     private String gitConfigName;
     private String gitConfigEmail;
     private boolean skipTag;
@@ -257,9 +222,10 @@ public class GitSCM extends SCM implements Serializable {
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
             || userRemoteConfigs.size() != 1
-            || (excludedRegions != null && excludedRegions.length() > 0)
+// FIXME:   || (excludedRegions != null && excludedRegions.length() > 0)
             || (submoduleCfg.size() != 0)
-            || (excludedUsers != null && excludedUsers.length() > 0))) {
+// FIXME:   || (excludedUsers != null && excludedUsers.length() > 0)
+        )) {
             LOGGER.log(Level.WARNING, "Cannot poll remotely with current configuration.");
             this.remotePoll = false;
         } else {
@@ -412,24 +378,7 @@ public class GitSCM extends SCM implements Serializable {
         if (extensions==null)
             extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP);
 
-        try {
-            if (excludedUsers!=null) {
-                extensions.add(new UserExclusion(excludedUsers));
-                excludedUsers = null;
-            }
-
-            if (excludedRegions!=null || includedRegions!=null) {
-                extensions.add(new PathRestriction(includedRegions,excludedRegions));
-                excludedRegions = excludedRegions = null;
-            }
-            if (relativeTargetDir!=null) {
-                extensions.add(new RelativeTargetDirectory(relativeTargetDir));
-                relativeTargetDir = null;
-            }
-        } catch (IOException e) {
-            throw new AssertionError(e); // since our extensions don't have any real Saveable
-        }
-
+        readBackExtensionsFromLegacy();
         return this;
     }
 
