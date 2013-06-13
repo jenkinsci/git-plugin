@@ -3,8 +3,8 @@ package hudson.plugins.git.extensions.impl.revexc;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
-import hudson.plugins.git.extensions.RevisionExclusionLogic;
-import hudson.plugins.git.extensions.RevisionExclusionLogicDescriptor;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -16,11 +16,11 @@ import java.util.Set;
 import static hudson.Util.*;
 
 /**
- * {@link RevisionExclusionLogic} that ignores commits that are made by specific users.
+ * {@link GitSCMExtension} that ignores commits that are made by specific users.
  *
  * @author Kohsuke Kawaguchi
  */
-public class UserExclusion extends RevisionExclusionLogic {
+public class UserExclusion extends GitSCMExtension {
     /**
      * Whitespace separated list of the user IDs to be ignored.
      */
@@ -49,7 +49,7 @@ public class UserExclusion extends RevisionExclusionLogic {
     }
 
     @Override
-    public boolean isRevExcluded(GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
+    public Boolean isRevExcluded(GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         String author = commit.getAuthorName();
         if (getExcludedUsersNormalized().contains(author)) {
             // If the author is an excluded user, don't count this entry as a change
@@ -57,11 +57,11 @@ public class UserExclusion extends RevisionExclusionLogic {
             return true;
         }
 
-        return false;
+        return null;
     }
 
     @Extension
-    public static class DescriptorImpl extends RevisionExclusionLogicDescriptor {
+    public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
             return "Polling ignores commits from certain users";

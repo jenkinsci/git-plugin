@@ -4,8 +4,8 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
-import hudson.plugins.git.extensions.RevisionExclusionLogic;
-import hudson.plugins.git.extensions.RevisionExclusionLogicDescriptor;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -17,13 +17,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * {@link RevisionExclusionLogic} that ignores commits that only affects specific paths.
+ * {@link GitSCMExtension} that ignores commits that only affects specific paths.
  *
  * @author Juerg Haefliger
  * @author Andrew Bayer
  * @author Kohsuke Kawaguchi
  */
-public class PathRestriction extends RevisionExclusionLogic {
+public class PathRestriction extends GitSCMExtension {
     private final String includedRegions;
     private final String excludedRegions;
 
@@ -82,10 +82,10 @@ public class PathRestriction extends RevisionExclusionLogic {
     }
 
     @Override
-    public boolean isRevExcluded(GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
+    public Boolean isRevExcluded(GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         Collection<String> paths = commit.getAffectedPaths();
         if (paths.isEmpty()) {// nothing modified, so no need to compute any of this
-            return false;
+            return null;
         }
 
         List<Pattern> included = getIncludedPatterns();
@@ -126,11 +126,12 @@ public class PathRestriction extends RevisionExclusionLogic {
                     + Util.join(excludedPaths, ", "));
             return true;
         }
-        return false;
+
+        return null;
     }
 
     @Extension
-    public static class DescriptorImpl extends RevisionExclusionLogicDescriptor {
+    public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
             return "Polling ignores commits in certain paths";

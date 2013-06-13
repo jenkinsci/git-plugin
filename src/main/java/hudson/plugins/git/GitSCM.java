@@ -12,7 +12,6 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.extensions.RevisionExclusionLogic;
 import hudson.plugins.git.extensions.impl.revexc.PathRestriction;
 import hudson.plugins.git.extensions.impl.revexc.UserExclusion;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -280,14 +279,6 @@ public class GitSCM extends SCM implements Serializable {
      */
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
-    }
-
-    public <T extends GitSCMExtension> List<T> getEffectiveExtensions(Class<T> type) {
-        List<T> r = new ArrayList<T>();
-        for (GitSCMExtension ext : getExtensions()) {
-            ext.collectEffectiveExtensions(type, r);
-        }
-        return r;
     }
 
     private void updateFromUserData() throws GitException {
@@ -1791,19 +1782,18 @@ public class GitSCM extends SCM implements Serializable {
                 revShow  = git.showRevision(r.getSha1());
             }
 
-            // If the revision info is empty, something went weird, so we'll just
-            // return false.
+            // If the revision info is empty, something went weird, so we'll just bail out
             if (revShow.isEmpty()) {
                 return false;
             }
 
-            List<RevisionExclusionLogic> rels = getEffectiveExtensions(RevisionExclusionLogic.class);
-            if (!rels.isEmpty()) {
+            if (!extensions.isEmpty()) {
                 GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
 
-                for (RevisionExclusionLogic rel : rels) {
-                    if (rel.isRevExcluded(git,change,listener,buildData))
-                        return true;
+                for (GitSCMExtension ext : extensions) {
+                    Boolean b = ext.isRevExcluded(git, change, listener, buildData);
+                    if (b!=null)
+                        return b;
                 }
             }
 
