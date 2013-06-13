@@ -13,6 +13,7 @@ import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -118,8 +119,12 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
-    private String relativeTargetDir;
     private String reference;
+    /**
+     * @deprecated
+     *      Moved to {@link RelativePath}
+     */
+    private String relativeTargetDir;
     /**
      * @deprecated
      *      Moved to {@link PathRestriction}.
@@ -172,7 +177,7 @@ public class GitSCM extends SCM implements Serializable {
                 Collections.singletonList(new BranchSpec("")),
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, false, null,
+                false, new DefaultBuildChooser(), null, null, false,
                 null,
                 null, false, false, false, false, null, null, false, false, false, null);
     }
@@ -191,7 +196,6 @@ public class GitSCM extends SCM implements Serializable {
             BuildChooser buildChooser, GitRepositoryBrowser browser,
             String gitTool,
             boolean authorOrCommitter,
-            String relativeTargetDir,
             String reference,
             String localBranch,
             boolean disableSubmodules,
@@ -243,7 +247,6 @@ public class GitSCM extends SCM implements Serializable {
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
-        this.relativeTargetDir = relativeTargetDir;
         this.reference = reference;
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
@@ -418,6 +421,10 @@ public class GitSCM extends SCM implements Serializable {
             if (excludedRegions!=null || includedRegions!=null) {
                 extensions.add(new PathRestriction(includedRegions,excludedRegions));
                 excludedRegions = excludedRegions = null;
+            }
+            if (relativeTargetDir!=null) {
+                extensions.add(new RelativeTargetDirectory(relativeTargetDir));
+                relativeTargetDir = null;
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -675,7 +682,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
-        FilePath workingDirectory = workingDirectory(workspace,environment);
+        FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
         // Rebuild if the working directory doesn't exist
         // I'm actually not 100% sure about this, but I'll leave it in for now.
@@ -1079,7 +1086,7 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final FilePath workingDirectory = workingDirectory(workspace,environment);
+        final FilePath workingDirectory = workingDirectory(build.getProject(),workspace,environment,listener);
 
         if (!workingDirectory.exists()) {
             workingDirectory.mkdirs();
@@ -1726,29 +1733,23 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * @deprecated
-     *      Use {@link #workingDirectory(FilePath, EnvVars)}
-     */
-    protected FilePath workingDirectory(final FilePath workspace) {
-        return workingDirectory(workspace,null);
-    }
-
-    /**
      * Given the workspace, gets the working directory, which will be the workspace
      * if no relative target dir is specified. Otherwise, it'll be "workspace/relativeTargetDir".
      *
      * @param workspace
      * @return working directory or null if workspace is null
      */
-    protected FilePath workingDirectory(final FilePath workspace, EnvVars environment) {
+    protected FilePath workingDirectory(AbstractProject<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException {
         // JENKINS-10880: workspace can be null
         if (workspace == null) {
             return null;
         }
-        if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
-            return workspace;
+
+        for (GitSCMExtension ext : extensions) {
+            FilePath r = ext.getWorkingDirectory(context, workspace, environment, listener);
+            if (r!=null)    return r;
         }
-        return workspace.child(environment.expand(relativeTargetDir));
+        return workspace;
     }
 
     public String getLocalBranch() {
@@ -1759,10 +1760,6 @@ public class GitSCM extends SCM implements Serializable {
         String branch = getLocalBranch();
         // substitute build parameters if available
         return getParameterString(branch, build);
-    }
-
-    public String getRelativeTargetDir() {
-        return relativeTargetDir;
     }
 
     /**

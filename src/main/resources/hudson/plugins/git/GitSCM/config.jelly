@@ -69,9 +69,6 @@
     <f:entry title="Checkout/merge to local branch (optional)" field="localBranch">
       <f:textbox />
     </f:entry>
-    <f:entry title="Local subdirectory for repo (optional)" field="relativeTargetDir">
-      <f:textbox />
-    </f:entry>
     <f:entry title="Path of the reference repo to use during clone (optional)" field="reference">
       <f:textbox/>
     </f:entry>

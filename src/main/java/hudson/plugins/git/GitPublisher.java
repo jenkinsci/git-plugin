@@ -160,7 +160,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     @Override
     public boolean perform(AbstractBuild<?, ?> build,
                            Launcher launcher, final BuildListener listener)
-        throws InterruptedException {
+            throws InterruptedException, IOException {
 
         // during matrix build, the push back would happen at the very end only once for the whole matrix,
         // not for individual configuration build.
@@ -213,7 +213,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             }
             
             final EnvVars environment = tempEnvironment;
-            final FilePath workingDirectory = gitSCM.workingDirectory(workspacePath,environment);
+            final FilePath workingDirectory = gitSCM.workingDirectory(build.getProject(),workspacePath,environment,listener);
 
             boolean pushResult = true;
             // If we're pushing the merge back...

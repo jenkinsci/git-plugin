@@ -1,6 +1,10 @@
 package hudson.plugins.git.extensions;
 
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.AbstractProject;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -32,6 +36,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
         return null;
     }
 
+    /**
+     * Given the workspace root directory, gets the working directory, which is where the repository will be checked out.
+     *
+     * @return working directory or null to let other {@link GitSCMExtension} control it.
+     */
+    public FilePath getWorkingDirectory(AbstractProject<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+        return null;
+    }
 
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {
