@@ -193,5 +193,11 @@
       </f:entry>
   </f:advanced>
 
+  <f:entry title="${%Additional Behaviours}">
+    <!-- TODO: switch to <f:repeatableHeteroList field="extensions"> -->
+    <f:hetero-list name="extensions" items="${instance.extensions}" descriptors="${descriptor.getExtensionDescriptors()}"
+                   hasHeader="true" />
+  </f:entry>
+
   <t:listScmBrowsers name="git.browser" />
 </j:jelly>

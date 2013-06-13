@@ -10,6 +10,8 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -17,6 +19,7 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.*;
 import hudson.triggers.SCMTrigger;
+import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
@@ -27,6 +30,8 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -122,6 +127,11 @@ public class GitSCM extends SCM implements Serializable {
     private String includedRegions;
     private String scmName;
 
+    /**
+     * All the configured extensions attached to this.
+     */
+    private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
+
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -151,9 +161,10 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false, false);
+                null, null, null, false, false, false, false, null, null, false, null, false, false, null);
     }
 
+    @Restricted(NoExternalUse.class) // because this keeps changing
     @DataBoundConstructor
     public GitSCM(
             String scmName,
@@ -181,7 +192,8 @@ public class GitSCM extends SCM implements Serializable {
             boolean skipTag,
             String includedRegions,
             boolean ignoreNotifyCommit,
-            boolean useShallowClone) {
+            boolean useShallowClone,
+            List<GitSCMExtension> extensions) {
 
         this.scmName = scmName;
 
@@ -247,7 +259,27 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
         this.includedRegions = includedRegions;
+        this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
+    }
+
+    /**
+     * All the configured extensions attached to this {@link GitSCM}.
+     *
+     * Going forward this is primarily how we'll support esoteric use cases.
+     *
+     * @since 1.EXTENSION
+     */
+    public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
+        return extensions;
+    }
+
+    public <T extends GitSCMExtension> List<T> getEffectiveExtensions(Class<T> type) {
+        List<T> r = new ArrayList<T>();
+        for (GitSCMExtension ext : getExtensions()) {
+            ext.collectEffectiveExtensions(type, r);
+        }
+        return r;
     }
 
     private void updateFromUserData() throws GitException {
