@@ -1,4 +1,4 @@
-package hudson.plugins.git.extensions.impl.revexc.UserExclusion;
+package hudson.plugins.git.extensions.impl.UserExclusion;
 
 def f = namespace(lib.FormTagLib);
 

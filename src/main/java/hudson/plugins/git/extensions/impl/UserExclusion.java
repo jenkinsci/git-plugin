@@ -1,4 +1,4 @@
-package hudson.plugins.git.extensions.impl.revexc;
+package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
 import hudson.model.TaskListener;

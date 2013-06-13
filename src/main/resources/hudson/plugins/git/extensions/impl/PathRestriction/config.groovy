@@ -1,4 +1,4 @@
-package hudson.plugins.git.extensions.impl.revexc.PathRestriction;
+package hudson.plugins.git.extensions.impl.PathRestriction;
 
 def f = namespace(lib.FormTagLib);
 
