@@ -12,6 +12,9 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.RevisionExclusionLogic;
+import hudson.plugins.git.extensions.impl.revexc.PathRestriction;
+import hudson.plugins.git.extensions.impl.revexc.UserExclusion;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -48,7 +51,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import static hudson.Util.fixEmptyAndTrim;
 import static hudson.init.InitMilestone.JOB_LOADED;
@@ -119,12 +121,24 @@ public class GitSCM extends SCM implements Serializable {
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String relativeTargetDir;
     private String reference;
-    private String excludedRegions;
-    private String excludedUsers;
+    /**
+     * @deprecated
+     *      Moved to {@link PathRestriction}.
+     */
+    private transient String includedRegions;
+    /**
+     * @deprecated
+     *      Moved to {@link PathRestriction}.
+     */
+    private transient String excludedRegions;
+    /**
+     * @deprecated
+     *      Moved to {@link UserExclusion}.
+     */
+    private transient String excludedUsers;
     private String gitConfigName;
     private String gitConfigEmail;
     private boolean skipTag;
-    private String includedRegions;
     private String scmName;
 
     /**
@@ -161,7 +175,7 @@ public class GitSCM extends SCM implements Serializable {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, false, false, null);
+                null, false, false, false, false, null, null, false, false, false, null);
     }
 
     @Restricted(NoExternalUse.class) // because this keeps changing
@@ -180,8 +194,6 @@ public class GitSCM extends SCM implements Serializable {
             boolean authorOrCommitter,
             String relativeTargetDir,
             String reference,
-            String excludedRegions,
-            String excludedUsers,
             String localBranch,
             boolean disableSubmodules,
             boolean recursiveSubmodules,
@@ -190,7 +202,6 @@ public class GitSCM extends SCM implements Serializable {
             String gitConfigName,
             String gitConfigEmail,
             boolean skipTag,
-            String includedRegions,
             boolean ignoreNotifyCommit,
             boolean useShallowClone,
             List<GitSCMExtension> extensions) {
@@ -235,8 +246,6 @@ public class GitSCM extends SCM implements Serializable {
         this.buildChooser = buildChooser;
         this.relativeTargetDir = relativeTargetDir;
         this.reference = reference;
-        this.excludedRegions = excludedRegions;
-        this.excludedUsers = excludedUsers;
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
@@ -258,7 +267,6 @@ public class GitSCM extends SCM implements Serializable {
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
         this.skipTag = skipTag;
-        this.includedRegions = includedRegions;
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
     }
@@ -407,67 +415,24 @@ public class GitSCM extends SCM implements Serializable {
         }
         buildChooser.gitSCM = this;
 
-        return this;
-    }
+        if (extensions==null)
+            extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP);
 
-    public String getIncludedRegions() {
-        return includedRegions;
-    }
-
-    public String[] getIncludedRegionsNormalized() {
-        return (includedRegions == null || includedRegions.trim().equals(""))
-                ? null : includedRegions.split("[\\r\\n]+");
-    }
-
-    private Pattern[] getIncludedRegionsPatterns() {
-        String[] included = getIncludedRegionsNormalized();
-        return getRegionsPatterns(included);
-    }
-
-    public String getExcludedRegions() {
-        return excludedRegions;
-    }
-
-    public String[] getExcludedRegionsNormalized() {
-        return (excludedRegions == null || excludedRegions.trim().equals(""))
-                ? null : excludedRegions.split("[\\r\\n]+");
-    }
-
-    private Pattern[] getExcludedRegionsPatterns() {
-        String[] excluded = getExcludedRegionsNormalized();
-        return getRegionsPatterns(excluded);
-    }
-
-    private Pattern[] getRegionsPatterns(String[] regions) {
-        if (regions != null) {
-            Pattern[] patterns = new Pattern[regions.length];
-
-            int i = 0;
-            for (String region : regions) {
-                patterns[i++] = Pattern.compile(region);
+        try {
+            if (excludedUsers!=null) {
+                extensions.add(new UserExclusion(excludedUsers));
+                excludedUsers = null;
             }
 
-            return patterns;
+            if (excludedRegions!=null || includedRegions!=null) {
+                extensions.add(new PathRestriction(includedRegions,excludedRegions));
+                excludedRegions = excludedRegions = null;
+            }
+        } catch (IOException e) {
+            throw new AssertionError(e); // since our extensions don't have any real Saveable
         }
 
-        return new Pattern[0];
-    }
-
-    public String getExcludedUsers() {
-        return excludedUsers;
-    }
-
-    public Set<String> getExcludedUsersNormalized() {
-        String s = fixEmptyAndTrim(excludedUsers);
-        if (s == null) {
-            return Collections.emptySet();
-        }
-
-        Set<String> users = new HashSet<String>();
-        for (String user : s.split("[\\r\\n]+")) {
-            users.add(user.trim());
-        }
-        return users;
+        return this;
     }
 
     @Override
@@ -1817,23 +1782,8 @@ public class GitSCM extends SCM implements Serializable {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
         try {
-            Pattern[] includedPatterns = getIncludedRegionsPatterns();
-            Pattern[] excludedPatterns = getExcludedRegionsPatterns();
-            Set<String> excludedUsers = getExcludedUsersNormalized();
-
-            // If there are no excluded users, no excluded patterns,
-            // and no included patterns, then the revision cannot be
-            // excluded.
-            //
-            // Assumes it is cheaper to obtain the excluded patterns,
-            // the included patterns and the excluded users than to
-            // call git.
-            if (includedPatterns.length == 0 && excludedPatterns.length == 0 && excludedUsers.isEmpty()) {
-                return false;
-            }
-
             List<String> revShow;
             if (buildData != null && buildData.lastBuild != null) {
                 revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
@@ -1843,68 +1793,25 @@ public class GitSCM extends SCM implements Serializable {
 
             // If the revision info is empty, something went weird, so we'll just
             // return false.
-            if (revShow.size() == 0) {
+            if (revShow.isEmpty()) {
                 return false;
             }
 
-            GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
+            List<RevisionExclusionLogic> rels = getEffectiveExtensions(RevisionExclusionLogic.class);
+            if (!rels.isEmpty()) {
+                GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
 
-            String author = change.getAuthorName();
-            if (excludedUsers.contains(author)) {
-                // If the author is an excluded user, don't count this entry as a change
-                listener.getLogger().println("Ignored commit " + r.getSha1String() + ": Found excluded author: " + author);
-                return true;
-            }
-
-            List<String> paths = new ArrayList<String>(change.getAffectedPaths());
-            if (paths.isEmpty()) {
-                // If there weren't any changed files here, we're just going to return false.
-                return false;
-            }
-
-	    // Assemble the list of included paths
-            List<String> includedPaths = new ArrayList<String>();
-            if (includedPatterns.length > 0) {
-                for (String path : paths) {
-                    for (Pattern pattern : includedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            includedPaths.add(path);
-                            break;
-                        }
-                    }
-                }
-            } else {
-		includedPaths = paths;
-	    }
-
-	    // Assemble the list of excluded paths
-            List<String> excludedPaths = new ArrayList<String>();
-            if (excludedPatterns.length > 0) {
-                for (String path : includedPaths) {
-                    for (Pattern pattern : excludedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            excludedPaths.add(path);
-                            break;
-                        }
-                    }
+                for (RevisionExclusionLogic rel : rels) {
+                    if (rel.isRevExcluded(git,change,listener,buildData))
+                        return true;
                 }
             }
 
-            // If every affected path is excluded, return true.
-            if (includedPaths.size() == excludedPaths.size()) {
-                listener.getLogger().println("Ignored commit " + r.getSha1String()
-                        + ": Found only excluded paths: "
-                        + Util.join(excludedPaths, ", "));
-                return true;
-            }
-        } catch (GitException e) {
-            // If an error was hit getting the revision info, assume something
-            // else entirely is wrong and we don't care, so return false.
             return false;
+        } catch (GitException e) {
+            e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
+            return false;   // for historical reason this is not considered a fatal error.
         }
-
-        // By default, return false.
-        return false;
     }
 
 
