@@ -178,17 +178,17 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             for (final String b : tagSet.keySet()) {
                 try {
                     final FilePath workspace = new FilePath(new File(ws));
+                    final GitClient git = Git.with(listener, environment)
+                            .in(workspace)
+                            .getClient();
+
                     Object returnData = workspace.act(new FilePath.FileCallable<Object[]>() {
                         private static final long serialVersionUID = 1L;
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                                 throws IOException {
 
-                            GitClient git = Git.with(listener, environment)
-                                    .in(localWorkspace)
-                                    .getClient();
-
-                            String buildNum = "jenkins-" 
+                            String buildNum = "jenkins-"
                                              + build.getProject().getName().replace(" ", "_") 
                                              + "-" + tagSet.get(b);
                             git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
