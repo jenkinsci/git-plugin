@@ -10,6 +10,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.TaskListener;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
 import hudson.scm.SCM;
@@ -89,18 +90,13 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  false,
 				  "repo0",
 				  null,
-				  null,
-				  null,
-				  null,
-				  false,
-				  false,
 				  false,
 				  false,
 				  null,
 				  null,
 				  false,
-				  null,
-				  false, false);
+				  false,
+                  Collections.<GitSCMExtension>emptyList());
 
 		SCM repo1Scm = new GitSCM("repo1",
 				  repo1.remoteConfigs(),
@@ -116,19 +112,14 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  false,
 				  "repo1",
 				  null,
-				  null,
-				  null,
-				  null,
-				  false,
-				  false,
 				  false,
 				  false,
 				  null,
 				  null,
 				  false,
-				  null,
-				  false, false);
-		
+				  false,
+                  Collections.<GitSCMExtension>emptyList());
+
 		List<SCM> testScms = new ArrayList<SCM>();
 		testScms.add(repo0Scm);
 		testScms.add(repo1Scm);

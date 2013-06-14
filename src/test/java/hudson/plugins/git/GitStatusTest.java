@@ -5,11 +5,11 @@
 package hudson.plugins.git;
 
 import hudson.model.FreeStyleProject;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.triggers.SCMTrigger;
 
 import org.eclipse.jgit.transport.URIish;
-import org.kohsuke.stapler.HttpResponse;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -130,7 +130,7 @@ public class GitStatusTest extends HudsonTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
-                null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit, false));
+                false, false, null, null, ignoreNotifyCommit, false, Collections.<GitSCMExtension>emptyList()));
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;

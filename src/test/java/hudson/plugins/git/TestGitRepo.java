@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -34,7 +33,7 @@ public class TestGitRepo {
 	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
-	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener) throws IOException {
+	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
 		

@@ -33,6 +33,7 @@ import hudson.model.*;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.NullSCM;
@@ -68,7 +69,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.<NoteToPush>emptyList(),
                 true, true) {
             @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 run.incrementAndGet();
                 try {
                     return super.perform(build, launcher, listener);
@@ -107,9 +108,9 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, "integration", false, false, false, false, null, null, false,
-                null, false, false));
+                false, new DefaultBuildChooser(), null, null, true, null,
+                "integration", false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
