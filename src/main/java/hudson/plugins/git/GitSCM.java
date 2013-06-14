@@ -107,7 +107,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String reference;
     private String gitConfigName;
     private String gitConfigEmail;
-    private boolean skipTag;
     private String scmName;
 
     /**
@@ -144,7 +143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
-                null, false, false, false, false, null, null, false, false, false, null);
+                null, false, false, false, false, null, null, false, false, null);
     }
 
     @Restricted(NoExternalUse.class) // because this keeps changing
@@ -169,7 +168,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             boolean remotePoll,
             String gitConfigName,
             String gitConfigEmail,
-            boolean skipTag,
             boolean ignoreNotifyCommit,
             boolean useShallowClone,
             List<GitSCMExtension> extensions) {
@@ -234,7 +232,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         this.gitConfigName = gitConfigName;
         this.gitConfigEmail = gitConfigEmail;
-        this.skipTag = skipTag;
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
     }
@@ -420,10 +417,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
-    }
-
-    public boolean getSkipTag() {
-        return this.skipTag;
     }
 
     public boolean getPruneBranches() {
@@ -1041,12 +1034,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             workingDirectory.mkdirs();
         }
 
-        final String projectName = build.getProject().getName();
         final int buildNumber = build.getNumber();
 
         final String gitExe = getGitExe(build.getBuiltOn(), listener);
-
-        final String buildnumber = "jenkins-" + projectName.replace(" ", "_") + "-" + buildNumber;
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 
@@ -1076,6 +1066,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
         final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), build);
 
+        final GitClient git = Git.with(listener, environment)
+                .in(workingDirectory)
+                .using(gitExe)
+                .getClient();
+
+
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
             returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
@@ -1084,12 +1080,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                 public Build invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
-
-                    GitClient git = Git.with(listener, environment)
-                            .in(localWorkspace)
-                            .using(gitExe)
-                            .getClient();
-
                     // Do we need to merge this revision onto MergeTarget
 
                     // Only merge if there's a branch to merge that isn't us..
@@ -1108,11 +1098,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         // candidate branch.
                         git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-                        if (!getSkipTag()) {
-                            git.tag(buildnumber, "Jenkins Build #"
-                                    + buildNumber);
-                        }
-
                         // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
                         return new Build(revToBuild, buildNumber, Result.FAILURE);
                     }
@@ -1122,11 +1107,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
                         git.submoduleUpdate(recursiveSubmodules);
-                    }
-
-                    if (!getSkipTag()) {
-                        // Tag the successful merge
-                        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
 
                     computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
@@ -1161,11 +1141,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 public Build invoke(File localWorkspace, VirtualChannel channel)
                         throws IOException, InterruptedException {
 
-                    GitClient git = Git.with(listener, environment)
-                            .in(localWorkspace)
-                            .using(gitExe)
-                            .getClient();
-
                     // Straight compile-the-branch
                     listener.getLogger().println("Checking out " + revToBuild);
 
@@ -1195,16 +1170,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         combinator.createSubmoduleCombinations();
                     }
 
-                    if (!getSkipTag()) {
-                        // Tag the successful merge
-                        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
-                    }
-
                     computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
 
                     return new Build(revToBuild, buildNumber, null);
                 }
             });
+        }
+
+        for (GitSCMExtension ext : extensions) {
+            ext.onCheckoutCompleted(build,launcher,git,listener);
         }
 
         buildData.saveBuild(returnedBuildData);

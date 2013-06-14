@@ -4,6 +4,7 @@ import hudson.RelativePath;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
+import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.scm.SCM;
@@ -43,7 +44,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      * @deprecated
      *      Moved to {@link RelativePath}
      */
-    private String relativeTargetDir;
+    private transient String relativeTargetDir;
     /**
      * @deprecated
      *      Moved to {@link PathRestriction}.
@@ -60,6 +61,11 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient String excludedUsers;
 
+    /**
+     * @deprecated
+     *      Moved to {@link PerBuildTag}
+     */
+    private transient Boolean skipTag;
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
@@ -77,6 +83,10 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (relativeTargetDir!=null) {
                 getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
+            }
+            if (skipTag!=null && skipTag) {
+                getExtensions().add(new PerBuildTag());
+                skipTag = null;
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -127,6 +137,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         UserExclusion ue = getExtensions().get(UserExclusion.class);
         return ue!=null ? ue.getExcludedUsersNormalized() : null;
     }
+
+    @Deprecated
+    public boolean getSkipTag() {
+        return getExtensions().get(PerBuildTag.class)==null;
+    }
+
 
     private static final long serialVersionUID = 1L;
 }

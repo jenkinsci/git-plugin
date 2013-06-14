@@ -2,22 +2,27 @@ package hudson.plugins.git.extensions;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
+import hudson.scm.SCM;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
  *
  * @author Kohsuke Kawaguchi
+ * @since 1.EXTENSION
  */
 public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
     /**
@@ -43,6 +48,18 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      */
     public FilePath getWorkingDirectory(AbstractProject<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         return null;
+    }
+
+    /**
+     * Called when the checkout was completed and the working directory is filled with files.
+     *
+     * See {@link SCM#checkout(AbstractBuild, Launcher, FilePath, BuildListener, File)} for the available parameters,
+     * except {@code workingDirectory}
+     *
+     * @param git
+     *
+     */
+    public void onCheckoutCompleted(AbstractBuild<?,?> build, Launcher launcher, GitClient git, final BuildListener listener) throws IOException, InterruptedException, GitException {
     }
 
     @Override
