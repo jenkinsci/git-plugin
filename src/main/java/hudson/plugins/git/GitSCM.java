@@ -30,8 +30,6 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -850,126 +848,120 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         //		useShallowClone = false;
         //	}
         }
+        GitClient git = Git.with(listener, environment)
+                .in(workingDirectory)
+                .using(gitExe)
+                .getClient();
 
-        Collection<Revision> candidates = workingDirectory.act(new FileCallable<Collection<Revision>>() {
+        final PrintStream log = listener.getLogger();
 
-            private static final long serialVersionUID = 1L;
-
-            public Collection<Revision> invoke(File localWorkspace, VirtualChannel channel)
-                    throws IOException, InterruptedException {
-                FilePath ws = new FilePath(localWorkspace);
-                final PrintStream log = listener.getLogger();
-                GitClient git = Git.with(listener, environment)
-                        .in(localWorkspace)
-                        .using(gitExe)
-                        .getClient();
-
-                if (wipeOutWorkspace) {
-                    log.println("Wiping out workspace first.");
-                    try {
-                        ws.deleteContents();
-                    } catch (InterruptedException e) {
-                        // I don't really care if this fails.
-                    }
-                }
-
-                if (git.hasGitRepo()) {
-                    // It's an update
-
-                    if (repos.size() == 1)
-                        log.println("Fetching changes from 1 remote Git repository");
-                    else
-                        log.println(MessageFormat
-                                .format("Fetching changes from {0} remote Git repositories",
-                                        repos.size()));
-
-                    boolean fetched = false;
-                    for (RemoteConfig remoteRepository : repos) {
-                        try {
-                            fetched |= fetchFrom(git, listener, remoteRepository);
-                        } catch (GitException e) {
-                            fetched |= false;
-                        }
-                    }
-
-                    if (!fetched) {
-                        listener.error("Could not fetch from any repository");
-                        // Throw IOException so the retry will be able to catch it
-                        throw new IOException("Could not fetch from any repository");
-                    }
-                    // Do we want to prune first?
-                    if (pruneBranches) {
-                        log.println("Pruning obsolete local branches");
-                        for (RemoteConfig remoteRepository : repos) {
-                            git.prune(remoteRepository);
-                        }
-                    }
-
-                } else {
-
-                    log.println("Cloning the remote Git repository");
-                    
-                    // Go through the repositories, trying to clone from one
-                    //
-                    boolean successfullyCloned = false;
-                    for (RemoteConfig rc : repos) {
-                    	final String expandedReference = environment.expand(reference);
-                        try {
-                            git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
-                            successfullyCloned = true;
-                            break;
-                        } catch (GitException ex) {
-                            ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
-                            // Failed. Try the next one
-                            log.println("Trying next repository");
-                        }
-                    }
-
-                    if (!successfullyCloned) {
-                        listener.error("Could not clone repository");
-                        // Throw IOException so the retry will be able to catch it
-                        throw new IOException("Could not clone");
-                    }
-
-                    boolean fetched = false;
-                    for (RemoteConfig remoteRepository : repos) {
-                        fetched |= fetchFrom(git, listener, remoteRepository);
-                    }
-
-                    if (!fetched) {
-                        listener.error("Could not fetch from any repository");
-                        // Throw IOException so the retry will be able to catch it
-                        throw new IOException("Could not fetch from any repository");
-                    }
-
-                    if (clean) {
-                        log.println("Cleaning workspace");
-                        git.clean();
-                        // TODO: revisit how to hand off to SubmoduleOption
-                        for (GitSCMExtension ext : extensions) {
-                            ext.onClean(git);
-                        }
-                    }
-                }
-
-                if (parentLastBuiltRev != null) {
-                    return Collections.singleton(parentLastBuiltRev);
-                }
-
-                if (rpa != null) {
-                    return Collections.singleton(rpa.toRevision(git));
-                }
-
-                return buildChooser.getCandidateRevisions(
-                        false, singleBranch, git, listener, buildData, context);
-
+        if (wipeOutWorkspace) {
+            log.println("Wiping out workspace first.");
+            try {
+                workingDirectory.deleteContents();
+            } catch (InterruptedException e) {
+                // I don't really care if this fails.
             }
-        });
+        }
+
+        if (git.hasGitRepo()) {
+            // It's an update
+
+            if (repos.size() == 1)
+                log.println("Fetching changes from 1 remote Git repository");
+            else
+                log.println(MessageFormat
+                        .format("Fetching changes from {0} remote Git repositories",
+                                repos.size()));
+
+            boolean fetched = false;
+            for (RemoteConfig remoteRepository : repos) {
+                try {
+                    fetched |= fetchFrom(git, listener, remoteRepository);
+                } catch (GitException e) {
+                    fetched |= false;
+                }
+            }
+
+            if (!fetched) {
+                listener.error("Could not fetch from any repository");
+                // Throw IOException so the retry will be able to catch it
+                throw new IOException("Could not fetch from any repository");
+            }
+            // Do we want to prune first?
+            if (pruneBranches) {
+                log.println("Pruning obsolete local branches");
+                for (RemoteConfig remoteRepository : repos) {
+                    git.prune(remoteRepository);
+                }
+            }
+
+        } else {
+
+            log.println("Cloning the remote Git repository");
+
+            // Go through the repositories, trying to clone from one
+            //
+            boolean successfullyCloned = false;
+            for (RemoteConfig rc : repos) {
+            	final String expandedReference = environment.expand(reference);
+                try {
+                    git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
+                    successfullyCloned = true;
+                    break;
+                } catch (GitException ex) {
+                    ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
+                    // Failed. Try the next one
+                    log.println("Trying next repository");
+                }
+            }
+
+            if (!successfullyCloned) {
+                listener.error("Could not clone repository");
+                // Throw IOException so the retry will be able to catch it
+                throw new IOException("Could not clone");
+            }
+
+            boolean fetched = false;
+            for (RemoteConfig remoteRepository : repos) {
+                fetched |= fetchFrom(git, listener, remoteRepository);
+            }
+
+            if (!fetched) {
+                listener.error("Could not fetch from any repository");
+                // Throw IOException so the retry will be able to catch it
+                throw new IOException("Could not fetch from any repository");
+            }
+
+            if (clean) {
+                log.println("Cleaning workspace");
+                git.clean();
+                // TODO: revisit how to hand off to SubmoduleOption
+                for (GitSCMExtension ext : extensions) {
+                    ext.onClean(git);
+                }
+            }
+        }
+
+        Collection<Revision> candidates;
+
+        if (parentLastBuiltRev != null) {
+            candidates = Collections.singleton(parentLastBuiltRev);
+        } else {
+            if (rpa != null) {
+                candidates = Collections.singleton(rpa.toRevision(git));
+            } else {
+                candidates = buildChooser.getCandidateRevisions(
+                        false, singleBranch, git, listener, buildData, context);
+            }
+        }
 
         if (candidates.size() == 0) {
             logger.println("No candidate revisions");
             return null;
         }
+
+
         if (candidates.size() > 1) {
             logger.println("Multiple candidate revisions");
             AbstractProject<?, ?> project = build.getProject();
