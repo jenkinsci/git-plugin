@@ -677,28 +677,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
-    private void cleanSubmodules(GitClient parentGit,
-            File workspace,
-            TaskListener listener,
-            RemoteConfig remoteRepository) {
-
-        List<IndexEntry> submodules = parentGit.getSubmodules("HEAD");
-
-        for (IndexEntry submodule : submodules) {
-            String subdir = submodule.getFile();
-            try {
-                listener.getLogger().println("Trying to clean submodule in " + subdir);
-                GitClient subGit = parentGit.subGit(subdir);
-                subGit.clean();
-            } catch (Exception ex) {
-                listener.getLogger().println(
-                        "Problem cleaning submodule in "
-                        + subdir
-                        + " - could be unavailable. Continuing anyway");
-            }
-        }
-    }
-
     /**
      * Fetch information from a particular remote repository.
      *
