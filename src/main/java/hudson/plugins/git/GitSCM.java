@@ -185,7 +185,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // emulate bindJSON behavior here
         if (doGenerateSubmoduleConfigurations != null) {
-            this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations.booleanValue();
+            this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
         } else {
             this.doGenerateSubmoduleConfigurations = false;
         }
@@ -1151,7 +1151,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     private void computeMergeChangeLog(GitClient git, Revision revToBuild, String remoteBranch, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
-        ObjectId objectId = git.getRepository().resolve(remoteBranch);
+        ObjectId objectId = git.revParse(remoteBranch);
         if (!git.isCommitInRepo(objectId)) {
             listener.getLogger().println("Could not record history. Previous build's commit, " + remoteBranch
                                          + ", does not exist in the current repository.");
@@ -1165,7 +1165,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     histories++;
                 }
             } catch (GitException ge) {
-                out.println("Unable to retrieve changeset");
+                ge.printStackTrace(listener.error("Unable to retrieve changeset"));
             } finally {
                 IOUtils.closeQuietly(out);
             }
