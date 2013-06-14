@@ -1070,7 +1070,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 .in(workingDirectory)
                 .using(gitExe)
                 .getClient();
+        GitUtils gu = new GitUtils(listener, git);
 
+        if (clean) {
+            listener.getLogger().println("Cleaning workspace");
+            git.clean();
+            if (!disableSubmodules && git.hasGitModules()) {
+                git.submoduleClean(recursiveSubmodules);
+            }
+        }
 
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
@@ -1107,30 +1115,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
 
-            GitUtils gu = new GitUtils(listener, git);
             Revision mergeRevision = gu.getRevisionForSHA1(target);
             returnedBuildData = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
 
-            if (clean) {
-                listener.getLogger().println("Cleaning workspace");
-                git.clean();
-                if (!disableSubmodules && git.hasGitModules()) {
-                    git.submoduleClean(recursiveSubmodules);
-                }
-            }
         } else {
             // No merge
             // Straight compile-the-branch
             listener.getLogger().println("Checking out " + revToBuild);
-
-            if (clean) {
-                listener.getLogger().println("Cleaning workspace");
-                git.clean();
-
-                if (!disableSubmodules && git.hasGitModules()) {
-                    git.submoduleClean(recursiveSubmodules);
-                }
-            }
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
