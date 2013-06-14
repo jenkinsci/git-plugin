@@ -62,7 +62,16 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     public void onCheckoutCompleted(AbstractBuild<?,?> build, Launcher launcher, GitClient git, final BuildListener listener) throws IOException, InterruptedException, GitException {
     }
 
+    /**
+     * Signals when "git-clean" runs. Primarily for running "git submodule clean"
+     *
+     * TODO: revisit the abstraction
+     */
+    public void onClean(GitClient git) throws IOException, InterruptedException, GitException {
+    }
+
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {
         return (GitSCMExtensionDescriptor) super.getDescriptor();
-    }}
+    }
+}

@@ -6,17 +6,14 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
-
-import static hudson.Util.fixEmptyAndTrim;
 
 /**
  * This is a portion of {@link GitSCM} for the stuff that's used to be in {@link GitSCM}
@@ -67,31 +64,52 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient Boolean skipTag;
 
+
+    /**
+     * @deprecated
+     *      Moved to {@link SubmoduleOption}
+     */
+    private transient boolean disableSubmodules;
+
+    /**
+     * @deprecated
+     *      Moved to {@link SubmoduleOption}
+     */
+    private transient boolean recursiveSubmodules;
+
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     void readBackExtensionsFromLegacy() {
         try {
             if (excludedUsers!=null) {
-                getExtensions().add(new UserExclusion(excludedUsers));
+                addIfMissing(new UserExclusion(excludedUsers));
                 excludedUsers = null;
             }
 
             if (excludedRegions!=null || includedRegions!=null) {
-                getExtensions().add(new PathRestriction(includedRegions, excludedRegions));
+                addIfMissing(new PathRestriction(includedRegions, excludedRegions));
                 excludedRegions = includedRegions = null;
             }
             if (relativeTargetDir!=null) {
-                getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
+                addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
             if (skipTag!=null && skipTag) {
-                getExtensions().add(new PerBuildTag());
+                addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
+            if (disableSubmodules || recursiveSubmodules)
+                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules));
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
         }
 
+    }
+
+    private void addIfMissing(GitSCMExtension ext) throws IOException {
+        if (getExtensions().get(ext.getClass())==null)
+            getExtensions().add(ext);
     }
 
     @Deprecated
@@ -141,6 +159,18 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     @Deprecated
     public boolean getSkipTag() {
         return getExtensions().get(PerBuildTag.class)==null;
+    }
+
+    @Deprecated
+    public boolean getDisableSubmodules() {
+        SubmoduleOption sm = getExtensions().get(SubmoduleOption.class);
+        return sm != null && sm.isDisableSubmodules();
+    }
+
+    @Deprecated
+    public boolean getRecursiveSubmodules() {
+        SubmoduleOption sm = getExtensions().get(SubmoduleOption.class);
+        return sm != null && sm.isRecursiveSubmodules();
     }
 
 

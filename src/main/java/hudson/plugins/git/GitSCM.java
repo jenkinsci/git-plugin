@@ -83,11 +83,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private UserMergeOptions userMergeOptions;
     private transient PreBuildMergeOptions mergeOptions;
-    /**
-     * Use --recursive flag on submodule commands - requires git>=1.6.5
-     */
-    private boolean disableSubmodules;
-    private boolean recursiveSubmodules;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
     private boolean clean;
@@ -143,10 +138,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
-                null, false, false, false, false, null, null, false, false, null);
+                null, false, false, null, null, false, false, null);
     }
 
-    @Restricted(NoExternalUse.class) // because this keeps changing
+//    @Restricted(NoExternalUse.class) // because this keeps changing
     @DataBoundConstructor
     public GitSCM(
             String scmName,
@@ -162,8 +157,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             boolean authorOrCommitter,
             String reference,
             String localBranch,
-            boolean disableSubmodules,
-            boolean recursiveSubmodules,
             boolean pruneBranches,
             boolean remotePoll,
             String gitConfigName,
@@ -211,8 +204,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.reference = reference;
-        this.disableSubmodules = disableSubmodules;
-        this.recursiveSubmodules = recursiveSubmodules;
         this.pruneBranches = pruneBranches;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
         this.useShallowClone = useShallowClone;
@@ -291,8 +282,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             branches = new ArrayList<BranchSpec>();
             doGenerateSubmoduleConfigurations = false;
             mergeOptions = new PreBuildMergeOptions();
-
-            recursiveSubmodules = false;
 
             remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*")));
             if (branch != null) {
@@ -978,9 +967,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     if (clean) {
                         log.println("Cleaning workspace");
                         git.clean();
-
-                        if (!disableSubmodules && git.hasGitModules()) {
-                            git.submoduleClean(recursiveSubmodules);
+                        // TODO: revisit how to hand off to SubmoduleOption
+                        for (GitSCMExtension ext : extensions) {
+                            ext.onClean(git);
                         }
                     }
                 }
@@ -1075,8 +1064,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (clean) {
             listener.getLogger().println("Cleaning workspace");
             git.clean();
-            if (!disableSubmodules && git.hasGitModules()) {
-                git.submoduleClean(recursiveSubmodules);
+            // TODO: revisit how to hand off to SubmoduleOption
+            for (GitSCMExtension ext : extensions) {
+                ext.onClean(git);
             }
         }
 
@@ -1106,11 +1096,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
 
-            if (!disableSubmodules && git.hasGitModules()) {
+            if (!getDisableSubmodules() && git.hasGitModules()) {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild, listener);
-                git.submoduleUpdate(recursiveSubmodules);
+                git.submoduleUpdate(getRecursiveSubmodules());
             }
 
             computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
@@ -1125,11 +1115,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-            if (!disableSubmodules && git.hasGitModules()) {
+            if (!getDisableSubmodules() && git.hasGitModules()) {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild, listener);
-                git.submoduleUpdate(recursiveSubmodules);
+                git.submoduleUpdate(getRecursiveSubmodules());
 
             }
 
@@ -1552,14 +1542,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
     private static final long serialVersionUID = 1L;
-
-    public boolean getDisableSubmodules() {
-        return this.disableSubmodules;
-    }
-
-    public boolean getRecursiveSubmodules() {
-        return this.recursiveSubmodules;
-    }
 
     public boolean getDoGenerate() {
         return this.doGenerateSubmoduleConfigurations;
