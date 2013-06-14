@@ -819,7 +819,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final List<RemoteConfig> repos,
                                               final FilePath workingDirectory,
                                               final EnvVars environment,
-                                              final String gitExe,
+                                              final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
         Revision tempParentLastBuiltRev = null;
 
@@ -848,10 +848,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         //		useShallowClone = false;
         //	}
         }
-        GitClient git = Git.with(listener, environment)
-                .in(workingDirectory)
-                .using(gitExe)
-                .getClient();
 
         final PrintStream log = listener.getLogger();
 
@@ -995,8 +991,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final int buildNumber = build.getNumber();
 
-        final String gitExe = getGitExe(build.getBuiltOn(), listener);
-
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
 
         if (buildData.lastBuild != null) {
@@ -1006,15 +1000,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String paramLocalBranch = getParamLocalBranch(build);
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
 
+        final GitClient git = Git.with(listener, environment)
+                .in(workingDirectory)
+                .using(getGitExe(build.getBuiltOn(), listener))
+                .getClient();
+        GitUtils gu = new GitUtils(listener, git);
+
         final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
-                environment, gitExe, listener);
+                environment, git, listener);
 
         if (revToBuild == null) {
             // getBuildCandidates should make the last item the last build, so a re-build
             // will build the last built thing.
-            listener.error("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
-            return false;
+            throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
         }
+
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
@@ -1023,13 +1023,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
-        final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), build);
-
-        final GitClient git = Git.with(listener, environment)
-                .in(workingDirectory)
-                .using(gitExe)
-                .getClient();
-        GitUtils gu = new GitUtils(listener, git);
 
         if (clean) {
             listener.getLogger().println("Cleaning workspace");
@@ -1045,7 +1038,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             // Do we need to merge this revision onto MergeTarget
 
             // Only merge if there's a branch to merge that isn't us..
-            listener.getLogger().println("Merging " + revToBuild + " onto " + mergeTarget);
+            listener.getLogger().println("Merging " + revToBuild + " onto " + getParameterString(mergeOptions.getMergeTarget(), build));
 
             // checkout origin/blah
             ObjectId target = git.revParse(remoteBranchName);
@@ -1066,12 +1059,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
 
-            if (!getDisableSubmodules() && git.hasGitModules()) {
-                // This ensures we don't miss changes to submodule paths and allows
-                // seamless use of bare and non-bare superproject repositories.
-                git.setupSubmoduleUrls(revToBuild, listener);
-                git.submoduleUpdate(getRecursiveSubmodules());
-            }
+            updateSubmodules(listener, git, revToBuild);
 
             computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
 
@@ -1085,13 +1073,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-            if (!getDisableSubmodules() && git.hasGitModules()) {
-                // This ensures we don't miss changes to submodule paths and allows
-                // seamless use of bare and non-bare superproject repositories.
-                git.setupSubmoduleUrls(revToBuild, listener);
-                git.submoduleUpdate(getRecursiveSubmodules());
-
-            }
+            updateSubmodules(listener, git, revToBuild);
 
             // if(compileSubmoduleCompares)
             if (doGenerateSubmoduleConfigurations) {
@@ -1114,6 +1096,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         build.addAction(new GitTagAction(build, buildData));
 
         return true;
+    }
+
+    private void updateSubmodules(BuildListener listener, GitClient git, Revision revToBuild) {
+        if (!getDisableSubmodules() && git.hasGitModules()) {
+            // This ensures we don't miss changes to submodule paths and allows
+            // seamless use of bare and non-bare superproject repositories.
+            git.setupSubmoduleUrls(revToBuild, listener);
+            git.submoduleUpdate(getRecursiveSubmodules());
+        }
     }
 
     /**
