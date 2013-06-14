@@ -1074,107 +1074,84 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
-            returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
+            // Do we need to merge this revision onto MergeTarget
 
-                private static final long serialVersionUID = 1L;
+            // Only merge if there's a branch to merge that isn't us..
+            listener.getLogger().println("Merging " + revToBuild + " onto " + mergeTarget);
 
-                public Build invoke(File localWorkspace, VirtualChannel channel)
-                        throws IOException, InterruptedException {
-                    // Do we need to merge this revision onto MergeTarget
+            // checkout origin/blah
+            ObjectId target = git.revParse(remoteBranchName);
 
-                    // Only merge if there's a branch to merge that isn't us..
-                    listener.getLogger().println("Merging " + revToBuild + " onto " + mergeTarget);
+            git.checkoutBranch(paramLocalBranch, remoteBranchName);
 
-                    // checkout origin/blah
-                    ObjectId target = git.revParse(remoteBranchName);
+            try {
+                git.merge(revToBuild.getSha1());
+            } catch (GitException ex) {
+                // We still need to tag something to prevent
+                // repetitive builds from happening - tag the
+                // candidate branch.
+                git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-                    git.checkoutBranch(paramLocalBranch, remoteBranchName);
-
-                    try {
-                        git.merge(revToBuild.getSha1());
-                    } catch (Exception ex) {
-                        // We still need to tag something to prevent
-                        // repetitive builds from happening - tag the
-                        // candidate branch.
-                        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
-
-                        // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
-                        return new Build(revToBuild, buildNumber, Result.FAILURE);
-                    }
-
-                    if (!disableSubmodules && git.hasGitModules()) {
-                        // This ensures we don't miss changes to submodule paths and allows
-                        // seamless use of bare and non-bare superproject repositories.
-                        git.setupSubmoduleUrls(revToBuild, listener);
-                        git.submoduleUpdate(recursiveSubmodules);
-                    }
-
-                    computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
-
-                    GitUtils gu = new GitUtils(listener, git);
-                    Revision mergeRevision = gu.getRevisionForSHA1(target);
-                    MergeBuild build = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
-
-                    if (clean) {
-                        listener.getLogger().println("Cleaning workspace");
-                        git.clean();
-                        if (!disableSubmodules && git.hasGitModules()) {
-                            git.submoduleClean(recursiveSubmodules);
-                        }
-                    }
-
-                    // Fetch the diffs into the changelog file
-                    return build;
-                }
-            });
-            if (returnedBuildData.getBuildResult() != null && returnedBuildData.getBuildResult().equals(Result.FAILURE)) {
-                buildData.saveBuild(returnedBuildData);
+                // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
+                buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
                 build.addAction(buildData);
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
+
+            if (!disableSubmodules && git.hasGitModules()) {
+                // This ensures we don't miss changes to submodule paths and allows
+                // seamless use of bare and non-bare superproject repositories.
+                git.setupSubmoduleUrls(revToBuild, listener);
+                git.submoduleUpdate(recursiveSubmodules);
+            }
+
+            computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
+
+            GitUtils gu = new GitUtils(listener, git);
+            Revision mergeRevision = gu.getRevisionForSHA1(target);
+            returnedBuildData = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
+
+            if (clean) {
+                listener.getLogger().println("Cleaning workspace");
+                git.clean();
+                if (!disableSubmodules && git.hasGitModules()) {
+                    git.submoduleClean(recursiveSubmodules);
+                }
+            }
         } else {
             // No merge
-            returnedBuildData = workingDirectory.act(new FileCallable<Build>() {
+            // Straight compile-the-branch
+            listener.getLogger().println("Checking out " + revToBuild);
 
-                private static final long serialVersionUID = 1L;
+            if (clean) {
+                listener.getLogger().println("Cleaning workspace");
+                git.clean();
 
-                public Build invoke(File localWorkspace, VirtualChannel channel)
-                        throws IOException, InterruptedException {
-
-                    // Straight compile-the-branch
-                    listener.getLogger().println("Checking out " + revToBuild);
-
-                    if (clean) {
-                        listener.getLogger().println("Cleaning workspace");
-                        git.clean();
-
-                        if (!disableSubmodules && git.hasGitModules()) {
-                            git.submoduleClean(recursiveSubmodules);
-                        }
-                    }
-
-                    git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
-
-                    if (!disableSubmodules && git.hasGitModules()) {
-                        // This ensures we don't miss changes to submodule paths and allows
-                        // seamless use of bare and non-bare superproject repositories.
-                        git.setupSubmoduleUrls(revToBuild, listener);
-                        git.submoduleUpdate(recursiveSubmodules);
-
-                    }
-
-                    // if(compileSubmoduleCompares)
-                    if (doGenerateSubmoduleConfigurations) {
-                        SubmoduleCombinator combinator = new SubmoduleCombinator(
-                                git, listener, localWorkspace, submoduleCfg);
-                        combinator.createSubmoduleCombinations();
-                    }
-
-                    computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
-
-                    return new Build(revToBuild, buildNumber, null);
+                if (!disableSubmodules && git.hasGitModules()) {
+                    git.submoduleClean(recursiveSubmodules);
                 }
-            });
+            }
+
+            git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
+
+            if (!disableSubmodules && git.hasGitModules()) {
+                // This ensures we don't miss changes to submodule paths and allows
+                // seamless use of bare and non-bare superproject repositories.
+                git.setupSubmoduleUrls(revToBuild, listener);
+                git.submoduleUpdate(recursiveSubmodules);
+
+            }
+
+            // if(compileSubmoduleCompares)
+            if (doGenerateSubmoduleConfigurations) {
+                SubmoduleCombinator combinator = new SubmoduleCombinator(
+                        git, listener, workingDirectory, submoduleCfg);
+                combinator.createSubmoduleCombinations();
+            }
+
+            computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
+
+            returnedBuildData = new Build(revToBuild, buildNumber, null);
         }
 
         for (GitSCMExtension ext : extensions) {

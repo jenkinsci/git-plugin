@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
 import org.eclipse.jgit.lib.ObjectId;
@@ -19,7 +20,7 @@ import java.util.Map.Entry;
  */
 public class SubmoduleCombinator {
     GitClient git;
-    File         workspace;
+    FilePath workspace;
     TaskListener listener;
 
     long         tid = new Date().getTime();
@@ -27,7 +28,7 @@ public class SubmoduleCombinator {
   
     Collection<SubmoduleConfig> submoduleConfig;
   
-    public SubmoduleCombinator(GitClient git, TaskListener listener, File workspace,
+    public SubmoduleCombinator(GitClient git, TaskListener listener, FilePath workspace,
                                Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;
