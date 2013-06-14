@@ -12,6 +12,7 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -741,8 +742,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -771,8 +772,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -811,8 +812,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -850,8 +851,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -888,8 +889,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, false, null, null, false,
+                false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
