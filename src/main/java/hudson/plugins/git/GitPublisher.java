@@ -16,6 +16,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -206,6 +207,11 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                 tempEnvironment = new EnvVars();
             }
 
+            for (GitSCMExtension ext : gitSCM.getExtensions()) {
+                ext.populateEnvironmentVariables(tempEnvironment);
+            }
+
+            // TODO: these sections will move into another GitSCMExtension class
             String confName = gitSCM.getGitConfigNameToUse();
             if ((confName != null) && (!confName.equals(""))) {
                 tempEnvironment.put("GIT_COMMITTER_NAME", confName);

@@ -17,6 +17,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
@@ -69,6 +70,11 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      */
     public void onClean(GitClient git) throws IOException, InterruptedException, GitException {
     }
+
+    /**
+     * Contribute additional environment variables for the Git invocation.
+     */
+    public void populateEnvironmentVariables(Map<String,String> env) {}
 
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {

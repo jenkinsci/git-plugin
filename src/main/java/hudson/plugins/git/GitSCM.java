@@ -1207,8 +1207,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
       		count++;
          }  
       }
-    	  
-    	
+
+        for (GitSCMExtension ext : extensions) {
+            ext.populateEnvironmentVariables(env);
+        }
+
+        // TODO: these sections will move into another GitSCMExtension class
         String confName = getGitConfigNameToUse();
         if ((confName != null) && (!confName.equals(""))) {
             env.put("GIT_COMMITTER_NAME", confName);
