@@ -840,7 +840,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     successfullyCloned = true;
                     break;
                 } catch (GitException ex) {
-                    ex.printStackTrace(listener.error("Error cloning remote repo '%s' : %s", rc.getName(), ex.getMessage()));
+                    ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
                     // Failed. Try the next one
                     log.println("Trying next repository");
                 }
