@@ -804,11 +804,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (wipeOutWorkspace) {
             log.println("Wiping out workspace first.");
-            try {
-                workingDirectory.deleteContents();
-            } catch (InterruptedException e) {
-                // I don't really care if this fails.
-            }
+            workingDirectory.deleteContents();
         }
 
         if (git.hasGitRepo()) {
