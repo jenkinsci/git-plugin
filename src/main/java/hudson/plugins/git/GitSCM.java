@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
 import hudson.init.Initializer;
@@ -532,7 +533,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        final BuildData buildData = fixNull(getBuildData(lastBuild, false));
+        final BuildData buildData = fixNull(getBuildData(lastBuild));
         if (buildData.lastBuild != null) {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
@@ -791,7 +792,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild, false);
+                BuildData parentBuildData = getBuildData(parentBuild);
                 if (parentBuildData != null) {
                     parentLastBuiltRev = parentBuildData.getLastBuiltRevision();
                 }
@@ -903,7 +904,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final int buildNumber = build.getNumber();
 
-        final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
+        final BuildData buildData = copyBuildData(build.getPreviousBuild());
 
         if (buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
@@ -934,7 +935,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        Build returnedBuildData;
+        final Build b;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
             // Do we need to merge this revision onto MergeTarget
 
@@ -961,7 +962,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             Revision mergeRevision = gu.getRevisionForSHA1(target);
-            returnedBuildData = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
+            b = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
         } else {
             // No merge
             // Straight compile-the-branch
@@ -969,10 +970,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-            returnedBuildData = new Build(revToBuild, buildNumber, null);
+            b = new Build(revToBuild, buildNumber, null);
         }
 
-        buildData.saveBuild(returnedBuildData);
+        buildData.saveBuild(b);
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
 
@@ -1057,7 +1058,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
-        Revision rev = fixNull(getBuildData(build, false)).getLastBuiltRevision();
+        Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         String singleBranch = getSingleBranch(build);
         if (singleBranch != null){
             env.put(GIT_BRANCH, singleBranch);
@@ -1096,7 +1097,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousBuiltBuild() != null) {
-            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild(), false)).getLastBuildOfBranch(branch.getName());
+            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
             if (lastBuildOfBranch != null) {
                 Revision previousRev = lastBuildOfBranch.getRevision();
                 if (previousRev != null) {
@@ -1339,7 +1340,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return gitWeb;
         }
 
-        public FormValidation doGitRemoteNameCheck(StaplerRequest req, StaplerResponse rsp)
+        public FormValidation doGitRemoteNameCheck(StaplerRequest req)
                 throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");
             boolean isMerge = req.getParameter("isMerge") != null;
@@ -1412,14 +1413,32 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
+     * @deprecated
+     */
+    public BuildData getBuildData(Run build, boolean clone) {
+        return clone ? copyBuildData(build) : getBuildData(build);
+    }
+
+    /**
+     * Like {@link #getBuildData(Run)}, but copy the data into a new object,
+     * which is used as the first step for updating the data for the next build.
+     */
+    public BuildData copyBuildData(Run build) {
+        BuildData base = getBuildData(build);
+        if (base==null)
+            return new BuildData(getScmName(), getUserRemoteConfigs());
+        else
+            return base.clone();
+    }
+
+    /**
      * Find the build log (BuildData) recorded with the last build that completed. BuildData
      * may not be recorded if an exception occurs in the plugin logic.
      *
      * @param build
-     * @param clone
      * @return the last recorded build data
      */
-    public BuildData getBuildData(Run build, boolean clone) {
+    public @CheckForNull BuildData getBuildData(Run build) {
         BuildData buildData = null;
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
@@ -1435,15 +1454,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             build = build.getPreviousBuild();
         }
 
-        if (buildData == null) {
-            return clone ? new BuildData(getScmName(), getUserRemoteConfigs()) : null;
-        }
-
-        if (clone) {
-            return buildData.clone();
-        } else {
-            return buildData;
-        }
+        return buildData;
     }
 
     /**

@@ -6,7 +6,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -63,7 +62,7 @@ public class SubmoduleOption extends GitSCMExtension {
 
     @Override
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, Launcher launcher, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
-        BuildData revToBuild = scm.getBuildData(build, false);
+        BuildData revToBuild = scm.getBuildData(build);
 
         if (!disableSubmodules && git.hasGitModules()) {
             // This ensures we don't miss changes to submodule paths and allows
