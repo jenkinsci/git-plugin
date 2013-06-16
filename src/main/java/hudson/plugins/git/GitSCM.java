@@ -783,33 +783,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final EnvVars environment,
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
-        Revision tempParentLastBuiltRev = null;
+        Revision parentLastBuiltRev = null;
 
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
                 BuildData parentBuildData = getBuildData(parentBuild, false);
                 if (parentBuildData != null) {
-                    tempParentLastBuiltRev = parentBuildData.getLastBuiltRevision();
+                    parentLastBuiltRev = parentBuildData.getLastBuiltRevision();
                 }
             }
         }
-
-        final Revision parentLastBuiltRev = tempParentLastBuiltRev;
-
-        final String singleBranch = environment.expand( getSingleBranch(build) );
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
 
         final PrintStream logger = listener.getLogger();
-        if(useShallowClone) {
-        //	if(build.getProject().getPublishersList().get(GitPublisher.class) == null) {
-        		logger.println("Using shallow clone");
-        //	} else {
-        //		useShallowClone = false;
-        //	}
-        }
 
         final PrintStream log = listener.getLogger();
 
@@ -844,11 +833,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (!fetched) {
                 listener.error("Could not fetch from any repository");
                 // Throw IOException so the retry will be able to catch it
-                throw new IOException("Could not fetch from any repository");
+                throw new AbortException("Could not fetch from any repository");
             }
         } else {
-
             log.println("Cloning the remote Git repository");
+            if(useShallowClone) {
+                logger.println("Using shallow clone");
+            }
 
             // Go through the repositories, trying to clone from one
             //
@@ -902,7 +893,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 candidates = Collections.singleton(rpa.toRevision(git));
             } else {
                 candidates = buildChooser.getCandidateRevisions(
-                        false, singleBranch, git, listener, buildData, context);
+                        false, environment.expand( getSingleBranch(build) ), git, listener, buildData, context);
             }
         }
 
