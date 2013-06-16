@@ -59,9 +59,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * See {@link SCM#checkout(AbstractBuild, Launcher, FilePath, BuildListener, File)} for the available parameters,
      * except {@code workingDirectory}
      *
-     * @param scm
-     * @param git
-     *
+     * Do not move the HEAD to another commit, as by this point the commit to be built is already determined
+     * and recorded (such as changelog.)
      */
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, Launcher launcher, GitClient git, final BuildListener listener) throws IOException, InterruptedException, GitException {
     }

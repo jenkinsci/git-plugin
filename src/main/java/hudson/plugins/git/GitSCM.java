@@ -28,6 +28,7 @@ import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -39,8 +40,11 @@ import org.kohsuke.stapler.export.Exported;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.*;
@@ -959,11 +963,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             updateSubmodules(listener, git, revToBuild);
 
-            computeMergeChangeLog(git, revToBuild, remoteBranchName, listener, changelogFile);
-
             Revision mergeRevision = gu.getRevisionForSHA1(target);
             returnedBuildData = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
-
         } else {
             // No merge
             // Straight compile-the-branch
@@ -973,16 +974,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             updateSubmodules(listener, git, revToBuild);
 
-            // if(compileSubmoduleCompares)
             if (doGenerateSubmoduleConfigurations) {
                 SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, submoduleCfg);
                 combinator.createSubmoduleCombinations();
             }
 
-            computeChangeLog(git, revToBuild, listener, buildData,changelogFile, context);
-
             returnedBuildData = new Build(revToBuild, buildNumber, null);
         }
+
+        computeChangeLog(git, revToBuild, listener, buildData, changelogFile, context);
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build,launcher,git,listener);
@@ -1005,7 +1005,36 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Build up change log from all the branches that we've merged into {@code revToBuild}
+     * Build up change log from all the branches that we've merged into {@code revToBuild}.
+     *
+     * <p>
+     * Intuitively, a changelog is a list of commits that's added since the "previous build" to the current build.
+     * However, because of the multiple branch support in Git, this notion is ambiguous. For example, consider the
+     * following commit graph where M1...M4 belongs to branch M, B1..B2 belongs to branch B, and so on:
+     *
+     * <pre>
+     *    M1 -> M2 -> M3 -> M4
+     *  /   \     \     \
+     * S ->  B1 -> B2    \
+     *  \                 \
+     *   C1 ---------------> C2
+     * </pre>
+     *
+     * <p>
+     * If Jenkin built B1, C1, B2, C3 in that order, then one'd prefer that the changelog of B2 only shows
+     * just B1..B2, not C1..B2. To do this, we attribute every build to specific branches, and when we say
+     * "since the previous build", what we really mean is "since the last build that built the same branch".
+     *
+     * <p>
+     * TODO: if a branch merge is configured, then the first build will end up listing all the changes
+     * in the upstream branch, which may be too many. To deal with this nicely, BuildData needs to remember
+     * when we started merging this branch so that we can properly detect if the current build is the
+     * first build that's merging a new branch.
+     *
+     * Another possibly sensible option is to always exclude all the commits that are happening in the remote branch.
+     * Picture yourself developing a feature branch that closely tracks a busy mainline, then you might
+     * not really care the changes going on in the main line. In this way, the changelog only lists your changes,
+     * so "notify those who break the build" will not spam upstream developers, too.
      *
      * @param git
      *      Used for invoking Git
@@ -1018,44 +1047,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      or else we won't know where to stop.
      */
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
-        PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
+        Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
+
+        ChangelogCommand changelog = git.changelog();
+        changelog.includes(revToBuild.getSha1());
         try {
+            boolean exclusion = false;
             for (Branch b : revToBuild.getBranches()) {
                 Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
-                if (lastRevWas != null) {
-                    if (git.isCommitInRepo(lastRevWas.getSHA1())) {
-                        putChangelogDiffs(git, b.getName(), lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
-                    } else {
-                        listener.getLogger().println("Could not record history. Previous build's commit, " + lastRevWas.getSHA1().name()
-                                + ", does not exist in the current repository.");
-                    }
-                } else {
-                    listener.getLogger().println("No change to record in branch " + b.getName());
+                if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
+                    changelog.excludes(lastRevWas.getSHA1());
+                    exclusion = true;
                 }
+            }
+            if (!exclusion) {
+                // this is the first time we are building this branch, so there's no base line to compare against.
+                // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
+                listener.getLogger().println("First time build. Skipping changelog.");
+            } else {
+                changelog.to(out).max(MAX_CHANGELOG).execute();
             }
         } catch (GitException ge) {
-            out.println("Unable to retrieve changeset");
+            ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
             IOUtils.closeQuietly(out);
-        }
-    }
-
-    private void computeMergeChangeLog(GitClient git, Revision revToBuild, String remoteBranch, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
-        ObjectId objectId = git.revParse(remoteBranch);
-        if (!git.isCommitInRepo(objectId)) {
-            listener.getLogger().println("Could not record history. Previous build's commit, " + remoteBranch
-                                         + ", does not exist in the current repository.");
-        } else {
-            PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
-            try {
-                for (Branch b : revToBuild.getBranches()) {
-                    putChangelogDiffs(git, b.getName(), remoteBranch, revToBuild.getSha1().name(), out);
-                }
-            } catch (GitException ge) {
-                ge.printStackTrace(listener.error("Unable to retrieve changeset"));
-            } finally {
-                IOUtils.closeQuietly(out);
-            }
         }
     }
 
@@ -1109,13 +1124,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         return prevCommit;
-    }
-
-
-    private void putChangelogDiffs(GitClient git, String branchName, String revFrom,
-            String revTo, PrintStream fos) throws IOException {
-        fos.println("Changes in branch " + branchName + ", between " + revFrom + " and " + revTo);
-        git.changelog(revFrom, revTo, fos);
     }
 
     @Override
@@ -1555,4 +1563,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Used by various classes in this package.
      */
     public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
+
+    /**
+     * To avoid pointlessly large changelog, we'll limit the number of changes up to this.
+     */
+    public static final int MAX_CHANGELOG = Integer.getInteger(GitSCM.class.getName()+".maxChangelog",1024);
 }
