@@ -1018,8 +1018,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      or else we won't know where to stop.
      */
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
-        int histories = 0;
-
         PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
         try {
             for (Branch b : revToBuild.getBranches()) {
@@ -1027,7 +1025,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (lastRevWas != null) {
                     if (git.isCommitInRepo(lastRevWas.getSHA1())) {
                         putChangelogDiffs(git, b.getName(), lastRevWas.getSHA1().name(), revToBuild.getSha1().name(), out);
-                        histories++;
                     } else {
                         listener.getLogger().println("Could not record history. Previous build's commit, " + lastRevWas.getSHA1().name()
                                 + ", does not exist in the current repository.");
@@ -1041,10 +1038,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } finally {
             IOUtils.closeQuietly(out);
         }
-
-        if (histories > 1) {
-            listener.getLogger().println("Warning : There are multiple branch changesets here");
-        }
     }
 
     private void computeMergeChangeLog(GitClient git, Revision revToBuild, String remoteBranch, BuildListener listener, FilePath changelogFile) throws IOException, InterruptedException {
@@ -1053,22 +1046,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Could not record history. Previous build's commit, " + remoteBranch
                                          + ", does not exist in the current repository.");
         } else {
-            int histories = 0;
-
             PrintStream out = new PrintStream(changelogFile.write(), false, "UTF-8");
             try {
                 for (Branch b : revToBuild.getBranches()) {
                     putChangelogDiffs(git, b.getName(), remoteBranch, revToBuild.getSha1().name(), out);
-                    histories++;
                 }
             } catch (GitException ge) {
                 ge.printStackTrace(listener.error("Unable to retrieve changeset"));
             } finally {
                 IOUtils.closeQuietly(out);
-            }
-
-            if (histories > 1) {
-                listener.getLogger().println("Warning : There are multiple branch changesets here");
             }
         }
     }
