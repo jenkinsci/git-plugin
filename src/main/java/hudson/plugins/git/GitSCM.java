@@ -906,7 +906,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final BuildData buildData = copyBuildData(build.getPreviousBuild());
 
-        if (buildData.lastBuild != null) {
+        if (VERBOSE && buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
