@@ -75,6 +75,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     }
 
     /**
+     * Called when {@link GitClient} is created to decorate its behaviour.
+     * This allows extensions to customize the behaviour of {@link GitClient}.
+     */
+    public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+        return git;
+    }
+
+    /**
      * Contribute additional environment variables for the Git invocation.
      */
     public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {}

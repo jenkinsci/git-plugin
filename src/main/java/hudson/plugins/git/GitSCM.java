@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 import static hudson.Util.fixEmptyAndTrim;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
+import static hudson.scm.PollingResult.*;
 
 /**
  * Git SCM.
@@ -525,7 +526,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (lastBuild == null) {
             // If we've never been built before, well, gotta build!
             listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
-            return PollingResult.BUILD_NOW;
+            return BUILD_NOW;
         }
 
         final BuildData buildData = fixNull(getBuildData(lastBuild, false));
@@ -539,34 +540,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
-            GitClient git = Git.with(listener, environment)
-                               .using(getGitExe(Jenkins.getInstance(), environment, listener))
-                               .getClient();
+            GitClient git = createClient(listener, environment, Jenkins.getInstance(), null);
 
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
             if (head != null && buildData.lastBuild.getRevision().getSha1().name().equals(head.name())) {
-                return PollingResult.NO_CHANGES;
+                return NO_CHANGES;
             } else {
-                return PollingResult.BUILD_NOW;
-            }
-        }
-
-        final String gitExe;
-        {
-            //If this project is tied onto a node, it's built always there. On other cases,
-            //polling is done on the node which did the last build.
-            //
-            Label label = project.getAssignedLabel();
-            if (label != null && label.isSelfLabel()) {
-                if (label.getNodes().iterator().next() != project.getLastBuiltOn()) {
-                    listener.getLogger().println("Last build was not on tied node, forcing rebuild.");
-                    return PollingResult.BUILD_NOW;
-                }
-                gitExe = getGitExe(label.getNodes().iterator().next(), listener);
-            } else {
-                gitExe = getGitExe(project.getLastBuiltOn(), listener);
+                return BUILD_NOW;
             }
         }
 
@@ -581,13 +563,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         
         // JENKINS-10880: workingDirectory can be null
         if (workingDirectory == null || !workingDirectory.exists()) {
-            return PollingResult.BUILD_NOW;
+            return BUILD_NOW;
         }
 
-        GitClient git = Git.with(listener, environment)
-                .in(workingDirectory)
-                .using(gitExe)
-                .getClient();
+
+        // which node is this workspace from?
+        Node n = Jenkins.getInstance();
+        if (workspace.isRemote()) {
+            // there should be always one match, but just in case we initialize n to a non-null value
+            for (Computer c : Jenkins.getInstance().getComputers()) {
+                if (c.getChannel()==workspace.getChannel()) {
+                    n =  c.getNode();
+                    break;
+                }
+            }
+        }
+
+        GitClient git = createClient(listener, environment, n, workingDirectory);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -609,11 +601,28 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            return PollingResult.NO_CHANGES;
+            return NO_CHANGES;
         } else {
             listener.getLogger().println("No Git repository yet, an initial checkout is required");
             return PollingResult.SIGNIFICANT;
         }
+    }
+
+    /*package*/ GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
+        FilePath ws = workingDirectory(build.getProject(),build.getWorkspace(), environment, listener);
+        ws.mkdirs(); // ensure it exists
+        return createClient(listener,environment,build.getBuiltOn(),ws);
+    }
+
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Node n, FilePath ws) throws IOException, InterruptedException {
+        String gitExe = getGitExe(n, listener);
+        Git git = Git.with(listener, environment).in(ws).using(gitExe);
+
+        GitClient c = git.getClient();
+        for (GitSCMExtension ext : extensions) {
+            c = ext.decorate(this,c);
+        }
+        return c;
     }
 
     private BuildData fixNull(BuildData bd) {
@@ -889,12 +898,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
         listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final FilePath workingDirectory = workingDirectory(build.getProject(),workspace,environment,listener);
-
-        if (!workingDirectory.exists()) {
-            workingDirectory.mkdirs();
-        }
-
         final int buildNumber = build.getNumber();
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
@@ -905,10 +908,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String paramLocalBranch = getParamLocalBranch(build);
 
-        final GitClient git = Git.with(listener, environment)
-                .in(workingDirectory)
-                .using(getGitExe(build.getBuiltOn(), listener))
-                .getClient();
+        final GitClient git = createClient(listener,environment,build);
         GitUtils gu = new GitUtils(listener, git);
 
         final Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
@@ -975,8 +975,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             // if(compileSubmoduleCompares)
             if (doGenerateSubmoduleConfigurations) {
-                SubmoduleCombinator combinator = new SubmoduleCombinator(
-                        git, listener, workingDirectory, submoduleCfg);
+                SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, submoduleCfg);
                 combinator.createSubmoduleCombinations();
             }
 

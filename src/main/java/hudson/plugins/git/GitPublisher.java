@@ -16,7 +16,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -26,7 +25,6 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -188,7 +186,6 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     	}
         
         final String projectName = build.getProject().getName();
-        final FilePath workspacePath = build.getWorkspace();
         final int buildNumber = build.getNumber();
         final Result buildResult = build.getResult();
 
@@ -198,20 +195,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             return true;
         }
         else {
-            final String gitExe = gitSCM.getGitExe(build.getBuiltOn(), listener);
             EnvVars environment = build.getEnvironment(listener);
 
-            gitSCM.getDescriptor().populateEnvironmentVariables(environment);
-            for (GitSCMExtension ext : gitSCM.getExtensions()) {
-                ext.populateEnvironmentVariables(gitSCM, environment);
-            }
-
-            final FilePath workingDirectory = gitSCM.workingDirectory(build.getProject(),workspacePath,environment,listener);
-
-            final GitClient git = Git.with(listener, environment)
-                    .in(workingDirectory)
-                    .using(gitExe)
-                    .getClient();
+            final GitClient git  = gitSCM.createClient(listener,environment,build);
 
             // If we're pushing the merge back...
             if (pushMerge) {

@@ -28,12 +28,11 @@ public class SubmoduleCombinator {
   
     Collection<SubmoduleConfig> submoduleConfig;
   
-    public SubmoduleCombinator(GitClient git, TaskListener listener, FilePath workspace,
-                               Collection<SubmoduleConfig> cfg) {
+    public SubmoduleCombinator(GitClient git, TaskListener listener, Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;
     
-        this.workspace = workspace;
+        this.workspace = git.getWorkTree();
         this.submoduleConfig = cfg;
     }
 
