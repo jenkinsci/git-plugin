@@ -780,7 +780,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private @NonNull Revision determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final List<RemoteConfig> repos,
-                                              final FilePath workingDirectory,
                                               final EnvVars environment,
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
@@ -802,7 +801,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (wipeOutWorkspace) {
             log.println("Wiping out workspace first.");
-            workingDirectory.deleteContents();
+            git.getWorkTree().deleteContents();
         }
 
         if (git.hasGitRepo()) {
@@ -894,7 +893,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throws IOException, InterruptedException {
 
         final EnvVars environment = build.getEnvironment(listener);
-        
+
         final FilePath changelogFile = new FilePath(_changelogFile);
 
         listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
@@ -923,8 +922,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 .getClient();
         GitUtils gu = new GitUtils(listener, git);
 
-        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
-                environment, git, listener);
+        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, environment, git, listener);
 
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
