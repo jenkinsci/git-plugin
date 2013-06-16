@@ -2,7 +2,6 @@ package hudson.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
-import hudson.FilePath.FileCallable;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
@@ -17,7 +16,6 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.*;
 import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
@@ -586,52 +584,36 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return PollingResult.BUILD_NOW;
         }
 
-        final List<RemoteConfig> paramRepos = getParamExpandedRepos(lastBuild);
-//        final String singleBranch = getSingleBranch(lastBuild);
-        final BuildChooserContext context = new BuildChooserContextImpl(project,null);
+        GitClient git = Git.with(listener, environment)
+                .in(workingDirectory)
+                .using(gitExe)
+                .getClient();
 
-        boolean pollChangesResult = workingDirectory.act(new FileCallable<Boolean>() {
+        if (git.hasGitRepo()) {
+            // Repo is there - do a fetch
+            listener.getLogger().println("Fetching changes from the remote Git repositories");
 
-            private static final long serialVersionUID = 1L;
+            // Fetch updates
+            for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild)) {
+                fetchFrom(git, listener, remoteRepository);
+            }
 
-            public Boolean invoke(File localWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
+            listener.getLogger().println("Polling for changes in");
 
-                GitClient git = Git.with(listener, environment)
-                        .in(localWorkspace)
-                        .using(gitExe)
-                        .getClient();
+            Collection<Revision> candidates = buildChooser.getCandidateRevisions(
+                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project,null));
 
-                if (git.hasGitRepo()) {
-                    // Repo is there - do a fetch
-                    listener.getLogger().println("Fetching changes from the remote Git repositories");
-
-                    // Fetch updates
-                    for (RemoteConfig remoteRepository : paramRepos) {
-                        fetchFrom(git, listener, remoteRepository);
-                    }
-
-                    listener.getLogger().println("Polling for changes in");
-
-                    Collection<Revision> origCandidates = buildChooser.getCandidateRevisions(
-                            true, singleBranch, git, listener, buildData, context);
-
-                    List<Revision> candidates = new ArrayList<Revision>();
-
-                    for (Revision c : origCandidates) {
-                        if (!isRevExcluded(git, c, listener, buildData)) {
-                            candidates.add(c);
-                        }
-                    }
-
-                    return (candidates.size() > 0);
-                } else {
-                    listener.getLogger().println("No Git repository yet, an initial checkout is required");
-                    return true;
+            for (Revision c : candidates) {
+                if (!isRevExcluded(git, c, listener, buildData)) {
+                    return PollingResult.SIGNIFICANT;
                 }
             }
-        });
 
-        return pollChangesResult ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
+            return PollingResult.NO_CHANGES;
+        } else {
+            listener.getLogger().println("No Git repository yet, an initial checkout is required");
+            return PollingResult.SIGNIFICANT;
+        }
     }
 
     private BuildData fixNull(BuildData bd) {
