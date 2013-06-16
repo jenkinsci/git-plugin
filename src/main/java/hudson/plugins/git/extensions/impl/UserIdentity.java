@@ -1,6 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -34,7 +35,7 @@ public class UserIdentity extends GitSCMExtension {
     }
 
     @Override
-    public void populateEnvironmentVariables(Map<String, String> env) {
+    public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {
         if (name!=null) {
             env.put("GIT_COMMITTER_NAME", name);
             env.put("GIT_AUTHOR_NAME", name);

@@ -29,6 +29,8 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Given a commit found during polling, check whether it should be disregarded.
      *
+     *
+     * @param scm
      * @param git GitClient object
      * @param commit
      *      The commit whose exclusion is being tested.
@@ -38,7 +40,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *      false to trigger a build from this commit, regardless of what later {@link GitSCMExtension}s say.
      *      null to allow other {@link GitSCMExtension}s to decide.
      */
-    public Boolean isRevExcluded(GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
         return null;
     }
 
@@ -47,7 +49,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *
      * @return working directory or null to let other {@link GitSCMExtension} control it.
      */
-    public FilePath getWorkingDirectory(AbstractProject<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+    public FilePath getWorkingDirectory(GitSCM scm, AbstractProject<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         return null;
     }
 
@@ -69,13 +71,13 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *
      * TODO: revisit the abstraction
      */
-    public void onClean(GitClient git) throws IOException, InterruptedException, GitException {
+    public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
     }
 
     /**
      * Contribute additional environment variables for the Git invocation.
      */
-    public void populateEnvironmentVariables(Map<String,String> env) {}
+    public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {}
 
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {

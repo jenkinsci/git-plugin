@@ -203,7 +203,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
             gitSCM.getDescriptor().populateEnvironmentVariables(environment);
             for (GitSCMExtension ext : gitSCM.getExtensions()) {
-                ext.populateEnvironmentVariables(environment);
+                ext.populateEnvironmentVariables(gitSCM, environment);
             }
 
             final FilePath workingDirectory = gitSCM.workingDirectory(build.getProject(),workspacePath,environment,listener);

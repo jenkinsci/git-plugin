@@ -2,6 +2,7 @@ package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -48,7 +49,7 @@ public class SubmoduleOption extends GitSCMExtension {
     }
 
     @Override
-    public void onClean(GitClient git) throws IOException, InterruptedException, GitException {
+    public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         if (!disableSubmodules && git.hasGitModules()) {
             git.submoduleClean(recursiveSubmodules);
         }

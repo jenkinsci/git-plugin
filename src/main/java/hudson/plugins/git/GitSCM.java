@@ -21,6 +21,7 @@ import hudson.scm.*;
 import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.util.IOException2;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -512,7 +513,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener, baseline);
         } catch (GitException e){
-            throw new IOException(e);
+            throw new IOException2(e);
         }
     }
 
@@ -887,7 +888,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 git.clean();
                 // TODO: revisit how to hand off to SubmoduleOption
                 for (GitSCMExtension ext : extensions) {
-                    ext.onClean(git);
+                    ext.onClean(this, git);
                 }
             }
         }
@@ -982,7 +983,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             git.clean();
             // TODO: revisit how to hand off to SubmoduleOption
             for (GitSCMExtension ext : extensions) {
-                ext.onClean(git);
+                ext.onClean(this, git);
             }
         }
 
@@ -1163,7 +1164,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         getDescriptor().populateEnvironmentVariables(env);
         for (GitSCMExtension ext : extensions) {
-            ext.populateEnvironmentVariables(env);
+            ext.populateEnvironmentVariables(this, env);
         }
     }
 
@@ -1541,7 +1542,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (GitSCMExtension ext : extensions) {
-            FilePath r = ext.getWorkingDirectory(context, workspace, environment, listener);
+            FilePath r = ext.getWorkingDirectory(this, context, workspace, environment, listener);
             if (r!=null)    return r;
         }
         return workspace;
@@ -1583,7 +1584,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
 
                 for (GitSCMExtension ext : extensions) {
-                    Boolean b = ext.isRevExcluded(git, change, listener, buildData);
+                    Boolean b = ext.isRevExcluded(this, git, change, listener, buildData);
                     if (b!=null)
                         return b;
                 }
