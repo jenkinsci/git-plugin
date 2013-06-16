@@ -817,19 +817,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         .format("Fetching changes from {0} remote Git repositories",
                                 repos.size()));
 
-            boolean fetched = false;
             for (RemoteConfig remoteRepository : repos) {
                 try {
-                    fetched |= fetchFrom(git, listener, remoteRepository);
+                    fetchFrom(git, listener, remoteRepository);
                 } catch (GitException e) {
-                    fetched |= false;
+                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
                 }
-            }
-
-            if (!fetched) {
-                listener.error("Could not fetch from any repository");
-                // Throw IOException so the retry will be able to catch it
-                throw new AbortException("Could not fetch from any repository");
             }
         } else {
             log.println("Cloning the remote Git repository");
