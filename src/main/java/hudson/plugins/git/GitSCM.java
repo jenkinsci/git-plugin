@@ -777,9 +777,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private @NonNull Revision determineRevisionToBuild(final AbstractBuild build,
+    /**
+     * Determines the commit to be built in this round, updating the working tree accordingly,
+     * and return the information about the selected commit.
+     *
+     * <p>
+     * For robustness, this method shouldn't assume too much about the state of the working tree when this method
+     * is called. In a general case, a working tree is a left-over from the previous build, so it can be quite
+     * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
+     * to the predictable clean state by the time this method returns.
+     */
+    private @NonNull Revision  determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
-                                              final List<RemoteConfig> repos,
                                               final EnvVars environment,
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
@@ -795,8 +804,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        final List<RemoteConfig> repos = getParamExpandedRepos(build);
         final PrintStream log = listener.getLogger();
 
         if (wipeOutWorkspace) {
@@ -809,9 +817,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (repos.size() == 1)
                 log.println("Fetching changes from the remote Git repository");
             else
-                log.println(MessageFormat
-                        .format("Fetching changes from {0} remote Git repositories",
-                                repos.size()));
+                log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
+
+            for (RemoteConfig remoteRepository : repos) {
+                try {
+                    fetchFrom(git, listener, remoteRepository);
+                } catch (GitException e) {
+                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
+                }
+            }
         } else {
             log.println("Cloning the remote Git repository");
             if(useShallowClone) {
@@ -838,14 +852,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Could not clone repository");
         }
 
-        for (RemoteConfig remoteRepository : repos) {
-            try {
-                fetchFrom(git, listener, remoteRepository);
-            } catch (GitException e) {
-                throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
-            }
-        }
-
         if (clean) {
             log.println("Cleaning workspace");
             git.clean();
@@ -860,9 +866,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (parentLastBuiltRev != null) {
             candidates = Collections.singleton(parentLastBuiltRev);
         } else {
+            final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
             if (rpa != null) {
                 candidates = Collections.singleton(rpa.toRevision(git));
             } else {
+                final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
                 candidates = buildChooser.getCandidateRevisions(
                         false, environment.expand( getSingleBranch(build) ), git, listener, buildData, context);
             }
@@ -914,7 +922,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final String paramLocalBranch = getParamLocalBranch(build);
-        final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
 
         final GitClient git = Git.with(listener, environment)
                 .in(workingDirectory)
@@ -922,7 +929,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 .getClient();
         GitUtils gu = new GitUtils(listener, git);
 
-        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, environment, git, listener);
+        final Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
