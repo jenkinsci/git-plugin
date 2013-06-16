@@ -935,7 +935,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        final Build b;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
             // Do we need to merge this revision onto MergeTarget
 
@@ -961,8 +960,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
 
-            Revision mergeRevision = gu.getRevisionForSHA1(target);
-            b = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
+            build.addAction(new MergeRecord(remoteBranchName,target.getName()));
         } else {
             // No merge
             // Straight compile-the-branch
@@ -970,10 +968,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-            b = new Build(revToBuild, buildNumber, null);
         }
 
-        buildData.saveBuild(b);
+        buildData.saveBuild(new Build(revToBuild, buildNumber, null));
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
 
