@@ -8,6 +8,11 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.Serializable;
 
+/**
+ * Remembers which build built which {@link Revision}.
+ *
+ * @see BuildData#buildsByBranchName
+ */
 @ExportedBean(defaultVisibility = 999)
 public class Build implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
