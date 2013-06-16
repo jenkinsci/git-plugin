@@ -40,7 +40,6 @@ import org.kohsuke.stapler.export.Exported;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
@@ -961,8 +960,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
 
-            updateSubmodules(listener, git, revToBuild);
-
             Revision mergeRevision = gu.getRevisionForSHA1(target);
             returnedBuildData = new MergeBuild(revToBuild, buildNumber, mergeRevision, null);
         } else {
@@ -972,15 +969,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
-            updateSubmodules(listener, git, revToBuild);
-
-            if (doGenerateSubmoduleConfigurations) {
-                SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, submoduleCfg);
-                combinator.createSubmoduleCombinations();
-            }
-
             returnedBuildData = new Build(revToBuild, buildNumber, null);
         }
+
+        buildData.saveBuild(returnedBuildData);
+        build.addAction(buildData);
+        build.addAction(new GitTagAction(build, buildData));
 
         computeChangeLog(git, revToBuild, listener, buildData, changelogFile, context);
 
@@ -988,20 +982,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.onCheckoutCompleted(this, build,launcher,git,listener);
         }
 
-        buildData.saveBuild(returnedBuildData);
-        build.addAction(buildData);
-        build.addAction(new GitTagAction(build, buildData));
-
         return true;
-    }
-
-    private void updateSubmodules(BuildListener listener, GitClient git, Revision revToBuild) {
-        if (!getDisableSubmodules() && git.hasGitModules()) {
-            // This ensures we don't miss changes to submodule paths and allows
-            // seamless use of bare and non-bare superproject repositories.
-            git.setupSubmoduleUrls(revToBuild, listener);
-            git.submoduleUpdate(getRecursiveSubmodules());
-        }
     }
 
     /**

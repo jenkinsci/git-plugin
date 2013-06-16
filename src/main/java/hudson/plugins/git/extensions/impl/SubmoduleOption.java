@@ -1,10 +1,16 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -52,6 +58,34 @@ public class SubmoduleOption extends GitSCMExtension {
     public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         if (!disableSubmodules && git.hasGitModules()) {
             git.submoduleClean(recursiveSubmodules);
+        }
+    }
+
+    @Override
+    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, Launcher launcher, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        BuildData revToBuild = scm.getBuildData(build, false);
+
+        if (!disableSubmodules && git.hasGitModules()) {
+            // This ensures we don't miss changes to submodule paths and allows
+            // seamless use of bare and non-bare superproject repositories.
+            git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+            git.submoduleUpdate(recursiveSubmodules);
+        }
+
+        if (scm.getDoGenerate()) {
+            /*
+                Kohsuke Note:
+
+                I could be wrong, but this feels like a totally wrong place to do this.
+                AFAICT, SubmoduleCombinator runs a lot of git-checkout and git-commit to
+                create new commits and branches. At the end of this, the working tree is
+                significantly altered, and HEAD no longer points to 'revToBuild'.
+
+                Custom BuildChooser is probably the right place to do this kind of stuff,
+                or maybe we can add a separate callback for GitSCMExtension.
+             */
+            SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
+            combinator.createSubmoduleCombinations();
         }
     }
 
