@@ -809,21 +809,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (git.hasGitRepo()) {
             // It's an update
-
             if (repos.size() == 1)
-                log.println("Fetching changes from 1 remote Git repository");
+                log.println("Fetching changes from the remote Git repository");
             else
                 log.println(MessageFormat
                         .format("Fetching changes from {0} remote Git repositories",
                                 repos.size()));
-
-            for (RemoteConfig remoteRepository : repos) {
-                try {
-                    fetchFrom(git, listener, remoteRepository);
-                } catch (GitException e) {
-                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
-                }
-            }
         } else {
             log.println("Cloning the remote Git repository");
             if(useShallowClone) {
@@ -846,30 +837,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            if (!successfullyCloned) {
-                listener.error("Could not clone repository");
-                // Throw IOException so the retry will be able to catch it
-                throw new IOException("Could not clone");
-            }
+            if (!successfullyCloned)
+                throw new AbortException("Could not clone repository");
+        }
 
-            boolean fetched = false;
-            for (RemoteConfig remoteRepository : repos) {
-                fetched |= fetchFrom(git, listener, remoteRepository);
+        for (RemoteConfig remoteRepository : repos) {
+            try {
+                fetchFrom(git, listener, remoteRepository);
+            } catch (GitException e) {
+                throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
             }
+        }
 
-            if (!fetched) {
-                listener.error("Could not fetch from any repository");
-                // Throw IOException so the retry will be able to catch it
-                throw new IOException("Could not fetch from any repository");
-            }
-
-            if (clean) {
-                log.println("Cleaning workspace");
-                git.clean();
-                // TODO: revisit how to hand off to SubmoduleOption
-                for (GitSCMExtension ext : extensions) {
-                    ext.onClean(this, git);
-                }
+        if (clean) {
+            log.println("Cleaning workspace");
+            git.clean();
+            // TODO: revisit how to hand off to SubmoduleOption
+            for (GitSCMExtension ext : extensions) {
+                ext.onClean(this, git);
             }
         }
 
@@ -890,7 +875,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             logger.println("No candidate revisions");
             return null;
         }
-
 
         if (candidates.size() > 1) {
             logger.println("Multiple candidate revisions");
