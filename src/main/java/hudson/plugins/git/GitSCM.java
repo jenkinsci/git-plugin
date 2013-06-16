@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
 import hudson.FilePath.FileCallable;
 import hudson.init.Initializer;
@@ -776,7 +777,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private Revision determineRevisionToBuild(final AbstractBuild build,
+    private @NonNull Revision determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final List<RemoteConfig> repos,
                                               final FilePath workingDirectory,
@@ -797,9 +798,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
-
-        final PrintStream logger = listener.getLogger();
-
         final PrintStream log = listener.getLogger();
 
         if (wipeOutWorkspace) {
@@ -818,7 +816,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } else {
             log.println("Cloning the remote Git repository");
             if(useShallowClone) {
-                logger.println("Using shallow clone");
+                log.println("Using shallow clone");
             }
 
             // Go through the repositories, trying to clone from one
@@ -872,17 +870,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         if (candidates.size() == 0) {
-            logger.println("No candidate revisions");
-            return null;
+            // getBuildCandidates should make the last item the last build, so a re-build
+            // will build the last built thing.
+            throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
         }
 
         if (candidates.size() > 1) {
-            logger.println("Multiple candidate revisions");
+            log.println("Multiple candidate revisions");
             AbstractProject<?, ?> project = build.getProject();
             if (!project.isDisabled()) {
-                logger.println("Scheduling another build to catch up with " + project.getFullDisplayName());
+                log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
                 if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
-                    logger.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+                    log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
                 }
             }
         }
@@ -926,12 +925,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
                 environment, git, listener);
-
-        if (revToBuild == null) {
-            // getBuildCandidates should make the last item the last build, so a re-build
-            // will build the last built thing.
-            throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
-        }
 
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
