@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
@@ -22,7 +21,6 @@ import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.util.DefaultBuildChooser;
@@ -37,7 +35,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
-import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -742,7 +739,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, null, null, false,
+                false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -772,7 +769,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, null, null, false,
+                false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -812,7 +809,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, null, null, false,
+                false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -851,7 +848,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, null, null, false,
+                false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -889,7 +886,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, null, null, false,
+                false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:

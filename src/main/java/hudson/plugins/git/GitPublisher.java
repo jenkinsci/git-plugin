@@ -207,22 +207,11 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                 tempEnvironment = new EnvVars();
             }
 
+            gitSCM.getDescriptor().populateEnvironmentVariables(tempEnvironment);
             for (GitSCMExtension ext : gitSCM.getExtensions()) {
                 ext.populateEnvironmentVariables(tempEnvironment);
             }
 
-            // TODO: these sections will move into another GitSCMExtension class
-            String confName = gitSCM.getGitConfigNameToUse();
-            if ((confName != null) && (!confName.equals(""))) {
-                tempEnvironment.put("GIT_COMMITTER_NAME", confName);
-                tempEnvironment.put("GIT_AUTHOR_NAME", confName);
-            }
-            String confEmail = gitSCM.getGitConfigEmailToUse();
-            if ((confEmail != null) && (!confEmail.equals(""))) {
-                tempEnvironment.put("GIT_COMMITTER_EMAIL", confEmail);
-                tempEnvironment.put("GIT_AUTHOR_EMAIL", confEmail);
-            }
-            
             final EnvVars environment = tempEnvironment;
             final FilePath workingDirectory = gitSCM.workingDirectory(build.getProject(),workspacePath,environment,listener);
 

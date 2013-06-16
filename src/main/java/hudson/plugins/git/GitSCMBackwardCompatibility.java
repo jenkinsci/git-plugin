@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.RelativePath;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
@@ -8,6 +9,7 @@ import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
+import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
 
@@ -77,8 +79,25 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient boolean recursiveSubmodules;
 
+    /**
+     * @deprecated
+     *      Moved to {@link UserIdentity}
+     */
+    private transient String gitConfigName;
+
+    /**
+     * @deprecated
+     *      Moved to {@link UserIdentity}
+     */
+    private transient String gitConfigEmail;
+
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl)super.getDescriptor();
+    }
 
     void readBackExtensionsFromLegacy() {
         try {
@@ -99,8 +118,13 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
-            if (disableSubmodules || recursiveSubmodules)
+            if (disableSubmodules || recursiveSubmodules) {
                 addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules));
+            }
+            if (gitConfigName!=null || gitConfigEmail!=null) {
+                addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
+                gitConfigName = gitConfigEmail = null;
+            }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
         }
@@ -172,6 +196,31 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         SubmoduleOption sm = getExtensions().get(SubmoduleOption.class);
         return sm != null && sm.isRecursiveSubmodules();
     }
+
+    @Deprecated
+    public String getGitConfigName() {
+        UserIdentity ui = getExtensions().get(UserIdentity.class);
+        return ui!=null ? ui.getName() : null;
+    }
+
+    @Deprecated
+    public String getGitConfigEmail() {
+        UserIdentity ui = getExtensions().get(UserIdentity.class);
+        return ui!=null ? ui.getEmail() : null;
+    }
+
+    public String getGitConfigNameToUse() {
+        String n = getGitConfigName();
+        if (n==null)    n = getDescriptor().getGlobalConfigName();
+        return n;
+    }
+
+    public String getGitConfigEmailToUse() {
+        String n = getGitConfigEmail();
+        if (n==null)    n = getDescriptor().getGlobalConfigEmail();
+        return n;
+    }
+
 
 
     private static final long serialVersionUID = 1L;

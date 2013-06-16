@@ -23,7 +23,6 @@
  */
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -35,14 +34,11 @@ import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.DefaultBuildChooser;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.eclipse.jgit.lib.Constants;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jvnet.hudson.test.Bug;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
@@ -109,7 +105,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null,
-                "integration", false, false, null, null, false,
+                "integration", false, false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         project.getPublishersList().add(new GitPublisher(

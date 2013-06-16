@@ -98,8 +98,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String reference;
-    private String gitConfigName;
-    private String gitConfigEmail;
     private String scmName;
 
     /**
@@ -136,7 +134,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
-                null, false, false, null, null, false, false, null);
+                null, false, false, false, false, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -157,8 +155,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String localBranch,
             boolean pruneBranches,
             boolean remotePoll,
-            String gitConfigName,
-            String gitConfigEmail,
             boolean ignoreNotifyCommit,
             boolean useShallowClone,
             List<GitSCMExtension> extensions) {
@@ -219,8 +215,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.remotePoll = remotePoll;
         }
 
-        this.gitConfigName = gitConfigName;
-        this.gitConfigEmail = gitConfigEmail;
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
     }
@@ -371,38 +365,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return browser;
     }
 
-    public String getGitConfigName() {
-        return gitConfigName;
-    }
-
-    public String getGitConfigEmail() {
-        return gitConfigEmail;
-    }
-
     public String getReference() {
         return reference;
     }
 
-    public String getGitConfigNameToUse() {
-        String confName = fixEmptyAndTrim(gitConfigName);
-        if (confName == null) {
-        	String globalConfigName = ((DescriptorImpl) getDescriptor()).getGlobalConfigName();
-        	confName = fixEmptyAndTrim(globalConfigName);
-        }
-        return confName;
-    }
-
-    public String getGitConfigEmailToUse() {
-        String confEmail = fixEmptyAndTrim(gitConfigEmail);
-        if (confEmail == null) {
-        	String globalConfigEmail = ((DescriptorImpl) getDescriptor()).getGlobalConfigEmail();
-        	confEmail = fixEmptyAndTrim(globalConfigEmail);
-        }
-        return confEmail;
-    }
-
     public boolean isCreateAccountBasedOnEmail() {
-        DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
+        DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
@@ -1208,22 +1176,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          }  
       }
 
+        getDescriptor().populateEnvironmentVariables(env);
         for (GitSCMExtension ext : extensions) {
             ext.populateEnvironmentVariables(env);
         }
-
-        // TODO: these sections will move into another GitSCMExtension class
-        String confName = getGitConfigNameToUse();
-        if ((confName != null) && (!confName.equals(""))) {
-            env.put("GIT_COMMITTER_NAME", confName);
-            env.put("GIT_AUTHOR_NAME", confName);
-        }
-        String confEmail = getGitConfigEmailToUse();
-        if ((confEmail != null) && (!confEmail.equals(""))) {
-            env.put("GIT_COMMITTER_EMAIL", confEmail);
-            env.put("GIT_AUTHOR_EMAIL", confEmail);
-        }
-
     }
 
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
@@ -1303,7 +1259,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Global setting to be used in call to "git config user.name".
          */
         public String getGlobalConfigName() {
-            return globalConfigName;
+            return fixEmptyAndTrim(globalConfigName);
         }
 
         public void setGlobalConfigName(String globalConfigName) {
@@ -1314,7 +1270,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Global setting to be used in call to "git config user.email".
          */
         public String getGlobalConfigEmail() {
-            return globalConfigEmail;
+            return fixEmptyAndTrim(globalConfigEmail);
         }
 
         public void setGlobalConfigEmail(String globalConfigEmail) {
@@ -1504,6 +1460,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             req.bindJSON(this, formData);
             save();
             return true;
+        }
+
+        /**
+         * Fill in the environment variables for launching git
+         */
+        public void populateEnvironmentVariables(Map<String,String> env) {
+            String name = getGlobalConfigName();
+            if (name!=null) {
+                env.put("GIT_COMMITTER_NAME", name);
+                env.put("GIT_AUTHOR_NAME", name);
+            }
+            String email = getGlobalConfigEmail();
+            if (email!=null) {
+                env.put("GIT_COMMITTER_EMAIL", email);
+                env.put("GIT_AUTHOR_EMAIL", email);
+            }
         }
     }
     private static final long serialVersionUID = 1L;
