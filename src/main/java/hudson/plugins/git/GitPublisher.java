@@ -199,13 +199,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         }
         else {
             final String gitExe = gitSCM.getGitExe(build.getBuiltOn(), listener);
-            EnvVars environment;
-            try {
-                environment = build.getEnvironment(listener);
-            } catch (IOException e) {
-                e.printStackTrace(listener.error("Failed to build up environment"));
-                environment = new EnvVars();
-            }
+            EnvVars environment = build.getEnvironment(listener);
 
             gitSCM.getDescriptor().populateEnvironmentVariables(environment);
             for (GitSCMExtension ext : gitSCM.getExtensions()) {
