@@ -90,8 +90,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  false,
 				  "repo0",
 				  null,
-				  false,
-				  false,
+                false,
                 false,
 				  false,
                   Collections.<GitSCMExtension>emptyList());
@@ -110,8 +109,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  false,
 				  "repo1",
 				  null,
-				  false,
-				  false,
+                false,
                 false,
 				  false,
                   Collections.<GitSCMExtension>emptyList());

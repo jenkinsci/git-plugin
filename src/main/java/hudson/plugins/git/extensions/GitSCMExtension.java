@@ -57,10 +57,11 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * See {@link SCM#checkout(AbstractBuild, Launcher, FilePath, BuildListener, File)} for the available parameters,
      * except {@code workingDirectory}
      *
+     * @param scm
      * @param git
      *
      */
-    public void onCheckoutCompleted(AbstractBuild<?,?> build, Launcher launcher, GitClient git, final BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, Launcher launcher, GitClient git, final BuildListener listener) throws IOException, InterruptedException, GitException {
     }
 
     /**

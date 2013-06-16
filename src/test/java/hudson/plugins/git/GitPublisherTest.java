@@ -105,7 +105,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null,
-                "integration", false, false, false,
+                "integration", false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         project.getPublishersList().add(new GitPublisher(

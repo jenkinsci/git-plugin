@@ -739,7 +739,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, false,
+                false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -769,7 +769,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, false,
+                false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -809,7 +809,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, false,
+                false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -848,7 +848,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, false,
+                false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -886,7 +886,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, true, null, null,
-                false, false, false,
+                false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:

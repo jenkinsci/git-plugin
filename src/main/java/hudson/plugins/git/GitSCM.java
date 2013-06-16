@@ -85,7 +85,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean authorOrCommitter;
     private boolean clean;
     private boolean wipeOutWorkspace;
-    private boolean pruneBranches;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
     private boolean useShallowClone;
@@ -134,7 +133,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
-                null, false, false, false, false, null);
+                null, false, false, false, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -153,7 +152,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             boolean authorOrCommitter,
             String reference,
             String localBranch,
-            boolean pruneBranches,
             boolean remotePoll,
             boolean ignoreNotifyCommit,
             boolean useShallowClone,
@@ -198,7 +196,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.reference = reference;
-        this.pruneBranches = pruneBranches;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
         this.useShallowClone = useShallowClone;
         if (remotePoll
@@ -372,10 +369,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
-    }
-
-    public boolean getPruneBranches() {
-        return this.pruneBranches;
     }
 
     public boolean getRemotePoll() {
@@ -852,14 +845,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 // Throw IOException so the retry will be able to catch it
                 throw new IOException("Could not fetch from any repository");
             }
-            // Do we want to prune first?
-            if (pruneBranches) {
-                log.println("Pruning obsolete local branches");
-                for (RemoteConfig remoteRepository : repos) {
-                    git.prune(remoteRepository);
-                }
-            }
-
         } else {
 
             log.println("Cloning the remote Git repository");
@@ -1056,7 +1041,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (GitSCMExtension ext : extensions) {
-            ext.onCheckoutCompleted(build,launcher,git,listener);
+            ext.onCheckoutCompleted(this, build,launcher,git,listener);
         }
 
         buildData.saveBuild(returnedBuildData);

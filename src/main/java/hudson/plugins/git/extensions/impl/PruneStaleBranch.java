@@ -8,29 +8,36 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 
 /**
- * Tags every build.
+ * Prune stale remote-tracking branches
  *
+ * @author Andrew Bayer
  * @author Kohsuke Kawaguchi
  */
-public class PerBuildTag extends GitSCMExtension {
+public class PruneStaleBranch extends GitSCMExtension {
+    @DataBoundConstructor
+    public PruneStaleBranch() {
+    }
+
     @Override
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, Launcher launcher, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
-        int buildNumber = build.getNumber();
-        String buildnumber = "jenkins-" + build.getProject().getName().replace(" ", "_") + "-" + buildNumber;
-
-        git.tag(buildnumber, "Jenkins Build #" + buildNumber);
+        listener.getLogger().println("Pruning obsolete local branches");
+        for (RemoteConfig remoteRepository : scm.getRepositories()) {
+            git.prune(remoteRepository);
+        }
     }
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Create a tag for every build";
+            return "Prune stale remote-tracking branches";
         }
     }
 }

@@ -6,6 +6,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
+import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
@@ -91,6 +92,11 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient String gitConfigEmail;
 
+    /**
+     * @deprecated
+     *      Moved to {@link PruneStaleBranch}
+     */
+    private transient boolean pruneBranches;
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
@@ -105,7 +111,6 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new UserExclusion(excludedUsers));
                 excludedUsers = null;
             }
-
             if (excludedRegions!=null || includedRegions!=null) {
                 addIfMissing(new PathRestriction(includedRegions, excludedRegions));
                 excludedRegions = includedRegions = null;
@@ -124,6 +129,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (gitConfigName!=null || gitConfigEmail!=null) {
                 addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
                 gitConfigName = gitConfigEmail = null;
+            }
+            if (pruneBranches) {
+                addIfMissing(new PruneStaleBranch());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -209,16 +217,22 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         return ui!=null ? ui.getEmail() : null;
     }
 
+    @Deprecated
     public String getGitConfigNameToUse() {
         String n = getGitConfigName();
         if (n==null)    n = getDescriptor().getGlobalConfigName();
         return n;
     }
 
+    @Deprecated
     public String getGitConfigEmailToUse() {
         String n = getGitConfigEmail();
         if (n==null)    n = getDescriptor().getGlobalConfigEmail();
         return n;
+    }
+
+    public boolean getPruneBranches() {
+        return this.pruneBranches;
     }
 
 
