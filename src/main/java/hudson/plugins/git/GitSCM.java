@@ -876,7 +876,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, environment, git, listener);
         Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
-        listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
@@ -890,10 +889,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        final String paramLocalBranch = getParamLocalBranch(build);
         listener.getLogger().println("Checking out " + revToBuild);
-
-        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
+        git.checkoutBranch(getParamLocalBranch(build), revToBuild.getSha1String());
 
         buildData.saveBuild(new Build(revToBuild, build.getNumber(), null));
         build.addAction(new GitTagAction(build, buildData));
