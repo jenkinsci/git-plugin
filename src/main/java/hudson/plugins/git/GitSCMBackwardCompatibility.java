@@ -13,6 +13,7 @@ import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.extensions.impl.UserIdentity;
+import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
@@ -120,6 +121,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient boolean clean;
 
+    /**
+     * @deprecated
+     *      Moved to {@link WipeWorkspace}
+     */
+    private boolean wipeOutWorkspace;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -166,6 +173,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (clean) {
                 addIfMissing(new CleanCheckout());
+            }
+            if (wipeOutWorkspace) {
+                addIfMissing(new WipeWorkspace());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -284,6 +294,13 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         return getExtensions().contains(CleanCheckout.class);
     }
 
+    /**
+     * @deprecated
+     *      Moved to {@link WipeWorkspace}
+     */
+    public boolean getWipeOutWorkspace() {
+        return getExtensions().contains(WipeWorkspace.class);
+    }
 
     private static final long serialVersionUID = 1L;
 }

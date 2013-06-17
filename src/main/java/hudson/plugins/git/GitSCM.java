@@ -87,7 +87,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
-    private boolean wipeOutWorkspace;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
     private boolean useShallowClone;
@@ -188,7 +187,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         this.submoduleCfg = submoduleCfg;
 
-        this.wipeOutWorkspace = wipeOutWorkspace;
         this.configVersion = 2L;
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
@@ -345,10 +343,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public boolean getRemotePoll() {
         return this.remotePoll;
-    }
-
-    public boolean getWipeOutWorkspace() {
-        return this.wipeOutWorkspace;
     }
 
     public boolean isIgnoreNotifyCommit() {
@@ -607,7 +601,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private boolean fetchFrom(GitClient git,
             TaskListener listener,
-            RemoteConfig remoteRepository) {
+            RemoteConfig remoteRepository) throws InterruptedException {
         String name = remoteRepository.getName();
         try {
             // Assume there is only 1 URL / refspec for simplicity
@@ -803,10 +797,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private void retrieveChanges(AbstractBuild build, EnvVars environment, GitClient git, BuildListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
-        if (wipeOutWorkspace) {
-            log.println("Wiping out workspace first.");
-            git.getWorkTree().deleteContents();
-        }
 
         final List<RemoteConfig> repos = getParamExpandedRepos(build);
         if (git.hasGitRepo()) {
@@ -865,6 +855,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         EnvVars environment = build.getEnvironment(listener);
         GitClient git = createClient(listener,environment,build);
+
+        for (GitSCMExtension ext : extensions) {
+            ext.beforeCheckout(this, build, git,listener);
+        }
 
         retrieveChanges(build, environment, git, listener);
         Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);

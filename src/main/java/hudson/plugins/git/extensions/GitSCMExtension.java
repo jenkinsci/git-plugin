@@ -90,6 +90,12 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     }
 
     /**
+     * Called before the checkout activity (including fetch and checkout) starts.
+     */
+    public void beforeCheckout(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    }
+
+    /**
      * Called when the checkout was completed and the working directory is filled with files.
      *
      * See {@link SCM#checkout(AbstractBuild, Launcher, FilePath, BuildListener, File)} for the available parameters,
