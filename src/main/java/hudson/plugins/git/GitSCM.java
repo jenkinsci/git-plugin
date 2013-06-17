@@ -786,18 +786,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final EnvVars environment,
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
-        Revision parentLastBuiltRev = null;
-
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    parentLastBuiltRev = parentBuildData.getLastBuiltRevision();
-                }
-            }
-        }
-
         final List<RemoteConfig> repos = getParamExpandedRepos(build);
         final PrintStream log = listener.getLogger();
 
@@ -846,20 +834,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Could not clone repository");
         }
 
-        Collection<Revision> candidates;
-
-        if (parentLastBuiltRev != null) {
-            candidates = Collections.singleton(parentLastBuiltRev);
-        } else {
-            final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
-            if (rpa != null) {
-                candidates = Collections.singleton(rpa.toRevision(git));
-            } else {
-                final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
-                candidates = buildChooser.getCandidateRevisions(
-                        false, environment.expand( getSingleBranch(build) ), git, listener, buildData, context);
+        // every MatrixRun should build the exact same commit ID
+        if (build instanceof MatrixRun) {
+            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
+            if (parentBuild != null) {
+                BuildData parentBuildData = getBuildData(parentBuild);
+                if (parentBuildData != null) {
+                    return parentBuildData.getLastBuiltRevision();
+                }
             }
         }
+
+        // parameter forcing the commit ID to build
+        final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
+        if (rpa != null)
+            return rpa.toRevision(git);
+
+
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        Collection<Revision> candidates = buildChooser.getCandidateRevisions(
+                false, environment.expand( getSingleBranch(build) ), git, listener, buildData, context);
 
         if (candidates.size() == 0) {
             // getBuildCandidates should make the last item the last build, so a re-build
