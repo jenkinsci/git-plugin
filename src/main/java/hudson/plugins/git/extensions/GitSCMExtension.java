@@ -85,7 +85,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *      The revision selected for this build. Unless you are decorating the given {@code rev}, return the value
      *      given in the {@code rev} parameter.
      */
-    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision rev) {
+    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException, GitException {
         return rev;
     }
 

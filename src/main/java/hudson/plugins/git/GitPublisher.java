@@ -15,6 +15,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Result;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
@@ -224,6 +225,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                         //git.push(null);
                     }
+                } catch (FormException e) {
+                    e.printStackTrace(listener.error("Failed to push merge to origin repository"));
+                    return false;
                 } catch (GitException e) {
                     e.printStackTrace(listener.error("Failed to push merge to origin repository"));
                     return false;

@@ -6,13 +6,16 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.extensions.impl.UserIdentity;
+import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
+import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -98,6 +101,18 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient boolean pruneBranches;
 
+    /**
+     * @deprecated
+     *      Moved to {@link PreBuildMerge}
+     */
+    private transient UserMergeOptions userMergeOptions;
+
+    /**
+     * @deprecated
+     *      Moved to {@link PreBuildMerge}. This predates {@link UserMergeOptions}
+     */
+    private transient PreBuildMergeOptions mergeOptions;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -132,6 +147,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (pruneBranches) {
                 addIfMissing(new PruneStaleBranch());
+            }
+            if (mergeOptions != null && mergeOptions.doMerge()) {
+                // update from version 1
+                getExtensions().replace(new PreBuildMerge(new UserMergeOptions(mergeOptions)));
+                mergeOptions = null;
+            }
+            if (userMergeOptions!=null) {
+                addIfMissing(new PreBuildMerge(userMergeOptions));
+                userMergeOptions = null;
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -190,7 +214,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     @Deprecated
     public boolean getSkipTag() {
-        return getExtensions().get(PerBuildTag.class)==null;
+        return getExtensions().contains(PerBuildTag.class);
     }
 
     @Deprecated
@@ -231,10 +255,16 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         return n;
     }
 
+    @Deprecated
     public boolean getPruneBranches() {
-        return this.pruneBranches;
+        return getExtensions().contains(PruneStaleBranch.class);
     }
 
+    @Deprecated
+    public UserMergeOptions getUserMergeOptions() {
+        PreBuildMerge m = getExtensions().get(PreBuildMerge.class);
+        return m!=null ? m.getOptions() : null;
+    }
 
 
     private static final long serialVersionUID = 1L;

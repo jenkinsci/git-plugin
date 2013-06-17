@@ -119,7 +119,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                 null,
                 createRemoteRepositories(),
                 branches,
-                null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, null,
                 localBranch, fastRemotePoll, false,

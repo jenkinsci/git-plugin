@@ -13,6 +13,7 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -80,11 +81,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Optional local branch to work on.
      */
     private String localBranch;
-    /**
-     * Options for merging before a build.
-     */
-    private UserMergeOptions userMergeOptions;
-    private transient PreBuildMergeOptions mergeOptions;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
     private boolean clean;
@@ -133,7 +129,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 null,
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
-                null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
@@ -146,7 +141,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String scmName,
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
-            UserMergeOptions userMergeOptions,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
             boolean clean,
@@ -175,7 +169,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.localBranch = Util.fixEmptyAndTrim(localBranch);
 
         this.userRemoteConfigs = userRemoteConfigs;
-        this.userMergeOptions = userMergeOptions;
         updateFromUserData();
 
         // TODO: getBrowserFromRequest
@@ -248,20 +241,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (IOException e1) {
             throw new GitException("Error creating repositories", e1);
         }
-
-        try {
-            this.mergeOptions = DescriptorImpl.createMergeOptions(userMergeOptions, remoteRepositories);
-
-            // replace with new merge options
-            if (userMergeOptions != null) {
-                this.userMergeOptions = new UserMergeOptions(userMergeOptions.getMergeRemote(), userMergeOptions.getMergeTarget());
-            }
-        } catch (FormException ex) {
-            throw new GitException("Error creating JGit merge options", ex);
-        }
     }
 
-    public Object readResolve() {
+    public Object readResolve() throws IOException {
         // Migrate data
 
         // Default unspecified to v0
@@ -274,7 +256,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             remoteRepositories = new ArrayList<RemoteConfig>();
             branches = new ArrayList<BranchSpec>();
             doGenerateSubmoduleConfigurations = false;
-            mergeOptions = new PreBuildMergeOptions();
 
             remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*")));
             if (branch != null) {
@@ -292,15 +273,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String name = branchSpec.getName();
                 name = name.replace("*", "**");
                 branchSpec.setName(name);
-            }
-        }
-
-        // update from version 1
-        if (mergeOptions != null && userMergeOptions == null) {
-            // update from version 1
-            if (mergeOptions.doMerge()) {
-                userMergeOptions = new UserMergeOptions(mergeOptions.getRemoteBranchName(),
-                        mergeOptions.getMergeTarget());
             }
         }
 
@@ -322,18 +294,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // patch internal objects from user data
         // if (configVersion == 2) {
-        if (remoteRepositories == null || mergeOptions == null) {
+        if (remoteRepositories == null) {
             // if we don't catch GitException here, the whole job fails to load
             try {
                 updateFromUserData();
             } catch (GitException e) {
                 LOGGER.log(Level.WARNING, "Failed to load SCM data", e);
-                mergeOptions = new PreBuildMergeOptions();
             }
-        }
-
-        if (mergeOptions.doMerge() && mergeOptions.getMergeRemote() == null) {
-            mergeOptions.setMergeRemote(remoteRepositories.get(0));
         }
 
         if (choosingStrategy != null && buildChooser == null) {
@@ -449,7 +416,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return gitTool;
     }
 
-    private String getParameterString(String original, AbstractBuild<?, ?> build) {
+    public static String getParameterString(String original, AbstractBuild<?, ?> build) {
         ParametersAction parameters = build.getAction(ParametersAction.class);
         if (parameters != null) {
             original = parameters.substitute(build, original);
@@ -894,6 +861,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
         BuildData buildData = copyBuildData(build.getPreviousBuild());
+        build.addAction(buildData);
         if (VERBOSE && buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
@@ -909,8 +877,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
-        String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
-
         if (clean) {
             listener.getLogger().println("Cleaning workspace");
             git.clean();
@@ -921,43 +887,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final String paramLocalBranch = getParamLocalBranch(build);
-        if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
-            // Do we need to merge this revision onto MergeTarget
+        listener.getLogger().println("Checking out " + revToBuild);
 
-            // Only merge if there's a branch to merge that isn't us..
-            listener.getLogger().println("Merging " + revToBuild + " onto " + getParameterString(mergeOptions.getMergeTarget(), build));
-
-            // checkout origin/blah
-            ObjectId target = git.revParse(remoteBranchName);
-
-            git.checkoutBranch(paramLocalBranch, remoteBranchName);
-
-            try {
-                git.merge(revToBuild.getSha1());
-            } catch (GitException ex) {
-                // We still need to tag something to prevent
-                // repetitive builds from happening - tag the
-                // candidate branch.
-                git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
-
-                // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
-                buildData.saveBuild(new Build(revToBuild, build.getNumber(), Result.FAILURE));
-                build.addAction(buildData);
-                throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
-            }
-
-            build.addAction(new MergeRecord(remoteBranchName,target.getName()));
-        } else {
-            // No merge
-            // Straight compile-the-branch
-            listener.getLogger().println("Checking out " + revToBuild);
-
-            git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
-
-        }
+        git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
         buildData.saveBuild(new Build(revToBuild, build.getNumber(), null));
-        build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
 
         computeChangeLog(git, revToBuild, listener, buildData, new FilePath(changelogFile),
@@ -1378,13 +1312,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return branches;
     }
 
+    /**
+     * Use {@link PreBuildMerge}.
+     */
     @Exported
-    public PreBuildMergeOptions getMergeOptions() {
-        return mergeOptions;
-    }
-
-    public UserMergeOptions getUserMergeOptions() {
-        return userMergeOptions;
+    @Deprecated
+    public PreBuildMergeOptions getMergeOptions() throws FormException {
+        return DescriptorImpl.createMergeOptions(getUserMergeOptions(), remoteRepositories);
     }
 
     private boolean isRelevantBuildData(BuildData bd) {
