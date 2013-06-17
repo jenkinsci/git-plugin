@@ -35,7 +35,6 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
@@ -899,10 +898,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final FilePath changelogFile = new FilePath(_changelogFile);
 
-        listener.getLogger().println("Checkout:" + workspace.getName() + " / " + workspace.getRemote() + " - " + workspace.getChannel());
-        listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
-
-        final int buildNumber = build.getNumber();
+        if (VERBOSE)
+            listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
         final BuildData buildData = copyBuildData(build.getPreviousBuild());
 
@@ -913,7 +910,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String paramLocalBranch = getParamLocalBranch(build);
 
         final GitClient git = createClient(listener,environment,build);
-        GitUtils gu = new GitUtils(listener, git);
 
         final Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
@@ -921,8 +917,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
-
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
         final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
 
@@ -955,7 +949,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
                 // return a failed build, so that it can be properly registered before throwing (else serialization error on slave)
-                buildData.saveBuild(new Build(revToBuild, buildNumber, Result.FAILURE));
+                buildData.saveBuild(new Build(revToBuild, build.getNumber(), Result.FAILURE));
                 build.addAction(buildData);
                 throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
             }
@@ -970,11 +964,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         }
 
-        buildData.saveBuild(new Build(revToBuild, buildNumber, null));
+        buildData.saveBuild(new Build(revToBuild, build.getNumber(), null));
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
 
-        computeChangeLog(git, revToBuild, listener, buildData, changelogFile, context);
+        computeChangeLog(git, revToBuild, listener, buildData, changelogFile,
+                new BuildChooserContextImpl(build.getProject(),build));
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build,launcher,git,listener);

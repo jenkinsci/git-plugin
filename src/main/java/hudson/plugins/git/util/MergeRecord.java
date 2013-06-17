@@ -27,4 +27,12 @@ public class MergeRecord extends InvisibleAction {
         this.branch = branch;
         this.sha1 = sha1;
     }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public String getSha1() {
+        return sha1;
+    }
 }
