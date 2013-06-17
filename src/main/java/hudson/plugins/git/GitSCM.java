@@ -846,15 +846,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Could not clone repository");
         }
 
-        if (clean) {
-            log.println("Cleaning workspace");
-            git.clean();
-            // TODO: revisit how to hand off to SubmoduleOption
-            for (GitSCMExtension ext : extensions) {
-                ext.onClean(this, git);
-            }
-        }
-
         Collection<Revision> candidates;
 
         if (parentLastBuiltRev != null) {
