@@ -781,7 +781,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Revision  determineRevisionToBuild(final AbstractBuild build,
+    private @NonNull Revision determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
@@ -825,7 +825,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
         }
-        return candidates.iterator().next();
+        Revision rev = candidates.iterator().next();
+        for (GitSCMExtension ext : extensions) {
+            rev = ext.decorateRevisionToBuild(this,build,git,listener,rev);
+        }
+        return rev;
     }
 
     /**
@@ -960,7 +964,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 new BuildChooserContextImpl(build.getProject(),build));
 
         for (GitSCMExtension ext : extensions) {
-            ext.onCheckoutCompleted(this, build,launcher,git,listener);
+            ext.onCheckoutCompleted(this, build, git,listener);
         }
 
         return true;
