@@ -786,53 +786,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final EnvVars environment,
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
-        final List<RemoteConfig> repos = getParamExpandedRepos(build);
-        final PrintStream log = listener.getLogger();
-
-        if (wipeOutWorkspace) {
-            log.println("Wiping out workspace first.");
-            git.getWorkTree().deleteContents();
-        }
-
-        if (git.hasGitRepo()) {
-            // It's an update
-            if (repos.size() == 1)
-                log.println("Fetching changes from the remote Git repository");
-            else
-                log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
-
-            for (RemoteConfig remoteRepository : repos) {
-                try {
-                    fetchFrom(git, listener, remoteRepository);
-                } catch (GitException e) {
-                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
-                }
-            }
-        } else {
-            log.println("Cloning the remote Git repository");
-            if(useShallowClone) {
-                log.println("Using shallow clone");
-            }
-
-            // Go through the repositories, trying to clone from one
-            //
-            boolean successfullyCloned = false;
-            for (RemoteConfig rc : repos) {
-            	final String expandedReference = environment.expand(reference);
-                try {
-                    git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
-                    successfullyCloned = true;
-                    break;
-                } catch (GitException ex) {
-                    ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
-                    // Failed. Try the next one
-                    log.println("Trying next repository");
-                }
-            }
-
-            if (!successfullyCloned)
-                throw new AbortException("Could not clone repository");
-        }
+        PrintStream log = listener.getLogger();
 
         // every MatrixRun should build the exact same commit ID
         if (build instanceof MatrixRun) {
@@ -874,36 +828,84 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return candidates.iterator().next();
     }
 
+    /**
+     * Retrieve Git objects from the specified remotes by doing the likes of clone/fetch/pull/etc.
+     *
+     * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
+     */
+    private void retrieveChanges(AbstractBuild build, EnvVars environment, GitClient git, BuildListener listener) throws IOException, InterruptedException {
+        final PrintStream log = listener.getLogger();
+        if (wipeOutWorkspace) {
+            log.println("Wiping out workspace first.");
+            git.getWorkTree().deleteContents();
+        }
+
+        final List<RemoteConfig> repos = getParamExpandedRepos(build);
+        if (git.hasGitRepo()) {
+            // It's an update
+            if (repos.size() == 1)
+                log.println("Fetching changes from the remote Git repository");
+            else
+                log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
+
+            for (RemoteConfig remoteRepository : repos) {
+                try {
+                    fetchFrom(git, listener, remoteRepository);
+                } catch (GitException e) {
+                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
+                }
+            }
+        } else {
+            log.println("Cloning the remote Git repository");
+            if(useShallowClone) {
+                log.println("Using shallow clone");
+            }
+
+            // Go through the repositories, trying to clone from one
+            //
+            boolean successfullyCloned = false;
+            for (RemoteConfig rc : repos) {
+            	final String expandedReference = environment.expand(reference);
+                try {
+                    git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
+                    successfullyCloned = true;
+                    break;
+                } catch (GitException ex) {
+                    ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
+                    // Failed. Try the next one
+                    log.println("Trying next repository");
+                }
+            }
+
+            if (!successfullyCloned)
+                throw new AbortException("Could not clone repository");
+        }
+    }
+
     @Override
-    public boolean checkout(final AbstractBuild build, Launcher launcher,
-            final FilePath workspace, final BuildListener listener, File _changelogFile)
+    public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile)
             throws IOException, InterruptedException {
-
-        final EnvVars environment = build.getEnvironment(listener);
-
-        final FilePath changelogFile = new FilePath(_changelogFile);
 
         if (VERBOSE)
             listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
-        final BuildData buildData = copyBuildData(build.getPreviousBuild());
-
+        BuildData buildData = copyBuildData(build.getPreviousBuild());
         if (VERBOSE && buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String paramLocalBranch = getParamLocalBranch(build);
+        EnvVars environment = build.getEnvironment(listener);
+        GitClient git = createClient(listener,environment,build);
 
-        final GitClient git = createClient(listener,environment,build);
-
-        final Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+        retrieveChanges(build, environment, git, listener);
+        Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
 
-        final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
+        String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
 
         if (clean) {
             listener.getLogger().println("Cleaning workspace");
@@ -914,6 +916,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
+        final String paramLocalBranch = getParamLocalBranch(build);
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
             // Do we need to merge this revision onto MergeTarget
 
@@ -953,7 +956,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
 
-        computeChangeLog(git, revToBuild, listener, buildData, changelogFile,
+        computeChangeLog(git, revToBuild, listener, buildData, new FilePath(changelogFile),
                 new BuildChooserContextImpl(build.getProject(),build));
 
         for (GitSCMExtension ext : extensions) {
