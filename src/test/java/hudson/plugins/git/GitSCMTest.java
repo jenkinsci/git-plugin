@@ -736,7 +736,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
@@ -765,7 +765,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
@@ -804,7 +804,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
@@ -842,7 +842,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 false, false,
                 false, Collections.<GitSCMExtension>emptyList()));
@@ -879,7 +879,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 false, false,
                 false, Collections.<GitSCMExtension>emptyList()));

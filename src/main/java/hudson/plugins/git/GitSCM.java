@@ -87,7 +87,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
-    private boolean clean;
     private boolean wipeOutWorkspace;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
@@ -133,7 +132,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 null,
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, false,
                 null,
                 null, false, false, false, null);
@@ -147,7 +146,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            boolean clean,
             boolean wipeOutWorkspace,
             BuildChooser buildChooser, GitRepositoryBrowser browser,
             String gitTool,
@@ -190,7 +188,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         this.submoduleCfg = submoduleCfg;
 
-        this.clean = clean;
         this.wipeOutWorkspace = wipeOutWorkspace;
         this.configVersion = 2L;
         this.gitTool = gitTool;
@@ -352,10 +349,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public boolean getWipeOutWorkspace() {
         return this.wipeOutWorkspace;
-    }
-
-    public boolean getClean() {
-        return this.clean;
     }
 
     public boolean isIgnoreNotifyCommit() {
@@ -879,15 +872,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
         Branch branch = revToBuild.getBranches().iterator().next();
         environment.put(GIT_BRANCH, branch.getName());
-
-        if (clean) {
-            listener.getLogger().println("Cleaning workspace");
-            git.clean();
-            // TODO: revisit how to hand off to SubmoduleOption
-            for (GitSCMExtension ext : extensions) {
-                ext.onClean(this, git);
-            }
-        }
 
         listener.getLogger().println("Checking out " + revToBuild);
         git.checkoutBranch(getParamLocalBranch(build), revToBuild.getSha1String());

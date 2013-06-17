@@ -4,6 +4,7 @@ import hudson.RelativePath;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -113,6 +114,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient PreBuildMergeOptions mergeOptions;
 
+    /**
+     * @deprecated
+     *      Moved to {@link CleanCheckout}
+     */
+    private transient boolean clean;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -156,6 +163,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (userMergeOptions!=null) {
                 addIfMissing(new PreBuildMerge(userMergeOptions));
                 userMergeOptions = null;
+            }
+            if (clean) {
+                addIfMissing(new CleanCheckout());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -264,6 +274,14 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     public UserMergeOptions getUserMergeOptions() {
         PreBuildMerge m = getExtensions().get(PreBuildMerge.class);
         return m!=null ? m.getOptions() : null;
+    }
+
+    /**
+     * @deprecated
+     *      Moved to {@link CleanCheckout}
+     */
+    public boolean getClean() {
+        return getExtensions().contains(CleanCheckout.class);
     }
 
 

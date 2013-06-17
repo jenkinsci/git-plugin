@@ -126,7 +126,7 @@ public class GitStatusTest extends HudsonTestCase {
                 null,
                 Collections.singletonList(new UserRemoteConfig(url, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
+                false, Collections.<SubmoduleConfig>emptyList(),
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
                 false, ignoreNotifyCommit, false, Collections.<GitSCMExtension>emptyList()));
