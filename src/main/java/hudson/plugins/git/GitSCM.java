@@ -60,6 +60,10 @@ import static hudson.scm.PollingResult.*;
  * Git SCM.
  *
  * @author Nigel Magnay
+ * @author Andrew Bayer
+ * @author Nicolas Deloof
+ * @author Kohsuke Kawaguchi
+ * ... and many others
  */
 public class GitSCM extends GitSCMBackwardCompatibility {
 
