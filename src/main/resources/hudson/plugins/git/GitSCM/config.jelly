@@ -101,12 +101,6 @@
   </f:entry>
      -->
 
-    <f:entry title="Skip internal tag" field="skipTag">
-      <f:checkbox />
-    </f:entry>
-    <f:entry title="Clean after checkout" field="clean">
-      <f:checkbox />
-    </f:entry>
     <f:entry title="Fast remote polling" field="remotePoll">
       <f:checkbox/>
     </f:entry>
