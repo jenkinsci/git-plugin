@@ -5,6 +5,7 @@ import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
+import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -125,7 +126,19 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      * @deprecated
      *      Moved to {@link WipeWorkspace}
      */
-    private boolean wipeOutWorkspace;
+    private transient boolean wipeOutWorkspace;
+
+    /**
+     * @deprecated
+     *      Moved to {@link CloneOption}
+     */
+    private transient boolean useShallowClone;
+
+    /**
+     * @deprecated
+     *      Moved to {@link CloneOption}
+     */
+    private transient String reference;
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
@@ -301,6 +314,25 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     public boolean getWipeOutWorkspace() {
         return getExtensions().contains(WipeWorkspace.class);
     }
+
+    /**
+     * @deprecated
+     *      Moved to {@link CloneOption}
+     */
+    public boolean getUseShallowClone() {
+        CloneOption m = getExtensions().get(CloneOption.class);
+    	return m!=null && m.isShallow();
+    }
+
+    /**
+     * @deprecated
+     *      Moved to {@link CloneOption}
+     */
+    public String getReference() {
+        CloneOption m = getExtensions().get(CloneOption.class);
+        return m!=null ? m.getReference() : null;
+    }
+
 
     private static final long serialVersionUID = 1L;
 }

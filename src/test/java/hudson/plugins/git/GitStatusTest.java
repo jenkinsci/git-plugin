@@ -127,9 +127,9 @@ public class GitStatusTest extends HudsonTestCase {
                 Collections.singletonList(new UserRemoteConfig(url, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, false, null,
+                new DefaultBuildChooser(), null, null, false,
                 null,
-                false, ignoreNotifyCommit, false, Collections.<GitSCMExtension>emptyList()));
+                false, ignoreNotifyCommit, Collections.<GitSCMExtension>emptyList()));
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;

@@ -737,9 +737,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, true, null, null,
+                new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                false, Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -766,9 +766,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, true, null, null,
+                new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                false, Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -805,9 +805,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, true, null, null,
+                new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                false, Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -843,9 +843,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, true, null, null,
+                new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                false, Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -880,9 +880,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, true, null, null,
+                new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                false, Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");

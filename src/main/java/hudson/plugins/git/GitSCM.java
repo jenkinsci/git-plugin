@@ -90,7 +90,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean authorOrCommitter;
     private boolean remotePoll;
     private boolean ignoreNotifyCommit;
-    private boolean useShallowClone;
 
     private BuildChooser buildChooser;
     public String gitTool = null;
@@ -99,7 +98,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
-    private String reference;
     private String scmName;
 
     /**
@@ -133,9 +131,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                false, new DefaultBuildChooser(), null, null, false,
-                null,
-                null, false, false, false, null);
+                new DefaultBuildChooser(), null, null, false,
+                null, false, false, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -146,15 +143,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            boolean wipeOutWorkspace,
             BuildChooser buildChooser, GitRepositoryBrowser browser,
             String gitTool,
             boolean authorOrCommitter,
-            String reference,
             String localBranch,
             boolean remotePoll,
             boolean ignoreNotifyCommit,
-            boolean useShallowClone,
             List<GitSCMExtension> extensions) {
 
         this.scmName = scmName;
@@ -192,9 +186,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.gitTool = gitTool;
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
-        this.reference = reference;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
-        this.useShallowClone = useShallowClone;
         if (remotePoll
             && (branches.size() != 1
             || branches.get(0).getName().contains("*")
@@ -333,10 +325,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return browser;
     }
 
-    public String getReference() {
-        return reference;
-    }
-
     public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
@@ -350,10 +338,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return ignoreNotifyCommit;
     }
     
-    public boolean getUseShallowClone() {
-    	return useShallowClone;
-    }
-
     public BuildChooser getBuildChooser() {
         return buildChooser;
     }
@@ -816,11 +800,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             repos = repos.subList(1,repos.size());
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
-                if (useShallowClone) {
-                    log.println("Using shallow clone");
-                    cmd.shallow();
-                }
-                cmd.reference(environment.expand(reference));
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
                 }

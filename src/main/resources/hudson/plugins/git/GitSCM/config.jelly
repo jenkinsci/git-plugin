@@ -69,9 +69,6 @@
     <f:entry title="Checkout/merge to local branch (optional)" field="localBranch">
       <f:textbox />
     </f:entry>
-    <f:entry title="Path of the reference repo to use during clone (optional)" field="reference">
-      <f:textbox/>
-    </f:entry>
    <f:entry title="Unique SCM name (optional)" field="scmName">
         <f:textbox />
    </f:entry>
@@ -117,10 +114,6 @@
       <f:checkbox />
     </f:entry>
     <f:entry title="Ignore this repository during notify commit" field="ignoreNotifyCommit">
-      <f:checkbox/>
-    </f:entry>
-    <!-- TODO move to appropriate location if necessary -->
-    <f:entry title="Use shallow clone" field="useShallowClone">
       <f:checkbox/>
     </f:entry>
 

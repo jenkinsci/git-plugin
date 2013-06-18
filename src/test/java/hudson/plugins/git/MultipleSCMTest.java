@@ -81,34 +81,28 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
-                false,
-				  new DefaultBuildChooser(),
+                new DefaultBuildChooser(),
 				  null,
 				  null,
 				  false,
-				  "repo0",
-				  null,
+                null,
                 false,
                 false,
-				  false,
-                  Collections.<GitSCMExtension>emptyList());
+                Collections.<GitSCMExtension>emptyList());
 
 		SCM repo1Scm = new GitSCM("repo1",
 				  repo1.remoteConfigs(),
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
-                false,
-				  new DefaultBuildChooser(),
+                new DefaultBuildChooser(),
 				  null,
 				  null,
 				  false,
-				  "repo1",
-				  null,
+                null,
                 false,
                 false,
-				  false,
-                  Collections.<GitSCMExtension>emptyList());
+                Collections.<GitSCMExtension>emptyList());
 
 		List<SCM> testScms = new ArrayList<SCM>();
 		testScms.add(repo0Scm);
