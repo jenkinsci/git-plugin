@@ -24,6 +24,8 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.IOException2;
 import hudson.util.IOUtils;
+import hudson.util.ListBoxModel;
+import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.eclipse.jgit.lib.Config;
@@ -1024,6 +1026,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public List<GitTool> getGitTools() {
             GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
+        }
+
+        public ListBoxModel doFillGitToolItems() {
+            ListBoxModel r = new ListBoxModel();
+            for (GitTool git : getGitTools()) {
+                r.add(git.getName());
+            }
+            return r;
         }
 
         /**
