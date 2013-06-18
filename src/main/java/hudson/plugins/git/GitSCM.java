@@ -56,7 +56,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static hudson.Util.fixEmptyAndTrim;
+import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import static hudson.scm.PollingResult.*;
@@ -943,25 +943,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
-        String singleBranch = getSingleBranch(build);
-        if (singleBranch != null){
-            env.put(GIT_BRANCH, singleBranch);
-        } else if (rev != null) {
-            Branch branch = rev.getBranches().iterator().next();
-            env.put(GIT_BRANCH, branch.getName());
-        }
-        if (rev != null) {
-            Branch branch = rev.getBranches().iterator().next();
-            String prevCommit = getLastBuiltCommitOfBranch(build, branch);
-            if (prevCommit != null) {
-                env.put(GIT_PREVIOUS_COMMIT, prevCommit);
+        if (rev!=null) {
+            Branch branch = Iterables.getFirst(rev.getBranches(), null);
+            if (branch!=null) {
+                env.put(GIT_BRANCH, branch.getName());
+
+                String prevCommit = getLastBuiltCommitOfBranch(build, branch);
+                if (prevCommit != null) {
+                    env.put(GIT_PREVIOUS_COMMIT, prevCommit);
+                }
             }
-            String commit = rev.getSha1String();
-            if (commit != null) {
-                env.put(GIT_COMMIT, commit);
-            }
+
+            env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
         }
-       
+
       if(userRemoteConfigs.size()==1){
     	  env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
       }else{
