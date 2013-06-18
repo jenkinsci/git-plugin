@@ -69,9 +69,11 @@
 
     <f:dropdownDescriptorSelector title="${%Choosing strategy}" field="buildChooser" descriptors="${descriptor.buildChooserDescriptors}"/>
 
-    <f:entry title="Git executable" field="gitTool">
-      <f:select />
-    </f:entry>
+    <j:if test="${descriptor.showGitToolOptions()}">
+      <f:entry title="${%Git executable}" field="gitTool">
+        <f:select />
+      </f:entry>
+    </j:if>
   </f:advanced>
 
   <f:entry title="${%Additional Behaviours}">
