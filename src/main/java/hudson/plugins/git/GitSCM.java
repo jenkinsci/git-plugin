@@ -31,6 +31,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
+import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -815,28 +816,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         } else {
             log.println("Cloning the remote Git repository");
-            if(useShallowClone) {
-                log.println("Using shallow clone");
-            }
 
-            // Go through the repositories, trying to clone from one
-            //
-            boolean successfullyCloned = false;
-            for (RemoteConfig rc : repos) {
-            	final String expandedReference = environment.expand(reference);
+            // Clone from the first and then fetch from the rest
+           for (RemoteConfig rc : repos) {
                 try {
-                    git.clone(rc.getURIs().get(0).toPrivateString(), rc.getName(), useShallowClone, expandedReference);
-                    successfullyCloned = true;
+                    CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
+                    if (useShallowClone) {
+                        log.println("Using shallow clone");
+                        cmd.shallow();
+                    }
+                    cmd.reference(environment.expand(reference));
+                    for (GitSCMExtension ext : extensions) {
+                        ext.decorateCloneCommand(this, build, git, listener, cmd);
+                    }
+                    cmd.execute();
                     break;
                 } catch (GitException ex) {
                     ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
-                    // Failed. Try the next one
-                    log.println("Trying next repository");
+                    throw new AbortException();
                 }
             }
-
-            if (!successfullyCloned)
-                throw new AbortException("Could not clone repository");
         }
     }
 
@@ -857,7 +856,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitClient git = createClient(listener,environment,build);
 
         for (GitSCMExtension ext : extensions) {
-            ext.beforeCheckout(this, build, git,listener);
+            ext.beforeCheckout(this, build, git, listener);
         }
 
         retrieveChanges(build, environment, git, listener);

@@ -15,6 +15,7 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
+import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
@@ -124,9 +125,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     }
 
     /**
+     * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
+     */
+    public void decorateCloneCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    }
+
+    /**
      * Contribute additional environment variables for the Git invocation.
      */
-    public void populateEnvironmentVariables(GitSCM scm, Map<String, String> env) {}
+    public void populateEnvironmentVariables(GitSCM scm, Map <String, String> env) {}
 
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {
