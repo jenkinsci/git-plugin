@@ -9,6 +9,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
+import hudson.plugins.git.GitTool.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -622,7 +623,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public GitTool resolveGitTool(TaskListener listener) {
         if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
+        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
         if (git == null) {
             listener.getLogger().println("selected Git installation does not exists. Using Default");
             git = GitTool.getDefaultInstallation();
@@ -1017,6 +1018,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public List<BuildChooserDescriptor> getBuildChooserDescriptors() {
             return BuildChooser.all();
+        }
+
+        public boolean showGitToolOptions() {
+            return Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
 
         /**

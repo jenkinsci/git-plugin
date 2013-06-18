@@ -36,7 +36,7 @@ public class DefaultBuildChooser extends BuildChooser {
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                                       GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
-        throws GitException, IOException {
+            throws GitException, IOException, InterruptedException {
 
         verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,singleBranch,data);
 
@@ -90,7 +90,7 @@ public class DefaultBuildChooser extends BuildChooser {
         return revisions;
     }
 
-    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) {
+    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) throws InterruptedException {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
@@ -162,7 +162,7 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data) throws GitException, IOException {
+    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data) throws GitException, IOException, InterruptedException {
         // 1. Get all the (branch) revisions that exist
         List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
         verbose(listener, "Starting with all the branches: {0}", revs);

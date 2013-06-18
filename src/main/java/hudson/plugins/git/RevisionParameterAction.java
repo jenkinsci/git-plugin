@@ -60,11 +60,11 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }
 
     @Deprecated
-    public Revision toRevision(IGitAPI git) {
+    public Revision toRevision(IGitAPI git) throws InterruptedException {
         return toRevision((GitClient) git);
     }
 
-    public Revision toRevision(GitClient git) {
+    public Revision toRevision(GitClient git) throws InterruptedException {
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
         // TODO: if commit is a branch, retain that information instead of making it 'detached'
@@ -80,7 +80,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     /**
      * Returns whether the new item should be scheduled. 
      * An action should return true if the associated task is 'different enough' to warrant a separate execution.
-     * from {@link #QueueAction}
+     * from {@link QueueAction}
       */
     public boolean shouldSchedule(List<Action> actions) {
         /* Called in two cases 
@@ -108,7 +108,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
 
     /**
      * Folds this Action into another action already associated with item
-     * from {@link #FoldableAction}
+     * from {@link FoldableAction}
      */
     public void foldIntoExisting(Queue.Item item, Queue.Task owner, List<Action> otherActions) {
         // only do this if we are asked to.
