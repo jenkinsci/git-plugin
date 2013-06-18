@@ -799,42 +799,43 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void retrieveChanges(AbstractBuild build, EnvVars environment, GitClient git, BuildListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
-        final List<RemoteConfig> repos = getParamExpandedRepos(build);
+        List<RemoteConfig> repos = getParamExpandedRepos(build);
+        if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
+
         if (git.hasGitRepo()) {
             // It's an update
             if (repos.size() == 1)
                 log.println("Fetching changes from the remote Git repository");
             else
                 log.println(MessageFormat.format("Fetching changes from {0} remote Git repositories", repos.size()));
-
-            for (RemoteConfig remoteRepository : repos) {
-                try {
-                    fetchFrom(git, listener, remoteRepository);
-                } catch (GitException e) {
-                    throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
-                }
-            }
         } else {
             log.println("Cloning the remote Git repository");
 
             // Clone from the first and then fetch from the rest
-           for (RemoteConfig rc : repos) {
-                try {
-                    CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
-                    if (useShallowClone) {
-                        log.println("Using shallow clone");
-                        cmd.shallow();
-                    }
-                    cmd.reference(environment.expand(reference));
-                    for (GitSCMExtension ext : extensions) {
-                        ext.decorateCloneCommand(this, build, git, listener, cmd);
-                    }
-                    cmd.execute();
-                    break;
-                } catch (GitException ex) {
-                    ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
-                    throw new AbortException();
+            RemoteConfig rc = repos.get(0);
+            repos = repos.subList(1,repos.size());
+            try {
+                CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
+                if (useShallowClone) {
+                    log.println("Using shallow clone");
+                    cmd.shallow();
                 }
+                cmd.reference(environment.expand(reference));
+                for (GitSCMExtension ext : extensions) {
+                    ext.decorateCloneCommand(this, build, git, listener, cmd);
+                }
+                cmd.execute();
+            } catch (GitException ex) {
+                ex.printStackTrace(listener.error("Error cloning remote repo '%s'", rc.getName()));
+                throw new AbortException();
+            }
+        }
+
+        for (RemoteConfig remoteRepository : repos) {
+            try {
+                fetchFrom(git, listener, remoteRepository);
+            } catch (GitException e) {
+                throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
             }
         }
     }
