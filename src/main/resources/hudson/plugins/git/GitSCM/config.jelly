@@ -16,34 +16,8 @@
     }
     ]]></script>
 
-    <f:entry title="Repositories" help="/plugin/git/repositories.html">
-      <f:repeatable name="repo" field="userRemoteConfigs" minimum="1" noAddButton="false">
-        <table width="100%">
-
-          <f:entry title="${%Repository URL}" field="url">
-            <f:textbox/>
-          </f:entry>
-
-          <f:advanced>
-
-            <f:entry title="${%Name}" field="name">
-              <f:textbox/>
-            </f:entry>
-
-            <f:entry title="${%Refspec}" field="refspec">
-              <f:textbox/>
-            </f:entry>
-
-          </f:advanced>
-
-          <f:entry>
-            <div align="right">
-              <input type="button" value="Delete Repository" class="repeatable-delete" style="margin-left: 1em;"/>
-            </div>
-          </f:entry>
-        </table>
-
-      </f:repeatable>
+    <f:entry title="Repositories" field="userRemoteConfigs" >
+      <f:repeatableProperty minimum="1" add="${%Add Repository}"/>
     </f:entry>
 
   <f:entry title="Branches to build" help="/plugin/git/branches.html">
