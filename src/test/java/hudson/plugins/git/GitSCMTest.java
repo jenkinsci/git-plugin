@@ -12,6 +12,7 @@ import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -599,7 +600,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSubmoduleFixup() throws Exception {
         File repo = createTmpDir();
         FilePath moduleWs = new FilePath(repo);
-        GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
+        org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
         {// first we create a Git repository with submodule
             moduleRepo.init();
@@ -616,7 +617,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject d = createFreeStyleProject();
 
         u.setScm(new GitSCM(workDir.getPath()));
-        u.getPublishersList().add(new BuildTrigger(new BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
+        u.getPublishersList().add(new BuildTrigger(new hudson.plugins.parameterizedtrigger.BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
                 new GitRevisionBuildParameters())));
 
         d.setScm(new GitSCM(workDir.getPath()));
@@ -761,14 +762,16 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testMerge() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
+        GitSCM scm = new GitSCM(
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -800,14 +803,16 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(createSlave().getSelfLabel());
 
-        project.setScm(new GitSCM(
+        GitSCM scm = new GitSCM(
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -838,14 +843,16 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testMergeFailed() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
+        GitSCM scm = new GitSCM(
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
                 false, false,
-                Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");

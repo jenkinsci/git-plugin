@@ -63,7 +63,7 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     private List<Pattern> getExcludedPatterns() {
-        if (excludedPatterns!=null)
+        if (excludedPatterns==null)
             excludedPatterns = getRegionsPatterns(getExcludedRegionsNormalized());
         return excludedPatterns;
     }

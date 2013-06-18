@@ -48,21 +48,21 @@ public class PreBuildMerge extends GitSCMExtension {
 
     @Override
     public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException {
-        String remoteBranchName = GitSCM.getParameterString(options.getMergeTarget(), build);
+        String remoteBranchRef = GitSCM.getParameterString(options.getRef(), build);
 
         // if the branch we are merging is already at the commit being built, the entire merge becomes no-op
         // so there's nothing to do
-        if (rev.containsBranchName(remoteBranchName))
+        if (rev.containsBranchName(remoteBranchRef))
             return rev;
 
         // Only merge if there's a branch to merge that isn't us..
-        listener.getLogger().println("Merging " + rev + " onto " + remoteBranchName);
+        listener.getLogger().println("Merging " + rev + " onto " + remoteBranchRef);
 
         // checkout origin/blah
-        ObjectId target = git.revParse(remoteBranchName);
+        ObjectId target = git.revParse(remoteBranchRef);
 
         String paramLocalBranch = scm.getParamLocalBranch(build);
-        git.checkoutBranch(paramLocalBranch, remoteBranchName);
+        git.checkoutBranch(paramLocalBranch, remoteBranchRef);
 
         try {
             git.merge(rev.getSha1());
@@ -79,7 +79,7 @@ public class PreBuildMerge extends GitSCMExtension {
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
         }
 
-        build.addAction(new MergeRecord(remoteBranchName,target.getName()));
+        build.addAction(new MergeRecord(remoteBranchRef,target.getName()));
 
         return new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
     }

@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
@@ -740,7 +741,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (parentBuild != null) {
                 BuildData parentBuildData = getBuildData(parentBuild);
                 if (parentBuildData != null) {
-                    return parentBuildData.getLastBuiltRevision();
+                    Revision rev = parentBuildData.getLastBuiltRevision();
+                    if (rev!=null)
+                        return rev;
                 }
             }
         }
@@ -829,6 +832,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (VERBOSE)
             listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
 
+        BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
         build.addAction(buildData);
         if (VERBOSE && buildData.lastBuild != null) {
@@ -846,8 +850,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
-        Branch branch = revToBuild.getBranches().iterator().next();
-        environment.put(GIT_BRANCH, branch.getName());
+        Branch branch = Iterables.getFirst(revToBuild.getBranches(),null);
+        if (branch!=null)   // null for a detached HEAD
+            environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild);
         git.checkoutBranch(getParamLocalBranch(build), revToBuild.getSha1String());
@@ -855,8 +860,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(new Build(revToBuild, build.getNumber(), null));
         build.addAction(new GitTagAction(build, buildData));
 
-        computeChangeLog(git, revToBuild, listener, buildData, new FilePath(changelogFile),
-                new BuildChooserContextImpl(build.getProject(),build));
+        computeChangeLog(git, revToBuild, listener, previousBuildData, new FilePath(changelogFile),
+                new BuildChooserContextImpl(build.getProject(), build));
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
@@ -903,11 +908,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Points to the revision we'll be building. This includes all the branches we've merged.
      * @param listener
      *      Used for writing to build console
-     * @param buildData
+     * @param previousBuildData
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData buildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
         ChangelogCommand changelog = git.changelog();
@@ -915,7 +920,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             boolean exclusion = false;
             for (Branch b : revToBuild.getBranches()) {
-                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), buildData, git, context);
+                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                 if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
                     changelog.excludes(lastRevWas.getSHA1());
                     exclusion = true;

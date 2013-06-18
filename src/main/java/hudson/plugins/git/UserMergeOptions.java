@@ -5,6 +5,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.export.Exported;
 
 import java.io.Serializable;
 
@@ -41,6 +42,10 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      */
     public String getMergeTarget() {
         return mergeTarget;
+    }
+
+    public String getRef() {
+        return mergeRemote + "/" + mergeTarget;
     }
 
     @Extension

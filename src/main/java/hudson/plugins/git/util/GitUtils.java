@@ -74,7 +74,7 @@ public class GitUtils {
             if(revision.getSha1().equals(sha1))
                 return revision;
         }
-        return null;
+        return new Revision(sha1);
     }
 
     /**
