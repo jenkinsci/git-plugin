@@ -47,22 +47,20 @@
     </f:entry>
 
   <f:entry title="Branches to build" help="/plugin/git/branches.html">
-  <f:repeatable var="branch" name="branches" varStatus="branchStatus" items="${instance.branches}" minimum="1" noAddButton="false">
-           <table width="100%">
-               <f:entry title="Branch Specifier (blank for default):" field="name">
-                    <f:textbox value="${branch.name}" />
-               </f:entry>
+    <f:repeatable var="branch" name="branches" varStatus="branchStatus" items="${instance.branches}" minimum="1"
+                  noAddButton="false">
+      <table width="100%">
+        <f:entry title="Branch Specifier (blank for default):" field="name">
+          <f:textbox value="${branch.name}"/>
+        </f:entry>
 
-               <f:entry>
-            <div align="right">
-                <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;" />
-            </div>
-          </f:entry>
-
-           </table>
-
-        </f:repeatable>
-
+        <f:entry>
+          <div align="right">
+            <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;"/>
+          </div>
+        </f:entry>
+      </table>
+    </f:repeatable>
   </f:entry>
 
   <f:advanced>
@@ -127,20 +125,20 @@
       </j:scope>
     </f:dropdownList>
 
-      <f:entry title="Git executable" field="gitTool">
-          <select name="gitTool">
-              <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
-                  <j:choose>
-                      <j:when test="${instance.gitTool==gitTool.name}">
-                          <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
-                      </j:when>
-                      <j:otherwise>
-                          <option value="${gitTool.name}">${gitTool.name}</option>
-                      </j:otherwise>
-                  </j:choose>
-              </j:forEach>
-          </select>
-      </f:entry>
+    <f:entry title="Git executable" field="gitTool">
+      <select name="gitTool">
+        <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">
+          <j:choose>
+            <j:when test="${instance.gitTool==gitTool.name}">
+              <option value="${gitTool.name}" selected="SELECTED">${gitTool.name}</option>
+            </j:when>
+            <j:otherwise>
+              <option value="${gitTool.name}">${gitTool.name}</option>
+            </j:otherwise>
+          </j:choose>
+        </j:forEach>
+      </select>
+    </f:entry>
   </f:advanced>
 
   <f:entry title="${%Additional Behaviours}">
