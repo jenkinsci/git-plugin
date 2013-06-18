@@ -495,7 +495,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
-            if (head != null && buildData.lastBuild.getRevision().getSha1().name().equals(head.name())) {
+            if (head != null && buildData.lastBuild.getRevision().getSha1().equals(head)) {
                 return NO_CHANGES;
             } else {
                 return BUILD_NOW;
