@@ -56,20 +56,20 @@ public class TestGitRepo {
 		git.init();
 	}
 	
-    public void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
+    public void commit(final String fileName, final PersonIdent committer, final String message) throws Exception {
         commit(fileName, fileName, committer, committer, message);
     }
 
-    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws GitException {
+    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws Exception {
         commit(fileName, fileName, author, committer, message);
     }
 
-    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message) throws GitException {
+    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message) throws Exception {
         commit(fileName, fileContent, committer, committer, message);
     }
 
     public void commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws GitException {
+                        final String message) throws Exception{
         FilePath file = gitDirPath.child(fileName);
         try {
             file.write(fileContent, null);
