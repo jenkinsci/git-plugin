@@ -487,7 +487,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild);
 
         // fast remote polling needs a single branch and an existing last build
-        if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
+        if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, Jenkins.getInstance(), null);
@@ -495,7 +495,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
-            if (head != null && buildData.lastBuild.getRevision().getSha1().equals(head)) {
+            if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
                 return NO_CHANGES;
             } else {
                 return BUILD_NOW;
@@ -728,7 +728,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Revision determineRevisionToBuild(final AbstractBuild build,
+    private @NonNull Build determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
@@ -741,9 +741,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (parentBuild != null) {
                 BuildData parentBuildData = getBuildData(parentBuild);
                 if (parentBuildData != null) {
-                    Revision rev = parentBuildData.getLastBuiltRevision();
-                    if (rev!=null)
-                        return rev;
+                    Build lastBuild = parentBuildData.lastBuild;
+                    if (lastBuild!=null)
+                        return lastBuild;
                 }
             }
         }
@@ -751,7 +751,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // parameter forcing the commit ID to build
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         if (rpa != null)
-            return rpa.toRevision(git);
+            return new Build(rpa.toRevision(git), build.getNumber(), null);
 
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
@@ -775,10 +775,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         Revision rev = candidates.iterator().next();
+        Revision marked = rev;
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,rev);
         }
-        return rev;
+        return new Build(marked, rev, build.getNumber(), null);
     }
 
     /**
@@ -847,20 +848,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         retrieveChanges(build, environment, git, listener);
-        Revision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+        Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
-        environment.put(GIT_COMMIT, revToBuild.getSha1String());
-        Branch branch = Iterables.getFirst(revToBuild.getBranches(),null);
+        environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
+        Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null)   // null for a detached HEAD
             environment.put(GIT_BRANCH, branch.getName());
 
-        listener.getLogger().println("Checking out " + revToBuild);
-        git.checkoutBranch(getParamLocalBranch(build), revToBuild.getSha1String());
+        listener.getLogger().println("Checking out " + revToBuild.revision);
+        git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
 
-        buildData.saveBuild(new Build(revToBuild, build.getNumber(), null));
+        buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, buildData));
 
-        computeChangeLog(git, revToBuild, listener, previousBuildData, new FilePath(changelogFile),
+        computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
                 new BuildChooserContextImpl(build.getProject(), build));
 
         for (GitSCMExtension ext : extensions) {
