@@ -57,9 +57,6 @@
   </f:entry>
      -->
 
-    <f:entry title="Fast remote polling" field="remotePoll">
-      <f:checkbox/>
-    </f:entry>
     <f:entry title="Use commit author in changelog" field="authorOrCommitter">
       <f:checkbox />
     </f:entry>

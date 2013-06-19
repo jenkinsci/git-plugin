@@ -104,7 +104,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true,
-                "integration", false, false,
+                "integration", false,
                 Collections.<GitSCMExtension>emptyList()));
 
         project.getPublishersList().add(new GitPublisher(

@@ -10,12 +10,12 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
-import hudson.plugins.git.GitTool.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -27,7 +27,6 @@ import hudson.util.FormValidation;
 import hudson.util.IOException2;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
-import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.eclipse.jgit.lib.Config;
@@ -92,7 +91,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
     private boolean authorOrCommitter;
-    private boolean remotePoll;
     private boolean ignoreNotifyCommit;
 
     private BuildChooser buildChooser;
@@ -136,7 +134,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, false,
-                null, false, false, null);
+                null, false, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -151,7 +149,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String gitTool,
             boolean authorOrCommitter,
             String localBranch,
-            boolean remotePoll,
             boolean ignoreNotifyCommit,
             List<GitSCMExtension> extensions) {
 
@@ -191,19 +188,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
-        if (remotePoll
-            && (branches.size() != 1
-            || branches.get(0).getName().contains("*")
-            || userRemoteConfigs.size() != 1
-// FIXME:   || (excludedRegions != null && excludedRegions.length() > 0)
-            || (submoduleCfg.size() != 0)
-// FIXME:   || (excludedUsers != null && excludedUsers.length() > 0)
-        )) {
-            LOGGER.log(Level.WARNING, "Cannot poll remotely with current configuration.");
-            this.remotePoll = false;
-        } else {
-            this.remotePoll = remotePoll;
-        }
 
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
@@ -334,10 +318,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
-    public boolean getRemotePoll() {
-        return this.remotePoll;
-    }
-
     public boolean isIgnoreNotifyCommit() {
         return ignoreNotifyCommit;
     }
@@ -455,7 +435,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        return !remotePoll;
+        return !getExtensions().contains(RemotePoll.class);
     }
 
     @Override
@@ -487,7 +467,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild);
 
         // fast remote polling needs a single branch and an existing last build
-        if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (getExtensions().contains(RemotePoll.class) && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, Jenkins.getInstance(), null);

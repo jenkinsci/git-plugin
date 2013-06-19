@@ -11,6 +11,7 @@ import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.extensions.impl.UserIdentity;
@@ -140,6 +141,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient String reference;
 
+    /**
+     * @deprecated
+     *      Moved to {@link RemotePoll}
+     */
+    private transient boolean remotePoll;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -189,6 +196,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (wipeOutWorkspace) {
                 addIfMissing(new WipeWorkspace());
+            }
+            if (remotePoll) {
+                addIfMissing(new RemotePoll());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -332,6 +342,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         CloneOption m = getExtensions().get(CloneOption.class);
         return m!=null ? m.getReference() : null;
     }
+
+    /**
+     * @deprecated
+     *      Moved to {@link RemotePoll}
+     */
+    public boolean getRemotePoll() {
+        return getExtensions().contains(RemotePoll.class);
+    }
+
 
 
     private static final long serialVersionUID = 1L;

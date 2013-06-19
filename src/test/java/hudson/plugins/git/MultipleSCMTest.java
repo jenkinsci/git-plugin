@@ -87,7 +87,6 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  false,
                 null,
                 false,
-                false,
                 Collections.<GitSCMExtension>emptyList());
 
 		SCM repo1Scm = new GitSCM("repo1",
@@ -100,7 +99,6 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  null,
 				  false,
                 null,
-                false,
                 false,
                 Collections.<GitSCMExtension>emptyList());
 

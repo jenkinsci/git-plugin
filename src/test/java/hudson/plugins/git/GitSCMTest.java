@@ -16,7 +16,6 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
-import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
@@ -34,7 +33,6 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
 
 import java.io.File;
@@ -739,7 +737,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
-                false, false,
+                false,
                 Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -768,7 +766,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
-                false, false,
+                false,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -809,7 +807,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
-                false, false,
+                false,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -849,7 +847,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
-                false, false,
+                false,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
@@ -888,7 +886,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
-                false, false,
+                false,
                 Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
