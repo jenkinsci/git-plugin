@@ -14,6 +14,7 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -90,7 +91,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
-    private boolean authorOrCommitter;
     private boolean ignoreNotifyCommit;
 
     private BuildChooser buildChooser;
@@ -185,7 +185,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         this.configVersion = 2L;
         this.gitTool = gitTool;
-        this.authorOrCommitter = authorOrCommitter;
         this.buildChooser = buildChooser;
         this.ignoreNotifyCommit = ignoreNotifyCommit;
 
@@ -539,7 +538,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
-        FilePath ws = workingDirectory(build.getProject(),build.getWorkspace(), environment, listener);
+        FilePath ws = workingDirectory(build.getProject(), build.getWorkspace(), environment, listener);
         ws.mkdirs(); // ensure it exists
         return createClient(listener,environment,build.getBuiltOn(),ws);
     }
@@ -635,14 +634,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         return tool.getGitExe();
-    }
-
-    /**
-     * If true, use the commit author as the changeset author, rather
-     * than the committer.
-     */
-    public boolean getAuthorOrCommitter() {
-        return authorOrCommitter;
     }
 
     /**
@@ -1382,7 +1373,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (!extensions.isEmpty()) {
-                GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
+                GitChangeSet change = new GitChangeSet(revShow, getExtensions().contains(AuthorInChangelog.class));
 
                 for (GitSCMExtension ext : extensions) {
                     Boolean b = ext.isRevExcluded(this, git, change, listener, buildData);

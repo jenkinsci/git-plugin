@@ -4,6 +4,7 @@ import hudson.RelativePath;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.PathRestriction;
@@ -147,6 +148,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient boolean remotePoll;
 
+    /**
+     * @deprecated
+     *      Moved to {@link AuthorInChangelog}
+     */
+    private transient boolean authorOrCommitter;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -199,6 +206,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (remotePoll) {
                 addIfMissing(new RemotePoll());
+            }
+            if (authorOrCommitter) {
+                addIfMissing(new AuthorInChangelog());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -349,6 +359,17 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     public boolean getRemotePoll() {
         return getExtensions().contains(RemotePoll.class);
+    }
+
+    /**
+     * If true, use the commit author as the changeset author, rather
+     * than the committer.
+     *
+     * @deprecated
+     *      Moved to {@link AuthorInChangelog}
+     */
+    public boolean getAuthorOrCommitter() {
+        return getExtensions().contains(AuthorInChangelog.class);
     }
 
 
