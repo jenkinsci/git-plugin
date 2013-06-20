@@ -99,7 +99,6 @@ public class GitPublisherTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         project.setScm(new GitSCM(
-                null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),

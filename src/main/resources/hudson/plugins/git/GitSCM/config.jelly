@@ -25,9 +25,6 @@
     <f:entry title="Checkout/merge to local branch (optional)" field="localBranch">
       <f:textbox />
     </f:entry>
-   <f:entry title="Unique SCM name (optional)" field="scmName">
-        <f:textbox />
-   </f:entry>
 
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">

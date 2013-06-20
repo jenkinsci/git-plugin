@@ -14,6 +14,7 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.RemotePoll;
+import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.extensions.impl.UserIdentity;
@@ -160,6 +161,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link IgnoreNotifyCommit}
      */
     private transient boolean ignoreNotifyCommit;
+
+    /**
+     * @deprecated
+     *      Moved to {@link ScmName}
+     */
+    private transient String scmName;
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
@@ -388,6 +395,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     public boolean isIgnoreNotifyCommit() {
         return getExtensions().get(IgnoreNotifyCommit.class)!=null;
+    }
+
+    /**
+     * @deprecated
+     *      Moved to {@link ScmName}
+     */
+    public String getScmName() {
+        ScmName sn = getExtensions().get(ScmName.class);
+        return sn!=null ? sn.getName() : null;
     }
 
 

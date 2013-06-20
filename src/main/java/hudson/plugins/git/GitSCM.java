@@ -99,7 +99,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
-    private String scmName;
 
     /**
      * All the configured extensions attached to this.
@@ -128,7 +127,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitSCM(String repositoryUrl) {
         this(
-                null,
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
@@ -139,7 +137,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 //    @Restricted(NoExternalUse.class) // because this keeps changing
     @DataBoundConstructor
     public GitSCM(
-            String scmName,
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
@@ -148,8 +145,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String gitTool,
             String localBranch,
             List<GitSCMExtension> extensions) {
-
-        this.scmName = scmName;
 
         // moved from createBranches
         if (branches == null) {
@@ -956,13 +951,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
     }
 
-    /**
-     * @return the scmName
-     */
-    public String getScmName() {
-        return scmName;
-    }
-    
     @Extension
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 

@@ -115,7 +115,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                                           String includedRegions) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
-                null,
                 createRemoteRepositories(),
                 branches,
                 false, Collections.<SubmoduleConfig>emptyList(),

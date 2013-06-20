@@ -736,7 +736,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         remotes.addAll(secondTestRepo.remoteConfigs());
 
         project.setScm(new GitSCM(
-                null,
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
@@ -764,7 +763,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
@@ -804,7 +802,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setAssignedLabel(createSlave().getSelfLabel());
 
         GitSCM scm = new GitSCM(
-                null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
@@ -843,7 +840,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
@@ -881,7 +877,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setAssignedLabel(createSlave().getSelfLabel());
 
         GitSCM scm = new GitSCM(
-                null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),

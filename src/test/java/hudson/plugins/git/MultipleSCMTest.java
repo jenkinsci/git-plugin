@@ -76,8 +76,8 @@ public class MultipleSCMTest extends HudsonTestCase {
 		
 		List<BranchSpec> branch = Collections.singletonList(new BranchSpec("master"));
 		
-		SCM repo0Scm = new GitSCM("repo0",
-				  repo0.remoteConfigs(),
+		SCM repo0Scm = new GitSCM(
+                repo0.remoteConfigs(),
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
@@ -87,8 +87,8 @@ public class MultipleSCMTest extends HudsonTestCase {
                 null,
                 Collections.<GitSCMExtension>emptyList());
 
-		SCM repo1Scm = new GitSCM("repo1",
-				  repo1.remoteConfigs(),
+		SCM repo1Scm = new GitSCM(
+                repo1.remoteConfigs(),
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
