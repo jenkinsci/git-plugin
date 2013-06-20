@@ -3,10 +3,12 @@ package hudson.plugins.git.util;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
+import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -221,14 +223,13 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
-        Repository repository = utils.git.getRepository();
-        try {
-            Collections.sort(revs,new CommitTimeComparator(repository));
-        } finally {
-            repository.close();
-        }
-
-        return revs;
+        final List<Revision> in = revs;
+        return utils.git.withRepository(new RepositoryCallback<List<Revision>>() {
+            public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                Collections.sort(in,new CommitTimeComparator(repo));
+                return in;
+            }
+        });
     }
 
     /**

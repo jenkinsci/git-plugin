@@ -884,14 +884,16 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(createSlave().getSelfLabel());
 
-        project.setScm(new GitSCM(
+        GitSCM scm = new GitSCM(
                 null,
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null, true, null,
                 false,
-                Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");

@@ -3,8 +3,10 @@ package hudson.plugins.git.util;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
+import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -90,13 +92,13 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
-        Repository repository = utils.git.getRepository();
-        try {
-            Collections.sort(branchRevs, new CommitTimeComparator(repository));
-        } finally {
-            repository.close();
-        }
-        return branchRevs;
+        final List<Revision> in = branchRevs;
+        return utils.git.withRepository(new RepositoryCallback<List<Revision>>() {
+            public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                Collections.sort(in,new CommitTimeComparator(repo));
+                return in;
+            }
+        });
     }
 
     @Extension
