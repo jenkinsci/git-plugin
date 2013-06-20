@@ -489,7 +489,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
     }
 
     // For HUDSON-7411
