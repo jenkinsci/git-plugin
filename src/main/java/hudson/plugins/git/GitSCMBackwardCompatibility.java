@@ -7,6 +7,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -20,7 +21,6 @@ import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
-import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -33,6 +33,7 @@ import java.util.Set;
  *
  * @author Kohsuke Kawaguchi
  */
+@SuppressWarnings({"deprecation", "UnusedDeclaration"})
 public abstract class GitSCMBackwardCompatibility extends SCM implements Serializable {
     // old fields are left so that old config data can be read in, but
     // they are deprecated. transient so that they won't show up in XML
@@ -154,6 +155,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient boolean authorOrCommitter;
 
+    /**
+     * @deprecated
+     *      Moved to {@link IgnoreNotifyCommit}
+     */
+    private transient boolean ignoreNotifyCommit;
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -209,6 +216,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (authorOrCommitter) {
                 addIfMissing(new AuthorInChangelog());
+            }
+            if (ignoreNotifyCommit) {
+                addIfMissing(new IgnoreNotifyCommit());
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
@@ -372,6 +382,13 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
         return getExtensions().get(AuthorInChangelog.class)!=null;
     }
 
+    /**
+     * @deprecated
+     *      Moved to {@link IgnoreNotifyCommit}
+     */
+    public boolean isIgnoreNotifyCommit() {
+        return getExtensions().get(IgnoreNotifyCommit.class)!=null;
+    }
 
 
     private static final long serialVersionUID = 1L;

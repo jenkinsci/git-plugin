@@ -91,7 +91,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
-    private boolean ignoreNotifyCommit;
 
     private BuildChooser buildChooser;
     public String gitTool = null;
@@ -133,8 +132,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, false,
-                null, false, null);
+                new DefaultBuildChooser(), null, null,
+                null, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -147,9 +146,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Collection<SubmoduleConfig> submoduleCfg,
             BuildChooser buildChooser, GitRepositoryBrowser browser,
             String gitTool,
-            boolean authorOrCommitter,
             String localBranch,
-            boolean ignoreNotifyCommit,
             List<GitSCMExtension> extensions) {
 
         this.scmName = scmName;
@@ -186,7 +183,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.configVersion = 2L;
         this.gitTool = gitTool;
         this.buildChooser = buildChooser;
-        this.ignoreNotifyCommit = ignoreNotifyCommit;
 
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
         buildChooser.gitSCM = this; // set the owner
@@ -317,10 +313,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
-    public boolean isIgnoreNotifyCommit() {
-        return ignoreNotifyCommit;
-    }
-    
     public BuildChooser getBuildChooser() {
         return buildChooser;
     }

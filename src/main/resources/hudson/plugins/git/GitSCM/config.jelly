@@ -57,10 +57,6 @@
   </f:entry>
      -->
 
-    <f:entry title="Ignore this repository during notify commit" field="ignoreNotifyCommit">
-      <f:checkbox/>
-    </f:entry>
-
     <f:dropdownDescriptorSelector title="${%Choosing strategy}" field="buildChooser" descriptors="${descriptor.buildChooserDescriptors}"/>
 
     <j:if test="${descriptor.showGitToolOptions()}">

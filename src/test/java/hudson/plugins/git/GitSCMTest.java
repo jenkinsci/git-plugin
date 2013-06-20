@@ -740,8 +740,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, true, null,
-                false,
+                new DefaultBuildChooser(), null, null, null,
                 Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -769,8 +768,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, true, null,
-                false,
+                new DefaultBuildChooser(), null, null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -810,8 +808,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, true, null,
-                false,
+                new DefaultBuildChooser(), null, null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -850,8 +847,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, true, null,
-                false,
+                new DefaultBuildChooser(), null, null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
@@ -889,8 +885,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null, true, null,
-                false,
+                new DefaultBuildChooser(), null, null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
