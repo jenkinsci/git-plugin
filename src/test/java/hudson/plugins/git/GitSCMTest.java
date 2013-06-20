@@ -12,7 +12,9 @@ import hudson.model.Result;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -328,7 +330,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testBasicInSubdir() throws Exception {
-        FreeStyleProject project = setupProject("master", false, "subdir");
+        FreeStyleProject project = setupSimpleProject("master");
+        ((GitSCM)project.getScm()).getExtensions().add(new RelativeTargetDirectory("subdir"));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -409,7 +412,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testAuthorOrCommitterFalse() throws Exception {
         // Test with authorOrCommitter set to false and make sure we get the committer.
-        FreeStyleProject project = setupProject("master", false);
+        FreeStyleProject project = setupSimpleProject("master");
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -435,7 +438,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testAuthorOrCommitterTrue() throws Exception {
         // Next, test with authorOrCommitter set to true and make sure we get the author.
-        FreeStyleProject project = setupProject("master", true);
+        FreeStyleProject project = setupSimpleProject("master");
+        ((GitSCM)project.getScm()).getExtensions().add(new AuthorInChangelog());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";

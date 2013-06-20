@@ -267,7 +267,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     @Deprecated
     public boolean getSkipTag() {
-        return getExtensions().contains(PerBuildTag.class);
+        return getExtensions().get(PerBuildTag.class)!=null;
     }
 
     @Deprecated
@@ -310,7 +310,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     @Deprecated
     public boolean getPruneBranches() {
-        return getExtensions().contains(PruneStaleBranch.class);
+        return getExtensions().get(PruneStaleBranch.class)!=null;
     }
 
     @Deprecated
@@ -324,7 +324,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link CleanCheckout}
      */
     public boolean getClean() {
-        return getExtensions().contains(CleanCheckout.class);
+        return getExtensions().get(CleanCheckout.class)!=null;
     }
 
     /**
@@ -332,7 +332,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link WipeWorkspace}
      */
     public boolean getWipeOutWorkspace() {
-        return getExtensions().contains(WipeWorkspace.class);
+        return getExtensions().get(WipeWorkspace.class)!=null;
     }
 
     /**
@@ -358,7 +358,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link RemotePoll}
      */
     public boolean getRemotePoll() {
-        return getExtensions().contains(RemotePoll.class);
+        return getExtensions().get(RemotePoll.class)!=null;
     }
 
     /**
@@ -369,7 +369,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link AuthorInChangelog}
      */
     public boolean getAuthorOrCommitter() {
-        return getExtensions().contains(AuthorInChangelog.class);
+        return getExtensions().get(AuthorInChangelog.class)!=null;
     }
 
 

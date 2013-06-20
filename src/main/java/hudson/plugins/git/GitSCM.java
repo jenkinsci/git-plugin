@@ -434,7 +434,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        return !getExtensions().contains(RemotePoll.class);
+        return getExtensions().get(RemotePoll.class)==null;
     }
 
     @Override
@@ -466,7 +466,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild);
 
         // fast remote polling needs a single branch and an existing last build
-        if (getExtensions().contains(RemotePoll.class) && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (getExtensions().get(RemotePoll.class)!=null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, Jenkins.getInstance(), null);
@@ -961,7 +961,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getAuthorOrCommitter());
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
     }
 
     /**
@@ -1373,7 +1373,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (!extensions.isEmpty()) {
-                GitChangeSet change = new GitChangeSet(revShow, getExtensions().contains(AuthorInChangelog.class));
+                GitChangeSet change = new GitChangeSet(revShow, getExtensions().get(AuthorInChangelog.class)!=null);
 
                 for (GitSCMExtension ext : extensions) {
                     Boolean b = ext.isRevExcluded(this, git, change, listener, buildData);

@@ -73,7 +73,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         return testRepo.remoteConfigs();
     }
 
-
     protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
         return setupProject(branchString, authorOrCommitter, null);
     }
