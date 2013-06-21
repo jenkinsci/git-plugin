@@ -22,6 +22,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.IOException;
 import java.io.Serializable;
 
+import static hudson.Util.*;
+
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
 
@@ -31,9 +33,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
     @DataBoundConstructor
     public UserRemoteConfig(String url, String name, String refspec) {
-        this.url = StringUtils.trim(url);
-        this.name = name;
-        this.refspec = refspec;
+        this.url = fixEmptyAndTrim(url);
+        this.name = fixEmpty(name);
+        this.refspec = fixEmpty(refspec);
     }
 
     @Exported
