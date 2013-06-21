@@ -61,6 +61,7 @@ import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import static hudson.scm.PollingResult.*;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
  * Git SCM.
@@ -750,7 +751,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(AbstractBuild build, EnvVars environment, GitClient git, BuildListener listener) throws IOException, InterruptedException {
+    private void retrieveChanges(AbstractBuild build, GitClient git, BuildListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         List<RemoteConfig> repos = getParamExpandedRepos(build);
@@ -810,7 +811,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.beforeCheckout(this, build, git, listener);
         }
 
-        retrieveChanges(build, environment, git, listener);
+        retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
@@ -1097,40 +1098,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
              */
         }
 
-        /**
-         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
-         *
-         * @param scmData
-         * @return
-         */
-        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
-            if (scmData.containsKey("browser")) {
-                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
-            } else {
-                return null;
-            }
-        }
-
-        public static List<RemoteConfig> createRepositoryConfigurations(String[] pUrls,
+        public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
                 String[] repoNames,
-                String[] refSpecs) throws IOException {
+                String[] refs) throws IOException {
 
             List<RemoteConfig> remoteRepositories;
             Config repoConfig = new Config();
             // Make up a repo config from the request parameters
 
-            String[] urls = pUrls;
             String[] names = repoNames;
 
             names = GitUtils.fixupNames(names, urls);
 
-            String[] refs = refSpecs;
             if (names != null) {
                 for (int i = 0; i < names.length; i++) {
                     String name = names[i];
                     name = name.replace(' ', '_');
 
-                    if (refs[i] == null || refs[i].length() == 0) {
+                    if (isBlank(refs[i])) {
                         refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";
                     }
 
@@ -1176,16 +1161,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public static GitWeb createGitWeb(String url) {
-            GitWeb gitWeb = null;
-            String gitWebUrl = url;
-            if (gitWebUrl != null && gitWebUrl.length() > 0) {
+            if (!isBlank(url)) {
                 try {
-                    gitWeb = new GitWeb(gitWebUrl);
+                    return  new GitWeb(url);
                 } catch (MalformedURLException e) {
                     throw new GitException("Error creating GitWeb", e);
                 }
             }
-            return gitWeb;
+            return null;
         }
 
         public FormValidation doGitRemoteNameCheck(StaplerRequest req)
