@@ -1,7 +1,6 @@
 package hudson.plugins.git;
 
 import hudson.RelativePath;
-import hudson.Util;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -237,6 +236,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (ignoreNotifyCommit) {
                 addIfMissing(new IgnoreNotifyCommit());
+            }
+            if (scmName!=null) {
+                addIfMissing(new ScmName(scmName));
+            }
+            if (localBranch!=null) {
+                addIfMissing(new LocalBranch(localBranch));
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable
