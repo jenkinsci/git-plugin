@@ -70,7 +70,7 @@ public class SubmoduleOption extends GitSCMExtension {
             git.submoduleUpdate(recursiveSubmodules);
         }
 
-        if (scm.getDoGenerate()) {
+        if (scm.isDoGenerateSubmoduleConfigurations()) {
             /*
                 Kohsuke Note:
 

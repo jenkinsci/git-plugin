@@ -1233,7 +1233,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
     private static final long serialVersionUID = 1L;
 
-    public boolean getDoGenerate() {
+    public boolean isDoGenerateSubmoduleConfigurations() {
         return this.doGenerateSubmoduleConfigurations;
     }
 
