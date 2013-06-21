@@ -84,7 +84,6 @@ public class MultipleSCMTest extends HudsonTestCase {
                 new DefaultBuildChooser(),
 				  null,
 				  null,
-                null,
                 Collections.<GitSCMExtension>emptyList());
 
 		SCM repo1Scm = new GitSCM(
@@ -95,7 +94,6 @@ public class MultipleSCMTest extends HudsonTestCase {
                 new DefaultBuildChooser(),
 				  null,
 				  null,
-                null,
                 Collections.<GitSCMExtension>emptyList());
 
 		List<SCM> testScms = new ArrayList<SCM>();

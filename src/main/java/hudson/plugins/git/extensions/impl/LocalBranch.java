@@ -2,13 +2,13 @@ package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
+ *
+ *
  * @author Kohsuke Kawaguchi
  */
 public class LocalBranch extends FakeGitSCMExtension {
@@ -21,13 +21,6 @@ public class LocalBranch extends FakeGitSCMExtension {
 
     public String getLocalBranch() {
         return localBranch;
-    }
-
-    /**
-     * Gets the parameter-expanded effective value in the context of the current build.
-     */
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) {
-        return GitSCM.getParameterString(getLocalBranch(), build);
     }
 
     @Extension

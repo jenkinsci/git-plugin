@@ -119,7 +119,6 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                 branches,
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null,
-                localBranch,
                 Collections.<GitSCMExtension>emptyList());
         if (relativeTargetDir!=null)
             scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));

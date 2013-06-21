@@ -128,7 +128,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null,
-                null, null);
+                null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -140,7 +140,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Collection<SubmoduleConfig> submoduleCfg,
             BuildChooser buildChooser, GitRepositoryBrowser browser,
             String gitTool,
-            String localBranch,
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
@@ -172,10 +171,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         this.configVersion = 2L;
         this.gitTool = gitTool;
+
+        if (buildChooser==null)
+            buildChooser = new DefaultBuildChooser();
         this.buildChooser = buildChooser;
+        buildChooser.gitSCM = this; // set the owner
 
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
-        buildChooser.gitSCM = this; // set the owner
     }
 
     /**
@@ -309,6 +311,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public void setBuildChooser(BuildChooser buildChooser) {
         this.buildChooser = buildChooser;
+    }
+
+    /**
+     * Gets the parameter-expanded effective value in the context of the current build.
+     */
+    public String getParamLocalBranch(AbstractBuild<?, ?> build) {
+        LocalBranch lb = getExtensions().get(LocalBranch.class);
+        return GitSCM.getParameterString(lb!=null?lb.getLocalBranch():null, build);
     }
 
     /**
@@ -809,8 +819,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-        LocalBranch lb = getExtensions().get(LocalBranch.class);
-        git.checkoutBranch(lb!=null?lb.getParamLocalBranch(build):null, revToBuild.revision.getSha1String());
+        git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
 
         buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, buildData));
