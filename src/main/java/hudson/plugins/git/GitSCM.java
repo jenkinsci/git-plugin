@@ -952,20 +952,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return prevCommit;
     }
 
-    @Override
-    public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
-    }
+        @Override
+        public ChangeLogParser createChangeLogParser() {
+            return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+        }
 
-    @Extension
-    public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
+        @Extension
+        public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
-        private String gitExe;
-        private String globalConfigName;
-        private String globalConfigEmail;
-        private boolean createAccountBasedOnEmail;
+            private String gitExe;
+            private String globalConfigName;
+            private String globalConfigEmail;
+            private boolean createAccountBasedOnEmail;
 
-        public DescriptorImpl() {
+            public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
         }
@@ -976,6 +976,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public List<BuildChooserDescriptor> getBuildChooserDescriptors() {
             return BuildChooser.all();
+        }
+
+        public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
+            return GitSCMExtensionDescriptor.all();
         }
 
         public boolean showGitToolOptions() {

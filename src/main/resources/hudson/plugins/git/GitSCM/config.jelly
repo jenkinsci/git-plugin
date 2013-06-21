@@ -21,7 +21,7 @@
     </f:repeatable>
   </f:entry>
 
-  <j:if test="${descriptor.buildChooserDescriptors.size() gt 1}>">
+  <j:if test="${size(descriptor.buildChooserDescriptors) gt 1}">
     <f:dropdownDescriptorSelector title="${%Choosing strategy}" field="buildChooser" descriptors="${descriptor.buildChooserDescriptors}"/>
   </j:if>
 
