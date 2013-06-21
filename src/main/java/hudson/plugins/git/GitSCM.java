@@ -15,6 +15,7 @@ import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -86,10 +87,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * All the branches that we wish to care about building.
      */
     private List<BranchSpec> branches;
-    /**
-     * Optional local branch to work on.
-     */
-    private String localBranch;
     private boolean doGenerateSubmoduleConfigurations;
 
     private BuildChooser buildChooser;
@@ -154,8 +151,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             branches.add(new BranchSpec("*/master"));
         }
         this.branches = branches;
-
-        this.localBranch = Util.fixEmptyAndTrim(localBranch);
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
@@ -814,7 +809,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-        git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+        LocalBranch lb = getExtensions().get(LocalBranch.class);
+        git.checkoutBranch(lb!=null?lb.getParamLocalBranch(build):null, revToBuild.revision.getSha1String());
 
         buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, buildData));
@@ -1318,16 +1314,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (r!=null)    return r;
         }
         return workspace;
-    }
-
-    public String getLocalBranch() {
-        return Util.fixEmpty(localBranch);
-    }
-
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) {
-        String branch = getLocalBranch();
-        // substitute build parameters if available
-        return getParameterString(branch, build);
     }
 
     /**

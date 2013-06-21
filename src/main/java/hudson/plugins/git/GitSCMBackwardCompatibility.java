@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.RelativePath;
+import hudson.Util;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -8,6 +9,7 @@ import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -167,6 +169,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *      Moved to {@link ScmName}
      */
     private transient String scmName;
+
+    /**
+     * @deprecated
+     *      Moved to {@link LocalBranch}
+     */
+    private transient String localBranch;
 
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
@@ -404,6 +412,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     public String getScmName() {
         ScmName sn = getExtensions().get(ScmName.class);
         return sn!=null ? sn.getName() : null;
+    }
+
+    /**
+     * @deprecated
+     *      Moved to {@link LocalBranch}
+     */
+    public String getLocalBranch() {
+        LocalBranch lb = getExtensions().get(LocalBranch.class);
+        return lb!=null ? lb.getLocalBranch() : null;
     }
 
 

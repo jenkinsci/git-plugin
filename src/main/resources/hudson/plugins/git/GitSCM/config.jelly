@@ -22,10 +22,6 @@
   </f:entry>
 
   <f:advanced>
-    <f:entry title="Checkout/merge to local branch (optional)" field="localBranch">
-      <f:textbox />
-    </f:entry>
-
     <!-- This needs more thought
   <f:entry title="Autogenerate submodule configurations">
     <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
