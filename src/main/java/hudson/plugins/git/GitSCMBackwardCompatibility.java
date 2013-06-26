@@ -24,10 +24,13 @@ import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Set;
+
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 /**
  * This is a portion of {@link GitSCM} for the stuff that's used to be in {@link GitSCM}
@@ -185,15 +188,15 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     void readBackExtensionsFromLegacy() {
         try {
-            if (excludedUsers!=null) {
+            if (isNotBlank(excludedUsers)) {
                 addIfMissing(new UserExclusion(excludedUsers));
                 excludedUsers = null;
             }
-            if (excludedRegions!=null || includedRegions!=null) {
+            if (isNotBlank(excludedRegions) || isNotBlank(includedRegions)) {
                 addIfMissing(new PathRestriction(includedRegions, excludedRegions));
                 excludedRegions = includedRegions = null;
             }
-            if (relativeTargetDir!=null) {
+            if (isNotBlank(relativeTargetDir)) {
                 addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
@@ -204,7 +207,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (disableSubmodules || recursiveSubmodules) {
                 addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules));
             }
-            if (gitConfigName!=null || gitConfigEmail!=null) {
+            if (isNotBlank(gitConfigName) || isNotBlank(gitConfigEmail)) {
                 addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
                 gitConfigName = gitConfigEmail = null;
             }
