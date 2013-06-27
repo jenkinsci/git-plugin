@@ -33,6 +33,8 @@ import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -98,12 +100,15 @@ public class GitPublisherTest extends AbstractGitTestCase {
     public void testMergeAndPush() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 new DefaultBuildChooser(), null, null,
-                Collections.<GitSCMExtension>emptyList()));
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),

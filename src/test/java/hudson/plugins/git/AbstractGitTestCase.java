@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -180,7 +181,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         return build.getWorkspace().act(new FilePath.FileCallable<String>() {
                 public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                     try {
-                        return Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/"+ branch).name();
+                        ObjectId oid = Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/" + branch);
+                        return oid.name();
                     } catch (GitException e) {
                         throw new RuntimeException(e);
                     }
