@@ -237,7 +237,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             if (ignoreNotifyCommit) {
                 addIfMissing(new IgnoreNotifyCommit());
             }
-            if (scmName!=null) {
+            if (isNotBlank(scmName)) {
                 addIfMissing(new ScmName(scmName));
             }
             if (localBranch!=null) {
