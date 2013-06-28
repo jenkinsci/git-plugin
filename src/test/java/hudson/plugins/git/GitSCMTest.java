@@ -9,6 +9,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.TopLevelItem;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
 import java.io.IOException;
@@ -918,5 +920,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         p.setScm(scm);
         configRoundtrip(p);
         assertEqualDataBoundBeans(scm,p.getScm());
+    }
+
+    /**
+     * Sample configuration that should result in no extensions at all
+     */
+    public void testDataCompatibility1() throws Exception {
+        FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
+        GitSCM git = (GitSCM) p.getScm();
+        assertTrue(git.getExtensions().isEmpty());
     }
 }
