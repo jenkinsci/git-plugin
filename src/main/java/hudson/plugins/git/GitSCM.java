@@ -11,6 +11,7 @@ import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.rebuild.GitRebuildAction.GitRebuildCause;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
@@ -22,6 +23,7 @@ import hudson.util.IOException2;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -35,6 +37,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -1077,6 +1080,22 @@ public class GitSCM extends SCM implements Serializable {
         return candidates.iterator().next();
     }
 
+    /**
+     * If the cause of this build was our custom Rebuild action,
+     * then return the {@link Revision} that is being rebuilt.
+     */
+    private Revision getRebuildRevision(AbstractBuild build) {
+    	for (Action action : build.getActions()) {
+    		if (action instanceof CauseAction) {
+    			GitRebuildCause rebuild_cause = ((CauseAction) action).findCause(GitRebuildCause.class);
+    			if (rebuild_cause != null)
+    				return rebuild_cause.original_revision;
+    		}
+    	}
+    	
+    	return null;
+    }
+    
     @Override
     public boolean checkout(final AbstractBuild build, Launcher launcher,
             final FilePath workspace, final BuildListener listener, File _changelogFile)
@@ -1111,7 +1130,8 @@ public class GitSCM extends SCM implements Serializable {
         final String paramLocalBranch = getParamLocalBranch(build);
         final List<RemoteConfig> paramRepos = getParamExpandedRepos(build);
 
-        final Revision revToBuild = determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
+        final Revision rebuild_revision = getRebuildRevision(build);
+        final Revision revToBuild = rebuild_revision != null ? rebuild_revision : determineRevisionToBuild(build, buildData, paramRepos, workingDirectory,
                 environment, gitExe, listener);
 
         if (revToBuild == null) {
