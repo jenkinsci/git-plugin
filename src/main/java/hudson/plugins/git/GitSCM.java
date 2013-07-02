@@ -570,7 +570,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             git.setRemoteUrl(name, url);
             git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
         } catch (GitException ex) {
-            throw new GitException("Failed to fetch from "+name+":"+url,ex);
+            throw new GitException("Failed to fetch from "+name+": "+url,ex);
         }
     }
 
