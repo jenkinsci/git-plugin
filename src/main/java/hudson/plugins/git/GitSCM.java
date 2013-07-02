@@ -557,26 +557,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param git
      * @param listener
      * @param remoteRepository
-     * @return true if fetch goes through, false otherwise.
      * @throws
      */
-    private boolean fetchFrom(GitClient git,
+    private void fetchFrom(GitClient git,
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException {
         String name = remoteRepository.getName();
+        // Assume there is only 1 URL / refspec for simplicity
+        String url = remoteRepository.getURIs().get(0).toPrivateString();
+
         try {
-            // Assume there is only 1 URL / refspec for simplicity
-            String url = remoteRepository.getURIs().get(0).toPrivateString();
             git.setRemoteUrl(name, url);
             git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
-            return true;
         } catch (GitException ex) {
-            ex.printStackTrace(listener.error(
-                    "Problem fetching from " + name
-                    + " / " + name
-                    + " - could be unavailable. Continuing anyway"));
+            throw new GitException("Failed to fetch from "+name+":"+url,ex);
         }
-        return false;
     }
 
     private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) {
@@ -782,11 +777,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            try {
-                fetchFrom(git, listener, remoteRepository);
-            } catch (GitException e) {
-                throw new IOException2("Failed to fetch from "+remoteRepository.getName(),e);
-            }
+            fetchFrom(git, listener, remoteRepository);
         }
     }
 

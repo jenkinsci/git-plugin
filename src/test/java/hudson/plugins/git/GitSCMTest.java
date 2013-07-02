@@ -9,6 +9,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -929,5 +931,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
         GitSCM git = (GitSCM) p.getScm();
         assertTrue(git.getExtensions().isEmpty());
+    }
+
+    public void testPleaseDontContinueAnyway() throws Exception {
+        // create an empty repository with some commits
+        testRepo.commit("a","foo",johnDoe, "added");
+
+        FreeStyleProject p = createFreeStyleProject();
+        p.setScm(new GitSCM(testRepo.gitDir.getAbsolutePath()));
+
+        assertBuildStatusSuccess(p.scheduleBuild2(0));
+
+        // this should fail as it fails to fetch
+        p.setScm(new GitSCM("https://github.com/cloudbees/coverity-plugin.git")); // inaccessible repository
+        assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
     }
 }
