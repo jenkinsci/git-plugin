@@ -9,9 +9,12 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
+import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -55,12 +58,22 @@ public class JGitCredential extends GitSCMExtension {
     }
 
     @Override
-    public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
-        if (git instanceof JGitAPIImpl) {
-            JGitAPIImpl jgit = (JGitAPIImpl) git;
-            jgit.setCredentials(getCredentials());
-        }
-        return super.decorate(scm, git);
+    public GitClient decorate(GitSCM scm, final GitClient git) throws IOException, InterruptedException, GitException {
+        final SSHUser cred = getCredentials();
+
+        // 'git' might be a proxy to the remote object so we need a closure that runs locally to 'git' to de-reference
+        // 'git' to JGit.
+        git.withRepository(new RepositoryCallback<Void>() {
+            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                if (git instanceof JGitAPIImpl) {
+                    JGitAPIImpl jgit = (JGitAPIImpl) git;
+                    jgit.setCredentials(cred);
+                }
+                return null;
+            }
+        });
+
+        return git;
     }
 
     @Extension
