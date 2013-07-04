@@ -7,6 +7,7 @@ import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.remoting.VirtualChannel;
@@ -75,6 +76,13 @@ public class JGitCredential extends GitSCMExtension {
 
         return git;
     }
+
+    @Override
+    public GitClientType getRequiredClient() {
+        return GitClientType.JGIT;
+    }
+
+
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {

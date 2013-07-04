@@ -12,6 +12,8 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
+import hudson.plugins.git.extensions.GitClientConflictException;
+import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -537,6 +539,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Node n, FilePath ws) throws IOException, InterruptedException {
+
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
@@ -607,6 +610,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Exposing so that we can get this from GitPublisher.
      */
     public String getGitExe(Node builtOn, EnvVars env, TaskListener listener) {
+
+        GitClientType client = GitClientType.ANY;
+        for (GitSCMExtension ext : extensions) {
+            try {
+                client = client.combine(ext.getRequiredClient());
+            } catch (GitClientConflictException e) {
+                throw new RuntimeException(ext.getDescriptor().getDisplayName() + " extended Git behavior is incompatible with other behaviors");
+            }
+        }
+        if (client == GitClientType.ANY) client = getDescriptor().getDefaultClientType();
+        if (client == GitClientType.JGIT) return "jgit";
+
         GitTool tool = resolveGitTool(listener);
         if (builtOn != null) {
             try {
@@ -943,20 +958,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return prevCommit;
     }
 
-        @Override
-        public ChangeLogParser createChangeLogParser() {
-            return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
-        }
+    @Override
+    public ChangeLogParser createChangeLogParser() {
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+    }
 
-        @Extension
-        public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
+    @Extension
+    public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
-            private String gitExe;
-            private String globalConfigName;
-            private String globalConfigEmail;
-            private boolean createAccountBasedOnEmail;
+        private String gitExe;
+        private String globalConfigName;
+        private String globalConfigEmail;
+        private boolean createAccountBasedOnEmail;
+        private GitClientType defaultClientType = GitClientType.GITCLI;
 
-            public DescriptorImpl() {
+        public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
         }
@@ -1208,7 +1224,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 env.put("GIT_AUTHOR_EMAIL", email);
             }
         }
+
+        public GitClientType getDefaultClientType() {
+            return defaultClientType;
+        }
+
+        public void setDefaultClientType(String defaultClientType) {
+            this.defaultClientType = GitClientType.valueOf(defaultClientType);
+        }
     }
+
     private static final long serialVersionUID = 1L;
 
     public boolean isDoGenerateSubmoduleConfigurations() {

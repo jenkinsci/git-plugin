@@ -5,10 +5,12 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 
@@ -19,6 +21,7 @@ public class CloneOption extends GitSCMExtension {
     private boolean shallow;
     private String reference;
 
+    @DataBoundConstructor
     public CloneOption(boolean shallow, String reference) {
         this.shallow = shallow;
         this.reference = reference;
@@ -39,6 +42,11 @@ public class CloneOption extends GitSCMExtension {
             cmd.shallow();
         }
         cmd.reference(build.getEnvironment(listener).expand(reference));
+    }
+
+    @Override
+    public GitClientType getRequiredClient() {
+        return GitClientType.GITCLI;
     }
 
     @Extension

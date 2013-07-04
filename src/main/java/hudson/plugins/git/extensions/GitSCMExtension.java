@@ -135,6 +135,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      */
     public void populateEnvironmentVariables(GitSCM scm, Map <String, String> env) {}
 
+    /**
+     * Let extension declare required GitClient implementation. git-plugin will then detect conflicts, and fallback to
+     * globally configured default git client
+     */
+    public GitClientType getRequiredClient() {
+        return GitClientType.ANY;
+    }
+
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {
         return (GitSCMExtensionDescriptor) super.getDescriptor();
