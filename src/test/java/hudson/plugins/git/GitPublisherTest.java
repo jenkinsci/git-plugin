@@ -133,6 +133,46 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
     }
 
+    /**
+     * Fix push to remote when skipTag is enabled
+     */
+    @Bug(17769)
+    public void testMergeAndPushWithSkipTagEnabled() throws Exception {
+      FreeStyleProject project = setupSimpleProject("master");
+
+      boolean skipTag = true;
+
+      project.setScm(new GitSCM(
+          null,
+          createRemoteRepositories(),
+          Collections.singletonList(new BranchSpec("*")),
+          new UserMergeOptions("origin", "integration"),
+          false, Collections.<SubmoduleConfig>emptyList(), false,
+          false, new DefaultBuildChooser(), null, null, true, null, null,
+          null, null, "integration", false, false, false, false, null, null, skipTag,
+          null, false, false));
+
+      project.getPublishersList().add(new GitPublisher(
+          Collections.<TagToPush>emptyList(),
+          Collections.singletonList(new BranchToPush("origin", "integration")),
+          Collections.<NoteToPush>emptyList(),
+          true, true));
+
+      // create initial commit and then run the build against it:
+      commit("commitFileBase", johnDoe, "Initial Commit");
+      testRepo.git.branch("integration");
+      build(project, Result.SUCCESS, "commitFileBase");
+
+      testRepo.git.checkout(null, "topic1");
+      final String commitFile1 = "commitFile1";
+      commit(commitFile1, johnDoe, "Commit number 1");
+      final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+      assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+      String sha1 = getHeadRevision(build1, "integration");
+      assertEquals(sha1, testRepo.git.revParse(Constants.HEAD).name());
+
+    }
 
     private boolean existsTag(String tag) {
         Set<String> tags = git.getTagNames("*");
