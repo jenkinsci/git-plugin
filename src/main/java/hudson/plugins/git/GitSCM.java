@@ -226,7 +226,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             branches = new ArrayList<BranchSpec>();
             doGenerateSubmoduleConfigurations = false;
 
-            remoteRepositories.add(newRemoteConfig("origin", source, new RefSpec("+refs/heads/*:refs/remotes/origin/*")));
+            List<RefSpec> rs = new ArrayList<RefSpec>();
+            rs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+            remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[0])));
             if (branch != null) {
                 branches.add(new BranchSpec(branch));
             } else {
@@ -344,7 +346,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
             expandedRepos.add(newRemoteConfig(getParameterString(oldRepo.getName(), build),
                     getParameterString(oldRepo.getURIs().get(0).toPrivateString(), build),
-                    new RefSpec(getRefSpec(oldRepo, build))));
+                    getRefSpec(oldRepo, build).toArray(new RefSpec[0])));
         }
 
         return expandedRepos;
@@ -387,10 +389,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return original;
     }
 
-    private String getRefSpec(RemoteConfig repo, AbstractBuild<?, ?> build) {
-        String refSpec = repo.getFetchRefSpecs().get(0).toString();
-
-        return getParameterString(refSpec, build);
+    private List<RefSpec> getRefSpec(RemoteConfig repo, AbstractBuild<?, ?> build) {
+        return repo.getFetchRefSpecs();
     }
 
     /**
@@ -578,25 +578,29 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException {
         String name = remoteRepository.getName();
-        // Assume there is only 1 URL / refspec for simplicity
+        // Assume there is only 1 URL for simplicity
         String url = remoteRepository.getURIs().get(0).toPrivateString();
 
         try {
             git.setRemoteUrl(name, url);
-            git.fetch(name, remoteRepository.getFetchRefSpecs().get(0));
+            git.fetch(name, remoteRepository.getFetchRefSpecs().toArray(new RefSpec[0]));
         } catch (GitException ex) {
             throw new GitException("Failed to fetch from "+name+": "+url,ex);
         }
     }
 
-    private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec refSpec) {
+    private RemoteConfig newRemoteConfig(String name, String refUrl, RefSpec... refSpec) {
 
         try {
             Config repoConfig = new Config();
             // Make up a repo config from the request parameters
 
             repoConfig.setString("remote", name, "url", refUrl);
-            repoConfig.setString("remote", name, "fetch", refSpec.toString());
+            List<String> str = new ArrayList<String>();
+            if(refSpec != null && refSpec.length > 0)
+                for (RefSpec rs: refSpec)
+                    str.add(rs.toString());
+            repoConfig.setStringList("remote", name, "fetch", str);
 
             return RemoteConfig.getAllRemoteConfigs(repoConfig).get(0);
         } catch (Exception ex) {
@@ -1142,7 +1146,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
 
                     repoConfig.setString("remote", name, "url", urls[i]);
-                    repoConfig.setString("remote", name, "fetch", refs[i]);
+                    repoConfig.setStringList("remote", name, "fetch", new ArrayList<String>(Arrays.asList(refs[i].split("\\s+"))));
                 }
             }
 
