@@ -21,9 +21,72 @@
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>1.0-beta-1</version>
         </plugin>
+        <plugin>
+            <groupId>org.jvnet.localizer</groupId>
+            <artifactId>maven-localizer-plugin</artifactId>
+            <version>1.14</version>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+        <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+                <lifecycleMappingMetadata>
+                    <pluginExecutions>
+                        <pluginExecution>
+                            <pluginExecutionFilter>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-enforcer-plugin</artifactId>
+                                <versionRange>[1.0,)</versionRange>
+                                <goals>
+                                    <goal>display-info</goal>
+                                </goals>
+                            </pluginExecutionFilter>
+                            <action>
+                                <ignore />
+                            </action>
+                        </pluginExecution>
+                        <pluginExecution>
+                            <pluginExecutionFilter>
+                                <groupId>org.codehaus.gmaven</groupId>
+                                <artifactId>gmaven-plugin</artifactId>
+                                <versionRange>[1.3,)</versionRange>
+                                <goals>
+                                    <goal>generateTestStubs</goal>
+                                    <goal>testCompile</goal>
+                                </goals>
+                            </pluginExecutionFilter>
+                            <action>
+                                <ignore />
+                            </action>
+                        </pluginExecution>
+                        <pluginExecution>
+                            <pluginExecutionFilter>
+                                <groupId>com.infradna.tool</groupId>
+                                <artifactId>bridge-method-injector</artifactId>
+                                <versionRange>[1.4,)</versionRange>
+                                <goals>
+                                    <goal>process</goal>
+                                </goals>
+                            </pluginExecutionFilter>
+                            <action>
+                                <ignore />
+                            </action>
+                        </pluginExecution>
+                    </pluginExecutions>
+                </lifecycleMappingMetadata>
+            </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+          <groupId>org.jenkins-ci.tools</groupId>
+          <artifactId>maven-hpi-plugin</artifactId>
+          <version>1.96</version>
+          <extensions>true</extensions>
+      </plugin>    
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
@@ -90,17 +153,17 @@
     </repository>
   </repositories>
 
-	<developers>
-		<developer>
-			<id>kohsuke</id>
-			<name>Kohsuke Kawaguchi</name>
-		</developer>
-		<developer>
-			<id>ndeloof</id>
-			<name>Nicolas De Loof</name>
-			<email>nicolas.deloof@gmail.com</email>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <id>kohsuke</id>
+            <name>Kohsuke Kawaguchi</name>
+        </developer>
+        <developer>
+            <id>ndeloof</id>
+            <name>Nicolas De Loof</name>
+            <email>nicolas.deloof@gmail.com</email>
+        </developer>
+    </developers>
 
 
   <dependencies>
