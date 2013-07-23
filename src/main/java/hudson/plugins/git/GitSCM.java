@@ -25,6 +25,8 @@ import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.scm.*;
+import hudson.tasks.Builder;
+import hudson.tasks.Publisher;
 import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -532,7 +534,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    /*package*/ GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
+    /**
+     * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
+     * perform additional git operations.
+     */
+    public GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getProject(), build.getWorkspace(), environment, listener);
         ws.mkdirs(); // ensure it exists
         return createClient(listener,environment,build.getBuiltOn(),ws);
