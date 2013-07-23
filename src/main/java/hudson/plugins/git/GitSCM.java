@@ -625,8 +625,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new RuntimeException(ext.getDescriptor().getDisplayName() + " extended Git behavior is incompatible with other behaviors");
             }
         }
-        if (client == GitClientType.ANY) client = getDescriptor().getDefaultClientType();
-        if (client == GitClientType.JGIT) return "jgit";
+        if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
 
         GitTool tool = resolveGitTool(listener);
         if (builtOn != null) {
@@ -976,7 +975,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
-        private GitClientType defaultClientType = GitClientType.GITCLI;
+//        private GitClientType defaultClientType = GitClientType.GITCLI;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1231,13 +1230,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        public GitClientType getDefaultClientType() {
-            return defaultClientType;
-        }
-
-        public void setDefaultClientType(String defaultClientType) {
-            this.defaultClientType = GitClientType.valueOf(defaultClientType);
-        }
+//        public GitClientType getDefaultClientType() {
+//            return defaultClientType;
+//        }
+//
+//        public void setDefaultClientType(String defaultClientType) {
+//            this.defaultClientType = GitClientType.valueOf(defaultClientType);
+//        }
     }
 
     private static final long serialVersionUID = 1L;
