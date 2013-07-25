@@ -5,6 +5,7 @@ import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
@@ -21,6 +22,8 @@ import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
 import org.apache.commons.lang.StringUtils;
@@ -178,6 +181,13 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      */
     private transient String localBranch;
 
+    /**
+     * @deprecated
+     *      Moved to {@link BuildChooserSetting}
+     */
+    private transient BuildChooser buildChooser;
+
+
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -242,6 +252,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (localBranch!=null) {
                 addIfMissing(new LocalBranch(localBranch));
+            }
+            if (buildChooser!=null && buildChooser.getClass()!=DefaultBuildChooser.class) {
+                addIfMissing(new BuildChooserSetting(buildChooser));
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable

@@ -9,8 +9,6 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.model.TopLevelItem;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -27,7 +25,6 @@ import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.IOException2;
 
 import com.google.common.base.Function;
@@ -37,9 +34,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
-import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
 import java.io.IOException;
@@ -743,7 +738,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
@@ -770,7 +765,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -809,7 +804,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);
@@ -847,7 +842,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
@@ -884,7 +879,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
         project.setScm(scm);

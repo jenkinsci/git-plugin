@@ -22,10 +22,6 @@
     </f:repeatable>
   </f:entry>
 
-  <j:if test="${size(descriptor.buildChooserDescriptors) gt 1}">
-    <f:dropdownDescriptorSelector title="${%Choosing strategy}" field="buildChooser" descriptors="${descriptor.buildChooserDescriptors}"/>
-  </j:if>
-
   <j:if test="${descriptor.showGitToolOptions()}">
     <f:entry title="${%Git executable}" field="gitTool">
       <f:select />

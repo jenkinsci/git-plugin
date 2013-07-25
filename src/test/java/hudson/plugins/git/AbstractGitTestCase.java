@@ -7,7 +7,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.UserExclusion;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.util.StreamTaskListener;
@@ -119,7 +118,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                 createRemoteRepositories(),
                 branches,
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
+                null, null,
                 Collections.<GitSCMExtension>emptyList());
         if (relativeTargetDir!=null)
             scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));

@@ -17,6 +17,7 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RemotePoll;
@@ -95,7 +96,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private List<BranchSpec> branches;
     private boolean doGenerateSubmoduleConfigurations;
 
-    private BuildChooser buildChooser;
     public String gitTool = null;
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
@@ -133,8 +133,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 createRepoList(repositoryUrl),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(), null, null,
-                null);
+                null, null, null);
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -144,7 +143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            BuildChooser buildChooser, GitRepositoryBrowser browser,
+            GitRepositoryBrowser browser,
             String gitTool,
             List<GitSCMExtension> extensions) {
 
@@ -178,12 +177,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.configVersion = 2L;
         this.gitTool = gitTool;
 
-        if (buildChooser==null)
-            buildChooser = new DefaultBuildChooser();
-        this.buildChooser = buildChooser;
-        buildChooser.gitSCM = this; // set the owner
-
         this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
+
+        getBuildChooser(); // set the gitSCM field.
     }
 
     /**
@@ -276,11 +272,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        if (choosingStrategy != null && buildChooser == null) {
+        if (extensions==null)
+            extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP);
+
+        readBackExtensionsFromLegacy();
+
+        if (choosingStrategy != null && getBuildChooser().getClass()==DefaultBuildChooser.class) {
             for (BuildChooserDescriptor d : BuildChooser.all()) {
                 if (choosingStrategy.equals(d.getLegacyId())) {
                     try {
-                        buildChooser = d.clazz.newInstance();
+                        setBuildChooser(d.clazz.newInstance());
                     } catch (InstantiationException e) {
                         LOGGER.log(Level.WARNING, "Failed to instantiate the build chooser", e);
                     } catch (IllegalAccessException e) {
@@ -289,15 +290,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
         }
-        if (buildChooser == null) {
-            buildChooser = new DefaultBuildChooser();
-        }
-        buildChooser.gitSCM = this;
 
-        if (extensions==null)
-            extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP);
+        getBuildChooser(); // set the gitSCM field.
 
-        readBackExtensionsFromLegacy();
         return this;
     }
 
@@ -312,11 +307,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public BuildChooser getBuildChooser() {
-        return buildChooser;
+        BuildChooser bc;
+
+        BuildChooserSetting bcs = getExtensions().get(BuildChooserSetting.class);
+        if (bcs!=null)  bc = bcs.getBuildChooser();
+        else            bc = new DefaultBuildChooser();
+        bc.gitSCM = this;
+        return bc;
     }
 
-    public void setBuildChooser(BuildChooser buildChooser) {
-        this.buildChooser = buildChooser;
+    public void setBuildChooser(BuildChooser buildChooser) throws IOException {
+        if (buildChooser.getClass()==DefaultBuildChooser.class) {
+            getExtensions().remove(BuildChooserSetting.class);
+        } else {
+            getExtensions().replace(new BuildChooserSetting(buildChooser));
+        }
     }
 
     /**
@@ -447,7 +452,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
-        listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
+        listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
         final AbstractBuild lastBuild = project.getLastBuild();
         if (lastBuild == null) {
@@ -519,8 +524,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             listener.getLogger().println("Polling for changes in");
 
-            Collection<Revision> candidates = buildChooser.getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project,null));
+            Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
+                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null));
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
@@ -735,8 +740,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
-        Collection<Revision> candidates = buildChooser.getCandidateRevisions(
-                false, environment.expand( getSingleBranch(build) ), git, listener, buildData, context);
+        Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
+                false, environment.expand(getSingleBranch(build)), git, listener, buildData, context);
 
         if (candidates.size() == 0) {
             // getBuildCandidates should make the last item the last build, so a re-build
@@ -807,7 +812,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throws IOException, InterruptedException {
 
         if (VERBOSE)
-            listener.getLogger().println("Using strategy: " + buildChooser.getDisplayName());
+            listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
@@ -897,7 +902,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             boolean exclusion = false;
             for (Branch b : revToBuild.getBranches()) {
-                Build lastRevWas = buildChooser.prevBuildForChangelog(b.getName(), previousBuildData, git, context);
+                Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                 if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
                     changelog.excludes(lastRevWas.getSHA1());
                     exclusion = true;

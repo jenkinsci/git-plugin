@@ -1,6 +1,8 @@
 package hudson.plugins.git.util;
 
+import hudson.DescriptorExtensionList;
 import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -14,5 +16,9 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
      */
     public String getLegacyId() {
         return null;
+    }
+
+    public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
+        return Jenkins.getInstance().getDescriptorList(BuildChooser.class);
     }
 }

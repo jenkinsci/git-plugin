@@ -11,7 +11,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.util.StreamTaskListener;
 import hudson.scm.SCM;
 
@@ -81,8 +80,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(),
-				  null,
+                null,
 				  null,
                 Collections.<GitSCMExtension>emptyList());
 
@@ -91,8 +89,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 				  branch,
                 false,
 				  Collections.<SubmoduleConfig>emptyList(),
-                new DefaultBuildChooser(),
-				  null,
+                null,
 				  null,
                 Collections.<GitSCMExtension>emptyList());
 
