@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
