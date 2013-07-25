@@ -34,6 +34,7 @@ import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.PerBuildTag;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.NullSCM;
@@ -42,6 +43,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.jvnet.hudson.test.Bug;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -139,17 +141,15 @@ public class GitPublisherTest extends AbstractGitTestCase {
     public void testMergeAndPushWithSkipTagEnabled() throws Exception {
       FreeStyleProject project = setupSimpleProject("master");
 
-      boolean skipTag = true;
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                new DefaultBuildChooser(), null, null, new ArrayList<GitSCMExtension>());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
 
-      project.setScm(new GitSCM(
-          null,
-          createRemoteRepositories(),
-          Collections.singletonList(new BranchSpec("*")),
-          new UserMergeOptions("origin", "integration"),
-          false, Collections.<SubmoduleConfig>emptyList(), false,
-          false, new DefaultBuildChooser(), null, null, true, null, null,
-          null, null, "integration", false, false, false, false, null, null, skipTag,
-          null, false, false));
 
       project.getPublishersList().add(new GitPublisher(
           Collections.<TagToPush>emptyList(),
