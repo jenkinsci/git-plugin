@@ -1335,7 +1335,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Given a Revision, check whether it matches any exclusion rules.
+     * Given a Revision "r", check whether the list of revisions "COMMITS_WE_HAVE_BUILT..r" are to be entirely excluded given the exclusion rules
      *
      * @param git GitClient object
      * @param r Revision object
@@ -1351,22 +1351,31 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 revShow  = git.showRevision(r.getSha1());
             }
 
-            // If the revision info is empty, something went weird, so we'll just bail out
-            if (revShow.isEmpty()) {
-                return false;
-            }
+            revShow.add("commit "); // sentinel value
 
-            if (!extensions.isEmpty()) {
-                GitChangeSet change = new GitChangeSet(revShow, getExtensions().get(AuthorInChangelog.class)!=null);
+            int start=0, idx=0;
+            for (String line : revShow) {
+                if (line.startsWith("commit ") && idx!=0) {
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null);
 
-                for (GitSCMExtension ext : extensions) {
-                    Boolean b = ext.isRevExcluded(this, git, change, listener, buildData);
-                    if (b!=null)
-                        return b;
+                    Boolean excludeThisCommit=null;
+                    for (GitSCMExtension ext : extensions) {
+                        excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
+                        if (excludeThisCommit!=null)
+                            break;
+                    }
+                    if (excludeThisCommit==null || !excludeThisCommit)
+                        return false;    // this sequence of commits have one commit that we want to build
+                    start = idx;
                 }
+
+                idx++;
             }
 
-            return false;
+            assert start==revShow.size()-1;
+
+            // every commit got excluded
+            return true;
         } catch (GitException e) {
             e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
             return false;   // for historical reason this is not considered a fatal error.
