@@ -477,6 +477,11 @@ public class GitSCM extends SCM implements Serializable {
         DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
+    
+    public boolean isDoNotSaveBranchesToBuilds() {
+        DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
+        return (gitDescriptor != null && gitDescriptor.isDoNotSaveBranchesToBuilds());
+    }
 
     public boolean getSkipTag() {
         return this.skipTag;
@@ -1255,6 +1260,13 @@ public class GitSCM extends SCM implements Serializable {
             });
         }
 
+        // Check if user does not want to persist the branches-to-builds map
+        if (this.isDoNotSaveBranchesToBuilds()) {
+            //Remove all previous buildsByBranches; the last built-branch
+            //added below will be the only entry persisted into the build
+            buildData.buildsByBranchName.clear();
+        }
+        
         buildData.saveBuild(returnedBuildData);
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
@@ -1417,6 +1429,7 @@ public class GitSCM extends SCM implements Serializable {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean doNotSaveBranchesToBuilds;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1475,11 +1488,19 @@ public class GitSCM extends SCM implements Serializable {
         public boolean isCreateAccountBasedOnEmail() {
             return createAccountBasedOnEmail;
         }
+        
+        public boolean isDoNotSaveBranchesToBuilds() {
+            return doNotSaveBranchesToBuilds;
+        }
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
         }
 
+        public void setDoNotSaveBranchesToBuilds(boolean doNotSaveBranchesToBuilds) {
+            this.doNotSaveBranchesToBuilds = doNotSaveBranchesToBuilds;
+        }
+        
         /**
          * Old configuration of git executable - exposed so that we can
          * migrate this setting to GitTool without deprecation warnings.

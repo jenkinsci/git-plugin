@@ -10,6 +10,12 @@
     <f:entry title="Create new accounts base on author/committer's email" field="createAccountBasedOnEmail">
            <f:checkbox name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
+    
+    <f:entry title="Do not save branches in build data" field="createAccountBasedOnEmail"
+        description="Can reduce disk and memory use if many branches are present, but might break merge-before-build feature"
+    >
+           <f:checkbox name="doNotSaveBranchesToBuilds" checked="${descriptor.doNotSaveBranchesToBuilds}"/>
+    </f:entry>
   </f:section>
 </j:jelly>
 
