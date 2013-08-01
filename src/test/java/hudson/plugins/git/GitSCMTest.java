@@ -5,11 +5,14 @@ import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Cause;
+import hudson.model.EnvironmentContributor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.util.BuildChooserContext;
@@ -20,6 +23,7 @@ import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
+import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
@@ -30,6 +34,7 @@ import hudson.util.IOException2;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
+import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
@@ -37,6 +42,7 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -915,4 +921,31 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testEnvironmentVariableExpansion() throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+        project.setScm(new GitSCM("${CAT}"+testRepo.gitDir.getPath()));
+
+        // create initial commit and then run the build against it:
+        commit("a.txt", johnDoe, "Initial Commit");
+
+        build(project, Result.SUCCESS, "a.txt");
+
+        PollingResult r = project.poll(StreamTaskListener.fromStdout());
+        assertFalse(r.hasChanges());
+
+        commit("b.txt", johnDoe, "Another commit");
+
+        r = project.poll(StreamTaskListener.fromStdout());
+        assertTrue(r.hasChanges());
+
+        build(project, Result.SUCCESS, "b.txt");
+    }
+
+    @TestExtension("testEnvironmentVariableExpansion")
+    public static class SupplySomeEnvVars extends EnvironmentContributor {
+        @Override
+        public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
+            envs.put("CAT","");
+        }
+    }
 }

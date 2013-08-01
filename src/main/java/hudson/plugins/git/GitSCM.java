@@ -18,6 +18,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.scm.*;
 import hudson.triggers.SCMTrigger;
 import hudson.util.FormValidation;
+import hudson.util.IOException2;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -520,13 +521,15 @@ public class GitSCM extends SCM implements Serializable {
      *
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) {
+    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
+        EnvVars env = build.getEnvironment();
+
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
-            expandedRepos.add(newRemoteConfig(getParameterString(oldRepo.getName(), build),
-                    getParameterString(oldRepo.getURIs().get(0).toPrivateString(), build),
-                    new RefSpec(getRefSpec(oldRepo, build))));
+            expandedRepos.add(newRemoteConfig(getParameterString(oldRepo.getName(), env),
+                    getParameterString(oldRepo.getURIs().get(0).toPrivateString(), env),
+                    new RefSpec(getRefSpec(oldRepo, env))));
         }
 
         return expandedRepos;
@@ -560,19 +563,14 @@ public class GitSCM extends SCM implements Serializable {
         return gitTool;
     }
 
-    private String getParameterString(String original, AbstractBuild<?, ?> build) {
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null) {
-            original = parameters.substitute(build, original);
-        }
-
-        return original;
+    private String getParameterString(String original, EnvVars env) {
+        return env.expand(original);
     }
 
-    private String getRefSpec(RemoteConfig repo, AbstractBuild<?, ?> build) {
+    private String getRefSpec(RemoteConfig repo, EnvVars env) {
         String refSpec = repo.getFetchRefSpecs().get(0).toString();
 
-        return getParameterString(refSpec, build);
+        return getParameterString(refSpec, env);
     }
 
     /**
@@ -581,7 +579,7 @@ public class GitSCM extends SCM implements Serializable {
      *
      * Otherwise return null.
      */
-    private String getSingleBranch(AbstractBuild<?, ?> build) {
+    private String getSingleBranch(EnvVars env) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1 || getRepositories().size() != 1) {
             return null;
@@ -602,7 +600,7 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         // substitute build parameters if available
-        branch = getParameterString(branch, build);
+        branch = getParameterString(branch, env);
 
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) {
@@ -627,7 +625,7 @@ public class GitSCM extends SCM implements Serializable {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener, baseline);
         } catch (GitException e){
-            throw new IOException(e);
+            throw new IOException2(e);
         }
     }
 
@@ -648,7 +646,7 @@ public class GitSCM extends SCM implements Serializable {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(lastBuild);
+        final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
         if (this.remotePoll && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getRevision() != null) {
@@ -933,7 +931,7 @@ public class GitSCM extends SCM implements Serializable {
 
         final Revision parentLastBuiltRev = tempParentLastBuiltRev;
 
-        final String singleBranch = environment.expand( getSingleBranch(build) );
+        final String singleBranch = environment.expand( getSingleBranch(environment) );
 
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
@@ -1129,8 +1127,8 @@ public class GitSCM extends SCM implements Serializable {
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(),build);
 
-        final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), build);
-        final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), build);
+        final String remoteBranchName = getParameterString(mergeOptions.getRemoteBranchName(), environment);
+        final String mergeTarget = getParameterString(mergeOptions.getMergeTarget(), environment);
 
         Build returnedBuildData;
         if (mergeOptions.doMerge() && !revToBuild.containsBranchName(remoteBranchName)) {
@@ -1342,7 +1340,7 @@ public class GitSCM extends SCM implements Serializable {
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
         Revision rev = fixNull(getBuildData(build, false)).getLastBuiltRevision();
-        String singleBranch = getSingleBranch(build);
+        String singleBranch = getSingleBranch(new EnvVars(env));
         if (singleBranch != null){
             env.put(GIT_BRANCH, singleBranch);
         } else if (rev != null) {
@@ -1767,10 +1765,10 @@ public class GitSCM extends SCM implements Serializable {
         return Util.fixEmpty(localBranch);
     }
 
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) {
+    public String getParamLocalBranch(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
         String branch = getLocalBranch();
         // substitute build parameters if available
-        return getParameterString(branch, build);
+        return getParameterString(branch, build.getEnvironment());
     }
 
     public String getRelativeTargetDir() {
