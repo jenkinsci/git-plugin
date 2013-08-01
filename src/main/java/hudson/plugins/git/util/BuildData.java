@@ -6,7 +6,9 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
+
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -31,13 +33,23 @@ public class BuildData implements Action, Serializable, Cloneable {
      * Map of branch name -> build (Branch name to last built SHA1).
      *
      * <p>
-     * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
-     * is attached to) 
+     * This map contains all the branches we've built in the past 
+     * (including the build that this {@link BuildData} is attached to)
+     * <p>
+     * Has been demoted from public to private access in v1.4.1. 
+     * 
+     * @deprecated Since 1.4.1. Replaced by global mapping, as build-local
+     * mapping is inefficient on GIT repositories with many branches. Use
+     * {@link #getBuildsByBranchName()} to get a view into the global mapping.
+     * Not yet marked as transient, as old builds will not have established
+     * the proper project<->BuildData mapping and must continue using this field
+     * until the mapping is established with another build.
      */
-    public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
+    private Map<String, Build> buildsByBranchName;
 
     /**
-     * The last build that we did (among the values in {@link #buildsByBranchName}.)
+     * The last build that we did. Do note that this is possibly not the newest
+     * value as stored in the map returned by {@link #getBuildsByBranchName()}.
      */
     public Build              lastBuild;
 
@@ -46,6 +58,22 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public String scmName;
 
+    /**
+     * The name of the project for which this BuildData is intended.
+     * <p>
+     * Used to identify the correct entry in {@link GitSCM.BuildsBySourceMapper}
+     * to store the branches-to-builds information in the global map.
+     * Previously, this was implicitly handled by storing the map in each build.
+     * See the annotation of {@link #buildsByBranchName} why this was
+     * deprecated.
+     * <p>
+     * Do note that this field will be null for builds created prior to
+     * 1.4.1. This
+     * 
+     * @since 1.4.1
+     */
+    public String projectName;
+    
     /**
      * The URLs that have been referenced.
      */
@@ -58,7 +86,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         this.scmName = scmName;
     }
 
-    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+    public BuildData(String projectName, String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+        this.projectName = projectName;
         this.scmName = scmName;
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
@@ -89,16 +118,10 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
-        
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = fixNull(buildByBranchName.getKey());
-            Build build = buildByBranchName.getValue();
-            newBuildsByBranchName.put(branchName, build);
-        }
-
-        this.buildsByBranchName = newBuildsByBranchName;
-
+        /* Previously, this method refreshed the locally stored
+         * buildsByBranchName map. Since that map is now a global property,
+         * no refresh is needed.
+         */
         if(this.remoteUrls == null)
             this.remoteUrls = new HashSet<String>();
 
@@ -112,28 +135,31 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @return
      */
     public boolean hasBeenBuilt(ObjectId sha1) {
-    	try {
-            for(Build b : buildsByBranchName.values()) {
+        try {
+            for(Build b : this.getBuildsByBranchName().values()) {
                 if(b.revision.getSha1().equals(sha1))
                     return true;
             }
-
             return false;
-    	}
-    	catch(Exception ex) {
+        }
+        catch(Exception ex) {
             return false;
-    	}
+        }
     }
 
     public void saveBuild(Build build) {
-    	lastBuild = build;
-    	for(Branch branch : build.revision.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
-    	}
+        lastBuild = build;
+        if (this.projectName != null) {
+            for(Branch branch : build.revision.getBranches()) {
+                GitSCM.buildsMapper.addBranchToBuildMap(
+                        this.projectName, fixNull(branch.getName()), build
+                );
+            }
+        }
     }
 
     public Build getLastBuildOfBranch(String branch) {
-        return buildsByBranchName.get(branch);
+        return this.getBuildsByBranchName().get(branch);
     }
 
     @Exported
@@ -143,7 +169,33 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Exported
     public Map<String,Build> getBuildsByBranchName() {
-        return buildsByBranchName;
+        //Check if an old map exists, if so, we add its content to the
+        //global map without overwriting existing entries
+        if (buildsByBranchName != null) {
+            //Check if we have a project<->BuildData mapping
+            if (this.projectName != null) {
+                // Get the global mapper and splice-in the correct mapping
+                if (GitSCM.buildsMapper == null) {
+                    //This should not have happened!
+                    return buildsByBranchName;
+                }
+                GitSCM.buildsMapper.addAllFromBranchToBuildMap(
+                        this.projectName, buildsByBranchName, false
+                );
+                //Removing the old buildsByBranchName object
+                buildsByBranchName = null;
+                return GitSCM.buildsMapper.getBranchToBuildMap(this.projectName);
+            } else {
+                //Must wait until GitSCM.getBuildData() has set the project name
+                return buildsByBranchName;
+            }
+        }
+        if (this.projectName == null) {
+            // Without a project name, we can't retrieve mappings from the
+            // global object; in that case, we return an empty map
+            return new HashMap<String, Build>();
+        }
+        return GitSCM.buildsMapper.getBranchToBuildMap(this.projectName);
     }
 
     public void setScmName(String scmName)
@@ -181,36 +233,16 @@ public class BuildData implements Action, Serializable, Cloneable {
         catch (CloneNotSupportedException e) {
             throw new RuntimeException("Error cloning BuildData", e);
         }
-
-        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
-
-        clone.buildsByBranchName = new HashMap<String, Build>();
+        
+        if (projectName != null) {
+            clone.projectName = projectName;
+        }
+        
+        clone.lastBuild = this.lastBuild.clone();
+        
         clone.remoteUrls = new HashSet<String>();
-
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = buildByBranchName.getKey();
-            if (branchName == null) {
-                branchName = "";
-            }
-            Build build = buildByBranchName.getValue();
-            Build clonedBuild = clonedBuilds.get(build);
-            if (clonedBuild == null) {
-                clonedBuild = build.clone();
-                clonedBuilds.put(build, clonedBuild);
-            }
-            clone.buildsByBranchName.put(branchName, clonedBuild);
-        }
-
-        if (lastBuild != null) {
-            clone.lastBuild = clonedBuilds.get(lastBuild);
-            if (clone.lastBuild == null) {
-                clone.lastBuild = lastBuild.clone();
-                clonedBuilds.put(lastBuild, clone.lastBuild);
-            }
-        }
-
-        for(String remoteUrl : getRemoteUrls())
-        {
+        
+        for(String remoteUrl : getRemoteUrls()) {
             clone.addRemoteUrl(remoteUrl);
         }
 
@@ -223,9 +255,13 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return super.toString()+"[scmName="+scmName==null?"<null>":scmName+
-                ",remoteUrls="+remoteUrls+
-                ",buildsByBranchName="+buildsByBranchName+
-                ",lastBuild="+lastBuild+"]";
+        return String.format(
+                "[scmName=%s, remoteUrls=%s, project=%s, buildsByBranchName=%s, lastBuild=%s]",
+                (scmName == null) ? "<null>" : scmName,
+                remoteUrls,
+                (projectName == null) ? "<null>" : projectName,
+                this.getBuildsByBranchName(),
+                lastBuild
+        );
     }
 }

@@ -21,6 +21,7 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -34,20 +35,30 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipException;
 
 import static hudson.Util.fixEmptyAndTrim;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
+
 
 /**
  * Git SCM.
@@ -56,6 +67,215 @@ import static hudson.init.InitMilestone.PLUGINS_STARTED;
  */
 public class GitSCM extends SCM implements Serializable {
 
+    /**
+     * This class replaces the deprecated {@link BuildData#buildsByBranchName}
+     * field, that used to be stored as an action in each build.
+     * <p>
+     * The reason for its deprecation was that it used to store the entire map
+     * of all the latest builds for all branches in each and every build. This
+     * could easily use up several megabytes per build both in RAM and on disk.
+     * <p>
+     * The new implementation by this class is a "global" object that avoids to
+     * store this data for every build -- as only the latest set of data is
+     * actually needed. The {@link BuildData} instance attached to each build
+     * will now only store the data about their own run and leave it
+     * up to this class to collect the data about everyone else.
+     * <p>
+     * Do note that the instances of this class should <b>NOT</b> be serialized
+     * to disk in the {@link GitSCM} instances, to avoid polluting the SCM
+     * settings of each {@link Project} with runtime-only data.
+     * <p>
+     * TODO: A strategy has to be found to remove old branches, to stop the
+     * map from growing endlessly.
+     * 
+     * @author mhschroe
+     */
+    public static class BuildsBySourceMapper implements Serializable, Saveable {
+        private static final long serialVersionUID = -2517229422949821293L;
+
+        //TODO: This file can grow quite large; investigate compression
+        private final transient File dataFile;
+        private final ReentrantReadWriteLock dataFileLock =
+                new ReentrantReadWriteLock();
+        
+        /**
+         * Map that maps: (project-name TO (branch-name TO latest-build)
+         * <p>
+         * Note: The map itself is guaranteed to be a concurrency-aware map like
+         * {@link ConcurrentHashMap}, so that we do not need to copy the map
+         * for concurrent read/write-access
+         */
+        private final Map<String, Map<String, Build>> branchByProjectAndBuildMap;
+        
+        
+        public BuildsBySourceMapper(File dataFile) {
+            this.dataFile = dataFile;
+            this.branchByProjectAndBuildMap =
+                    new ConcurrentHashMap<String, Map<String,Build>>();
+            try {
+                this.load();
+            } catch (IOException ex) {
+                //TODO: Log an appropriate error 
+            }
+        }
+        
+        protected static File getDefaultConfigFile() {
+            File root = Jenkins.getInstance().getRootDir();
+            return new File(root, "hudson.plugins.git.GitSCM.branches.xml.gz");
+        }
+        
+        protected void load() throws IOException {
+            //Deserialising from disk (file is GZ compressed to save space)
+            dataFileLock.readLock().lock();
+            try {
+                if (dataFile.exists()) {
+                    GZIPInputStream gzio = null;
+                    try {
+                        gzio = new GZIPInputStream(
+                                new FileInputStream(this.dataFile)
+                        );
+                        Object obj = Jenkins.XSTREAM.fromXML(gzio);
+                        if (obj instanceof BuildsBySourceMapper) {
+                            //And finally copying the details
+                            BuildsBySourceMapper mapper = (BuildsBySourceMapper) obj;
+                            //Copying over the map content
+                            for (Entry<String, Map<String, Build>> entry : mapper.branchByProjectAndBuildMap.entrySet()) {
+                                String project = entry.getKey();
+                                if (project == null) { continue; }
+                                ConcurrentHashMap<String, Build> pMap = 
+                                        new ConcurrentHashMap<String, Build>(entry.getValue());
+                                this.branchByProjectAndBuildMap.put(project, pMap);
+                            }
+                        }
+                    } catch (ZipException ex) {
+                        throw new IOException(
+                                "Could not decompress: " + dataFile.getAbsolutePath()
+                        );
+                    } finally {
+                        if (gzio != null) {
+                            gzio.close();
+                        }
+                    }
+                } else {
+                    throw new IOException(
+                            "No such file, or invalid: " + dataFile.getAbsolutePath()
+                    );
+                }
+            } finally {
+                dataFileLock.readLock().unlock();
+            }
+        }
+        
+        public void save() throws IOException {
+            //Checking if we should hold back a change
+            if (BulkChange.contains(this)) {
+                return;
+            }
+            this.dataFileLock.writeLock().lock();
+            try {
+                //Creating the configuration XML-File to serialise ourselves into
+                GZIPOutputStream gzos = null;
+                try {
+                    gzos = new GZIPOutputStream(
+                            new FileOutputStream(this.dataFile)
+                    );
+                    Jenkins.XSTREAM.toXML(this, gzos);
+                } finally {
+                    if (gzos != null) {
+                        gzos.close();
+                    }
+                }
+            } finally {
+                this.dataFileLock.writeLock().unlock();
+            }
+        }
+        
+        
+        /**
+         * Returns the branch map for the given project.
+         * Copying it is not necessary, as the map is guaranteed to be a 
+         * concurrency-aware map like {@link ConcurrentHashMap}.
+         * 
+         * @param project the project to retrieve the map for.
+         * @return a map between branch names and most-recent builds on them
+         */
+        public Map<String, Build> getBranchToBuildMap(String project) {
+            // Get a read-lock for the main map
+            // Check if project is known already
+            if (branchByProjectAndBuildMap.containsKey(project)) {
+                Map<String, Build> map = branchByProjectAndBuildMap.get(project);
+                if (map == null) {
+                    return new ConcurrentHashMap<String, Build>();
+                } else {
+                    return new ConcurrentHashMap<String, Build>(map);
+                }
+            }
+            //This project has not yet been built; returning empty map
+            return new ConcurrentHashMap<String, Build>();
+        }
+        
+        public void addBranchToBuildMap(String project, String branch, Build build) {
+            this.addBranchToBuildMap(project, branch, build, true);
+        }
+        
+        public void addBranchToBuildMap(
+                String project, String branch, Build build, boolean overwrite) {
+            this.addAllFromBranchToBuildMap(
+                    project, Collections.singletonMap(branch, build), overwrite
+            );
+        }
+        
+        public void addAllFromBranchToBuildMap(
+                String project, Map<String, Build> input, boolean overwrite) {
+            Map<String, Build> map;
+            //Open a bulk-change object to block saving while modification
+            BulkChange bc = new BulkChange(this);
+            try {
+                //Fetch the map for the given project
+                if (branchByProjectAndBuildMap.containsKey(project)) {
+                    map = branchByProjectAndBuildMap.get(project);
+                    if (map != null) {
+                        //Check if overwriting is allowed
+                        if (overwrite) {
+                            map.putAll(input);
+                        } else {
+                            //Ensuring that we do not overwrite an entry
+                            for (Entry<String, Build> entry : input.entrySet()) {
+                                String branch = entry.getKey();
+                                if (!map.containsKey(branch)) {
+                                    map.put(branch, entry.getValue());
+                                }
+                            }
+                        }
+                    } else {
+                        //Create a new map for that project
+                        map = new ConcurrentHashMap<String, Build>();
+                        map.putAll(input);
+                        this.branchByProjectAndBuildMap.put(project, map);
+                    }
+                } else {
+                    //Create a new map for that project
+                    map = new ConcurrentHashMap<String, Build>();
+                    map.putAll(input);
+                    this.branchByProjectAndBuildMap.put(project, map);
+                }
+            } finally {
+                try {
+                    bc.commit();
+                } catch (IOException ex) {
+                    //TODO: Log this?
+                }
+            }
+        }
+    }
+    
+    /**
+     * The static instance of the builds-to-branches mapper, as loaded from the
+     * default configuration file.
+     */
+    public static final BuildsBySourceMapper buildsMapper =
+            new BuildsBySourceMapper(BuildsBySourceMapper.getDefaultConfigFile());
+    
     // old fields are left so that old config data can be read in, but
     // they are deprecated. transient so that they won't show up in XML
     // when writing back
@@ -477,11 +697,6 @@ public class GitSCM extends SCM implements Serializable {
         DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
-    
-    public boolean isDoNotSaveBranchesToBuilds() {
-        DescriptorImpl gitDescriptor = ((DescriptorImpl) getDescriptor());
-        return (gitDescriptor != null && gitDescriptor.isDoNotSaveBranchesToBuilds());
-    }
 
     public boolean getSkipTag() {
         return this.skipTag;
@@ -753,7 +968,7 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
+        return bd != null ? bd : new BuildData("", getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
     private void cleanSubmodules(GitClient parentGit,
@@ -1260,13 +1475,6 @@ public class GitSCM extends SCM implements Serializable {
             });
         }
 
-        // Check if user does not want to persist the branches-to-builds map
-        if (this.isDoNotSaveBranchesToBuilds()) {
-            //Remove all previous buildsByBranches; the last built-branch
-            //added below will be the only entry persisted into the build
-            buildData.buildsByBranchName.clear();
-        }
-        
         buildData.saveBuild(returnedBuildData);
         build.addAction(buildData);
         build.addAction(new GitTagAction(build, buildData));
@@ -1429,7 +1637,6 @@ public class GitSCM extends SCM implements Serializable {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
-        private boolean doNotSaveBranchesToBuilds;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1489,18 +1696,10 @@ public class GitSCM extends SCM implements Serializable {
             return createAccountBasedOnEmail;
         }
         
-        public boolean isDoNotSaveBranchesToBuilds() {
-            return doNotSaveBranchesToBuilds;
-        }
-
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
         }
 
-        public void setDoNotSaveBranchesToBuilds(boolean doNotSaveBranchesToBuilds) {
-            this.doNotSaveBranchesToBuilds = doNotSaveBranchesToBuilds;
-        }
-        
         /**
          * Old configuration of git executable - exposed so that we can
          * migrate this setting to GitTool without deprecation warnings.
@@ -1723,10 +1922,11 @@ public class GitSCM extends SCM implements Serializable {
      * @param clone
      * @return the last recorded build data
      */
-    public BuildData getBuildData(Run build, boolean clone) {
+    public BuildData getBuildData(Run<?,?> build, boolean clone) {
         BuildData buildData = null;
-        while (build != null) {
-            List<BuildData> buildDataList = build.getActions(BuildData.class);
+        Run<?,?> currBuild = build;
+        while (currBuild != null) {
+            List<BuildData> buildDataList = currBuild.getActions(BuildData.class);
             for (BuildData bd : buildDataList) {
                 if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
@@ -1736,11 +1936,43 @@ public class GitSCM extends SCM implements Serializable {
             if (buildData != null) {
                 break;
             }
-            build = build.getPreviousBuild();
+            currBuild = currBuild.getPreviousBuild();
         }
-
+        String projectName = (currBuild == null)
+                ? build.getParent().getName()
+                : currBuild.getParent().getName();
+        
         if (buildData == null) {
-            return clone ? new BuildData(getScmName(), getUserRemoteConfigs()) : null;
+            if (clone) {
+                return new BuildData(
+                        projectName, getScmName(), getUserRemoteConfigs()
+                );
+            } else {
+                return null;
+            }
+        }
+        
+        //Now, we go back through the BuildData fields to fix-up project-name
+        //associations that have been introduced in v1.4.1
+        currBuild = build;
+        if (buildData.projectName == null) {
+            buildData.projectName = projectName;
+            //We must re-adjust the project-name bindings or previous builds
+            currBuild = currBuild.getPreviousBuild();
+            while (currBuild != null) {
+                List<BuildData> buildDataList =
+                        currBuild.getActions(BuildData.class);
+                for (BuildData bd : buildDataList) {
+                    if (bd != null) {
+                        //Check if we're done and have found an already fixed one
+                        if (bd.projectName != null) {
+                            currBuild = null;
+                            break;
+                        }
+                        bd.projectName = projectName;
+                    }
+                }
+            }
         }
 
         if (clone) {
