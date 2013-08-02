@@ -1938,9 +1938,21 @@ public class GitSCM extends SCM implements Serializable {
             }
             currBuild = currBuild.getPreviousBuild();
         }
-        String projectName = (currBuild == null)
-                ? build.getParent().getName()
-                : currBuild.getParent().getName();
+        
+        String projectName;
+        if (build != null) {
+            Job<?,?> job = build.getParent();
+            if (job != null) {
+                projectName = job.getName();
+            } else {
+                //Should only happen in tests; as real builds should have a parent
+                projectName = null;
+            }
+        } else {
+            //Without a build, we can't find out the process; this should also
+            //only happen in synthetic testcases.
+            projectName = null;
+        }
         
         if (buildData == null) {
             if (clone) {
