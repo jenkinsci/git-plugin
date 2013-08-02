@@ -82,7 +82,7 @@ public class GitLab extends GitRepositoryBrowser {
             return getDiffLink(path);
         } else {
             String spec;
-            if(getVersion() >= 5.2) {
+            if(getVersion() >= 5.1) {
                 spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
             } else {
                 spec = path.getChangeSet().getId() + "/tree/" + path.getPath();
