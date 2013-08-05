@@ -112,6 +112,7 @@ public class GitSCM extends SCM implements Serializable {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String GIT_MERGE_FLAG = "GIT_MERGE_FLAG";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     private String relativeTargetDir;
     private String reference;
@@ -274,7 +275,7 @@ public class GitSCM extends SCM implements Serializable {
 
             // replace with new merge options
             if (userMergeOptions != null) {
-                this.userMergeOptions = new UserMergeOptions(userMergeOptions.getMergeRemote(), userMergeOptions.getMergeTarget());
+                this.userMergeOptions = new UserMergeOptions(userMergeOptions.getMergeRemote(), userMergeOptions.getMergeTarget(), userMergeOptions.getMergeFlag());
             }
         } catch (FormException ex) {
             throw new GitException("Error creating JGit merge options", ex);
@@ -322,7 +323,7 @@ public class GitSCM extends SCM implements Serializable {
             // update from version 1
             if (mergeOptions.doMerge()) {
                 userMergeOptions = new UserMergeOptions(mergeOptions.getRemoteBranchName(),
-                        mergeOptions.getMergeTarget());
+                        mergeOptions.getMergeTarget(), mergeOptions.getMergeFlag());
             }
         }
 
@@ -1616,7 +1617,7 @@ public class GitSCM extends SCM implements Serializable {
                     throw new FormException("No remote repository configured with name '" + mergeRemoteName + "'", "git.mergeRemote");
                 }
                 mergeOptions.setMergeRemote(mergeRemote);
-
+                mergeOptions.setMergeFlag(mergeOptionsBean.getMergeFlag());
                 mergeOptions.setMergeTarget(mergeOptionsBean.getMergeTarget());
             }
 

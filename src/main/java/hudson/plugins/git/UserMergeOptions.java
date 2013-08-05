@@ -11,11 +11,13 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     private String mergeRemote;
     private String mergeTarget;
+    private String mergeFlag;
 
     @DataBoundConstructor
-    public UserMergeOptions(String mergeRemote, String mergeTarget) {
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeFlag ) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
+        this.mergeFlag = mergeFlag;
     }
 
     public String getMergeRemote() {
@@ -24,6 +26,10 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     public String getMergeTarget() {
         return mergeTarget;
+    }
+
+    public String getMergeFlag() {
+        return mergeFlag;
     }
 
     @Extension

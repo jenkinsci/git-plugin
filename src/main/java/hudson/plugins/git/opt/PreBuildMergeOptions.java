@@ -25,6 +25,12 @@ public class PreBuildMergeOptions implements Serializable {
      */
     public String mergeTarget = null;
 
+    /**
+     * Allow use of a merge flag
+     * e.g. non fast forward merge (--no-ff flag)
+     * */
+    public String mergeFlag = null;
+
     @Exported
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
@@ -41,6 +47,15 @@ public class PreBuildMergeOptions implements Serializable {
 
     public void setMergeTarget(String mergeTarget) {
         this.mergeTarget = mergeTarget;
+    }
+
+    public void setMergeFlag(String mergeFlag) {
+        this.mergeFlag=mergeFlag;
+    }
+
+    @Exported
+    public String getMergeFlag() {
+        return mergeFlag;
     }
 
     @Exported
