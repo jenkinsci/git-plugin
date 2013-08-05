@@ -85,17 +85,21 @@ public class GitSCM extends SCM implements Serializable {
      * to disk in the {@link GitSCM} instances, to avoid polluting the SCM
      * settings of each {@link Project} with runtime-only data.
      * <p>
-     * TODO: A strategy has to be found to remove old branches, to stop the
-     * map from growing endlessly.
+     * TODO: Find a strategy to remove old branches, to limit growth of the map
+     * 
+     * @see BuildData#configureXtream()
+     * @see BuildData#localBuildsMapperLink
+     * @see BuildData#buildsByBranchName
+     * @see GitSCM#buildsMapper
+     * @see GitSCM.BuildsBySourceMapper
      * 
      * @author mhschroe
      */
     public static class BuildsBySourceMapper implements Serializable, Saveable {
         private static final long serialVersionUID = -2517229422949821293L;
 
-        //TODO: This file can grow quite large; investigate compression
         private final transient File dataFile;
-        private final ReentrantReadWriteLock dataFileLock =
+        private final transient ReentrantReadWriteLock dataFileLock =
                 new ReentrantReadWriteLock();
         
         /**
@@ -120,11 +124,20 @@ public class GitSCM extends SCM implements Serializable {
         }
         
         protected static File getDefaultConfigFile() {
-            File root = Jenkins.getInstance().getRootDir();
+            Jenkins j = Jenkins.getInstance();
+            if (j == null) {
+                //We're not on the master; can't load the default config
+                return null;
+            }
+            File root = j.getRootDir();
             return new File(root, "hudson.plugins.git.GitSCM.branches.xml.gz");
         }
         
         protected void load() throws IOException {
+            if (this.dataFile == null) {
+                //Nothing to load
+                return;
+            }
             //Deserialising from disk (file is GZ compressed to save space)
             dataFileLock.readLock().lock();
             try {
@@ -167,6 +180,10 @@ public class GitSCM extends SCM implements Serializable {
         }
         
         public void save() throws IOException {
+            if (this.dataFile == null) {
+                //Nothing to save
+                return;
+            }
             //Checking if we should hold back a change
             if (BulkChange.contains(this)) {
                 return;
@@ -272,6 +289,21 @@ public class GitSCM extends SCM implements Serializable {
     /**
      * The static instance of the builds-to-branches mapper, as loaded from the
      * default configuration file.
+     * <p>
+     * The field is fully serializable, but will only save changes to disk
+     * if on the master. The {@link BuildData} objects need to have a
+     * network-serialisable reference to it, so that they can resolve the
+     * latest builds <b>without</b> having access to this static instance.
+     * <p>
+     * Do note that the field <b>must not</b> be saved to disk by XStream, as
+     * that can incur a dramatic space overhead, leading to hundreds of
+     * megabytes of disk-space and main memory waste.
+     * 
+     * @see BuildData#configureXtream()
+     * @see BuildData#localBuildsMapperLink
+     * @see BuildData#buildsByBranchName
+     * @see GitSCM#buildsMapper
+     * @see GitSCM.BuildsBySourceMapper
      */
     public static final BuildsBySourceMapper buildsMapper =
             new BuildsBySourceMapper(BuildsBySourceMapper.getDefaultConfigFile());
@@ -1317,6 +1349,14 @@ public class GitSCM extends SCM implements Serializable {
         final String buildnumber = "jenkins-" + projectName.replace(" ", "_") + "-" + buildNumber;
 
         final BuildData buildData = getBuildData(build.getPreviousBuild(), true);
+        
+        //Check if we need to assign a project name to a freshly minted build
+        Job<?,?> project = build.getParent();
+        if (project != null) {
+            if (buildData.projectName == null) {
+                buildData.projectName = projectName;
+            }
+        }
 
         if (buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
@@ -1915,8 +1955,16 @@ public class GitSCM extends SCM implements Serializable {
     }
 
     /**
-     * Find the build log (BuildData) recorded with the last build that completed. BuildData
-     * may not be recorded if an exception occurs in the plugin logic.
+     * Find the build log (BuildData) recorded with the last build that
+     * completed. BuildData may not be recorded if an exception occurs in
+     * the plugin logic.
+     * <p>
+     * If you pass a null-value for the <code>build</code> parameter, you
+     * might get a newly made object. This object will not have any project
+     * name assigned to it, which leads to all sorts of issues.
+     * <p>
+     * Therefore, if your code makes this situation possible, make sure to
+     * assign the projectName if you know it after calling this method.
      *
      * @param build
      * @param clone
@@ -1949,8 +1997,10 @@ public class GitSCM extends SCM implements Serializable {
                 projectName = null;
             }
         } else {
-            //Without a build, we can't find out the process; this should also
-            //only happen in synthetic testcases.
+            /* Without a build, we can't find out the project it belongs to.
+             * Such buildData is unable to use the global branch-to-build list,
+             * which causes all sorts of issues within this plug-in.
+             */
             projectName = null;
         }
         

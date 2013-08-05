@@ -1,13 +1,18 @@
 package hudson.plugins.git.util;
 
 import hudson.Functions;
+import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
-import hudson.model.Action;
+import hudson.model.RunAction;
 import hudson.model.Api;
+import hudson.model.Items;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.GitSCM.BuildsBySourceMapper;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
@@ -17,6 +22,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import static hudson.Util.fixNull;
+import static hudson.init.InitMilestone.JOB_LOADED;
 
 /**
  * Captures the Git related information for a build.
@@ -26,7 +32,7 @@ import static hudson.Util.fixNull;
  * This persists the Git related information of that build.
  */
 @ExportedBean(defaultVisibility = 999)
-public class BuildData implements Action, Serializable, Cloneable {
+public class BuildData implements RunAction, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -43,13 +49,45 @@ public class BuildData implements Action, Serializable, Cloneable {
      * {@link #getBuildsByBranchName()} to get a view into the global mapping.
      * Not yet marked as transient, as old builds will not have established
      * the proper project<->BuildData mapping and must continue using this field
-     * until the mapping is established with another build.
+     * until the mapping is established with the next build on that job.
+     * 
+     * @see BuildData#configureXtream()
+     * @see BuildData#localBuildsMapperLink
+     * @see BuildData#buildsByBranchName
+     * @see GitSCM#buildsMapper
+     * @see GitSCM.BuildsBySourceMapper
      */
     private Map<String, Build> buildsByBranchName;
 
     /**
+     * This field must be a reference to the global {@link GitSCM#buildsMapper}.
+     * <p>
+     * Basically, it has to be transmittable over a channel to a remote host,
+     * but may not be saved in the job configuration via XSTREAM.
+     * <p>
+     * This strange set-up is needed, because this map needs to be available on
+     * the slave when it executes certain GIT commands, but may not be saved in
+     * each build and also may not be a copy of the static field in
+     * {@link GitSCM} to conserve disk space and main memory.
+     * 
+     * @see BuildData#configureXtream()
+     * @see BuildData#localBuildsMapperLink
+     * @see BuildData#buildsByBranchName
+     * @see GitSCM#buildsMapper
+     * @see GitSCM.BuildsBySourceMapper
+     */
+    private BuildsBySourceMapper localBuildsMapperLink = GitSCM.buildsMapper;
+    
+    /**
      * The last build that we did. Do note that this is possibly not the newest
-     * value as stored in the map returned by {@link #getBuildsByBranchName()}.
+     * value as stored in the global build-by-branch map stored in
+     * {@link GitSCM#buildsMapper} / {@link #localBuildsMapperLink}.
+     * <p>
+     * Therefore, {@link #getBuildsByBranchName()} makes sure to return a copy
+     * of that map where the {@link #lastBuild} is spliced in.
+     * 
+     * @see #getBuildsByBranchName()
+     * @see #addOwnBranches(Map)
      */
     public Build              lastBuild;
 
@@ -151,9 +189,29 @@ public class BuildData implements Action, Serializable, Cloneable {
         lastBuild = build;
         if (this.projectName != null) {
             for(Branch branch : build.revision.getBranches()) {
-                GitSCM.buildsMapper.addBranchToBuildMap(
+                localBuildsMapperLink.addBranchToBuildMap(
                         this.projectName, fixNull(branch.getName()), build
                 );
+            }
+        }
+    }
+    
+    
+    public void onLoad() {
+        //Nothing to do
+    }
+    
+    public void onBuildComplete() {
+        //Nothing to do
+    }
+    
+    @SuppressWarnings("rawtypes")
+    public void onAttached(Run run) {
+        Job<?,?> job = run.getParent();
+        if (job != null) {
+            String pName = job.getName();
+            if (pName != null) {
+                this.projectName = pName;
             }
         }
     }
@@ -167,6 +225,42 @@ public class BuildData implements Action, Serializable, Cloneable {
         return lastBuild==null?null:lastBuild.revision;
     }
 
+    /**
+     * This method takes a build map and returns a copy of it, where the last
+     * build for the branches stored in the revisions from {@link #lastBuild}
+     * are replaced by the above last build.
+     * <p>
+     * This is necessary, as many parts in the plug-in assume that the
+     * {@link #buildsByBranchName} map still is copied into each build and is
+     * a snapshot in time.
+     * <p>
+     * Thankfully, that assumption only needs to hold in respect to the
+     * branches stored in {@link #lastBuild}. Therefore, this method makes
+     * sure that the outside assumption of the "snapshot in time" character
+     * holds well enough.
+     * 
+     * @param buildMap the current map containing the branches-to-builds
+     * association.
+     * @return a copy of the buildMap with values from {@link #lastBuild}
+     * spliced in.
+     */
+    private Map<String, Build> addOwnBranches(Map<String, Build> buildMap) {
+        if (buildMap == null) {
+            return null;
+        }
+        Map<String, Build> copy = new HashMap<String,Build>(buildMap);
+        if (this.lastBuild != null) {
+            Revision r = this.lastBuild.getRevision();
+            if (r != null) {
+                for (Branch b : r.getBranches()) {
+                    //TODO: Should we really overwrite a branch, if it is already there?
+                    copy.put(b.getName(), this.lastBuild);
+                }
+            }
+        }
+        return copy;
+    }
+    
     @Exported
     public Map<String,Build> getBuildsByBranchName() {
         //Check if an old map exists, if so, we add its content to the
@@ -175,16 +269,19 @@ public class BuildData implements Action, Serializable, Cloneable {
             //Check if we have a project<->BuildData mapping
             if (this.projectName != null) {
                 // Get the global mapper and splice-in the correct mapping
-                if (GitSCM.buildsMapper == null) {
+                if (localBuildsMapperLink == null) {
                     //This should not have happened!
                     return buildsByBranchName;
                 }
-                GitSCM.buildsMapper.addAllFromBranchToBuildMap(
+                localBuildsMapperLink.addAllFromBranchToBuildMap(
                         this.projectName, buildsByBranchName, false
                 );
                 //Removing the old buildsByBranchName object
                 buildsByBranchName = null;
-                return GitSCM.buildsMapper.getBranchToBuildMap(this.projectName);
+                //Grab the newest branch map; and splice-in ourselves if missing
+                return addOwnBranches(
+                        localBuildsMapperLink.getBranchToBuildMap(this.projectName)
+                );
             } else {
                 //Must wait until GitSCM.getBuildData() has set the project name
                 return buildsByBranchName;
@@ -193,9 +290,11 @@ public class BuildData implements Action, Serializable, Cloneable {
         if (this.projectName == null) {
             // Without a project name, we can't retrieve mappings from the
             // global object; in that case, we return an empty map
-            return new HashMap<String, Build>();
+            return addOwnBranches(new HashMap<String, Build>());
         }
-        return GitSCM.buildsMapper.getBranchToBuildMap(this.projectName);
+        return addOwnBranches(
+                localBuildsMapperLink.getBranchToBuildMap(this.projectName)
+        );
     }
 
     public void setScmName(String scmName)
@@ -263,5 +362,27 @@ public class BuildData implements Action, Serializable, Cloneable {
                 this.getBuildsByBranchName(),
                 lastBuild
         );
+    }
+    
+    
+    /**
+     * This method makes sure that the {@link #localBuildsMapperLink} is not
+     * serialised to disk.
+     * <p>
+     * It is still serialized via the network, though, when transmitted to build
+     * hosts. Keep that in mind given that this object never actually stops
+     * growing, as new branches are continuously added it, but never removed.
+     * 
+     * @see BuildData#configureXtream()
+     * @see BuildData#localBuildsMapperLink
+     * @see BuildData#buildsByBranchName
+     * @see GitSCM#buildsMapper
+     * @see GitSCM.BuildsBySourceMapper
+     */
+    @Initializer(before=JOB_LOADED)
+    public static void configureXtream() {
+        //Making sure that XStream does not save this field to disk; it shall
+        //only be serialised over the network; but not saved to disk!
+        Items.XSTREAM.omitField(BuildData.class, "localBuildsMapperLink");
     }
 }
