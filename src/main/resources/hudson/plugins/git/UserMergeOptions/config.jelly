@@ -9,4 +9,7 @@
   <f:entry title="${%Branch to merge to}" field="mergeTarget">
     <f:textbox id="git.mergeTarget" clazz="required"/>
   </f:entry>
+  <f:entry title="Merge flag" field="mergeFlag">
+    <f:textbox id="git.mergeFlag" />
+  </f:entry>
 </j:jelly>
