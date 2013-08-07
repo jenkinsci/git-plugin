@@ -1,8 +1,9 @@
 package hudson.plugins.git.extensions.impl;
 
-import com.cloudbees.jenkins.plugins.sshcredentials.SSHUser;
-import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserListBoxModel;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.plugins.git.GitException;
@@ -11,6 +12,8 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.remoting.VirtualChannel;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -20,6 +23,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,10 +46,9 @@ public class JGitCredential extends GitSCMExtension {
         return credentialsId;
     }
 
-    public SSHUser getCredentials() {
-        // TODO: once we define a credential type for HTTP BASIC auth, look there in addition to SSHUser
-        List<SSHUser> all = CredentialsProvider.lookupCredentials(SSHUser.class, Jenkins.getInstance());
-        for (SSHUser u: all) {
+    public StandardUsernameCredentials getCredentials() {
+        List<StandardUsernameCredentials> all = allCredentials();
+        for (StandardUsernameCredentials u: all) {
             if (u.getId().equals(credentialsId)) {
                 return u;
             }
@@ -58,9 +61,13 @@ public class JGitCredential extends GitSCMExtension {
         return null;
     }
 
+    private static List<StandardUsernameCredentials> allCredentials() {
+        return CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, Jenkins.getInstance(), /* TODO per-build auth? */ACL.SYSTEM, /* TODO restrict */Collections.<DomainRequirement>emptyList());
+    }
+
     @Override
     public GitClient decorate(GitSCM scm, final GitClient git) throws IOException, InterruptedException, GitException {
-        final SSHUser cred = getCredentials();
+        final StandardUsernameCredentials cred = getCredentials();
 
         // 'git' might be a proxy to the remote object so we need a closure that runs locally to 'git' to de-reference
         // 'git' to JGit.
@@ -91,9 +98,8 @@ public class JGitCredential extends GitSCMExtension {
             return "Credential for authentication (JGit only/experimental)";
         }
 
-        public SSHUserListBoxModel doFillCredentialsIdItems(@AncestorInPath AbstractProject context) {
-            return new SSHUserListBoxModel().addCollection(
-                    CredentialsProvider.lookupCredentials(SSHUser.class, context));
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath AbstractProject context) {
+            return new StandardUsernameListBoxModel().withEmptySelection().withAll(allCredentials());
         }
     }
 }
