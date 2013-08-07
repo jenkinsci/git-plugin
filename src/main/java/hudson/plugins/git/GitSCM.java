@@ -120,11 +120,7 @@ public class GitSCM extends SCM implements Serializable {
             try {
                 this.load();
             } catch (IOException ex) {
-                LOGGER.log(
-                        Level.WARNING,
-                        "Could not load GitSCM branches-to-builds mapping from: {0}",
-                        this.dataFile.getAbsolutePath()
-                );
+                //Nothing to do; error was logged in load()
             }
         }
         
@@ -140,7 +136,7 @@ public class GitSCM extends SCM implements Serializable {
         
         protected void load() throws IOException {
             if (this.dataFile == null) {
-                //Nothing to load
+                //Nothing to load; not on master server?
                 return;
             }
             //Deserialising from disk (file is GZ compressed to save space)
@@ -166,18 +162,16 @@ public class GitSCM extends SCM implements Serializable {
                             }
                         }
                     } catch (ZipException ex) {
-                        throw new IOException(
-                                "Could not decompress: " + dataFile.getAbsolutePath()
-                        );
+                        String msg = "Could not decompress: " + dataFile.getAbsolutePath();
+                        throw new IOException(msg);
                     } finally {
                         if (gzio != null) {
                             gzio.close();
                         }
                     }
                 } else {
-                    throw new IOException(
-                            "No such file, or invalid: " + dataFile.getAbsolutePath()
-                    );
+                    String msg = "No such file, or invalid: " + dataFile.getAbsolutePath();
+                    throw new IOException(msg);
                 }
             } finally {
                 dataFileLock.readLock().unlock();
@@ -207,6 +201,12 @@ public class GitSCM extends SCM implements Serializable {
                         gzos.close();
                     }
                 }
+            } catch (IOException ex) {
+                LOGGER.log(
+                    Level.WARNING,
+                    "Could not save GitSCM branches-to-builds mapping to: {0}",
+                    this.dataFile.getAbsolutePath()
+                );
             } finally {
                 this.dataFileLock.writeLock().unlock();
             }
@@ -285,11 +285,7 @@ public class GitSCM extends SCM implements Serializable {
                 try {
                     bc.commit();
                 } catch (IOException ex) {
-                    LOGGER.log(
-                        Level.WARNING,
-                        "Could not save GitSCM branches-to-builds mapping to: {0}",
-                        this.dataFile.getAbsolutePath()
-                    );
+                    //save() should already have logged this error
                 }
             }
         }
