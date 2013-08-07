@@ -214,7 +214,7 @@ public class BuildData implements RunAction, Serializable, Cloneable {
     public void onAttached(Run run) {
         Job<?,?> job = run.getParent();
         if (job != null) {
-            String pName = job.getName();
+            String pName = job.getFullName();
             if (pName != null) {
                 this.projectName = pName;
             }

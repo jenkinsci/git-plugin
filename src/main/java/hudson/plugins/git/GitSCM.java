@@ -8,6 +8,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
+import hudson.model.listeners.ItemListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -95,7 +96,7 @@ public class GitSCM extends SCM implements Serializable {
      * 
      * @author mhschroe
      */
-    public static class BuildsBySourceMapper implements Serializable, Saveable {
+    public static class BuildsBySourceMapper extends ItemListener implements Serializable, Saveable {
         private static final long serialVersionUID = -2517229422949821293L;
 
         private final transient File dataFile;
@@ -119,7 +120,11 @@ public class GitSCM extends SCM implements Serializable {
             try {
                 this.load();
             } catch (IOException ex) {
-                //TODO: Log an appropriate error 
+                LOGGER.log(
+                        Level.WARNING,
+                        "Could not load GitSCM branches-to-builds mapping from: {0}",
+                        this.dataFile.getAbsolutePath()
+                );
             }
         }
         
@@ -280,10 +285,70 @@ public class GitSCM extends SCM implements Serializable {
                 try {
                     bc.commit();
                 } catch (IOException ex) {
-                    //TODO: Log this?
+                    LOGGER.log(
+                        Level.WARNING,
+                        "Could not save GitSCM branches-to-builds mapping to: {0}",
+                        this.dataFile.getAbsolutePath()
+                    );
                 }
             }
         }
+    
+        // === ITEM LISTENER METHODS ===
+        
+        public void onDeleted(Item item) {
+            //Fetch the name, if it matches a project, we remove its branches
+            String name = item.getFullName();
+            if (branchByProjectAndBuildMap.containsKey(name)) {
+                branchByProjectAndBuildMap.remove(name);
+                try {
+                    this.save();
+                } catch (IOException ex) {
+                    //Do nothing
+                }
+            }
+        }
+        
+        public void onRenamed(Item item, String oldName, String newName) {
+            ItemGroup<?> parent = item.getParent();
+            String root = (parent != null) ? parent.getFullName() : "";
+            String oldFullName = root + oldName;
+            String newFullName = root + newName;
+            
+            BulkChange bc = new BulkChange(this);
+            try {
+                if (branchByProjectAndBuildMap.containsKey(oldFullName)) {
+                    Map<String, Build> map = 
+                            branchByProjectAndBuildMap.get(oldFullName);
+                    branchByProjectAndBuildMap.put(newFullName, map);
+                    branchByProjectAndBuildMap.remove(oldFullName);
+                }
+            } finally {
+                try {
+                    bc.commit();
+                } catch (IOException ex) {
+                    //Do nothing
+                }
+            }
+            
+            //Now, we also need to go through all builds and correct the
+            //project-name in their stored BuildData objects
+            if (item instanceof Job<?,?>) {
+                Job<?,?> job = (Job<?,?>) item;
+                Object obj = job.getLastBuild();
+                if (obj instanceof Run<?,?>) {
+                    Run<?,?> run = (Run<?,?>) obj;
+                    while (run != null) {
+                        List<BuildData> bdLst = run.getActions(BuildData.class);
+                        if (bdLst == null) { continue; }
+                        for (BuildData bd : bdLst) {
+                            bd.projectName = newFullName;
+                        }
+                    }
+                }
+            }
+        }
+    
     }
     
     /**
@@ -305,6 +370,7 @@ public class GitSCM extends SCM implements Serializable {
      * @see GitSCM#buildsMapper
      * @see GitSCM.BuildsBySourceMapper
      */
+    @Extension
     public static final BuildsBySourceMapper buildsMapper =
             new BuildsBySourceMapper(BuildsBySourceMapper.getDefaultConfigFile());
     
@@ -1342,6 +1408,7 @@ public class GitSCM extends SCM implements Serializable {
         }
 
         final String projectName = build.getProject().getName();
+        final String projectFullName = build.getProject().getFullName();
         final int buildNumber = build.getNumber();
 
         final String gitExe = getGitExe(build.getBuiltOn(), listener);
@@ -1354,7 +1421,7 @@ public class GitSCM extends SCM implements Serializable {
         Job<?,?> project = build.getParent();
         if (project != null) {
             if (buildData.projectName == null) {
-                buildData.projectName = projectName;
+                buildData.projectName = projectFullName;
             }
         }
 
@@ -1991,7 +2058,7 @@ public class GitSCM extends SCM implements Serializable {
         if (build != null) {
             Job<?,?> job = build.getParent();
             if (job != null) {
-                projectName = job.getName();
+                projectName = job.getFullName();
             } else {
                 //Should only happen in tests; as real builds should have a parent
                 projectName = null;
