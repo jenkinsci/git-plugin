@@ -46,7 +46,7 @@ public class RhodeCode extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + "changeset/" + changeSet.getId() + "/");
+        return new URL(url, url.getPath() + "changeset/" + changeSet.getId());
     }
 
     /**
