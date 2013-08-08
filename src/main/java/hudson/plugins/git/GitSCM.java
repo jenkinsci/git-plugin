@@ -1881,7 +1881,7 @@ public class GitSCM extends SCM implements Serializable {
         if (desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();
             String defaultGit = GitTool.getDefaultInstallation().getGitExe();
-            if (defaultGit.equals(exe)) {
+            if (exe.equals(defaultGit)) {
                 return;
             }
             System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
