@@ -56,7 +56,7 @@ public class RhodeCodeTest extends TestCase {
      */
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = rhodecode.getChangeSetLink(createChangeSet("rawchangelog"));
-        assertEquals(RHODECODE_URL + "/files/396fc230a3db05c427737aa5c2eb7856ba72b05d/", changeSetLink.toString());
+        assertEquals(RHODECODE_URL + "/changeset/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     /**
