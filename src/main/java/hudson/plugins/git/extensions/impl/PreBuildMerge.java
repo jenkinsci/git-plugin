@@ -46,7 +46,7 @@ public class PreBuildMerge extends GitSCMExtension {
 
     @Override
     public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException {
-        String remoteBranchRef = GitSCM.getParameterString(options.getRef(), build);
+        String remoteBranchRef = GitSCM.getParameterString(options.getRef(), build.getEnvironment(listener));
 
         // if the branch we are merging is already at the commit being built, the entire merge becomes no-op
         // so there's nothing to do

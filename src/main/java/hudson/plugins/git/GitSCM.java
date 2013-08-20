@@ -329,9 +329,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * Gets the parameter-expanded effective value in the context of the current build.
      */
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) {
-        LocalBranch lb = getExtensions().get(LocalBranch.class);
-        return GitSCM.getParameterString(lb!=null?lb.getLocalBranch():null, build);
+    public String getParamLocalBranch(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+        String branch = getLocalBranch();
+        // substitute build parameters if available
+        return getParameterString(branch != null ? branch : null, build.getEnvironment());
     }
 
     /**
@@ -340,13 +341,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) {
+    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
+        EnvVars env = build.getEnvironment();
+
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
-            expandedRepos.add(newRemoteConfig(getParameterString(oldRepo.getName(), build),
-                    getParameterString(oldRepo.getURIs().get(0).toPrivateString(), build),
-                    getRefSpec(oldRepo, build).toArray(new RefSpec[0])));
+            expandedRepos.add(
+                newRemoteConfig(
+                    getParameterString(oldRepo.getName(), env),
+                    getParameterString(oldRepo.getURIs().get(0).toPrivateString(), env),
+                    getRefSpecs(oldRepo, env).toArray(new RefSpec[0])));
         }
 
         return expandedRepos;
@@ -380,17 +385,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return gitTool;
     }
 
-    public static String getParameterString(String original, AbstractBuild<?, ?> build) {
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-        if (parameters != null) {
-            original = parameters.substitute(build, original);
-        }
-
-        return original;
+    public static String getParameterString(String original, EnvVars env) {
+        return env.expand(original);
     }
 
-    private List<RefSpec> getRefSpec(RemoteConfig repo, AbstractBuild<?, ?> build) {
-        return repo.getFetchRefSpecs();
+    private List<RefSpec> getRefSpecs(RemoteConfig repo, EnvVars env) {
+        List<RefSpec> refSpecs = new ArrayList<RefSpec>();
+        for (RefSpec refSpec : repo.getFetchRefSpecs()) {
+            refSpecs.add(new RefSpec(getParameterString(refSpec.toString(), env)));
+        }
+        return refSpecs;
     }
 
     /**
@@ -399,7 +403,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * Otherwise return null.
      */
-    private String getSingleBranch(AbstractBuild<?, ?> build) {
+    private String getSingleBranch(EnvVars env) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1 || getRepositories().size() != 1) {
             return null;
@@ -420,7 +424,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         // substitute build parameters if available
-        branch = getParameterString(branch, build);
+        branch = getParameterString(branch, env);
 
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) {
@@ -466,7 +470,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(lastBuild);
+        final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
         if (getExtensions().get(RemotePoll.class)!=null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
@@ -742,10 +746,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (rpa != null)
             return new Build(rpa.toRevision(git), build.getNumber(), null);
 
+        final String singleBranch = environment.expand( getSingleBranch(environment) );
 
         final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
         Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                false, environment.expand(getSingleBranch(build)), git, listener, buildData, context);
+                false, singleBranch, git, listener, buildData, context);
 
         if (candidates.size() == 0) {
             // getBuildCandidates should make the last item the last build, so a re-build
@@ -943,15 +948,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
         }
 
-      if(userRemoteConfigs.size()==1){
-    	  env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
-      }else{
-    	  int count=1;
-    	  for(UserRemoteConfig config:userRemoteConfigs)   {
-      		env.put("GIT_URL_"+count, config.getUrl());
-      		count++;
-         }  
-      }
+       
+        if (userRemoteConfigs.size()==1){
+            env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
+        } else {
+            int count=1;
+            for(UserRemoteConfig config:userRemoteConfigs)   {
+                env.put("GIT_URL_"+count, config.getUrl());
+                count++;
+            }  
+        }
 
         getDescriptor().populateEnvironmentVariables(env);
         for (GitSCMExtension ext : extensions) {
@@ -1399,7 +1405,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();
             String defaultGit = GitTool.getDefaultInstallation().getGitExe();
-            if (defaultGit.equals(exe)) {
+            if (exe.equals(defaultGit)) {
                 return;
             }
             System.err.println("[WARNING] you're using deprecated gitexe attribute to configure git plugin. Use Git installations");
