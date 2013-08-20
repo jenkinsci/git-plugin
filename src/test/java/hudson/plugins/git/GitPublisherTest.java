@@ -35,6 +35,7 @@ import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.UserMergeOptions;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.eclipse.jgit.lib.Constants;
@@ -106,7 +107,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
@@ -144,7 +145,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, new ArrayList<GitSCMExtension>());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 

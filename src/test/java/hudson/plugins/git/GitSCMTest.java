@@ -8,6 +8,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -30,7 +31,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jvnet.hudson.test.Bug;
-import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -764,7 +764,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default")));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -803,7 +803,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -842,7 +842,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "")));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -878,7 +878,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration")));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:

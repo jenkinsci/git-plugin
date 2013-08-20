@@ -4,6 +4,8 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 
@@ -18,15 +20,17 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     private String mergeRemote;
     private String mergeTarget;
+    private String mergeStrategy;
 
     @DataBoundConstructor
-    public UserMergeOptions(String mergeRemote, String mergeTarget) {
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
+        this.mergeStrategy = mergeStrategy;
     }
 
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(pbm.getRemoteBranchName(),pbm.getMergeTarget());
+        this(pbm.getRemoteBranchName(),pbm.getMergeTarget(),pbm.getMergeStrategy().toString());
     }
 
     /**
@@ -48,11 +52,25 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return mergeRemote + "/" + mergeTarget;
     }
 
+    public MergeCommand.Strategy getMergeStrategy() {
+        for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
+            if (strategy.toString().equals(mergeStrategy))
+                return strategy;
+        return MergeCommand.Strategy.DEFAULT;
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<UserMergeOptions> {
         @Override
         public String getDisplayName() {
             return "";
+        }
+
+        public ListBoxModel doFillMergeStrategyItems() {
+            ListBoxModel m = new ListBoxModel();
+            for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
+                m.add(strategy.toString(), strategy.toString());
+            return m;
         }
     }
 }

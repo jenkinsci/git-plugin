@@ -1185,8 +1185,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     throw new FormException("No remote repository configured with name '" + mergeRemoteName + "'", "git.mergeRemote");
                 }
                 mergeOptions.setMergeRemote(mergeRemote);
-
                 mergeOptions.setMergeTarget(mergeOptionsBean.getMergeTarget());
+                mergeOptions.setMergeStrategy(mergeOptionsBean.getMergeStrategy());
             }
 
             return mergeOptions;
