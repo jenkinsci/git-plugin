@@ -112,7 +112,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * It is better to match loosely and wastes a few polling calls than to be pedantic and miss the push notification,
      * especially given that Git tends to support multiple access protocols.
      */
-    protected static boolean looselyMatches(URIish lhs, URIish rhs) {
+    public static boolean looselyMatches(URIish lhs, URIish rhs) {
         return StringUtils.equals(lhs.getHost(),rhs.getHost())
             && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
     }
