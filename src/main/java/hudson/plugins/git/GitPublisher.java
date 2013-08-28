@@ -224,7 +224,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                             private static final long serialVersionUID = 1L;
                             
                             public Boolean invoke(File workspace,
-                                                  VirtualChannel channel) throws IOException {
+                                                  VirtualChannel channel) throws IOException, InterruptedException {
 
                                 GitClient git = Git.with(listener, environment)
                                         .in(workspace)
@@ -292,7 +292,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     private static final long serialVersionUID = 1L;
                                     
                                     public Boolean invoke(File workspace,
-                                                          VirtualChannel channel) throws IOException {
+                                                          VirtualChannel channel) throws IOException, InterruptedException {
 
                                         GitClient git = Git.with(listener, environment)
                                                 .in(workspace)
@@ -368,7 +368,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                     private static final long serialVersionUID = 1L;
                                     
                                     public Boolean invoke(File workspace,
-                                                          VirtualChannel channel) throws IOException {
+                                                          VirtualChannel channel) throws IOException, InterruptedException {
 
                                         GitClient git = Git.with(listener, environment)
                                                 .in(workspace)
@@ -429,7 +429,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
    
                                     
                                     public Boolean invoke(File workspace,
-                                                          VirtualChannel channel) throws IOException {
+                                                          VirtualChannel channel) throws IOException, InterruptedException {
 
                                         GitClient git = Git.with(listener, environment)
                                                 .in(workspace)

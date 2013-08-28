@@ -60,11 +60,11 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }
 
     @Deprecated
-    public Revision toRevision(IGitAPI git) {
+    public Revision toRevision(IGitAPI git) throws InterruptedException {
         return toRevision((GitClient) git);
     }
 
-    public Revision toRevision(GitClient git) {
+    public Revision toRevision(GitClient git) throws InterruptedException {
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
         // TODO: if commit is a branch, retain that information instead of making it 'detached'

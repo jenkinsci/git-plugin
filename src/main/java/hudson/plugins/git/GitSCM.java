@@ -752,7 +752,7 @@ public class GitSCM extends SCM implements Serializable {
     private void cleanSubmodules(GitClient parentGit,
             File workspace,
             TaskListener listener,
-            RemoteConfig remoteRepository) {
+            RemoteConfig remoteRepository) throws InterruptedException {
 
         List<IndexEntry> submodules = parentGit.getSubmodules("HEAD");
 
@@ -782,7 +782,7 @@ public class GitSCM extends SCM implements Serializable {
      */
     private boolean fetchFrom(GitClient git,
             TaskListener listener,
-            RemoteConfig remoteRepository) {
+            RemoteConfig remoteRepository) throws InterruptedException {
         String name = remoteRepository.getName();
         try {
             // Assume there is only 1 URL / refspec for simplicity
@@ -1399,7 +1399,7 @@ public class GitSCM extends SCM implements Serializable {
 
 
     private void putChangelogDiffs(GitClient git, String branchName, String revFrom,
-            String revTo, PrintStream fos) throws IOException {
+            String revTo, PrintStream fos) throws IOException, InterruptedException {
         fos.println("Changes in branch " + branchName + ", between " + revFrom + " and " + revTo);
         git.changelog(revFrom, revTo, fos);
     }
@@ -1783,7 +1783,7 @@ public class GitSCM extends SCM implements Serializable {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws InterruptedException {
         try {
             Pattern[] includedPatterns = getIncludedRegionsPatterns();
             Pattern[] excludedPatterns = getExcludedRegionsPatterns();

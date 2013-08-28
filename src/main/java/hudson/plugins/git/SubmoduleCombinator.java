@@ -36,7 +36,7 @@ public class SubmoduleCombinator {
         this.submoduleConfig = cfg;
     }
 
-    public void createSubmoduleCombinations() throws GitException, IOException {
+    public void createSubmoduleCombinations() throws GitException, IOException, InterruptedException {
         Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<IndexEntry, Collection<Revision>>();
 
         for (IndexEntry submodule : git.getSubmodules("HEAD")) {
@@ -138,7 +138,7 @@ public class SubmoduleCombinator {
         return null;
     }
 
-    protected void makeCombination(Map<IndexEntry, Revision> settings) {
+    protected void makeCombination(Map<IndexEntry, Revision> settings) throws InterruptedException {
         // Assume we are checked out
         String name = "combine-" + tid + "-" + (idx++); 
         git.branch(name);

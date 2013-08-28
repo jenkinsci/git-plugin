@@ -38,7 +38,7 @@ public class GitUtils {
      * @throws IOException
      * @throws GitException
      */
-    public Collection<Revision> getAllBranchRevisions() throws GitException, IOException {
+    public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
         Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
         for (Branch b : git.getRemoteBranches()) {
             Revision r = revisions.get(b.getSHA1());
@@ -58,7 +58,7 @@ public class GitUtils {
      * @throws IOException
      * @throws GitException
      */
-    public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException {
+    public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
         for(Revision revision : getAllBranchRevisions()) {
             for(Branch b : revision.getBranches()) {
                 if(b.getName().equals(branchName)) {
@@ -69,7 +69,7 @@ public class GitUtils {
         return null;
     }
 
-    public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException {
+    public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
         for(Revision revision : getAllBranchRevisions()) {
             if(revision.getSha1().equals(sha1))
                 return revision;

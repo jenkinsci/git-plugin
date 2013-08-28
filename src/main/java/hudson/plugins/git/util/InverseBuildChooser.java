@@ -37,7 +37,7 @@ public class InverseBuildChooser extends BuildChooser {
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall,
             String singleBranch, GitClient git, TaskListener listener,
-            BuildData buildData, BuildChooserContext context) throws GitException, IOException {
+            BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         GitUtils utils = new GitUtils(listener, git);
         List<Revision> branchRevs = new ArrayList<Revision>(utils.getAllBranchRevisions());

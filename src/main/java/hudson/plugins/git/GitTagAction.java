@@ -182,7 +182,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                         private static final long serialVersionUID = 1L;
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
-                                throws IOException {
+                                throws IOException, InterruptedException {
 
                             GitClient git = Git.with(listener, environment)
                                     .in(localWorkspace)
