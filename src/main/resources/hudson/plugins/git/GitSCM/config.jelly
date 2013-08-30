@@ -24,6 +24,17 @@
             <f:textbox/>
           </f:entry>
 
+          <f:entry title="${%Credentials}" field="credentialsId">
+            <f:select default="" field="credentialsId"
+                      onchange="{ // workaround for JENKINS-19124
+                                    var self = this.targetElement ? this.targetElement : this;
+                                    var r = findPreviousFormItem(self,'url');
+                                    r.onchange(r);
+                                    self = null;
+                                    r = null;
+                                 }"/>
+          </f:entry>
+
           <f:advanced>
 
             <f:entry title="${%Name}" field="name">
