@@ -10,6 +10,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +32,7 @@ public class PathRestriction extends GitSCMExtension {
     // compiled cache
     private transient volatile List<Pattern> includedPatterns,excludedPatterns;
 
+    @DataBoundConstructor
     public PathRestriction(String includedRegions, String excludedRegions) {
         this.includedRegions = includedRegions;
         this.excludedRegions = excludedRegions;

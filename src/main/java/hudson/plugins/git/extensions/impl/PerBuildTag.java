@@ -8,6 +8,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 
@@ -17,6 +18,10 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class PerBuildTag extends GitSCMExtension {
+    @DataBoundConstructor
+    public PerBuildTag() {
+    }
+
     @Override
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
         int buildNumber = build.getNumber();
