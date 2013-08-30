@@ -8,6 +8,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserMergeOptions;
+import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
@@ -15,6 +16,7 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -54,7 +56,7 @@ public class PreBuildMerge extends GitSCMExtension {
             return rev;
 
         // Only merge if there's a branch to merge that isn't us..
-        listener.getLogger().println("Merging " + rev + " onto " + remoteBranchRef);
+        listener.getLogger().println("Merging " + rev + " onto " + remoteBranchRef + " using " + scm.getUserMergeOptions().getMergeStrategy().toString() + " strategy");
 
         // checkout origin/blah
         ObjectId target = git.revParse(remoteBranchRef);
@@ -63,7 +65,10 @@ public class PreBuildMerge extends GitSCMExtension {
         git.checkoutBranch(paramLocalBranch, remoteBranchRef);
 
         try {
-            git.merge(rev.getSha1());
+            MergeCommand cmd = git.merge().setRevisionToMerge(rev.getSha1());
+            for (GitSCMExtension ext : scm.getExtensions())
+                ext.decorateMergeCommand(scm, build, git, listener, cmd);
+            cmd.execute();
         } catch (GitException ex) {
             // merge conflict. First, avoid leaving any conflict markers in the working tree
             // by checking out some known clean state. We don't really mind what commit this is,
@@ -80,6 +85,17 @@ public class PreBuildMerge extends GitSCMExtension {
         build.addAction(new MergeRecord(remoteBranchRef,target.getName()));
 
         return new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
+    }
+
+    @Override
+    public void decorateMergeCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+        if (scm.getUserMergeOptions().getMergeStrategy() != null)
+            cmd.setStrategy(scm.getUserMergeOptions().getMergeStrategy());
+    }
+
+    @Override
+    public GitClientType getRequiredClient() {
+        return GitClientType.GITCLI;
     }
 
     @Extension
