@@ -25,7 +25,7 @@ public class PruneStaleBranch extends GitSCMExtension {
     }
 
     @Override
-    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Pruning obsolete local branches");
         for (RemoteConfig remoteRepository : scm.getRepositories()) {
             git.prune(remoteRepository);
