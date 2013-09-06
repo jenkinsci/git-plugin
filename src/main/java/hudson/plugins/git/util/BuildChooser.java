@@ -5,6 +5,7 @@ import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Hudson;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -14,7 +15,9 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface defining an API to choose which revisions ought to be
@@ -143,6 +146,20 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
         return Hudson.getInstance()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
+    }
+
+    /**
+     * All the registered build choosers that are applicable to the specified item.
+     *
+     * @param item the item.
+     */
+    public static List<BuildChooserDescriptor> allApplicableTo(Item item) {
+        List<BuildChooserDescriptor> result = new ArrayList<BuildChooserDescriptor>();
+        for (BuildChooserDescriptor d: all()) {
+            if (d.isApplicable(item.getClass()))
+                result.add(d);
+        }
+        return result;
     }
 
     private static final long serialVersionUID = 1L;

@@ -175,7 +175,7 @@
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}">
       <j:scope>
         <j:set var="current" value="${instance.buildChooser}"/>
-        <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
+        <j:forEach var="descriptor" items="${descriptor.getBuildChooserDescriptors(it)}">
           <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
             selected="${current.descriptor==descriptor or (current==null and descriptor.displayName=='Default')}">
             <j:set var="instance" value="${current.descriptor==descriptor ? current : null}" />

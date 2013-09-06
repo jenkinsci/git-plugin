@@ -1437,6 +1437,10 @@ public class GitSCM extends SCM implements Serializable {
             return BuildChooser.all();
         }
 
+        public List<BuildChooserDescriptor> getBuildChooserDescriptors(Item job) {
+            return BuildChooser.allApplicableTo(job);
+        }
+
         /**
          * Lists available toolinstallations.
          * @return  list of available git tools
