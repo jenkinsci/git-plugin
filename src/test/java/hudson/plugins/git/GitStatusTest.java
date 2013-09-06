@@ -124,7 +124,7 @@ public class GitStatusTest extends HudsonTestCase {
         FreeStyleProject project = createFreeStyleProject();
         project.setScm(new GitSCM(
                 null,
-                Collections.singletonList(new UserRemoteConfig(url, null, null)),
+                Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
