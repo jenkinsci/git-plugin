@@ -109,7 +109,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
         @Override
         public String getDisplayName() {
-            return "Git";
+            return Messages.GitSCMSource_DisplayName();
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
