@@ -1172,10 +1172,11 @@ public class GitSCM extends SCM implements Serializable {
                     }
 
                     if (!disableSubmodules && git.hasGitModules()) {
+                        final String expandedReference = environment.expand(reference);
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
-                        git.submoduleUpdate(recursiveSubmodules);
+                        git.submoduleUpdate(recursiveSubmodules, reference);
                     }
 
                     if (!getSkipTag()) {
@@ -1235,10 +1236,11 @@ public class GitSCM extends SCM implements Serializable {
                     git.checkoutBranch(paramLocalBranch, revToBuild.getSha1String());
 
                     if (!disableSubmodules && git.hasGitModules()) {
+                        final String expandedReference = environment.expand(reference);
                         // This ensures we don't miss changes to submodule paths and allows
                         // seamless use of bare and non-bare superproject repositories.
                         git.setupSubmoduleUrls(revToBuild, listener);
-                        git.submoduleUpdate(recursiveSubmodules);
+                        git.submoduleUpdate(recursiveSubmodules, reference);
 
                     }
 
