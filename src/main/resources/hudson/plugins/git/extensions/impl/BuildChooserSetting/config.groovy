@@ -1,7 +1,7 @@
 package hudson.plugins.git.extensions.impl.BuildChooserSetting
 
-import hudson.plugins.git.util.BuildChooserDescriptor;
-
 def f = namespace(lib.FormTagLib);
 
-f.dropdownDescriptorSelector(title:_("Choosing strategy"), descriptors: descriptor.getBuildChooserDescriptor(it))
+f.entry(title:_("Choosing strategy"), field:"buildChooser") {
+    f.dropdownDescriptorSelector(descriptors: descriptor.getBuildChooserDescriptors(it))
+}
