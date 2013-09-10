@@ -1,24 +1,40 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-  <f:entry title="Repositories" field="userRemoteConfigs" >
-    <f:repeatableProperty field="userRemoteConfigs" minimum="1" noAddButton="true"/>
-  </f:entry>
+    <script><![CDATA[
+    function encodeAllInputs(sep, form, field) {
+        var inputs = Form.getInputs(form, null, field);
+        if (inputs.length == 0)
+            return "";
 
-  <f:entry title="Branches to build" field="branches">
-    <f:repeatableProperty field="branches" minimum="1" noAddButton="true" />
-  </f:entry>
+        var rv = sep;
+        for (var i = 0; i < inputs.length; ++i) {
+            if (i != 0)
+                rv += "&";
+            rv += field+"="+encode(inputs[i].value);
+        }
+        return rv;
+    }
+    ]]></script>
 
-  <j:if test="${descriptor.showGitToolOptions()}">
-    <f:entry title="${%Git executable}" field="gitTool">
-      <f:select />
+    <f:entry title="Repositories" field="userRemoteConfigs" >
+        <f:repeatableProperty field="userRemoteConfigs" minimum="1" noAddButton="true"/>
     </f:entry>
-  </j:if>
 
-  <t:listScmBrowsers name="git.browser" />
+    <f:entry title="Branches to build" field="branches">
+        <f:repeatableProperty field="branches" minimum="1" noAddButton="true" />
+    </f:entry>
 
-  <f:entry title="${%Additional Behaviours}">
-    <!-- TODO: switch to <f:repeatableHeteroList field="extensions"> -->
-    <f:hetero-list name="extensions" items="${instance.extensions}" descriptors="${descriptor.getExtensionDescriptors()}"
-                   hasHeader="true" />
-  </f:entry>
+    <j:if test="${descriptor.showGitToolOptions()}">
+        <f:entry title="${%Git executable}" field="gitTool">
+            <f:select />
+        </f:entry>
+    </j:if>
+
+    <t:listScmBrowsers name="git.browser" />
+
+    <f:entry title="${%Additional Behaviours}">
+        <!-- TODO: switch to <f:repeatableHeteroList field="extensions"> -->
+        <f:hetero-list name="extensions" items="${instance.extensions}" descriptors="${descriptor.getExtensionDescriptors()}"
+                       hasHeader="true" />
+    </f:entry>
 </j:jelly>

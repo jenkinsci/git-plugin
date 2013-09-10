@@ -4,4 +4,4 @@ import hudson.plugins.git.util.BuildChooserDescriptor;
 
 def f = namespace(lib.FormTagLib);
 
-f.dropdownDescriptorSelector(title:_("Choosing strategy"), descriptors: BuildChooserDescriptor.all())
+f.dropdownDescriptorSelector(title:_("Choosing strategy"), descriptors: descriptor.getBuildChooserDescriptor(it))

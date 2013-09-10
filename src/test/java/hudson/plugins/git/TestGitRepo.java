@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -33,7 +34,8 @@ public class TestGitRepo {
 	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
-	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener) throws IOException, InterruptedException {
+	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener)
+            throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
 		
@@ -56,20 +58,25 @@ public class TestGitRepo {
 		git.init();
 	}
 	
-    public void commit(final String fileName, final PersonIdent committer, final String message) throws Exception {
+    public void commit(final String fileName, final PersonIdent committer, final String message)
+            throws GitException, InterruptedException {
         commit(fileName, fileName, committer, committer, message);
     }
 
-    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws Exception {
+    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
+
+            throws GitException, InterruptedException {
         commit(fileName, fileName, author, committer, message);
     }
 
-    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message) throws Exception {
+    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
+
+            throws GitException, InterruptedException {
         commit(fileName, fileContent, committer, committer, message);
     }
 
     public void commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws Exception{
+                        final String message) throws GitException, InterruptedException {
         FilePath file = gitDirPath.child(fileName);
         try {
             file.write(fileContent, null);
@@ -82,7 +89,7 @@ public class TestGitRepo {
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
         List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
-        list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", ""));
+        list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }
 }

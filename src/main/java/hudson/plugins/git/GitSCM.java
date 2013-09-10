@@ -118,7 +118,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     static private List<UserRemoteConfig> createRepoList(String url) {
         List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig(url, null, null));
+        repoList.add(new UserRemoteConfig(url, null, null, null));
         return repoList;
     }
 
@@ -259,7 +259,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (cfg.getFetchRefSpecs().size() > 0 && cfg.getFetchRefSpecs().get(0) != null)
                     refspec = cfg.getFetchRefSpecs().get(0).toString();
 
-                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec));
+                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec, null));
             }
         }
 
@@ -1002,10 +1002,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return "Git";
         }
 
-        public List<BuildChooserDescriptor> getBuildChooserDescriptors() {
-            return BuildChooser.all();
-        }
-
         public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
             return GitSCMExtensionDescriptor.all();
         }
@@ -1079,55 +1075,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return gitExe;
         }
 
-        public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return super.newInstance(req, formData);
-            /*
-            List<RemoteConfig> remoteRepositories;
-            try {
-            remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
-            req.getParameterValues("git.repo.name"),
-            req.getParameterValues("git.repo.refspec"));
+        /**
+         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
+         *
+         * @param scmData
+         * @return
+         */
+        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
+            if (scmData.containsKey("browser")) {
+                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
+            } else {
+                return null;
             }
-            catch (IOException e1) {
-            throw new GitException("Error creating repositories", e1);
-            }
-            List<BranchSpec> branches = createBranches(req.getParameterValues("git.branch"));
-
-            // Make up a repo config from the request parameters
-
-            PreBuildMergeOptions mergeOptions = createMergeOptions(req.getParameter("git.doMerge"),
-            req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"),
-            remoteRepositories);
-
-
-            String[] urls = req.getParameterValues("git.repo.url");
-            String[] names = req.getParameterValues("git.repo.name");
-            Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
-
-            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
-            String gitTool = req.getParameter("git.gitTool");
-            return new GitSCM(
-            remoteRepositories,
-            branches,
-            mergeOptions,
-            req.getParameter("git.generate") != null,
-            submoduleCfg,
-            req.getParameter("git.clean") != null,
-            req.getParameter("git.wipeOutWorkspace") != null,
-            req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
-            gitBrowser,
-            gitTool,
-            req.getParameter("git.authorOrCommitter") != null,
-            req.getParameter("git.relativeTargetDir"),
-            req.getParameter("git.excludedRegions"),
-            req.getParameter("git.excludedUsers"),
-            req.getParameter("git.localBranch"),
-            req.getParameter("git.recursiveSubmodules") != null,
-            req.getParameter("git.pruneBranches") != null,
-            req.getParameter("git.gitConfigName"),
-            req.getParameter("git.gitConfigEmail"),
-            req.getParameter("git.skipTag") != null);
-             */
         }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,

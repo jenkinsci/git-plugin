@@ -7,6 +7,7 @@ package hudson.plugins.git;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
+import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.triggers.SCMTrigger;
 
 import org.eclipse.jgit.transport.URIish;
@@ -123,7 +124,7 @@ public class GitStatusTest extends HudsonTestCase {
     private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM git = new GitSCM(
-                Collections.singletonList(new UserRemoteConfig(url, null, null)),
+                Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
