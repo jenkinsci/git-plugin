@@ -51,13 +51,13 @@ import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -106,7 +106,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     @CheckForNull
     @Override
-    public SCMRevision fetch(@NonNull SCMHead head, @CheckForNull TaskListener listener)
+    protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
@@ -140,8 +140,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     @NonNull
     @Override
-    public <O extends SCMHeadObserver> O fetch(@NonNull final O observer,
-                                               @CheckForNull TaskListener listener)
+    protected void retrieve(@NonNull final SCMHeadObserver observer,
+                            @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
@@ -215,7 +215,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     SCMRevision hash = new SCMRevisionImpl(head, b.getSHA1String());
                     observer.observe(head, hash);
                     if (!observer.isObserving()) {
-                        return observer;
+                        return;
                     }
                 }
             } finally {
@@ -226,7 +226,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         } finally {
             cacheLock.unlock();
         }
-        return observer;
     }
 
     protected String getCacheEntry() {
