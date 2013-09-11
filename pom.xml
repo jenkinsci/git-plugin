@@ -170,7 +170,7 @@
     <dependency>
       <groupId>org.eclipse.jgit</groupId>
       <artifactId>org.eclipse.jgit</artifactId>
-      <version>2.2.0.201212191850-r</version>
+      <version>3.0.0.201306101825-r</version>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
