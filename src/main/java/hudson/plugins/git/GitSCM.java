@@ -133,7 +133,7 @@ public class GitSCM extends SCM implements Serializable {
 
     static private List<UserRemoteConfig> createRepoList(String url) {
         List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig(url, null, null));
+        repoList.add(new UserRemoteConfig(url, null, null, null));
         return repoList;
     }
 
@@ -338,7 +338,7 @@ public class GitSCM extends SCM implements Serializable {
                 if (cfg.getFetchRefSpecs().size() > 0 && cfg.getFetchRefSpecs().get(0) != null)
                     refspec = cfg.getFetchRefSpecs().get(0).toString();
 
-                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec));
+                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec, null));
             }
         }
 
@@ -1437,6 +1437,10 @@ public class GitSCM extends SCM implements Serializable {
             return BuildChooser.all();
         }
 
+        public List<BuildChooserDescriptor> getBuildChooserDescriptors(Item job) {
+            return BuildChooser.allApplicableTo(job);
+        }
+
         /**
          * Lists available toolinstallations.
          * @return  list of available git tools
@@ -1492,57 +1496,6 @@ public class GitSCM extends SCM implements Serializable {
          */
         public String getOldGitExe() {
             return gitExe;
-        }
-
-        public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return super.newInstance(req, formData);
-            /*
-            List<RemoteConfig> remoteRepositories;
-            try {
-            remoteRepositories = createRepositoryConfigurations(req.getParameterValues("git.repo.url"),
-            req.getParameterValues("git.repo.name"),
-            req.getParameterValues("git.repo.refspec"));
-            }
-            catch (IOException e1) {
-            throw new GitException("Error creating repositories", e1);
-            }
-            List<BranchSpec> branches = createBranches(req.getParameterValues("git.branch"));
-
-            // Make up a repo config from the request parameters
-
-            PreBuildMergeOptions mergeOptions = createMergeOptions(req.getParameter("git.doMerge"),
-            req.getParameter("git.mergeRemote"), req.getParameter("git.mergeTarget"),
-            remoteRepositories);
-
-
-            String[] urls = req.getParameterValues("git.repo.url");
-            String[] names = req.getParameterValues("git.repo.name");
-            Collection<SubmoduleConfig> submoduleCfg = new ArrayList<SubmoduleConfig>();
-
-            final GitRepositoryBrowser gitBrowser = getBrowserFromRequest(req, formData);
-            String gitTool = req.getParameter("git.gitTool");
-            return new GitSCM(
-            remoteRepositories,
-            branches,
-            mergeOptions,
-            req.getParameter("git.generate") != null,
-            submoduleCfg,
-            req.getParameter("git.clean") != null,
-            req.getParameter("git.wipeOutWorkspace") != null,
-            req.bindJSON(BuildChooser.class,formData.getJSONObject("buildChooser")),
-            gitBrowser,
-            gitTool,
-            req.getParameter("git.authorOrCommitter") != null,
-            req.getParameter("git.relativeTargetDir"),
-            req.getParameter("git.excludedRegions"),
-            req.getParameter("git.excludedUsers"),
-            req.getParameter("git.localBranch"),
-            req.getParameter("git.recursiveSubmodules") != null,
-            req.getParameter("git.pruneBranches") != null,
-            req.getParameter("git.gitConfigName"),
-            req.getParameter("git.gitConfigEmail"),
-            req.getParameter("git.skipTag") != null);
-             */
         }
 
         /**

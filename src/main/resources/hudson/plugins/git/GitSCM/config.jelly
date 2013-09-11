@@ -24,6 +24,17 @@
             <f:textbox/>
           </f:entry>
 
+          <f:entry title="${%Credentials}" field="credentialsId">
+            <f:select default="" field="credentialsId"
+                      onchange="{ // workaround for JENKINS-19124
+                                    var self = this.targetElement ? this.targetElement : this;
+                                    var r = findPreviousFormItem(self,'url');
+                                    r.onchange(r);
+                                    self = null;
+                                    r = null;
+                                 }"/>
+          </f:entry>
+
           <f:advanced>
 
             <f:entry title="${%Name}" field="name">
@@ -164,7 +175,7 @@
     <f:dropdownList name="buildChooser" title="${%Choosing strategy}">
       <j:scope>
         <j:set var="current" value="${instance.buildChooser}"/>
-        <j:forEach var="descriptor" items="${descriptor.buildChooserDescriptors}">
+        <j:forEach var="descriptor" items="${descriptor.getBuildChooserDescriptors(it)}">
           <f:dropdownListBlock value="${descriptor.clazz.name}" title="${descriptor.displayName}"
             selected="${current.descriptor==descriptor or (current==null and descriptor.displayName=='Default')}">
             <j:set var="instance" value="${current.descriptor==descriptor ? current : null}" />
