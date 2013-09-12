@@ -1766,64 +1766,64 @@ public class GitSCM extends SCM implements Serializable {
                 return false;
             }
 
-            GitChangeSet change = new GitChangeSet(revShow, authorOrCommitter);
+            List<GitChangeSet> changeSets = new GitChangeLogParser(authorOrCommitter).parse(revShow);
+            boolean included = false;
+            for (GitChangeSet change : changeSets) {
+                String author = change.getAuthorName();
+                if (excludedUsers.contains(author)) {
+                    // If the author is an excluded user, don't count this entry as a change
+                    listener.getLogger().println("Ignored commit " + r.getSha1String() + ": Found excluded author: " + author);
+                    continue;
+                }
+                List<String> paths = new ArrayList<String>(change.getAffectedPaths());
+                if (paths.isEmpty()) {
+                    included = true;
+                }
 
-            String author = change.getAuthorName();
-            if (excludedUsers.contains(author)) {
-                // If the author is an excluded user, don't count this entry as a change
-                listener.getLogger().println("Ignored commit " + r.getSha1String() + ": Found excluded author: " + author);
-                return true;
-            }
+                // Assemble the list of included paths
+                List<String> includedPaths = new ArrayList<String>();
+                if (includedPatterns.length > 0) {
+                    for (String path : paths) {
+                        for (Pattern pattern : includedPatterns) {
+                            if (pattern.matcher(path).matches()) {
+                                includedPaths.add(path);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    includedPaths = paths;
+                }
 
-            List<String> paths = new ArrayList<String>(change.getAffectedPaths());
-            if (paths.isEmpty()) {
-                // If there weren't any changed files here, we're just going to return false.
-                return false;
-            }
-
-	    // Assemble the list of included paths
-            List<String> includedPaths = new ArrayList<String>();
-            if (includedPatterns.length > 0) {
-                for (String path : paths) {
-                    for (Pattern pattern : includedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            includedPaths.add(path);
-                            break;
+                // Assemble the list of excluded paths
+                List<String> excludedPaths = new ArrayList<String>();
+                if (excludedPatterns.length > 0) {
+                    for (String path : includedPaths) {
+                        for (Pattern pattern : excludedPatterns) {
+                            if (pattern.matcher(path).matches()) {
+                                excludedPaths.add(path);
+                                break;
+                            }
                         }
                     }
                 }
-            } else {
-		includedPaths = paths;
-	    }
 
-	    // Assemble the list of excluded paths
-            List<String> excludedPaths = new ArrayList<String>();
-            if (excludedPatterns.length > 0) {
-                for (String path : includedPaths) {
-                    for (Pattern pattern : excludedPatterns) {
-                        if (pattern.matcher(path).matches()) {
-                            excludedPaths.add(path);
-                            break;
-                        }
-                    }
+                // If every affected path is excluded, return true.
+                if (includedPaths.size() == excludedPaths.size()) {
+                    listener.getLogger().println("Ignored commit " + r.getSha1String()
+                            + ": Found only excluded paths: "
+                            + Util.join(excludedPaths, ", "));
+                } else {
+                    included = true;
                 }
             }
+            return !included;
 
-            // If every affected path is excluded, return true.
-            if (includedPaths.size() == excludedPaths.size()) {
-                listener.getLogger().println("Ignored commit " + r.getSha1String()
-                        + ": Found only excluded paths: "
-                        + Util.join(excludedPaths, ", "));
-                return true;
-            }
         } catch (GitException e) {
             // If an error was hit getting the revision info, assume something
             // else entirely is wrong and we don't care, so return false.
             return false;
         }
-
-        // By default, return false.
-        return false;
     }
 
 
