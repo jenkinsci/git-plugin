@@ -347,7 +347,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
                                            BuildChooserContext context) throws IOException, InterruptedException {
             // we have ditched that crazy multiple branch stuff from the regular GIT SCM.
-            return data.lastBuild;
+            return data == null ? null : data.lastBuild;
         }
 
         @Extension
