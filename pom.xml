@@ -224,6 +224,13 @@
     </dependency>
 
 
+	<!-- we contribute our own custom Rebuild action -->
+	<dependency>
+		<groupId>com.sonyericsson.hudson.plugins.rebuild</groupId>
+		<artifactId>rebuild</artifactId>
+		<version>1.19</version>
+        <optional>true</optional>
+	</dependency>
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jvnet.hudson.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
