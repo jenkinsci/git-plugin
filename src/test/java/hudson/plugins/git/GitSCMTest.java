@@ -6,9 +6,9 @@ import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -20,6 +20,7 @@ import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
+import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
 
 import com.google.common.base.Function;
@@ -29,7 +30,12 @@ import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.TestExtension;
 
@@ -970,5 +976,32 @@ public class GitSCMTest extends AbstractGitTestCase {
         // this should fail as it fails to fetch
         p.setScm(new GitSCM("https://github.com/cloudbees/coverity-plugin.git")); // inaccessible repository
         assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
+    }
+
+    @Bug(19108)
+    public void testCheckoutToSpecificBranch() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        GitSCM git = new GitSCM("https://github.com/imod/dummy-tester.git");
+        setupJGit(git);
+        git.getExtensions().add(new LocalBranch("master"));
+        p.setScm(git);
+
+        FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
+        GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
+        gc.withRepository(new RepositoryCallback<Void>() {
+            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                Ref head = repo.getRef("HEAD");
+                assertTrue("Detached HEAD",head.isSymbolic());
+                Ref t = head.getTarget();
+                assertEquals(t.getName(),"refs/heads/master");
+
+                return null;
+            }
+        });
+    }
+
+    private void setupJGit(GitSCM git) {
+        git.gitTool="jgit";
+        jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
     }
 }
