@@ -16,7 +16,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -45,7 +44,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         this.url = fixEmptyAndTrim(url);
         this.name = fixEmpty(name);
         this.refspec = fixEmpty(refspec);
-        this.credentialsId = credentialsId;
+        this.credentialsId = fixEmpty(credentialsId);
     }
 
     @Exported
