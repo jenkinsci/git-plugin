@@ -974,7 +974,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertBuildStatusSuccess(p.scheduleBuild2(0));
 
         // this should fail as it fails to fetch
-        p.setScm(new GitSCM("https://github.com/cloudbees/coverity-plugin.git")); // inaccessible repository
+        p.setScm(new GitSCM("http://www.google.com/no/such/repository.git"));
         assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
     }
 
