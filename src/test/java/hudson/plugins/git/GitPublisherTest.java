@@ -23,7 +23,6 @@
  */
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -33,16 +32,17 @@ import hudson.model.*;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
-import hudson.plugins.git.util.DefaultBuildChooser;
-import hudson.remoting.VirtualChannel;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.UserMergeOptions;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.eclipse.jgit.lib.Constants;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jvnet.hudson.test.Bug;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,7 +68,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.<NoteToPush>emptyList(),
                 true, true) {
             @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 run.incrementAndGet();
                 try {
                     return super.perform(build, launcher, listener);
@@ -101,15 +101,15 @@ public class GitPublisherTest extends AbstractGitTestCase {
     public void testMergeAndPush() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
-                null,
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                new UserMergeOptions("origin", "integration"),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, "integration", false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
@@ -140,17 +140,15 @@ public class GitPublisherTest extends AbstractGitTestCase {
     public void testMergeAndPushWithSkipTagEnabled() throws Exception {
       FreeStyleProject project = setupSimpleProject("master");
 
-      boolean skipTag = true;
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, new ArrayList<GitSCMExtension>());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
 
-      project.setScm(new GitSCM(
-          null,
-          createRemoteRepositories(),
-          Collections.singletonList(new BranchSpec("*")),
-          new UserMergeOptions("origin", "integration"),
-          false, Collections.<SubmoduleConfig>emptyList(), false,
-          false, new DefaultBuildChooser(), null, null, true, null, null,
-          null, null, "integration", false, false, false, false, null, null, skipTag,
-          null, false, false));
 
       project.getPublishersList().add(new GitPublisher(
           Collections.<TagToPush>emptyList(),

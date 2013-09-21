@@ -42,6 +42,8 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
@@ -263,16 +265,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         BuildChooser buildChooser = revision instanceof SCMRevisionImpl ? new SpecificRevisionBuildChooser(
                 (SCMRevisionImpl) revision) : new DefaultBuildChooser();
         return new GitSCM(
-                null,
                 getRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head.getName())),
-                null,
-                false, Collections.<SubmoduleConfig>emptyList(), true,
-                false, buildChooser, null, null, false, null,
-                null,
-                null, null,
-                head.getName(),
-                false, false, false, false, null, null, false, null, false, false);
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
     }
 
     protected List<UserRemoteConfig> getRemoteConfigs() {

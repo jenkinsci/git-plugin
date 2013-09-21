@@ -5,11 +5,12 @@
 package hudson.plugins.git;
 
 import hudson.model.FreeStyleProject;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.triggers.SCMTrigger;
 
 import org.eclipse.jgit.transport.URIish;
-import org.kohsuke.stapler.HttpResponse;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -122,15 +123,15 @@ public class GitStatusTest extends HudsonTestCase {
 
     private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        project.setScm(new GitSCM(
-                null,
+        GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                null,
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, false, null,
-                null,
-                null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        if (ignoreNotifyCommit)
+            git.getExtensions().add(new IgnoreNotifyCommit());
+        project.setScm(git);
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         project.addTrigger(trigger);
         return trigger;

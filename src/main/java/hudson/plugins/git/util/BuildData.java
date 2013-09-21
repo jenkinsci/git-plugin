@@ -4,6 +4,7 @@ import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
+import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
@@ -39,7 +40,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
-    public Build              lastBuild;
+    public Build lastBuild;
 
     /**
      * The name of the SCM as given by the user.
@@ -114,7 +115,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     public boolean hasBeenBuilt(ObjectId sha1) {
     	try {
             for(Build b : buildsByBranchName.values()) {
-                if(b.revision.getSha1().equals(sha1))
+                if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
                     return true;
             }
 
@@ -127,7 +128,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public void saveBuild(Build build) {
     	lastBuild = build;
-    	for(Branch branch : build.revision.getBranches()) {
+    	for(Branch branch : build.marked.getBranches()) {
             buildsByBranchName.put(fixNull(branch.getName()), build);
     	}
     }

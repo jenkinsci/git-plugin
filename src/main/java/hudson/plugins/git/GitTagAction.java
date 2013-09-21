@@ -175,30 +175,23 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         @Override
         protected void perform(final TaskListener listener) throws Exception {
             final EnvVars environment = build.getEnvironment(listener);
-            for (final String b : tagSet.keySet()) {
+            final FilePath workspace = new FilePath(new File(ws));
+            final GitClient git = Git.with(listener, environment)
+                    .in(workspace)
+                    .getClient();
+
+
+            for (String b : tagSet.keySet()) {
                 try {
-                    final FilePath workspace = new FilePath(new File(ws));
-                    Object returnData = workspace.act(new FilePath.FileCallable<Object[]>() {
-                        private static final long serialVersionUID = 1L;
+                    String buildNum = "jenkins-"
+                                     + build.getProject().getName().replace(" ", "_")
+                                     + "-" + tagSet.get(b);
+                    git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
 
-                        public Object[] invoke(File localWorkspace, VirtualChannel channel)
-                                throws IOException, InterruptedException {
-
-                            GitClient git = Git.with(listener, environment)
-                                    .in(localWorkspace)
-                                    .getClient();
-
-                            String buildNum = "jenkins-" 
-                                             + build.getProject().getName().replace(" ", "_") 
-                                             + "-" + tagSet.get(b);
-                            git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
-                            return new Object[]{null, build};
-                        }
-                    });
                     for (Map.Entry<String, String> e : tagSet.entrySet())
                         GitTagAction.this.tags.get(e.getKey()).add(e.getValue());
 
-                     getBuild().save();
+                    getBuild().save();
                     workerThread = null;
                 }
                 catch (GitException ex) {

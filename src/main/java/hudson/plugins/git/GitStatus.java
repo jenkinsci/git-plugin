@@ -9,6 +9,7 @@ import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 import hudson.model.UnprotectedRootAction;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
@@ -220,7 +221,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 }
                             }
 
-                            if (!repositoryMatches || git.isIgnoreNotifyCommit()) {
+                            if (!repositoryMatches || git.getExtensions().get(IgnoreNotifyCommit.class)!=null) {
                                 continue;
                             }
 

@@ -2,33 +2,25 @@ package hudson.plugins.git;
 
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.Cause;
-import hudson.model.EnvironmentContributor;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
-import hudson.model.Node;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.model.User;
+import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
-import hudson.plugins.parameterizedtrigger.BuildTriggerConfig;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
 
 import com.google.common.base.Function;
@@ -38,10 +30,13 @@ import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jvnet.hudson.test.Bug;
-import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -337,7 +332,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testBasicInSubdir() throws Exception {
-        FreeStyleProject project = setupProject("master", false, "subdir");
+        FreeStyleProject project = setupSimpleProject("master");
+        ((GitSCM)project.getScm()).getExtensions().add(new RelativeTargetDirectory("subdir"));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -418,7 +414,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testAuthorOrCommitterFalse() throws Exception {
         // Test with authorOrCommitter set to false and make sure we get the committer.
-        FreeStyleProject project = setupProject("master", false);
+        FreeStyleProject project = setupSimpleProject("master");
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -444,7 +440,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testAuthorOrCommitterTrue() throws Exception {
         // Next, test with authorOrCommitter set to true and make sure we get the author.
-        FreeStyleProject project = setupProject("master", true);
+        FreeStyleProject project = setupSimpleProject("master");
+        ((GitSCM)project.getScm()).getExtensions().add(new AuthorInChangelog());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -494,7 +491,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
     }
 
     // For HUDSON-7411
@@ -603,11 +600,17 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Bug(19037)
+    @SuppressWarnings("ResultOfObjectAllocationIgnored")
+    public void testBlankRepositoryName() throws Exception {
+        new GitSCM(null);
+    }
+
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
         File repo = createTmpDir();
         FilePath moduleWs = new FilePath(repo);
-        GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
+        org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
         {// first we create a Git repository with submodule
             moduleRepo.init();
@@ -624,7 +627,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject d = createFreeStyleProject();
 
         u.setScm(new GitSCM(workDir.getPath()));
-        u.getPublishersList().add(new BuildTrigger(new BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
+        u.getPublishersList().add(new BuildTrigger(new hudson.plugins.parameterizedtrigger.BuildTriggerConfig(d.getName(), ResultCondition.SUCCESS,
                 new GitRevisionBuildParameters())));
 
         d.setScm(new GitSCM(workDir.getPath()));
@@ -741,14 +744,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         remotes.addAll(secondTestRepo.remoteConfigs());
 
         project.setScm(new GitSCM(
-                null,
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
-                null,
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList()));
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -770,15 +770,14 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testMerge() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
-                null,
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                new UserMergeOptions("origin", "integration"),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default")));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -810,15 +809,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(createSlave().getSelfLabel());
 
-        project.setScm(new GitSCM(
-                null,
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                new UserMergeOptions("origin", "integration"),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -849,15 +847,14 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testMergeFailed() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        project.setScm(new GitSCM(
-                null,
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                new UserMergeOptions("origin", "integration"),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "")));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -887,15 +884,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(createSlave().getSelfLabel());
 
-        project.setScm(new GitSCM(
-                null,
+        GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                new UserMergeOptions("origin", "integration"),
-                false, Collections.<SubmoduleConfig>emptyList(), false,
-                false, new DefaultBuildChooser(), null, null, true, null, null,
-                null, null, null, false, false, false, false, null, null, false,
-                null, false, false));
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null)));
+        project.setScm(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -947,5 +943,65 @@ public class GitSCMTest extends AbstractGitTestCase {
         public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
             envs.put("CAT","");
         }
+    }
+    /**
+     * Makes sure that the configuration form works.
+     */
+    public void testConfigRoundtrip() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        GitSCM scm = new GitSCM("https://github.com/jenkinsci/jenkins");
+        p.setScm(scm);
+        configRoundtrip(p);
+        assertEqualDataBoundBeans(scm,p.getScm());
+    }
+
+    /**
+     * Sample configuration that should result in no extensions at all
+     */
+    public void testDataCompatibility1() throws Exception {
+        FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
+        GitSCM git = (GitSCM) p.getScm();
+        assertTrue(git.getExtensions().isEmpty());
+    }
+
+    public void testPleaseDontContinueAnyway() throws Exception {
+        // create an empty repository with some commits
+        testRepo.commit("a","foo",johnDoe, "added");
+
+        FreeStyleProject p = createFreeStyleProject();
+        p.setScm(new GitSCM(testRepo.gitDir.getAbsolutePath()));
+
+        assertBuildStatusSuccess(p.scheduleBuild2(0));
+
+        // this should fail as it fails to fetch
+        p.setScm(new GitSCM("http://www.google.com/no/such/repository.git"));
+        assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
+    }
+
+    @Bug(19108)
+    public void testCheckoutToSpecificBranch() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        GitSCM git = new GitSCM("https://github.com/imod/dummy-tester.git");
+        setupJGit(git);
+        git.getExtensions().add(new LocalBranch("master"));
+        p.setScm(git);
+
+        FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
+        GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
+        gc.withRepository(new RepositoryCallback<Void>() {
+            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                Ref head = repo.getRef("HEAD");
+                assertTrue("Detached HEAD",head.isSymbolic());
+                Ref t = head.getTarget();
+                assertEquals(t.getName(),"refs/heads/master");
+
+                return null;
+            }
+        });
+    }
+
+    private void setupJGit(GitSCM git) {
+        git.gitTool="jgit";
+        jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
     }
 }

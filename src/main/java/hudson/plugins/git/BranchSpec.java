@@ -1,5 +1,8 @@
 package hudson.plugins.git;
 
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -20,7 +23,7 @@ import java.util.regex.Pattern;
  * origin/&#42;/thing
  * </pre>
  */
-public class BranchSpec implements Serializable {
+public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements Serializable {
     private static final long serialVersionUID = -6177158367915899356L;
 
     private String name;
@@ -141,5 +144,13 @@ public class BranchSpec implements Serializable {
         pattern = Pattern.compile(builder.toString());
         
         return pattern;
+    }
+
+    @Extension
+    public static class DescriptorImpl extends Descriptor<BranchSpec> {
+        @Override
+        public String getDisplayName() {
+            return "Branch Spec";
+        }
     }
 }

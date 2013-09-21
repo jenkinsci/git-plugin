@@ -1,0 +1,97 @@
+package hudson.plugins.git.extensions.impl;
+
+import hudson.Extension;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.SubmoduleCombinator;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.util.BuildData;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.IOException;
+
+/**
+ * Further tweak the behaviour of git-submodule.
+ *
+ * <p>
+ * Historically, the submodule support was on by default,
+ * and given the clear marker file in the source tree, I think
+ * keeping this default behaviour is sensible.
+ *
+ * So when we split out {@link GitSCMExtension}s, we decided
+ * to keep the git-submodule handling enabled by default,
+ * and this extension controls the recursiveness and the option
+ * to switch it off.
+ *
+ * @author Yury V. Zaytsev
+ * @author Andrew Bayer
+ * @author Kohsuke Kawaguchi
+ */
+public class SubmoduleOption extends GitSCMExtension {
+    /**
+     * Use --recursive flag on submodule commands - requires git>=1.6.5
+     */
+    private boolean disableSubmodules;
+    private boolean recursiveSubmodules;
+
+    @DataBoundConstructor
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules) {
+        this.disableSubmodules = disableSubmodules;
+        this.recursiveSubmodules = recursiveSubmodules;
+    }
+
+    public boolean isDisableSubmodules() {
+        return disableSubmodules;
+    }
+
+    public boolean isRecursiveSubmodules() {
+        return recursiveSubmodules;
+    }
+
+    @Override
+    public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+        if (!disableSubmodules && git.hasGitModules()) {
+            git.submoduleClean(recursiveSubmodules);
+        }
+    }
+
+    @Override
+    public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        BuildData revToBuild = scm.getBuildData(build);
+
+        if (!disableSubmodules && git.hasGitModules()) {
+            // This ensures we don't miss changes to submodule paths and allows
+            // seamless use of bare and non-bare superproject repositories.
+            git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+            git.submoduleUpdate(recursiveSubmodules);
+        }
+
+        if (scm.isDoGenerateSubmoduleConfigurations()) {
+            /*
+                Kohsuke Note:
+
+                I could be wrong, but this feels like a totally wrong place to do this.
+                AFAICT, SubmoduleCombinator runs a lot of git-checkout and git-commit to
+                create new commits and branches. At the end of this, the working tree is
+                significantly altered, and HEAD no longer points to 'revToBuild'.
+
+                Custom BuildChooser is probably the right place to do this kind of stuff,
+                or maybe we can add a separate callback for GitSCMExtension.
+             */
+            SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
+            combinator.createSubmoduleCombinations();
+        }
+    }
+
+    @Extension
+    public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Advanced sub-modules behaviours";
+        }
+    }
+}

@@ -8,21 +8,24 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GitUtils {
+public class GitUtils implements Serializable {
     GitClient git;
     TaskListener listener;
 
@@ -74,7 +77,7 @@ public class GitUtils {
             if(revision.getSha1().equals(sha1))
                 return revision;
         }
-        return null;
+        return new Revision(sha1);
     }
 
     /**
@@ -84,7 +87,7 @@ public class GitUtils {
      * @return filtered tip branches
      */
     @WithBridgeMethods(Collection.class)
-    public List<Revision> filterTipBranches(Collection<Revision> revisions) {
+    public List<Revision> filterTipBranches(Collection<Revision> revisions) throws InterruptedException {
         // If we have 3 branches that we might want to build
         // ----A--.---.--- B
         //        \-----C
@@ -96,67 +99,68 @@ public class GitUtils {
         if (l.size() <= 1)
             return l;
 
-        final boolean log = LOGGER.isLoggable(Level.FINE);
-        Revision revI;
-        Revision revJ;
-        ObjectId shaI;
-        ObjectId shaJ;
-        ObjectId commonAncestor;
-        RevWalk walk = null;
-        Repository repository = null;
-        final long start = System.currentTimeMillis();
-        long calls = 0;
-        if (log)
-            LOGGER.fine(MessageFormat.format(
-                    "Computing merge base of {0}  branches", l.size()));
         try {
-            repository = git.getRepository();
-            walk = new RevWalk(repository);
-            walk.setRetainBody(false);
-            walk.setRevFilter(RevFilter.MERGE_BASE);
-            for (int i = 0; i < l.size(); i++)
-                for (int j = i + 1; j < l.size(); j++) {
-                    revI = l.get(i);
-                    revJ = l.get(j);
-                    shaI = revI.getSha1();
-                    shaJ = revJ.getSha1();
+            return git.withRepository(new RepositoryCallback<List<Revision>>() {
+                public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                    RevWalk walk = new RevWalk(repo);
+                    long calls = 0;
 
-                    walk.reset();
-                    walk.markStart(walk.parseCommit(shaI));
-                    walk.markStart(walk.parseCommit(shaJ));
-                    commonAncestor = walk.next();
-                    calls++;
+                    final boolean log = LOGGER.isLoggable(Level.FINE);
+                    final long start = System.currentTimeMillis();
+                    if (log)
+                        LOGGER.fine(MessageFormat.format(
+                                "Computing merge base of {0}  branches", l.size()));
 
-                    if (commonAncestor == null)
-                        continue;
-                    if (commonAncestor.equals(shaI)) {
-                        if (log)
-                            LOGGER.fine("filterTipBranches: " + revJ
-                                    + " subsumes " + revI);
-                        l.remove(i);
-                        i--;
-                        break;
+                    try {
+                        walk.setRetainBody(false);
+                        walk.setRevFilter(RevFilter.MERGE_BASE);
+                        for (int i = 0; i < l.size(); i++) {
+                            for (int j = i + 1; j < l.size(); j++) {
+                                Revision revI = l.get(i);
+                                Revision revJ = l.get(j);
+                                ObjectId shaI = revI.getSha1();
+                                ObjectId shaJ = revJ.getSha1();
+
+                                walk.reset();
+                                walk.markStart(walk.parseCommit(shaI));
+                                walk.markStart(walk.parseCommit(shaJ));
+                                ObjectId commonAncestor = walk.next();
+                                calls++;
+
+                                if (commonAncestor == null)
+                                    continue;
+                                if (commonAncestor.equals(shaI)) {
+                                    if (log)
+                                        LOGGER.fine("filterTipBranches: " + revJ
+                                                + " subsumes " + revI);
+                                    l.remove(i);
+                                    i--;
+                                    break;
+                                }
+                                if (commonAncestor.equals(shaJ)) {
+                                    if (log)
+                                        LOGGER.fine("filterTipBranches: " + revI
+                                                + " subsumes " + revJ);
+                                    l.remove(j);
+                                    j--;
+                                }
+                            }
+                        }
+                    } finally {
+                        walk.release();
                     }
-                    if (commonAncestor.equals(shaJ)) {
-                        if (log)
-                            LOGGER.fine("filterTipBranches: " + revI
-                                    + " subsumes " + revJ);
-                        l.remove(j);
-                        j--;
-                    }
+
+                    if (log)
+                        LOGGER.fine(MessageFormat.format(
+                                "Computed {0} merge bases in {1} ms", calls,
+                                (System.currentTimeMillis() - start)));
+
+                    return l;
                 }
+            });
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);
-        } finally {
-            if (walk != null) walk.release();
-            if (repository != null) repository.close();
         }
-        if (log)
-            LOGGER.fine(MessageFormat.format(
-                    "Computed {0} merge bases in {1} ms", calls,
-                    (System.currentTimeMillis() - start)));
-
-        return l;
     }
 
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
@@ -255,4 +259,6 @@ public class GitUtils {
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
+
+    private static final long serialVersionUID = 1L;
 }
