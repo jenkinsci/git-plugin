@@ -594,6 +594,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Bug(19037)
+    @SuppressWarnings("ResultOfObjectAllocationIgnored")
+    public void testBlankRepositoryName() throws Exception {
+        new GitSCM(null);
+    }
+
     @Bug(10060)
     public void testSubmoduleFixup() throws Exception {
         File repo = createTmpDir();

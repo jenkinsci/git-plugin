@@ -1103,6 +1103,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             if (names != null) {
                 for (int i = 0; i < names.length; i++) {
+                    String url = urls[i];
+                    if (url == null) {
+                        continue;
+                    }
                     String name = names[i];
                     name = name.replace(' ', '_');
 
@@ -1110,7 +1114,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         refs[i] = "+refs/heads/*:refs/remotes/" + name + "/*";
                     }
 
-                    repoConfig.setString("remote", name, "url", urls[i]);
+                    repoConfig.setString("remote", name, "url", url);
                     repoConfig.setStringList("remote", name, "fetch", new ArrayList<String>(Arrays.asList(refs[i].split("\\s+"))));
                 }
             }
