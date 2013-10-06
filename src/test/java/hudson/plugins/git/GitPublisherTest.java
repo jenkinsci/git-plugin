@@ -37,12 +37,14 @@ import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
+
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jvnet.hudson.test.Bug;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -107,6 +109,8 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, "integration", false, false, false, false, null, null, false,
                 null, false, false));
@@ -147,7 +151,11 @@ public class GitPublisherTest extends AbstractGitTestCase {
           createRemoteRepositories(),
           Collections.singletonList(new BranchSpec("*")),
           new UserMergeOptions("origin", "integration"),
-          false, Collections.<SubmoduleConfig>emptyList(), false,
+          false,
+          Collections.<SubmoduleConfig>emptyList(),
+          false,
+          30,
+          Collections.<AncestryRefSpec>emptyList(),
           false, new DefaultBuildChooser(), null, null, true, null, null,
           null, null, "integration", false, false, false, false, null, null, skipTag,
           null, false, false));

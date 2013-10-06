@@ -188,6 +188,31 @@
       </j:scope>
     </f:dropdownList>
 
+	<f:entry
+		title="Max branch age in days (for choosing strategy)"
+		field="maxBranchAgeDays" help="/plugin/git/maxBranchAgeDays.html">
+		<f:textbox default="0" />
+	</f:entry>
+
+	<f:entry title="Ancestry filter (for choosing strategy)" help="/plugin/git/ancestors.html">
+		<f:repeatable var="ancestor" name="ancestors" varStatus="ancestorStatus"
+			items="${instance.ancestors}" minimum="1" noAddButton="false">
+			<table width="100%">
+				<f:entry title="Ancestor ref:" field="name">
+					<f:textbox value="${ancestor.name}" />
+				</f:entry>
+
+				<f:entry>
+					<div align="right">
+						<input type="button" value="Delete Ancestor" class="repeatable-delete"
+							style="margin-left: 1em;" />
+					</div>
+				</f:entry>
+			</table>
+		</f:repeatable>
+	</f:entry>
+
+
       <f:entry title="Git executable" field="gitTool">
           <select name="gitTool">
               <j:forEach var="gitTool" items="${descriptor.gitTools}" varStatus="current">

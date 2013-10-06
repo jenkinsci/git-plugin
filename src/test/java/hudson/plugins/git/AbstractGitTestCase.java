@@ -120,6 +120,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                 branches,
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, authorOrCommitter, relativeTargetDir, null,
                 excludedRegions, excludedUsers, localBranch, false, false, false, fastRemotePoll, null, null, false,
                 includedRegions, false, false));

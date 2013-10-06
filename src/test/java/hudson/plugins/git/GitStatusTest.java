@@ -128,6 +128,8 @@ public class GitStatusTest extends HudsonTestCase {
                 Collections.singletonList(new BranchSpec(branchString)),
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, false, null,
                 null,
                 null, null, null, false, false, false, false, null, null, false, null, ignoreNotifyCommit, false));

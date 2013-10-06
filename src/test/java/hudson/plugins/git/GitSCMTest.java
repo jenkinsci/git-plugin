@@ -37,7 +37,6 @@ import com.google.common.collect.Collections2;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
-
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.Bug;
@@ -746,6 +745,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("master")),
                 null,
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, null, false, false, false, false, null, null, false,
                 null, false, false));
@@ -776,6 +777,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, null, false, false, false, false, null, null, false,
                 null, false, false));
@@ -816,6 +819,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, null, false, false, false, false, null, null, false,
                 null, false, false));
@@ -855,6 +860,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, null, false, false, false, false, null, null, false,
                 null, false, false));
@@ -893,6 +900,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec("*")),
                 new UserMergeOptions("origin", "integration"),
                 false, Collections.<SubmoduleConfig>emptyList(), false,
+                8,
+                Collections.<AncestryRefSpec>emptyList(),
                 false, new DefaultBuildChooser(), null, null, true, null, null,
                 null, null, null, false, false, false, false, null, null, false,
                 null, false, false));
