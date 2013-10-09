@@ -161,11 +161,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         private static StandardCredentials lookupCredentials(AbstractProject project, String credentialId, String uri) {
             return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM, GitURIRequirementsBuilder.fromUri(
-
-
-
-                                uri).build()),
+                        CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
+                                GitURIRequirementsBuilder.fromUri(uri).build()),
                         CredentialsMatchers.withId(credentialId));
         }
 
