@@ -89,6 +89,43 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     );
         }
 
+        public FormValidation doCheckCredentialsId(@AncestorInPath AbstractProject project,
+                                                   @QueryParameter String url,
+                                                   @QueryParameter String value) {
+            value = Util.fixEmptyAndTrim(value);
+            if (value == null) {
+                return FormValidation.ok();
+            }
+
+            if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+
+            url = Util.fixEmptyAndTrim(url);
+            if (url == null)
+            // not set, can't check
+            {
+                return FormValidation.ok();
+            }
+
+            if (url.indexOf('$') >= 0)
+            // set by variable, can't check
+            {
+                return FormValidation.ok();
+            }
+
+            StandardCredentials credentials = lookupCredentials(project, value, url);
+
+            if (credentials == null) {
+                // no credentials available, can't check
+                return FormValidation.ok();
+            }
+
+            // TODO check if this type of credential is acceptible to the Git client or does it merit warning the user
+
+            return FormValidation.ok();
+        }
+
         public FormValidation doCheckUrl(@AncestorInPath AbstractProject project,
                                          @QueryParameter String credentialId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
