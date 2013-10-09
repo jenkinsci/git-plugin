@@ -22,7 +22,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -481,7 +480,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (getExtensions().get(RemotePoll.class)!=null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
-            GitClient git = createClient(listener, environment, Jenkins.getInstance(), null);
+            GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
@@ -520,22 +519,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        GitClient git = createClient(listener, environment, n, workingDirectory);
-        for (UserRemoteConfig c : getUserRemoteConfigs()) {
-            if (c.getCredentialsId() != null) {
-                String url = c.getUrl();
-                StandardUsernameCredentials credentials = CredentialsMatchers
-                        .firstOrNull(
-                                CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
-                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build()),
-                                CredentialsMatchers.allOf(CredentialsMatchers.withId(c.getCredentialsId()),
-                                        GitClient.CREDENTIALS_MATCHER));
-                if (credentials != null) {
-                    git.addCredentials(url, credentials);
-                }
-            }
-        }
-        // TODO add default credentials
+        GitClient git = createClient(listener, environment, project, n, workingDirectory);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -571,10 +555,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getProject(), build.getWorkspace(), environment, listener);
         ws.mkdirs(); // ensure it exists
-        return createClient(listener,environment,build.getBuiltOn(),ws);
+        return createClient(listener,environment, build.getParent(), build.getBuiltOn(), ws);
     }
 
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Node n, FilePath ws) throws IOException, InterruptedException {
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, AbstractProject project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
@@ -583,6 +567,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             c = ext.decorate(this,c);
         }
+
+        for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+            if (uc.getCredentialsId() != null) {
+                String url = uc.getUrl();
+                StandardUsernameCredentials credentials = CredentialsMatchers
+                        .firstOrNull(
+                                CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
+                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build()),
+                                CredentialsMatchers.allOf(CredentialsMatchers.withId(uc.getCredentialsId()),
+                                        GitClient.CREDENTIALS_MATCHER));
+                if (credentials != null) {
+                    c.addCredentials(url, credentials);
+                }
+            }
+        }
+        // TODO add default credentials
+
         return c;
     }
 
