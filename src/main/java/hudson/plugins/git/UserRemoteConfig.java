@@ -127,7 +127,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         }
 
         public FormValidation doCheckUrl(@AncestorInPath AbstractProject project,
-                                         @QueryParameter String credentialId,
+                                         @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
             String url = Util.fixEmptyAndTrim(value);
