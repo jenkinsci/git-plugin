@@ -118,7 +118,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             if (credentials == null) {
                 // no credentials available, can't check
-                return FormValidation.ok();
+                return FormValidation.warning("Cannot find any credentials with id " + value);
             }
 
             // TODO check if this type of credential is acceptible to the Git client or does it merit warning the user
