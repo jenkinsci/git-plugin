@@ -1,5 +1,9 @@
 package hudson.plugins.git;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -26,6 +30,7 @@ import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.scm.*;
+import hudson.security.ACL;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import hudson.triggers.SCMTrigger;
@@ -516,6 +521,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         GitClient git = createClient(listener, environment, n, workingDirectory);
+        for (UserRemoteConfig c : getUserRemoteConfigs()) {
+            if (c.getCredentialsId() != null) {
+                String url = c.getUrl();
+                StandardUsernameCredentials credentials = CredentialsMatchers
+                        .firstOrNull(
+                                CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
+                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build()),
+                                CredentialsMatchers.allOf(CredentialsMatchers.withId(c.getCredentialsId()),
+                                        GitClient.CREDENTIALS_MATCHER));
+                if (credentials != null) {
+                    git.addCredentials(url, credentials);
+                }
+            }
+        }
+        // TODO add default credentials
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
