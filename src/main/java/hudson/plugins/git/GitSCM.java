@@ -44,6 +44,7 @@ import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -602,15 +603,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void fetchFrom(GitClient git,
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException {
-        String name = remoteRepository.getName();
-        // Assume there is only 1 URL for simplicity
-        String url = remoteRepository.getURIs().get(0).toPrivateString();
 
-        try {
-            git.setRemoteUrl(name, url);
-            git.fetch(name, remoteRepository.getFetchRefSpecs().toArray(new RefSpec[0]));
-        } catch (GitException ex) {
-            throw new GitException("Failed to fetch from "+name+": "+url,ex);
+        for (URIish url : remoteRepository.getURIs()) {
+            try {
+                git.fetch(url, remoteRepository.getFetchRefSpecs());
+            } catch (GitException ex) {
+                throw new GitException("Failed to fetch from "+url.toString(), ex);
+            }
         }
     }
 
