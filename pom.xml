@@ -143,9 +143,9 @@
     <repository>
       <id>jgit-repository</id>
       <name>Eclipse JGit Repository</name>
-      <url>http://download.eclipse.org/jgit/maven</url>
+      <url>https://repo.eclipse.org/content/groups/releases/</url>
     </repository>
-    
+
     <repository>
       <id>guice-maven</id>
       <name>guice maven</name>
@@ -196,7 +196,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>1.4.0</version>
+      <version>1.4.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
