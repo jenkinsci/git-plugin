@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.480</version>
+    <version>1.509.2</version>
   </parent>
 
   <artifactId>git</artifactId>
@@ -258,6 +258,11 @@
       <artifactId>promoted-builds</artifactId>
       <version>2.7</version>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+      <version>1.5</version>
     </dependency>
   </dependencies>
 
