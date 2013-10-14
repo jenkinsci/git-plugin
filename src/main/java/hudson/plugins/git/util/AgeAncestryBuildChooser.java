@@ -167,7 +167,14 @@ public class AgeAncestryBuildChooser extends BuildChooser {
 		
 		BuildChooser default_chooser = new DefaultBuildChooser();
 		
-		GitSCM git_scm = (GitSCM) context.getBuild().getProject().getScm();
+		// This fails with the following error:
+		//		java.lang.ClassCastException: class hudson.model.FreeStyleBuild is
+		//		returned from public hudson.model.AbstractBuild
+		//		hudson.plugins.git.GitSCM$BuildChooserContextImpl$1.getBuild() on class
+		//		hudson.plugins.git.GitSCM$BuildChooserContextImpl$1 but it's not serializable
+//		GitSCM git_scm = (GitSCM) context.getBuild().getProject().getScm();
+
+		final GitSCM git_scm = this.gitSCM;
 		default_chooser.gitSCM = git_scm;
 		Collection<Revision> original_revision_collection = default_chooser.getCandidateRevisions(
 				isPollCall,
