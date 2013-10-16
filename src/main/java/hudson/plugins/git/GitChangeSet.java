@@ -3,13 +3,12 @@ package hudson.plugins.git;
 import hudson.MarkupText;
 import hudson.model.Hudson;
 import hudson.model.User;
+import hudson.model.UserProperty;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
-import hudson.tasks.Mailer;
-import hudson.tasks.Mailer.UserProperty;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -268,7 +267,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 try {
                     user = User.get(csAuthorEmail, true);
                     user.setFullName(csAuthor);
-                    user.addProperty(new Mailer.UserProperty(csAuthorEmail));
+                    if (hasHudsonTasksMailer())
+                        setMail(user, csAuthorEmail);
                     user.save();
                 } catch (IOException e) {
                     // add logging statement?
@@ -281,21 +281,34 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 user = User.get(csAuthorEmail.split("@")[0], true);
         }
         // set email address for user if none is already available
-        if (fixEmpty(csAuthorEmail) != null && !isMailerPropertySet(user)) {
+        if (fixEmpty(csAuthorEmail) != null && hasHudsonTasksMailer() && !hasMail(user)) {
             try {
-                user.addProperty(new Mailer.UserProperty(csAuthorEmail));
+                setMail(user, csAuthorEmail);
             } catch (IOException e) {
-                // ignore error
+                // ignore
             }
         }
         return user;
     }
 
-	private boolean isMailerPropertySet(User user) {
-		UserProperty property = user.getProperty(Mailer.UserProperty.class);
-		return property != null
-            && property.hasExplicitlyConfiguredAddress();
+    private void setMail(User user, String csAuthorEmail) throws IOException {
+        user.addProperty(new hudson.tasks.Mailer.UserProperty(csAuthorEmail));
+    }
+
+    private boolean hasMail(User user) {
+        hudson.tasks.Mailer.UserProperty property = user.getProperty(hudson.tasks.Mailer.UserProperty.class);
+        return property != null && property.hasExplicitlyConfiguredAddress();
 	}
+
+    private boolean hasHudsonTasksMailer() {
+        // TODO convert to checking for mailer plugin as plugin migrates to 1.509+
+        try {
+            Class.forName("hudson.tasks.Mailer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 
 	private boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl descriptor = (DescriptorImpl) Hudson.getInstance().getDescriptor(GitSCM.class);
