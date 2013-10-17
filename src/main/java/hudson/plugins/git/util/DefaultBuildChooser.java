@@ -16,6 +16,9 @@ import java.util.*;
 import static java.util.Collections.emptyList;
 
 public class DefaultBuildChooser extends BuildChooser {
+    /* Ignore symbolic default branch ref. */
+    private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
+
     @DataBoundConstructor
     public DefaultBuildChooser() {
     }
@@ -186,6 +189,17 @@ public class DefaultBuildChooser extends BuildChooser {
                 if (!keep) {
                     verbose(listener, "Ignoring {0} because it doesn''t match branch specifier", b);
                     j.remove();
+                }
+            }
+            
+            // filter out HEAD ref if it's not the only ref
+            if (r.getBranches().size() > 1) {
+                for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
+                    Branch b = j.next();
+                    if (HEAD.matches(b.getName())) {
+                    	verbose(listener, "Ignoring {0} because there''s named branch for this revision", b.getName());
+                    	j.remove();
+                    }
                 }
             }
 
