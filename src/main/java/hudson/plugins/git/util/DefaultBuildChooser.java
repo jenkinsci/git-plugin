@@ -217,20 +217,29 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
+        Revision lastBuiltRevision = data.getLastBuiltRevision();
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
             Revision r = i.next();
 
             if (data.hasBeenBuilt(r.getSha1())) {
                 i.remove();
+                
+                // keep track of new branches pointing to the last built revision
+                if (lastBuiltRevision != null && lastBuiltRevision.getSha1().equals(r.getSha1())) {
+                	lastBuiltRevision = r;
+                }
             }
         }
         verbose(listener, "After filtering out what''s already been built: {0}", revs);
 
         // if we're trying to run a build (not an SCM poll) and nothing new
-        // was found then just run the last build again
-        if (!isPollCall && revs.isEmpty() && data.getLastBuiltRevision() != null) {
+        // was found then just run the last build again but ensure that the branch list
+        // is ordered according to the configuration. Sorting the branch list ensures
+        // a deterministic value for GIT_BRANCH and allows a git-flow style workflow
+        // with fast-forward merges between branches
+        if (!isPollCall && revs.isEmpty() && lastBuiltRevision != null) {
             verbose(listener, "Nothing seems worth building, so falling back to the previously built revision: {0}", data.getLastBuiltRevision());
-            return Collections.singletonList(data.getLastBuiltRevision());
+            return Collections.singletonList(utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches()));
         }
 
         // 5. sort them by the date of commit, old to new

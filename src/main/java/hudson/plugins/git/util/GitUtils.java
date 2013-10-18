@@ -6,6 +6,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
 import hudson.slaves.NodeProperty;
@@ -75,6 +76,24 @@ public class GitUtils {
                 return revision;
         }
         return null;
+    }
+
+    public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder) {
+        ArrayList<Branch> orderedBranches = new ArrayList<Branch>(revision.getBranches().size());
+        ArrayList<Branch> revisionBranches = new ArrayList<Branch>(revision.getBranches());
+    	
+        for(BranchSpec branchSpec : branchOrder) {
+            for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
+                Branch b = i.next();
+                if (branchSpec.matches(b.getName())) {
+                    i.remove();
+                    orderedBranches.add(b);
+                }
+            }
+        }
+
+        orderedBranches.addAll(revisionBranches);
+        return new Revision(revision.getSha1(), orderedBranches);
     }
 
     /**
