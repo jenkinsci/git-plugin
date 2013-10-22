@@ -447,7 +447,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public boolean requiresWorkspaceForPolling() {
         String singleBranch = getSingleBranch(new EnvVars());
-        return singleBranch != null && getExtensions().get(DisableRemotePoll.class) != null;
+        return singleBranch == null || getExtensions().get(DisableRemotePoll.class) != null;
     }
 
     @Override
