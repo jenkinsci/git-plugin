@@ -85,7 +85,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
 		@Override
 		public FisheyeGitRepositoryBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindParameters(FisheyeGitRepositoryBrowser.class, "fisheye.");
+			return req.bindJSON(FisheyeGitRepositoryBrowser.class, jsonObject);
 		}
 
 		/**

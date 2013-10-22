@@ -86,7 +86,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
 
         @Override
         public BitbucketWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(BitbucketWeb.class, "bitbucketweb.");
+            return req.bindJSON(BitbucketWeb.class, jsonObject);
         }
     }
 

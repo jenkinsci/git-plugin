@@ -77,7 +77,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
 
         @Override
         public GitoriousWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(GitoriousWeb.class, "Gitoriousweb.");
+            return req.bindJSON(GitoriousWeb.class, jsonObject);
         }
     }
 

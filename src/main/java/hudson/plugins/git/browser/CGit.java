@@ -90,7 +90,7 @@ public class CGit extends GitRepositoryBrowser {
 
         @Override
         public CGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(CGit.class, "cgit.");
+            return req.bindJSON(CGit.class, jsonObject);
         }
     }
 }

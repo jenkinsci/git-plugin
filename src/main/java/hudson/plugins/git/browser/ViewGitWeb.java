@@ -82,7 +82,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
 
         @Override
         public ViewGitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(ViewGitWeb.class, "viewgit.");
+            return req.bindJSON(ViewGitWeb.class, jsonObject);
         }
 
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url) throws IOException, ServletException {

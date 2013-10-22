@@ -94,7 +94,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
 
         @Override
         public RedmineWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(RedmineWeb.class, "redmineweb.");
+            return req.bindJSON(RedmineWeb.class, jsonObject);
         }
     }
 

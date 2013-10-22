@@ -85,7 +85,7 @@ public class GitWeb extends GitRepositoryBrowser {
 
         @Override
         public GitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(GitWeb.class, "gitweb.");
+            return req.bindJSON(GitWeb.class, jsonObject);
         }
     }
 

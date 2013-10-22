@@ -95,7 +95,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
         @Override
         public RhodeCode newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(RhodeCode.class, "rhodecode.");
+            return req.bindJSON(RhodeCode.class, jsonObject);
         }
     }
 }

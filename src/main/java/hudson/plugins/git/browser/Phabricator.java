@@ -93,7 +93,7 @@ public class Phabricator extends GitRepositoryBrowser {
 
         @Override
         public Phabricator newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(Phabricator.class, "phabricator.");
+            return req.bindJSON(Phabricator.class, jsonObject);
         }
     }
 }

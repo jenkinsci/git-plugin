@@ -116,7 +116,7 @@ public class KilnGit extends GitRepositoryBrowser {
 
         @Override
         public KilnGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(KilnGit.class, "kilngit.");
+            return req.bindJSON(KilnGit.class, jsonObject);
         }
     }
 }

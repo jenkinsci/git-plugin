@@ -99,7 +99,7 @@ public class GitLab extends GitRepositoryBrowser {
 
         @Override
         public GitLab newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(GitLab.class, "Gitlab.");
+            return req.bindJSON(GitLab.class, jsonObject);
         }
     }
 

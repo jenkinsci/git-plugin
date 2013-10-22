@@ -73,7 +73,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
         @Override
         public GitBlitRepositoryBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(GitBlitRepositoryBrowser.class, "gitblit.");
+            return req.bindJSON(GitBlitRepositoryBrowser.class, jsonObject);
         }
 
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)

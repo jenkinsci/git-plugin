@@ -95,7 +95,7 @@ public class Stash extends GitRepositoryBrowser {
 
         @Override
         public Stash newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindParameters(Stash.class, "stash.");
+            return req.bindJSON(Stash.class, jsonObject);
         }
     }
 }
