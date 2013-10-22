@@ -4,29 +4,13 @@ import hudson.RelativePath;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.extensions.impl.AuthorInChangelog;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.CleanCheckout;
-import hudson.plugins.git.extensions.impl.CloneOption;
-import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.plugins.git.extensions.impl.PathRestriction;
-import hudson.plugins.git.extensions.impl.PerBuildTag;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
-import hudson.plugins.git.extensions.impl.PruneStaleBranch;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.extensions.impl.RemotePoll;
-import hudson.plugins.git.extensions.impl.ScmName;
-import hudson.plugins.git.extensions.impl.SubmoduleOption;
-import hudson.plugins.git.extensions.impl.UserExclusion;
-import hudson.plugins.git.extensions.impl.UserIdentity;
-import hudson.plugins.git.extensions.impl.WipeWorkspace;
+import hudson.plugins.git.extensions.impl.*;
+import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.util.DescribableList;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -153,7 +137,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     /**
      * @deprecated
-     *      Moved to {@link RemotePoll}
+     *      Moved to {@link hudson.plugins.git.extensions.impl.DisableRemotePoll}
      */
     private transient boolean remotePoll;
 
@@ -237,9 +221,6 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (wipeOutWorkspace) {
                 addIfMissing(new WipeWorkspace());
-            }
-            if (remotePoll) {
-                addIfMissing(new RemotePoll());
             }
             if (authorOrCommitter) {
                 addIfMissing(new AuthorInChangelog());
@@ -401,10 +382,10 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     /**
      * @deprecated
-     *      Moved to {@link RemotePoll}
+     *      Moved to {@link hudson.plugins.git.extensions.impl.DisableRemotePoll}
      */
     public boolean getRemotePoll() {
-        return getExtensions().get(RemotePoll.class)!=null;
+        return getExtensions().get(DisableRemotePoll.class)==null;
     }
 
     /**

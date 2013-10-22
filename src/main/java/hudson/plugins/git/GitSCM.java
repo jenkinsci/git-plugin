@@ -22,8 +22,8 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
-import hudson.plugins.git.extensions.impl.RemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -446,7 +446,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        return getExtensions().get(RemotePoll.class)==null;
+        String singleBranch = getSingleBranch(new EnvVars());
+        return singleBranch != null
+            && !singleBranch.contains("$") // branch is set by a parameter
+            && getExtensions().get(DisableRemotePoll.class) != null;
     }
 
     @Override
@@ -478,7 +481,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
-        if (getExtensions().get(RemotePoll.class)!=null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (getExtensions().get(DisableRemotePoll.class)==null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
