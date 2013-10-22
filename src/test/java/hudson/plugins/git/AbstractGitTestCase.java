@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.UserExclusion;
@@ -123,6 +124,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
         if (relativeTargetDir!=null)
             scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
         if (excludedUsers!=null)
