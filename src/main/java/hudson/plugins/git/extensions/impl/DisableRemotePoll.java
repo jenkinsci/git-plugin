@@ -19,7 +19,7 @@ public class DisableRemotePoll extends FakeGitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Fast remote polling";
+            return "Force polling using workspace";
         }
     }
 }
