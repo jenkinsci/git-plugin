@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import hudson.Extension;
+import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
@@ -48,7 +49,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // if the branch name contains more wildcards then the simple usecase
         // does not apply and we need to skip to the advanced usecase
         if (singleBranch == null || singleBranch.contains("*"))
-            return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data);
+            return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data, context);
 
         // check if we're trying to build a specific commit
         // this only makes sense for a build, there is no
@@ -167,7 +168,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data) throws GitException, IOException, InterruptedException {
+    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+        EnvVars env = context.getBuild().getEnvironment();
+
         // 1. Get all the (branch) revisions that exist
         List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
         verbose(listener, "Starting with all the branches: {0}", revs);
@@ -182,7 +185,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 Branch b = j.next();
                 boolean keep = false;
                 for (BranchSpec bspec : gitSCM.getBranches()) {
-                    if (bspec.matches(b.getName())) {
+                    if (bspec.matches(b.getName(), env)) {
                         keep = true;
                         break;
                     }
@@ -198,7 +201,7 @@ public class DefaultBuildChooser extends BuildChooser {
             if (r.getBranches().size() > 1) {
                 for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
                     Branch b = j.next();
-                    if (HEAD.matches(b.getName())) {
+                    if (HEAD.matches(b.getName(), env)) {
                     	verbose(listener, "Ignoring {0} because there''s named branch for this revision", b.getName());
                     	j.remove();
                     }
@@ -241,7 +244,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // with fast-forward merges between branches
         if (!isPollCall && revs.isEmpty() && lastBuiltRevision != null) {
             verbose(listener, "Nothing seems worth building, so falling back to the previously built revision: {0}", data.getLastBuiltRevision());
-            return Collections.singletonList(utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches()));
+            return Collections.singletonList(utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches(), env));
         }
 
         // 5. sort them by the date of commit, old to new

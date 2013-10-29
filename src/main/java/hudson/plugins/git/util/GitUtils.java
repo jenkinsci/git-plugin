@@ -81,14 +81,14 @@ public class GitUtils implements Serializable {
         return new Revision(sha1);
     }
 
-    public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder) {
+    public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder, EnvVars env) {
         ArrayList<Branch> orderedBranches = new ArrayList<Branch>(revision.getBranches().size());
         ArrayList<Branch> revisionBranches = new ArrayList<Branch>(revision.getBranches());
     	
         for(BranchSpec branchSpec : branchOrder) {
             for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
                 Branch b = i.next();
-                if (branchSpec.matches(b.getName())) {
+                if (branchSpec.matches(b.getName(), env)) {
                     i.remove();
                     orderedBranches.add(b);
                 }
