@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
@@ -27,7 +28,6 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     private static final long serialVersionUID = -6177158367915899356L;
 
     private String name;
-    private transient Pattern pattern;
     
     public String getName() {
         return name;
@@ -48,18 +48,28 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     public String toString() {
-        return pattern + " (" + name + ")";
+        return name;
     }
 
     public boolean matches(String item) {
-        return getPattern().matcher(item).matches();
+        EnvVars env = new EnvVars();
+        return matches(item, env);
+    }
+
+    public boolean matches(String item, EnvVars env) {
+        return getPattern(env).matcher(item).matches();
     }
     
     public List<String> filterMatching(Collection<String> branches) {
+        EnvVars env = new EnvVars();
+        return filterMatching(branches, env);
+    }
+
+    public List<String> filterMatching(Collection<String> branches, EnvVars env) {
         List<String> items = new ArrayList<String>();
         
         for(String b : branches) {
-            if(matches(b))
+            if(matches(b, env))
                 items.add(b);
         }
         
@@ -67,35 +77,40 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
     
     public List<Branch> filterMatchingBranches(Collection<Branch> branches) {
+        EnvVars env = new EnvVars();
+        return filterMatchingBranches(branches, env);
+    }
+
+    public List<Branch> filterMatchingBranches(Collection<Branch> branches, EnvVars env) {
         List<Branch> items = new ArrayList<Branch>();
         
         for(Branch b : branches) {
-            if(matches(b.getName()))
+            if(matches(b.getName(), env))
                 items.add(b);
         }
         
         return items;
     }
+
+    private String getExpandedName(EnvVars env) {
+        return env.expand(name);
+    }
     
-    private Pattern getPattern() {
-        // return the saved pattern if available
-        if (pattern != null)
-            return pattern;
-        
+    private Pattern getPattern(EnvVars env) {
+        String expandedName = getExpandedName(env);
         // use regex syntax directly if name starts with colon
-        if (name.startsWith(":") && name.length() > 1) {
-        	String regexSubstring = name.substring(1, name.length());
-        	pattern = Pattern.compile(regexSubstring);
-        	return pattern;
+        if (expandedName.startsWith(":") && expandedName.length() > 1) {
+            String regexSubstring = expandedName.substring(1, expandedName.length());
+            return Pattern.compile(regexSubstring);
         }
         
         // if an unqualified branch was given add a "*/" so it will match branches
         // from remote repositories as the user probably intended
         String qualifiedName;
-        if (!name.contains("**") && !name.contains("/"))
-            qualifiedName = "*/" + name;
+        if (!expandedName.contains("**") && !expandedName.contains("/"))
+            qualifiedName = "*/" + expandedName;
         else
-            qualifiedName = name;
+            qualifiedName = expandedName;
         
         // build a pattern into this builder
         StringBuilder builder = new StringBuilder();
@@ -140,10 +155,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             builder.append("[^/]*");
         }
         
-        // save the pattern
-        pattern = Pattern.compile(builder.toString());
-        
-        return pattern;
+        return Pattern.compile(builder.toString());
     }
 
     @Extension
