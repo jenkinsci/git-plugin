@@ -16,6 +16,7 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -129,6 +130,12 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
      */
     public void decorateCloneCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    }
+
+    /**
+     * Called before a {@link FetchCommand} is executed to allow extensions to alter its behaviour.
+     */
+    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
     }
 
     /**

@@ -1,13 +1,13 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -25,11 +25,9 @@ public class PruneStaleBranch extends GitSCMExtension {
     }
 
     @Override
-    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Pruning obsolete local branches");
-        for (RemoteConfig remoteRepository : scm.getRepositories()) {
-            git.prune(remoteRepository);
-        }
+        cmd.prune();
     }
 
     @Extension
