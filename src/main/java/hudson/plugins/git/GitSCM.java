@@ -749,19 +749,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final BuildListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
 
-        // every MatrixRun should build the exact same commit ID
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        return lastBuild;
-                }
-            }
-        }
-
         // parameter forcing the commit ID to build
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         if (rpa != null)
