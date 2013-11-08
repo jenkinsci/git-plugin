@@ -1,13 +1,14 @@
 package hudson.plugins.git.UserRemoteConfig;
 
 f = namespace(lib.FormTagLib)
+c = namespace(lib.CredentialsTagLib)
 
 f.entry(title:_("Repository URL"), field:"url") {
     f.textbox()
 }
 
 f.entry(title:_("Credentials"), field:"credentialsId") {
-    f.select(onchange="""{
+    c.select(onchange="""{
             var self = this.targetElement ? this.targetElement : this;
             var r = findPreviousFormItem(self,'url');
             r.onchange(r);

@@ -22,12 +22,12 @@
  ~ THE SOFTWARE.
  -->
 
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
   <f:entry title="${%Project Repository}" field="remote">
     <f:textbox/>
   </f:entry>
   <f:entry title="${%Credentials}" field="credentialsId">
-    <f:select/>
+    <c:select/>
   </f:entry>
   <f:advanced>
     <f:entry title="${%Include branches}" field="includes">
