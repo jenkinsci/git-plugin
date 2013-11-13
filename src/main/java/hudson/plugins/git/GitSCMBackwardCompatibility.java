@@ -193,7 +193,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
-            if (skipTag!=null && skipTag) {
+            if (skipTag!=null && !skipTag) {
                 addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
