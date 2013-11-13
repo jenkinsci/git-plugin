@@ -38,13 +38,15 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     private final String ws;
 
-    protected GitTagAction(AbstractBuild build, BuildData buildData) {
+    private final String tagMessage;
+
+    protected GitTagAction(AbstractBuild build, BuildData buildData, String tagMessage) {
         super(build);
-        List<String> val = new ArrayList<String>();
         this.ws = build.getWorkspace().getRemote();
         for (Branch b : buildData.lastBuild.revision.getBranches()) {
             tags.put(b.getName(), new ArrayList<String>());
         }
+        this.tagMessage = tagMessage;
     }
 
     public Descriptor<GitTagAction> getDescriptor() {
@@ -57,6 +59,11 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             if (!t.isEmpty()) return true;
         }
         return false;
+    }
+
+    /** @return The tag message for this tag, or {@code null} if there is none. */
+    public String getTagMessage() {
+        return tagMessage;
     }
 
     public String getIconFileName() {

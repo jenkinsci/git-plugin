@@ -108,6 +108,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
+    public static final String GIT_TAG_MESSAGE = "GIT_TAG_MESSAGE";
 
     /**
      * All the configured extensions attached to this.
@@ -867,15 +868,29 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
-        Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
-        if (branch!=null)   // null for a detached HEAD
-            environment.put(GIT_BRANCH, branch.getName());
+
+        // Get the first branch pointing to this commit; if there is none, we're at a detached HEAD.
+        Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(), null);
+
+        // Export some environment variables for the branch found, if any
+        String tagMessage = null;
+        if (branch != null) {
+            final String branchName = branch.getName();
+            environment.put(GIT_BRANCH, branchName);
+
+            // If the tag name indicates it's a branch, check for a tag message
+            if (branchName.contains("/tags/")) {
+                int index = branchName.indexOf("/tags/");
+                String tagName = branchName.substring(index + "/tags/".length());
+                tagMessage = git.getTagMessage(tagName);
+            }
+        }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
         git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
 
         buildData.saveBuild(revToBuild);
-        build.addAction(new GitTagAction(build, buildData));
+        build.addAction(new GitTagAction(build, buildData, tagMessage));
 
         computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
                 new BuildChooserContextImpl(build.getProject(), build));
@@ -974,6 +989,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
         }
 
+        GitTagAction tagAction = build.getAction(GitTagAction.class);
+        if (tagAction != null) {
+            String tagMessage = tagAction.getTagMessage();
+            if (Util.fixEmptyAndTrim(tagMessage) != null) {
+                env.put(GIT_TAG_MESSAGE, tagMessage);
+            }
+        }
        
         if (userRemoteConfigs.size()==1){
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
