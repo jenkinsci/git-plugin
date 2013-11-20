@@ -68,7 +68,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        assertNull(b2); // TODO fails in 1.521+ (along with other assertNull calls), perhaps due to fix of JENKINS-18407
         
         // Check that only one build occured
         waitUntilNoActivity();

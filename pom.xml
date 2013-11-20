@@ -185,7 +185,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>r09</version>
+      <version>11.0.1</version>
     </dependency>
     <dependency>
       <groupId>com.infradna.tool</groupId>
@@ -258,6 +258,12 @@
       <artifactId>promoted-builds</artifactId>
       <version>2.7</version>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.sonatype.sisu</groupId>
+          <artifactId>sisu-guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
