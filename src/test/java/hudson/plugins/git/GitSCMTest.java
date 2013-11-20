@@ -961,7 +961,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testDataCompatibility1() throws Exception {
         FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
         GitSCM git = (GitSCM) p.getScm();
-        assertTrue(git.getExtensions().isEmpty());
+        assertEquals(Collections.emptyList(), git.getExtensions().toList());
     }
 
     public void testPleaseDontContinueAnyway() throws Exception {
