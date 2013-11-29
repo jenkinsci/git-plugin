@@ -31,7 +31,9 @@ import java.util.Map;
  */
 public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
     /**
-     * Given a commit found during polling, check whether it should be disregarded.
+     * Given a commit found during polling, check whether it should be disregarded. This operation requires a workspace,
+     * as it operates on the revision history; if you override this, you will need to override
+     * {@link #requiresWorkspaceForPolling()} as well.
      *
      *
      * @param scm
@@ -154,4 +156,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     public GitSCMExtensionDescriptor getDescriptor() {
         return (GitSCMExtensionDescriptor) super.getDescriptor();
     }
+
+    /**
+	 * Allows extensions to force a workspace and disable "fast" polling. Some extensions need to walk the changelog,
+	 * which means the changelog must be available locally; Jenkins can't make the build/no-build decision purely
+	 * remotely in these cases.
+     */
+	public boolean requiresWorkspaceForPolling() {
+		/* If you override isRevExcluded, you probably want to override this, too. */
+		return false;
+	}
 }

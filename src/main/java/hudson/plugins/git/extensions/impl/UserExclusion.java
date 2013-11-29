@@ -7,6 +7,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -30,6 +31,11 @@ public class UserExclusion extends GitSCMExtension {
     @DataBoundConstructor
     public UserExclusion(String excludedUsers) {
         this.excludedUsers = excludedUsers;
+    }
+
+    @Override
+    public boolean requiresWorkspaceForPolling () {
+    	return true;
     }
 
     public String getExcludedUsers() {

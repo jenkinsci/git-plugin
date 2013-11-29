@@ -38,6 +38,11 @@ public class PathRestriction extends GitSCMExtension {
         this.excludedRegions = excludedRegions;
     }
 
+    @Override
+    public boolean requiresWorkspaceForPolling () {
+    	return true;
+    }
+    
     public String getIncludedRegions() {
         return includedRegions;
     }

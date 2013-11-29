@@ -3,6 +3,7 @@ package hudson.plugins.git.extensions.impl;
 import hudson.Extension;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -21,5 +22,10 @@ public class DisableRemotePoll extends FakeGitSCMExtension {
         public String getDisplayName() {
             return "Force polling using workspace";
         }
+    }
+    
+    @Override
+    public boolean requiresWorkspaceForPolling () {
+    	return true;
     }
 }
