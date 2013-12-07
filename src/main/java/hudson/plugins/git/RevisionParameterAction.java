@@ -49,6 +49,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
      */
     public final String commit;
     public final boolean combineCommits;
+    public final Revision revision;
 
     public RevisionParameterAction(String commit) {
         this(commit, false);
@@ -57,7 +58,18 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     public RevisionParameterAction(String commit, boolean combineCommits) {
         this.commit = commit;
         this.combineCommits = combineCommits;
+        this.revision = null;
     }
+    
+    public RevisionParameterAction(Revision revision) {
+        this(revision, false);
+    }   
+
+    public RevisionParameterAction(Revision revision, boolean combineCommits) {
+    	this.revision = revision;
+    	this.commit = revision.getSha1String();
+    	this.combineCommits = combineCommits;
+    }   
 
     @Deprecated
     public Revision toRevision(IGitAPI git) throws InterruptedException {
@@ -65,9 +77,12 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     }
 
     public Revision toRevision(GitClient git) throws InterruptedException {
+    	if (revision != null) {
+    		return revision;
+    	}
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
-        // TODO: if commit is a branch, retain that information instead of making it 'detached'
+        // all we have is a sha1 so make the branch 'detached'
         revision.getBranches().add(new Branch("detached", sha1));
         return revision;
     }
