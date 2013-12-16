@@ -822,9 +822,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } else {
             log.println("Cloning the remote Git repository");
 
-            // Clone from the first and then fetch from the rest
             RemoteConfig rc = repos.get(0);
-            repos = repos.subList(1,repos.size());
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
