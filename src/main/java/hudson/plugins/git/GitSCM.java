@@ -606,8 +606,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException, IOException {
 
+        boolean first = true;
         for (URIish url : remoteRepository.getURIs()) {
             try {
+                if (first) {
+                    git.setRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
+                    first = false;
+                } else {
+                    git.addRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
+                }
+
                 FetchCommand fetch = git.fetch_().from(url, remoteRepository.getFetchRefSpecs());
                 for (GitSCMExtension extension : extensions) {
                     extension.decorateFetchCommand(this, git, listener, fetch);
