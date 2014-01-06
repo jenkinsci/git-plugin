@@ -878,7 +878,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-        git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+        try {
+            git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+        } catch(GitLockFailedException e) {
+            // Rethrow IOException so the retry will be able to catch it
+            throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+        }
 
         buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, buildData));
