@@ -938,6 +938,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
+        boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
         try {
@@ -955,10 +956,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("First time build. Skipping changelog.");
             } else {
                 changelog.to(out).max(MAX_CHANGELOG).execute();
+                executed = true;
             }
         } catch (GitException ge) {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
+            if (!executed) changelog.abort();
             IOUtils.closeQuietly(out);
         }
     }
