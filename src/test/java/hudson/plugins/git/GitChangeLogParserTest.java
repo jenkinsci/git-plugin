@@ -32,5 +32,6 @@ public class GitChangeLogParserTest extends HudsonTestCase {
         assertNotNull(first);
         assertEquals("123abc456def", first.getId());
         assertEquals("first message", first.getMsg());
+        assertTrue("Temp file delete failed for " + log, log.delete());
     }
 }
