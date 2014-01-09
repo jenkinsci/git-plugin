@@ -435,6 +435,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) {
             branch = "**";
+        } else if (!branch.startsWith(repository)) {
+            // we can hit this case if the given branch name contains a slash.
+            // Since we have a single repository, it makes sense to prepend it anyway
+            branch = repository + "/" + branch;
         }
 
         return branch;
