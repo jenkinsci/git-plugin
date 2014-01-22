@@ -494,20 +494,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
     }
 
-    public void testBranchContainsSlash() throws Exception {
-      FreeStyleProject project = setupSimpleProject("my/branch");
-
-      final String commitFile1 = "commitFile1";
-      commit(commitFile1, johnDoe, "Commit number 1");
-      git.branch("my/branch");
-      git.checkout("my/branch");
-      final String commitFile2 = "commitFile2";
-      commit(commitFile2, johnDoe, "Commit number 2");
-      build(project, Result.SUCCESS, commitFile1, commitFile2);
-
-      assertEquals("origin/my/branch", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-    }
-
     // For HUDSON-7411
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
