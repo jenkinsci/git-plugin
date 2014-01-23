@@ -101,7 +101,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected List<RefSpec> getRefSpecs() {
-        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/" + getRemoteName() + "/*"));
     }
 
     @Extension
