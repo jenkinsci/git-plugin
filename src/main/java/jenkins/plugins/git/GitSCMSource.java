@@ -71,13 +71,20 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final String excludes;
 
+    private final boolean ignoreOnPushNotifications;
+
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes) {
+    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
         this.includes = includes;
         this.excludes = excludes;
+        this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+    }
+
+    public boolean isIgnoreOnPushNotifications() {
+      return ignoreOnPushNotifications;
     }
 
     @Override
@@ -147,6 +154,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     for (SCMSource source : owner.getSCMSources()) {
                         if (source instanceof GitSCMSource) {
                             GitSCMSource git = (GitSCMSource) source;
+                            if (git.ignoreOnPushNotifications) {
+                              continue;
+                            }
                             URIish remote;
                             try {
                                 remote = new URIish(git.getRemote());
