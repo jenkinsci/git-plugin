@@ -29,6 +29,9 @@
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select/>
   </f:entry>
+  <f:entry title="${%Ignore on push notifications}" field="ignoreOnPushNotifications">
+    <f:checkbox/>
+  </f:entry>
   <f:advanced>
     <f:entry title="${%Include branches}" field="includes">
       <f:textbox default="*"/>
