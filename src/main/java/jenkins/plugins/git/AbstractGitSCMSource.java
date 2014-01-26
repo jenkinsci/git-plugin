@@ -183,6 +183,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             try {
                 walk.setRetainBody(false);
                 for (Branch b : client.getRemoteBranches()) {
+                    if (!b.getName().startsWith(remoteName + "/")) {
+                      continue;
+                    }
                     final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                     listener.getLogger().println("Checking branch " + branchName);
                     if (branchCriteria != null) {
