@@ -87,9 +87,27 @@ public class DefaultBuildChooser extends BuildChooser {
                 revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }
         } else {
-            // singleBranch contains a '/', so is in most case a fully qualified branch
-            // doesn't seem we can distinguish unqualified branch with '/' in name, so expect users to fully qualify
-            revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
+            // either the branch is qualified (first part should match a valid remote)
+            // or it is still unqualified, but the branch name contains a '/'
+            List<String> possibleQualifiedBranches = new ArrayList<String>();
+            boolean singleBranchIsQualified = false;
+            for (RemoteConfig config : gitSCM.getRepositories()) {
+                String repository = config.getName();
+                if (singleBranch.startsWith(repository + "/")) {
+                  singleBranchIsQualified = true;
+                  break;
+                }
+                String fqbn = repository + "/" + singleBranch;
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", singleBranch, repository, fqbn);
+                possibleQualifiedBranches.add(fqbn);
+            }
+            if (singleBranchIsQualified) {
+                revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
+            } else {
+              for (String fqbn : possibleQualifiedBranches) {
+                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+              }
+            }
         }
 
         return revisions;
