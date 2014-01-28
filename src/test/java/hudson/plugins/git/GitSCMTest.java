@@ -27,6 +27,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
 import hudson.util.StreamTaskListener;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
@@ -998,6 +999,28 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return null;
             }
         });
+    }
+
+    public void testCheckoutFailureIsRetryable() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // run build first to create workspace
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+
+        // create lock file to simulate lock collision
+        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        try {
+            FileUtils.touch(lock);
+            final FreeStyleBuild build2 = build(project, Result.FAILURE);
+            assertLogContains("java.io.IOException: Could not checkout", build2);
+        } finally {
+            lock.delete();
+        }
     }
 
     private void setupJGit(GitSCM git) {
