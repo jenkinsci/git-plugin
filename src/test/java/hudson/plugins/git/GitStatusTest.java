@@ -55,7 +55,7 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger bMasterTrigger = setupProject("b", "master", false);
         SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
-        this.gitStatus.doNotifyCommit("a", "");
+        this.gitStatus.doNotifyCommit("a", null, "");
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
@@ -68,7 +68,7 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger bMasterTrigger = setupProject("b", "master", false);
         SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
-        this.gitStatus.doNotifyCommit("nonexistent", "");
+        this.gitStatus.doNotifyCommit("nonexistent", null, "");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
@@ -81,7 +81,7 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger bMasterTrigger = setupProject("b", "master", false);
         SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
-        this.gitStatus.doNotifyCommit("a", "master");
+        this.gitStatus.doNotifyCommit("a", null, "master");
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
@@ -94,7 +94,7 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger bMasterTrigger = setupProject("b", "master", false);
         SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
-        this.gitStatus.doNotifyCommit("a", "master,topic");
+        this.gitStatus.doNotifyCommit("a", null, "master,topic");
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
@@ -107,7 +107,7 @@ public class GitStatusTest extends HudsonTestCase {
         SCMTrigger bMasterTrigger = setupProject("b", "master", false);
         SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
 
-        this.gitStatus.doNotifyCommit("a", "nonexistent");
+        this.gitStatus.doNotifyCommit("a", null, "nonexistent");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
@@ -117,7 +117,7 @@ public class GitStatusTest extends HudsonTestCase {
     public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", true);
 
-        this.gitStatus.doNotifyCommit("a", "");
+        this.gitStatus.doNotifyCommit("a", null, "");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
     }
 
