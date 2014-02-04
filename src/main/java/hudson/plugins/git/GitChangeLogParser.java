@@ -2,10 +2,13 @@ package hudson.plugins.git;
 
 import hudson.model.AbstractBuild;
 import hudson.scm.ChangeLogParser;
+
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,7 +45,13 @@ public class GitChangeLogParser extends ChangeLogParser {
         Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
         
         // Parse the log file into GitChangeSet items - each one is a commit
-        return new GitChangeSetList(build, parse(FileUtils.lineIterator(changelogFile)));
+        LineIterator lineIterator = null;
+        try {
+        	lineIterator = FileUtils.lineIterator(changelogFile);
+        	return new GitChangeSetList(build, parse(lineIterator));
+        } finally {
+        	LineIterator.closeQuietly(lineIterator);
+        }
     }
 
     private List<GitChangeSet> parse(Iterator<String> changelog) {
