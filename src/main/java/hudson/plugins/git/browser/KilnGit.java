@@ -6,14 +6,12 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
-import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,18 +22,13 @@ import java.util.Collections;
 public class KilnGit extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public KilnGit(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+    public KilnGit(String url) {
+        super(url);
     }
 
-    public URL getUrl() {
-        return url;
-    }
-
-    private QueryBuilder param() {
+    private QueryBuilder param(URL url) {
         return new QueryBuilder(url.getQuery());
     }
 
@@ -49,7 +42,8 @@ public class KilnGit extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + "History/" + changeSet.getId() + param().toString());
+        URL url = getUrl();
+        return new URL(url, url.getPath() + "History/" + changeSet.getId() + param(url).toString());
     }
 
     /**
@@ -85,7 +79,8 @@ public class KilnGit extends GitRepositoryBrowser {
         final int i = Collections.binarySearch(affectedPaths, pathAsString);
         if (i >= 0) {
             // Kiln diff indices begin at 1.
-            return new URL(getChangeSetLink(changeSet), param().toString() + "#diff-" + String.valueOf(i + 1));
+            URL url = getUrl();
+            return new URL(getChangeSetLink(changeSet), param(url).toString() + "#diff-" + String.valueOf(i + 1));
         }
         return getChangeSetLink(changeSet);
     }
@@ -104,7 +99,8 @@ public class KilnGit extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             GitChangeSet changeSet = path.getChangeSet();
-            return new URL(url, url.getPath() + "FileHistory/" + path.getPath() + param().add("rev=" + changeSet.getId()).toString());
+            URL url = getUrl();
+            return new URL(url, url.getPath() + "FileHistory/" + path.getPath() + param(url).add("rev=" + changeSet.getId()).toString());
         }
     }
 

@@ -1,12 +1,19 @@
 package hudson.plugins.git.browser;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
+import hudson.model.EnvironmentContributor;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -22,19 +29,15 @@ import java.util.Collections;
 public class GithubWeb extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public GithubWeb(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
-    }
-
-    public URL getUrl() {
-        return url;
+    public GithubWeb(String url) {
+        super(url);
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
+        URL url = getUrl();
         return new URL(url, url.getPath()+"commit/" + changeSet.getId().toString());
     }
 
@@ -89,6 +92,7 @@ public class GithubWeb extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+            URL url = getUrl();
             return new URL(url, url.getPath() + spec);
         }
     }

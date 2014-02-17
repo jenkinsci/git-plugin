@@ -21,23 +21,20 @@ import java.net.URL;
 public class GitWeb extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public GitWeb(String url) throws MalformedURLException {
-        this.url = new URL(url);
-    }
-
-    public URL getUrl() {
-        return url;
+    public GitWeb(String url) {
+        super(url);
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath()+param().add("a=commit").add("h=" + changeSet.getId()).toString());
+        URL url = getUrl();
+
+        return new URL(url, url.getPath()+param(url).add("a=commit").add("h=" + changeSet.getId()).toString());
     }
 
-    private QueryBuilder param() {
+    private QueryBuilder param(URL url) {
         return new QueryBuilder(url.getQuery());
     }
 
@@ -56,7 +53,8 @@ public class GitWeb extends GitRepositoryBrowser {
             return null;
         }
         GitChangeSet changeSet = path.getChangeSet();
-        String spec = param().add("a=blobdiff").add("f=" + path.getPath()).add("fp=" + path.getPath())
+        URL url = getUrl();
+        String spec = param(url).add("a=blobdiff").add("f=" + path.getPath()).add("fp=" + path.getPath())
             .add("h=" + path.getSrc()).add("hp=" + path.getDst())
             .add("hb=" + changeSet.getId()).add("hpb=" + changeSet.getParentCommit()).toString();
         return new URL(url, url.getPath()+spec);
@@ -71,8 +69,9 @@ public class GitWeb extends GitRepositoryBrowser {
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
+        URL url = getUrl();
         String h = (path.getDst() != null) ? path.getDst() : path.getSrc();
-        String spec = param().add("a=blob").add("f=" + path.getPath())
+        String spec = param(url).add("a=blob").add("f=" + path.getPath())
             .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
         return new URL(url, url.getPath()+spec);
     }

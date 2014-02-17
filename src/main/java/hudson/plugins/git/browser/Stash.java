@@ -21,18 +21,13 @@ import java.net.URL;
 public class Stash extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public Stash(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+    public Stash(String url) {
+        super(url);
     }
 
-    public URL getUrl() {
-        return url;
-    }
-
-    private QueryBuilder param() {
+    private QueryBuilder param(URL url) {
         return new QueryBuilder(url.getQuery());
     }
 
@@ -46,6 +41,7 @@ public class Stash extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
+        URL url = getUrl();
         return new URL(url, url.getPath() + "commits/" + changeSet.getId());
     }
 
@@ -60,11 +56,12 @@ public class Stash extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
+        URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("at=" + changeSet.getParentCommit()).add("until=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).add("until=" + changeSet.getId()).toString());
         } else {
-            return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("at=" + changeSet.getId()).add("until=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getId()).add("until=" + changeSet.getId()).toString());
         }
     }
 
@@ -79,11 +76,12 @@ public class Stash extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
+        URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "browse/" + path.getPath() + param().add("at=" + changeSet.getParentCommit()).toString());
+            return new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).toString());
         } else {
-            return new URL(url, url.getPath() + "browse/" + path.getPath() + param().add("at=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getId()).toString());
         }
     }
 

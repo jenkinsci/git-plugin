@@ -21,18 +21,13 @@ import java.net.URL;
 public class CGit extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public CGit(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+    public CGit(String url) {
+        super(url);
     }
 
-    public URL getUrl() {
-        return url;
-    }
-
-    private QueryBuilder param() {
+    private QueryBuilder param(URL url) {
         return new QueryBuilder(url.getQuery());
     }
 
@@ -46,7 +41,8 @@ public class CGit extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + "commit/" + param().add("id=" + changeSet.getId()).toString());
+        URL url = getUrl();
+        return new URL(url, url.getPath() + "commit/" + param(url).add("id=" + changeSet.getId()).toString());
     }
 
     /**
@@ -60,7 +56,8 @@ public class CGit extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param().add("id=" + changeSet.getId()).toString());
+        URL url = getUrl();
+        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString());
     }
 
     /**
@@ -74,11 +71,11 @@ public class CGit extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
-
+        URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "tree/" + path.getPath() + param().add("id=" + changeSet.getParentCommit()).toString());
+            return new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getParentCommit()).toString());
         } else {
-            return new URL(url, url.getPath() + "tree/" + path.getPath() + param().add("id=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString());
         }
     }
 

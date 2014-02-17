@@ -24,50 +24,49 @@ import java.net.URLEncoder;
 public class ViewGitWeb extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
+
     private final String projectName;
 
     @DataBoundConstructor
-    public ViewGitWeb(String url, String projectName) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+    public ViewGitWeb(String url, String projectName) {
+        super(url);
         this.projectName = projectName;
     }
 
     @Override
     public URL getDiffLink(Path path) throws IOException {
         if (path.getEditType() == EditType.EDIT) {
-        	String spec = buildCommitDiffSpec(path);
-        	return new URL(url, url.getPath() + spec);            
+            URL url = getUrl();
+            String spec = buildCommitDiffSpec(url, path);
+        	return new URL(url, url.getPath() + spec);
         }
         return null;
     }
 
     @Override
     public URL getFileLink(Path path) throws IOException {
+        URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            String spec = buildCommitDiffSpec(path);
-            return new URL(url, url.getPath() + spec);            
+            String spec = buildCommitDiffSpec(url, path);
+            return new URL(url, url.getPath() + spec);
         }
-        String spec = param().add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
+        String spec = param(url).add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
         return new URL(url, url.getPath() + spec);
     }
 
-	private String buildCommitDiffSpec(Path path)
+	private String buildCommitDiffSpec(URL url, Path path)
 			throws UnsupportedEncodingException {
-		return param().add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()).toString() + "#" +  URLEncoder.encode(path.getPath(),"UTF-8").toString();
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()).toString() + "#" +  URLEncoder.encode(path.getPath(),"UTF-8").toString();
 	}
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, url.getPath() + param().add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()).toString());
+        URL url = getUrl();
+        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()).toString());
     }
 
-    private QueryBuilder param() {
+    private QueryBuilder param(URL url) {
         return new QueryBuilder(url.getQuery());
-    }
-
-    public URL getUrl() {
-        return url;
     }
 
     public String getProjectName() {

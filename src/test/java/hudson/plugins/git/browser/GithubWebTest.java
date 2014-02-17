@@ -30,21 +30,13 @@ public class GithubWebTest extends TestCase {
      *
      */
     private static final String GITHUB_URL = "http://github.com/USER/REPO";
-    private final GithubWeb githubWeb;
-
-    {
-        try {
-            githubWeb = new GithubWeb(GITHUB_URL);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private final GithubWeb githubWeb = new GithubWeb(GITHUB_URL);
 
     /**
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrl() throws MalformedURLException {
+    public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(githubWeb.getUrl()), GITHUB_URL  + "/");
     }
 
@@ -52,7 +44,7 @@ public class GithubWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()), GITHUB_URL  + "/");
     }
 

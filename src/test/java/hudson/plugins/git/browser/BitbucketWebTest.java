@@ -28,21 +28,13 @@ public class BitbucketWebTest extends TestCase {
      *
      */
     private static final String BITBUCKET_URL = "http://bitbucket.org/USER/REPO";
-    private final BitbucketWeb bitbucketWeb;
-
-    {
-        try {
-            bitbucketWeb = new BitbucketWeb(BITBUCKET_URL);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private final BitbucketWeb bitbucketWeb = new BitbucketWeb(BITBUCKET_URL);
 
     /**
      * Test method for {@link BitbucketWeb#getUrl()}.
      * @throws java.net.MalformedURLException
      */
-    public void testGetUrl() throws MalformedURLException {
+    public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(bitbucketWeb.getUrl()), BITBUCKET_URL + "/");
     }
 
@@ -50,7 +42,7 @@ public class BitbucketWebTest extends TestCase {
      * Test method for {@link BitbucketWeb#getUrl()}.
      * @throws java.net.MalformedURLException
      */
-    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new BitbucketWeb(BITBUCKET_URL + "/").getUrl()), BITBUCKET_URL + "/");
     }
 

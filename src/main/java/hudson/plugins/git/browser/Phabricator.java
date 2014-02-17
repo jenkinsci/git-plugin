@@ -20,17 +20,13 @@ import java.net.URL;
 public class Phabricator extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
+
     private final String repo;
 
     @DataBoundConstructor
-    public Phabricator(String url, String repo) throws MalformedURLException {
+    public Phabricator(String url, String repo) {
+        super(url);
         this.repo = repo;
-        this.url = normalizeToEndWithSlash(new URL(url));
-    }
-
-    public URL getUrl() {
-        return url;
     }
 
     public String getRepo() {
@@ -42,13 +38,12 @@ public class Phabricator extends GitRepositoryBrowser {
      *
      * https://[Phabricator URL]/r$repo$sha
      *
-     * @param path
      * @return diff link
      * @throws IOException
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(this.getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId().toString()));
+        return new URL(getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId().toString()));
     }
 
     /**
@@ -66,7 +61,7 @@ public class Phabricator extends GitRepositoryBrowser {
         final GitChangeSet changeSet = path.getChangeSet();
         final String sha = changeSet.getId().toString();
         final String spec = String.format("/diffusion/%s/change/master/%s;%s", this.getRepo(), path.getPath(), sha);
-        return new URL(this.getUrl(), spec);
+        return new URL(getUrl(), spec);
     }
 
     /**
@@ -82,7 +77,7 @@ public class Phabricator extends GitRepositoryBrowser {
         final GitChangeSet changeSet = path.getChangeSet();
         final String sha = changeSet.getId().toString();
         final String spec = String.format("/diffusion/%s/history/master/%s;%s", this.getRepo(), path.getPath(), sha);
-        return new URL(this.getUrl(), spec);
+        return new URL(getUrl(), spec);
     }
 
     @Extension

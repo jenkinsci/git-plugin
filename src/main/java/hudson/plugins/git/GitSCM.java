@@ -1193,17 +1193,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return mergeOptions;
         }
 
-        public static GitWeb createGitWeb(String url) {
-            if (!isBlank(url)) {
-                try {
-                    return  new GitWeb(url);
-                } catch (MalformedURLException e) {
-                    throw new GitException("Error creating GitWeb", e);
-                }
-            }
-            return null;
-        }
-
         public FormValidation doGitRemoteNameCheck(StaplerRequest req)
                 throws IOException, ServletException {
             String mergeRemoteName = req.getParameter("value");

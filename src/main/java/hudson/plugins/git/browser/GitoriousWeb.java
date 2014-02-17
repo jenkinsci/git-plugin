@@ -20,20 +20,15 @@ import java.net.URL;
 public class GitoriousWeb extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
 
     @DataBoundConstructor
-    public GitoriousWeb(String url) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
-    }
-
-    public URL getUrl() {
-        return url;
+    public GitoriousWeb(String url) {
+        super(url);
     }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, "commit/" + changeSet.getId().toString());
+        return new URL(getUrl(), "commit/" + changeSet.getId().toString());
     }
 
     /**
@@ -48,7 +43,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(url, "commit/" + changeSet.getId().toString() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
+        return new URL(getUrl(), "commit/" + changeSet.getId().toString() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
     }
 
     /**
@@ -65,6 +60,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
             return getDiffLink(path);
         } else {
             final String spec = "blobs/" + path.getChangeSet().getId() + "/" + path.getPath();
+            URL url = getUrl();
             return new URL(url, url.getPath() + spec);
         }
     }

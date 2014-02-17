@@ -24,21 +24,9 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
 	private static final long serialVersionUID = 2881872624557203410L;
 
-	/**
-	 * The URL of the FishEye repository.
-	 *
-	 * This is normally like <tt>http://fisheye5.cenqua.com/browse/glassfish/</tt>
-	 * Normalized to have '/' at the tail.
-	 */
-	public final URL url;
-
 	@DataBoundConstructor
-	public FisheyeGitRepositoryBrowser(URL url) throws MalformedURLException {
-		this.url = normalizeToEndWithSlash(url);
-	}
-
-	public URL getUrl() {
-		return url;
+	public FisheyeGitRepositoryBrowser(String url) {
+        super(url);
 	}
 
 	@Override
@@ -47,12 +35,12 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			return null; // no diff if this is not an edit change
 		String r1 = path.getChangeSet().getParentCommit();
 		String r2 = path.getChangeSet().getId();
-		return new URL(url, getPath(path) + String.format("?r1=%s&r2=%s", r1, r2));
+		return new URL(getUrl(), getPath(path) + String.format("?r1=%s&r2=%s", r1, r2));
 	}
 
 	@Override
 	public URL getFileLink(Path path) throws IOException {
-		return new URL(url, getPath(path));
+		return new URL(getUrl(), getPath(path));
 	}
 
 	private String getPath(Path path) {
@@ -62,8 +50,8 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	/**
 	 * Pick up "FOOBAR" from "http://site/browse/FOOBAR/"
 	 */
-	private String getProjectName() {
-		String p = url.getPath();
+	private String getProjectName() throws IOException {
+		String p = getUrl().getPath();
 		if (p.endsWith("/"))
 			p = p.substring(0, p.length() - 1);
 
@@ -73,7 +61,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
 	@Override
 	public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-		return new URL(url, "../../changelog/" + getProjectName() + "?cs=" + changeSet.getId());
+		return new URL(getUrl(), "../../changelog/" + getProjectName() + "?cs=" + changeSet.getId());
 	}
 
 	@Extension
