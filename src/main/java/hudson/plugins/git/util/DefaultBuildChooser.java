@@ -2,6 +2,7 @@ package hudson.plugins.git.util;
 
 import hudson.Extension;
 import hudson.EnvVars;
+import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
@@ -11,6 +12,8 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -186,8 +189,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
-        EnvVars env = context.getBuild().getEnvironment();
+    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, @NonNull BuildChooserContext context) throws GitException, IOException, InterruptedException {
+        AbstractBuild<?, ?> build = context.getBuild();
+        EnvVars env = build != null ? build.getEnvironment() : new EnvVars();
 
         // 1. Get all the (branch) revisions that exist
         List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
