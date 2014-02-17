@@ -3,12 +3,12 @@ package hudson.plugins.git;
 import hudson.MarkupText;
 import hudson.model.Hudson;
 import hudson.model.User;
-import hudson.model.UserProperty;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import org.apache.commons.lang.time.FastDateFormat;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -32,8 +32,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final String PREFIX_AUTHOR = "author ";
     private static final String PREFIX_COMMITTER = "committer ";
-    private static final String IDENTITY = "([^<]*)<(.*)> (.*) (.*)";//starts with everything-but
-
+    private static final String IDENTITY = "([^<]*)<(.*)> (.*)";
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
     private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
@@ -43,6 +42,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
 
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
+    private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+
     /**
      * This is broken as a part of the 1.5 refactoring.
      *
@@ -66,11 +67,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String committer;
     private String committerEmail;
     private String committerTime;
-    private String committerTz;
     private String author;
     private String authorEmail;
     private String authorTime;
-    private String authorTz;
     private String comment;
     private String title;
     private String id;
@@ -106,19 +105,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             } else if (line.startsWith(PREFIX_COMMITTER)) {
                 Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
                 if (committerMatcher.matches()
-                        && committerMatcher.groupCount() >= 4) {
+                        && committerMatcher.groupCount() >= 3) {
                     this.committer = committerMatcher.group(1).trim();
                     this.committerEmail = committerMatcher.group(2);
-                    this.committerTime = committerMatcher.group(3);
-                    this.committerTz = committerMatcher.group(4);
+                    this.committerTime = isoDateFormat(committerMatcher.group(3));
                 }
             } else if (line.startsWith(PREFIX_AUTHOR)) {
                 Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
-                if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
+                if (authorMatcher.matches() && authorMatcher.groupCount() >= 3) {
                     this.author = authorMatcher.group(1).trim();
                     this.authorEmail = authorMatcher.group(2);
-                    this.authorTime = authorMatcher.group(3);
-                    this.authorTz = authorMatcher.group(4);
+                    this.authorTime = isoDateFormat(authorMatcher.group(3));
                 }
             } else if (line.startsWith("    ")) {
                 message.append(line.substring(4)).append('\n');
@@ -173,37 +170,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
+    /** Convert to iso date format if required */
+    private String isoDateFormat(String s) {
+        if (s.length() == 25 /* already in ISO 8601 */) return s;
+
+        // legacy mode
+        int i = s.indexOf(' ');
+        long time = Long.parseLong(s.substring(0,i));
+        return FastDateFormat.getInstance(ISO_8601).format(new Date(time)) + s.substring(i);
+    }
+
     private String parseHash(String hash) {
         return NULL_HASH.equals(hash) ? null : hash;
     }
 
     @Exported
     public String getDate() {
-        DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        String dateStr;
-        String csTime;
-        String csTz;
-        Date csDate;
-
-        if (authorOrCommitter) {
-            csTime = this.authorTime;
-            csTz = this.authorTz;
-        }
-        else {
-            csTime = this.committerTime;
-            csTz = this.committerTz;
-        }
-
-        try {
-            csDate = new Date(Long.parseLong(csTime) * 1000L);
-        } catch (NumberFormatException e) {
-            csDate = new Date();
-        }
-
-        dateStr = fmt.format(csDate) + " " + csTz;
-
-        return dateStr;
+        return authorOrCommitter ? authorTime : committerTime;
     }
 
     @Override
