@@ -15,7 +15,6 @@ import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -63,7 +62,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -536,7 +534,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Polling for changes in");
 
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null));
+                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
@@ -710,10 +708,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         final AbstractProject project;
         final AbstractBuild build;
+        final EnvVars environment;
 
-        BuildChooserContextImpl(AbstractProject project, AbstractBuild build) {
+        BuildChooserContextImpl(AbstractProject project, AbstractBuild build, EnvVars environment) {
             this.project = project;
             this.build = build;
+            this.environment = environment;
         }
 
         public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
@@ -728,6 +728,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return build;
         }
 
+        public EnvVars getEnvironment() {
+            return environment;
+        }
+
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
                 public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
@@ -740,6 +744,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                 public AbstractBuild<?, ?> getBuild() {
                     return build;
+                }
+
+                public EnvVars getEnvironment() {
+                    return environment;
                 }
             });
         }
@@ -782,7 +790,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = environment.expand( getSingleBranch(environment) );
 
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build, environment);
         Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                 false, singleBranch, git, listener, buildData, context);
 
@@ -889,7 +897,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         build.addAction(new GitTagAction(build, buildData));
 
         computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                new BuildChooserContextImpl(build.getProject(), build));
+                new BuildChooserContextImpl(build.getProject(), build, environment));
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);

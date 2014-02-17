@@ -649,7 +649,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleProject p = createFreeStyleProject();
         final FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
 
-        BuildChooserContextImpl c = new BuildChooserContextImpl(p, b);
+        BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
         c.actOnBuild(new ContextCallable<AbstractBuild<?,?>, Object>() {
             public Object invoke(AbstractBuild param, VirtualChannel channel) throws IOException, InterruptedException {
                 assertSame(param,b);

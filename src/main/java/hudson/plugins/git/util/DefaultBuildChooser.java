@@ -187,7 +187,8 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws GitException
      */
     private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
-        EnvVars env = context.getBuild().getEnvironment();
+
+        EnvVars env = context.getEnvironment();
 
         // 1. Get all the (branch) revisions that exist
         List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
