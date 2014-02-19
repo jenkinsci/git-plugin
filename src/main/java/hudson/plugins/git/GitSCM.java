@@ -445,9 +445,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        String singleBranch = getSingleBranch(new EnvVars());
-        return singleBranch == null || getExtensions().get(DisableRemotePoll.class) != null;
+        return isSingleBranch() || anyExtensionRequiresWorkspace();
     }
+
+	private boolean anyExtensionRequiresWorkspace() {
+		DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions = getExtensions();
+        for (GitSCMExtension extension: extensions) {
+        	if (extension.requiresWorkspaceForPolling()) {
+        		return true;
+        	}
+        }
+        return false;
+	}
+
+	private boolean isSingleBranch() {
+		String singleBranch = getSingleBranch(new EnvVars());
+        return singleBranch == null;
+	}
 
     @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
@@ -478,7 +492,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
-        if (getExtensions().get(DisableRemotePoll.class)==null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (!anyExtensionRequiresWorkspace() && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
