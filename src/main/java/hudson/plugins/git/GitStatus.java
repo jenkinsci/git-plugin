@@ -187,7 +187,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * @since 1.4.1
          * @deprecated implement #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, String...)
          */
-        public List<ResponseContributor> onNotifyCommit(URIish uri, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
             return Collections.EMPTY_LIST;
         }
 
