@@ -19,6 +19,8 @@ import java.util.List;
 
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class GitStatusTest extends HudsonTestCase {
     private GitStatus gitStatus;
@@ -129,10 +131,9 @@ public class GitStatusTest extends HudsonTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        if (ignoreNotifyCommit)
-            git.getExtensions().add(new IgnoreNotifyCommit());
         project.setScm(git);
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
+        Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
         project.addTrigger(trigger);
         return trigger;
     }

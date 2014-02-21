@@ -219,7 +219,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 final List<AbstractProject<?, ?>> projects = Lists.newArrayList();
                 boolean scmFound = false,
-                        triggerFound = false,
                         urlFound = false;
                 for (final AbstractProject<?, ?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
                     Collection<GitSCM> projectSCMs = getProjectScms(project);
@@ -240,27 +239,27 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 continue;
                             }
 
+                            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                            if (trigger != null && trigger.isIgnorePostCommitHooks()) {
+                                LOGGER.info("PostCommitHooks are disabled on " + project.getFullDisplayName());
+                                continue;
+                            }
+
+                            Boolean branchFound = false;
                             if (branches.length == 0) {
-                                urlFound = true;
+                                branchFound = true;
                             } else {
                                 OUT: for (BranchSpec branchSpec : git.getBranches()) {
                                     for (String branch : branches) {
                                         if (branchSpec.matches(repository.getName() + "/" + branch)) {
-                                            urlFound = true;
+                                            branchFound = true;
                                             break OUT;
                                         }
                                     }
                                 }
                             }
-
-                            if (!urlFound) continue;
-
-                            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                            if (trigger != null && !trigger.isIgnorePostCommitHooks()) {
-                                triggerFound = true;
-                            } else {
-                                continue;
-                            }
+                            if (!branchFound) continue;
+                            urlFound = true;
 
                             if (!project.isDisabled()) {
                                 if (isNotEmpty(sha1)) {
@@ -284,8 +283,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     result.add(new MessageResponseContributor(
                             "No git jobs using repository: " + uri.toString() + " and branches: " + StringUtils
                                     .join(branches, ",")));
-                } else if (!triggerFound) {
-                    result.add(new MessageResponseContributor("Jobs found but they aren't configured for polling"));
                 }
 
                 return result;
