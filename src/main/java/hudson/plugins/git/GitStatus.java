@@ -188,11 +188,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * @deprecated implement #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, String...)
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
-            return Collections.EMPTY_LIST;
+            return onNotifyCommit(uri, null, branches);
         }
 
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
-            return onNotifyCommit(uri, branches);
+            return Collections.EMPTY_LIST;
         }
     }
 
@@ -241,30 +241,22 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
 
                             if (branches.length == 0) {
-                                branchMatches = true;
+                                urlFound = true;
                             } else {
-                                for (BranchSpec branchSpec : git.getBranches()) {
+                                OUT: for (BranchSpec branchSpec : git.getBranches()) {
                                     for (String branch : branches) {
                                         if (branchSpec.matches(repository.getName() + "/" + branch)) {
-                                            branchMatches = true;
-                                            break;
+                                            urlFound = true;
+                                            break OUT;
                                         }
-                                    }
-                                    if (branchMatches) {
-                                        break;
                                     }
                                 }
                             }
 
-                            if (branchMatches) {
-                                urlFound = true;
-                            } else {
-                                continue;
-                            }
-
+                            if (!urlFound) continue;
 
                             SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                            if (trigger != null) {
+                            if (trigger != null && !trigger.isIgnorePostCommitHooks()) {
                                 triggerFound = true;
                             } else {
                                 continue;
