@@ -20,8 +20,12 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         this(null);
     }
 
-    protected GitRepositoryBrowser(String url) {
-        this.url = url;
+    protected GitRepositoryBrowser(String repourl) {
+        this.url = repourl;
+    }
+
+    public finar String getRepoUrl() {
+        return url;
     }
 
     public final URL getUrl() throws IOException {
