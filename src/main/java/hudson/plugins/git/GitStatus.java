@@ -240,7 +240,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
 
                             SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                            if (trigger != null && trigger.isIgnorePostCommitHooks()) {
+                            if (trigger == null) {
+                                continue;
+                            }
+                            if (trigger.isIgnorePostCommitHooks()) {
                                 LOGGER.info("PostCommitHooks are disabled on " + project.getFullDisplayName());
                                 continue;
                             }
