@@ -949,7 +949,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      or else we won't know where to stop.
      */
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
-        Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
+        Writer out = new OutputStreamWriter(changelogFile.write());
 
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
