@@ -14,6 +14,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -191,7 +192,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     @Override
     public long getTimestamp() {
-        return Long.parseLong(authorOrCommitter ? authorTime : committerTime) * 1000L;
+        try {
+            return new SimpleDateFormat(ISO_8601).parse(getDate()).getTime();
+        } catch (ParseException e) {
+            return -1;
+        }
     }
 
     @Override
