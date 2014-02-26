@@ -123,7 +123,21 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
     }
 
+
+    public void testDoNotifyCommitWithNoScmTrigger() throws Exception {
+        setupProject("a", "master", null);
+        this.gitStatus.doNotifyCommit("a", null, "");
+        // no expectation here, however we shouldn't have a build triggered, and no exception
+    }
+
     private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
+        SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
+        Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
+        setupProject(url, branchString, trigger);
+        return trigger;
+    }
+
+    private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
@@ -132,11 +146,9 @@ public class GitStatusTest extends HudsonTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);
-        SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
-        Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
-        project.addTrigger(trigger);
-        return trigger;
+        if (trigger != null) project.addTrigger(trigger);
     }
+
 
     public void testLooseMatch() throws URISyntaxException {
         String[] list = new String[]{

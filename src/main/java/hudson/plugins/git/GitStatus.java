@@ -263,10 +263,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!project.isDisabled()) {
                                 if (isNotEmpty(sha1)) {
+                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     project.scheduleBuild2(project.getQuietPeriod(),
                                             new CommitHookCause(sha1),
                                             new RevisionParameterAction(sha1));
-                                } else {
+                                    result.add(new ScheduledResponseContributor(project));
+                                } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
@@ -325,6 +327,38 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             @Override
             public void writeBody(PrintWriter w) {
                 w.println("Scheduled polling of " + project.getFullDisplayName());
+            }
+        }
+
+        private static class ScheduledResponseContributor extends ResponseContributor {
+            /**
+             * The project
+             */
+            private final AbstractProject<?, ?> project;
+
+            /**
+             * Constructor.
+             *
+             * @param project the project.
+             */
+            public ScheduledResponseContributor(AbstractProject<?, ?> project) {
+                this.project = project;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                rsp.addHeader("Triggered", project.getAbsoluteUrl());
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void writeBody(PrintWriter w) {
+                w.println("Scheduled " + project.getFullDisplayName());
             }
         }
     }
