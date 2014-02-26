@@ -24,7 +24,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         this.url = repourl;
     }
 
-    public finar String getRepoUrl() {
+    public final String getRepoUrl() {
         return url;
     }
 
