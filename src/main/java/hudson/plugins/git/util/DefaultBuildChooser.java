@@ -108,7 +108,7 @@ public class DefaultBuildChooser extends BuildChooser {
         if (revisions.isEmpty()) {
             // the 'branch' could actually be a non branch reference (for example a tag or a gerrit change)
 
-            revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
+            revisions = getHeadRevision(isPollCall, singleBranch, git, listener, data);
             if (!revisions.isEmpty()) {
                 verbose(listener, "{0} seems to be a non-branch reference (tag?)");
             }
