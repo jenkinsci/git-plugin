@@ -27,6 +27,7 @@ import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -174,6 +175,28 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         }
 
         SCM scm = build.getProject().getScm();
+
+        if (scm instanceof MultiSCM) {
+            List<SCM> scmlist = ((MultiSCM) scm).getConfiguredSCMs();
+            for (SCM s : scmlist) {
+                if (s instanceof GitSCM) {
+
+                    for (final TagToPush t : tagsToPush) {
+                        if (t.getTagName() == null)
+                            throw new AbortException("No tag to push defined");
+
+                        if (t.getTargetRepoName() == null)
+                            throw new AbortException("No target repo to push to defined");
+                        EnvVars environment = build.getEnvironment(listener);
+
+                        final String targetRepo = environment.expand(t.getTargetRepoName());
+                        if (targetRepo.equals(((GitSCM) s).getScmName())) {
+                            scm = s;
+                        }
+                    }
+                }
+            }
+        }
 
         if (!(scm instanceof GitSCM)) {
             return false;
@@ -416,15 +439,31 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             if (validation.kind != FormValidation.Kind.OK)
                 return validation;
 
-            if (!(project.getScm() instanceof GitSCM)) {
-                return FormValidation.warning("Project not currently configured to use Git; cannot check remote repository");
+            SCM scm_temp = project.getScm();
+            GitSCM scm = null;
+
+            if (scm_temp instanceof GitSCM) {
+                scm = (GitSCM) scm_temp;
+            } else {
+                if (scm_temp instanceof MultiSCM) {
+                    List<SCM> scmlist = ((MultiSCM) scm_temp).getConfiguredSCMs();
+
+                    for (SCM s : scmlist) {
+                        if (s instanceof GitSCM) {
+                            if (remote.equals(((GitSCM) s).getScmName())) {
+                                if(((GitSCM) s).getRepositories().get(0).getName() != null && ((GitSCM) s).getRepositories().get(0).getName().equals(remote)){
+                                    scm = (GitSCM) s;
+                                }else{
+                                    return FormValidation.error("No remote repository configured with name '" + remote + "'");                                    
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-            GitSCM scm = (GitSCM) project.getScm();
-            if (scm.getRepositoryByName(remote) == null)
-                return FormValidation
-                        .error("No remote repository configured with name '"
-                                + remote + "'");
+            if ((scm == null) || (scm.getRepositoryByName(remote) == null))
+                return FormValidation.error("No remote repository configured with name '" + remote + "'");
 
             return FormValidation.ok();
         }
