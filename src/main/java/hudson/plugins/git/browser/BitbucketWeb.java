@@ -29,12 +29,12 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "changeset/" + changeSet.getId());
+        return new URL(url, url.getPath() + "commits/" + changeSet.getId());
     }
 
     /**
      * Creates a link to the file diff.
-     * http://[BitbucketWeb URL]/changeset/[commitid]
+     * http://[BitbucketWeb URL]/commits/[commitid]
      *
      * @param path affected file path
      * @return diff link

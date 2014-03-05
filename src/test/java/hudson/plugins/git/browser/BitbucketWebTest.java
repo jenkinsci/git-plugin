@@ -53,7 +53,7 @@ public class BitbucketWebTest extends TestCase {
      */
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = bitbucketWeb.getChangeSetLink(createChangeSet("rawchangelog"));
-        assertEquals(BITBUCKET_URL + "/changeset/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
+        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     /**
@@ -66,11 +66,11 @@ public class BitbucketWebTest extends TestCase {
         final String path1Str = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
         final Path path1 = pathMap.get(path1Str);
 
-        assertEquals(BITBUCKET_URL + "/changeset/396fc230a3db05c427737aa5c2eb7856ba72b05d#chg-" + path1Str, bitbucketWeb.getDiffLink(path1).toString());
+        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#chg-" + path1Str, bitbucketWeb.getDiffLink(path1).toString());
 
         final String path2Str = "src/test/java/hudson/plugins/git/browser/GithubWebTest.java";
         final Path path2 = pathMap.get(path2Str);
-        assertEquals(BITBUCKET_URL + "/changeset/396fc230a3db05c427737aa5c2eb7856ba72b05d#chg-" + path2Str, bitbucketWeb.getDiffLink(path2).toString());
+        assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#chg-" + path2Str, bitbucketWeb.getDiffLink(path2).toString());
         final String path3Str = "src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file";
         final Path path3 = pathMap.get(path3Str);
         assertNull("Do not return a diff link for added files.", bitbucketWeb.getDiffLink(path3));
