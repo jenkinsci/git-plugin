@@ -12,8 +12,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  */
 public class AuthorInChangelog extends FakeGitSCMExtension {
+
     @DataBoundConstructor
     public AuthorInChangelog() {
+    }
+
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        return true;
     }
 
     @Extension

@@ -32,6 +32,11 @@ public class UserExclusion extends GitSCMExtension {
         this.excludedUsers = excludedUsers;
     }
 
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        return true;
+    }
+
     public String getExcludedUsers() {
         return excludedUsers;
     }

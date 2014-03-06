@@ -32,6 +32,11 @@ public class PathRestriction extends GitSCMExtension {
     // compiled cache
     private transient volatile List<Pattern> includedPatterns,excludedPatterns;
 
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        return true;
+    }
+
     @DataBoundConstructor
     public PathRestriction(String includedRegions, String excludedRegions) {
         this.includedRegions = includedRegions;

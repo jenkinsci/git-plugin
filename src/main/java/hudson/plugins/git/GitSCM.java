@@ -21,7 +21,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -445,20 +444,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        String singleBranch = getSingleBranch(new EnvVars());
-        return singleBranch == null || getExtensions().get(DisableRemotePoll.class) != null;
+        for (GitSCMExtension ext : getExtensions()) {
+            if (ext.requiresWorkspaceForPolling()) return true;
+        }
+        return getSingleBranch(new EnvVars()) == null;
     }
 
     @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
-            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener, baseline);
+            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
         } catch (GitException e){
             throw new IOException2(e);
         }
     }
 
-    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -478,7 +479,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
-        if (getExtensions().get(DisableRemotePoll.class)==null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (!requiresWorkspaceForPolling() && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+
+            // FIXME this should not be a specific case, but have BuildChooser tell us if it can poll without workspace.
+
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
@@ -497,21 +501,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
-        // Rebuild if the working directory doesn't exist
-        // I'm actually not 100% sure about this, but I'll leave it in for now.
-        // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
-        // for whether we'd ever been built before. But I'm fixing that right now anyway.
-        
-        // JENKINS-10880: workingDirectory can be null
+        // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
             return BUILD_NOW;
         }
 
-
         // which node is this workspace from?
+        // there should be always one match, but just in case we initialize n to a non-null value
         Node n = Jenkins.getInstance();
         if (workspace.isRemote()) {
-            // there should be always one match, but just in case we initialize n to a non-null value
             for (Computer c : Jenkins.getInstance().getComputers()) {
                 if (c.getChannel()==workspace.getChannel()) {
                     n =  c.getNode();

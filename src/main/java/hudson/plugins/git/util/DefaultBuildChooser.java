@@ -19,6 +19,7 @@ import java.util.*;
 import static java.util.Collections.emptyList;
 
 public class DefaultBuildChooser extends BuildChooser {
+
     /* Ignore symbolic default branch ref. */
     private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
 

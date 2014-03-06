@@ -30,6 +30,7 @@ import java.util.List;
  * @author Kohsuke Kawaguchi
  */
 public abstract class BuildChooser implements ExtensionPoint, Describable<BuildChooser>, Serializable {
+
     /**
      * Refers back to the {@link GitSCM} that owns this build chooser.
      * Do not modify from outside {@link GitSCM}.
