@@ -134,6 +134,8 @@ public class PathRestriction extends GitSCMExtension {
                     + Util.join(excludedPaths, ", "));
             return true;
         }
+        
+        listener.getLogger().println("Not ignored commit " + commit.getCommitId() + ": Found included paths: " + Util.join(includedPaths, ", "));
 
         return null;
     }

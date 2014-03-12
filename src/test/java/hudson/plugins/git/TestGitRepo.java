@@ -92,4 +92,17 @@ public class TestGitRepo {
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }
+
+    public void commit(String[] fileNames, PersonIdent committer, String message)  throws GitException, InterruptedException {
+        for (String fileName : fileNames) {
+            FilePath file = gitDirPath.child(fileName);
+            try {
+                file.write(fileName, null);
+            } catch (Exception e) {
+                throw new GitException("unable to write file", e);
+            }
+            git.add(fileName);
+        }
+        git.commit(message, committer, committer);
+    }
 }

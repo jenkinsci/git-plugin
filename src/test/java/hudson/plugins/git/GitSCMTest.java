@@ -27,10 +27,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
 import hudson.util.StreamTaskListener;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
-
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -300,6 +300,67 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         build(project, Result.SUCCESS, branch1File1, branch1File2, branch1File3);
     */ }
+    
+    public void testBranchSwitchDoesntTriggerUnaffectedProjects() throws Exception {
+        final String branch_dev = "develop";
+        final String branch_master = "master";
+
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec(branch_master));
+        branches.add(new BranchSpec(branch_dev));
+                
+        final FreeStyleProject projectA = setupProject(branches, false, null, null, janeDoe.getName(), null, false, "projectA/.*");
+        final FreeStyleProject projectB = setupProject(branches, false, null, null, janeDoe.getName(), null, false, "projectB/.*");
+        
+        
+        final String commitFile1a = "projectA/commitFile1a";
+        final String commitFile1b = "projectB/commitFile1b";
+        commit(new String[] {commitFile1a, commitFile1b}, johnDoe, "Initial Commit - Project A + B");
+
+        assertTrue(projectA.poll(listener).hasChanges());
+        assertTrue(projectB.poll(listener).hasChanges());
+        
+        build(projectA, Result.SUCCESS, commitFile1a);    
+        build(projectB, Result.SUCCESS, commitFile1b);    
+        
+        // Both Projects have now been built once on master
+        
+        testRepo.git.branch(branch_dev);
+                
+        // Make a commit for Project A on develop and let it build
+        // Also force a build of B to have it built at least once on develop
+        testRepo.git.checkout(branch_dev);
+        
+        final String commitFile2 = "projectA/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2 - Project A");
+        
+        build(projectA, Result.SUCCESS, commitFile2); 
+        build(projectB, Result.SUCCESS, commitFile1b);  
+        
+        // Now make another commit for Project A and B on master and let them build
+        testRepo.git.checkout(branch_master);
+
+        final String commitFile3 = "projectA/commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 4 - Project A");  
+        
+        final String commitFile4 = "projectB/commitFile4";
+        commit(commitFile4, johnDoe, "Commit number 6 - Project B");  
+
+        assertTrue(projectA.poll(listener).hasChanges());
+        assertTrue(projectB.poll(listener).hasChanges());
+        build(projectA, Result.SUCCESS, commitFile3);  
+        build(projectB, Result.SUCCESS, commitFile4);  
+                
+        // Make a commit for Project B on develop, A should now not build
+        testRepo.git.checkout(branch_dev);        
+        
+        final String commitFile5 = "projectB/commitFile5";
+        commit(commitFile5, johnDoe, "Commit number 5 - Project B");
+
+        assertFalse(projectA.poll(listener).hasChanges());
+        assertTrue(projectB.poll(listener).hasChanges());
+        build(projectB, Result.SUCCESS, commitFile5);
+    }
 
     public void testBasicExcludedUser() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, "Jane Doe", null);

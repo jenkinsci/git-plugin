@@ -536,6 +536,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
+                    listener.getLogger().println("Revision considered significant: " + c.getSha1String());
                     return PollingResult.SIGNIFICANT;
                 }
             }
@@ -1355,10 +1356,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
         try {
-            List<String> revShow;
-            if (buildData != null && buildData.lastBuild != null) {
-                revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+            listener.getLogger().println("Cheking Revision " + r + " for Exclusion");        	
+
+            List<String> revShow = new ArrayList<String>();
+
+            if (buildData != null) {
+                for (Branch branch : r.getBranches()) {
+                    if (buildData.getLastBuildOfBranch(branch.getName()) != null) {
+                        ObjectId lastBuiltInBranch = buildData.getLastBuildOfBranch(branch.getName()).getRevision().getSha1();
+                        listener.getLogger().println("Cheking History between " + lastBuiltInBranch + " and " + r.getSha1()); 
+                        revShow  = git.showRevision(lastBuiltInBranch, r.getSha1());
+                    } else {
+                        listener.getLogger().println("Cheking History for " + r.getSha1());
+                        revShow  = git.showRevision(r.getSha1());
+                    }
+                }                
             } else {
+                listener.getLogger().println("Cheking History for " + r.getSha1());
                 revShow  = git.showRevision(r.getSha1());
             }
 
@@ -1375,8 +1389,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         if (excludeThisCommit!=null)
                             break;
                     }
-                    if (excludeThisCommit==null || !excludeThisCommit)
+                    if (excludeThisCommit==null || !excludeThisCommit) {
+                    	listener.getLogger().println("Revision " + r.getSha1String() + "determined as being included");
                         return false;    // this sequence of commits have one commit that we want to build
+                    }
                     start = idx;
                 }
 
@@ -1384,6 +1400,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             assert start==revShow.size()-1;
+            
+
+            listener.getLogger().println("Revision " + r.getSha1String() + "determined as being excluded");
 
             // every commit got excluded
             return true;

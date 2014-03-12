@@ -61,6 +61,10 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
             throws GitException, InterruptedException {
     	testRepo.commit(fileName, committer, message);
     }
+    
+    protected void commit(final String[] fileNames, final PersonIdent committer, final String message) throws GitException, InterruptedException {
+    	testRepo.commit(fileNames, committer, message);
+    }
 
     protected void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
 
