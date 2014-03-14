@@ -102,6 +102,28 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testBranchSpecWithRemotesMaster() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("remotes/origin/master", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
+    
+    public void testBranchSpecWithRemotesHierarchical() throws Exception {
+      FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
+      FreeStyleProject projectHierarchicalBranch = setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
+      // create initial commit
+      final String commitFile1 = "commitFile1";
+      commit(commitFile1, johnDoe, "Commit number 1");
+      // create hierarchical branch, delete master branch, and build
+      git.branch("rel-1/xy");
+      git.checkout("rel-1/xy");
+      git.deleteBranch("master");
+      build(projectMasterBranch, Result.FAILURE);
+      build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
+    }
+    
     public void testBasicIncludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
 
