@@ -123,6 +123,15 @@ public class GitSCMTest extends AbstractGitTestCase {
       build(projectMasterBranch, Result.FAILURE);
       build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
     }
+
+    public void testBranchSpecUsingTagWithSlash() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("path/tag", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1 will be tagged with path/tag");
+        testRepo.git.tag("path/tag", "tag with a slash in the tag name");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
     
     public void testBasicIncludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
