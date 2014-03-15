@@ -71,14 +71,8 @@ public class DefaultBuildChooser extends BuildChooser {
 
         Collection<Revision> revisions = new ArrayList<Revision>();
 
-        // if it doesn't contain '/' then it could be either a tag or an unqualified branch
+        // if it doesn't contain '/' then it could be an unqualified branch
         if (!singleBranch.contains("/")) {
-            // the 'branch' could actually be a tag:
-            Set<String> tags = git.getTagNames(singleBranch);
-            if(tags.size() != 0) {
-                verbose(listener, "{0} is a tag");
-                return getHeadRevision(isPollCall, singleBranch, git, listener, data);
-            }
 
             // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
             // so check all remotes to fully qualify this branch spec
@@ -112,6 +106,15 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
+        if (revisions.isEmpty()) {
+            // the 'branch' could actually be a non branch reference (for example a tag or a gerrit change)
+
+            revisions = getHeadRevision(isPollCall, singleBranch, git, listener, data);
+            if (!revisions.isEmpty()) {
+                verbose(listener, "{0} seems to be a non-branch reference (tag?)");
+            }
+        }
+        
         return revisions;
     }
 
