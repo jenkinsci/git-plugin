@@ -95,7 +95,7 @@ public class DefaultBuildChooser extends BuildChooser {
             boolean singleBranchIsQualified = false;
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
-                if (singleBranch.startsWith(repository + "/")) {
+                if (singleBranch.startsWith(repository + "/") || singleBranch.startsWith("remotes/" + repository + "/")) {
                   singleBranchIsQualified = true;
                   break;
                 }
