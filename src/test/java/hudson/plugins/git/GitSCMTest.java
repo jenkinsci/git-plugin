@@ -228,6 +228,145 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
     }
 
+    public void testMultiCommitInclude() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, null, null, ".*2");
+        
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        // polling originally checked only the head, so ensure that the included commit is not last
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling did not detect commit2 change", project.pollSCMChanges(listener));
+
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have two culprit", 2, culprits.size());
+        boolean foundJohn = false;
+        boolean foundJane = false;
+        for (User user : culprits) {
+        	if(user.getFullName().equals(johnDoe.getName())) foundJohn = true;
+        	if(user.getFullName().equals(janeDoe.getName())) foundJane = true;
+        }
+        assertTrue(foundJohn && foundJane);
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    public void testIncludeAndExclude() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, ".*2", null, ".*2");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        // according to the help, excludes should win if a file is included and excluded
+        assertFalse("scm polling detected commit2 change, which should have been excluded",
+                project.pollSCMChanges(listener));
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    public void testIncludeAndExcludeOverlap() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, ".*2\n.*3", null, ".*3\n.*4");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm pollould not detect any more changes after build", project.pollSCMChanges(listener));
+
+        // 2 is included, 3 is included and excluded (exclude wins) and 4 is included == build it!
+        final String commitFile2 = "commitFile2";
+        final String commitFile3 = "commitFile3";
+        final String commitFile4 = "commitFile4";
+        commit(new String[] { commitFile2, commitFile3, commitFile4 }, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit4 change", project.pollSCMChanges(listener));
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3, commitFile4);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertTrue(build2.getWorkspace().child(commitFile4).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    public void testNeitherIncludeNorExclude() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, ".*3", null, ".*4");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        // if a file is neither included nor excluded, assumon't want it (exclude)
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        assertFalse("scm polling detected commit2 change, which should have been ignored (by default)",
+                project.pollSCMChanges(listener));
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have one culprit", 1, culprits.size());
+        assertEquals("", johnDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    public void testDisjointIncludeAndExcludeRegions() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, ".*2", null, ".*3");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+
+        // 1 exclude and 1 include == build it
+        final String commitFile2 = "commitFile2";
+        final String commitFile3 = "commitFile3";
+        commit(new String[]{commitFile2, commitFile3}, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit3 change", project.pollSCMChanges(listener));
+        // ... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2, commitFile3);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), ((User) culprits.toArray()[0]).getFullName());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertTrue(build2.getWorkspace().child(commitFile3).exists());
+        assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.pollSCMChanges(listener));
+    }
+
+    
     /**
      * With multiple branches specified in the project and having commits from a user
      * excluded should not build the excluded revisions when another branch changes.

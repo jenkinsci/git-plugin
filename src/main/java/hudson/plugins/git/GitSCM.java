@@ -1356,7 +1356,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
         try {
-            listener.getLogger().println("Cheking Revision " + r + " for Exclusion");        	
+            listener.getLogger().println("Checking Revision " + r + " for Exclusion");        	
 
             List<String> revShow = new ArrayList<String>();
 
@@ -1364,15 +1364,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (Branch branch : r.getBranches()) {
                     if (buildData.getLastBuildOfBranch(branch.getName()) != null) {
                         ObjectId lastBuiltInBranch = buildData.getLastBuildOfBranch(branch.getName()).getRevision().getSha1();
-                        listener.getLogger().println("Cheking History between " + lastBuiltInBranch + " and " + r.getSha1()); 
+                        listener.getLogger().println("Checking History between " + lastBuiltInBranch + " and " + r.getSha1()); 
                         revShow  = git.showRevision(lastBuiltInBranch, r.getSha1());
                     } else {
-                        listener.getLogger().println("Cheking History for " + r.getSha1());
+                        listener.getLogger().println("Checking History for " + r.getSha1());
                         revShow  = git.showRevision(r.getSha1());
                     }
                 }                
             } else {
-                listener.getLogger().println("Cheking History for " + r.getSha1());
+                listener.getLogger().println("Checking History for " + r.getSha1());
                 revShow  = git.showRevision(r.getSha1());
             }
 
