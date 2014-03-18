@@ -10,6 +10,9 @@
     <f:entry title="Create new accounts base on author/committer's email" field="createAccountBasedOnEmail">
            <f:checkbox name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
+    <f:entry title="Do the polling centralized for all projects using the same repository" field="useCentralizedPolling">
+           <f:checkbox name="useCentralizedPolling" checked="${descriptor.useCentralizedPolling}"/>
+    </f:entry>
     <!--
     <f:entry title="Default git client implementation" field="defaultClientType">
         <select>

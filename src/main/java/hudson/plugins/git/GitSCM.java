@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
@@ -38,6 +39,9 @@ import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.codehaus.plexus.util.io.URLInputStreamFacade;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -55,6 +59,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -311,6 +316,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
+    public boolean isUseCentralizedPolling() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isUseCentralizedPolling());
+    }
+    
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
 
@@ -517,16 +527,39 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
         }
+        
 
-        GitClient git = createClient(listener, environment, project, n, workingDirectory);
-
-        if (git.hasGitRepo()) {
-            // Repo is there - do a fetch
-            listener.getLogger().println("Fetching changes from the remote Git repositories");
-
-            // Fetch updates
+        GitClient git = null;
+        
+        if (isUseCentralizedPolling()) {
+        	GitPollingManager pollMan = GitPollingManager.getInstance();
+        	
+        	String urls = "";
             for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild)) {
-                fetchFrom(git, listener, remoteRepository);
+            	for (URIish uri : remoteRepository.getURIs()) {
+            		urls += uri;
+            	}
+            }
+
+            String home = environment.get("JENKINS_HOME");
+            FilePath fp = new FilePath(new File(home + "/git_centralized/" + DigestUtils.shaHex(urls) + "/"));
+            listener.getLogger().println("File path is " + fp);
+        	
+        	git = createClient(listener, environment, project, n, fp);
+        	
+        	pollMan.doFetch(this, listener, git, project, buildData, environment, extensions);
+        } else {
+        	git = createClient(listener, environment, project, n, workingDirectory);
+        }
+
+        if (isUseCentralizedPolling() || git.hasGitRepo()) {
+        	
+            // Fetch updates
+            if (!isUseCentralizedPolling()) {
+                listener.getLogger().println("Fetching changes from the remote Git repositories");
+	            for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild)) {
+	                fetchFrom(git, listener, remoteRepository);
+	            }
             }
 
             listener.getLogger().println("Polling for changes in");
@@ -1037,6 +1070,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean useCentralizedPolling;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
 
         public DescriptorImpl() {
@@ -1111,6 +1145,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
+        }
+
+        public boolean isUseCentralizedPolling() {
+            return useCentralizedPolling;
+        }
+
+        public void setUseCentralizedPolling(boolean useCentralizedPolling) {
+            this.useCentralizedPolling = useCentralizedPolling;
         }
 
         /**
