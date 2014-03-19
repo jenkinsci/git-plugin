@@ -618,8 +618,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 fetch.execute();
             } catch (GitException ex) {
-                // Convert GitException to IOException, since the SCM retry functionality only checks that kind
-                throw new IOException("Failed to fetch from "+url.toString(), ex);
+                if (ex.getMessage().contains("stderr: ssh_exchange_identification: Connection closed by remote host"))
+                    // Convert GitException to IOException, since the SCM retry functionality only checks that kind
+                    throw new IOException("Failed to fetch from "+url.toString(), ex);
+                else
+                    throw ex;
             }
         }
     }
