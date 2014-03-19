@@ -24,8 +24,8 @@ public class KilnGit extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public KilnGit(String url) {
-        super(url);
+    public KilnGit(String repoUrl) {
+        super(repoUrl);
     }
 
     private QueryBuilder param(URL url) {

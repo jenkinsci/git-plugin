@@ -27,8 +27,8 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     private final String projectName;
 
     @DataBoundConstructor
-    public GitBlitRepositoryBrowser(String url, String projectName) {
-        super(url);
+    public GitBlitRepositoryBrowser(String repoUrl, String projectName) {
+        super(repoUrl);
         this.projectName = projectName;
     }
 

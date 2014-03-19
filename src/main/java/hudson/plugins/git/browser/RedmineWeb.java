@@ -24,8 +24,8 @@ public class RedmineWeb extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public RedmineWeb(String url) {
-        super(url);
+    public RedmineWeb(String repoUrl) {
+        super(repoUrl);
     }
 
     @Override

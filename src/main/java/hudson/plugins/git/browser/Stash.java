@@ -23,8 +23,8 @@ public class Stash extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public Stash(String url) {
-        super(url);
+    public Stash(String repoUrl) {
+        super(repoUrl);
     }
 
     private QueryBuilder param(URL url) {
