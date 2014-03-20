@@ -528,7 +528,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         
-
         GitClient git = null;
         
         if (isUseCentralizedPolling()) {
@@ -542,12 +541,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             String home = environment.get("JENKINS_HOME");
-            FilePath fp = new FilePath(new File(home + "/git_centralized/" + DigestUtils.shaHex(urls) + "/"));
+            final String urlHash = DigestUtils.shaHex(urls);
+            FilePath fp = new FilePath(new File(home + "/git_centralized/" + urlHash + "/"));
             listener.getLogger().println("File path is " + fp);
         	
-        	git = createClient(listener, environment, project, n, fp);
+            git = createClient(listener, environment, project, n, fp);
         	
-        	pollMan.doFetch(this, listener, git, project, buildData, environment, extensions);
+            pollMan.doFetch(this, listener, git, project, urlHash, extensions);
         } else {
         	git = createClient(listener, environment, project, n, workingDirectory);
         }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Map;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -23,25 +24,20 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 public class GitPollingManager {
 	private static GitPollingManager instance;
-	private GitPoller poller;
+	private Map<String, GitPoller> pollers;
 	
 	private class GitPoller implements Runnable {
 		private TaskListener listener;
 		private GitClient git;
 		private AbstractProject<?, ?> project;
-		private EnvVars environment;
 		private DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions;
 		private GitSCM gitSCM;
-		private BuildData buildData;
 
-		public GitPoller(GitSCM gitSCM, TaskListener listener, GitClient git, AbstractProject<?, ?> project, BuildData buildData, EnvVars environment, DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions) {
+		public GitPoller(GitSCM gitSCM, TaskListener listener, GitClient git, AbstractProject<?, ?> project, DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions) {
 			this.gitSCM = gitSCM;
 			this.listener = listener;
-			// TODO Auto-generated constructor stub
 			this.git = git;
 			this.project = project;
-			this.buildData = buildData;
-			this.environment = environment;
 			this.extensions = extensions;
 		}
 
@@ -130,13 +126,16 @@ public class GitPollingManager {
 		return instance;
 	}
 
-	public void doFetch(GitSCM gitSCM, TaskListener listener, GitClient git, AbstractProject<?, ?> project, BuildData buildData, EnvVars environment, DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions) {
+	public void doFetch(GitSCM gitSCM, TaskListener listener, GitClient git, AbstractProject<?, ?> project, String urlHash, DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> extensions) {
 		try {
 			listener.getLogger().println("Project " + project.getName() + " requesting a fetch");
+			GitPoller poller = null;
 			synchronized (this) {
+				poller = pollers.get(urlHash);
 				if (poller == null) {
 					listener.getLogger().println("Project " + project.getName() + " starting poller");
-					poller = new GitPoller(gitSCM, listener, git, project, buildData, environment, extensions);
+					poller = new GitPoller(gitSCM, listener, git, project, extensions);
+					pollers.put(urlHash, poller);
 					Thread t = new Thread(poller);
 					t.start();
 				}
@@ -148,8 +147,10 @@ public class GitPollingManager {
 			}
 			
 			synchronized (this) {
-				listener.getLogger().println("Project " + project.getName() + " destroying poller");
-				poller = null;				
+				if(pollers.containsKey(urlHash)) {
+					listener.getLogger().println("Project " + project.getName() + " destroying poller");
+					pollers.remove(poller);
+				}
 			}
 
 			listener.getLogger().println("Project " + project.getName() + " done waiting for fetch");
