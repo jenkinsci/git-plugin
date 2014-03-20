@@ -4,6 +4,8 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -976,6 +978,30 @@ public class GitSCMTest extends AbstractGitTestCase {
             envs.put("CAT","");
         }
     }
+
+    private List<UserRemoteConfig> createRepoList(String url) {
+        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        repoList.add(new UserRemoteConfig(url, null, null, null));
+        return repoList;
+    }
+
+    /**
+     * Makes sure that git browser URL is preserved across config round trip.
+     */
+    @Bug(22604)
+    public void testConfigRoundtripURLPreserved() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        final String url = "https://github.com/jenkinsci/jenkins";
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList(url),
+                                Collections.singletonList(new BranchSpec("")),
+                                false, Collections.<SubmoduleConfig>emptyList(),
+                                browser, null, null);
+        p.setScm(scm);
+        configRoundtrip(p);
+        assertEqualDataBoundBeans(scm,p.getScm());
+    }
+
     /**
      * Makes sure that the configuration form works.
      */
