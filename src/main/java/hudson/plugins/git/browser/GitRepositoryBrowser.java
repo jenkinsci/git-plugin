@@ -13,11 +13,10 @@ import java.net.URL;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
-    private final String url;
+    private /* mostly final */ String url;
 
     @Deprecated
     protected GitRepositoryBrowser() {
-        this(null);
     }
 
     protected GitRepositoryBrowser(String repourl) {

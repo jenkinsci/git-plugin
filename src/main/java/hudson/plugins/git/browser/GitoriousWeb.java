@@ -22,8 +22,8 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public GitoriousWeb(String url) {
-        super(url);
+    public GitoriousWeb(String repoUrl) {
+        super(repoUrl);
     }
 
     @Override

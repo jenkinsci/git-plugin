@@ -31,8 +31,8 @@ public class GithubWeb extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public GithubWeb(String url) {
-        super(url);
+    public GithubWeb(String repoUrl) {
+        super(repoUrl);
     }
 
     @Override

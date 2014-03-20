@@ -24,8 +24,8 @@ public class GitLab extends GitRepositoryBrowser {
     private final double version;
 
     @DataBoundConstructor
-    public GitLab(String url, String version) {
-        super(url);
+    public GitLab(String repoUrl, String version) {
+        super(repoUrl);
         this.version = Double.valueOf(version);
     }
 

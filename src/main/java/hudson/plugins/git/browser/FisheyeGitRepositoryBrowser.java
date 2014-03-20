@@ -25,8 +25,8 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	private static final long serialVersionUID = 2881872624557203410L;
 
 	@DataBoundConstructor
-	public FisheyeGitRepositoryBrowser(String url) {
-        super(url);
+	public FisheyeGitRepositoryBrowser(String repoUrl) {
+        super(repoUrl);
 	}
 
 	@Override

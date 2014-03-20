@@ -4,6 +4,8 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -102,6 +104,37 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testBranchSpecWithRemotesMaster() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("remotes/origin/master", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
+    
+    public void testBranchSpecWithRemotesHierarchical() throws Exception {
+      FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
+      FreeStyleProject projectHierarchicalBranch = setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
+      // create initial commit
+      final String commitFile1 = "commitFile1";
+      commit(commitFile1, johnDoe, "Commit number 1");
+      // create hierarchical branch, delete master branch, and build
+      git.branch("rel-1/xy");
+      git.checkout("rel-1/xy");
+      git.deleteBranch("master");
+      build(projectMasterBranch, Result.FAILURE);
+      build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
+    }
+
+    public void testBranchSpecUsingTagWithSlash() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("path/tag", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1 will be tagged with path/tag");
+        testRepo.git.tag("path/tag", "tag with a slash in the tag name");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
+    
     public void testBasicIncludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
 
@@ -1145,6 +1178,30 @@ public class GitSCMTest extends AbstractGitTestCase {
             envs.put("CAT","");
         }
     }
+
+    private List<UserRemoteConfig> createRepoList(String url) {
+        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        repoList.add(new UserRemoteConfig(url, null, null, null));
+        return repoList;
+    }
+
+    /**
+     * Makes sure that git browser URL is preserved across config round trip.
+     */
+    @Bug(22604)
+    public void testConfigRoundtripURLPreserved() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        final String url = "https://github.com/jenkinsci/jenkins";
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList(url),
+                                Collections.singletonList(new BranchSpec("")),
+                                false, Collections.<SubmoduleConfig>emptyList(),
+                                browser, null, null);
+        p.setScm(scm);
+        configRoundtrip(p);
+        assertEqualDataBoundBeans(scm,p.getScm());
+    }
+
     /**
      * Makes sure that the configuration form works.
      */
