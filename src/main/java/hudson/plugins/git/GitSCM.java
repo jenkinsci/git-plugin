@@ -618,7 +618,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 fetch.execute();
             } catch (GitException ex) {
-                throw new GitException("Failed to fetch from "+url.toString(), ex);
+                // we need to wrap the GitException to an IOException since the SCM will retry only on IOException
+                // and will throw a stacktrace on GitException. 
+                throw new IOException("Failed to fetch from "+url.toString(), ex);
+
             }
         }
     }

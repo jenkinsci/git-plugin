@@ -45,6 +45,8 @@ import org.jvnet.hudson.test.TestExtension;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
+import java.io.File;
 
 /**
  * Tests for {@link GitSCM}.
@@ -1083,5 +1085,31 @@ public class GitSCMTest extends AbstractGitTestCase {
     private void setupJGit(GitSCM git) {
         git.gitTool="jgit";
         jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
+    }
+
+    public void testGitSCMRetryWhenFetch() throws Exception {
+        File f = null;
+        String fullLog = null;
+        jenkins.setScmCheckoutRetryCount(2);
+        jenkins.setQuietPeriod(2);
+
+        // create an empty repository with some commits
+        testRepo.commit("a","foo",johnDoe, "added");
+
+        FreeStyleProject p = createFreeStyleProject();
+        p.setScm(new GitSCM(testRepo.gitDir.getAbsolutePath()));
+
+        assertBuildStatusSuccess(p.scheduleBuild2(0).get());
+
+        try {
+            f = new File(testRepo.gitDir.getAbsolutePath().toString());
+            f.setExecutable(false);
+            p.scheduleBuild2(0).get();
+            fullLog = p.getLastBuild().getLog();
+            int count = StringUtils.countMatches(fullLog, "Retrying after");
+            assertEquals(2, count);
+        } finally {
+            f.setExecutable(true);
+        }
     }
 }
