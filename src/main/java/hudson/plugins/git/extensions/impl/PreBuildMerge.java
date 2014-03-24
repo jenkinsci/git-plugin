@@ -15,6 +15,7 @@ import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -62,7 +63,10 @@ public class PreBuildMerge extends GitSCMExtension {
         ObjectId target = git.revParse(remoteBranchRef);
 
         String paramLocalBranch = scm.getParamLocalBranch(build);
-        git.checkoutBranch(paramLocalBranch, remoteBranchRef);
+        CheckoutCommand checkoutCommand = git.checkout().branch(paramLocalBranch).ref(remoteBranchRef);
+        for (GitSCMExtension ext : scm.getExtensions())
+            ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);
+        checkoutCommand.execute();
 
         try {
             MergeCommand cmd = git.merge().setRevisionToMerge(rev.getSha1());
@@ -73,8 +77,10 @@ public class PreBuildMerge extends GitSCMExtension {
             // merge conflict. First, avoid leaving any conflict markers in the working tree
             // by checking out some known clean state. We don't really mind what commit this is,
             // since the next build is going to pick its own commit to build, but 'rev' is as good any.
-            git.checkoutBranch(paramLocalBranch, rev.getSha1String());
-
+            checkoutCommand = git.checkout().branch(paramLocalBranch).ref(rev.getSha1String());
+            for (GitSCMExtension ext : scm.getExtensions())
+                ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);
+            checkoutCommand.execute();
             // record the fact that we've tried building 'rev' and it failed, or else
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
