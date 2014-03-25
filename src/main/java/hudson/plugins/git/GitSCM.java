@@ -886,7 +886,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build)).ref(revToBuild.revision.getSha1String());
+        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }

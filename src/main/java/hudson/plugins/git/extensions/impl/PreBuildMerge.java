@@ -63,7 +63,7 @@ public class PreBuildMerge extends GitSCMExtension {
         ObjectId target = git.revParse(remoteBranchRef);
 
         String paramLocalBranch = scm.getParamLocalBranch(build);
-        CheckoutCommand checkoutCommand = git.checkout().branch(paramLocalBranch).ref(remoteBranchRef);
+        CheckoutCommand checkoutCommand = git.checkout().branch(paramLocalBranch).ref(remoteBranchRef).deleteBranchIfExist(true);
         for (GitSCMExtension ext : scm.getExtensions())
             ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);
         checkoutCommand.execute();
@@ -77,7 +77,7 @@ public class PreBuildMerge extends GitSCMExtension {
             // merge conflict. First, avoid leaving any conflict markers in the working tree
             // by checking out some known clean state. We don't really mind what commit this is,
             // since the next build is going to pick its own commit to build, but 'rev' is as good any.
-            checkoutCommand = git.checkout().branch(paramLocalBranch).ref(rev.getSha1String());
+            checkoutCommand = git.checkout().branch(paramLocalBranch).ref(rev.getSha1String()).deleteBranchIfExist(true);
             for (GitSCMExtension ext : scm.getExtensions())
                 ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);
             checkoutCommand.execute();
