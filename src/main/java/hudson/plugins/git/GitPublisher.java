@@ -181,51 +181,29 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         SCM scm = build.getProject().getScm();
         List<GitSCM> scmlist = new ArrayList<GitSCM>();
 
-        try {
-            boolean multiSCMInstalled = false;
-            try{
-                final Class<?> multiSCMClass = Class.forName("org.jenkinsci.plugins.multiplescms.MultiSCM");
-                multiSCMInstalled = true;
-            }catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            if(multiSCMInstalled){
-                final Class<?> multiSCMClass = Class.forName("org.jenkinsci.plugins.multiplescms.MultiSCM");
-                final Method configuredSCM = multiSCMClass.getMethod("getConfiguredSCMs", null);
+        if(isMultiSCMInstalled()){
 
-                List<SCM> scmlist_tmp = (List<SCM>) configuredSCM.invoke(build.getProject().getScm(), null);
+            List<SCM> scmlist_tmp = getMultiSCMs(build.getProject());
 
-                for (SCM s : scmlist_tmp) {
-                    if (s instanceof GitSCM) {
-                        for (TagToPush t : tagsToPush) {
-                            if (t.getTagName() == null)
-                                throw new AbortException("No tag to push defined");
+            for (SCM s : scmlist_tmp) {
+                if (s instanceof GitSCM) {
+                    for (TagToPush t : tagsToPush) {
+                        if (t.getTagName() == null)
+                            throw new AbortException("No tag to push defined");
 
-                            if (t.getTargetRepoName() == null)
-                                throw new AbortException("No target repo to push to defined");
-                            EnvVars environment = build.getEnvironment(listener);
+                        if (t.getTargetRepoName() == null)
+                            throw new AbortException("No target repo to push to defined");
+                        EnvVars environment = build.getEnvironment(listener);
 
-                            String targetRepo = environment.expand(t.getTargetRepoName());
-                            if (targetRepo.equals(((GitSCM) s).getScmName())) {
-                                scmlist.add((GitSCM) s);
-                            }
+                        String targetRepo = environment.expand(t.getTargetRepoName());
+                        if (targetRepo.equals(((GitSCM) s).getScmName())) {
+                            scmlist.add((GitSCM) s);
                         }
                     }
                 }
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
         }
+
 
         // If this is not a MultiSCM, add the GitSCM and continue
         if (scmlist.isEmpty()){
@@ -437,6 +415,36 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         return true;
     }
 
+    private static boolean isMultiSCMInstalled() {
+        return getMultiSCMClass() != null;
+    }
+
+    private static Class<?> getMultiSCMClass() {
+        try {
+            return Class.forName("org.jenkinsci.plugins.multiplescms.MultiSCM");
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    private static List<SCM> getMultiSCMs(AbstractProject project) {
+        try {
+            final Method configuredSCM = getMultiSCMClass().getMethod("getConfiguredSCMs", null);
+            return (List<SCM>) configuredSCM.invoke(project.getScm(), null);
+        } catch (NoSuchMethodException e) {
+            return new ArrayList<SCM>();
+        } catch (SecurityException e) {
+            return new ArrayList<SCM>();
+        } catch (IllegalAccessException e) {
+            return new ArrayList<SCM>();
+        } catch (IllegalArgumentException e) {
+            return new ArrayList<SCM>();
+        } catch (InvocationTargetException e) {
+            return new ArrayList<SCM>();
+        }
+    }
+
+    
     /**
      * Handles migration from earlier version - if we were pushing merges, we'll be
      * instantiated but tagsToPush will be null rather than empty.
@@ -512,38 +520,21 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             if (projectSCM instanceof GitSCM) {
                 scm = (GitSCM) projectSCM;
             } else {
-                try {
-                    final Class<?> multiSCMClass = Class.forName("org.jenkinsci.plugins.multiplescms.MultiSCM");
-                    final Method configuredSCM = multiSCMClass.getMethod("getConfiguredSCMs", null);
-                    List<SCM> scmlist = (List<SCM>) configuredSCM.invoke(project.getScm(), null);
+                List<SCM> scmlist = getMultiSCMs(project);
 
-                    for (SCM s : scmlist) {
-                        if (s instanceof GitSCM) {
-                            if (remote.equals(((GitSCM) s).getScmName())) {
-                                if(((GitSCM) s).getRepositories().get(0).getName() != null && ((GitSCM) s).getRepositories().get(0).getName().equals(remote)){
-                                    scm = (GitSCM) s;
-                                }else{
-                                    return FormValidation.error("No remote repository configured with name '" + remote + "'");                                    
-                                }
+                for (SCM s : scmlist) {
+                    if (s instanceof GitSCM) {
+                        if (remote.equals(((GitSCM) s).getScmName())) {
+                            if(((GitSCM) s).getRepositories().get(0).getName() != null && ((GitSCM) s).getRepositories().get(0).getName().equals(remote)){
+                                scm = (GitSCM) s;
+                            }else{
+                                return FormValidation.error("No remote repository configured with name '" + remote + "'");
                             }
                         }
                     }
-
-                } catch (ClassNotFoundException e) {
-                    return FormValidation.error(e, "MultiSCM not on classpath");
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (SecurityException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
                 }
             }
-
+            
             if ((scm == null) || (scm.getRepositoryByName(remote) == null))
                 return FormValidation.error("No remote repository configured with name '" + remote + "'");
 
