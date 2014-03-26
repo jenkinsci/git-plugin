@@ -1,7 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
-import hudson.plugins.git.extensions.FakeGitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -10,9 +10,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author Kohsuke Kawaguchi
  */
-public class DisableRemotePoll extends FakeGitSCMExtension {
+public class DisableRemotePoll extends GitSCMExtension {
+
     @DataBoundConstructor
     public DisableRemotePoll() {
+    }
+
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        return true;
     }
 
     @Extension

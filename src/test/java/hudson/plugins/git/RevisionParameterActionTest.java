@@ -23,22 +23,31 @@
  */
 package hudson.plugins.git;
 
+import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
+import hudson.model.FreeStyleBuild;
+import hudson.model.Result;
+import hudson.plugins.git.util.BuildData;
+
+import org.eclipse.jgit.lib.ObjectId;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.util.concurrent.Future;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Tests for {@link RevisionParameterAction}
  * 
  * @author Chris Johnson
  */
-public class RevisionParameterActionTest extends HudsonTestCase {
+public class RevisionParameterActionTest extends AbstractGitTestCase {
     
     /**
      * Test covering the behaviour after 1.1.26 where passing different revision 
-     * actions to a job in the queue creates seperate builds
+     * actions to a job in the queue creates separate builds
      */
     public void testCombiningScheduling() throws Exception {
 
@@ -52,7 +61,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         assertNotNull(b1);
         assertNotNull(b2);
         
-        // Check that only one build occured
+        // Check that two builds occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
     }
@@ -68,9 +77,9 @@ public class RevisionParameterActionTest extends HudsonTestCase {
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        assertNull(b2); // TODO fails in 1.521+ (along with other assertNull calls), perhaps due to fix of JENKINS-18407
         
-        // Check that only one build occured
+        // Check that only one build occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
     }
@@ -88,7 +97,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         assertNotNull(b1);
         assertNotNull(b2);
         
-        // Check that only one build occured
+        // Check that two builds occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
     }
@@ -107,7 +116,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         assertNotNull(b1);
         assertNull(b2);
 
-        // Check that only one build occured
+        // Check that only one build occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
 
@@ -130,7 +139,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         assertNotNull(b1);
         assertNull(b2);
 
-        // Check that only one build occured
+        // Check that only one build occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
 
@@ -152,7 +161,7 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         assertNotNull(b1);
         assertNotNull(b2);
 
-        // Check that only one build occured
+        // Check that two builds occurred
         waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
 
@@ -160,4 +169,46 @@ public class RevisionParameterActionTest extends HudsonTestCase {
         // list is reversed indexed so first item is latest build
         assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "DEADBEEF");
     }
+    
+
+	public void testProvidingRevision() throws Exception {
+
+		FreeStyleProject p1 = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
+        
+        Revision r1 = b1.getAction(BuildData.class).getLastBuiltRevision();
+        
+        // create a second commit
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");       
+
+		// create second build and set revision parameter using r1
+        FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserCause(),
+				Collections.singletonList(new RevisionParameterAction(r1))).get();
+        System.out.println(b2.getLog());
+        
+		// Check revision built for b2 matches the r1 revision
+		assertEquals(b2.getAction(BuildData.class)
+				.getLastBuiltRevision().getSha1String(), r1.getSha1String());
+		assertEquals(b2.getAction(BuildData.class)
+				.getLastBuiltRevision().getBranches().iterator().next()
+				.getName(), r1.getBranches().iterator().next().getName());
+		
+		// create a third build
+		FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
+		
+		// Check revision built for b3 does not match r1 revision
+		assertFalse(b3.getAction(BuildData.class)
+				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
+		
+		if (System.getProperty("os.name").startsWith("Windows")) {
+		  System.gc(); // Prevents exceptions cleaning up temp dirs during tearDown
+		}
+
+	}
 }
+

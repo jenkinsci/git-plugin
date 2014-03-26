@@ -4,6 +4,8 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -27,6 +29,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
 import hudson.util.StreamTaskListener;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
 
@@ -101,6 +104,37 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testBranchSpecWithRemotesMaster() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("remotes/origin/master", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
+    
+    public void testBranchSpecWithRemotesHierarchical() throws Exception {
+      FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
+      FreeStyleProject projectHierarchicalBranch = setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
+      // create initial commit
+      final String commitFile1 = "commitFile1";
+      commit(commitFile1, johnDoe, "Commit number 1");
+      // create hierarchical branch, delete master branch, and build
+      git.branch("rel-1/xy");
+      git.checkout("rel-1/xy");
+      git.deleteBranch("master");
+      build(projectMasterBranch, Result.FAILURE);
+      build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
+    }
+
+    public void testBranchSpecUsingTagWithSlash() throws Exception {
+        FreeStyleProject projectMasterBranch = setupProject("path/tag", false, null, null, null, true, null);
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1 will be tagged with path/tag");
+        testRepo.git.tag("path/tag", "tag with a slash in the tag name");
+        build(projectMasterBranch, Result.SUCCESS, commitFile1);
+      }
+    
     public void testBasicIncludedRegion() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, null, ".*3");
 
@@ -648,7 +682,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleProject p = createFreeStyleProject();
         final FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
 
-        BuildChooserContextImpl c = new BuildChooserContextImpl(p, b);
+        BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
         c.actOnBuild(new ContextCallable<AbstractBuild<?,?>, Object>() {
             public Object invoke(AbstractBuild param, VirtualChannel channel) throws IOException, InterruptedException {
                 assertSame(param,b);
@@ -944,6 +978,30 @@ public class GitSCMTest extends AbstractGitTestCase {
             envs.put("CAT","");
         }
     }
+
+    private List<UserRemoteConfig> createRepoList(String url) {
+        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        repoList.add(new UserRemoteConfig(url, null, null, null));
+        return repoList;
+    }
+
+    /**
+     * Makes sure that git browser URL is preserved across config round trip.
+     */
+    @Bug(22604)
+    public void testConfigRoundtripURLPreserved() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        final String url = "https://github.com/jenkinsci/jenkins";
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList(url),
+                                Collections.singletonList(new BranchSpec("")),
+                                false, Collections.<SubmoduleConfig>emptyList(),
+                                browser, null, null);
+        p.setScm(scm);
+        configRoundtrip(p);
+        assertEqualDataBoundBeans(scm,p.getScm());
+    }
+
     /**
      * Makes sure that the configuration form works.
      */
@@ -961,7 +1019,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testDataCompatibility1() throws Exception {
         FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
         GitSCM git = (GitSCM) p.getScm();
-        assertTrue(git.getExtensions().isEmpty());
+        assertEquals(Collections.emptyList(), git.getExtensions().toList());
     }
 
     public void testPleaseDontContinueAnyway() throws Exception {
@@ -998,6 +1056,28 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return null;
             }
         });
+    }
+
+    public void testCheckoutFailureIsRetryable() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // run build first to create workspace
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+
+        // create lock file to simulate lock collision
+        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        try {
+            FileUtils.touch(lock);
+            final FreeStyleBuild build2 = build(project, Result.FAILURE);
+            assertLogContains("java.io.IOException: Could not checkout", build2);
+        } finally {
+            lock.delete();
+        }
     }
 
     private void setupJGit(GitSCM git) {

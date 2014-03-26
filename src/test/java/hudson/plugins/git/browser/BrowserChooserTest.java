@@ -41,6 +41,7 @@ public class BrowserChooserTest extends TestCase {
         final WebApp webApp = Mockito.mock(WebApp.class);
         Mockito.when(webApp.getClassLoader()).thenReturn(this.getClass().getClassLoader());
         Mockito.when(stapler.getWebApp()).thenReturn(webApp);
+        // TODO need to mock also WebApp.bindInterceptors and MetaClass.getPostConstructMethods to pass in 1.540; would probably be easier to not use Mockito for all this
     }
 
     public void testRedmineWeb() throws IOException {

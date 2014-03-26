@@ -23,22 +23,14 @@ public class ViewGitWebTest extends TestCase {
 
     private static final String VIEWGIT_URL = "http://SERVER/viewgit";
     private static final String PROJECT_NAME = "PROJECT";
-    private final ViewGitWeb viewGitWeb;
-
-    {
-        try {
-            viewGitWeb = new ViewGitWeb(VIEWGIT_URL, PROJECT_NAME);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private final ViewGitWeb viewGitWeb = new ViewGitWeb(VIEWGIT_URL, PROJECT_NAME);
 
     /**
      * Test method for {@link hudson.plugins.git.browser.ViewGitWeb#getUrl()}.
      * 
      * @throws MalformedURLException
      */
-    public void testGetUrl() throws MalformedURLException {
+    public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(viewGitWeb.getUrl()), VIEWGIT_URL + "/");
     }
 
@@ -47,7 +39,7 @@ public class ViewGitWebTest extends TestCase {
      * 
      * @throws MalformedURLException
      */
-    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new ViewGitWeb(VIEWGIT_URL + "/", PROJECT_NAME).getUrl()), VIEWGIT_URL + "/");
     }
 

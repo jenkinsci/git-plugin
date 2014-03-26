@@ -23,17 +23,18 @@ import java.net.URLEncoder;
 public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
-    private final URL url;
+
     private final String projectName;
 
     @DataBoundConstructor
-    public GitBlitRepositoryBrowser(String url, String projectName) throws MalformedURLException {
-        this.url = normalizeToEndWithSlash(new URL(url));
+    public GitBlitRepositoryBrowser(String repoUrl, String projectName) {
+        super(repoUrl);
         this.projectName = projectName;
     }
 
     @Override
     public URL getDiffLink(Path path) throws IOException {
+        URL url = getUrl();
         return new URL(url,
                 String.format(url.getPath() + "blobdiff?r=%s&h=%s&hb=%s", encodeString(projectName), path.getChangeSet().getId(),
                         path.getChangeSet().getParentCommit()));
@@ -44,6 +45,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return null;
         }
+        URL url = getUrl();
         return new URL(url,
                 String.format(url.getPath() + "blob?r=%s&h=%s&f=%s", encodeString(projectName), path.getChangeSet().getId(),
                         encodeString(path.getPath())));
@@ -51,11 +53,8 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
+        URL url = getUrl();
         return new URL(url, String.format(url.getPath() + "commit?r=%s&h=%s", encodeString(projectName), changeSet.getId()));
-    }
-
-    public URL getUrl() {
-        return url;
     }
 
     public String getProjectName() {

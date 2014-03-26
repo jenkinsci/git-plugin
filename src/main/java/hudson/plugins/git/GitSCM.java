@@ -15,14 +15,12 @@ import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -63,7 +61,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -448,20 +445,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        String singleBranch = getSingleBranch(new EnvVars());
-        return singleBranch == null || getExtensions().get(DisableRemotePoll.class) != null;
+        for (GitSCMExtension ext : getExtensions()) {
+            if (ext.requiresWorkspaceForPolling()) return true;
+        }
+        return getSingleBranch(new EnvVars()) == null;
     }
 
     @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
-            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener, baseline);
+            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
         } catch (GitException e){
             throw new IOException2(e);
         }
     }
 
-    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -481,7 +480,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
-        if (getExtensions().get(DisableRemotePoll.class)==null && singleBranch != null && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (!requiresWorkspaceForPolling() && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+
+            // FIXME this should not be a specific case, but have BuildChooser tell us if it can poll without workspace.
+
             final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
@@ -500,21 +502,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
-        // Rebuild if the working directory doesn't exist
-        // I'm actually not 100% sure about this, but I'll leave it in for now.
-        // Update 9/9/2010 - actually, I think this *was* needed, since we weren't doing a better check
-        // for whether we'd ever been built before. But I'm fixing that right now anyway.
-        
-        // JENKINS-10880: workingDirectory can be null
+        // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
             return BUILD_NOW;
         }
 
-
         // which node is this workspace from?
+        // there should be always one match, but just in case we initialize n to a non-null value
         Node n = Jenkins.getInstance();
         if (workspace.isRemote()) {
-            // there should be always one match, but just in case we initialize n to a non-null value
             for (Computer c : Jenkins.getInstance().getComputers()) {
                 if (c.getChannel()==workspace.getChannel()) {
                     n =  c.getNode();
@@ -537,7 +533,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Polling for changes in");
 
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null));
+                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
@@ -607,8 +603,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException, IOException {
 
+        boolean first = true;
         for (URIish url : remoteRepository.getURIs()) {
             try {
+                if (first) {
+                    git.setRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
+                    first = false;
+                } else {
+                    git.addRemoteUrl(remoteRepository.getName(), url.toPrivateASCIIString());
+                }
+
                 FetchCommand fetch = git.fetch_().from(url, remoteRepository.getFetchRefSpecs());
                 for (GitSCMExtension extension : extensions) {
                     extension.decorateFetchCommand(this, git, listener, fetch);
@@ -703,10 +707,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         final AbstractProject project;
         final AbstractBuild build;
+        final EnvVars environment;
 
-        BuildChooserContextImpl(AbstractProject project, AbstractBuild build) {
+        BuildChooserContextImpl(AbstractProject project, AbstractBuild build, EnvVars environment) {
             this.project = project;
             this.build = build;
+            this.environment = environment;
         }
 
         public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
@@ -721,6 +727,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return build;
         }
 
+        public EnvVars getEnvironment() {
+            return environment;
+        }
+
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
                 public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
@@ -733,6 +743,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                 public AbstractBuild<?, ?> getBuild() {
                     return build;
+                }
+
+                public EnvVars getEnvironment() {
+                    return environment;
                 }
             });
         }
@@ -775,7 +789,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = environment.expand( getSingleBranch(environment) );
 
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build);
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build, environment);
         Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                 false, singleBranch, git, listener, buildData, context);
 
@@ -823,9 +837,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } else {
             log.println("Cloning the remote Git repository");
 
-            // Clone from the first and then fetch from the rest
             RemoteConfig rc = repos.get(0);
-            repos = repos.subList(1,repos.size());
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
@@ -887,13 +899,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-        git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+        try {
+            git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+        } catch(GitLockFailedException e) {
+            // Rethrow IOException so the retry will be able to catch it
+            throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+        }
 
         buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, buildData, tagMessage));
 
         computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                new BuildChooserContextImpl(build.getProject(), build));
+                new BuildChooserContextImpl(build.getProject(), build, environment));
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
@@ -947,6 +964,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
+        boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
         try {
@@ -964,10 +982,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("First time build. Skipping changelog.");
             } else {
                 changelog.to(out).max(MAX_CHANGELOG).execute();
+                executed = true;
             }
         } catch (GitException ge) {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
+            if (!executed) changelog.abort();
             IOUtils.closeQuietly(out);
         }
     }
@@ -1199,17 +1219,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             return mergeOptions;
-        }
-
-        public static GitWeb createGitWeb(String url) {
-            if (!isBlank(url)) {
-                try {
-                    return  new GitWeb(url);
-                } catch (MalformedURLException e) {
-                    throw new GitException("Error creating GitWeb", e);
-                }
-            }
-            return null;
         }
 
         public FormValidation doGitRemoteNameCheck(StaplerRequest req)

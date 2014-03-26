@@ -28,9 +28,18 @@ import java.util.Map;
  * Extension point to tweak the behaviour of {@link GitSCM}.
  *
  * @author Kohsuke Kawaguchi
- * @since 1.EXTENSION
+ * @since 2.0.0
  */
 public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
+
+    /**
+     * @return <code>true</code> when this extension has a requirement to get a workspace during polling,
+     * typically as it has to check for incoming changes, not just remote HEAD.
+     */
+    public boolean requiresWorkspaceForPolling() {
+        return false;
+    }
+
     /**
      * Given a commit found during polling, check whether it should be disregarded.
      *

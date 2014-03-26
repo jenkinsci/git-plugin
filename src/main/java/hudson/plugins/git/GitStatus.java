@@ -2,12 +2,15 @@ package hudson.plugins.git;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
 import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
+import hudson.model.Cause;
 import hudson.model.Hudson;
+import hudson.model.ParametersAction;
 import hudson.model.UnprotectedRootAction;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
@@ -26,12 +29,15 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.acegisecurity.context.SecurityContext;
 
 /**
@@ -56,7 +62,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return "git";
     }
 
-    public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url, @QueryParameter(required=false) String branches) throws ServletException, IOException {
+    public HttpResponse doNotifyCommit(@QueryParameter(required=true) String url,
+                                       @QueryParameter(required=false) String branches,
+                                       @QueryParameter(required=false) String sha1) throws ServletException, IOException {
         URIish uri;
         try {
             uri = new URIish(url);
@@ -74,7 +82,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         final List<ResponseContributor> contributors = new ArrayList<ResponseContributor>();
         for (Listener listener : Jenkins.getInstance().getExtensionList(Listener.class)) {
-            contributors.addAll(listener.onNotifyCommit(uri, branchesArray));
+            contributors.addAll(listener.onNotifyCommit(uri, sha1, branchesArray));
         }
 
         return new HttpResponse() {
@@ -126,7 +134,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Contributes to a {@link #doNotifyCommit(String, String)} response.
+     * Contributes to a {@link #doNotifyCommit(String, String, String)} response.
      *
      * @since 1.4.1
      */
@@ -177,8 +185,15 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * @param branches the (optional) branch information.
          * @return any response contributors for the response to the push request.
          * @since 1.4.1
+         * @deprecated implement #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, String...)
          */
-        public abstract List<ResponseContributor> onNotifyCommit(URIish uri, String... branches);
+        public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
+            return onNotifyCommit(uri, null, branches);
+        }
+
+        public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
+            return Collections.EMPTY_LIST;
+        }
     }
 
     /**
@@ -194,7 +209,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
-        public List<ResponseContributor> onNotifyCommit(URIish uri, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, String... branches) {
             List<ResponseContributor> result = new ArrayList<ResponseContributor>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -204,7 +219,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 final List<AbstractProject<?, ?>> projects = Lists.newArrayList();
                 boolean scmFound = false,
-                        triggerFound = false,
                         urlFound = false;
                 for (final AbstractProject<?, ?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
                     Collection<GitSCM> projectSCMs = getProjectScms(project);
@@ -225,40 +239,40 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 continue;
                             }
 
+                            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                            if (trigger != null && trigger.isIgnorePostCommitHooks()) {
+                                LOGGER.info("PostCommitHooks are disabled on " + project.getFullDisplayName());
+                                continue;
+                            }
+
+                            Boolean branchFound = false;
                             if (branches.length == 0) {
-                                branchMatches = true;
+                                branchFound = true;
                             } else {
-                                for (BranchSpec branchSpec : git.getBranches()) {
+                                OUT: for (BranchSpec branchSpec : git.getBranches()) {
                                     for (String branch : branches) {
                                         if (branchSpec.matches(repository.getName() + "/" + branch)) {
-                                            branchMatches = true;
-                                            break;
+                                            branchFound = true;
+                                            break OUT;
                                         }
-                                    }
-                                    if (branchMatches) {
-                                        break;
                                     }
                                 }
                             }
-
-                            if (branchMatches) {
-                                urlFound = true;
-                            } else {
-                                continue;
-                            }
-
-
-                            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
-                            if (trigger != null) {
-                                triggerFound = true;
-                            } else {
-                                continue;
-                            }
+                            if (!branchFound) continue;
+                            urlFound = true;
 
                             if (!project.isDisabled()) {
-                                LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
-                                trigger.run();
-                                result.add(new PollingScheduledResponseContributor(project));
+                                if (isNotEmpty(sha1)) {
+                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
+                                    project.scheduleBuild2(project.getQuietPeriod(),
+                                            new CommitHookCause(sha1),
+                                            new RevisionParameterAction(sha1));
+                                    result.add(new ScheduledResponseContributor(project));
+                                } else if (trigger != null) {
+                                    LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
+                                    trigger.run();
+                                    result.add(new PollingScheduledResponseContributor(project));
+                                }
                             }
                             break;
                         }
@@ -271,8 +285,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     result.add(new MessageResponseContributor(
                             "No git jobs using repository: " + uri.toString() + " and branches: " + StringUtils
                                     .join(branches, ",")));
-                } else if (!triggerFound) {
-                    result.add(new MessageResponseContributor("Jobs found but they aren't configured for polling"));
                 }
 
                 return result;
@@ -317,6 +329,38 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 w.println("Scheduled polling of " + project.getFullDisplayName());
             }
         }
+
+        private static class ScheduledResponseContributor extends ResponseContributor {
+            /**
+             * The project
+             */
+            private final AbstractProject<?, ?> project;
+
+            /**
+             * Constructor.
+             *
+             * @param project the project.
+             */
+            public ScheduledResponseContributor(AbstractProject<?, ?> project) {
+                this.project = project;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                rsp.addHeader("Triggered", project.getAbsoluteUrl());
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void writeBody(PrintWriter w) {
+                w.println("Scheduled " + project.getFullDisplayName());
+            }
+        }
     }
 
     /**
@@ -345,6 +389,20 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         @Override
         public void writeBody(PrintWriter w) {
             w.println(msg);
+        }
+    }
+
+    public static class CommitHookCause extends Cause {
+
+        public final String sha1;
+
+        public CommitHookCause(String sha1) {
+            this.sha1 = sha1;
+        }
+
+        @Override
+        public String getShortDescription() {
+            return "commit notification " + sha1;
         }
     }
 

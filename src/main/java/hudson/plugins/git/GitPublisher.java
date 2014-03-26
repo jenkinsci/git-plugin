@@ -416,6 +416,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             if (validation.kind != FormValidation.Kind.OK)
                 return validation;
 
+            if (!(project.getScm() instanceof GitSCM)) {
+                return FormValidation.warning("Project not currently configured to use Git; cannot check remote repository");
+            }
+
             GitSCM scm = (GitSCM) project.getScm();
             if (scm.getRepositoryByName(remote) == null)
                 return FormValidation

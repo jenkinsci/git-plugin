@@ -31,7 +31,9 @@ import hudson.Extension;
 import hudson.plugins.git.GitStatus;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
@@ -71,13 +73,20 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final String excludes;
 
+    private final boolean ignoreOnPushNotifications;
+
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes) {
+    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
         this.includes = includes;
         this.excludes = excludes;
+        this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+    }
+
+    public boolean isIgnoreOnPushNotifications() {
+      return ignoreOnPushNotifications;
     }
 
     @Override
@@ -101,7 +110,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected List<RefSpec> getRefSpecs() {
-        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/" + getRemoteName() + "/*"));
     }
 
     @Extension
@@ -134,19 +143,21 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public static class ListenerImpl extends GitStatus.Listener {
 
         @Override
-        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, String... branches) {
+        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, String sha1, String... branches) {
             List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
             boolean notified = false;
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
-            Authentication old = SecurityContextHolder.getContext().getAuthentication();
-            SecurityContextHolder.getContext().setAuthentication(ACL.SYSTEM);
+            SecurityContext old = Jenkins.getInstance().getACL().impersonate(ACL.SYSTEM);
             try {
                 for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
                     for (SCMSource source : owner.getSCMSources()) {
                         if (source instanceof GitSCMSource) {
                             GitSCMSource git = (GitSCMSource) source;
+                            if (git.ignoreOnPushNotifications) {
+                              continue;
+                            }
                             URIish remote;
                             try {
                                 remote = new URIish(git.getRemote());
@@ -174,7 +185,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
             } finally {
-                SecurityContextHolder.getContext().setAuthentication(old);
+                SecurityContextHolder.setContext(old);
             }
             if (!notified) {
                 result.add(new GitStatus.MessageResponseContributor("No git consumers for URI " + uri.toString()));

@@ -23,21 +23,13 @@ public class RhodeCodeTest extends TestCase {
      *
      */
     private static final String RHODECODE_URL = "https://SERVER/r/PROJECT";
-    private final RhodeCode rhodecode;
-
-    {
-        try {
-            rhodecode = new RhodeCode(RHODECODE_URL);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private final RhodeCode rhodecode = new RhodeCode(RHODECODE_URL);
 
     /**
      * Test method for {@link hudson.plugins.git.browser.RhodeCode#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrl() throws MalformedURLException {
+    public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(rhodecode.getUrl()), RHODECODE_URL  + "/");
     }
 
@@ -45,7 +37,7 @@ public class RhodeCodeTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.RhodeCode#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new RhodeCode(RHODECODE_URL + "/").getUrl()), RHODECODE_URL  + "/");
     }
 

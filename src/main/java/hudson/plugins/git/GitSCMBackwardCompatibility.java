@@ -193,7 +193,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new RelativeTargetDirectory(relativeTargetDir));
                 relativeTargetDir = null;
             }
-            if (skipTag!=null && skipTag) {
+            if (skipTag!=null && !skipTag) {
                 addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
@@ -236,6 +236,9 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
             }
             if (buildChooser!=null && buildChooser.getClass()!=DefaultBuildChooser.class) {
                 addIfMissing(new BuildChooserSetting(buildChooser));
+            }
+            if (isNotBlank(reference) || useShallowClone) {
+                addIfMissing(new CloneOption(useShallowClone, reference,null));
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable

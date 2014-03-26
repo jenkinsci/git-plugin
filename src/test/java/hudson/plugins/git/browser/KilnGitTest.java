@@ -22,21 +22,14 @@ import org.xml.sax.SAXException;
 public class KilnGitTest extends TestCase {
 
     private static final String KILN_URL = "http://USER.kilnhg.com/Code/PROJECT/Group/REPO";
-    private final KilnGit kilnGit;
+    private final KilnGit kilnGit = new KilnGit(KILN_URL);
 
-    {
-        try {
-            kilnGit = new KilnGit(KILN_URL);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Test method for {@link hudson.plugins.git.browser.KilnGit#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrl() throws MalformedURLException {
+    public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(kilnGit.getUrl()), KILN_URL  + "/");
     }
 
@@ -44,7 +37,7 @@ public class KilnGitTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.KilnGit#getUrl()}.
      * @throws MalformedURLException
      */
-    public void testGetUrlForRepoWithTrailingSlash() throws MalformedURLException {
+    public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new KilnGit(KILN_URL + "/").getUrl()), KILN_URL  + "/");
     }
 

@@ -106,6 +106,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public abstract String getExcludes();
 
+    public String getRemoteName() {
+      return "origin";
+    }
+
     @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
@@ -122,14 +126,15 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
             }
-            listener.getLogger().println("Setting origin to " + getRemote());
-            client.setRemoteUrl("origin", getRemote());
-            listener.getLogger().println("Fetching origin...");
+            String remoteName = getRemoteName();
+            listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
+            client.setRemoteUrl(remoteName, getRemote());
+            listener.getLogger().println("Fetching " + remoteName + "...");
             List<RefSpec> refSpecs = getRefSpecs();
-            client.fetch("origin", refSpecs.toArray(new RefSpec[refSpecs.size()]));
+            client.fetch(remoteName, refSpecs.toArray(new RefSpec[refSpecs.size()]));
             // we don't prune remotes here, as we just want one head's revision
             for (Branch b : client.getRemoteBranches()) {
-                String branchName = StringUtils.removeStart(b.getName(), "origin/");
+                String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                 if (branchName.equals(head.getName())) {
                     return new SCMRevisionImpl(head, b.getSHA1String());
                 }
@@ -157,15 +162,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
             }
-            listener.getLogger().println("Setting origin to " + getRemote());
-            client.setRemoteUrl("origin", getRemote());
-            listener.getLogger().println("Fetching origin...");
+            String remoteName = getRemoteName();
+            listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
+            client.setRemoteUrl(remoteName, getRemote());
+            listener.getLogger().println("Fetching " + remoteName + "...");
             List<RefSpec> refSpecs = getRefSpecs();
-            client.fetch("origin", refSpecs.toArray(new RefSpec[refSpecs.size()]));
+            client.fetch(remoteName, refSpecs.toArray(new RefSpec[refSpecs.size()]));
             listener.getLogger().println("Pruning stale remotes...");
             final Repository repository = client.getRepository();
             try {
-                client.prune(new RemoteConfig(repository.getConfig(), "origin"));
+                client.prune(new RemoteConfig(repository.getConfig(), remoteName));
             } catch (UnsupportedOperationException e) {
                 e.printStackTrace(listener.error("Could not prune stale remotes"));
             } catch (URISyntaxException e) {
@@ -177,7 +183,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             try {
                 walk.setRetainBody(false);
                 for (Branch b : client.getRemoteBranches()) {
-                    final String branchName = StringUtils.removeStart(b.getName(), "origin/");
+                    if (!b.getName().startsWith(remoteName + "/")) {
+                      continue;
+                    }
+                    final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                     listener.getLogger().println("Checking branch " + branchName);
                     if (branchCriteria != null) {
                         RevCommit commit = walk.parseCommit(b.getSHA1());
@@ -276,7 +285,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>(refSpecs.size());
         String remote = getRemote();
         for (RefSpec refSpec : refSpecs) {
-            result.add(new UserRemoteConfig(remote, "origin", refSpec.toString(), getCredentialsId()));
+            result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getCredentialsId()));
         }
         return result;
     }
