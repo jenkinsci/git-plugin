@@ -308,6 +308,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 remote = gitSCM.getRepositoryByName(gitSCM.getScmName());   
                             }
 
+                            if (remote == null){
+                                remote = gitSCM.getRepositoryByName(targetRepo);
+                            }
                             if (remote == null)
                                 throw new AbortException("No repository found for target repo name " + targetRepo);
 
@@ -360,6 +363,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                 remote = gitSCM.getRepositoryByName(gitSCM.getScmName());   
                             }
 
+                            if (remote == null){
+                                remote = gitSCM.getRepositoryByName(targetRepo);
+                            }
                             if (remote == null)
                                 throw new AbortException("No repository found for target repo name " + targetRepo);
 
@@ -395,6 +401,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                             RemoteConfig remote = null;
                             if (gitSCM.getRepositories().get(0).getName().equals(gitSCM.getScmName())){
                                 remote = gitSCM.getRepositoryByName(gitSCM.getScmName());   
+                            }
+
+                            if (remote == null){
+                                remote = gitSCM.getRepositoryByName(targetRepo);
                             }
 
                             if (remote == null) {
