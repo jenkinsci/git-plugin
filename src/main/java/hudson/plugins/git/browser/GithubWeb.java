@@ -33,6 +33,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public GithubWeb(String repoUrl) {
         super(repoUrl);
+        this.normalizeUrl = true;
     }
 
     @Override
