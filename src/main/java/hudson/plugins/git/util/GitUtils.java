@@ -13,6 +13,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -89,7 +90,7 @@ public class GitUtils implements Serializable {
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder, EnvVars env) {
         ArrayList<Branch> orderedBranches = new ArrayList<Branch>(revision.getBranches().size());
         ArrayList<Branch> revisionBranches = new ArrayList<Branch>(revision.getBranches());
-    	
+
         for(BranchSpec branchSpec : branchOrder) {
             for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
                 Branch b = i.next();
@@ -111,14 +112,14 @@ public class GitUtils implements Serializable {
      * @return filtered tip branches
      */
     @WithBridgeMethods(Collection.class)
-    public List<Revision> filterTipBranches(Collection<Revision> revisions) throws InterruptedException {
+    public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws InterruptedException {
         // If we have 3 branches that we might want to build
         // ----A--.---.--- B
         //        \-----C
 
         // we only want (B) and (C), as (A) is an ancestor (old).
         final List<Revision> l = new ArrayList<Revision>(revisions);
-        
+
         // Bypass any rev walks if only one branch or less
         if (l.size() <= 1)
             return l;
@@ -126,60 +127,58 @@ public class GitUtils implements Serializable {
         try {
             return git.withRepository(new RepositoryCallback<List<Revision>>() {
                 public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                    RevWalk walk = new RevWalk(repo);
+
+                    // Commit nodes that we have already reached
+                    Set<RevCommit> visited = new HashSet<RevCommit>();
+                    // Commits nodes that are tips if we don't reach them walking back from
+                    // another node
+                    Map<RevCommit, Revision> tipCandidates = new HashMap<RevCommit, Revision>();
+
                     long calls = 0;
+                    final long start = System.currentTimeMillis();
+
+                    RevWalk walk = new RevWalk(repo);
 
                     final boolean log = LOGGER.isLoggable(Level.FINE);
-                    final long start = System.currentTimeMillis();
+
                     if (log)
                         LOGGER.fine(MessageFormat.format(
                                 "Computing merge base of {0}  branches", l.size()));
 
                     try {
                         walk.setRetainBody(false);
-                        walk.setRevFilter(RevFilter.MERGE_BASE);
-                        for (int i = 0; i < l.size(); i++) {
-                            for (int j = i + 1; j < l.size(); j++) {
-                                Revision revI = l.get(i);
-                                Revision revJ = l.get(j);
-                                ObjectId shaI = revI.getSha1();
-                                ObjectId shaJ = revJ.getSha1();
 
-                                walk.reset();
-                                walk.markStart(walk.parseCommit(shaI));
-                                walk.markStart(walk.parseCommit(shaJ));
-                                ObjectId commonAncestor = walk.next();
+                        // Each commit passed in starts as a potential tip.
+                        // We walk backwards in the commit's history, until we reach the
+                        // beginning or a commit that we have already visited. In that case,
+                        // we mark that one as not a potential tip.
+                        for (Revision r : revisions) {
+                            walk.reset();
+                            RevCommit head = walk.parseCommit(r.getSha1());
+
+                            tipCandidates.put(head, r);
+
+                            walk.markStart(head);
+                            for (RevCommit commit : walk) {
                                 calls++;
-
-                                if (commonAncestor == null)
-                                    continue;
-                                if (commonAncestor.equals(shaI)) {
-                                    if (log)
-                                        LOGGER.fine("filterTipBranches: " + revJ
-                                                + " subsumes " + revI);
-                                    l.remove(i);
-                                    i--;
+                                if (visited.contains(commit)) {
+                                    tipCandidates.remove(commit);
                                     break;
                                 }
-                                if (commonAncestor.equals(shaJ)) {
-                                    if (log)
-                                        LOGGER.fine("filterTipBranches: " + revI
-                                                + " subsumes " + revJ);
-                                    l.remove(j);
-                                    j--;
-                                }
+                                visited.add(commit);
                             }
                         }
+
                     } finally {
                         walk.release();
                     }
 
                     if (log)
                         LOGGER.fine(MessageFormat.format(
-                                "Computed {0} merge bases in {1} ms", calls,
+                                "Computed merge bases in {0} commit steps and {1} ms", calls,
                                 (System.currentTimeMillis() - start)));
 
-                    return l;
+                    return new ArrayList<Revision>(tipCandidates.values());
                 }
             });
         } catch (IOException e) {
@@ -217,7 +216,7 @@ public class GitUtils implements Serializable {
             } else {
                 env = new EnvVars(System.getenv());
             }
-            
+
             p.getScm().buildEnvVars(b,env);
 
             if (lastBuiltOn != null) {
