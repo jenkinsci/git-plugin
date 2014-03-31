@@ -44,6 +44,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
+import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -884,8 +885,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
+
+        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        for (GitSCMExtension ext : this.getExtensions()) {
+            ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
+        }
+
         try {
-            git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+          checkoutCommand.execute();
         } catch(GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
