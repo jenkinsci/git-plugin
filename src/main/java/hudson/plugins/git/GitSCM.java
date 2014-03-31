@@ -402,7 +402,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     /**
      * If the configuration is such that we are tracking just one branch of one repository
-     * return that branch specifier (in the form of something like "origin/master"
+     * return that branch specifier (in the form of something like "origin/master" or a SHA1-hash
      *
      * Otherwise return null.
      */
