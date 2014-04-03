@@ -17,7 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 
 /**
- * git-clean after the checkout.
+ * git-clean before the checkout.
  *
  * @author Kohsuke Kawaguchi
  */

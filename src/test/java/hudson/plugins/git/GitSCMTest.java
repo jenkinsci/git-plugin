@@ -234,7 +234,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
-    @Bug(value=9001)
+
     public void testCleanBeforeCheckout() throws Exception {
     	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
         ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
