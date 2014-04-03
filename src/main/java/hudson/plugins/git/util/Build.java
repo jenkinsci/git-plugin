@@ -3,6 +3,7 @@ package hudson.plugins.git.util;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import hudson.scm.SCMRevisionState;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -16,7 +17,7 @@ import java.io.Serializable;
  * @see BuildData#buildsByBranchName
  */
 @ExportedBean(defaultVisibility = 999)
-public class Build implements Serializable, Cloneable {
+public class Build extends SCMRevisionState implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**

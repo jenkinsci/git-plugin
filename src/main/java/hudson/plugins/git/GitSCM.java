@@ -439,7 +439,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> abstractBuild, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+    public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+        Build b = build.getAction(Build.class);
+        if (b != null) return b;
+
+        BuildData buildData = getBuildData(build);
+        if (buildData != null) return buildData.lastBuild;
+
         return SCMRevisionState.NONE;
     }
 
@@ -454,13 +460,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
-            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
+            return compareRemoteRevisionWithImpl( project, launcher, workspace, listener,
+                    (baseline instanceof Build ? (Build) baseline : null));
         } catch (GitException e){
             throw new IOException2(e);
         }
     }
 
-    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, Build baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -472,15 +479,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        final BuildData buildData = fixNull(getBuildData(lastBuild));
-        if (buildData.lastBuild != null) {
-            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
+        if (baseline != null) {
+            listener.getLogger().println("[poll] Last Built Revision: " + baseline.revision);
         }
 
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
 
         // fast remote polling needs a single branch and an existing last build
-        if (!requiresWorkspaceForPolling() && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
+        if (!requiresWorkspaceForPolling() && baseline != null && baseline.getMarked() != null) {
 
             // FIXME this should not be a specific case, but have BuildChooser tell us if it can poll without workspace.
 
@@ -491,7 +497,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
 
-            if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
+            if (head != null && baseline.getMarked().getSha1().equals(head)) {
                 return NO_CHANGES;
             } else {
                 return BUILD_NOW;
@@ -531,6 +537,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             listener.getLogger().println("Polling for changes in");
+            final BuildData buildData = fixNull(getBuildData(lastBuild));
 
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                     true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
