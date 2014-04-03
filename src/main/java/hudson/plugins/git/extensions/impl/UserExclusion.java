@@ -6,7 +6,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.Build;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -55,7 +55,7 @@ public class UserExclusion extends GitSCMExtension {
     }
 
     @Override
-    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener) {
         String author = commit.getAuthorName();
         if (getExcludedUsersNormalized().contains(author)) {
             // If the author is an excluded user, don't count this entry as a change

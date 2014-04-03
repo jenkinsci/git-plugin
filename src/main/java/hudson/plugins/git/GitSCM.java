@@ -543,7 +543,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
-                if (!isRevExcluded(git, c, listener, buildData)) {
+                if (!isRevExcluded(git, c, listener, baseline)) {
                     return PollingResult.SIGNIFICANT;
                 }
             }
@@ -780,12 +780,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        return lastBuild;
-                }
+                return parentBuild.getAction(Build.class);
             }
         }
 
@@ -1367,11 +1362,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, Build baseline) throws IOException, InterruptedException {
         try {
             List<String> revShow;
-            if (buildData != null && buildData.lastBuild != null) {
-                revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+            if (baseline != null) {
+                revShow  = git.showRevision(baseline.revision.getSha1(), r.getSha1());
             } else {
                 revShow  = git.showRevision(r.getSha1());
             }
@@ -1385,7 +1380,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
-                        excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
+                        excludeThisCommit = ext.isRevExcluded(this, git, change, listener);
                         if (excludeThisCommit!=null)
                             break;
                     }
