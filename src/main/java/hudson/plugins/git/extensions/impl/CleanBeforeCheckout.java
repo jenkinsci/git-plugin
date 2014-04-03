@@ -35,16 +35,7 @@ public class CleanBeforeCheckout extends GitSCMExtension {
             ext.onClean(scm, git);
         }
     }
-    /*
-    @Override
-    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
-        listener.getLogger().println("Cleaning workspace");
-        git.clean();
-        // TODO: revisit how to hand off to SubmoduleOption
-        for (GitSCMExtension ext : scm.getExtensions()) {
-            ext.onClean(scm, git);
-        }
-    }*/
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
