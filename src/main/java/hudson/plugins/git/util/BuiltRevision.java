@@ -46,18 +46,19 @@ public class BuiltRevision extends Build {
      */
     public Revision revision;
 
-    public int      hudsonBuildNumber;
-    public Result   hudsonBuildResult;
-
-    // TODO: We don't currently store the result correctly.
-
-    public BuiltRevision(Revision marked, Revision revision, int buildNumber, Result result) {
+    public BuiltRevision(Revision marked, Revision revision) {
         this.marked = marked;
         this.revision = revision;
-        this.hudsonBuildNumber = buildNumber;
-        this.hudsonBuildResult = result;
     }
 
+    @Deprecated
+    public BuiltRevision(Revision marked, Revision revision, int buildNumber, Result result) {
+        this(marked, revision);
+        super.hudsonBuildNumber = buildNumber;
+        super.hudsonBuildResult = result;
+    }
+
+    @Deprecated
     public BuiltRevision(Revision revision, int buildNumber, Result result) {
         this(revision,revision,buildNumber,result);
     }
@@ -76,18 +77,8 @@ public class BuiltRevision extends Build {
         return marked;
     }
 
-    @Exported
-    public int getBuildNumber() {
-        return hudsonBuildNumber;
-    }
-
-    @Exported
-    public Result getBuildResult() {
-        return hudsonBuildResult;
-    }
-
     public @Override String toString() {
-        return "Build #" + hudsonBuildNumber + " of " + revision.toString();
+        return "Built " + revision.toString();
     }
 
     @Override
