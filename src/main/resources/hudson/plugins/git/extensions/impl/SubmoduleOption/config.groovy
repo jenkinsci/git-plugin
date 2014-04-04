@@ -12,6 +12,10 @@ f.entry(title:_("Update tracking submodules to tip of branch"), field:"trackingS
     f.checkbox()
 }
 
+f.entry(title:_("Submodules to switch branches")) {
+    f.repeatableProperty(field:"submoduleBranches")
+}
+
 /*
   This needs more thought
 

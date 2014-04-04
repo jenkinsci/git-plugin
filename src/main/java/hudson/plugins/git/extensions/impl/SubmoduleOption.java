@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -10,9 +11,12 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -39,12 +43,24 @@ public class SubmoduleOption extends GitSCMExtension {
     private boolean disableSubmodules;
     private boolean recursiveSubmodules;
     private boolean trackingSubmodules;
+    private List<SubmoduleBranch> submoduleBranches = Collections.emptyList();
+
+    @Deprecated
+    public SubmoduleOption(boolean disableSubmodules,
+                           boolean recursiveSubmodules,
+                           boolean trackingSubmodules) {
+        this(disableSubmodules, recursiveSubmodules, trackingSubmodules, null);
+    }
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules) {
+    public SubmoduleOption(boolean disableSubmodules,
+                           boolean recursiveSubmodules,
+                           boolean trackingSubmodules,
+                           List<SubmoduleBranch> submoduleBranches) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
+        this.submoduleBranches = submoduleBranches == null ? Collections.<SubmoduleBranch>emptyList() : submoduleBranches;
     }
 
     public boolean isDisableSubmodules() {
@@ -57,6 +73,10 @@ public class SubmoduleOption extends GitSCMExtension {
 
     public boolean isTrackingSubmodules() {
         return trackingSubmodules;
+    }
+
+    public List<SubmoduleBranch> getSubmoduleBranches() {
+        return submoduleBranches;
     }
 
     @Override
@@ -74,7 +94,30 @@ public class SubmoduleOption extends GitSCMExtension {
             // This ensures we don't miss changes to submodule paths and allows
             // seamless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
-            git.submoduleUpdate().recursive(recursiveSubmodules).remoteTracking(trackingSubmodules).execute();
+
+            SubmoduleUpdateCommand upd = git.submoduleUpdate().recursive(recursiveSubmodules).remoteTracking(trackingSubmodules);
+            if (submoduleBranches != null) {
+                EnvVars env = build.getEnvironment();
+                for (SubmoduleBranch sb : submoduleBranches) {
+                    String expandedBranchValue = env.expand(sb.getBranch());
+
+                    //
+                    //  If nothing gets replaced, we are probably in the initial checkout of the
+                    //  repo before node-based configuration matrix selection occurs.  If our,
+                    //  branch uses variables based on node-based configuration, then it won't be
+                    //  available in the initial checkout.  So, don't do the submodule branch
+                    //  switch if we can't substitute it correctly.
+                    //
+                    if (!sb.getBranch().contains("$") || !expandedBranchValue.equals(sb.getBranch())) {
+                        listener.getLogger().println("Updating submodule '" + sb.getSubmodule() + "' to '" + expandedBranchValue + "'");
+                        upd = upd.useBranch(sb.getSubmodule(), expandedBranchValue);
+                    }
+                    else {
+                        listener.getLogger().println("Couldn't substitute '" + sb.getBranch() + "' for submodule '" + sb.getSubmodule() + "'");
+                    }
+                }
+            }
+            upd.execute();
         }
 
         if (scm.isDoGenerateSubmoduleConfigurations()) {
