@@ -44,7 +44,7 @@ import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
@@ -296,7 +296,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public static class SCMRevisionImpl extends SCMRevision {
 
         /**
-         * The subversion revision.
+         * The git revision.
          */
         private String hash;
 
@@ -349,7 +349,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
 
         @Override
-        public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
+        public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
                                            BuildChooserContext context) throws IOException, InterruptedException {
             // we have ditched that crazy multiple branch stuff from the regular GIT SCM.
             return data == null ? null : data.lastBuild;

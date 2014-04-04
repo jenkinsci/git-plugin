@@ -4,8 +4,9 @@ import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.git.util.BuildData;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,9 +27,9 @@ public class BuildHistory implements Action {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to)
      */
-    private Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
+    private Map<String, BuiltRevision> buildsByBranchName = new HashMap<String, BuiltRevision>();
 
-    public Build getLastBuildOfBranch(String branch) {
+    public BuiltRevision getLastBuildOfBranch(String branch) {
         return buildsByBranchName.get(branch);
     }
 

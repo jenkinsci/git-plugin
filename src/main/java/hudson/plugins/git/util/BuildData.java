@@ -1,16 +1,13 @@
 package hudson.plugins.git.util;
 
 import hudson.Functions;
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
-import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.Serializable;
 import java.util.*;
@@ -30,22 +27,22 @@ public class BuildData implements Action, Serializable, Cloneable {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to) 
      */
-    public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
+    public transient Map<String, BuiltRevision> buildsByBranchName = new HashMap<String, BuiltRevision>();
 
     /**
      * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
-    public Build lastBuild;
+    public transient BuiltRevision lastBuild;
 
     /**
      * The name of the SCM as given by the user.
      */
-    public String scmName;
+    public transient String scmName;
 
     /**
      * The URLs that have been referenced.
      */
-    public Set<String> remoteUrls = new HashSet<String>();
+    public transient Set<String> remoteUrls = new HashSet<String>();
 
     public BuildData() {
     }
@@ -85,12 +82,12 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
+        Map<String,BuiltRevision> newBuildsByBranchName = new HashMap<String,BuiltRevision>();
         
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+        for (Map.Entry<String, BuiltRevision> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
-            Build build = buildByBranchName.getValue();
-            newBuildsByBranchName.put(branchName, build);
+            BuiltRevision builtRevision = buildByBranchName.getValue();
+            newBuildsByBranchName.put(branchName, builtRevision);
         }
 
         this.buildsByBranchName = newBuildsByBranchName;
@@ -109,7 +106,7 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public boolean hasBeenBuilt(ObjectId sha1) {
     	try {
-            for(Build b : buildsByBranchName.values()) {
+            for(BuiltRevision b : buildsByBranchName.values()) {
                 if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
                     return true;
             }
@@ -121,14 +118,14 @@ public class BuildData implements Action, Serializable, Cloneable {
     	}
     }
 
-    public void saveBuild(Build build) {
-    	lastBuild = build;
-    	for(Branch branch : build.marked.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
+    public void saveBuild(BuiltRevision builtRevision) {
+    	lastBuild = builtRevision;
+    	for(Branch branch : builtRevision.marked.getBranches()) {
+            buildsByBranchName.put(fixNull(branch.getName()), builtRevision);
     	}
     }
 
-    public Build getLastBuildOfBranch(String branch) {
+    public BuiltRevision getLastBuildOfBranch(String branch) {
         return buildsByBranchName.get(branch);
     }
 
@@ -138,7 +135,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     @Exported
-    public Map<String,Build> getBuildsByBranchName() {
+    public Map<String,BuiltRevision> getBuildsByBranchName() {
         return buildsByBranchName;
     }
 
@@ -178,23 +175,23 @@ public class BuildData implements Action, Serializable, Cloneable {
             throw new RuntimeException("Error cloning BuildData", e);
         }
 
-        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
+        IdentityHashMap<BuiltRevision, BuiltRevision> clonedBuilds = new IdentityHashMap<BuiltRevision, BuiltRevision>();
 
-        clone.buildsByBranchName = new HashMap<String, Build>();
+        clone.buildsByBranchName = new HashMap<String, BuiltRevision>();
         clone.remoteUrls = new HashSet<String>();
 
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+        for (Map.Entry<String, BuiltRevision> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();
             if (branchName == null) {
                 branchName = "";
             }
-            Build build = buildByBranchName.getValue();
-            Build clonedBuild = clonedBuilds.get(build);
-            if (clonedBuild == null) {
-                clonedBuild = build.clone();
-                clonedBuilds.put(build, clonedBuild);
+            BuiltRevision builtRevision = buildByBranchName.getValue();
+            BuiltRevision clonedBuiltRevision = clonedBuilds.get(builtRevision);
+            if (clonedBuiltRevision == null) {
+                clonedBuiltRevision = builtRevision.clone();
+                clonedBuilds.put(builtRevision, clonedBuiltRevision);
             }
-            clone.buildsByBranchName.put(branchName, clonedBuild);
+            clone.buildsByBranchName.put(branchName, clonedBuiltRevision);
         }
 
         if (lastBuild != null) {

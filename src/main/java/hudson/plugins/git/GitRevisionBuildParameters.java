@@ -34,7 +34,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Build parameter in the parameterized build trigger to pass the Git commit to the downstream build
+ * BuiltRevision parameter in the parameterized build trigger to pass the Git commit to the downstream build
  * (to do something else on the same commit.)
  *
  * @author Kohsuke Kawaguchi

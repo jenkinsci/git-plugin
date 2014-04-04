@@ -23,7 +23,7 @@ import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.scm.*;
@@ -440,7 +440,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> build, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
-        Build b = build.getAction(Build.class);
+        BuiltRevision b = build.getAction(BuiltRevision.class);
         if (b != null) return b;
 
         BuildData buildData = getBuildData(build);
@@ -461,13 +461,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener,
-                    (baseline instanceof Build ? (Build) baseline : null));
+                    (baseline instanceof BuiltRevision ? (BuiltRevision) baseline : null));
         } catch (GitException e){
             throw new IOException2(e);
         }
     }
 
-    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, Build baseline) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, BuiltRevision baseline) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -704,7 +704,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (AbstractBuild b : p.getBuilds()) {
             BuildData d = b.getAction(BuildData.class);
             if (d!=null && d.lastBuild!=null) {
-                Build lb = d.lastBuild;
+                BuiltRevision lb = d.lastBuild;
                 if (lb.isFor(sha1)) return b;
             }
         }
@@ -769,7 +769,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Build determineRevisionToBuild(final AbstractBuild build,
+    private @NonNull
+    BuiltRevision determineRevisionToBuild(final AbstractBuild build,
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
@@ -780,14 +781,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
-                return parentBuild.getAction(Build.class);
+                return parentBuild.getAction(BuiltRevision.class);
             }
         }
 
         // parameter forcing the commit ID to build
         final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
         if (rpa != null)
-            return new Build(rpa.toRevision(git), build.getNumber(), null);
+            return new BuiltRevision(rpa.toRevision(git), build.getNumber(), null);
 
         final String singleBranch = environment.expand( getSingleBranch(environment) );
 
@@ -816,7 +817,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,rev);
         }
-        return new Build(marked, rev, build.getNumber(), null);
+        return new BuiltRevision(marked, rev, build.getNumber(), null);
     }
 
     /**
@@ -879,7 +880,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         retrieveChanges(build, git, listener);
-        Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+        BuiltRevision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
@@ -901,7 +902,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         buildData.saveBuild(revToBuild);
-        build.addAction(new GitTagAction(build, buildData));
+        build.addAction(new GitTagAction(build, revToBuild));
 
         computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
                 new BuildChooserContextImpl(build.getProject(), build, environment));
@@ -914,7 +915,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Build up change log from all the branches that we've merged into {@code revToBuild}.
+     * BuiltRevision up change log from all the branches that we've merged into {@code revToBuild}.
      *
      * <p>
      * Intuitively, a changelog is a list of commits that's added since the "previous build" to the current build.
@@ -964,7 +965,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             boolean exclusion = false;
             for (Branch b : revToBuild.getBranches()) {
-                Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
+                BuiltRevision lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                 if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
                     changelog.excludes(lastRevWas.getSHA1());
                     exclusion = true;
@@ -1023,7 +1024,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousBuiltBuild() != null) {
-            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
+            final BuiltRevision lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
             if (lastBuildOfBranch != null) {
                 Revision previousRev = lastBuildOfBranch.getRevision();
                 if (previousRev != null) {
@@ -1362,7 +1363,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, Build baseline) throws IOException, InterruptedException {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuiltRevision baseline) throws IOException, InterruptedException {
         try {
             List<String> revShow;
             if (baseline != null) {
@@ -1422,6 +1423,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Run.XSTREAM.registerConverter(new ObjectIdConverter());
         Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));
         Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig", RemoteConfig.class);
+        Items.XSTREAM.alias("hudson.plugins.git.util.Build", BuiltRevision.class);
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());

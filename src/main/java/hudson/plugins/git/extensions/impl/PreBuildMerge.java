@@ -11,7 +11,7 @@ import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
@@ -84,7 +84,7 @@ public class PreBuildMerge extends GitSCMExtension {
             // record the fact that we've tried building 'rev' and it failed, or else
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
-            scm.getBuildData(build).saveBuild(new Build(rev, build.getNumber(), FAILURE));
+            scm.getBuildData(build).saveBuild(new BuiltRevision(rev, build.getNumber(), FAILURE));
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
         }
 

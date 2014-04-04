@@ -99,7 +99,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @deprecated as of 1.1.25
      *      Use and override {@link #prevBuildForChangelog(String, BuildData, IGitAPI, BuildChooserContext)}
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git) {
+    public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git) {
         return data==null?null:data.getLastBuildOfBranch(branch);
     }
 
@@ -125,7 +125,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
+    public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
     }
 
@@ -133,7 +133,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @deprecated as of 1.2.0
      *     Use and override {@link #prevBuildForChangelog(String, BuildData, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
+    public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data,git);
     }
 
