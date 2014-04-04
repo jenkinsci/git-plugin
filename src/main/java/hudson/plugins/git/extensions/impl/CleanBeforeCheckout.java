@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * git-clean before the checkout.
  *
- * @author Kohsuke Kawaguchi
+ * @author David S Wang
  */
 public class CleanBeforeCheckout extends GitSCMExtension {
     @DataBoundConstructor
