@@ -597,7 +597,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param git
      * @param listener
      * @param remoteRepository
-     * @throws
+     * @throws InterruptedException
+     * @throws IOException
      */
     private void fetchFrom(GitClient git,
             TaskListener listener,
@@ -1132,7 +1133,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Determine the browser from the scmData contained in the {@link StaplerRequest}.
          *
          * @param scmData
-         * @return
+         * @return browser based on request scmData
          */
         private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
             if (scmData.containsKey("browser")) {

@@ -48,7 +48,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
     /**
      * Determines the link to the diff between the version
-     * in the specified revision of {@link GitChangeSet.Path} to its previous version.
+     * in the specified revision of {@link hudson.plugins.git.GitChangeSet.Path} to its previous version.
      *
      * @param path affected file path
      * @return

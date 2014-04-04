@@ -40,7 +40,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diff/pom.xml
      * 
      * Returns a diff link for {@link EditType#DELETE} and {@link EditType#EDIT}, for {@link EditType#ADD} returns an
-     * {@link RedmineWeb#getFileLink(Path)}.
+     * {@link #getFileLink}.
      * 
      * 
      * @param path

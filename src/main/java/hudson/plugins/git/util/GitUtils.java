@@ -39,7 +39,7 @@ public class GitUtils implements Serializable {
     /**
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.
-     * @return
+     * @return list of revisions
      * @throws IOException
      * @throws GitException
      */
@@ -59,7 +59,7 @@ public class GitUtils implements Serializable {
     /**
      * Return the revision containing the branch name.
      * @param branchName
-     * @return
+     * @return revision containing branchName
      * @throws IOException
      * @throws GitException
      */
