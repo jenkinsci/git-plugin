@@ -348,13 +348,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return Collections.singleton(revision);
         }
 
-        @Override
-        public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
-                                           BuildChooserContext context) throws IOException, InterruptedException {
-            // we have ditched that crazy multiple branch stuff from the regular GIT SCM.
-            return data == null ? null : data.lastBuild;
-        }
-
         @Extension
         public static class DescriptorImpl extends BuildChooserDescriptor {
 

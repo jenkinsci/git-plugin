@@ -15,7 +15,7 @@ import java.util.*;
 import static hudson.Util.fixNull;
 
 /**
- * @deprecated see {@link hudson.plugins.git.BuildHistory}
+ * @deprecated see {@link BuildHistory}
  */
 public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;

@@ -116,8 +116,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *
      * @param branch
      *      The branch name.
-     * @param data
-     *      Information that captures what we did during the last build.
+     * @param history
+     *      Information that captures what we did during the previous builds.
      * @param git
      *      Used for invoking Git
      * @param context
@@ -125,12 +125,20 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
      */
+    public BuiltRevision prevBuildForChangelog(String branch, BuildHistory history, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
+        return prevBuildForChangelog(branch, history.asBuildData(branch), git, context);
+    }
+
+
+    /**
+     * @deprecated override {@link #prevBuildForChangelog(String, BuildHistory, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
+     */
     public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
     }
 
     /**
-     * @deprecated as of 1.2.0
+     *  as of 1.2.0
      *     Use and override {@link #prevBuildForChangelog(String, BuildData, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
      */
     public BuiltRevision prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {

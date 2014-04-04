@@ -1,13 +1,16 @@
-package hudson.plugins.git;
+package hudson.plugins.git.util;
 
 import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.Api;
 import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.git.util.BuildData;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -27,7 +30,7 @@ public class BuildHistory implements Action {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to)
      */
-    private Map<String, BuiltRevision> buildsByBranchName = new HashMap<String, BuiltRevision>();
+    private Map<String, BuiltRevision> buildsByBranchName = new LinkedHashMap<String, BuiltRevision>();
 
     public BuiltRevision getLastBuildOfBranch(String branch) {
         return buildsByBranchName.get(branch);
@@ -60,5 +63,26 @@ public class BuildHistory implements Action {
 
     public String getUrlName() {
         return "branches";
+    }
+
+    public Api getApi() {
+        return new Api(this);
+    }
+
+    BuildData asBuildData(final String branch) {
+        return new BuildData() {
+            {
+                buildsByBranchName = Collections.unmodifiableMap(buildsByBranchName);
+                lastBuild = getLastBuildOfBranch(branch);
+            }
+
+            public void saveBuild(BuiltRevision builtRevision) {
+                throw new UnsupportedOperationException();
+            }
+
+            public void addRemoteUrl(String remoteUrl) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }
