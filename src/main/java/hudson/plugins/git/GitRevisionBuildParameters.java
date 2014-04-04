@@ -28,7 +28,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuiltRevision;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -53,11 +53,11 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 
 	@Override
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
-		BuildData data = build.getAction(BuildData.class);
+        BuiltRevision data = build.getAction(BuiltRevision.class);
 		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
-                data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);
+                data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuiltRevision.class);
             }
         }
         if (data == null) {
@@ -65,7 +65,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 			return null;
 		}
 
-		return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
+		return new RevisionParameterAction(data.getRevision(), getCombineQueuedCommits());
 	}
 
 	public boolean getCombineQueuedCommits() {

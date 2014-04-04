@@ -26,11 +26,12 @@ package hudson.plugins.git;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuiltRevision;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * {@code GIT_BRANCH} token that expands to the branch(es) that was built.
@@ -58,23 +59,23 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
 
     @Override
     public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName) throws MacroEvaluationException, IOException, InterruptedException {
-        BuildData data = context.getAction(BuildData.class);
+        BuiltRevision data = context.getAction(BuiltRevision.class);
         if (data == null) {
             return "";  // shall we report an error more explicitly?
         }
 
-        Revision lb = data.getLastBuiltRevision();
-        if (lb==null || lb.getBranches().isEmpty())   return "";
+        Collection<Branch> branches = data.getRevision().branches;
+        if (branches.isEmpty())   return "";
 
         if (all) {
             StringBuilder buf = new StringBuilder();
-            for (Branch b : lb.getBranches()) {
+            for (Branch b : branches) {
                 if (buf.length()>0) buf.append(',');
                 buf.append(format(b));
             }
             return buf.toString();
         } else {
-            return format(lb.getBranches().iterator().next());
+            return format(branches.iterator().next());
         }
     }
 

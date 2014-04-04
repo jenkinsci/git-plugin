@@ -8,7 +8,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuiltRevision;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -61,12 +61,12 @@ public class SubmoduleOption extends GitSCMExtension {
 
     @Override
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
-        BuildData revToBuild = scm.getBuildData(build);
+        BuiltRevision revToBuild = build.getAction(BuiltRevision.class);
 
         if (!disableSubmodules && git.hasGitModules()) {
             // This ensures we don't miss changes to submodule paths and allows
             // seamless use of bare and non-bare superproject repositories.
-            git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+            git.setupSubmoduleUrls(revToBuild.getRevision(), listener);
             git.submoduleUpdate(recursiveSubmodules);
         }
 
