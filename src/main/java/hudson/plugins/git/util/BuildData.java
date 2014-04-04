@@ -18,13 +18,8 @@ import java.util.*;
 import static hudson.Util.fixNull;
 
 /**
- * Captures the Git related information for a build.
- *
- * <p>
- * This object is added to {@link AbstractBuild#getActions()}.
- * This persists the Git related information of that build.
+ * @deprecated see {@link hudson.plugins.git.BuildHistory}
  */
-@ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
