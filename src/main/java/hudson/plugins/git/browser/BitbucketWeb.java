@@ -24,6 +24,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public BitbucketWeb(String repoUrl) {
         super(repoUrl);
+        this.normalizeUrl = true;
     }
 
     @Override
