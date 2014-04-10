@@ -26,7 +26,6 @@ public class RedmineWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public RedmineWeb(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     @Override
@@ -42,8 +41,8 @@ public class RedmineWeb extends GitRepositoryBrowser {
      *
      * Returns a diff link for {@link EditType#DELETE} and {@link EditType#EDIT}, for {@link EditType#ADD} returns an
      * {@link #getFileLink}.
-     * 
-     * 
+     *
+     *
      * @param path
      *            affected file path
      * @return diff link

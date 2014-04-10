@@ -24,7 +24,6 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public GitoriousWeb(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     @Override

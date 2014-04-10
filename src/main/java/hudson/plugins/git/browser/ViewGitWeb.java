@@ -31,7 +31,6 @@ public class ViewGitWeb extends GitRepositoryBrowser {
     public ViewGitWeb(String repoUrl, String projectName) {
         super(repoUrl);
         this.projectName = projectName;
-        this.normalizeUrl = true;
     }
 
     @Override

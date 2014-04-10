@@ -30,7 +30,6 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     public GitBlitRepositoryBrowser(String repoUrl, String projectName) {
         super(repoUrl);
         this.projectName = projectName;
-        this.normalizeUrl = true;
     }
 
     @Override
