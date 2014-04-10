@@ -5,6 +5,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
