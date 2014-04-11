@@ -15,6 +15,10 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
     private /* mostly final */ String url;
 
+    @Deprecated
+    protected GitRepositoryBrowser() {
+    }
+
     protected GitRepositoryBrowser(String repourl) {
         this.url = repourl;
     }
@@ -57,7 +61,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
-
+    
     /**
      * Determines the link to a single file under Git.
      * This page should display all the past revisions of this file, etc.
