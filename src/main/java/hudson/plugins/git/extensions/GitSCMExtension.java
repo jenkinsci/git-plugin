@@ -15,6 +15,7 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
+import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -151,6 +152,12 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * Called before a {@link MergeCommand} is executed to allow extensions to alter its behaviour.
      */
     public void decorateMergeCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+    }
+
+    /**
+     * Called before a {@link CheckoutCommand} is executed to allow extensions to alter its behaviour.
+     */
+    public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
     }
 
     /**

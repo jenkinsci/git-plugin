@@ -42,7 +42,7 @@ public class InverseBuildChooser extends BuildChooser {
             String singleBranch, GitClient git, TaskListener listener,
             BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
-        EnvVars env = context.getBuild().getEnvironment();
+        EnvVars env = context.getEnvironment();
         GitUtils utils = new GitUtils(listener, git);
         List<Revision> branchRevs = new ArrayList<Revision>(utils.getAllBranchRevisions());
         List<BranchSpec> specifiedBranches = gitSCM.getBranches();

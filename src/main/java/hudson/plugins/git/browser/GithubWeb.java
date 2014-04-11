@@ -33,6 +33,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public GithubWeb(String repoUrl) {
         super(repoUrl);
+        this.normalizeUrl = true;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      * Return a diff link regardless of the edit type by appending the index of the pathname in the changeset.
      *
      * @param path
-     * @return
+     * @return url for differences
      * @throws IOException
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {

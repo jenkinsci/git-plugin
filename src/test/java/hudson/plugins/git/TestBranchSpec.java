@@ -126,6 +126,16 @@ public class TestBranchSpec extends TestCase {
     	assertEquals("other",branchSpec.getName());
     }
     
+    public void testUsesRefsHeads() {
+    	BranchSpec m = new BranchSpec("refs/heads/j*n*");
+    	assertTrue(m.matches("refs/heads/jenkins"));
+    	assertTrue(m.matches("refs/heads/jane"));
+    	assertTrue(m.matches("refs/heads/jones"));
+
+    	assertFalse(m.matches("origin/jenkins"));
+    	assertFalse(m.matches("remote/origin/jane"));
+    }
+    
     public void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
     	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
     	assertTrue(m.matches("origin"));

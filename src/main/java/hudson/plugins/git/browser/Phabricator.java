@@ -27,6 +27,7 @@ public class Phabricator extends GitRepositoryBrowser {
     public Phabricator(String repoUrl, String repo) {
         super(repoUrl);
         this.repo = repo;
+        this.normalizeUrl = true;
     }
 
     public String getRepo() {

@@ -83,6 +83,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
 
     /**
      * @deprecated
+     *      Moved to {@link SubmoduleOption}
+     */
+    private transient boolean trackingSubmodules;
+
+    /**
+     * @deprecated
      *      Moved to {@link UserIdentity}
      */
     private transient String gitConfigName;
@@ -197,8 +203,8 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new PerBuildTag());
                 skipTag = null;
             }
-            if (disableSubmodules || recursiveSubmodules) {
-                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules));
+            if (disableSubmodules || recursiveSubmodules || trackingSubmodules) {
+                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules));
             }
             if (isNotBlank(gitConfigName) || isNotBlank(gitConfigEmail)) {
                 addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));
@@ -310,6 +316,12 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     public boolean getRecursiveSubmodules() {
         SubmoduleOption sm = getExtensions().get(SubmoduleOption.class);
         return sm != null && sm.isRecursiveSubmodules();
+    }
+
+    @Deprecated
+    public boolean getTrackingSubmodules() {
+        SubmoduleOption sm = getExtensions().get(SubmoduleOption.class);
+        return sm != null && sm.isTrackingSubmodules();
     }
 
     @Deprecated

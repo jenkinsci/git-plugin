@@ -1,12 +1,16 @@
 package hudson.plugins.git;
 
+import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -118,9 +122,26 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
     }
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
+                                            String relativeTargetDir, String excludedRegions,
+                                            String excludedUsers, String localBranch, boolean fastRemotePoll,
+                                            String includedRegions) throws Exception {
+        return setupProject(branches,
+                authorOrCommitter, relativeTargetDir, excludedRegions,
+                excludedUsers, localBranch, fastRemotePoll,
+                includedRegions, null);
+    }
+
+    protected FreeStyleProject setupProject(String branchString, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
+        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
+                false, null, null,
+                null, null, false,
+                null, sparseCheckoutPaths);
+    }
+
+    protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
                                           String relativeTargetDir, String excludedRegions,
                                           String excludedUsers, String localBranch, boolean fastRemotePoll,
-                                          String includedRegions) throws Exception {
+                                          String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
@@ -135,6 +156,8 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
             scm.getExtensions().add(new UserExclusion(excludedUsers));
         if (excludedRegions!=null || includedRegions!=null)
             scm.getExtensions().add(new PathRestriction(includedRegions,excludedRegions));
+
+        scm.getExtensions().add(new SparseCheckoutPaths(sparseCheckoutPaths));
 
         project.setScm(scm);
         project.getBuildersList().add(new CaptureEnvironmentBuilder());

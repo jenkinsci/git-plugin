@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.*;
@@ -8,9 +9,12 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -234,6 +238,36 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testCleanBeforeCheckout() throws Exception {
+    	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
+        ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
+        final String commitFile1 = "commitFile1";
+        final String commitFile2 = "commitFile2";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
+        final String branch1 = "Branch1";
+        final String branch2 = "Branch2";
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("master"));
+        branches.add(new BranchSpec(branch1));
+        branches.add(new BranchSpec(branch2));
+        git.branch(branch1);
+        git.checkout(branch1);
+        p.poll(listener).hasChanges();
+        assertTrue(firstBuild.getLog().contains("Cleaning"));
+        assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
+        assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
+        assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
+        git.checkout(branch1);
+        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
+        p.poll(listener).hasChanges();
+        assertTrue(secondBuild.getLog().contains("Cleaning"));
+        assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
+        assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
+
+        
+    }
     @Bug(value = 8342)
     public void testExcludedRegionMultiCommit() throws Exception {
         // Got 2 projects, each one should only build if changes in its own file
@@ -1278,6 +1312,104 @@ public class GitSCMTest extends AbstractGitTestCase {
         } finally {
             lock.delete();
         }
+    }
+
+    public void testInitSparseCheckout() throws Exception {
+        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("toto")));
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("toto").exists());
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+        assertFalse(build1.getWorkspace().child("titi").exists());
+        assertFalse(build1.getWorkspace().child(commitFile2).exists());
+    }
+
+    public void testInitSparseCheckoutBis() throws Exception {
+        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertFalse(build1.getWorkspace().child("toto").exists());
+        assertFalse(build1.getWorkspace().child(commitFile1).exists());
+    }
+
+    public void testSparseCheckoutAfterNormalCheckout() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertTrue(build1.getWorkspace().child("toto").exists());
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+        ((GitSCM) project.getScm()).getExtensions().add(new SparseCheckoutPaths(Lists.newArrayList(new SparseCheckoutPath("titi"))));
+
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS);
+        assertTrue(build2.getWorkspace().child("titi").exists());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertFalse(build2.getWorkspace().child("toto").exists());
+        assertFalse(build2.getWorkspace().child(commitFile1).exists());
+    }
+
+    public void testNormalCheckoutAfterSparseCheckout() throws Exception {
+        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS);
+        assertTrue(build2.getWorkspace().child("titi").exists());
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        assertFalse(build2.getWorkspace().child("toto").exists());
+        assertFalse(build2.getWorkspace().child(commitFile1).exists());
+
+        ((GitSCM) project.getScm()).getExtensions().remove(SparseCheckoutPaths.class);
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertTrue(build1.getWorkspace().child("toto").exists());
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+    }
+
+    public void testInitSparseCheckoutOverSlave() throws Exception {
+        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+        project.setAssignedLabel(createSlave().getSelfLabel());
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertFalse(build1.getWorkspace().child("toto").exists());
+        assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
     private void setupJGit(GitSCM git) {

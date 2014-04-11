@@ -44,6 +44,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
+import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -402,7 +403,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     /**
      * If the configuration is such that we are tracking just one branch of one repository
-     * return that branch specifier (in the form of something like "origin/master"
+     * return that branch specifier (in the form of something like "origin/master" or a SHA1-hash
      *
      * Otherwise return null.
      */
@@ -597,7 +598,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param git
      * @param listener
      * @param remoteRepository
-     * @throws
+     * @throws InterruptedException
+     * @throws IOException
      */
     private void fetchFrom(GitClient git,
             TaskListener listener,
@@ -885,8 +887,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, branch.getName());
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
+
+        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        for (GitSCMExtension ext : this.getExtensions()) {
+            ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
+        }
+
         try {
-            git.checkoutBranch(getParamLocalBranch(build), revToBuild.revision.getSha1String());
+          checkoutCommand.execute();
         } catch(GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
@@ -1126,7 +1134,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Determine the browser from the scmData contained in the {@link StaplerRequest}.
          *
          * @param scmData
-         * @return
+         * @return browser based on request scmData
          */
         private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
             if (scmData.containsKey("browser")) {
