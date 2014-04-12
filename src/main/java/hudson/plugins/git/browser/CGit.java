@@ -25,7 +25,6 @@ public class CGit extends GitRepositoryBrowser {
     @DataBoundConstructor
     public CGit(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     private QueryBuilder param(URL url) {

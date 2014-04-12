@@ -14,7 +14,6 @@ import java.net.URL;
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
     private /* mostly final */ String url;
-    protected boolean normalizeUrl;
 
     @Deprecated
     protected GitRepositoryBrowser() {
@@ -44,7 +43,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
             }
         }
 
-        if (normalizeUrl) {
+        if (getNormalizeUrl()) {
             return normalizeToEndWithSlash(new URL(u));
         }
         else {
@@ -62,7 +61,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
-
+    
     /**
      * Determines the link to a single file under Git.
      * This page should display all the past revisions of this file, etc.
@@ -73,6 +72,16 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException
      */
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException;
+
+    /**
+     * Determines whether a URL should be normalized
+	 * Overridden in the rare case where it shouldn't
+     *
+     * @return True if the URL should be normalized
+     */
+    protected boolean getNormalizeUrl() {
+		return true;
+	}
 
     private static final long serialVersionUID = 1L;
 }

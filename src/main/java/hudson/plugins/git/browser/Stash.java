@@ -25,7 +25,6 @@ public class Stash extends GitRepositoryBrowser {
     @DataBoundConstructor
     public Stash(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     private QueryBuilder param(URL url) {

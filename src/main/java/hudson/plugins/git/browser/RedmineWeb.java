@@ -16,7 +16,7 @@ import java.net.URL;
 
 /**
  * Git Browser for <a href="http://www.redmine.org/">Redmine</a>.
- *
+ * 
  * @author mfriedenhagen
  */
 public class RedmineWeb extends GitRepositoryBrowser {
@@ -26,7 +26,6 @@ public class RedmineWeb extends GitRepositoryBrowser {
     @DataBoundConstructor
     public RedmineWeb(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     @Override
@@ -37,9 +36,9 @@ public class RedmineWeb extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     *
+     * 
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diff/pom.xml
-     *
+     * 
      * Returns a diff link for {@link EditType#DELETE} and {@link EditType#EDIT}, for {@link EditType#ADD} returns an
      * {@link #getFileLink}.
      * 
@@ -67,7 +66,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * Creates a link to the file.
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/entry/pom.xml
      * For deleted files just returns a diff link, which will have /dev/null as target file.
-     *
+     * 
      * @param path
      *            file
      * @return file link

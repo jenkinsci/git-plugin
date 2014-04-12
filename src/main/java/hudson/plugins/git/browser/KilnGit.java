@@ -26,7 +26,6 @@ public class KilnGit extends GitRepositoryBrowser {
     @DataBoundConstructor
     public KilnGit(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
     }
 
     private QueryBuilder param(URL url) {
