@@ -41,23 +41,23 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws GitException
      */
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
                                                       GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
             throws GitException, IOException, InterruptedException {
 
-        verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,singleBranch,data);
+        verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,branchSpec,data);
 
         // if the branch name contains more wildcards then the simple usecase
         // does not apply and we need to skip to the advanced usecase
-        if (singleBranch == null || singleBranch.contains("*"))
+        if (branchSpec == null || branchSpec.contains("*"))
             return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data, context);
 
         // check if we're trying to build a specific commit
         // this only makes sense for a build, there is no
         // reason to poll for a commit
-        if (!isPollCall && singleBranch.matches("[0-9a-f]{6,40}")) {
+        if (!isPollCall && branchSpec.matches("[0-9a-f]{6,40}")) {
             try {
-                ObjectId sha1 = git.revParse(singleBranch);
+                ObjectId sha1 = git.revParse(branchSpec);
                 Revision revision = new Revision(sha1);
                 revision.getBranches().add(new Branch("detached", sha1));
                 verbose(listener,"Will build the detached SHA1 {0}",sha1);
@@ -65,51 +65,57 @@ public class DefaultBuildChooser extends BuildChooser {
             } catch (GitException e) {
                 // revision does not exist, may still be a branch
                 // for example a branch called "badface" would show up here
-                verbose(listener, "Not a valid SHA1 {0}", singleBranch);
+                verbose(listener, "Not a valid SHA1 {0}", branchSpec);
             }
         }
 
         Collection<Revision> revisions = new ArrayList<Revision>();
 
         // if it doesn't contain '/' then it could be an unqualified branch
-        if (!singleBranch.contains("/")) {
+        if (!branchSpec.contains("/")) {
 
             // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
             // so check all remotes to fully qualify this branch spec
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
-                String fqbn = repository + "/" + singleBranch;
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", singleBranch, repository, fqbn);
+                String fqbn = repository + "/" + branchSpec;
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }
         } else {
             // either the branch is qualified (first part should match a valid remote)
             // or it is still unqualified, but the branch name contains a '/'
             List<String> possibleQualifiedBranches = new ArrayList<String>();
-            boolean singleBranchIsQualified = false;
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
-                if (singleBranch.startsWith(repository + "/") || singleBranch.startsWith("remotes/" + repository + "/")) {
-                  singleBranchIsQualified = true;
-                  break;
+                String fqbn;
+                if (branchSpec.startsWith(repository + "/")) {
+                    fqbn = "refs/remotes/" + branchSpec;
+                } else if(branchSpec.startsWith("remotes/" + repository + "/")) {
+                    fqbn = "refs/" + branchSpec;
+                } else if(branchSpec.startsWith("refs/heads/")) {
+                    fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
+                } else {
+                    //Try branchSpec as it is - e.g. "refs/tags/mytag"
+                    fqbn = branchSpec;
                 }
-                String fqbn = repository + "/" + singleBranch;
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", singleBranch, repository, fqbn);
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                possibleQualifiedBranches.add(fqbn);
+
+                //Check if exact branch name <branchSpec> existss
+                fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
             }
-            if (singleBranchIsQualified) {
-                revisions.addAll(getHeadRevision(isPollCall, singleBranch, git, listener, data));
-            } else {
-              for (String fqbn : possibleQualifiedBranches) {
-                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
-              }
+            for (String fqbn : possibleQualifiedBranches) {
+              revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }
         }
 
         if (revisions.isEmpty()) {
             // the 'branch' could actually be a non branch reference (for example a tag or a gerrit change)
 
-            revisions = getHeadRevision(isPollCall, singleBranch, git, listener, data);
+            revisions = getHeadRevision(isPollCall, branchSpec, git, listener, data);
             if (!revisions.isEmpty()) {
                 verbose(listener, "{0} seems to be a non-branch reference (tag?)");
             }
