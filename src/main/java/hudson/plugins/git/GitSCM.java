@@ -489,7 +489,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
-            ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
+            ObjectId head = git.getHeadRev(gitRepo, singleBranch);
 
             if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
                 return NO_CHANGES;
