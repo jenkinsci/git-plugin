@@ -27,7 +27,6 @@ public class GitLab extends GitRepositoryBrowser {
     public GitLab(String repoUrl, String version) {
         super(repoUrl);
         this.version = Double.valueOf(version);
-        this.normalizeUrl = true;
     }
 
     public double getVersion() {
@@ -51,9 +50,9 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the commit diff.
-     *
+     * 
      * https://[GitLab URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b#[path to file]
-     *
+     * 
      * @param path
      * @return diff link
      * @throws IOException
@@ -67,7 +66,7 @@ public class GitLab extends GitRepositoryBrowser {
     /**
      * Creates a link to the file.
      * https://[GitLab URL]/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/tree/pom.xml
-     *
+     * 
      * @param path
      * @return file link
      * @throws IOException
@@ -106,6 +105,6 @@ public class GitLab extends GitRepositoryBrowser {
         }
 
         return "commits/";
-    }
+    } 
 
 }

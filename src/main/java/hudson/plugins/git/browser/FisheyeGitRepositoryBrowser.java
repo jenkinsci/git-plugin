@@ -25,10 +25,9 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	private static final long serialVersionUID = 2881872624557203410L;
 
 	@DataBoundConstructor
-    public FisheyeGitRepositoryBrowser(String repoUrl) {
+	public FisheyeGitRepositoryBrowser(String repoUrl) {
         super(repoUrl);
-        this.normalizeUrl = true;
-    }
+	}
 
 	@Override
 	public URL getDiffLink(Path path) throws IOException {
