@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc., Stephen Connolly.
+ * Copyright (c) 2013-2014, CloudBees, Inc., Stephen Connolly, Amadeus IT Group.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,6 +83,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 /**
  * @author Stephen Connolly
@@ -188,6 +189,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                     final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                     listener.getLogger().println("Checking branch " + branchName);
+                    if (isExcluded(branchName)){
+                      continue;
+                    }
                     if (branchCriteria != null) {
                         RevCommit commit = walk.parseCommit(b.getSHA1());
                         final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
@@ -288,6 +292,43 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getCredentialsId()));
         }
         return result;
+    }
+    
+    /**
+     * Returns true if the branchName isn't matched by includes or is matched by excludes.
+     * 
+     * @param branchName
+     * @return
+     */
+    protected boolean isExcluded (String branchName){
+      return !Pattern.matches(getPattern(getIncludes()), branchName) || (Pattern.matches(getPattern(getExcludes()), branchName));
+    }
+    
+    /**
+     * Returns the pattern corresponding to the branches containing wildcards. 
+     * 
+     * @param branchName
+     * @return
+     */
+    private String getPattern(String branches){
+      StringBuilder quotedBranches = new StringBuilder();
+      for (String wildcard : branches.split(" ")){
+        StringBuilder quotedBranch = new StringBuilder();
+        for(String branch : wildcard.split("\\*")){
+          if (wildcard.startsWith("*") || quotedBranches.length()>0) {
+            quotedBranch.append(".*");
+          }
+          quotedBranch.append(Pattern.quote(branch));
+        }
+        if (wildcard.endsWith("*")){
+          quotedBranch.append(".*");
+        }
+        if (quotedBranches.length()>0) {
+          quotedBranches.append("|");
+        }
+        quotedBranches.append(quotedBranch);
+      }
+      return quotedBranches.toString();
     }
 
     /**
