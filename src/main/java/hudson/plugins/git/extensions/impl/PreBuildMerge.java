@@ -7,6 +7,7 @@ import hudson.model.BuildListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -90,7 +91,9 @@ public class PreBuildMerge extends GitSCMExtension {
 
         build.addAction(new MergeRecord(remoteBranchRef,target.getName()));
 
-        return new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
+        Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
+        mergeRevision.getBranches().add(new Branch(remoteBranchRef, target));
+        return mergeRevision;
     }
 
     @Override
