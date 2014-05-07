@@ -204,7 +204,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 skipTag = null;
             }
             if (disableSubmodules || recursiveSubmodules || trackingSubmodules) {
-                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules));
+                addIfMissing(new SubmoduleOption(disableSubmodules, recursiveSubmodules, trackingSubmodules, null));
             }
             if (isNotBlank(gitConfigName) || isNotBlank(gitConfigEmail)) {
                 addIfMissing(new UserIdentity(gitConfigName,gitConfigEmail));

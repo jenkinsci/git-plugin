@@ -39,12 +39,14 @@ public class SubmoduleOption extends GitSCMExtension {
     private boolean disableSubmodules;
     private boolean recursiveSubmodules;
     private boolean trackingSubmodules;
+    private Integer timeout;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, Integer timeout) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
+        this.timeout = timeout;
     }
 
     public boolean isDisableSubmodules() {
@@ -57,6 +59,10 @@ public class SubmoduleOption extends GitSCMExtension {
 
     public boolean isTrackingSubmodules() {
         return trackingSubmodules;
+    }
+
+    public Integer getTimeout() {
+        return timeout;
     }
 
     @Override
@@ -74,7 +80,11 @@ public class SubmoduleOption extends GitSCMExtension {
             // This ensures we don't miss changes to submodule paths and allows
             // seamless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
-            git.submoduleUpdate().recursive(recursiveSubmodules).remoteTracking(trackingSubmodules).execute();
+            git.submoduleUpdate()
+                .recursive(recursiveSubmodules)
+                .remoteTracking(trackingSubmodules)
+                .timeout(timeout)
+                .execute();
         }
 
         if (scm.isDoGenerateSubmoduleConfigurations()) {
