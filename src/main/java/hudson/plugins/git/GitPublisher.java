@@ -26,6 +26,7 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -55,7 +56,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     private List<BranchToPush> branchesToPush;
     // notes support
     private List<NoteToPush> notesToPush;
-    
+    private static final RefSpec notesRefSpec = new RefSpec("+refs/notes/*:refs/notes/*");   
+ 
     @DataBoundConstructor
     public GitPublisher(List<TagToPush> tagsToPush,
                         List<BranchToPush> branchesToPush,
@@ -328,6 +330,9 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                             return false;
                         }
 
+                        // Notes must be fetched explicitly
+                        git.fetch(remote.getName(), this.notesRefSpec );
+
                         listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
                         if ( noteReplace )
@@ -335,7 +340,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         else
                             git.appendNote( noteMsg, noteNamespace );
 
-                        git.push(remote.getName(), "refs/notes/*" );
+                        git.push(remote.getName(), this.notesRefSpec.toString() );
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
                         return false;
