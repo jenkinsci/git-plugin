@@ -882,8 +882,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
-        if (branch!=null)   // null for a detached HEAD
-            environment.put(GIT_BRANCH, branch.getName());
+        if (branch!=null) { // null for a detached HEAD
+            String name = branch.getName();
+            if(name.startsWith("refs/remotes/")) {
+                //Restore expected previous behaviour
+                name = name.substring("refs/remotes/".length());
+            }
+            environment.put(GIT_BRANCH, name);
+        }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
