@@ -345,7 +345,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build) throws IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
         EnvVars env = build.getEnvironment();
@@ -439,7 +439,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> abstractBuild, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
+    public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> abstractBuild, FilePath workspace, Launcher launcher, TaskListener taskListener) throws IOException, InterruptedException {
         return SCMRevisionState.NONE;
     }
 
@@ -452,7 +452,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+    public PollingResult compareRemoteRevisionWith(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
         } catch (GitException e){
@@ -460,12 +460,27 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private PollingResult compareRemoteRevisionWithImpl(AbstractProject<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
+    private static Node workspaceToNode(FilePath workspace) {
+        Jenkins j = Jenkins.getInstance();
+        if (workspace.isRemote()) {
+            for (Computer c : j.getComputers()) {
+                if (c.getChannel() == workspace.getChannel()) {
+                    Node n = c.getNode();
+                    if (n != null) {
+                        return n;
+                    }
+                }
+            }
+        }
+        return j;
+    }
+
+    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
-        final AbstractBuild lastBuild = project.getLastBuild();
+        final Run lastBuild = project.getLastBuild();
         if (lastBuild == null) {
             // If we've never been built before, well, gotta build!
             listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
@@ -484,7 +499,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             // FIXME this should not be a specific case, but have BuildChooser tell us if it can poll without workspace.
 
-            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
+            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
@@ -498,7 +513,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
@@ -507,19 +522,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        // which node is this workspace from?
-        // there should be always one match, but just in case we initialize n to a non-null value
-        Node n = Jenkins.getInstance();
-        if (workspace.isRemote()) {
-            for (Computer c : Jenkins.getInstance().getComputers()) {
-                if (c.getChannel()==workspace.getChannel()) {
-                    n =  c.getNode();
-                    break;
-                }
-            }
-        }
-
-        GitClient git = createClient(listener, environment, project, n, workingDirectory);
+        GitClient git = createClient(listener, environment, project, workspaceToNode(workspace), workingDirectory);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -552,13 +555,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
      * perform additional git operations.
      */
-    public GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
-        FilePath ws = workingDirectory(build.getProject(), build.getWorkspace(), environment, listener);
+    public GitClient createClient(BuildListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+        FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         ws.mkdirs(); // ensure it exists
-        return createClient(listener,environment, build.getParent(), build.getBuiltOn(), ws);
+        return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
     }
 
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, AbstractProject project, Node n, FilePath ws) throws IOException, InterruptedException {
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
@@ -706,25 +709,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
-        final AbstractProject project;
-        final AbstractBuild build;
+        final Job project;
+        final Run build;
         final EnvVars environment;
 
-        BuildChooserContextImpl(AbstractProject project, AbstractBuild build, EnvVars environment) {
+        BuildChooserContextImpl(Job project, Run build, EnvVars environment) {
             this.project = project;
             this.build = build;
             this.environment = environment;
         }
 
-        public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build,Hudson.MasterComputer.localChannel);
         }
 
-        public <T> T actOnProject(ContextCallable<AbstractProject<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(project, MasterComputer.localChannel);
         }
 
-        public AbstractBuild<?, ?> getBuild() {
+        public Run<?, ?> getBuild() {
             return build;
         }
 
@@ -734,15 +737,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
-                public <T> T actOnBuild(ContextCallable<AbstractBuild<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
 
-                public <T> T actOnProject(ContextCallable<AbstractProject<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(project,Channel.current());
                 }
 
-                public AbstractBuild<?, ?> getBuild() {
+                public Run<?, ?> getBuild() {
                     return build;
                 }
 
@@ -763,7 +766,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Build determineRevisionToBuild(final AbstractBuild build,
+    private @NonNull Build determineRevisionToBuild(final Run build,
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
@@ -790,7 +793,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = environment.expand( getSingleBranch(environment) );
 
-        final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build, environment);
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                 false, singleBranch, git, listener, buildData, context);
 
@@ -802,12 +805,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
-            AbstractProject<?, ?> project = build.getProject();
+            Job<?, ?> job = build.getParent();
+            if (job instanceof AbstractProject) {
+                AbstractProject project = (AbstractProject) job;
             if (!project.isDisabled()) {
                 log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
                 if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
                     log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
                 }
+            }
             }
         }
         Revision rev = candidates.iterator().next();
@@ -823,7 +829,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(AbstractBuild build, GitClient git, BuildListener listener) throws IOException, InterruptedException {
+    private void retrieveChanges(Run build, GitClient git, BuildListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         List<RemoteConfig> repos = getParamExpandedRepos(build);
@@ -857,7 +863,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public boolean checkout(AbstractBuild build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile)
+    public boolean checkout(Run build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile)
             throws IOException, InterruptedException {
 
         if (VERBOSE)
@@ -871,7 +877,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
-        GitClient git = createClient(listener,environment,build);
+        GitClient git = createClient(listener, environment, build, workspace);
 
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
@@ -900,10 +906,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         buildData.saveBuild(revToBuild);
-        build.addAction(new GitTagAction(build, buildData));
+        build.addAction(new GitTagAction(build, workspace, buildData));
 
         computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                new BuildChooserContextImpl(build.getProject(), build, environment));
+                new BuildChooserContextImpl(build.getParent(), build, environment));
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
@@ -1054,6 +1060,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public String getDisplayName() {
             return "Git";
+        }
+
+        @Override public boolean isApplicable(Job project) {
+            return true;
         }
 
         public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
@@ -1340,7 +1350,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param workspace
      * @return working directory or null if workspace is null
      */
-    protected FilePath workingDirectory(AbstractProject<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException {
+    protected FilePath workingDirectory(Job<?,?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException {
         // JENKINS-10880: workspace can be null
         if (workspace == null) {
             return null;

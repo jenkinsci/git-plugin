@@ -3,10 +3,12 @@ package hudson.plugins.git.extensions;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -15,15 +17,14 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
-import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.CloneCommand;
-import org.jenkinsci.plugins.gitclient.FetchCommand;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.jenkinsci.plugins.gitclient.GitClient;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import org.jenkinsci.plugins.gitclient.CheckoutCommand;
+import org.jenkinsci.plugins.gitclient.CloneCommand;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
@@ -64,7 +65,18 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *
      * @return working directory or null to let other {@link GitSCMExtension} control it.
      */
+    public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+        if (context instanceof AbstractProject) {
+            return getWorkingDirectory(scm, (AbstractProject) context, workspace, environment, listener);
+        }
+        return null;
+    }
+
+    @Deprecated
     public FilePath getWorkingDirectory(GitSCM scm, AbstractProject<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "getWorkingDirectory", GitSCM.class, Job.class, FilePath.class, EnvVars.class, TaskListener.class)) {
+            return getWorkingDirectory(scm, (Job) context, workspace, environment, listener);
+        }
         return null;
     }
 

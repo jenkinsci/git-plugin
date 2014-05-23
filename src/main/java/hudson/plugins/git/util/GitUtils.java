@@ -200,7 +200,7 @@ public class GitUtils implements Serializable {
         throws IOException,InterruptedException {
         EnvVars env;
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
-        AbstractBuild b = (AbstractBuild)p.getLastBuild();
+        AbstractBuild b = p.getLastBuild();
 
         if (reuseLastBuildEnv && b != null) {
             Node lastBuiltOn = b.getBuiltOn();

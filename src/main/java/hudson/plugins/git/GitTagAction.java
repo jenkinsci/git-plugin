@@ -5,7 +5,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.util.BuildData;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
@@ -38,10 +37,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     private final String ws;
 
-    protected GitTagAction(AbstractBuild build, BuildData buildData) {
+    protected GitTagAction(Run build, FilePath workspace, BuildData buildData) {
         super(build);
         List<String> val = new ArrayList<String>();
-        this.ws = build.getWorkspace().getRemote();
+        this.ws = workspace.getRemote();
         for (Branch b : buildData.lastBuild.revision.getBranches()) {
             tags.put(b.getName(), new ArrayList<String>());
         }
@@ -184,7 +183,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             for (String b : tagSet.keySet()) {
                 try {
                     String buildNum = "jenkins-"
-                                     + build.getProject().getName().replace(" ", "_")
+                                     + build.getParent().getName().replace(" ", "_")
                                      + "-" + tagSet.get(b);
                     git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
 
