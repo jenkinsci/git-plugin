@@ -21,6 +21,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -962,13 +963,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         changelog.includes(revToBuild.getSha1());
         try {
             boolean exclusion = false;
-            for (Branch b : revToBuild.getBranches()) {
-                Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
-                if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
-                    changelog.excludes(lastRevWas.getSHA1());
-                    exclusion = true;
+            ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
+            if (changelogToBranch != null) {
+                listener.getLogger().println("Using 'Changelog to branch' strategy.");
+                changelog.excludes(changelogToBranch.getOptions().getRef());
+                exclusion = true;
+            } else {
+                for (Branch b : revToBuild.getBranches()) {
+                    Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
+                    if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
+                        changelog.excludes(lastRevWas.getSHA1());
+                        exclusion = true;
+                    }
                 }
             }
+
             if (!exclusion) {
                 // this is the first time we are building this branch, so there's no base line to compare against.
                 // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
