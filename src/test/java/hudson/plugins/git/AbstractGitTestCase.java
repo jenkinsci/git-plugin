@@ -1,11 +1,17 @@
 package hudson.plugins.git;
 
-import com.google.common.collect.Lists;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.FreeStyleBuild;
+import hudson.model.Hudson;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.model.AbstractBuild;
+import hudson.model.Cause;
+import hudson.model.FreeStyleProject;
+import hudson.model.Node;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -14,6 +20,8 @@ import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.triggers.SCMTrigger;
+import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
@@ -25,8 +33,8 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
 
 /**
@@ -135,9 +143,9 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
     }
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
-                                          String relativeTargetDir, String excludedRegions,
-                                          String excludedUsers, String localBranch, boolean fastRemotePoll,
-                                          String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
+                String relativeTargetDir, String excludedRegions,
+                String excludedUsers, String localBranch, boolean fastRemotePoll,
+                String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
@@ -160,6 +168,36 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         return project;
     }
 
+    /**
+     * Creates a new project and configures the GitSCM according the parameters.
+     * @param repos
+     * @param branchSpecs
+     * @param scmTriggerSpec
+     * @param disableRemotePoll Disable Workspace-less polling via "git ls-remote"
+     * @return
+     * @throws Exception
+     */
+    protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
+                String scmTriggerSpec, boolean disableRemotePoll) throws Exception {
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                    repos,
+                    branchSpecs,
+                    false, Collections.<SubmoduleConfig>emptyList(),
+                    null, null,
+                    Collections.<GitSCMExtension>emptyList());
+        if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
+        project.setScm(scm);
+        if(!isBlank(scmTriggerSpec)) {
+            SCMTrigger trigger = new SCMTrigger(scmTriggerSpec);
+            project.addTrigger(trigger);
+            trigger.start(project, true);
+        }
+        //project.getBuildersList().add(new CaptureEnvironmentBuilder());
+        project.save();
+        return project;
+    }
+    
     protected FreeStyleProject setupSimpleProject(String branchString) throws Exception {
         return setupProject(branchString,false);
     }
