@@ -9,6 +9,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitException;
@@ -110,14 +111,37 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *      The revision selected for this build. Unless you are decorating the given {@code rev}, return the value
      *      given in the {@code rev} parameter.
      */
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            return decorateRevisionToBuild(scm, (AbstractBuild) build, git, listener, rev);
+        } else {
+            return rev;
+        }
+    }
+    
+    @Deprecated
     public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException, GitException {
-        return rev;
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateRevisionToBuild", GitSCM.class, Run.class, GitClient.class, BuildListener.class, Revision.class)) {
+            return decorateRevisionToBuild(scm, (Run) build, git, listener, rev);
+        } else {
+            return rev;
+        }
     }
 
     /**
      * Called before the checkout activity (including fetch and checkout) starts.
      */
+    public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            beforeCheckout(scm, (AbstractBuild) build, git, listener);
+        }
+    }
+
+    @Deprecated
     public void beforeCheckout(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "beforeCheckout", GitSCM.class, Run.class, GitClient.class, BuildListener.class)) {
+            beforeCheckout(scm, (Run) build, git, listener);
+        }
     }
 
     /**
@@ -129,7 +153,17 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * Do not move the HEAD to another commit, as by this point the commit to be built is already determined
      * and recorded (such as changelog.)
      */
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            onCheckoutCompleted(scm, (AbstractBuild) build, git, listener);
+        }
+    }
+
+    @Deprecated
     public void onCheckoutCompleted(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "onCheckoutCompleted", GitSCM.class, Run.class, GitClient.class, BuildListener.class)) {
+            onCheckoutCompleted(scm, (Run) build, git, listener);
+        }
     }
 
     /**
@@ -151,7 +185,17 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
      */
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            decorateCloneCommand(scm, (AbstractBuild) build, git, listener, cmd);
+        }
+    }
+
+    @Deprecated
     public void decorateCloneCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateCloneCommand", GitSCM.class, Run.class, GitClient.class, BuildListener.class, CloneCommand.class)) {
+            decorateCloneCommand(scm, (Run) build, git, listener, cmd);
+        }
     }
 
     /**
@@ -163,13 +207,33 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Called before a {@link MergeCommand} is executed to allow extensions to alter its behaviour.
      */
+    public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            decorateMergeCommand(scm, (AbstractBuild) build, git, listener, cmd);
+        }
+    }
+
+    @Deprecated
     public void decorateMergeCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateMergeCommand", GitSCM.class, Run.class, GitClient.class, BuildListener.class, MergeCommand.class)) {
+            decorateMergeCommand(scm, (Run) build, git, listener, cmd);
+        }
     }
 
     /**
      * Called before a {@link CheckoutCommand} is executed to allow extensions to alter its behaviour.
      */
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild) {
+            decorateCheckoutCommand(scm, (AbstractBuild) build, git, listener, cmd);
+        }
+    }
+
+    @Deprecated
     public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateCheckoutCommand", GitSCM.class, Run.class, GitClient.class, BuildListener.class, CheckoutCommand.class)) {
+            decorateCheckoutCommand(scm, (Run) build, git, listener, cmd);
+        }
     }
 
     /**

@@ -1,8 +1,8 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Run;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -23,7 +23,7 @@ public class WipeWorkspace extends GitSCMExtension {
     }
 
     @Override
-    public void beforeCheckout(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void beforeCheckout(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Wiping out workspace first.");
         git.getWorkTree().deleteContents();
     }

@@ -333,7 +333,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * Gets the parameter-expanded effective value in the context of the current build.
      */
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+    public String getParamLocalBranch(Run<?, ?> build) throws IOException, InterruptedException {
         String branch = getLocalBranch();
         // substitute build parameters if available
         return getParameterString(branch != null ? branch : null, build.getEnvironment());
