@@ -1,8 +1,8 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
-import hudson.model.BuildListener;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -23,7 +23,7 @@ public class PerBuildTag extends GitSCMExtension {
     }
 
     @Override
-    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener) throws IOException, InterruptedException, GitException {
+    public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         int buildNumber = build.getNumber();
         String buildnumber = "jenkins-" + build.getParent().getName().replace(" ", "_") + "-" + buildNumber;
 

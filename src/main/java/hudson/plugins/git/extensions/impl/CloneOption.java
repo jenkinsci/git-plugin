@@ -1,7 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
-import hudson.model.BuildListener;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
@@ -45,7 +44,7 @@ public class CloneOption extends GitSCMExtension {
     }
 
     @Override
-    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (shallow) {
             listener.getLogger().println("Using shallow clone");
             cmd.shallow();

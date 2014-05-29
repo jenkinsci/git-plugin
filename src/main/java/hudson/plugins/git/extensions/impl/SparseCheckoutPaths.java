@@ -2,8 +2,8 @@ package hudson.plugins.git.extensions.impl;
 
 import com.google.common.collect.Lists;
 import hudson.Extension;
-import hudson.model.BuildListener;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -30,7 +30,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     }
 
     @Override
-    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (! sparseCheckoutPaths.isEmpty()) {
             listener.getLogger().println("Using no checkout clone with sparse checkout.");
             cmd.noCheckout();
@@ -38,7 +38,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     }
 
     @Override
-    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, SparseCheckoutPath.SPARSE_CHECKOUT_PATH_TO_PATH));
     }
 

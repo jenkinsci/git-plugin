@@ -555,7 +555,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
      * perform additional git operations.
      */
-    public GitClient createClient(BuildListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         ws.mkdirs(); // ensure it exists
         return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
@@ -770,7 +770,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
-                                              final BuildListener listener) throws IOException, InterruptedException {
+                                              final TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
 
         // every MatrixRun should build the exact same commit ID
@@ -829,7 +829,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(Run build, GitClient git, BuildListener listener) throws IOException, InterruptedException {
+    private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         List<RemoteConfig> repos = getParamExpandedRepos(build);
@@ -863,7 +863,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public boolean checkout(Run build, Launcher launcher, FilePath workspace, BuildListener listener, File changelogFile)
+    public boolean checkout(Run build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile)
             throws IOException, InterruptedException {
 
         if (VERBOSE)
@@ -960,7 +960,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, BuildListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
         boolean executed = false;
