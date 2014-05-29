@@ -3,11 +3,10 @@ package hudson.plugins.git.extensions.impl;
 import hudson.Extension;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * When used with {@link MultiSCM}, this differentiates a different instance.
+ * When used with {@code org.jenkinsci.plugins.multiplescms.MultiSCM}, this differentiates a different instance.
  *
  * @author Kohsuke Kawaguchi
  */
