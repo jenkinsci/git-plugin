@@ -863,7 +863,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public boolean checkout(Run build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile)
+    public void checkout(Run build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile)
             throws IOException, InterruptedException {
 
         if (VERBOSE)
@@ -916,8 +916,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
         }
-
-        return true;
     }
 
     /**
