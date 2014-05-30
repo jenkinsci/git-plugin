@@ -368,7 +368,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     public String getCommentAnnotated() {
         MarkupText markup = new MarkupText(getComment());
         for (ChangeLogAnnotator a : ChangeLogAnnotator.all())
-            a.annotate(getParent().build,this,markup);
+            a.annotate(getParent().getBuild(), this, markup);
 
         return markup.toString(false);
     }
