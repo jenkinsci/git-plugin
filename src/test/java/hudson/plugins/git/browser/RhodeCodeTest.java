@@ -1,9 +1,9 @@
 package hudson.plugins.git.browser;
 
+import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -11,9 +11,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-
 import junit.framework.TestCase;
-
 import org.xml.sax.SAXException;
 
 
@@ -92,7 +90,7 @@ public class RhodeCodeTest extends TestCase {
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
         final File rawchangelog = new File(RhodeCodeTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse(null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, rawchangelog).getLogs();
         return changeSetList.get(0);
     }
 

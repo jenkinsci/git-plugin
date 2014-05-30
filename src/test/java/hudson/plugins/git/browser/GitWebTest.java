@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
@@ -82,7 +83,7 @@ public class GitWebTest extends TestCase {
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
         final File rawchangelog = new File(GitWebTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse(null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, rawchangelog).getLogs();
         return changeSetList.get(0);
     }
 

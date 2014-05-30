@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import hudson.model.Run;
 import java.io.File;
 import java.io.FileWriter;
 
@@ -24,7 +25,7 @@ public class GitChangeLogParserTest extends HudsonTestCase {
         writer.write("commit 123abc456def\n");
         writer.write("    second message");
         writer.close();
-        GitChangeSetList list = parser.parse(null, log);
+        GitChangeSetList list = parser.parse((Run) null, log);
         assertNotNull(list);
         assertNotNull(list.getLogs());
         assertEquals(1, list.getLogs().size());
