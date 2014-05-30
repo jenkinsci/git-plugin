@@ -908,8 +908,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(revToBuild);
         build.addAction(new GitTagAction(build, workspace, buildData));
 
-        computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                new BuildChooserContextImpl(build.getParent(), build, environment));
+        if (changelogFile != null) {
+            computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
+                    new BuildChooserContextImpl(build.getParent(), build, environment));
+        }
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
