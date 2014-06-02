@@ -11,7 +11,9 @@ import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
+import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -33,6 +35,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
@@ -178,15 +181,16 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
      * @throws Exception
      */
     protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
-                String scmTriggerSpec, boolean disableRemotePoll) throws Exception {
+                String scmTriggerSpec, boolean disableRemotePoll, EnforceGitClient enforceGitClient) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
                     repos,
                     branchSpecs,
                     false, Collections.<SubmoduleConfig>emptyList(),
-                    null, null,
+                    null, JGitTool.MAGIC_EXENAME,
                     Collections.<GitSCMExtension>emptyList());
         if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
+        if(enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
         project.setScm(scm);
         if(!isBlank(scmTriggerSpec)) {
             SCMTrigger trigger = new SCMTrigger(scmTriggerSpec);
