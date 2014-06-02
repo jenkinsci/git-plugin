@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import static java.util.Arrays.asList;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.scm.PollingResult;
 import hudson.util.IOUtils;
 import hudson.util.RunList;
@@ -22,9 +23,8 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
-public class SCMTriggerTest extends AbstractGitTestCase
+public abstract class SCMTriggerTest extends AbstractGitTestCase
 {
-    private boolean SKIP_FAILING_TESTS = true;
     
     private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
@@ -33,8 +33,13 @@ public class SCMTriggerTest extends AbstractGitTestCase
     @Override
     protected void tearDown() throws Exception
     {
-        super.tearDown();
-        tempAllocator.dispose();
+        try { //Avoid test failures due to failed cleanup tasks
+            super.tearDown();
+            tempAllocator.dispose();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -45,9 +50,11 @@ public class SCMTriggerTest extends AbstractGitTestCase
         tempAllocator = new TemporaryDirectoryAllocator();
     }
     
+    protected abstract EnforceGitClient getGitClient();
+    
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/master", false, 
+            "refs/heads/master", false,
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
@@ -67,17 +74,15 @@ public class SCMTriggerTest extends AbstractGitTestCase
     }
 
     public void testNamespaces_with_master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         check(namespaceRepoZip, namespaceRepoCommits,
-            "master", false, 
+            "master", false,
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
-    // This one works by accident! ls-remote lists this as first entry 
     public void testNamespaces_with_namespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "a_tests/b_namespace1/master", false, 
+            "a_tests/b_namespace1/master", false,
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace1/master"),
             "origin/a_tests/b_namespace1/master");
     }
@@ -90,9 +95,8 @@ public class SCMTriggerTest extends AbstractGitTestCase
     }
 
     public void testNamespaces_with_namespace2Master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         check(namespaceRepoZip, namespaceRepoCommits,
-            "a_tests/b_namespace2/master", false, 
+            "a_tests/b_namespace2/master", false,
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
@@ -105,38 +109,34 @@ public class SCMTriggerTest extends AbstractGitTestCase
     }
     
     public void testTags_with_TagA() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         check(namespaceRepoZip, namespaceRepoCommits,
-            "TagA", false, 
+            "TagA", false,
             namespaceRepoCommits.getProperty("refs/tags/TagA"),
-            null); //What do we expect!?
+            "refs/tags/TagA"); //TODO: What do we expect!?
     }
 
     public void testTags_with_TagBAnnotated() throws Exception {
-        //TODO Is this what we expect??
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagBAnnotated", false, 
             namespaceRepoCommits.getProperty("refs/tags/TagBAnnotated^{}"),
-            "refs/tags/TagBAnnotated^{}");
+            "refs/tags/TagBAnnotated^{}"); //TODO: What do we expect!?
     }
 
     public void testTags_with_refsTagsTagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/tags/TagA", false, 
+            "refs/tags/TagA", false,
             namespaceRepoCommits.getProperty("refs/tags/TagA"),
-            "refs/tags/TagA");
+            "refs/tags/TagA"); //TODO: What do we expect!?
     }
 
     public void testTags_with_refsTagsTagBAnnotated() throws Exception {
-        //if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/tags/TagBAnnotated^{}", false, 
+            "refs/tags/TagBAnnotated", false,
             namespaceRepoCommits.getProperty("refs/tags/TagBAnnotated^{}"),
-            null); //What do we expect!?
+            "refs/tags/TagBAnnotated");
     }
 
     public void testCommitAsBranchSpec() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         check(namespaceRepoZip, namespaceRepoCommits,
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), false, 
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"),
@@ -144,15 +144,15 @@ public class SCMTriggerTest extends AbstractGitTestCase
     }
 
     
-    public void check(ZipFile repoZip, Properties commits, String branchSpec, boolean disableRemotePoll,
-                String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
+    public void check(ZipFile repoZip, Properties commits, String branchSpec, 
+                boolean disableRemotePoll, String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         File tempRemoteDir = tempAllocator.allocate();
         extract(repoZip, tempRemoteDir);
         final String remote = tempRemoteDir.getAbsolutePath();
        
         FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
                     asList(new BranchSpec(branchSpec)),
-                    "* * * * *", disableRemotePoll);
+                    "* * * * *", disableRemotePoll, getGitClient());
         
         FreeStyleBuild build1 = waitForBuildFinished(project, 1, 120000);
         assertNotNull("Job has not been triggered", build1);
@@ -219,5 +219,5 @@ public class SCMTriggerTest extends AbstractGitTestCase
             }
         }
     }
-    
+
 }
