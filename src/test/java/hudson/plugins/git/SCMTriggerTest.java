@@ -52,107 +52,109 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     
     protected abstract EnforceGitClient getGitClient();
     
+    protected abstract boolean isDisableRemotePoll();
+    
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/master", false,
+            "refs/heads/master",
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
     public void testNamespaces_with_remotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "remotes/origin/master", false, 
+            "remotes/origin/master", 
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
     public void testNamespaces_with_refsRemotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/remotes/origin/master", false, 
+            "refs/remotes/origin/master", 
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
     public void testNamespaces_with_master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "master", false,
+            "master",
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
     public void testNamespaces_with_namespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "a_tests/b_namespace1/master", false,
+            "a_tests/b_namespace1/master",
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace1/master"),
             "origin/a_tests/b_namespace1/master");
     }
 
     public void testNamespaces_with_refsHeadsNamespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/a_tests/b_namespace1/master", false, 
+            "refs/heads/a_tests/b_namespace1/master", 
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace1/master"),
             "origin/a_tests/b_namespace1/master");
     }
 
     public void testNamespaces_with_namespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "a_tests/b_namespace2/master", false,
+            "a_tests/b_namespace2/master",
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
 
     public void testNamespaces_with_refsHeadsNamespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/a_tests/b_namespace2/master", false, 
+            "refs/heads/a_tests/b_namespace2/master", 
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
     
     public void testTags_with_TagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "TagA", false,
+            "TagA",
             namespaceRepoCommits.getProperty("refs/tags/TagA"),
-            "refs/tags/TagA"); //TODO: What do we expect!?
+            "TagA"); //TODO: What do we expect!?
     }
 
     public void testTags_with_TagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "TagBAnnotated", false, 
+            "TagBAnnotated", 
             namespaceRepoCommits.getProperty("refs/tags/TagBAnnotated^{}"),
-            "refs/tags/TagBAnnotated^{}"); //TODO: What do we expect!?
+            "TagBAnnotated"); //TODO: What do we expect!?
     }
 
     public void testTags_with_refsTagsTagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/tags/TagA", false,
+            "refs/tags/TagA",
             namespaceRepoCommits.getProperty("refs/tags/TagA"),
             "refs/tags/TagA"); //TODO: What do we expect!?
     }
 
     public void testTags_with_refsTagsTagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/tags/TagBAnnotated", false,
+            "refs/tags/TagBAnnotated",
             namespaceRepoCommits.getProperty("refs/tags/TagBAnnotated^{}"),
             "refs/tags/TagBAnnotated");
     }
 
     public void testCommitAsBranchSpec() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), false, 
+            namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), 
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"),
-            "origin/b_namespace3/master");
+            "detached");
     }
 
     
     public void check(ZipFile repoZip, Properties commits, String branchSpec, 
-                boolean disableRemotePoll, String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
+            String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         File tempRemoteDir = tempAllocator.allocate();
         extract(repoZip, tempRemoteDir);
         final String remote = tempRemoteDir.getAbsolutePath();
        
         FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
                     asList(new BranchSpec(branchSpec)),
-                    "* * * * *", disableRemotePoll, getGitClient());
+                    "* * * * *", isDisableRemotePoll(), getGitClient());
         
         FreeStyleBuild build1 = waitForBuildFinished(project, 1, 120000);
         assertNotNull("Job has not been triggered", build1);
