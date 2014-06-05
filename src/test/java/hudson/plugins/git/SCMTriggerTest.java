@@ -1,10 +1,12 @@
 package hudson.plugins.git;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.scm.PollingResult;
+import hudson.triggers.SCMTrigger;
 import hudson.util.IOUtils;
 import hudson.util.RunList;
 
@@ -15,6 +17,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -29,12 +37,14 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
+    private ExecutorService singleThreadExecutor;
         
     @Override
     protected void tearDown() throws Exception
     {
         try { //Avoid test failures due to failed cleanup tasks
             super.tearDown();
+            singleThreadExecutor.shutdownNow();
             tempAllocator.dispose();
         }
         catch (Exception e) {
@@ -48,6 +58,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
         tempAllocator = new TemporaryDirectoryAllocator();
+        singleThreadExecutor = Executors.newSingleThreadExecutor();
     }
     
     protected abstract EnforceGitClient getGitClient();
@@ -154,13 +165,21 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
        
         FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
                     asList(new BranchSpec(branchSpec)),
-                    "* * * * *", isDisableRemotePoll(), getGitClient());
+                    //empty scmTriggerSpec, SCMTrigger triggered manually
+                    "", isDisableRemotePoll(), getGitClient()); 
         
-        FreeStyleBuild build1 = waitForBuildFinished(project, 1, 120000);
+        //Speedup test - avoid waiting 1 minute
+        triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
+        
+        FreeStyleBuild build1 = waitForBuildFinished(project, 1, 60000);
         assertNotNull("Job has not been triggered", build1);
 
         PollingResult poll = project.poll(listener);
         assertFalse("Polling found new changes although nothing new", poll.hasChanges());
+        
+        //Speedup test - avoid waiting 1 minute
+        triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
+        
         FreeStyleBuild build2 = waitForBuildFinished(project, 2, 2000);
         assertNull("Found build 2 although no new changes and no multi candidate build", build2);
         
@@ -170,6 +189,19 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
                     expected_GIT_BRANCH, build1.getEnvironment(null).get("GIT_BRANCH"));
     }
  
+    private Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
+    {
+        if(trigger == null) return null;
+        Callable<Void> callable = new Callable<Void>() {
+            public Void call() throws Exception
+            {
+                trigger.run();
+                return null;
+            }
+        };
+        return singleThreadExecutor.submit(callable);
+    }
+
     private FreeStyleBuild waitForBuildFinished(FreeStyleProject project, int expectedBuildNumber, long timeout)
                 throws Exception
     {
