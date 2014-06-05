@@ -192,7 +192,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
         if(enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
         project.setScm(scm);
-        if(!isBlank(scmTriggerSpec)) {
+        if(scmTriggerSpec != null) {
             SCMTrigger trigger = new SCMTrigger(scmTriggerSpec);
             project.addTrigger(trigger);
             trigger.start(project, true);
