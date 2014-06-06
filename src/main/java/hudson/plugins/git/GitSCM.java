@@ -34,7 +34,6 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.IOException2;
-import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -70,7 +69,10 @@ import java.util.logging.Logger;
 import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
+import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -305,6 +307,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public GitRepositoryBrowser getBrowser() {
         return browser;
+    }
+    
+    @Override public RepositoryBrowser<?> guessBrowser() {
+        if (remoteRepositories != null && remoteRepositories.size() == 1) {
+            List<URIish> uris = remoteRepositories.get(0).getURIs();
+            if (uris.size() == 1) {
+                String uri = uris.get(0).toString();
+                // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
+                Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
+                if (m.matches()) {
+                    return new GithubWeb(m.group(1) + "/");
+                }
+                m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
+                if (m.matches()) {
+                    return new GithubWeb("https://github.com/" + m.group(1) + "/");
+                }
+                // TODO match also
+            }
+        }
+        return null;
     }
 
     public boolean isCreateAccountBasedOnEmail() {
