@@ -264,6 +264,11 @@
       <artifactId>matrix-project</artifactId>
       <version>1.2</version>
     </dependency>
+    <dependency> <!-- TODO so long as we depend on a new core version, this is required to compile: -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+      <version>1.8</version>
+    </dependency>
 
 
     <dependency>
