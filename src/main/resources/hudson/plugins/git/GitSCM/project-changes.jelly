@@ -40,13 +40,14 @@ THE SOFTWARE.
     <j:otherwise>
       <j:set var="hadChanges" value="${false}"/>
       <j:forEach var="b" items="${builds}">
-        <j:if test="${b.changeSet.iterator().hasNext()}">
+        <j:forEach var="changeSet" items="${b.changeSets}">
+          <j:set var="browser" value="${changeSet.browser}"/>
           <j:set var="hadChanges" value="${true}"/>
           <h2><a href="${b.number}/changes">${b.displayName}
             (<i:formatDate value="${b.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>)</a></h2>
 
           <ol>
-            <j:forEach var="c" items="${b.changeSet.iterator()}" varStatus="loop">
+            <j:forEach var="c" items="${changeSet.iterator()}" varStatus="loop">
               <li value="${loop.index + 1}">
                 ${c.msgAnnotated}
 
@@ -66,7 +67,7 @@ THE SOFTWARE.
               </li>
             </j:forEach>
           </ol>
-        </j:if>
+        </j:forEach>
       </j:forEach>
       <j:if test="${!hadChanges}">
         ${%No changes in any of the builds.}
