@@ -177,7 +177,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Handle standard {@link AbstractProject} instances with a standard {@link SCMTrigger}.
+     * Handle standard {@link SCMTriggerItem} instances with a standard {@link SCMTrigger}.
      *
      * @since 1.4.1
      */
@@ -204,7 +204,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     if (project == null) {
                         continue;
                     }
-                    for (SCM scm : scmTriggerItem.getSCMs()) {
+                    SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
                         if (!(scm instanceof GitSCM)) {
                             continue;
                         }
@@ -258,6 +258,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
+                                    break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
                                 }
                             }
                             break;
