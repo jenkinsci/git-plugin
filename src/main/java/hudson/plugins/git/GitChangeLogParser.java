@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
+import hudson.scm.RepositoryBrowser;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -34,7 +35,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         return parse(changelog.iterator());
     }
 
-    @Override public GitChangeSetList parse(Run build, File changelogFile)
+    @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
         throws IOException, SAXException {
         
         Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
@@ -43,7 +44,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         LineIterator lineIterator = null;
         try {
         	lineIterator = FileUtils.lineIterator(changelogFile);
-        	return new GitChangeSetList(build, parse(lineIterator));
+        	return new GitChangeSetList(build, browser, parse(lineIterator));
         } finally {
         	LineIterator.closeQuietly(lineIterator);
         }

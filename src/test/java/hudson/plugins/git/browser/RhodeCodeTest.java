@@ -90,7 +90,7 @@ public class RhodeCodeTest extends TestCase {
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
         final File rawchangelog = new File(RhodeCodeTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
         return changeSetList.get(0);
     }
 
