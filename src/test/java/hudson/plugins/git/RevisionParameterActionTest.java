@@ -29,14 +29,8 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 
-import org.eclipse.jgit.lib.ObjectId;
-import org.jvnet.hudson.test.HudsonTestCase;
-
 import java.util.concurrent.Future;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Tests for {@link RevisionParameterAction}
@@ -54,8 +48,8 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("FREED456")));
+        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("FREED456")));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
@@ -72,12 +66,14 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2); // TODO fails in 1.521+ (along with other assertNull calls), perhaps due to fix of JENKINS-18407
+        /* As of 1.521 this is non-null, although the future yields the same build as b1:
+        assertNull(b2);
+        */
         
         // Check that only one build occurred
         waitUntilNoActivity();
@@ -90,8 +86,8 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20);
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
+        Future b1 = fs.scheduleBuild2(3);
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
@@ -109,12 +105,12 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("FFEEFFEE", true)));
+        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("FFEEFFEE", true)));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        //assertNull(b2);
 
         // Check that only one build occurred
         waitUntilNoActivity();
@@ -132,12 +128,12 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        //assertNull(b2);
 
         // Check that only one build occurred
         waitUntilNoActivity();
@@ -154,8 +150,8 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         FreeStyleProject fs = createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(20);
-        Future b2 = fs.scheduleBuild2(20, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
+        Future b1 = fs.scheduleBuild2(3);
+        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
 
         // Check that we have the correct futures.
         assertNotNull(b1);
