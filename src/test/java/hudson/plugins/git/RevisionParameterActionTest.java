@@ -29,14 +29,8 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 
-import org.eclipse.jgit.lib.ObjectId;
-import org.jvnet.hudson.test.HudsonTestCase;
-
 import java.util.concurrent.Future;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Tests for {@link RevisionParameterAction}
@@ -77,7 +71,9 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2); // TODO fails in 1.521+ (along with other assertNull calls), perhaps due to fix of JENKINS-18407
+        /* As of 1.521 this is non-null, although the future yields the same build as b1:
+        assertNull(b2);
+        */
         
         // Check that only one build occurred
         waitUntilNoActivity();
@@ -114,7 +110,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        //assertNull(b2);
 
         // Check that only one build occurred
         waitUntilNoActivity();
@@ -137,7 +133,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 
         // Check that we have the correct futures.
         assertNotNull(b1);
-        assertNull(b2);
+        //assertNull(b2);
 
         // Check that only one build occurred
         waitUntilNoActivity();
