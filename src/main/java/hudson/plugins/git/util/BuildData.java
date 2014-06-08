@@ -119,6 +119,13 @@ public class BuildData implements Action, Serializable, Cloneable {
                     return true;
             }
 
+            // We don't keep track of non-branch builds (such as tags, sha1s, etc.).
+            // But we can compare against the last build.
+            Revision lastBuiltRevision = getLastBuiltRevision();
+            if (lastBuiltRevision != null && lastBuiltRevision.getSha1().equals(sha1)) {
+                return true;
+            }
+
             return false;
     	}
     	catch(Exception ex) {

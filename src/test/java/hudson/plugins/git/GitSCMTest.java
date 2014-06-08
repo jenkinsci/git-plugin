@@ -632,6 +632,123 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    public void testGitSCMCanBuildAgainstTagsWithMultipleRepositories() throws Exception {
+        final String mytag = "mytag";
+        FreeStyleProject project = setupSimpleProject(mytag);
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        GitSCM scm = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec(mytag)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+
+        // Try again. The first build will leave the repository in a bad state because we
+        // cloned something without even a HEAD - which will mean it will want to re-clone once there is some
+        // actual data.
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
+        //now create and checkout a new branch:
+        final String tmpBranch = "tmp";
+        git.branch(tmpBranch);
+        git.checkout(tmpBranch);
+        // commit to it
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.poll(listener).hasChanges());
+        build(project, Result.FAILURE);  // fail, because there's nothing to be checked out here
+
+        // tag it, then delete the tmp branch
+        git.tag(mytag, "mytag initial");
+        git.checkout("master");
+        git.deleteBranch(tmpBranch);
+
+        // at this point we're back on master, there are no other branches, tag "mytag" exists but is
+        // not part of "master"
+        assertTrue("scm polling should detect commit2 change in 'mytag'", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+
+        // now, create tmp branch again against mytag:
+        git.checkout(mytag);
+        git.branch(tmpBranch);
+        // another commit:
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.poll(listener).hasChanges());
+
+        // now we're going to force mytag to point to the new commit, if everything goes well, gitSCM should pick the change up:
+        git.tag(mytag, "mytag moved");
+        git.checkout("master");
+        git.deleteBranch(tmpBranch);
+
+        // at this point we're back on master, there are no other branches, "mytag" has been updated to a new commit:
+        assertTrue("scm polling should detect commit3 change in 'mytag'", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile3);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+    }
+
+    public void testGitSCMCanBuildQualifiedTagWithMultipleRepositories() throws Exception {
+        final String mytag = "mytag";
+        FreeStyleProject project = setupSimpleProject(mytag);
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        GitSCM scm = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("tags/" + mytag)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+
+        // Try again. The first build will leave the repository in a bad state because we
+        // cloned something without even a HEAD - which will mean it will want to re-clone once there is some
+        // actual data.
+        build(project, Result.FAILURE); // fail, because there's nothing to be checked out here
+
+        //now create and checkout a new branch:
+        final String tmpBranch = "tmp";
+        git.branch(tmpBranch);
+        git.checkout(tmpBranch);
+        // commit to it
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        assertFalse("scm polling should not detect any more changes since mytag is untouched right now", project.poll(listener).hasChanges());
+        build(project, Result.FAILURE);  // fail, because there's nothing to be checked out here
+
+        // tag it, then delete the tmp branch
+        git.tag(mytag, "mytag initial");
+        git.checkout("master");
+        git.deleteBranch(tmpBranch);
+
+        // at this point we're back on master, there are no other branches, tag "mytag" exists but is
+        // not part of "master"
+        assertTrue("scm polling should detect commit2 change in 'mytag'", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+    }
+
+
     /**
      * Not specifying a branch string in the project implies that we should be polling for changes in
      * all branches.

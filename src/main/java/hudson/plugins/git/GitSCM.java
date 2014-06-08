@@ -403,7 +403,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     /**
      * If the configuration is such that we are tracking just one branch of one repository
-     * return that branch specifier (in the form of something like "origin/master" or a SHA1-hash
+     * return that branch specifier (in the form of something like "origin/master",
+     * "refs/tags/mytag" or a SHA1-hash).
      *
      * Otherwise return null.
      */
@@ -417,6 +418,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // substitute build parameters if available
         branch = getParameterString(branch, env);
+
+        // if the branch name is a tag, qualify as a tag
+        String tag = null;
+        if (branch.startsWith("refs/tags/")) {
+            tag = branch.substring("refs/tags/".length());
+        } else if (branch.startsWith("tags/")) {
+            tag = branch.substring("tags/".length());
+        }
+        if (tag != null && !tag.equals("") && !tag.contains("*")) {
+            return "refs/tags/" + tag;
+        }
 
         if (branch.startsWith("remotes/")) {
             branch = branch.substring(8);
@@ -465,7 +477,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
-        return getSingleBranch(new EnvVars()) == null;
+
+        String singleBranch = getSingleBranch(new EnvVars());
+
+        // ls-remote supports looking up tags, but git-client doesn't provide a way
+        // to look up tags without a workspace.
+        // TODO: Add getTagRev to git-client.
+        if (singleBranch != null && singleBranch.startsWith("refs/tags/")) {
+            return true;
+        }
+
+        return singleBranch == null;
     }
 
     @Override
