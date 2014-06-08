@@ -86,27 +86,41 @@ public class DefaultBuildChooser extends BuildChooser {
             // either the branch is qualified (first part should match a valid remote)
             // or it is still unqualified, but the branch name contains a '/'
             List<String> possibleQualifiedBranches = new ArrayList<String>();
+
+            // first, try to match a specific remote
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
-                String fqbn;
+                String fqbn = null;
                 if (branchSpec.startsWith(repository + "/")) {
                     fqbn = "refs/remotes/" + branchSpec;
                 } else if(branchSpec.startsWith("remotes/" + repository + "/")) {
                     fqbn = "refs/" + branchSpec;
-                } else if(branchSpec.startsWith("refs/heads/")) {
-                    fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
-                } else {
-                    //Try branchSpec as it is - e.g. "refs/tags/mytag"
-                    fqbn = branchSpec;
                 }
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                if (fqbn != null) {
+                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    possibleQualifiedBranches.add(fqbn);
+                }
+            }
+
+            // if no remote match, try as is and in every remote
+            if (possibleQualifiedBranches.isEmpty()) {
+                //Try branchSpec as it is - e.g. "refs/tags/mytag"
+                String fqbn = branchSpec;
+                verbose(listener, "Qualifying {0} as is -> {1}", branchSpec, fqbn);
                 possibleQualifiedBranches.add(fqbn);
 
-                //Check if exact branch name <branchSpec> existss
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec;
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                possibleQualifiedBranches.add(fqbn);
+                for (RemoteConfig config : gitSCM.getRepositories()) {
+                    String repository = config.getName();
+                    if(branchSpec.startsWith("refs/heads/")) {
+                        fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
+                    } else {
+                        fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                    }
+                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    possibleQualifiedBranches.add(fqbn);
+                }
             }
+
             for (String fqbn : possibleQualifiedBranches) {
               revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }

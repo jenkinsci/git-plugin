@@ -409,15 +409,35 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private String getSingleBranch(EnvVars env) {
         // if we have multiple branches skip to advanced usecase
-        if (getBranches().size() != 1 || getRepositories().size() != 1) {
+        if (getBranches().size() != 1) {
             return null;
         }
 
         String branch = getBranches().get(0).getName();
-        String repository = getRepositories().get(0).getName();
+
+        // substitute build parameters if available
+        branch = getParameterString(branch, env);
+
+        if (branch.startsWith("remotes/")) {
+            branch = branch.substring(8);
+        }
+
+        if (getRepositories().size() > 1) {
+            Boolean oneRemote = false;
+            for (RemoteConfig r : getRepositories()) {
+                if (branch.startsWith(r.getName() + "/")) {
+                    oneRemote = true;
+                    break;
+                }
+            }
+            if (!oneRemote) {
+                return null;
+            }
+        }
 
         // replace repository wildcard with repository name
-        if (branch.startsWith("*/")) {
+        if (branch.startsWith("*/") && getRepositories().size() == 1) {
+            String repository = getRepositories().get(0).getName();
             branch = repository + branch.substring(1);
         }
 
@@ -426,9 +446,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (branch.contains("*")) {
             return null;
         }
-
-        // substitute build parameters if available
-        branch = getParameterString(branch, env);
 
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) {
@@ -488,13 +505,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
-            String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
-            ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
-
-            if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
-                return NO_CHANGES;
+            String gitRepo = null;
+            if (getRepositories().size() > 1) {
+                for (RemoteConfig r : getParamExpandedRepos(lastBuild)) {
+                    if (singleBranch.startsWith(r.getName() + "/")) {
+                        gitRepo = r.getURIs().get(0).toString();
+                        break;
+                    }
+                }
             } else {
-                return BUILD_NOW;
+                gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
+            }
+
+            if (gitRepo != null) {
+                ObjectId head = git.getHeadRev(gitRepo, getParameterString(getBranches().get(0).getName(), environment));
+
+                if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
+                    return NO_CHANGES;
+                } else {
+                    return BUILD_NOW;
+                }
             }
         }
 

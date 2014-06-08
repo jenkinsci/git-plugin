@@ -835,6 +835,44 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    public void testSingleBranchFromMultipleRepositories() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        // Create some commits
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "commitFile2";
+        secondTestRepo.commit(commitFile2, johnDoe, "Commit number 2");
+
+        GitSCM scm1 = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("remotes/origin/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        GitSCM scm2 = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("remotes/origin1/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+
+        // build from 1st repository
+        project.setScm(scm1);
+        build(project, Result.SUCCESS, commitFile1);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        // build from 2nd repository
+        project.setScm(scm2);
+        build(project, Result.SUCCESS, commitFile2);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
     public void testMerge() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
