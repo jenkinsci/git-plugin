@@ -41,9 +41,9 @@ THE SOFTWARE.
   <j:set var="descriptor" value="${it.descriptor}" />
 
   <l:layout norefresh="true" xmlns:local="local">
-    <st:include it="${it.build}" page="sidepanel.jelly" />
+    <st:include it="${it.run}" page="sidepanel.jelly" />
     <l:main-panel>
-      <h1>${%Build} #${it.build.number}</h1>
+      <h1>${%Build} #${it.run.number}</h1>
 
       <j:set var="tags" value="${it.tags}" />
       <j:if test="${it.isTagged()}">
@@ -67,7 +67,7 @@ THE SOFTWARE.
         </j:choose>
       </j:if>
 
-      <j:if test="${h.hasPermission(it.build,it.permission)}">
+      <j:if test="${h.hasPermission(it.run,it.permission)}">
         <j:if test="${it.isTagged()}">
           <h2>${%Create more tags}</h2>
         </j:if>
@@ -97,7 +97,7 @@ THE SOFTWARE.
               <td colspan="3">
                 ${%Commit comment:}
                 <textarea name="comment" rows="1" class="setting-input"><st:out
-                 value="Tagged from ${it.build}"/></textarea>
+                 value="Tagged from ${it.run}"/></textarea>
                 <div class="textarea-handle"/>
               </td>
             </tr>
