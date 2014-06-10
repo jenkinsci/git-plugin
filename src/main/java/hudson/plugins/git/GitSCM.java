@@ -886,7 +886,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public void checkout(Run build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile)
+    public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
 
         if (VERBOSE)
@@ -1301,6 +1301,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Exported
     public List<BranchSpec> getBranches() {
         return branches;
+    }
+
+    @Override public String getKey() {
+        String name = getScmName();
+        if (name != null) {
+            return name;
+        }
+        StringBuilder b = new StringBuilder("git");
+        for (RemoteConfig cfg : getRepositories()) {
+            for (URIish uri : cfg.getURIs()) {
+                b.append(' ').append(uri.toString());
+            }
+        }
+        return b.toString();
     }
 
     /**
