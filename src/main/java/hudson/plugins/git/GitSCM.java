@@ -483,7 +483,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private static Node workspaceToNode(FilePath workspace) {
+    private static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
         Jenkins j = Jenkins.getInstance();
         if (workspace.isRemote()) {
             for (Computer c : j.getComputers()) {
