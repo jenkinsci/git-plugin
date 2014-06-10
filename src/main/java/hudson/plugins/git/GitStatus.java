@@ -201,7 +201,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         urlFound = false;
                 for (final Item project : Jenkins.getInstance().getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
-                    if (project == null) {
+                    if (scmTriggerItem == null) {
                         continue;
                     }
                     SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
