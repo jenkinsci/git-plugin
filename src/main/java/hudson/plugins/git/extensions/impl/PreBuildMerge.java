@@ -2,8 +2,6 @@ package hudson.plugins.git.extensions.impl;
 
 import hudson.AbortException;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
@@ -23,6 +21,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 
 import static hudson.model.Result.FAILURE;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
@@ -48,7 +48,7 @@ public class PreBuildMerge extends GitSCMExtension {
     }
 
     @Override
-    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException {
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision rev) throws IOException, InterruptedException {
         String remoteBranchRef = GitSCM.getParameterString(options.getRef(), build.getEnvironment(listener));
 
         // if the branch we are merging is already at the commit being built, the entire merge becomes no-op
@@ -94,7 +94,7 @@ public class PreBuildMerge extends GitSCMExtension {
     }
 
     @Override
-    public void decorateMergeCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
+    public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
         if (scm.getUserMergeOptions().getMergeStrategy() != null)
             cmd.setStrategy(scm.getUserMergeOptions().getMergeStrategy());
     }

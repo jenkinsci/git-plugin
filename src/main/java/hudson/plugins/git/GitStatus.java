@@ -1,7 +1,5 @@
 package hudson.plugins.git;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.ExtensionPoint;
@@ -9,36 +7,33 @@ import hudson.Util;
 import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
 import hudson.model.Cause;
-import hudson.model.Hudson;
-import hudson.model.ParametersAction;
+import hudson.model.CauseAction;
+import hudson.model.Item;
 import hudson.model.UnprotectedRootAction;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
-import jenkins.model.Jenkins;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.apache.commons.lang.StringUtils;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.kohsuke.stapler.*;
-
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
-
+import javax.servlet.ServletException;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
+import jenkins.model.Jenkins;
+import jenkins.triggers.SCMTriggerItem;
 import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
+import org.kohsuke.stapler.*;
+
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -99,21 +94,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 }
             }
         };
-    }
-
-    private static Collection<GitSCM> getProjectScms(AbstractProject<?, ?> project) {
-        Set<GitSCM> projectScms = Sets.newHashSet();
-        if (Jenkins.getInstance().getPlugin("multiple-scms") != null) {
-            MultipleScmResolver multipleScmResolver = new MultipleScmResolver();
-            multipleScmResolver.resolveMultiScmIfConfigured(project, projectScms);
-        }
-        if (projectScms.isEmpty()) {
-            SCM scm = project.getScm();
-            if (scm instanceof GitSCM) {
-                projectScms.add(((GitSCM) scm));
-            }
-        }
-        return projectScms;
     }
 
     /**
@@ -197,7 +177,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Handle standard {@link AbstractProject} instances with a standard {@link SCMTrigger}.
+     * Handle standard {@link SCMTriggerItem} instances with a standard {@link SCMTrigger}.
      *
      * @since 1.4.1
      */
@@ -217,12 +197,18 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
 
-                final List<AbstractProject<?, ?>> projects = Lists.newArrayList();
                 boolean scmFound = false,
                         urlFound = false;
-                for (final AbstractProject<?, ?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
-                    Collection<GitSCM> projectSCMs = getProjectScms(project);
-                    for (GitSCM git : projectSCMs) {
+                for (final Item project : Jenkins.getInstance().getAllItems()) {
+                    SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
+                    if (scmTriggerItem == null) {
+                        continue;
+                    }
+                    SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
+                        if (!(scm instanceof GitSCM)) {
+                            continue;
+                        }
+                        GitSCM git = (GitSCM) scm;
                         scmFound = true;
 
                         for (RemoteConfig repository : git.getRepositories()) {
@@ -239,7 +225,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 continue;
                             }
 
-                            SCMTrigger trigger = project.getTrigger(SCMTrigger.class);
+                            SCMTrigger trigger = scmTriggerItem.getSCMTrigger();
                             if (trigger != null && trigger.isIgnorePostCommitHooks()) {
                                 LOGGER.info("PostCommitHooks are disabled on " + project.getFullDisplayName());
                                 continue;
@@ -261,17 +247,18 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (!branchFound) continue;
                             urlFound = true;
 
-                            if (!project.isDisabled()) {
+                            if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
-                                    project.scheduleBuild2(project.getQuietPeriod(),
-                                            new CommitHookCause(sha1),
+                                    scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
+                                            new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
+                                    break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
                                 }
                             }
                             break;
@@ -294,7 +281,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         /**
-         * A response contributor for triggering polling of an {@link AbstractProject}.
+         * A response contributor for triggering polling of a project.
          *
          * @since 1.4.1
          */
@@ -302,14 +289,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             /**
              * The project
              */
-            private final AbstractProject<?, ?> project;
+            private final Item project;
 
             /**
              * Constructor.
              *
              * @param project the project.
              */
-            public PollingScheduledResponseContributor(AbstractProject<?, ?> project) {
+            public PollingScheduledResponseContributor(Item project) {
                 this.project = project;
             }
 
@@ -334,14 +321,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             /**
              * The project
              */
-            private final AbstractProject<?, ?> project;
+            private final Item project;
 
             /**
              * Constructor.
              *
              * @param project the project.
              */
-            public ScheduledResponseContributor(AbstractProject<?, ?> project) {
+            public ScheduledResponseContributor(Item project) {
                 this.project = project;
             }
 

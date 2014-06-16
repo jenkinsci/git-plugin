@@ -4,9 +4,12 @@
 
 package hudson.plugins.git.browser;
 
+import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import hudson.plugins.git.GitSCM;
+import hudson.scm.RepositoryBrowser;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,10 +100,21 @@ public class GithubWebTest extends TestCase {
         assertEquals(GITHUB_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#diff-0", String.valueOf(fileLink));
     }
 
+    public void testGuessBrowser() {
+        assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
+        assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");
+        assertGuessURL("git@git.apache.org:whatever.git", null);
+    }
+    private void assertGuessURL(String repo, String web) {
+        RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
+        String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
+        assertEquals(web, actual);
+    }
+
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
         final File rawchangelog = new File(GithubWebTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse(null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
         return changeSetList.get(0);
     }
 
