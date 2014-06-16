@@ -324,7 +324,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (m.matches()) {
                     return new GithubWeb("https://github.com/" + m.group(1) + "/");
                 }
-                // TODO match also
             }
         }
         return null;
