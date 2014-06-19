@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * A specification of branches to build. Rather like a refspec.
@@ -24,11 +26,13 @@ import java.util.regex.Pattern;
  * origin/&#42;/thing
  * </pre>
  */
+@ExportedBean
 public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements Serializable {
     private static final long serialVersionUID = -6177158367915899356L;
 
     private String name;
-    
+
+    @Exported
     public String getName() {
         return name;
     }
