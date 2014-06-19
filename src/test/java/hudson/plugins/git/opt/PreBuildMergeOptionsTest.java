@@ -34,12 +34,14 @@ import java.util.Collections;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 import org.junit.Rule;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 public class PreBuildMergeOptionsTest {
 
     @Rule public JenkinsRule r = new JenkinsRule();
 
+    @Issue("JENKINS-9843")
     @Test public void exporting() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
         p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.<GitSCMExtension>singletonList(new PreBuildMerge(new UserMergeOptions("repo", "master", MergeCommand.Strategy.DEFAULT.name())))));
