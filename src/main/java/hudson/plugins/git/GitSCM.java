@@ -398,7 +398,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return Collections.unmodifiableList(userRemoteConfigs);
     }
 
-    @Exported
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
