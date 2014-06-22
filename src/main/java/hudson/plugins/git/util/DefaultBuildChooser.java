@@ -86,27 +86,43 @@ public class DefaultBuildChooser extends BuildChooser {
             // either the branch is qualified (first part should match a valid remote)
             // or it is still unqualified, but the branch name contains a '/'
             List<String> possibleQualifiedBranches = new ArrayList<String>();
+
+            // first, try to match a specific remote
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
-                String fqbn;
+                String fqbn = null;
                 if (branchSpec.startsWith(repository + "/")) {
                     fqbn = "refs/remotes/" + branchSpec;
                 } else if(branchSpec.startsWith("remotes/" + repository + "/")) {
                     fqbn = "refs/" + branchSpec;
-                } else if(branchSpec.startsWith("refs/heads/")) {
-                    fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
-                } else {
-                    //Try branchSpec as it is - e.g. "refs/tags/mytag"
-                    fqbn = branchSpec;
                 }
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                if (fqbn != null) {
+                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    possibleQualifiedBranches.add(fqbn);
+                }
+            }
+
+            // if no remote match, try as is and in every remote
+            if (possibleQualifiedBranches.isEmpty()) {
+                //Try branchSpec as it is - e.g. "refs/tags/mytag"
+                String fqbn = branchSpec;
+                verbose(listener, "Qualifying {0} as is -> {1}", branchSpec, fqbn);
                 possibleQualifiedBranches.add(fqbn);
 
-                //Check if exact branch name <branchSpec> existss
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec;
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                possibleQualifiedBranches.add(fqbn);
+                if (!branchSpec.startsWith("refs/tags/")) {
+                    for (RemoteConfig config : gitSCM.getRepositories()) {
+                        String repository = config.getName();
+                        if(branchSpec.startsWith("refs/heads/")) {
+                            fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
+                        } else {
+                            fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                        }
+                        verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                        possibleQualifiedBranches.add(fqbn);
+                    }
+                }
             }
+
             for (String fqbn : possibleQualifiedBranches) {
               revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
             }
@@ -185,10 +201,11 @@ public class DefaultBuildChooser extends BuildChooser {
      *  1. Find all the branch revisions
      *  2. Filter out branches that we don't care about from the revisions.
      *     Any Revisions with no interesting branches are dropped.
-     *  3. Get rid of any revisions that are wholly subsumed by another
+     *  3. Add tags that match the branch spec
+     *  4. Get rid of any revisions that are wholly subsumed by another
      *     revision we're considering.
-     *  4. Get rid of any revisions that we've already built.
-     *  5. Sort revisions from old to new.
+     *  5. Get rid of any revisions that we've already built.
+     *  6. Sort revisions from old to new.
      *
      *  NB: Alternate BuildChooser implementations are possible - this
      *  may be beneficial if "only 1" branch is to be built, as much of
@@ -245,11 +262,24 @@ public class DefaultBuildChooser extends BuildChooser {
 
         verbose(listener, "After branch filtering: {0}", revs);
 
-        // 3. We only want 'tip' revisions
+        // 3. Add tags that match the branch spec
+        for (BranchSpec bspec : gitSCM.getBranches()) {
+            String bspecName = env.expand(bspec.getName());
+            if (utils.git.tagExists(bspecName)) {
+                ObjectId sha1 = utils.git.revParse(bspecName);
+                if (sha1 != null) {
+                    Revision rev = new Revision(sha1);
+                    revs.add(rev);
+                }
+            }
+        }
+        verbose(listener, "After adding tags: {0}", revs);
+
+        // 4. We only want 'tip' revisions
         revs = utils.filterTipBranches(revs);
         verbose(listener, "After non-tip filtering: {0}", revs);
 
-        // 4. Finally, remove any revisions that have already been built.
+        // 5. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
         Revision lastBuiltRevision = data.getLastBuiltRevision();
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
@@ -276,7 +306,7 @@ public class DefaultBuildChooser extends BuildChooser {
             return Collections.singletonList(utils.sortBranchesForRevision(lastBuiltRevision, gitSCM.getBranches(), env));
         }
 
-        // 5. sort them by the date of commit, old to new
+        // 6. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
         final List<Revision> in = revs;
         return utils.git.withRepository(new RepositoryCallback<List<Revision>>() {
