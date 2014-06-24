@@ -63,7 +63,7 @@ public class PreBuildMerge extends GitSCMExtension {
         // checkout origin/blah
         ObjectId target = git.revParse(remoteBranchRef);
 
-        String paramLocalBranch = scm.getParamLocalBranch(build);
+        String paramLocalBranch = scm.getParamLocalBranch(build, listener);
         CheckoutCommand checkoutCommand = git.checkout().branch(paramLocalBranch).ref(remoteBranchRef).deleteBranchIfExist(true);
         for (GitSCMExtension ext : scm.getExtensions())
             ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);

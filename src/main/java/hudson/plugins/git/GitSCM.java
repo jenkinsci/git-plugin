@@ -38,6 +38,7 @@ import hudson.util.FormValidation;
 import hudson.util.IOException2;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
@@ -334,13 +335,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @Deprecated
+    public String getParamLocalBranch(Run<?, ?> build) throws IOException, InterruptedException {
+        return getParamLocalBranch(build, new LogTaskListener(LOGGER, Level.INFO));
+    }
+
     /**
      * Gets the parameter-expanded effective value in the context of the current build.
      */
-    public String getParamLocalBranch(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+    public String getParamLocalBranch(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
         String branch = getLocalBranch();
         // substitute build parameters if available
-        return getParameterString(branch != null ? branch : null, build.getEnvironment());
+        return getParameterString(branch != null ? branch : null, build.getEnvironment(listener));
+    }
+
+    @Deprecated
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build) throws IOException, InterruptedException {
+        return getParamExpandedRepos(build, new LogTaskListener(LOGGER, Level.INFO));
     }
 
     /**
@@ -349,10 +360,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * @return can be empty but never null.
      */
-    public List<RemoteConfig> getParamExpandedRepos(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+    public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
         List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
 
-        EnvVars env = build.getEnvironment();
+        EnvVars env = build.getEnvironment(listener);
 
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
             expandedRepos.add(
@@ -480,7 +491,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(lastBuild.getEnvironment());
+        final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
 
         // fast remote polling needs a single branch and an existing last build
         if (!requiresWorkspaceForPolling() && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
@@ -491,7 +502,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
-            String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
+            String gitRepo = getParamExpandedRepos(lastBuild, listener).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
             if (head != null){
                 listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
@@ -534,7 +545,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Fetching changes from the remote Git repositories");
 
             // Fetch updates
-            for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild)) {
+            for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild, listener)) {
                 fetchFrom(git, listener, remoteRepository);
             }
 
@@ -841,7 +852,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void retrieveChanges(AbstractBuild build, GitClient git, BuildListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
-        List<RemoteConfig> repos = getParamExpandedRepos(build);
+        List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
         if (git.hasGitRepo()) {
@@ -903,7 +914,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build, listener)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }
