@@ -921,7 +921,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            fetchFrom(git, listener, remoteRepository);
+            try {
+                fetchFrom(git, listener, remoteRepository);
+            } catch (GitException ex) {
+                ex.printStackTrace(listener.error("Error fetching changes from repo '%s'", remoteRepository.getName()));
+                throw new AbortException();
+            }
         }
     }
 
