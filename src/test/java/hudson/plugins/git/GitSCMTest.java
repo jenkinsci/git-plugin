@@ -993,12 +993,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     public void testMergeWithMatrixBuild() throws Exception {
         
+        //Create a matrix project and a couple of axes
         MatrixProject project = createMatrixProject("xyz");
         project.setAxes(new AxisList(new Axis("VAR","a","b")));
         
-        //FreeStyleProject project = setupSimpleProject("master");
-        //project.setAssignedLabel(createSlave().getSelfLabel());
-
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
