@@ -31,7 +31,6 @@ public class PreBuildMergeOptions implements Serializable {
      */
     public String mergeStrategy = MergeCommand.Strategy.DEFAULT.toString();
 
-    @Exported
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
     }

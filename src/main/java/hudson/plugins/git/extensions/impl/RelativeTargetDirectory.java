@@ -3,7 +3,7 @@ package hudson.plugins.git.extensions.impl;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -33,7 +33,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
     }
 
     @Override
-    public FilePath getWorkingDirectory(GitSCM scm, AbstractProject<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
+    public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (relativeTargetDir == null || relativeTargetDir.length() == 0 || relativeTargetDir.equals(".")) {
             return workspace;
         }

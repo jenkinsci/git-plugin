@@ -15,30 +15,39 @@ import hudson.util.StreamTaskListener;
 import hudson.scm.SCM;
 
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * Verifies the git plugin interacts correctly with the multiple SCMs plugin.
  * 
  * @author corey@ooyala.com
  */
-public class MultipleSCMTest extends HudsonTestCase {
+public class MultipleSCMTest {
+
+    @Rule public JenkinsRule r = new JenkinsRule();
+    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+
 	protected TaskListener listener;
 	
 	protected TestGitRepo repo0;
 	protected TestGitRepo repo1;
 	
-	protected void setUp() throws Exception {
-		super.setUp();
-		
+	@Before public void setUp() throws Exception {
 		listener = StreamTaskListener.fromStderr();
 		
-		repo0 = new TestGitRepo("repo0", this, listener);
-		repo1 = new TestGitRepo("repo1", this, listener);
+		repo0 = new TestGitRepo("repo0", tmp.newFolder(), listener);
+		repo1 = new TestGitRepo("repo1", tmp.newFolder(), listener);
 	}
-	
-	public void testBasic() throws Exception
+
+    @Ignore("https://github.com/jenkinsci/multiple-scms-plugin/pull/5 broke this; cf. JENKINS-14537")
+	@Test public void basic() throws Exception
 	{
 		FreeStyleProject project = setupBasicProject("master");
 
@@ -71,7 +80,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 	
 	private FreeStyleProject setupBasicProject(String name) throws IOException
 	{
-		FreeStyleProject project = createFreeStyleProject(name);
+		FreeStyleProject project = r.createFreeStyleProject(name);
 		
 		List<BranchSpec> branch = Collections.singletonList(new BranchSpec("master"));
 		
@@ -108,7 +117,7 @@ public class MultipleSCMTest extends HudsonTestCase {
 			final Result expectedResult) throws Exception {
 		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
 		if(expectedResult != null) {
-			assertBuildStatus(expectedResult, build);
+			r.assertBuildStatus(expectedResult, build);
 		}
 		return build;
 	}

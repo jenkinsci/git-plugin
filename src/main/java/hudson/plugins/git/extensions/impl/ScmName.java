@@ -1,14 +1,14 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * When used with {@link MultiSCM}, this differentiates a different instance.
- *
+ * When used with {@code org.jenkinsci.plugins.multiplescms.MultiSCM}, this differentiates a different instance.
+ * Not strictly necessary any more since {@link GitSCM#getKey} will compute a default value, but can improve visual appearance of multiple-SCM changelogs.
  * @author Kohsuke Kawaguchi
  */
 public class ScmName extends FakeGitSCMExtension {

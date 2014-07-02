@@ -5,7 +5,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.*;
 import hudson.plugins.git.util.BuildData;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
@@ -38,10 +37,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     private final String ws;
 
-    protected GitTagAction(AbstractBuild build, BuildData buildData) {
+    protected GitTagAction(Run build, FilePath workspace, BuildData buildData) {
         super(build);
         List<String> val = new ArrayList<String>();
-        this.ws = build.getWorkspace().getRemote();
+        this.ws = workspace.getRemote();
         for (Branch b : buildData.lastBuild.revision.getBranches()) {
             tags.put(b.getName(), new ArrayList<String>());
         }
@@ -174,7 +173,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
         @Override
         protected void perform(final TaskListener listener) throws Exception {
-            final EnvVars environment = build.getEnvironment(listener);
+            final EnvVars environment = getRun().getEnvironment(listener);
             final FilePath workspace = new FilePath(new File(ws));
             final GitClient git = Git.with(listener, environment)
                     .in(workspace)
@@ -184,14 +183,14 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             for (String b : tagSet.keySet()) {
                 try {
                     String buildNum = "jenkins-"
-                                     + build.getProject().getName().replace(" ", "_")
+                                     + getRun().getParent().getName().replace(" ", "_")
                                      + "-" + tagSet.get(b);
                     git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
 
                     for (Map.Entry<String, String> e : tagSet.entrySet())
                         GitTagAction.this.tags.get(e.getKey()).add(e.getValue());
 
-                    getBuild().save();
+                    getRun().save();
                     workerThread = null;
                 }
                 catch (GitException ex) {

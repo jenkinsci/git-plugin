@@ -1,7 +1,8 @@
 package hudson.plugins.git;
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.RepositoryBrowser;
 import org.kohsuke.stapler.export.Exported;
 
 import java.util.Collections;
@@ -16,8 +17,8 @@ import java.util.List;
 public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     private final List<GitChangeSet> changeSets;
 
-    /*package*/ GitChangeSetList(AbstractBuild build, List<GitChangeSet> logs) {
-        super(build);
+    /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs) {
+        super(build, browser);
         Collections.reverse(logs);  // put new things first
         this.changeSets = Collections.unmodifiableList(logs);
         for (GitChangeSet log : logs)

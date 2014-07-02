@@ -722,14 +722,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
 
         BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
-        c.actOnBuild(new ContextCallable<AbstractBuild<?,?>, Object>() {
-            public Object invoke(AbstractBuild param, VirtualChannel channel) throws IOException, InterruptedException {
+        c.actOnBuild(new ContextCallable<Run<?,?>, Object>() {
+            public Object invoke(Run param, VirtualChannel channel) throws IOException, InterruptedException {
                 assertSame(param,b);
                 return null;
             }
         });
-        c.actOnProject(new ContextCallable<AbstractProject<?,?>, Object>() {
-            public Object invoke(AbstractProject param, VirtualChannel channel) throws IOException, InterruptedException {
+        c.actOnProject(new ContextCallable<Job<?,?>, Object>() {
+            public Object invoke(Job param, VirtualChannel channel) throws IOException, InterruptedException {
                 assertSame(param,p);
                 return null;
             }
@@ -747,8 +747,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         public String call() throws IOException {
             try {
-                return c.actOnProject(new ContextCallable<AbstractProject<?,?>, String>() {
-                    public String invoke(AbstractProject<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
+                return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
+                    public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
                         assertTrue(channel instanceof Channel);
                         assertTrue(Hudson.getInstance()!=null);
                         return param.toString();
