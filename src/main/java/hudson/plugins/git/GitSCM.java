@@ -570,6 +570,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             if (uc.getCredentialsId() != null) {
                 String url = uc.getUrl();
+                url = getParameterString(url, environment);
                 StandardUsernameCredentials credentials = CredentialsMatchers
                         .firstOrNull(
                                 CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
