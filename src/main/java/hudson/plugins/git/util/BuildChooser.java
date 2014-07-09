@@ -7,6 +7,7 @@ import hudson.model.Describable;
 import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.TaskListener;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
@@ -43,7 +44,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     public final String getDisplayName() {
         return getDescriptor().getDisplayName();
     }
-    
+
     /**
      * Get a list of revisions that are candidates to be built.
      *
@@ -139,6 +140,24 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
 
     public BuildChooserDescriptor getDescriptor() {
         return (BuildChooserDescriptor)Hudson.getInstance().getDescriptorOrDie(getClass());
+    }
+
+    /**
+     * Determines whether the supplied branch matches the branch configuration.
+     *
+     * @param branch
+     *      The qualified branch name, ex: origin/branch-name
+     */
+
+    public boolean isMatchingBranch(String branch)
+    {
+        for (BranchSpec bspec : gitSCM.getBranches()) {
+            if (bspec.matches(branch)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

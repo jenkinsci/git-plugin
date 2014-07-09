@@ -10,7 +10,6 @@ import hudson.model.AbstractModelObject;
 import hudson.model.AbstractProject;
 import hudson.model.Cause;
 import hudson.model.Hudson;
-import hudson.model.ParametersAction;
 import hudson.model.UnprotectedRootAction;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
@@ -249,12 +248,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (branches.length == 0) {
                                 branchFound = true;
                             } else {
-                                OUT: for (BranchSpec branchSpec : git.getBranches()) {
-                                    for (String branch : branches) {
-                                        if (branchSpec.matches(repository.getName() + "/" + branch)) {
-                                            branchFound = true;
-                                            break OUT;
-                                        }
+                                for (String branch : branches) {
+                                    String qualifiedBranch = ensureQualifiedBranch(repository, branch);
+                                    if (git.getBuildChooser().isMatchingBranch(qualifiedBranch)) {
+                                        branchFound = true;
+                                        break;
                                     }
                                 }
                             }
@@ -291,6 +289,20 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             } finally {
                 SecurityContextHolder.setContext(old);
             }
+        }
+
+        /**
+         * Returns the branch as qualified by the supplied {@link RemoteConfig}.
+         */
+        private String ensureQualifiedBranch( RemoteConfig repository, String branch )
+        {
+            // the branch is qualified if the first part matches a valid remote
+            String remoteQualification = repository.getName() + "/";
+            if (branch.startsWith(remoteQualification) || branch.startsWith("remotes/" + remoteQualification)) {
+                return branch;
+            }
+
+            return remoteQualification + branch;
         }
 
         /**

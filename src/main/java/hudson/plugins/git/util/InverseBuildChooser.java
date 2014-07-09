@@ -103,6 +103,18 @@ public class InverseBuildChooser extends BuildChooser {
         });
     }
 
+    @Override
+    public boolean isMatchingBranch(String branch)
+    {
+        for (BranchSpec bspec : gitSCM.getBranches()) {
+            if (bspec.matches(branch)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @Extension
     public static final class DescriptorImpl extends BuildChooserDescriptor {
         @Override
