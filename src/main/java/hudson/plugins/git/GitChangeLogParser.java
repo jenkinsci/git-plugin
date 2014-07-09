@@ -43,7 +43,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         // Parse the log file into GitChangeSet items - each one is a commit
         LineIterator lineIterator = null;
         try {
-        	lineIterator = FileUtils.lineIterator(changelogFile);
+        	lineIterator = FileUtils.lineIterator(changelogFile, "UTF-8");
         	return new GitChangeSetList(build, browser, parse(lineIterator));
         } finally {
         	LineIterator.closeQuietly(lineIterator);
