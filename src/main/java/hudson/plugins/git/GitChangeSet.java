@@ -178,7 +178,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         // legacy mode
         int i = s.indexOf(' ');
         long time = Long.parseLong(s.substring(0,i));
-        return FastDateFormat.getInstance(ISO_8601).format(new Date(time)) + s.substring(i);
+        return FastDateFormat.getInstance(ISO_8601).format(new Date(time * 1000)) + s.substring(i);
     }
 
     private String parseHash(String hash) {
