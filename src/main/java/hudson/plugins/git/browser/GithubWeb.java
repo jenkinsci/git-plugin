@@ -13,6 +13,8 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
+
+import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -22,6 +24,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Git Browser URLs
@@ -109,4 +113,19 @@ public class GithubWeb extends GitRepositoryBrowser {
 		}
 	}
 
+    public static class GithubWebRepositoryGuesser {
+		public String getRepoUrl(URIish repoUrl) {
+			String uri = repoUrl.toString();
+	        Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
+	        if (m.matches()) {
+	            return m.group(1) + "/";
+	        }
+	        m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
+	        if (m.matches()) {
+	            return "https://github.com/" + m.group(1) + "/";
+	        }
+			
+			return null;
+		}
+    }
 }

@@ -5,11 +5,17 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.RepositoryBrowser;
+
+import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.URL;
+
+interface RepositoryGuesser {
+	String getRepoUrl(URIish repoUrl);
+}
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
