@@ -8,12 +8,16 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
+
+import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Stash Browser URLs
@@ -95,5 +99,64 @@ public class Stash extends GitRepositoryBrowser {
         public Stash newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
             return req.bindJSON(Stash.class, jsonObject);
         }
+    }
+    
+    public static class StashRepositoryGuesser {
+    	public String getRepoUrl(URIish repoUrl) {
+	
+    		if (repoUrl.getScheme() == "ssh")
+    			return getRepoUrlSsh(repoUrl);
+    		if (repoUrl.getScheme() == "http")
+    			return getRepoUrlHttp(repoUrl);
+    		
+    		return null;
+    	}
+    	
+    	private String getRepoUrlSsh(URIish repoUrl) {
+    		// ssh clone: ssh://git@<host>:<port?>/<project>/<repo>.git
+    		// want http://<host>/projects/<project>/repos/<repo>
+    		
+    		String host = repoUrl.getHost();
+    		String project = null;
+    		String repo = null;
+    		
+    		Matcher m = Pattern.compile("/(\\w+)/(\\w+)\\.git").matcher(repoUrl.toString());
+    		if (m.matches()) {
+    			project = m.group(1);
+    			repo = m.group(2);
+    		} else {
+    			return null;
+    		}
+    		
+    		return createStashUrl(host, project, repo);
+    	}
+
+		private String createStashUrl(String host, String project, String repo) {
+			return "http://" 
+		    			+ host 
+		    			+ "/projects/"
+		    			+ project 
+		    			+ "/repos/"
+		    			+ repo;
+		}
+    	
+    	private String getRepoUrlHttp(URIish repoUrl) {
+    		// http clone: http://<user>@<host>/scm/<project>/<repo>.git
+    		// want http://<host>/projects/<project>/repos/<repo>
+    		
+    		String host = repoUrl.getHost();
+    		String project = null;
+    		String repo = null;
+    		
+    		Matcher m = Pattern.compile("/scm/(\\w+)/(\\w+).git").matcher(repoUrl.toString());
+    		if (m.matches()) {
+    			project = m.group(1);
+    			repo = m.group(2);
+    		} else {
+    			return null;
+    		}
+    		
+    		return createStashUrl(host, project, repo);
+    	}
     }
 }
