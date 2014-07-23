@@ -1,16 +1,50 @@
 <div>
-  Specify the branches if you'd like to track a specific branch in a repository.
-  If left blank, all branches will be examined for changes and built.<br/>
-  <br/>
-  The syntax is of the form: <tt>REPOSITORYNAME/BRANCH</tt>.
-  In addition, <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>, '*' is recognized as a wildcard,
-  and '**' is recognized as wildcard that includes the separator '/'. Therefore, <tt>origin/branches*</tt> would
-  match <tt>origin/branches-foo</tt> but not <tt>origin/branches/foo</tt>, while <tt>origin/branches**</tt> would
-  match both <tt>origin/branches-foo</tt> and <tt>origin/branches/foo</tt>.<br/>
-  <br/>
-  If you are using namespaces to structure branches (e.g. feature1/master, or team1/requestA/rel-1.0) you have to
-  specify the full branch specifier (including "remotes/"): <tt>remotes/REPOSITORYNAME/BRANCH/WITH/NAMESPACE</tt>.<br/>
-  E.g. "remotes/origin/feature1/master"
-  <br/>
-  A specific revision can be checked out by specifying the SHA1 hash of that revision in this field.
+  <p>Specify the branches if you'd like to track a specific branch in a repository.
+  If left blank, all branches will be examined for changes and built.</p>
+  
+  <p>The safest way is to use the <tt>refs/heads/&lt;branchName&gt;</tt> syntax. This way the expected branch
+  is unambiguous.</p>
+  
+  <p>Possible options:
+    <ul>
+      <li> <b><tt>&lt;branchName&gt;</tt></b><br/>
+           Tracks/checks out the specified branch. If ambiguous the first result is taken, which is not necessarily
+           the expected one. Better use <tt>refs/heads/&lt;branchName&gt;</tt>.<br/>
+           E.g. <tt>master</tt>, <tt>feature1</tt>,...
+      <li> <b><tt>refs/heads/&lt;branchName&gt;</tt></b><br/>
+           Tracks/checks out the specified branch.<br/>
+           E.g. <tt>refs/heads/master</tt>, <tt>refs/heads/feature1/master</tt>,...
+      <li> <b><tt>&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
+           Tracks/checks out the specified branch. If ambiguous the first result is taken, which is not necessarily
+           the expected one.<br/>
+           Better use <tt>refs/heads/&lt;branchName&gt;</tt>.<br/> 
+           E.g. <tt>origin/master</tt>
+      <li> <b><tt>remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
+           Tracks/checks out the specified branch.<br/> 
+           E.g. <tt>remotes/origin/master</tt>
+      <li> <b><tt>refs/remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
+           Tracks/checks out the specified branch.<br/>
+           E.g. <tt>refs/remotes/origin/master</tt>
+      <li> <b><tt>&lt;tagName&gt;</tt></b><br/>
+           This does not work since the tag will not be recognized as tag.<br/>
+           Use <tt>refs/tags/&lt;tagName&gt;</tt> instead.<br/>
+           E.g. <tt>git-2.3.0</tt>
+      <li> <b><tt>refs/tags/&lt;tagName&gt;</tt></b><br/>
+           Tracks/checks out the specified tag.<br/>
+           E.g. <tt>refs/tags/git-2.3.0</tt>
+      <li> <b><tt>&lt;commitId&gt;</tt></b><br/>
+           Checks out the specified commit.<br/>
+           E.g. <tt>5062ac843f2b947733e6a3b105977056821bd352</tt>, <tt>5062ac84</tt>, ...
+      <li> <b><tt>${ENV_VARIABLE}</tt></b><br/>
+           It is also possible to use environment variables. In this case the variables are evaluated and the
+           result is used as described above.<br/>
+           E.g. <tt>${TREEISH}</tt>, <tt>refs/tags/${TAGNAME}</tt>,...
+      <li> <b><tt>&lt;Wildcards&gt;</tt></b><br/>
+           The syntax is of the form: <tt>REPOSITORYNAME/BRANCH</tt>.
+           In addition, <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>, '*' is recognized as a wildcard,
+           and '**' is recognized as wildcard that includes the separator '/'. Therefore, <tt>origin/branches*</tt> would
+           match <tt>origin/branches-foo</tt> but not <tt>origin/branches/foo</tt>, while <tt>origin/branches**</tt> would
+           match both <tt>origin/branches-foo</tt> and <tt>origin/branches/foo</tt>.
+    </ul>
+  </p>
 </div>
