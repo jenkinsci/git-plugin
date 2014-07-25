@@ -15,7 +15,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
@@ -202,7 +201,15 @@ public class GitUtils implements Serializable {
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = p.getLastBuild();
 
-        if (reuseLastBuildEnv && b != null) {
+        if (b == null) {
+            // If there is no last build, we need to trigger a new build anyway, and
+            // GitSCM.compareRemoteRevisionWithImpl() will short-circuit and never call this code
+            // ("No previous build, so forcing an initial build.").
+            throw new IllegalArgumentException("Last build must not be null. If there really is no last build, " +
+                    "a new build should be triggered without polling the SCM.");
+        }
+
+        if (reuseLastBuildEnv) {
             Node lastBuiltOn = b.getBuiltOn();
 
             if (lastBuiltOn != null) {
@@ -218,11 +225,6 @@ public class GitUtils implements Serializable {
             }
 
             p.getScm().buildEnvVars(b,env);
-
-            if (lastBuiltOn != null) {
-
-            }
-
         } else {
             env = new EnvVars(System.getenv());
         }
@@ -231,7 +233,7 @@ public class GitUtils implements Serializable {
         if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
-            if( b != null) env.put("BUILD_URL", rootUrl+b.getUrl());
+            env.put("BUILD_URL", rootUrl+b.getUrl());
             env.put("JOB_URL", rootUrl+p.getUrl());
         }
 
@@ -251,9 +253,25 @@ public class GitUtils implements Serializable {
             }
         }
 
+        // add env contributing actions' values from last build to environment - fixes JENKINS-22009
+        addEnvironmentContributingActionsValues(env, b);
+
         EnvVars.resolve(env);
 
         return env;
+    }
+
+    private static void addEnvironmentContributingActionsValues(EnvVars env, AbstractBuild b) {
+        List<? extends Action> buildActions = b.getAllActions();
+        if (buildActions != null) {
+            for (Action action : buildActions) {
+                // most importantly, ParametersAction will be processed here (for parameterized builds)
+                if (action instanceof EnvironmentContributingAction) {
+                    EnvironmentContributingAction envAction = (EnvironmentContributingAction) action;
+                    envAction.buildEnvVars(b, env);
+                }
+            }
+        }
     }
 
     public static String[] fixupNames(String[] names, String[] urls) {
