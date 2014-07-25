@@ -1,7 +1,8 @@
 package hudson.plugins.git;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.matrix.Axis;
@@ -10,16 +11,9 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
-import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GithubWeb;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.AuthorInChangelog;
-import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
-import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
+import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -30,15 +24,9 @@ import hudson.remoting.VirtualChannel;
 import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
-import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-
 import hudson.util.StreamTaskListener;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -1269,6 +1257,32 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child(commitFile2).exists());
         assertFalse(build1.getWorkspace().child("toto").exists());
         assertFalse(build1.getWorkspace().child(commitFile1).exists());
+    }
+
+    /**
+     * Test for JENKINS-22009.
+     *
+     * @throws Exception
+     */
+    public void testPolling_environmentValueInBranchSpec() throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
+
+        // commit something in order to create an initial base version in git
+        commit("toto/commitFile1", johnDoe, "Commit number 1");
+
+        // build the project
+        build(project, Result.SUCCESS);
+
+        assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
     }
 
     private void setupJGit(GitSCM git) {
