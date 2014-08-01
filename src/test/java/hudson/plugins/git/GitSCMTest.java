@@ -22,6 +22,7 @@ import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
+import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
@@ -871,6 +872,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
+    @Bug(20392)
+    public void testMergeChangelog() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default")));
+        project.setScm(scm);
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        // Create second commit and run build
+        // Here the changelog should contain exactly this one new commit
+        testRepo.git.checkout("master", "topic2");
+        final String commitFile2 = "commitFile2";
+        String commitMessage = "Commit number 2";
+        commit(commitFile2, johnDoe, commitMessage);
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build2.getChangeSet();
+        assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
     }
 
     public void testMergeWithSlave() throws Exception {
