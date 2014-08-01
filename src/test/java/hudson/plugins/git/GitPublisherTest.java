@@ -66,7 +66,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
-                true, true) {
+                true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 run.incrementAndGet();
@@ -115,7 +115,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true));
+                true, true, false));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -154,7 +154,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
           Collections.<TagToPush>emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
           Collections.<NoteToPush>emptyList(),
-          true, true));
+          true, true, false));
 
       // create initial commit and then run the build against it:
       commit("commitFileBase", johnDoe, "Initial Commit");

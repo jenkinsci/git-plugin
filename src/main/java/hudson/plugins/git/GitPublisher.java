@@ -26,7 +26,9 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.PushCommand;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -49,6 +51,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     private boolean pushMerge;
     private boolean pushOnlyIfSuccess;
+    private boolean forcePush;
     
     private List<TagToPush> tagsToPush;
     // Pushes HEAD to these locations
@@ -61,12 +64,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
                         boolean pushOnlyIfSuccess,
-                        boolean pushMerge) {
+                        boolean pushMerge,
+                        boolean forcePush) {
         this.tagsToPush = tagsToPush;
         this.branchesToPush = branchesToPush;
         this.notesToPush = notesToPush;
         this.pushMerge = pushMerge;
         this.pushOnlyIfSuccess = pushOnlyIfSuccess;
+        this.forcePush = forcePush;
         this.configVersion = 2L;
     }
 
@@ -76,6 +81,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public boolean isPushMerge() {
         return pushMerge;
+    }
+
+    public boolean isForcePush() {
+        return forcePush;
     }
 
     public boolean isPushTags() {
@@ -200,6 +209,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
             final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace());
 
+            URIish remoteURI;
+
             // If we're pushing the merge back...
             if (pushMerge) {
                 try {
@@ -223,7 +234,12 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         RemoteConfig remote = mergeOptions.getMergeRemote();
                         listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
 
-                        git.push(remote.getName(), "HEAD:" + mergeTarget);
+                        remoteURI = remote.getURIs().get(0);
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + mergeTarget);
+                        if (forcePush) {
+                          push.force();
+                        }
+                        push.execute();
                     } else {
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                         //git.push(null);
@@ -273,7 +289,13 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                         listener.getLogger().println("Pushing tag " + tagName + " to repo "
                                                      + targetRepo);
-                        git.push(remote.getName(), tagName);
+
+                        remoteURI = remote.getURIs().get(0);
+                        PushCommand push = git.push().to(remoteURI).ref(tagName);
+                        if (forcePush) {
+                          push.force();
+                        }
+                        push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push tag " + tagName + " to " + targetRepo));
                         return false;
@@ -300,7 +322,12 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
-                        git.push(remote.getName(), "HEAD:" + branchName);
+                        remoteURI = remote.getURIs().get(0);
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
+                        if (forcePush) {
+                          push.force();
+                        }
+                        push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
                         return false;
@@ -335,7 +362,12 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         else
                             git.appendNote( noteMsg, noteNamespace );
 
-                        git.push(remote.getName(), "refs/notes/*" );
+                        remoteURI = remote.getURIs().get(0);
+                        PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
+                        if (forcePush) {
+                          push.force();
+                        }
+                        push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
                         return false;
