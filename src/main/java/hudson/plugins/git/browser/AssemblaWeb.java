@@ -42,13 +42,13 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + changeSet.getId().toString());
+        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
     }
 
     /**
      * Shows the difference between the referenced commit and the previous commit.
      * The changes section also display diffs, so a seperate url is unncessary.
-     * http://[Assembla URL]/commits/[commit]/[path]
+     * http://[Assembla URL]/commits/[commit]
      *
      * @param path affected file path
      * @return diff link
