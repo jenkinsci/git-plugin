@@ -11,3 +11,5 @@ nbactions.xml
 release.properties
 pom.xml.releaseBackup
 .idea
+*.sublime-project
+*.sublime-workspace
