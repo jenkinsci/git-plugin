@@ -3,6 +3,8 @@ package hudson.plugins.git;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Hudson;
 import hudson.model.Result;
@@ -229,6 +231,19 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         }
         return build;
     }
+    
+    protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
+        final MatrixBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        System.out.println(build.getLog());
+        for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
+            assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
+        }
+        if(expectedResult != null) {
+            assertBuildStatus(expectedResult, build);
+        }
+        return build;
+    }
+    
 
     protected EnvVars getEnvVars(FreeStyleProject project) {
         for (hudson.tasks.Builder b : project.getBuilders()) {
