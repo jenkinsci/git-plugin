@@ -80,7 +80,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     }
 
     @Extension
-    public static class ASSEMBLAWEBDescriptor extends Descriptor<RepositoryBrowser<?>> {
+    public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         public String getDisplayName() {
             return "AssemblaWeb";
         }
