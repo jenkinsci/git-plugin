@@ -1037,7 +1037,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.populateEnvironmentVariables(this, env);
         }
     }
-    
+
     private String getBranchName(Branch branch)
     {
         String name = branch.getName();

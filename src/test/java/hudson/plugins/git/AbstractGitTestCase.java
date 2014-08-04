@@ -201,7 +201,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         project.save();
         return project;
     }
-    
+
     protected FreeStyleProject setupSimpleProject(String branchString) throws Exception {
         return setupProject(branchString,false);
     }

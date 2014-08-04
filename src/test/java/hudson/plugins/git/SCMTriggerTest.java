@@ -33,12 +33,12 @@ import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
 public abstract class SCMTriggerTest extends AbstractGitTestCase
 {
-    
+
     private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
-        
+
     @Override
     protected void tearDown() throws Exception
     {
@@ -60,11 +60,11 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         tempAllocator = new TemporaryDirectoryAllocator();
         singleThreadExecutor = Executors.newSingleThreadExecutor();
     }
-    
+
     protected abstract EnforceGitClient getGitClient();
-    
+
     protected abstract boolean isDisableRemotePoll();
-    
+
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/master",
@@ -74,14 +74,14 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
 
     public void testNamespaces_with_remotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "remotes/origin/master", 
+            "remotes/origin/master",
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
 
     public void testNamespaces_with_refsRemotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/remotes/origin/master", 
+            "refs/remotes/origin/master",
             namespaceRepoCommits.getProperty("refs/heads/master"),
             "origin/master");
     }
@@ -102,7 +102,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
 
     public void testNamespaces_with_refsHeadsNamespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/a_tests/b_namespace1/master", 
+            "refs/heads/a_tests/b_namespace1/master",
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace1/master"),
             "origin/a_tests/b_namespace1/master");
     }
@@ -116,11 +116,11 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
 
     public void testNamespaces_with_refsHeadsNamespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "refs/heads/a_tests/b_namespace2/master", 
+            "refs/heads/a_tests/b_namespace2/master",
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
-    
+
     public void testTags_with_TagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagA",
@@ -130,7 +130,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
 
     public void testTags_with_TagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            "TagBAnnotated", 
+            "TagBAnnotated",
             namespaceRepoCommits.getProperty("refs/tags/TagBAnnotated^{}"),
             "TagBAnnotated"); //TODO: What do we expect!?
     }
@@ -151,44 +151,43 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
 
     public void testCommitAsBranchSpec() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
-            namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), 
+            namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"),
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"),
             "detached");
     }
 
-    
-    public void check(ZipFile repoZip, Properties commits, String branchSpec, 
+    public void check(ZipFile repoZip, Properties commits, String branchSpec,
             String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         File tempRemoteDir = tempAllocator.allocate();
         extract(repoZip, tempRemoteDir);
         final String remote = tempRemoteDir.getAbsolutePath();
-       
+
         FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
                     asList(new BranchSpec(branchSpec)),
                     //empty scmTriggerSpec, SCMTrigger triggered manually
-                    "", isDisableRemotePoll(), getGitClient()); 
-        
+                    "", isDisableRemotePoll(), getGitClient());
+
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
-        
+
         FreeStyleBuild build1 = waitForBuildFinished(project, 1, 60000);
         assertNotNull("Job has not been triggered", build1);
 
         PollingResult poll = project.poll(listener);
         assertFalse("Polling found new changes although nothing new", poll.hasChanges());
-        
+
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
-        
+
         FreeStyleBuild build2 = waitForBuildFinished(project, 2, 2000);
         assertNull("Found build 2 although no new changes and no multi candidate build", build2);
-        
-        assertEquals("Unexpected GIT_COMMIT", 
+
+        assertEquals("Unexpected GIT_COMMIT",
                     expected_GIT_COMMIT, build1.getEnvironment(null).get("GIT_COMMIT"));
-        assertEquals("Unexpected GIT_BRANCH", 
+        assertEquals("Unexpected GIT_BRANCH",
                     expected_GIT_BRANCH, build1.getEnvironment(null).get("GIT_BRANCH"));
     }
- 
+
     private Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
     {
         if(trigger == null) return null;
@@ -234,7 +233,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         }
         return properties;
     }
-    
+
     private void extract(ZipFile zipFile, File outputDir) throws IOException
     {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();

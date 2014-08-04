@@ -13,12 +13,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class EnforceGitClient extends FakeGitSCMExtension {
 
     GitClientType clientType = GitClientType.ANY;
-    
+
     public EnforceGitClient set(GitClientType type) {
         this.clientType = type;
         return this;
     }
-    
+
     @Override
     public GitClientType getRequiredClient()
     {

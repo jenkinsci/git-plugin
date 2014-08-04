@@ -12,7 +12,6 @@ public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest
      */
     private boolean SKIP_FAILING_TESTS = true;
 
-        
     @Override
     protected EnforceGitClient getGitClient()
     {
@@ -24,7 +23,7 @@ public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest
     {
         return false;
     }
-    
+
     @Override
     public void testNamespaces_with_master() throws Exception {
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
@@ -36,13 +35,13 @@ public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest
         //This one works by accident! ls-remote lists this as first entry
         super.testNamespaces_with_namespace1Master();
     }
-    
+
     @Override
     public void testNamespaces_with_namespace2Master() throws Exception {
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testNamespaces_with_namespace2Master();
     }
-    
+
     @Override
     public void testCommitAsBranchSpec() throws Exception {
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
@@ -60,7 +59,7 @@ public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testTags_with_TagBAnnotated();
     }
-    
+
     @Override
     public void testTags_with_refsTagsTagBAnnotated() throws Exception
     {

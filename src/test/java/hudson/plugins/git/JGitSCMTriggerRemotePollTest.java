@@ -12,13 +12,12 @@ public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
      */
     private boolean SKIP_FAILING_TESTS = true;
 
-    
     @Override
     protected EnforceGitClient getGitClient()
     {
         return new EnforceGitClient().set(GitClientType.JGIT);
     }
-    
+
     @Override
     protected boolean isDisableRemotePoll()
     {
@@ -36,11 +35,11 @@ public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testNamespaces_with_namespace2Master();
     }
-    
+
     @Override
     public void testCommitAsBranchSpec() throws Exception {
         if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testCommitAsBranchSpec();
     }
-    
+
 }
