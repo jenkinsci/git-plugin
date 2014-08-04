@@ -37,9 +37,6 @@ public class GitChangeLogParser extends ChangeLogParser {
 
     @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
         throws IOException, SAXException {
-        
-        Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
-        
         // Parse the log file into GitChangeSet items - each one is a commit
         LineIterator lineIterator = null;
         try {
