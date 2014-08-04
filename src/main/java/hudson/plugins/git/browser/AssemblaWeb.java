@@ -120,5 +120,6 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                     }
                 }
             }.check();
+        }
     }
 }
