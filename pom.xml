@@ -20,10 +20,25 @@
   <name>Jenkins GIT plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  
+  <properties>
+    <findbugs-maven-plugin.version>2.5.4</findbugs-maven-plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
 
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs-maven-plugin.version}</version>
+          <configuration>
+            <!-- <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile> -->
+            <failOnError>${maven.findbugs.failure.strict}</failOnError>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -179,11 +194,6 @@
       </plugin>
     </plugins>
   </build>
-  
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-  </properties>
 
   <repositories>
     <repository>
