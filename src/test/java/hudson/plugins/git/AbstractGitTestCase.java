@@ -3,6 +3,8 @@ package hudson.plugins.git;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Hudson;
 import hudson.model.Result;
