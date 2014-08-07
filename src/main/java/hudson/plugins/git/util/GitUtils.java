@@ -262,7 +262,7 @@ public class GitUtils implements Serializable {
     }
 
     private static void addEnvironmentContributingActionsValues(EnvVars env, AbstractBuild b) {
-        List<? extends Action> buildActions = b.getAllActions();
+        List<? extends Action> buildActions = b.getActions();
         if (buildActions != null) {
             for (Action action : buildActions) {
                 // most importantly, ParametersAction will be processed here (for parameterized builds)
