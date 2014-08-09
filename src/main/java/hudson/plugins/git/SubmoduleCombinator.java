@@ -179,7 +179,7 @@ public class SubmoduleCombinator {
 
             if (b == null) return -1;
 
-            if (!entry.getObject().equals(b.getSha1())) difference++;
+            if (!entry.getObject().equals(b.getSha1().getName())) difference++;
 
         }
         return difference;
