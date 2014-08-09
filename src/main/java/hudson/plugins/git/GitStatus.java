@@ -217,7 +217,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
 
-                final List<AbstractProject<?, ?>> projects = Lists.newArrayList();
                 boolean scmFound = false,
                         urlFound = false;
                 for (final AbstractProject<?, ?> project : Hudson.getInstance().getAllItems(AbstractProject.class)) {
