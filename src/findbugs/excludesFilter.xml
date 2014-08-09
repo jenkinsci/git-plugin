@@ -11,4 +11,12 @@
     </Or>
   </Match>
 
+  <!-- The VERBOSE field is intentionally not final so that scripts
+       and debugging tools can modify it at runtime. -->
+  <Match>
+    <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    <Class name="hudson.plugins.git.GitSCM"/>
+    <Field name="VERBOSE"/>
+  </Match>
+
 </FindBugsFilter>
