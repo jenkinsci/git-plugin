@@ -1,0 +1,14 @@
+<FindBugsFilter>
+
+  <!-- isRevExcluded intentionally returns null.  Callers are expected
+       to safeguard their use. -->
+  <Match>
+    <Bug pattern="NP_BOOLEAN_RETURN_NULL"/>
+    <Or>
+      <Class name="hudson.plugins.git.extensions.GitSCMExtension"/>
+      <Class name="hudson.plugins.git.extensions.impl.PathRestriction"/>
+      <Class name="hudson.plugins.git.extensions.impl.UserExclusion"/>
+    </Or>
+  </Match>
+
+</FindBugsFilter>

@@ -35,7 +35,7 @@
           <artifactId>findbugs-maven-plugin</artifactId>
           <version>${findbugs-maven-plugin.version}</version>
           <configuration>
-            <!-- <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile> -->
+            <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
             <failOnError>${maven.findbugs.failure.strict}</failOnError>
           </configuration>
         </plugin>
