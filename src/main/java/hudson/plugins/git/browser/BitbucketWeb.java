@@ -46,7 +46,6 @@ public class BitbucketWeb extends GitRepositoryBrowser {
                 || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
-        final String pathAsString = path.getPath();
         return getDiffLinkRegardlessOfEditType(path);
     }
 
