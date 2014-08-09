@@ -131,6 +131,9 @@ public class BuildData implements Action, Serializable, Cloneable {
     	for(Branch branch : build.marked.getBranches()) {
             buildsByBranchName.put(fixNull(branch.getName()), build);
     	}
+        for(Branch branch : build.revision.getBranches()) {
+            buildsByBranchName.put(fixNull(branch.getName()), build);
+        }
     }
 
     public Build getLastBuildOfBranch(String branch) {
