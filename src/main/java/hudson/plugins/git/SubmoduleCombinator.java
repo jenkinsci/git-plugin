@@ -19,7 +19,6 @@ import java.util.Map.Entry;
  */
 public class SubmoduleCombinator {
     GitClient git;
-    FilePath workspace;
     TaskListener listener;
 
     long         tid = new Date().getTime();
@@ -30,8 +29,6 @@ public class SubmoduleCombinator {
     public SubmoduleCombinator(GitClient git, TaskListener listener, Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;
-    
-        this.workspace = git.getWorkTree();
         this.submoduleConfig = cfg;
     }
 
