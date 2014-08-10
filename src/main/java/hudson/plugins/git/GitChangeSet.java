@@ -64,7 +64,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * the commit graph and see if a commit can be only reachable from the "revOfBranchInPreviousBuild" of
      * just one branch, in which case it's safe to attribute the commit to that branch.
      */
-    private String branch;
     private String committer;
     private String committerEmail;
     private String committerTime;
@@ -374,7 +373,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     public String getBranch() {
-        return this.branch;
+        return null;
     }
 
     @ExportedBean(defaultVisibility=999)
