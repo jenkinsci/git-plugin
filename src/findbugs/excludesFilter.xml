@@ -19,4 +19,12 @@
     <Field name="VERBOSE"/>
   </Match>
 
+  <!-- The difference method must use the keySet iterator because it
+       evaluates the keys before reading the value. -->
+  <Match>
+    <Bug pattern="WMI_WRONG_MAP_ITERATOR"/>
+    <Class name="hudson.plugins.git.SubmoduleCombinator"/>
+    <Method name="difference"/>
+  </Match>
+
 </FindBugsFilter>
