@@ -27,4 +27,103 @@
     <Method name="difference"/>
   </Match>
 
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.GitPublisher"/>
+    <Or>
+      <Method name="perform"/>
+      <Method name="replaceAdditionalEnvironmentalVariables"/>
+    </Or>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.GitRevisionBuildParameters"/>
+    <Method name="getAction"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Or>
+      <Class name="hudson.plugins.git.GitSCM"/>
+      <Class name="hudson.plugins.git.GitSCM$DescriptorImpl"/>
+    </Or>
+    <Or>
+      <Method name="onLoaded"/>
+      <Method name="resolveGitTool"/>
+      <Method name="showGitToolOptions"/>
+    </Or>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Or>
+      <Class name="hudson.plugins.git.GitStatus"/>
+      <Class name="hudson.plugins.git.GitStatus$JenkinsAbstractProjectListener"/>
+    </Or>
+    <Or>
+      <Method name="doNotifyCommit"/>
+      <Method name="onNotifyCommit"/>
+    </Or>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.GitTagAction"/>
+    <Method name="getDescriptor"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.UserRemoteConfig$DescriptorImpl"/>
+    <Or>
+      <Method name="doCheckCredentialsId"/>
+      <Method name="doCheckUrl"/>
+    </Or>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Or>
+      <Class name="hudson.plugins.git.extensions.GitSCMExtensionDescriptor"/>
+      <Class name="hudson.plugins.git.util.BuildChooserDescriptor"/>
+    </Or>
+    <Method name="all"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.extensions.impl.PreBuildMerge"/>
+    <Method name="decorateRevisionToBuild"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.util.GitUtils"/>
+    <Method name="getPollEnvironment"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="jenkins.plugins.git.AbstractGitSCMSource"/>
+    <Method name="getCacheDir"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="jenkins.plugins.git.GitSCMSource$ListenerImpl"/>
+    <Method name="onNotifyCommit"/>
+  </Match>
+
 </FindBugsFilter>
