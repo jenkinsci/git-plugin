@@ -18,6 +18,7 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
+import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -147,7 +148,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Called when the checkout was completed and the working directory is filled with files.
      *
-     * See {@link SCM#checkout(Run, Launcher, FilePath, TaskListener, File)} for the available parameters,
+     * See {@link SCM#checkout(Run, Launcher, FilePath, TaskListener, File, SCMRevisionState)} for the available parameters,
      * except {@code workingDirectory}
      *
      * Do not move the HEAD to another commit, as by this point the commit to be built is already determined
