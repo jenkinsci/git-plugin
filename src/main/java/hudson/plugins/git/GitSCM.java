@@ -1463,8 +1463,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData base = getBuildData(build);
         if (base==null)
             return new BuildData(getScmName(), getUserRemoteConfigs());
-        else
-            return base.clone();
+        else {
+           BuildData buildData = base.clone();
+           buildData.setScmName(getScmName());
+           return buildData;
+        }
     }
 
     /**
@@ -1488,6 +1491,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 break;
             }
             build = build.getPreviousBuild();
+        }
+        if (buildData != null) {
+            buildData.setScmName(getScmName());
         }
 
         return buildData;
