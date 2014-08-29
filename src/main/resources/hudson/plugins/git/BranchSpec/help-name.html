@@ -1,10 +1,10 @@
 <div>
   <p>Specify the branches if you'd like to track a specific branch in a repository.
   If left blank, all branches will be examined for changes and built.</p>
-  
+
   <p>The safest way is to use the <tt>refs/heads/&lt;branchName&gt;</tt> syntax. This way the expected branch
   is unambiguous.</p>
-  
+
   <p>Possible options:
     <ul>
       <li> <b><tt>&lt;branchName&gt;</tt></b><br/>
@@ -17,10 +17,10 @@
       <li> <b><tt>&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
            Tracks/checks out the specified branch. If ambiguous the first result is taken, which is not necessarily
            the expected one.<br/>
-           Better use <tt>refs/heads/&lt;branchName&gt;</tt>.<br/> 
+           Better use <tt>refs/heads/&lt;branchName&gt;</tt>.<br/>
            E.g. <tt>origin/master</tt>
       <li> <b><tt>remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
-           Tracks/checks out the specified branch.<br/> 
+           Tracks/checks out the specified branch.<br/>
            E.g. <tt>remotes/origin/master</tt>
       <li> <b><tt>refs/remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</tt></b><br/>
            Tracks/checks out the specified branch.<br/>
@@ -45,6 +45,11 @@
            and '**' is recognized as wildcard that includes the separator '/'. Therefore, <tt>origin/branches*</tt> would
            match <tt>origin/branches-foo</tt> but not <tt>origin/branches/foo</tt>, while <tt>origin/branches**</tt> would
            match both <tt>origin/branches-foo</tt> and <tt>origin/branches/foo</tt>.
+      <li> <b><tt>:&lt;regular expression&gt;</tt></b><br/>
+           The syntax is of the form: <tt>:regexp</tt>.
+           Regular expression syntax in branches to build will only
+           build those branches whose names match the regular
+           expression.
     </ul>
   </p>
 </div>
