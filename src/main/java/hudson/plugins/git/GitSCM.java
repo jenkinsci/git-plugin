@@ -493,10 +493,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             String gitRepo = getParamExpandedRepos(lastBuild).get(0).getURIs().get(0).toString();
             ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
-            listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
-            if (head != null && buildData.lastBuild.getMarked().getSha1().equals(head)) {
-                return NO_CHANGES;
+            if (head != null){
+                listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
+                if (buildData.lastBuild.getMarked().getSha1().equals(head)) {
+                    return NO_CHANGES;
+                } else {
+                    return BUILD_NOW;
+                }
             } else {
+                listener.getLogger().println("[poll] Couldn't get remote head revision");
                 return BUILD_NOW;
             }
         }
