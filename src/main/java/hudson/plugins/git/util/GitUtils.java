@@ -266,8 +266,8 @@ public class GitUtils implements Serializable {
         if (buildActions != null) {
             for (Action action : buildActions) {
                 // most importantly, ParametersAction will be processed here (for parameterized builds)
-                if (action instanceof EnvironmentContributingAction) {
-                    EnvironmentContributingAction envAction = (EnvironmentContributingAction) action;
+                if (action instanceof ParametersAction) {
+                    ParametersAction envAction = (ParametersAction) action;
                     envAction.buildEnvVars(b, env);
                 }
             }

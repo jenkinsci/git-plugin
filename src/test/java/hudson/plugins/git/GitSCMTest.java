@@ -5,6 +5,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -16,6 +17,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
+import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Callable;
@@ -42,6 +44,8 @@ import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -1318,6 +1322,77 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS);
 
         assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
+    }
+
+    private final class FakeParametersAction implements EnvironmentContributingAction, Serializable {
+        // Test class for testPolling_environmentValueAsEnvironmentContributingAction test case
+        final ParametersAction m_forwardingAction;
+
+        public FakeParametersAction(StringParameterValue params) {
+            this.m_forwardingAction = new ParametersAction(params);
+        }
+
+        public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
+            this.m_forwardingAction.buildEnvVars(ab, ev);
+        }
+
+        public String getIconFileName() {
+            return this.m_forwardingAction.getIconFileName();
+        }
+
+        public String getDisplayName() {
+            return this.m_forwardingAction.getDisplayName();
+        }
+
+        public String getUrlName() {
+            return this.m_forwardingAction.getUrlName();
+        }
+
+        public List<ParameterValue> getParameters() {
+            return this.m_forwardingAction.getParameters();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        }
+
+        private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        }
+
+        private void readObjectNoData() throws ObjectStreamException {
+        }
+    }
+
+    /**
+     * Test for JENKINS-24467.
+     *
+     * @throws Exception
+     */
+    public void testPolling_environmentValueAsEnvironmentContributingAction() throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        // Inital commit and build
+        commit("toto/commitFile1", johnDoe, "Commit number 1");
+        final String brokenPath = "\\broken/path\\of/doom";
+        final StringParameterValue real_param = new StringParameterValue("MY_BRANCH", "master");
+        final StringParameterValue fake_param = new StringParameterValue("PATH", brokenPath);
+
+        final Action[] actions = {new ParametersAction(real_param), new FakeParametersAction(fake_param)};
+
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        assertBuildStatus(Result.SUCCESS, first_build);
+
+        Launcher launcher = workspace.createLauncher(listener);
+        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
+
+        assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
     }
 
     private void setupJGit(GitSCM git) {
