@@ -308,8 +308,9 @@ public class GitSCMTest extends AbstractGitTestCase {
      * With multiple branches specified in the project and having commits from a user
      * excluded should not build the excluded revisions when another branch changes.
      */
+    /*
     @Bug(value = 8342)
-    public void testMultipleBranchWithExcludedUser() throws Exception { /*
+    public void testMultipleBranchWithExcludedUser() throws Exception {
         final String branch1 = "Branch1";
         final String branch2 = "Branch2";
 
@@ -375,7 +376,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue("scm polling should detect changes in 'Branch1' branch", project.poll(listener).hasChanges());
 
         build(project, Result.SUCCESS, branch1File1, branch1File2, branch1File3);
-    */ }
+    } */
 
     public void testBasicExcludedUser() throws Exception {
         FreeStyleProject project = setupProject("master", false, null, null, "Jane Doe", null);
