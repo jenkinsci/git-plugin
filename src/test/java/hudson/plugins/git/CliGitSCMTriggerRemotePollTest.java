@@ -60,11 +60,15 @@ public class CliGitSCMTriggerRemotePollTest extends SCMTriggerTest
         super.testTags_with_TagBAnnotated();
     }
 
+    /* Skip this test because git client 1.10.2 and later include a fix for
+     * JENKINS-23299.  The fix resolves refs/tags/tag_name as the commit to
+     * which tag_name points.  Prior to that change, the ref pointed to the
+     * SHA-1 of the tag, instead of the SHA-1 of the commit to which the tag
+     * points.  Because of that bug fix, the git plugin correctly detects
+     * refs/tags/TagA as needing to build.
+     */
     @Override
-    public void testTags_with_refsTagsTagBAnnotated() throws Exception
-    {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
-        super.testTags_with_refsTagsTagBAnnotated();
+    public void testTags_with_refsTagsTagA() throws Exception {
+        return;
     }
-
 }
