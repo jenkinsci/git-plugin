@@ -1370,6 +1370,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
         assertEquals("git --version non-zero return code", 0, returnCode);
+        assertFalse("Process listener logged an error", procListener.getLogger().checkError());
         final String versionOutput = out.toString().trim();
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
         final int gitMajor = Integer.parseInt(fields[0]);
