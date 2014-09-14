@@ -32,6 +32,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
+import java.io.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -1364,6 +1365,18 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
+    private boolean gitVersionAtLeast(int neededMajor, int neededMinor) throws IOException, InterruptedException {
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+        assertEquals("git --version non-zero return code", 0, returnCode);
+        final String versionOutput = out.toString().trim();
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
+        final int gitMajor = Integer.parseInt(fields[0]);
+        final int gitMinor = Integer.parseInt(fields[1]);
+        return gitMajor >= neededMajor && gitMinor >= neededMinor;
+    }
+
     /**
      * Test for JENKINS-24467.
      *
@@ -1382,7 +1395,15 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // Inital commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
-        final String brokenPath = "\\broken/path\\of/doom";
+        String brokenPath = "\\broken/path\\of/doom";
+        if (!gitVersionAtLeast(1, 8)) {
+            /* Git 1.7.10.4 fails the first build unless the git-upload-pack
+             * program is available in its PATH.
+             * Later versions of git don't have that problem.
+             */
+            final String systemPath = System.getenv("PATH");
+            brokenPath = systemPath + File.pathSeparator + brokenPath;
+        }
         final StringParameterValue real_param = new StringParameterValue("MY_BRANCH", "master");
         final StringParameterValue fake_param = new StringParameterValue("PATH", brokenPath);
 
