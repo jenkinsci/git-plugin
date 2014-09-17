@@ -141,7 +141,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
-                Collections.singletonList(new BranchSpec("*")),
+                Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
