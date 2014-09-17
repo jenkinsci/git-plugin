@@ -39,6 +39,7 @@ import hudson.plugins.git.UserMergeOptions;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.jvnet.hudson.test.Bug;
 
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
-                true, true) {
+                true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 run.incrementAndGet();
@@ -115,7 +116,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true));
+                true, true, false));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -131,6 +132,40 @@ public class GitPublisherTest extends AbstractGitTestCase {
         String sha1 = getHeadRevision(build1, "integration");
         assertEquals(sha1, testRepo.git.revParse(Constants.HEAD).name());
 
+    }
+    
+    @Bug(24082)
+    public void testForcePush() throws Exception {
+    	FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        project.getPublishersList().add(new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.<NoteToPush>emptyList(),
+                true, true, true));
+
+        commit("commitFile", johnDoe, "Initial Commit");
+
+        testRepo.git.branch("otherbranch");
+        testRepo.git.checkout("otherbranch");
+        commit("otherCommitFile", johnDoe, "commit lost on force push");
+        
+        testRepo.git.checkout("master");
+        commit("commitFile2", johnDoe, "commit to be pushed");
+        
+        ObjectId expectedCommit = testRepo.git.revParse("master");
+        
+        build(project, Result.SUCCESS, "commitFile");
+
+        assertEquals(expectedCommit, testRepo.git.revParse("otherbranch"));
     }
 
     /**
@@ -154,7 +189,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
           Collections.<TagToPush>emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
           Collections.<NoteToPush>emptyList(),
-          true, true));
+          true, true, false));
 
       // create initial commit and then run the build against it:
       commit("commitFileBase", johnDoe, "Initial Commit");
