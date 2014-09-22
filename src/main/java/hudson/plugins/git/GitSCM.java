@@ -789,9 +789,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final GitClient git,
                                               final BuildListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
+        Collection<Revision> candidates = Collections.EMPTY_LIST;
 
-        Revision marked = null;
-        
         // every MatrixRun should build the same marked commit ID
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
@@ -800,48 +799,53 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (parentBuildData != null) {
                     Build lastBuild = parentBuildData.lastBuild;
                     if (lastBuild!=null)
-                        marked = lastBuild.getMarked();
+                        candidates = Collections.singleton(lastBuild.getMarked());
                 }
             }
         }
 
-        if( marked == null ) {
-            // parameter forcing the commit ID to build
+        // parameter forcing the commit ID to build
+        if (candidates.isEmpty() ) {
             final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
             if (rpa != null)
                 return new Build(rpa.toRevision(git), build.getNumber(), null);
-    
+
             final String singleBranch = environment.expand( getSingleBranch(environment) );
-    
+
             final BuildChooserContext context = new BuildChooserContextImpl(build.getProject(), build, environment);
-            Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
+            candidates = getBuildChooser().getCandidateRevisions(
                     false, singleBranch, git, listener, buildData, context);
-    
-            if (candidates.size() == 0) {
-                // getBuildCandidates should make the last item the last build, so a re-build
-                // will build the last built thing.
-                throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
-            }
-    
-            if (candidates.size() > 1) {
-                log.println("Multiple candidate revisions");
-                AbstractProject<?, ?> project = build.getProject();
-                if (!project.isDisabled()) {
-                    log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
-                    if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause())) {
-                        log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
-                    }
-                }
-            }
-            marked = candidates.iterator().next();
         }
-        
+
+        if (candidates.isEmpty()) {
+            // getBuildCandidates should make the last item the last build, so a re-build
+            // will build the last built thing.
+            throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
+        }
+
+        Revision marked = candidates.iterator().next();
         Revision rev = marked;
-        //Modify the revision based on extensions
+        // Modify the revision based on extensions
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,rev);
         }
-        return new Build(marked, rev, build.getNumber(), null);
+        Build revToBuild = new Build(marked, rev, build.getNumber(), null);
+        buildData.saveBuild(revToBuild);
+
+        if (candidates.size() > 1) {
+            log.println("Multiple candidate revisions");
+            AbstractProject<?, ?> project = build.getProject();
+            
+                if (!project.isDisabled()) {
+                    log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
+                    if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
+                            + build.getNumber() + " because more than one build candidate was found."))) {
+                        log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+                    }
+                }
+            
+        }
+        return revToBuild;
     }
 
     /**
