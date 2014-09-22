@@ -27,6 +27,7 @@ import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
+
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
@@ -50,6 +51,13 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
      */
     @Parameter
     public boolean fullName;
+    
+    /**
+     * If true, include only the branch name
+     */
+    
+    @Parameter
+    public boolean onlyNameBranch;
 
     @Override
     public boolean acceptsMacroName(String macroName) {
@@ -63,8 +71,8 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
             return "";  // shall we report an error more explicitly?
         }
 
-       // Revision lb = data.getLastBuiltRevision();
-        Revision lb = data.getLastBuiltMarked();
+       //Revision lb = data.getLastBuiltRevision();
+       Revision lb = data.getLastBuiltMarked();
         if (lb==null || lb.getBranches().isEmpty())   return "";
 
         if (all) {
@@ -82,7 +90,18 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
     private String format(Branch b) {
         String n = b.getName();
         if (fullName)   return n;
+        if (onlyNameBranch) return getBranchName(b);
         return n.substring(n.indexOf('/')+1); // trim off '/'
+    }
+    
+    private String getBranchName(Branch branch)
+    {
+        String name = branch.getName();
+        if(name.startsWith("refs/remotes/")) {
+            //Restore expected previous behaviour
+            name = name.substring("refs/remotes/".length());
+        }
+        return name;
     }
 }
 
