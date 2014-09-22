@@ -144,6 +144,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     public Revision getLastBuiltRevision() {
         return lastBuild==null?null:lastBuild.revision;
     }
+    
+    @Exported
+    public Revision getLastBuiltMarked() {
+        return lastBuild==null?null:lastBuild.marked;
+    }
 
     @Exported
     public Map<String,Build> getBuildsByBranchName() {

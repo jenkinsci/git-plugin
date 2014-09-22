@@ -77,8 +77,10 @@ import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.util.IOUtils;
 import hudson.util.LogTaskListener;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -1052,8 +1054,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
-        if (rev!=null) {
-            Branch branch = Iterables.getFirst(rev.getBranches(), null);
+        Revision marked=fixNull(getBuildData(build)).getLastBuiltMarked();
+        if (marked!=null) {
+            Branch branch = Iterables.getFirst(marked.getBranches(), null);
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
 

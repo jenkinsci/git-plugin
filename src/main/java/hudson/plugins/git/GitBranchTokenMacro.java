@@ -63,7 +63,8 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
             return "";  // shall we report an error more explicitly?
         }
 
-        Revision lb = data.getLastBuiltRevision();
+       // Revision lb = data.getLastBuiltRevision();
+        Revision lb = data.getLastBuiltMarked();
         if (lb==null || lb.getBranches().isEmpty())   return "";
 
         if (all) {
