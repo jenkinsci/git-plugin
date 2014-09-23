@@ -498,7 +498,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
         Jenkins j = Jenkins.getInstance();
-        if (workspace.isRemote()) {
+        if (workspace != null && workspace.isRemote()) {
             for (Computer c : j.getComputers()) {
                 if (c.getChannel() == workspace.getChannel()) {
                     Node n = c.getNode();
@@ -598,7 +598,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
-        ws.mkdirs(); // ensure it exists
+        /* ws will be null if the node which ran the build is offline */
+        if (ws != null) {
+            ws.mkdirs(); // ensure it exists
+        }
         return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
     }
 
