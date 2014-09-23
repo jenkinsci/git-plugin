@@ -114,6 +114,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
+    public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
 
     /**
      * All the configured extensions attached to this.
@@ -1066,6 +1067,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (prevCommit != null) {
                     env.put(GIT_PREVIOUS_COMMIT, prevCommit);
                 }
+
+                String prevSuccessfulCommit = getLastSuccessfulBuiltCommitOfBranch(build, branch);
+                if (prevSuccessfulCommit != null) {
+                    env.put(GIT_PREVIOUS_SUCCESSFUL_COMMIT, prevSuccessfulCommit);
+                }
             }
 
             env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
@@ -1109,6 +1115,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
         }
+        return prevCommit;
+    }
+
+    private String getLastSuccessfulBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
+        String prevCommit = null;
+        if (build.getPreviousSuccessfulBuild() != null) {
+            final Build lastSuccessfulBuildOfBranch = fixNull(getBuildData(build.getPreviousSuccessfulBuild())).getLastBuildOfBranch(branch.getName());
+            if (lastSuccessfulBuildOfBranch != null) {
+                Revision previousRev = lastSuccessfulBuildOfBranch.getRevision();
+                if (previousRev != null) {
+                    prevCommit = previousRev.getSha1String();
+                }
+            }
+        }
+
         return prevCommit;
     }
 
