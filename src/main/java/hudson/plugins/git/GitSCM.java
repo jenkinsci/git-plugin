@@ -573,7 +573,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitClient createClient(BuildListener listener, EnvVars environment, AbstractBuild<?,?> build) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getProject(), build.getWorkspace(), environment, listener);
-        ws.mkdirs(); // ensure it exists
+        /* ws will be null if the node which ran the build is offline */
+        if (ws != null) {
+            ws.mkdirs(); // ensure it exists
+        }
         return createClient(listener,environment, build.getParent(), build.getBuiltOn(), ws);
     }
 
