@@ -492,15 +492,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
+        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
+
+        final String singleBranch = getSingleBranch(environment);
 
         // fast remote polling needs a single branch and an existing last build
         if (singleBranch != null                                                      // branch spec can be resolved to a single branch
             && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null // we know previous build commit
             && !requiresWorkspaceForPolling()                                         // remote polling hasn't been intentionally disabled
            ) {
-
-            final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener, false);
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
@@ -518,8 +518,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 return BUILD_NOW;
             }
         }
-
-        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
@@ -542,31 +540,31 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         GitClient git = createClient(listener, environment, project, n, workingDirectory);
 
-        if (git.hasGitRepo()) {
-            // Repo is there - do a fetch
-            listener.getLogger().println("Fetching changes from the remote Git repositories");
-
-            // Fetch updates
-            for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild, listener)) {
-                fetchFrom(git, listener, remoteRepository);
-            }
-
-            listener.getLogger().println("Polling for changes in");
-
-            Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
-
-            for (Revision c : candidates) {
-                if (!isRevExcluded(git, c, listener, buildData)) {
-                    return PollingResult.SIGNIFICANT;
-                }
-            }
-
-            return NO_CHANGES;
-        } else {
+        if (!git.hasGitRepo()) {
             listener.getLogger().println("No Git repository yet, an initial checkout is required");
             return PollingResult.SIGNIFICANT;
         }
+
+        // Repo is there - do a fetch
+        listener.getLogger().println("Fetching changes from the remote Git repositories");
+
+        // Fetch updates
+        for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild, listener)) {
+            fetchFrom(git, listener, remoteRepository);
+        }
+
+        listener.getLogger().println("Polling for changes in");
+
+        Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
+                true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
+
+        for (Revision c : candidates) {
+            if (!isRevExcluded(git, c, listener, buildData)) {
+                return PollingResult.SIGNIFICANT;
+            }
+        }
+
+        return NO_CHANGES;
     }
 
     /**
