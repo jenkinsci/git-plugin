@@ -48,7 +48,8 @@ public class GitSCMCreateClientNullTest {
         String repoURL = (new File(".git")).toURI().toURL().toString();
         String refspec = "+refs/heads/*:refs/remotes/origin/*";
         userRemoteConfigs.add(new UserRemoteConfig(repoURL, "origin", refspec, null));
-        List<BranchSpec> branches = null;
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("refs/tags/git-2.2.6"));
         Boolean doGenerateSubmoduleConfigurations = false;
         Collection<SubmoduleConfig> submoduleCfg = null;
         GitRepositoryBrowser browser = null;
