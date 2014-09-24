@@ -506,6 +506,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
+        // TODO would need to use hudson.plugins.git.util.GitUtils.getPollEnvironment
         return getSingleBranch(new EnvVars()) == null;
     }
 
@@ -553,16 +554,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
 
         // fast remote polling needs a single branch and an existing last build
-        if (!requiresWorkspaceForPolling() && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null) {
-
-            // FIXME this should not be a specific case, but have BuildChooser tell us if it can poll without workspace.
+        if (singleBranch != null                                                      // branch spec can be resolved to a single branch
+            && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null // we know previous build commit
+            && !requiresWorkspaceForPolling()                                         // remote polling hasn't been intentionally disabled
+           ) {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
             String gitRepo = getParamExpandedRepos(lastBuild, listener).get(0).getURIs().get(0).toString();
-            ObjectId head = git.getHeadRev(gitRepo, getBranches().get(0).getName());
+            ObjectId head = git.getHeadRev(gitRepo, singleBranch);
             if (head != null){
                 listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
                 if (buildData.lastBuild.getMarked().getSha1().equals(head)) {
