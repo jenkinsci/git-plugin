@@ -291,11 +291,21 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                                                      + targetRepo);
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref(tagName);
-                        if (forcePush) {
-                          push.force();
+                        
+                        String tagParts[] = tagName.split(",");
+                        
+                        for (String tag : tagParts) {
+                        
+                        	PushCommand push = git.push().to(remoteURI).ref(tag);
+                        
+                        	if (forcePush) {
+                        		push.force();
+                        	}
+                        
+                        	push.execute();
+                        
                         }
-                        push.execute();
+                        
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push tag " + tagName + " to " + targetRepo));
                         return false;
