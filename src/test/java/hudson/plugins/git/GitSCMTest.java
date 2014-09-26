@@ -565,14 +565,31 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect commit2 change because it is not in the branch we are tracking.", project.poll(listener).hasChanges());
     }
 
-    public void testBranchIsAvailableInEvironment() throws Exception {
+    private String checkoutString(FreeStyleProject project, String envVar) {
+        return "checkout -f " + getEnvVars(project).get(envVar);
+    }
+
+    public void testEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, Result.SUCCESS, commitFile1);
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+
+        assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+
+        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
+        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+
+        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
+        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
     // For HUDSON-7411
