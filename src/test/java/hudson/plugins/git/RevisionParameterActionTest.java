@@ -28,6 +28,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
+import hudson.Functions;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -205,7 +206,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 		assertFalse(b3.getAction(BuildData.class)
 				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
 		
-		if (System.getProperty("os.name").startsWith("Windows")) {
+		if (Functions.isWindows()) {
 		  System.gc(); // Prevents exceptions cleaning up temp dirs during tearDown
 		}
 

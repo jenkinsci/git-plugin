@@ -1,7 +1,10 @@
 package hudson.plugins.git;
 
+import hudson.Functions;
+import hudson.model.Run;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 
 import org.jvnet.hudson.test.HudsonTestCase;
 
@@ -9,6 +12,20 @@ import org.jvnet.hudson.test.HudsonTestCase;
  * Unit tests of {@link GitChangeLogParser}
  */
 public class GitChangeLogParserTest extends HudsonTestCase {
+
+    @Override
+    protected void tearDown() throws Exception
+    {
+        try { //Avoid test failures due to failed cleanup tasks
+            super.tearDown();
+        }
+        catch (Exception e) {
+            if (e instanceof IOException && Functions.isWindows()) {
+                return;
+            }
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Test duplicate changes filtered from parsed change set list.

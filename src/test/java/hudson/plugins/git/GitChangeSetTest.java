@@ -1,10 +1,12 @@
 package hudson.plugins.git;
 
+import hudson.Functions;
 import hudson.model.User;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +17,18 @@ import org.jvnet.hudson.test.HudsonTestCase;
 import junit.framework.Assert;
 
 public class GitChangeSetTest extends HudsonTestCase {
+
+    @Override
+    protected void tearDown() throws Exception {
+        try { //Avoid test failures due to failed cleanup tasks
+            super.tearDown();
+        } catch (Exception e) {
+            if (e instanceof IOException && Functions.isWindows()) {
+                return;
+            }
+            e.printStackTrace();
+        }
+    }
     
     public GitChangeSetTest(String testName) {
         super(testName);
