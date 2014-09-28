@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleBuild;
@@ -72,6 +73,18 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         workDir = testRepo.gitDir;
         workspace = testRepo.gitDirPath;
         git = testRepo.git;
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        try { //Avoid test failures due to failed cleanup tasks
+            super.tearDown();
+        } catch (Exception e) {
+            if (e instanceof IOException && Functions.isWindows()) {
+                return;
+            }
+            e.printStackTrace();
+        }
     }
 
     protected void commit(final String fileName, final PersonIdent committer, final String message)

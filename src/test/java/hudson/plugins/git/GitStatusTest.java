@@ -4,19 +4,18 @@
  */
 package hudson.plugins.git;
 
+import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.triggers.SCMTrigger;
-
-import org.eclipse.jgit.transport.URIish;
-
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import org.eclipse.jgit.transport.URIish;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -33,6 +32,18 @@ public class GitStatusTest extends HudsonTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         this.gitStatus = new GitStatus();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        try { //Avoid test failures due to failed cleanup tasks
+            super.tearDown();
+        } catch (Exception e) {
+            if (e instanceof IOException && Functions.isWindows()) {
+                return;
+            }
+            e.printStackTrace();
+        }
     }
 
     public void testGetDisplayName() {

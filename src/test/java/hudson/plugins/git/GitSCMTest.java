@@ -56,17 +56,6 @@ import java.util.*;
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
-
-    @Override
-    protected void tearDown() throws Exception
-    {
-        try { //Avoid test failures due to failed cleanup tasks
-            super.tearDown();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.

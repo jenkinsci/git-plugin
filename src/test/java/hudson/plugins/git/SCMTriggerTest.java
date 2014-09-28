@@ -9,6 +9,7 @@ import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
 import hudson.util.IOUtils;
 import hudson.util.RunList;
+import hudson.Functions;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,6 +49,9 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             tempAllocator.dispose();
         }
         catch (Exception e) {
+            if (e instanceof IOException && Functions.isWindows()) {
+                return;
+            }
             e.printStackTrace();
         }
     }
