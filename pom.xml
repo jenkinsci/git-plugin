@@ -23,6 +23,7 @@
   
   <properties>
     <findbugs-maven-plugin.version>3.0.0</findbugs-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.7.2.201409121644</jacoco-maven-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -159,7 +160,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.0.201403182114</version>
+        <version>${jacoco-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>pre-unit-test</id>
@@ -223,6 +224,11 @@
             <id>ndeloof</id>
             <name>Nicolas De Loof</name>
             <email>nicolas.deloof@gmail.com</email>
+        </developer>
+        <developer>
+            <id>MarkEWaite</id>
+            <name>Mark Waite</name>
+            <email>mark.earl.waite@gmail.com</email>
         </developer>
     </developers>
 
