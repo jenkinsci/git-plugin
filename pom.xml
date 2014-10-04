@@ -22,7 +22,7 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
   
   <properties>
-    <findbugs-maven-plugin.version>2.5.4</findbugs-maven-plugin.version>
+    <findbugs-maven-plugin.version>3.0.0</findbugs-maven-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
