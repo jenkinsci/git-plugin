@@ -13,6 +13,8 @@ import hudson.matrix.MatrixProject;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.util.BuildChooserContext;
@@ -1118,16 +1120,16 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Bug(22604)
     public void testConfigRoundtripURLPreserved() throws Exception {
-//        FreeStyleProject p = createFreeStyleProject();
-//        final String url = "https://github.com/jenkinsci/jenkins";
-//        GitRepositoryBrowser browser = new GithubWeb(url);
-//        GitSCM scm = new GitSCM(createRepoList(url),
-//                                Collections.singletonList(new BranchSpec("")),
-//                                false, Collections.<SubmoduleConfig>emptyList(),
-//                                browser, null, null);
-//        p.setScm(scm);
-//        configRoundtrip(p);
-//        assertEqualDataBoundBeans(scm,p.getScm());
+        FreeStyleProject p = createFreeStyleProject();
+        final String url = "https://github.com/jenkinsci/jenkins";
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList(url),
+                                Collections.singletonList(new BranchSpec("")),
+                                false, Collections.<SubmoduleConfig>emptyList(),
+                                browser, null, null);
+        p.setScm(scm);
+        configRoundtrip(p);
+        assertEqualDataBoundBeans(scm,p.getScm());
     }
 
     /**
