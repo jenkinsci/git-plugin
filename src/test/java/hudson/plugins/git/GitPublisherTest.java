@@ -23,6 +23,8 @@
  */
 package hudson.plugins.git;
 
+import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -35,7 +37,6 @@ import hudson.plugins.git.GitPublisher.TagToPush;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
-import hudson.plugins.git.UserMergeOptions;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import org.eclipse.jgit.lib.Constants;
@@ -45,6 +46,7 @@ import org.jvnet.hudson.test.Bug;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -204,18 +206,128 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
       String sha1 = getHeadRevision(build1, "integration");
       assertEquals(sha1, testRepo.git.revParse(Constants.HEAD).name());
+    }
+
+    @Bug(24786)
+    public void testMergeAndPushWithCharacteristicEnvVar() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        /*
+         * JOB_NAME seemed like the more obvious choice, but when run from a 
+         * multi-configuration job, the value of JOB_NAME includes an equals
+         * sign.  That makes log parsing and general use of the variable more
+         * difficult.  JENKINS_SERVER_COOKIE is a characteristic env var which
+         * probably never includes an equals sign.
+         */
+        String envName = "JENKINS_SERVER_COOKIE";
+        String envValue = project.getCharacteristicEnvVars().get(envName, "NOT-SET");
+        assertFalse("Env " + envName + " not set", envValue.equals("NOT-SET"));
+
+        checkEnvVar(project, envName, envValue);
+    }
+
+    @Bug(24786)
+    public void testMergeAndPushWithSystemEnvVar() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        String envName = Functions.isWindows() ? "COMPUTERNAME" : "LOGNAME";
+        String envValue = System.getenv().get(envName);
+        assertNotNull("Env " + envName + " not set", envValue);
+        assertFalse("Env " + envName + " empty", envValue.isEmpty());
+
+        checkEnvVar(project, envName, envValue);
+    }
+
+    private void checkEnvVar(FreeStyleProject project, String envName, String envValue) throws Exception {
+
+        String envReference = "${" + envName + "}";
+
+        List<GitSCMExtension> scmExtensions = new ArrayList<GitSCMExtension>();
+        scmExtensions.add(new PreBuildMerge(new UserMergeOptions("origin", envReference, null)));
+        scmExtensions.add(new LocalBranch(envReference));
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, scmExtensions);
+        project.setScm(scm);
+
+        String tagNameReference = envReference + "-tag"; // ${BRANCH_NAME}-tag
+        String tagNameValue = envValue + "-tag";         // master-tag
+        String tagMessageReference = envReference + " tag message";
+        String noteReference = "note for " + envReference;
+        String noteValue = "note for " + envValue;
+        GitPublisher publisher = new GitPublisher(
+                Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
+                Collections.singletonList(new BranchToPush("origin", envReference)),
+                Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
+                true, true, true);
+        assertTrue(publisher.isForcePush());
+        assertTrue(publisher.isPushBranches());
+        assertTrue(publisher.isPushMerge());
+        assertTrue(publisher.isPushNotes());
+        assertTrue(publisher.isPushOnlyIfSuccess());
+        assertTrue(publisher.isPushTags());
+        project.getPublishersList().add(publisher);
+
+        // create initial commit
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        ObjectId initialCommit = testRepo.git.getHeadRev(testRepo.gitDir.getAbsolutePath(), "master");
+        assertTrue(testRepo.git.isCommitInRepo(initialCommit));
+
+        // Create branch in the test repo (pulled into the project workspace at build)
+        assertFalse("Test repo has " + envValue + " branch", hasBranch(envValue));
+        testRepo.git.branch(envValue);
+        assertTrue("Test repo missing " + envValue + " branch", hasBranch(envValue));
+        assertFalse(tagNameValue + " in " + testRepo, testRepo.git.tagExists(tagNameValue));
+
+        // Build the branch
+        final FreeStyleBuild build0 = build(project, Result.SUCCESS, "commitFileBase");
+
+        String build0HeadBranch = getHeadRevision(build0, envValue);
+        assertEquals(build0HeadBranch, initialCommit.getName());
+        assertTrue(tagNameValue + " not in " + testRepo, testRepo.git.tagExists(tagNameValue));
+        assertTrue(tagNameValue + " not in build", build0.getWorkspace().child(".git/refs/tags/" + tagNameValue).exists());
+
+        // Create a topic branch in the source repository and commit to topic branch
+        String topicBranch = envValue + "-topic1";
+        assertFalse("Test repo has " + topicBranch + " branch", hasBranch(topicBranch));
+        testRepo.git.checkout(null, topicBranch);
+        assertTrue("Test repo has no " + topicBranch + " branch", hasBranch(topicBranch));
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        ObjectId topicCommit = testRepo.git.getHeadRev(testRepo.gitDir.getAbsolutePath(), topicBranch);
+        assertTrue(testRepo.git.isCommitInRepo(topicCommit));
+
+        // Run a build, should be on the topic branch, tagged, and noted
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+        FilePath myWorkspace = build1.getWorkspace();
+        assertTrue(myWorkspace.child(commitFile1).exists());
+        assertTrue("Tag " + tagNameValue + " not in build", myWorkspace.child(".git/refs/tags/" + tagNameValue).exists());
+
+        String build1Head = getHeadRevision(build1, envValue);
+        assertEquals(build1Head, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals("Wrong head commit in build1", topicCommit.getName(), build1Head);
 
     }
 
     private boolean existsTag(String tag) throws InterruptedException {
         Set<String> tags = git.getTagNames("*");
-        System.out.println(tags);
         return tags.contains(tag);
     }
 
     private boolean containsTagMessage(String tag, String str) throws InterruptedException {
         String msg = git.getTagMessage(tag);
-        System.out.println(msg);
         return msg.contains(str);
+    }
+
+    private boolean hasBranch(String branchName) throws GitException, InterruptedException {
+        Set<Branch> testRepoBranches = testRepo.git.getBranches();
+        for (Branch branch : testRepoBranches) {
+            if (branch.getName().equals(branchName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
