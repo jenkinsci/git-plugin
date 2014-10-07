@@ -28,11 +28,11 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.plugins.git.GitStatus;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import jenkins.scm.api.SCMSource;
@@ -123,6 +123,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String remote) {
+            if (context == null || !context.hasPermission(Item.CONFIGURE)) {
+                return new ListBoxModel();
+            }
             StandardListBoxModel result = new StandardListBoxModel();
             result.withEmptySelection();
             result.withMatching(GitClient.CREDENTIALS_MATCHER,
