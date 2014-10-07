@@ -78,6 +78,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath AbstractProject project,
                                                      @QueryParameter String url) {
+            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+                return new StandardListBoxModel();
+            }
             return new StandardListBoxModel()
                     .withEmptySelection()
                     .withMatching(
@@ -92,12 +95,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath AbstractProject project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            value = Util.fixEmptyAndTrim(value);
-            if (value == null) {
+            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }
 
-            if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE)) {
+            value = Util.fixEmptyAndTrim(value);
+            if (value == null) {
                 return FormValidation.ok();
             }
 
@@ -130,15 +133,16 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
+            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
+
             String url = Util.fixEmptyAndTrim(value);
             if (url == null)
                 return FormValidation.error("Please enter Git repository.");
 
             if (url.indexOf('$') >= 0)
                 // set by variable, can't validate
-                return FormValidation.ok();
-
-            if (!Jenkins.getInstance().hasPermission(Item.CONFIGURE))
                 return FormValidation.ok();
 
             // get git executable on master
