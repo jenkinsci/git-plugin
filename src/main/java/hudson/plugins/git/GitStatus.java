@@ -14,12 +14,15 @@ import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+import org.eclipse.jgit.lib.ObjectId;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -249,11 +252,34 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (isNotEmpty(sha1)) {
-                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
-                                    scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
-                                            new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1));
-                                    result.add(new ScheduledResponseContributor(project));
+                                    final ObjectId id = ObjectId.fromString(sha1);
+                                    boolean revIsIncluded = false;
+                                    try {
+                                        // TODO: THere should be correct selection for AbstractProject
+                                        // in the case of MultiBranchFresstyle projects
+                                        final Boolean revIsExcluded = git.isRevExcluded(
+                                                (AbstractProject<?, ?>) project, id,
+                                                new LogTaskListener(LOGGER, Level.FINE));
+                                        if (revIsExcluded == null) {
+                                            LOGGER.info("No previous build detected for project "
+                                                    + project.getName() + ". Forcing a build");
+                                            revIsIncluded = true;
+                                        } else {
+                                            revIsIncluded = !revIsExcluded;
+                                        }
+                                    } catch (IOException e) {
+                                        LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+                                    } catch (InterruptedException e) {
+                                        LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+                                    }
+                                    if (revIsIncluded) {
+                                        LOGGER.info("Scheduling " + project.getFullDisplayName()
+                                                + " to build commit " + sha1);
+                                        scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
+                                                new CauseAction(new CommitHookCause(sha1)),
+                                                new RevisionParameterAction(sha1));
+                                        result.add(new ScheduledResponseContributor(project));
+                                    }
                                 } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
