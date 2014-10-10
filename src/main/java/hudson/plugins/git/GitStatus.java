@@ -5,15 +5,22 @@ import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
 import hudson.model.*;
+import hudson.model.ItemGroup;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+
+import org.eclipse.jgit.lib.ObjectId;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,10 +28,13 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.triggers.SCMTriggerItem;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -261,11 +271,16 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (isNotEmpty(sha1)) {
-                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
-                                    scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
-                                            new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1), new ParametersAction(buildParameters));
-                                    result.add(new ScheduledResponseContributor(project));
+                                    final boolean revIsIncluded = isRevisionIncluded(sha1, project,
+                                            git);
+                                    if (revIsIncluded) {
+                                        LOGGER.info("Scheduling " + project.getFullDisplayName()
+                                                + " to build commit " + sha1);
+                                        scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
+                                                new CauseAction(new CommitHookCause(sha1)),
+                                                new RevisionParameterAction(sha1), new ParametersAction(buildParameters));
+                                        result.add(new ScheduledResponseContributor(project));
+                                    }
                                 } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
@@ -290,6 +305,65 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             } finally {
                 SecurityContextHolder.setContext(old);
             }
+        }
+
+        /**
+         * Method determines whether the specified revision is included or
+         * excluded from the polling by the current project.
+         * @param sha1 commit id
+         * @param project project to probe commit on
+         * @param git SCM object
+         * @return <code>true</code> if the revision is included and there fore
+         *         - is to be build. <code>false</code> - otherwise
+         */
+        private boolean isRevisionIncluded(String sha1, Item project, GitSCM git) {
+            final ObjectId id = ObjectId.fromString(sha1);
+            boolean revIsIncluded = false;
+            try {
+                final AbstractProject<?, ?> projectObject = getProject(project);
+                if (projectObject == null) {
+                    revIsIncluded = true;
+                    LOGGER.warning("Unable to find AbstractProject for " + project
+                            + ". Forcing build");
+                }
+                final Boolean revIsExcluded = git.isRevExcluded(projectObject, id,
+                        new LogTaskListener(LOGGER, Level.FINE));
+                if (revIsExcluded == null) {
+                    LOGGER.info("No previous build detected for project " + project.getName()
+                            + ". Forcing a build");
+                    revIsIncluded = true;
+                } else {
+                    revIsIncluded = !revIsExcluded;
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+            }
+            return revIsIncluded;
+        }
+
+        /**
+         * Method returns abstract project object from the current runnable
+         * item.
+         * @param item runnable item
+         * @return AbstractProject object, if found. <code>null</code>
+         *         otherwise.
+         */
+        private static AbstractProject<?, ?> getProject(Item item) {
+            Item currentItem = item;
+            while (currentItem != null) {
+                if (currentItem instanceof AbstractProject) {
+                    return (AbstractProject<?, ?>) currentItem;
+                }
+                final ItemGroup<? extends Item> parent = currentItem.getParent();
+                if (parent instanceof Item) {
+                    currentItem = (Item) parent;
+                } else {
+                    return null;
+                }
+            }
+            return null;
         }
 
         /**

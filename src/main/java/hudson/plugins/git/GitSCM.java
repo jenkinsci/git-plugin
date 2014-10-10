@@ -1552,6 +1552,57 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
+     * Method determines whether the specified revision on the specified project
+     * is excluded from polling, i.e. we must ignore it and not trigger any
+     * build for it.
+     * @param project project, whether to test the revision against
+     * @param sha1 commit id
+     * @param listener log listener
+     * @return returns <code>null</code> if it is impossible to decide whether
+     *         the commit is excluded, <code>true</code> if the commit should be
+     *         ignored</code> and <code>false</code> if the commit should not be
+     *         ignored.
+     * @throws IOException on upstream errors from Git client
+     * @throws InterruptedException on thread interruption
+     */
+    public Boolean isRevExcluded(AbstractProject<?, ?> project, ObjectId sha1, TaskListener listener)
+            throws IOException, InterruptedException {
+        final AbstractBuild<?, ?> lastBuild = project.getLastBuild();
+        if (lastBuild == null) {
+            // It is not possible to classify the commit if we have no previous
+            // build, so we have no workspace to perform tests on.
+            return null;
+        }
+        final FilePath workspace = lastBuild.getWorkspace();
+        final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, null, listener);
+
+        final FilePath workingDirectory = workingDirectory(project, workspace, environment,
+                listener);
+        // which node is this workspace from?
+        // there should be always one match, but just in case we initialize n to
+        // a non-null value
+        Node n = Jenkins.getInstance();
+        if (workspace.isRemote()) {
+            for (Computer c : Jenkins.getInstance().getComputers()) {
+                if (c.getChannel() == workspace.getChannel()) {
+                    n = c.getNode();
+                    break;
+                }
+            }
+        }
+        final GitClient git = createClient(listener, environment, project, n, workingDirectory);
+        // Repo is there - do a fetch
+        listener.getLogger().println("Fetching changes from the remote Git repositories");
+
+        // Fetch updates
+        for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild, listener)) {
+            fetchFrom(git, listener, remoteRepository);
+        }
+        final Revision revision = new Revision(sha1);
+        return isRevExcluded(git, revision, listener, null);
+    }
+
+    /**
      * Given a Revision "r", check whether the list of revisions "COMMITS_WE_HAVE_BUILT..r" are to be entirely excluded given the exclusion rules
      *
      * @param git GitClient object
@@ -1581,8 +1632,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         if (excludeThisCommit!=null)
                             break;
                     }
-                    if (excludeThisCommit==null || !excludeThisCommit)
-                        return false;    // this sequence of commits have one commit that we want to build
+                    if (excludeThisCommit == null || !excludeThisCommit) {
+                        // this sequence of commits have one commit that we want
+                        // to build
+                        listener.getLogger().println(
+                                "At least one commit has changes: " + change.getCommitId());
+                        return false;
+                    }
                     start = idx;
                 }
 
