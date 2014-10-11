@@ -14,8 +14,6 @@ import java.util.HashSet;
 
 import org.jvnet.hudson.test.HudsonTestCase;
 
-import junit.framework.Assert;
-
 public class GitChangeSetTest extends HudsonTestCase {
 
     @Override
@@ -29,7 +27,7 @@ public class GitChangeSetTest extends HudsonTestCase {
             e.printStackTrace();
         }
     }
-    
+
     public GitChangeSetTest(String testName) {
         super(testName);
     }
@@ -60,21 +58,22 @@ public class GitChangeSetTest extends HudsonTestCase {
 
         return new GitChangeSet(lines, authorOrCommitter);
     }
-    
+
     public void testLegacyChangeSet() {
         GitChangeSet changeSet = genChangeSet(false, true);
         assertChangeSet(changeSet);
     }
-    
+
     public void testChangeSet() {
-    	GitChangeSet changeSet = genChangeSet(false, false);
-    	assertChangeSet(changeSet);
+        GitChangeSet changeSet = genChangeSet(false, false);
+        assertChangeSet(changeSet);
     }
 
-	private void assertChangeSet(GitChangeSet changeSet) {
-		Assert.assertEquals("123abc456def", changeSet.getId());
-        Assert.assertEquals("Commit title.", changeSet.getMsg());
-        Assert.assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
+    private void assertChangeSet(GitChangeSet changeSet) {
+        assertEquals("123abc456def", changeSet.getId());
+        assertEquals("Commit title.", changeSet.getMsg());
+        assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
+        assertEquals("Commit title.\nCommit extended description.\n".replace("\n", "<br>"), changeSet.getCommentAnnotated());
         HashSet<String> expectedAffectedPaths = new HashSet<String>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
@@ -82,66 +81,69 @@ public class GitChangeSetTest extends HudsonTestCase {
         expectedAffectedPaths.add("src/test/renamedFrom.file");
         expectedAffectedPaths.add("src/test/renamedTo.file");
         expectedAffectedPaths.add("src/test/copyOf.file");
-        Assert.assertEquals(expectedAffectedPaths, changeSet.getAffectedPaths());
+        assertEquals(expectedAffectedPaths, changeSet.getAffectedPaths());
 
         Collection<Path> actualPaths = changeSet.getPaths();
-        Assert.assertEquals(6, actualPaths.size());
+        assertEquals(6, actualPaths.size());
         for (Path path : actualPaths) {
             if ("src/test/add.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.ADD, path.getEditType());
-                Assert.assertNull(path.getSrc());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                assertEquals(EditType.ADD, path.getEditType());
+                assertNull(path.getSrc());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
             } else if ("src/test/deleted.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.DELETE, path.getEditType());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                Assert.assertNull(path.getDst());
+                assertEquals(EditType.DELETE, path.getEditType());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                assertNull(path.getDst());
             } else if ("src/test/modified.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.EDIT, path.getEditType());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                Assert.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                assertEquals(EditType.EDIT, path.getEditType());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
             } else if ("src/test/renamedFrom.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.DELETE, path.getEditType());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                Assert.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                assertEquals(EditType.DELETE, path.getEditType());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
             } else if ("src/test/renamedTo.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.ADD, path.getEditType());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                Assert.assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                assertEquals(EditType.ADD, path.getEditType());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
             } else if ("src/test/copyOf.file".equals(path.getPath())) {
-                Assert.assertEquals(EditType.ADD, path.getEditType());
-                Assert.assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
-                Assert.assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                assertEquals(EditType.ADD, path.getEditType());
+                assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
+                assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
             } else {
-                Assert.fail("Unrecognized path.");
+                fail("Unrecognized path.");
             }
         }
-	}
+    }
 
     public void testAuthorOrCommitter() {
         GitChangeSet committerCS = genChangeSet(false, false);
 
-        Assert.assertEquals("John Committer", committerCS.getAuthorName());
+        assertEquals("John Committer", committerCS.getAuthorName());
 
         GitChangeSet authorCS = genChangeSet(true, false);
 
-        Assert.assertEquals("John Author", authorCS.getAuthorName());
+        assertEquals("John Author", authorCS.getAuthorName());
     }
-    
+
     public void testFindOrCreateUser() {
-    	GitChangeSet committerCS = genChangeSet(false, false);
-    	String csAuthor = "John Author";
-		String csAuthorEmail = "jauthor@nospam.com";
-		boolean createAccountBasedOnEmail = true;
-		
-		User user = committerCS.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail);
-		Assert.assertNotNull(user);
-		
-		UserProperty property = user.getProperty(Mailer.UserProperty.class);
-		Assert.assertNotNull(property);
-		
-		String address = property.getAddress();
-		Assert.assertNotNull(address);
-		Assert.assertEquals(csAuthorEmail, address);
+        GitChangeSet committerCS = genChangeSet(false, false);
+        String csAuthor = "John Author";
+        String csAuthorEmail = "jauthor@nospam.com";
+        boolean createAccountBasedOnEmail = true;
+
+        User user = committerCS.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail);
+        assertNotNull(user);
+
+        UserProperty property = user.getProperty(Mailer.UserProperty.class);
+        assertNotNull(property);
+
+        String address = property.getAddress();
+        assertNotNull(address);
+        assertEquals(csAuthorEmail, address);
+
+        assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, csAuthorEmail, false));
+        assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, csAuthorEmail, true));
     }
 
     private GitChangeSet genChangeSetForSwedCase(boolean authorOrCommitter) {
@@ -172,10 +174,10 @@ public class GitChangeSetTest extends HudsonTestCase {
     public void testAuthorOrCommitterSwedCase() {
         GitChangeSet committerCS = genChangeSetForSwedCase(false);
 
-        Assert.assertEquals("Mister Åhlander", committerCS.getAuthorName());//swedish char on purpose
+        assertEquals("Mister Åhlander", committerCS.getAuthorName());//swedish char on purpose
 
         GitChangeSet authorCS = genChangeSetForSwedCase(true);
 
-        Assert.assertEquals("mistera", authorCS.getAuthorName());
+        assertEquals("mistera", authorCS.getAuthorName());
     }
 }
