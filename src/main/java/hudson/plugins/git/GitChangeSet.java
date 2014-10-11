@@ -247,6 +247,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      */
     public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
         User user;
+        if (csAuthor == null) {
+            return User.getUnknown();
+        }
         if (createAccountBasedOnEmail) {
             user = User.get(csAuthorEmail, false);
 
@@ -297,8 +300,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-	private boolean isCreateAccountBasedOnEmail() {
-        DescriptorImpl descriptor = (DescriptorImpl) Hudson.getInstance().getDescriptor(GitSCM.class);
+    private boolean isCreateAccountBasedOnEmail() {
+        Hudson hudson = Hudson.getInstance();
+        if (hudson == null) {
+            return false;
+        }
+        DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
 
         return descriptor.isCreateAccountBasedOnEmail();
     }
@@ -319,10 +326,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             csAuthorEmail = this.committerEmail;
         }
 
-        if (csAuthor == null) {
-            throw new RuntimeException("No author in changeset " + id);
-        }
-
         return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail());
     }
 
@@ -336,8 +339,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     public String getAuthorName() {
         // If true, use the author field from git log rather than the committer.
         String csAuthor = authorOrCommitter ? author : committer;
-        if (csAuthor == null)
-            throw new RuntimeException("No author in changeset " + id);
         return csAuthor;
     }
 
