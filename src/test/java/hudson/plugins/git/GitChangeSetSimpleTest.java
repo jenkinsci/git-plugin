@@ -122,11 +122,6 @@ public class GitChangeSetSimpleTest {
     }
 
     @Test
-    public void testGetDate() {
-        assertEquals(useAuthorName ? "1970-01-14T23:56:08-0700 -0600" : "1970-01-14T23:56:06-0700 -0600", changeSet.getDate());
-    }
-
-    @Test
     public void testGetTimestamp() {
         assertEquals(useAuthorName ? 1234568000L : 1234566000L, changeSet.getTimestamp());
     }

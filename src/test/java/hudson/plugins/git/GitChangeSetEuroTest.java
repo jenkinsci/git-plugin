@@ -64,11 +64,6 @@ public class GitChangeSetEuroTest {
     }
 
     @Test
-    public void testGetDate() {
-        assertEquals(useAuthorName ? "2013-03-21T09:16:44-0600 +0100" : "2013-03-25T02:18:59-0600 -0400", changeSet.getDate());
-    }
-
-    @Test
     public void testGetTimestamp() {
         assertEquals(useAuthorName ? 1363879004000L : 1364199539000L, changeSet.getTimestamp());
     }
