@@ -18,7 +18,6 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class GitChangeSetSimpleTest {
 
-    private GitChangeSet changeSet = null;
     private final String id = "123abc456def";
     private final String parent = "345mno678pqr";
     private final String authorName = "John Author";
@@ -26,8 +25,9 @@ public class GitChangeSetSimpleTest {
     private final String commitTitle = "Commit title.";
     private final String comment = commitTitle + "\n";
 
-    protected final boolean useAuthorName;
-    protected boolean useLegacyFormat = false;
+    private GitChangeSet changeSet = null;
+    private final boolean useAuthorName;
+    private final boolean useLegacyFormat;
 
     public GitChangeSetSimpleTest(String useAuthorName, String useLegacyFormat) {
         this.useAuthorName = Boolean.valueOf(useAuthorName);
@@ -39,8 +39,8 @@ public class GitChangeSetSimpleTest {
         List<Object[]> values = new ArrayList<Object[]>();
         String[] allowed = {"true", "false"};
         for (String authorName : allowed) {
-            for (String legacyLayout : allowed) {
-                Object[] combination = {authorName, legacyLayout};
+            for (String legacyFormat : allowed) {
+                Object[] combination = {authorName, legacyFormat};
                 values.add(combination);
             }
         }
