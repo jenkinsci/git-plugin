@@ -63,9 +63,9 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
         if (data == null) {
 			listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
 			return null;
+		} else {
+			return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
 		}
-
-		return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
 	}
 
 	public boolean getCombineQueuedCommits() {
