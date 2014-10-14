@@ -38,6 +38,9 @@ public class BuildChooserSetting extends FakeGitSCMExtension {
         }
 
         public List<BuildChooserDescriptor> getBuildChooserDescriptors(Item job) {
+            if (job == null) {
+                return getBuildChooserDescriptors();
+            }
             return BuildChooser.allApplicableTo(job);
         }
 
