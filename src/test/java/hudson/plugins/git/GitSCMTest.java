@@ -239,6 +239,53 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    /**
+     * Method tests for multiple branches, tracked by polling. Commit structure
+     * is the following:
+     *
+     * <pre>
+     * master:  1+ ---- 3+ -- 4
+     * branch1:   \-2+ --------- 5
+     * </pre>
+     *
+     * Commits with plus (+) have changes, that are not excluded, while lacking
+     * (+) should be ignored by path exclusion
+     * @throws Exception on exceptions occur
+     */
+    public void testMultibranchExcludedRegion() throws Exception {
+        final String branch1 = "master";
+        final String branch2 = "branch2";
+        final List<BranchSpec> branches = Arrays.asList(new BranchSpec(branch1), new BranchSpec(branch2));
+        final FreeStyleProject project = setupProject(branches, false, null, ".*ex", null, null,
+                false, null);
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        assertTrue("scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile1);
+
+        testRepo.git.branch(branch2);
+        build(project, Result.SUCCESS, commitFile1);
+        testRepo.git.checkout().ref(branch2).execute();
+        commit("commitFile2", johnDoe, "Commit number 2");
+        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS);
+
+        testRepo.git.checkout().ref(branch1).execute();
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling should detect commit 3", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS);
+
+        commit("commitFile4ex", johnDoe, "Commit number 4");
+        assertFalse("scm polling should not detect commit 4", project.poll(listener).hasChanges());
+
+        testRepo.git.checkout().ref(branch2).execute();
+        commit("commitFile5ex", johnDoe, "Commit number 5");
+        assertFalse("scm polling should not detect commit 5", project.poll(listener).hasChanges());
+    }
+
     public void testCleanBeforeCheckout() throws Exception {
     	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
         ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());

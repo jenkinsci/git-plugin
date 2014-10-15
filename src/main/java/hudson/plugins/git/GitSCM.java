@@ -1467,10 +1467,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
         try {
             List<String> revShow;
-            if (buildData != null && buildData.lastBuild != null) {
-                revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+            final ObjectId lastBuiltRevision = getLastBuiltAncestor(buildData, r);
+
+            if (lastBuiltRevision != null) {
+                revShow = git.showRevision(lastBuiltRevision, r.getSha1());
             } else {
-                revShow  = git.showRevision(r.getSha1());
+                revShow = git.showRevision(r.getSha1());
             }
 
             revShow.add("commit "); // sentinel value
@@ -1502,6 +1504,43 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
             return false;   // for historical reason this is not considered a fatal error.
         }
+    }
+
+    /**
+     * Method returns the last built revision from the branch the specified
+     * revision comes from. If multiple branches contains the revision, then the
+     * latest build's revision is selected
+     * @param buildData build data is used to retrieve build-by-branches
+     *            dependency
+     * @param r revision previous build for which we are seeking
+     * @return SHA1 of the revision that is ancestor for <code>r</code> and is
+     *         built by the job.
+     */
+    private ObjectId getLastBuiltAncestor(BuildData buildData, Revision r) {
+        if (buildData == null || buildData.lastBuild == null) {
+            return null;
+        }
+        final Build lastBuild;
+        if (r.getBranches().size() > 1) {
+            final Collection<Build> builds = new ArrayList<Build>();
+            for (Branch branch : r.getBranches()) {
+                final Build build = buildData.getLastBuildOfBranch(branch.getName());
+                if (build.getBuildResult() == Result.SUCCESS
+                        || build.getBuildResult() == Result.UNSTABLE) {
+                    builds.add(build);
+                }
+            }
+            lastBuild = Collections.max(builds, new Comparator<Build>() {
+                public int compare(Build o1, Build o2) {
+                    return o1.getBuildNumber() - o2.getBuildNumber();
+                }
+            });
+        } else if (!r.getBranches().isEmpty()) {
+            lastBuild = buildData.getLastBuildOfBranch(r.getBranches().iterator().next().getName());
+        } else {
+            lastBuild = null;
+        }
+        return lastBuild == null ? null : lastBuild.getRevision().getSha1();
     }
 
 
