@@ -49,7 +49,7 @@ public class PreBuildMerge extends GitSCMExtension {
     }
 
     @Override
-    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException {
+    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, Revision marked, Revision rev) throws IOException, InterruptedException {
         String remoteBranchRef = GitSCM.getParameterString(options.getRef(), build.getEnvironment(listener));
 
         // if the branch we are merging is already at the commit being built, the entire merge becomes no-op
@@ -85,7 +85,7 @@ public class PreBuildMerge extends GitSCMExtension {
             // record the fact that we've tried building 'rev' and it failed, or else
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
-            scm.getBuildData(build).saveBuild(new Build(rev, build.getNumber(), FAILURE));
+            scm.getBuildData(build).saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
         }
 
