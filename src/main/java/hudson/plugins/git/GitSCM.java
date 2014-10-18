@@ -831,7 +831,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Revision rev = marked;
         // Modify the revision based on extensions
         for (GitSCMExtension ext : extensions) {
-            rev = ext.decorateRevisionToBuild(this,build,git,listener,rev);
+            rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
         Build revToBuild = new Build(marked, rev, build.getNumber(), null);
         buildData.saveBuild(revToBuild);
