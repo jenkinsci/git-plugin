@@ -90,7 +90,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * the chosen revision and returning it) or manipulate the state of the working tree (such as
      * running git-clean.)
      *
-     * <h3>{@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision)} vs {@link BuildChooser}</h3>
+     * <h3>{@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision, Revision)} vs {@link BuildChooser}</h3>
      * <p>
      * {@link BuildChooser} and this method are similar in the sense that they both participate in the process
      * of determining what commits to build. So when a plugin wants to control the commit to be built, you have
@@ -101,29 +101,31 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * control what commit to build. For example the gerrit-trigger plugin looks at
      * a specific build parameter, then retrieves that commit from Gerrit and builds that.
      *
-     * {@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision)} is suitable
+     * {@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision, Revision)} is suitable
      * when you accept arbitrary revision as an input and then create some derivative commits and then build that
      * result. The primary example is for speculative merge with another branch (people use this to answer
      * the question of "what happens if I were to integrate this feature branch back to the master branch?")
      *
+     * @param marked
+     * 		The revision that started this build. (e.g. pre-merge)
      * @param rev
      *      The revision selected for this build.
      * @return
      *      The revision selected for this build. Unless you are decorating the given {@code rev}, return the value
      *      given in the {@code rev} parameter.
      */
-    public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener, Revision rev) throws IOException, InterruptedException, GitException {
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
-            return decorateRevisionToBuild(scm, (AbstractBuild) build, git, (BuildListener) listener, rev);
+            return decorateRevisionToBuild(scm, (AbstractBuild) build, git, (BuildListener) listener, marked, rev);
         } else {
             return rev;
         }
     }
     
     @Deprecated
-    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision rev) throws IOException, InterruptedException, GitException {
-        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateRevisionToBuild", GitSCM.class, Run.class, GitClient.class, TaskListener.class, Revision.class)) {
-            return decorateRevisionToBuild(scm, (Run) build, git, listener, rev);
+    public Revision decorateRevisionToBuild(GitSCM scm, AbstractBuild<?,?> build, GitClient git, BuildListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateRevisionToBuild", GitSCM.class, Run.class, GitClient.class, TaskListener.class, Revision.class, Revision.class)) {
+            return decorateRevisionToBuild(scm, (Run) build, git, listener, marked, rev);
         } else {
             return rev;
         }

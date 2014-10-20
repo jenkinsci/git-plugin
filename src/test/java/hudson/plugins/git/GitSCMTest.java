@@ -1002,6 +1002,37 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertBuildStatus(Result.FAILURE, build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
+    
+    @Bug(25191)
+    public void testMultipleMergeFailed() throws Exception {
+    	FreeStyleProject project = setupSimpleProject("master");
+    	
+    	GitSCM scm = new GitSCM(
+    			createRemoteRepositories(),
+    			Collections.singletonList(new BranchSpec("master")),
+    			false, Collections.<SubmoduleConfig>emptyList(),
+    			null, null,
+    			Collections.<GitSCMExtension>emptyList());
+    	project.setScm(scm);
+    	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "")));
+    	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "")));
+    	
+    	commit("dummyFile", johnDoe, "Initial Commit");
+    	testRepo.git.branch("integration1");
+    	testRepo.git.branch("integration2");
+    	build(project, Result.SUCCESS);
+    	
+    	final String commitFile = "commitFile";
+    	testRepo.git.checkoutBranch("integration1","master");
+    	commit(commitFile,"abc", johnDoe, "merge conflict with integration2");
+    	
+    	testRepo.git.checkoutBranch("integration2","master");
+    	commit(commitFile,"cde", johnDoe, "merge conflict with integration1");
+    	
+    	final FreeStyleBuild build = build(project, Result.FAILURE);
+    	
+    	assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
 
     public void testMergeFailedWithSlave() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
