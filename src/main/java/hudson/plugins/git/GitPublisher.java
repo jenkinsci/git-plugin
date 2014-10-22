@@ -50,6 +50,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     private Long configVersion;
 
     private boolean pushMerge;
+    private boolean pushLocalTags;
     private boolean pushOnlyIfSuccess;
     private boolean forcePush;
     
@@ -64,12 +65,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
                         boolean pushOnlyIfSuccess,
+                        boolean pushLocalTags,
                         boolean pushMerge,
                         boolean forcePush) {
         this.tagsToPush = tagsToPush;
         this.branchesToPush = branchesToPush;
         this.notesToPush = notesToPush;
         this.pushMerge = pushMerge;
+        this.pushLocalTags = pushLocalTags;
         this.pushOnlyIfSuccess = pushOnlyIfSuccess;
         this.forcePush = forcePush;
         this.configVersion = 2L;
@@ -81,6 +84,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public boolean isPushMerge() {
         return pushMerge;
+    }
+
+    public boolean isPushLocalTags() {
+        return pushLocalTags;
     }
 
     public boolean isForcePush() {
@@ -239,6 +246,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         if (forcePush) {
                           push.force();
                         }
+                        if(pushLocalTags) {
+                            listener.getLogger().println("Pushing local tags");
+                            push.tags(true);
+                        }
                         push.execute();
                     } else {
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
@@ -326,6 +337,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
                         if (forcePush) {
                           push.force();
+                        }
+                        if(pushLocalTags) {
+                            listener.getLogger().println("Pushing local tags");
+                            push.tags(true);
                         }
                         push.execute();
                     } catch (GitException e) {
