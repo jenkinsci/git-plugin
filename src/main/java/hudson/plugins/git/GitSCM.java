@@ -205,6 +205,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private void updateFromUserData() throws GitException {
         // do what newInstance used to do directly from the request data
+        if (userRemoteConfigs == null) {
+            return; /* Prevent NPE when no remote config defined */
+        }
         try {
             String[] pUrls = new String[userRemoteConfigs.size()];
             String[] repoNames = new String[userRemoteConfigs.size()];
