@@ -392,6 +392,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Exported
     public List<UserRemoteConfig> getUserRemoteConfigs() {
+        if (userRemoteConfigs == null) {
+            /* Prevent NPE when no remote config defined */
+            userRemoteConfigs = new ArrayList<UserRemoteConfig>();
+        }
         return Collections.unmodifiableList(userRemoteConfigs);
     }
 
