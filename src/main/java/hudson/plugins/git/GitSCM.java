@@ -896,6 +896,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             try {
                 fetchFrom(git, listener, remoteRepository);
             } catch (GitException ex) {
+                /* Allow retry by throwing AbortException instead of
+                 * GitException. See JENKINS-20531. */
                 ex.printStackTrace(listener.error("Error fetching changes from repo '%s'", remoteRepository.getName()));
                 throw new AbortException();
             }
