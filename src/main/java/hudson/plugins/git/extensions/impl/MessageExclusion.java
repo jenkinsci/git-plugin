@@ -12,6 +12,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  * {@link GitSCMExtension} that ignores commits with specific messages.
@@ -24,6 +25,8 @@ public class MessageExclusion extends GitSCMExtension {
 	 */
 	private String excludedMessage;
 
+	private transient volatile Pattern excludedPattern;
+
 	@DataBoundConstructor
 	public MessageExclusion(String excludedMessage) { this.excludedMessage = excludedMessage; }
 
@@ -34,8 +37,11 @@ public class MessageExclusion extends GitSCMExtension {
 
 	@Override
 	public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
+		if (excludedPattern == null){
+			excludedPattern = Pattern.compile(excludedMessage);
+		}
 		String msg = commit.getMsg();
-		if (msg.matches(excludedMessage)){
+		if (excludedPattern.matcher(msg).matches()){
 			listener.getLogger().println("Ignored commit " + commit.getId() + ": Found excluded message: " + msg);
 			return true;
 		}
