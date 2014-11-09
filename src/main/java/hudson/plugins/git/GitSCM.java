@@ -453,12 +453,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private String getSingleBranch(EnvVars env) {
         // if we have multiple branches skip to advanced usecase
-        if (getBranches().size() != 1 || getRepositories().size() != 1) {
+        if (getBranches().size() != 1) {
             return null;
         }
-
         String branch = getBranches().get(0).getName();
-        String repository = getRepositories().get(0).getName();
+        String repository = null;
+
+        if (getRepositories().size() != 1) {
+        	for (RemoteConfig repo : getRepositories()) {
+        		if (branch.startsWith(repo.getName() + "/")) {
+        			repository = repo.getName();
+        			break;
+        		}
+        	}
+        	if (repository == null) {
+        		return null;
+        	}
+        } else {
+        	repository = getRepositories().get(0).getName();
+        }
+
 
         // replace repository wildcard with repository name
         if (branch.startsWith("*/")) {
