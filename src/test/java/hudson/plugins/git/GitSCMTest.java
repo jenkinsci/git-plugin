@@ -1415,6 +1415,26 @@ public class GitSCMTest extends AbstractGitTestCase {
         final int gitMinor = Integer.parseInt(fields[1]);
         return gitMajor >= neededMajor && gitMinor >= neededMinor;
     }
+    
+	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
+		FreeStyleProject project = createFreeStyleProject();
+		List<UserRemoteConfig> remoteConfigs = new ArrayList<UserRemoteConfig>();
+		remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "", null));
+		remoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "someOtherRepo", "", null));
+		GitSCM scm = new GitSCM(remoteConfigs,
+				Collections.singletonList(new BranchSpec("origin/master")), false,
+				Collections.<SubmoduleConfig> emptyList(), null, null,
+				Collections.<GitSCMExtension> emptyList());
+		project.setScm(scm);
+		commit("commitFile1", johnDoe, "Commit number 1");
+
+		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		assertBuildStatus(Result.SUCCESS, first_build);
+
+		first_build.getWorkspace().deleteContents();
+		PollingResult pollingResult = scm.poll(project, null, first_build.getWorkspace(), listener, null);
+		assertFalse(pollingResult.hasChanges());
+	}
 
     /**
      * Test for JENKINS-24467.
