@@ -29,10 +29,12 @@ import hudson.model.InvisibleAction;
 import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
 import hudson.model.queue.FoldableAction;
+
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -82,9 +84,37 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     	}
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
-        // all we have is a sha1 so make the branch 'detached'
-        revision.getBranches().add(new Branch("detached", sha1));
+        // Here we do not have any local branches, containing the commit. So...
+        // we are to get all the remote branches, and show them to users, as
+        // they are local
+        final List<Branch> branches = normalizeBranches(git.getBranchesContaining(
+                ObjectId.toString(sha1), true));
+        revision.getBranches().addAll(branches);
         return revision;
+    }
+
+    /**
+     * This method is aimed to normalize all the branches to the same naming
+     * convention, as {@link GitClient#getBranchesContaining(String, boolean)}
+     * returns branches with "remotes/" prefix.
+     * @param branches branches, retrieved from git client
+     * @return list of branches without the "remote/" prefix.
+     */
+    private List<Branch> normalizeBranches(List<Branch> branches) {
+        final List<Branch> normalBranches = new ArrayList<Branch>(branches.size());
+        final String remotesPrefix = "remotes/";
+        for (Branch initialBranch : branches) {
+            final String initialBranchName = initialBranch.getName();
+            final Branch normalBranch;
+            if (initialBranchName.startsWith(remotesPrefix)) {
+                final String normalName = initialBranchName.substring(remotesPrefix.length());
+                normalBranch = new Branch(normalName, initialBranch.getSHA1());
+            } else {
+                normalBranch = initialBranch;
+            }
+            normalBranches.add(normalBranch);
+        }
+        return normalBranches;
     }
 
     @Override

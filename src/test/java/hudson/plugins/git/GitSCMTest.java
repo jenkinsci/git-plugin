@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -19,6 +20,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
@@ -32,9 +34,14 @@ import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
+
 import java.io.ByteArrayOutputStream;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -47,8 +54,11 @@ import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -1476,6 +1486,98 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals(environment.get("MY_BRANCH"), "master");
         assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
+    }
+
+    /**
+     * Tests that builds have the correctly specified branches, associated with
+     * the commit id, passed with "notifyCommit" URL.
+     * @see JENKINS-24133
+     * @throws Exception on various exceptions
+     */
+    public void testSha1NotificationBranches() throws Exception {
+        final String branchName = "master";
+        final FreeStyleProject project = setupProject(branchName, false);
+        final GitSCM git = (GitSCM) project.getScm();
+        setupJGit(git);
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        assertTrue("scm polling should not detect any more changes after build",
+                project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile1);
+        final ObjectId commit1 = testRepo.git.revListAll().get(0);
+        notifyAndCheckBranch(project, commit1, branchName, 1, git);
+
+        commit("commitFile2", johnDoe, "Commit number 2");
+        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
+        final ObjectId commit2 = testRepo.git.revListAll().get(0);
+        notifyAndCheckBranch(project, commit2, branchName, 2, git);
+
+        notifyAndCheckBranch(project, commit1, branchName, 1, git);
+    }
+
+    /**
+     * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
+     * and tests for build data consistency.
+     * @param project project to build
+     * @param commit commit to build
+     * @param expectedBranch branch, that is expected to be built
+     * @param ordinal number of commit to log into errors, if any
+     * @param git git SCM
+     * @throws Exception on various exceptions occur
+     */
+    private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
+            String expectedBranch, int ordinal, GitSCM git) throws Exception {
+        assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
+        final BuildData buildData = git.getBuildData(project.getLastBuild());
+        final Collection<Branch> builtBranches = buildData.lastBuild.getRevision().getBranches();
+        assertEquals("Commit " + ordinal + " should be built", commit, buildData
+                .getLastBuiltRevision().getSha1());
+
+        final String expectedBranchString = "origin/" + expectedBranch;
+        assertFalse("Branches should be detected for the build", builtBranches.isEmpty());
+        assertEquals(expectedBranch + " branch should be detected", builtBranches.iterator().next()
+                .getName(), expectedBranchString);
+        assertEquals(expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
+    }
+
+    /**
+     * Method performs commit notification for the last committed SHA1 using
+     * notifyCommit URL.
+     * @param project project to trigger
+     * @return whether the new build has been triggered (<code>true</code>) or
+     *         not (<code>false</code>).
+     * @throws Exception on various exceptions
+     */
+    private boolean notifyCommit(FreeStyleProject project, ObjectId commitId) throws Exception {
+        final int initialBuildNumber = project.getLastBuild().getNumber();
+        final String commit1 = ObjectId.toString(commitId);
+        final URI gitRepo = testRepo.gitDir.toURI();
+
+        final int port = server.getConnectors()[0].getLocalPort();
+        if (port < 0) {
+            throw new IllegalStateException("Could not locate Jetty server port");
+        }
+        final String notificationPath = "http://localhost:" + Integer.toString(port)
+                + "/git/notifyCommit?url=" + gitRepo + "&sha1=" + commit1;
+        final URL notifyUrl = new URL(notificationPath);
+        final InputStream is = notifyUrl.openStream();
+        IOUtils.toString(is);
+        IOUtils.closeQuietly(is);
+
+        if ((project.getLastBuild().getNumber() == initialBuildNumber)
+                && (jenkins.getQueue().isEmpty())) {
+            return false;
+        } else {
+            while (!jenkins.getQueue().isEmpty()) {
+                Thread.sleep(100);
+            }
+            final FreeStyleBuild build = project.getLastBuild();
+            while (build.isBuilding()) {
+                Thread.sleep(100);
+            }
+            return true;
+        }
     }
 
     private void setupJGit(GitSCM git) {
