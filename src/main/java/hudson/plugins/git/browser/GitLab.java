@@ -36,7 +36,8 @@ public class GitLab extends GitRepositoryBrowser {
     /**
      * Creates a link to the changeset
      *
-     * https://[GitLab URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b
+     * v &lt; 3.0: [GitLab URL]/commits/[Hash]
+     * else:       [GitLab URL]/commit/[Hash]
      *
      * @return diff link
      * @throws IOException
@@ -50,9 +51,10 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the commit diff.
-     * 
-     * https://[GitLab URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b#[path to file]
-     * 
+     *
+     * v &lt; 3.0: [GitLab URL]/commits/[Hash]#[File path]
+     * else:       [GitLab URL]/commit/[Hash]#[File path]
+     *
      * @param path
      * @return diff link
      * @throws IOException
@@ -65,8 +67,9 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file.
-     * https://[GitLab URL]/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/tree/pom.xml
-     * 
+     * v &lt; 5.1: [GitLab URL][Hash]/tree/[File path]
+     * else:       [GitLab URL]blob/[Hash]/[File path]
+     *
      * @param path
      * @return file link
      * @throws IOException
