@@ -20,6 +20,7 @@ public class GitLabTest extends TestCase {
 
     private static final String GITLAB_URL = "https://SERVER/USER/REPO/";
     private final GitLab gitlab29 = new GitLab(GITLAB_URL, "2.9");
+    private final GitLab gitlab42 = new GitLab(GITLAB_URL, "4.2");
     private final GitLab gitlab50 = new GitLab(GITLAB_URL, "5.0");
     private final GitLab gitlab51 = new GitLab(GITLAB_URL, "5.1");
 
@@ -28,6 +29,7 @@ public class GitLabTest extends TestCase {
      */
     public void testGetVersion() {
         assertEquals(gitlab29.getVersion(), 2.9);
+        assertEquals(gitlab42.getVersion(), 4.2);
         assertEquals(gitlab50.getVersion(), 5.0);
         assertEquals(gitlab51.getVersion(), 5.1);
     }
@@ -39,6 +41,8 @@ public class GitLabTest extends TestCase {
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         assertEquals(GITLAB_URL + "commits/396fc230a3db05c427737aa5c2eb7856ba72b05d",
                      gitlab29.getChangeSetLink(createChangeSet("rawchangelog")).toString());
+        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
+                     gitlab42.getChangeSetLink(createChangeSet("rawchangelog")).toString());
         assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
                      gitlab50.getChangeSetLink(createChangeSet("rawchangelog")).toString());
         assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
@@ -55,6 +59,8 @@ public class GitLabTest extends TestCase {
         assertEquals(GITLAB_URL + "commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                      gitlab29.getDiffLink(modified1).toString());
         assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
+                     gitlab42.getDiffLink(modified1).toString());
+        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                      gitlab50.getDiffLink(modified1).toString());
         assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                      gitlab51.getDiffLink(modified1).toString());
@@ -67,8 +73,10 @@ public class GitLabTest extends TestCase {
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
+        assertEquals(GITLAB_URL + "tree/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                      gitlab29.getFileLink(path).toString());
+        assertEquals(GITLAB_URL + "tree/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
+                     gitlab42.getFileLink(path).toString());
         assertEquals(GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
                      gitlab50.getFileLink(path).toString());
         assertEquals(GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
@@ -84,6 +92,8 @@ public class GitLabTest extends TestCase {
         final Path path = pathMap.get("bar");
         assertEquals(GITLAB_URL + "commits/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
                      gitlab29.getFileLink(path).toString());
+        assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
+                     gitlab42.getFileLink(path).toString());
         assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
                      gitlab50.getFileLink(path).toString());
         assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
