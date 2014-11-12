@@ -67,6 +67,7 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file.
+     * v &le; 4.2: [GitLab URL]tree/[Hash]/[File path]
      * v &lt; 5.1: [GitLab URL][Hash]/tree/[File path]
      * else:       [GitLab URL]blob/[Hash]/[File path]
      *
@@ -79,7 +80,9 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            if(getVersion() < 5.1) {
+            if(getVersion() <= 4.2) {
+                return new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath());
+            } else if(getVersion() < 5.1) {
                 return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
             } else {
                 return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
