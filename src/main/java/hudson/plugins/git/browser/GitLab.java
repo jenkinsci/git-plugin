@@ -36,7 +36,8 @@ public class GitLab extends GitRepositoryBrowser {
     /**
      * Creates a link to the changeset
      *
-     * https://[GitLab URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b
+     * v &lt; 3.0: [GitLab URL]/commits/[Hash]
+     * else:       [GitLab URL]/commit/[Hash]
      *
      * @return diff link
      * @throws IOException
@@ -50,9 +51,10 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the commit diff.
-     * 
-     * https://[GitLab URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b#[path to file]
-     * 
+     *
+     * v &lt; 3.0: [GitLab URL]/commits/[Hash]#[File path]
+     * else:       [GitLab URL]/commit/[Hash]#[File path]
+     *
      * @param path
      * @return diff link
      * @throws IOException
@@ -65,8 +67,10 @@ public class GitLab extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file.
-     * https://[GitLab URL]/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/tree/pom.xml
-     * 
+     * v &le; 4.2: [GitLab URL]tree/[Hash]/[File path]
+     * v &lt; 5.1: [GitLab URL][Hash]/tree/[File path]
+     * else:       [GitLab URL]blob/[Hash]/[File path]
+     *
      * @param path
      * @return file link
      * @throws IOException
@@ -76,14 +80,13 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            String spec;
-            if(getVersion() >= 5.1) {
-                spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+            if(getVersion() <= 4.2) {
+                return new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath());
+            } else if(getVersion() < 5.1) {
+                return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
             } else {
-                spec = path.getChangeSet().getId() + "/tree/" + path.getPath();
+                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
             }
-            URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
         }
     }
 
@@ -100,11 +103,11 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     private String calculatePrefix() {
-        if(getVersion() >= 3){
+        if(getVersion() < 3) {
+            return "commits/";
+        } else {
             return "commit/";
         }
-
-        return "commits/";
     } 
 
 }
