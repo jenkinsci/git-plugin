@@ -76,10 +76,10 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            if(getVersion() >= 5.1) {
-                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
-            } else {
+            if(getVersion() < 5.1) {
                 return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
+            } else {
+                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
             }
         }
     }
@@ -97,11 +97,11 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     private String calculatePrefix() {
-        if(getVersion() >= 3){
+        if(getVersion() < 3) {
+            return "commits/";
+        } else {
             return "commit/";
         }
-
-        return "commits/";
     } 
 
 }
