@@ -76,14 +76,11 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            String spec;
             if(getVersion() >= 5.1) {
-                spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
             } else {
-                spec = path.getChangeSet().getId() + "/tree/" + path.getPath();
+                return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
             }
-            URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
         }
     }
 
