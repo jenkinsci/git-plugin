@@ -53,9 +53,9 @@ public class GitilesTest {
 
     @Test
     public void testGetFileLink() throws Exception {
-        Gitiles stash = new Gitiles(repoUrl);
+        Gitiles gitiles = new Gitiles(repoUrl);
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
-            URL fileLink = stash.getFileLink(path);
+            URL fileLink = gitiles.getFileLink(path);
             URL expectedFileLink = new URL(repoUrl + "+blame/" + sample.id + "/" + path.getPath());
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + path.getEditType().getName();
             assertEquals(msg, expectedFileLink, fileLink);
