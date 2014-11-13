@@ -88,7 +88,9 @@ public class TestGitRepo {
             throw new GitException("unable to write file", e);
         }
         git.add(fileName);
-        git.commit(message, author, committer);
+        git.setAuthor(author);
+        git.setCommitter(committer);
+        git.commit(message);
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
