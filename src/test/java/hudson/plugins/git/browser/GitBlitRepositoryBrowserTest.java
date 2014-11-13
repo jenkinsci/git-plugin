@@ -3,6 +3,7 @@ package hudson.plugins.git.browser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -58,6 +59,20 @@ public class GitBlitRepositoryBrowserTest {
     @Test
     public void testGetFileLink() throws Exception {
         GitBlitRepositoryBrowser gitblit = new GitBlitRepositoryBrowser(repoUrl, projectName);
+        for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
+            URL fileLink = gitblit.getFileLink(path);
+            EditType editType = path.getEditType();
+            URL expectedFileLink = null;
+            if (editType == EditType.ADD || editType == EditType.EDIT) {
+                expectedFileLink = new URL(repoUrl + "blob?r=" + projectName + "&h=" + sample.id + "&f=" + URLEncoder.encode(path.getPath(), "UTF-8").replaceAll("\\+", "%20"));
+            } else if (editType == EditType.DELETE) {
+                expectedFileLink = null;
+            } else {
+                fail("Unexpected edit type " + editType.getName());
+            }
+            String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
+            assertEquals(msg, expectedFileLink, fileLink);
+        }
     }
 
     @Test
