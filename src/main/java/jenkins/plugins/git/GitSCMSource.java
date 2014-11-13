@@ -191,7 +191,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 SecurityContextHolder.setContext(old);
             }
             if (!notified) {
-                result.add(new GitStatus.MessageResponseContributor("No git consumers for URI " + uri.toString()));
+                result.add(new GitStatus.MessageResponseContributor("No Git consumers using SCM API plugin for: " + uri.toString()));
             }
             return result;
         }
