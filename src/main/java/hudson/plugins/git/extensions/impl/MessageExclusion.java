@@ -40,7 +40,7 @@ public class MessageExclusion extends GitSCMExtension {
 		if (excludedPattern == null){
 			excludedPattern = Pattern.compile(excludedMessage);
 		}
-		String msg = commit.getMsg();
+		String msg = commit.getComment();
 		if (excludedPattern.matcher(msg).matches()){
 			listener.getLogger().println("Ignored commit " + commit.getId() + ": Found excluded message: " + msg);
 			return true;
