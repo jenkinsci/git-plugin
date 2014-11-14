@@ -20,7 +20,7 @@ public class MessageExclusionTest extends GitSCMExtensionTest {
 
 	@Override
 	protected GitSCMExtension getExtension() {
-		return new MessageExclusion(".*\\[maven-release-plugin\\].*");
+		return new MessageExclusion("(?s).*\\[maven-release-plugin\\].*");
 	}
 
 	@Override
@@ -42,6 +42,10 @@ public class MessageExclusionTest extends GitSCMExtensionTest {
 		repo.commit("repo-init", repo.janeDoe, " [maven-release-plugin] excluded message commit");
 
 		assertFalse("scm polling should not detect excluded message", project.poll(listener).hasChanges());
+
+		repo.commit("repo-init", repo.janeDoe, "first line in excluded commit\nsecond\nthird [maven-release-plugin]\n");
+
+		assertFalse("scm polling should not detect multiline message", project.poll(listener).hasChanges());
 
 		// should be enough, but let's test more
 
