@@ -6,6 +6,14 @@ Git software configuration management support for Jenkins
 * see [Jenkins wiki](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin) for detailed feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
+Master Branch
+=============
+
+This is the master branch of the git plugin. It depends on a more
+recent version of jenkins core so that it can support the workflow
+plugin. This branch is the primary development branch for the git
+plugin.
+
 Contributing to the Plugin
 ==========================
 
