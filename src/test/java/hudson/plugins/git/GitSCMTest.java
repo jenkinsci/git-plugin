@@ -118,7 +118,16 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(projectMasterBranch, Result.SUCCESS, commitFile1);
       }
-    
+
+    public void testBranchSpecWithRemotesWildcard() throws Exception {
+        FreeStyleProject project = setupProject("remotes/origin/*", false, null, null, null, true, null);
+
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+    }
+
     public void testBranchSpecWithRemotesHierarchical() throws Exception {
       FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
       FreeStyleProject projectHierarchicalBranch = setupProject("remotes/origin/rel-1/xy", false, null, null, null, true, null);
