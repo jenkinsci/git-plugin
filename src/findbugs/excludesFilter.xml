@@ -6,6 +6,7 @@
     <Bug pattern="NP_BOOLEAN_RETURN_NULL"/>
     <Or>
       <Class name="hudson.plugins.git.extensions.GitSCMExtension"/>
+      <Class name="hudson.plugins.git.extensions.impl.MessageExclusion"/>
       <Class name="hudson.plugins.git.extensions.impl.PathRestriction"/>
       <Class name="hudson.plugins.git.extensions.impl.UserExclusion"/>
     </Or>
