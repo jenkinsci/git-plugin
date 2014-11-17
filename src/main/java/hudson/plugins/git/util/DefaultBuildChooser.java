@@ -69,7 +69,7 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
-        Collection<Revision> revisions = new ArrayList<Revision>();
+        Collection<Revision> revisions = new HashSet<Revision>();
 
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
