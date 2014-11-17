@@ -1536,8 +1536,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         final String expectedBranchString = "origin/" + expectedBranch;
         assertFalse("Branches should be detected for the build", builtBranches.isEmpty());
-        assertEquals(expectedBranch + " branch should be detected", builtBranches.iterator().next()
-                .getName(), expectedBranchString);
+        assertEquals(expectedBranch + " branch should be detected", expectedBranchString,
+                     builtBranches.iterator().next().getName());
         assertEquals(expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
     }
 
