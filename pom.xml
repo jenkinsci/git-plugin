@@ -198,18 +198,6 @@
 
   <repositories>
     <repository>
-      <id>jgit-repository</id>
-      <name>Eclipse JGit Repository</name>
-      <url>https://repo.eclipse.org/content/groups/releases/</url>
-    </repository>
-
-    <repository>
-      <id>guice-maven</id>
-      <name>guice maven</name>
-      <url>http://guice-maven.googlecode.com/svn/trunk</url>
-    </repository>
-
-    <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
