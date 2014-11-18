@@ -30,8 +30,8 @@ import com.google.common.collect.Lists;
 
 public class AncestryBuildChooser extends DefaultBuildChooser {
 
-    private Integer maximumAgeInDays;
-    private String ancestorCommitSha1;
+    private final Integer maximumAgeInDays;
+    private final String ancestorCommitSha1;
     
     @DataBoundConstructor
     public AncestryBuildChooser(Integer maximumAgeInDays, String ancestorCommitSha1) {
@@ -74,8 +74,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 final List<Revision> filteredCandidates = Lists.newArrayList();
                 
                 try {
-                    for (Iterator<Revision> i = candidates.iterator(); i.hasNext(); ) {
-                        Revision currentRevision = i.next();
+                    for (Revision currentRevision : candidates) {
                         RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
                         
                         if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
