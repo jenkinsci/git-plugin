@@ -108,7 +108,6 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
     
     // Git Client implementation throws away committer date info so we have to do this manually..
     // Copied from JGitAPIImpl.commit(String message)
-    // XXX Is there a better way to do this?
     private void commit(String message, PersonIdent author, PersonIdent committer) {
         Repository repo = null;
         try {
@@ -129,7 +128,10 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
     
     private List<String> getFilteredTestCandidates(Integer maxAgeInDays, String ancestorCommitSha1) throws Exception {
         GitSCM gitSCM = new GitSCM("foo");
-        gitSCM.getExtensions().add(new BuildChooserSetting(new AncestryBuildChooser(maxAgeInDays, ancestorCommitSha1)));
+        AncestryBuildChooser chooser = new AncestryBuildChooser(maxAgeInDays, ancestorCommitSha1);
+        gitSCM.getExtensions().add(new BuildChooserSetting(chooser));
+        assertEquals(maxAgeInDays, chooser.getMaximumAgeInDays());
+        assertEquals(ancestorCommitSha1, chooser.getAncestorCommitSha1());
         
         // mock necessary objects
         GitClient git = Mockito.spy(this.git);
