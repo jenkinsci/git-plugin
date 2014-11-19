@@ -1552,14 +1552,13 @@ public class GitSCMTest extends AbstractGitTestCase {
     private boolean notifyCommit(FreeStyleProject project, ObjectId commitId) throws Exception {
         final int initialBuildNumber = project.getLastBuild().getNumber();
         final String commit1 = ObjectId.toString(commitId);
-        final URI gitRepo = testRepo.gitDir.toURI();
 
         final int port = server.getConnectors()[0].getLocalPort();
         if (port < 0) {
             throw new IllegalStateException("Could not locate Jetty server port");
         }
         final String notificationPath = "http://localhost:" + Integer.toString(port)
-                + "/git/notifyCommit?url=" + gitRepo + "&sha1=" + commit1;
+                + "/git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
         final InputStream is = notifyUrl.openStream();
         IOUtils.toString(is);
