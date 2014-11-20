@@ -200,7 +200,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 relativeTargetDir = null;
             }
             if (skipTag!=null && !skipTag) {
-                addIfMissing(new PerBuildTag());
+                addIfMissing(new PerBuildTag("${BUILD_TAG}", "Jenkins Build #${BUILD_NUMBER}"));
                 skipTag = null;
             }
             if (disableSubmodules || recursiveSubmodules || trackingSubmodules) {
