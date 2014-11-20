@@ -28,11 +28,6 @@
              description="${%Add force option to git push}">
       <f:checkbox />
     </f:entry>
-    <f:entry field="pushLocalTags"
-             title="${%Push Local Tags}"
-             description="${%Also push tags created by local build}">
-      <f:checkbox />
-    </f:entry>
     <f:entry field="tagsToPush"
              title="${%Tags}"
              description="${%Tags to push to remote repositories}">
@@ -67,6 +62,11 @@
         </div>
       </f:repeatable>
     </f:entry>
+    <f:entry field="pushLocalTags"
+             title="${%Push Local Tags}"
+             description="${%Also push tags created by local build}">
+      <f:checkbox />
+    </f:entry>
     <f:entry field="branchesToPush"
              title="${%Branches}"
              description="${%Branches to push to remote repositories}">
@@ -89,35 +89,35 @@
         </div>
       </f:repeatable>
     </f:entry>
-    
+
     <f:entry field="notesToPush" title="${%Notes}" description="${%Notes to push to remote repositories}">
-    
+
       <f:repeatable field="notesToPush"  add="${%Add Note}">
-      
+
         <table width="100%">
           <br/>
           <f:entry title="${%Note to push}"    field="noteMsg" >
             <f:textarea checkUrl="'descriptorByName/GitPublisher/checkNoteMsg?value='+escape(this.value)" />
           </f:entry>
-          
+
           <f:entry field="targetRepoName" title="${%Target remote name}">
             <f:textbox/>
           </f:entry>
-          
+
           <f:entry title="${%Note's namespace}" field="noteNamespace">
             <f:textbox/>
           </f:entry>
-          
+
           <f:entry title="${%Abort if note exists}" field="noteReplace" >
             <f:checkbox />
           </f:entry>
-          
+
         </table>
         <div align="right">
           <input type="button" value="Delete Note" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
-         
+
       </f:repeatable>
     </f:entry>
-    
+
 </j:jelly>
