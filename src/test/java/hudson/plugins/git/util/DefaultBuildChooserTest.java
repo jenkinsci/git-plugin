@@ -23,5 +23,8 @@ public class DefaultBuildChooserTest extends AbstractGitTestCase {
 
         assertEquals(1, candidateRevisions.size());
         assertEquals(shaHashCommit1, candidateRevisions.iterator().next().getSha1String());
+
+        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), git, null, null, null);
+        assertTrue(candidateRevisions.isEmpty());
     }
 }
