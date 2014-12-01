@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <?jelly escape-by-default='true'?>
 <!--
   Displays the Git change log digest for the build top page 
@@ -13,9 +14,45 @@
     </j:when>
     <j:otherwise>
       Changes
-      <ol>
+      <j:if test="${it.excludedCount != 0}">
+        <style type="text/css">
+            .git-ignored-changes {
+              opacity: 0.6;
+              display: none;
+            }
+        </style>
+        <script>
+          function gitDigestSetExcludedDisplayType(displayType) {
+            var excludedObjects = document.querySelectorAll('.git-ignored-changes'),
+            i = 0,
+            l = excludedObjects.length;
+            for (i; i &lt; l; i++) {
+              excludedObjects[i].style.display = displayType;
+            }
+          }
+          function gitDigestShowExcluded(showExcluded) {
+            if (showExcluded) {
+              gitDigestSetExcludedDisplayType('list-item');
+            } else {
+              gitDigestSetExcludedDisplayType('none');
+            }
+            document.getElementById('git.plugin.GitChangeSetList.digest.hide').style.display =
+              showExcluded ? 'inline' : 'none';
+            document.getElementById('git.plugin.GitChangeSetList.digest.show').style.display =
+              showExcluded ? 'none' : 'inline';
+          }
+        </script>
+        <st:nbsp/>
+        <a id="git.plugin.GitChangeSetList.digest.show" href="javascript:void(0);" onclick="gitDigestShowExcluded(true);">Show ${it.excludedCount} excluded</a>
+        <a id="git.plugin.GitChangeSetList.digest.hide" href="javascript:void(0);" onclick="gitDigestShowExcluded(false);" style="display:none;">Hide excluded</a>
+      </j:if>
+      <ol id="git.plugin.chageSetList">
         <j:forEach var="cs" items="${it.logs}" varStatus="loop">
-          <li>
+          <j:set var="commitClass" value=""/>
+          <j:if test="${it.isExcluded(cs)}">
+            <j:set var="commitClass" value="git-ignored-changes"/>
+          </j:if>
+          <li class="${commitClass}">
             <j:out value="${cs.msgAnnotated}"/>
             (<a href="changes#detail${loop.index}">detail</a>
             <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
@@ -27,6 +64,11 @@
           </li>
         </j:forEach>
       </ol>
+      <j:if test="${!it.hideExludedCommits}">
+        <script>
+          gitDigestShowExcluded(true);
+        </script>
+      </j:if>
     </j:otherwise>
   </j:choose>
 </j:jelly>

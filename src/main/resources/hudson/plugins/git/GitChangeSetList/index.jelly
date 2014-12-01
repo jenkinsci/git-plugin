@@ -1,53 +1,115 @@
+<?xml version="1.0"?>
 <?jelly escape-by-default='true'?>
 <!--
   Displays Git change log.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <j:set var="browser" value="${it.browser}"/>
-
-  <h2>Summary</h2>
-  <ol>
-    <j:forEach var="cs" items="${it.logs}">
-      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">details</a>)</li>
-    </j:forEach>
-  </ol>
-  <table class="pane" style="border:none">
-    <j:forEach var="cs" items="${it.logs}">
-      <tr class="pane">
-        <td colspan="2" class="changeset">
-          <a name="${cs.id}"></a>
-          <div class="changeset-message">
-            <b>
-              Commit
-              <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
-              <j:if test="${cslink!=null}">
-                <a href="${cslink}">${cs.id}</a>
-              </j:if>
-              <j:if test="${cslink==null}">
-                ${cs.id}
-              </j:if>
-              by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
-            </b>
-            <j:if test="${cs.branch!=null}">
-              <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
-            </j:if>
-            <pre><j:out value="${cs.commentAnnotated}"/></pre>
-          </div>
-        </td>
-      </tr>
-      <j:forEach var="p" items="${cs.paths}">
-        <tr>
-          <td width="16"><t:editTypeIcon type="${p.editType}"/></td>
-          <td>
-            <a href="${browser.getFileLink(p)}">${p.path}</a>
-            <j:set var="diff" value="${browser.getDiffLink(p)}"/>
-            <j:if test="${diff!=null}">
-              <st:nbsp/>
-              <a href="${diff}">(diff)</a>
-            </j:if>
-          </td>
-        </tr>
-      </j:forEach>
-    </j:forEach>
-  </table>
+  <j:choose>
+    <j:when test="${it.emptySet}">
+    No changes.
+  </j:when>
+    <j:otherwise>
+      <h2>Summary</h2>
+      <j:if test="${it.excludedCount != 0}">
+        <style type="text/css">
+          li.git-ignored-changes {
+            opacity: 0.6;
+            display: none;
+          }
+          tr.git-ignored-changes div.changeset-message {
+            opacity: 0.6;
+          }
+          tr.git-ignored-changes {
+            display: none;
+          }
+        </style>
+        <script>
+            function gitDigestSetExcludedDisplayType(displayType, selector) {
+            var excludedObjects = document.querySelectorAll(selector),
+            i = 0,
+            l = excludedObjects.length;
+            for (i; i &lt; l; i++) {
+              excludedObjects[i].style.display = displayType;
+            }
+          }
+          function gitDigestShowExcluded(showExcluded) {
+            if (showExcluded) {
+              gitDigestSetExcludedDisplayType('list-item', 'li.git-ignored-changes');
+              gitDigestSetExcludedDisplayType('table-row', 'tr.git-ignored-changes');
+            } else {
+              gitDigestSetExcludedDisplayType('none', 'li.git-ignored-changes');
+              gitDigestSetExcludedDisplayType('none', 'tr.git-ignored-changes');
+            }
+            document.getElementById('git.plugin.GitChangeSetList.digest.hide').style.display =
+              showExcluded ? 'inline' : 'none';
+            document.getElementById('git.plugin.GitChangeSetList.digest.show').style.display =
+              showExcluded ? 'none' : 'inline';
+          }
+        </script>
+        <p>
+          <a id="git.plugin.GitChangeSetList.digest.show" href="javascript:void(0);" onclick="gitDigestShowExcluded(true);">Show ${it.excludedCount} excluded</a>
+          <a id="git.plugin.GitChangeSetList.digest.hide" href="javascript:void(0);" onclick="gitDigestShowExcluded(false);" style="display:none;">Hide excluded</a>
+        </p>
+      </j:if>
+      <ol id="git.plugin.chageSetList">
+        <j:forEach var="cs" items="${it.logs}">
+          <j:set var="commitClass" value=""/>
+          <j:if test="${it.isExcluded(cs)}">
+            <j:set var="commitClass" value="git-ignored-changes"/>
+          </j:if>
+          <li class="${commitClass}"><j:out value="${cs.msgAnnotated}"/> (<a href="#detail${cs.id}">details</a>)
+        </li>
+        </j:forEach>
+      </ol>
+      <table class="pane" style="border:none">
+        <j:forEach var="cs" items="${it.logs}">
+          <j:set var="commitClass" value=""/>
+          <j:if test="${it.isExcluded(cs)}">
+            <j:set var="commitClass" value="git-ignored-changes"/>
+          </j:if>
+          <tr class="pane, ${commitClass}">
+            <td colspan="2" class="changeset">
+            <a name="${cs.id}"></a>
+              <div class="changeset-message">
+                <b>
+                Commit
+                <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
+                <j:if test="${cslink!=null}"><a href="${cslink}">${cs.id}</a></j:if>
+                <j:if test="${cslink==null}">
+                  ${cs.id}
+                </j:if>
+                by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
+              </b>
+                <j:if test="${cs.branch!=null}">
+                  <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
+                </j:if>
+                <pre><j:out value="${cs.commentAnnotated}"/></pre>
+              </div>
+            </td>
+          </tr>
+          <j:forEach var="p" items="${cs.paths}">
+            <tr class="${commitClass}">
+              <td width="16">
+                <t:editTypeIcon type="${p.editType}"/>
+              </td>
+              <td>
+                <a href="${browser.getFileLink(p)}">${p.path}</a>
+                <j:set var="diff" value="${browser.getDiffLink(p)}"/>
+                <j:if test="${diff!=null}">
+                  <st:nbsp/>
+                  <a href="${diff}">(diff)</a>
+                </j:if>
+              </td>
+            </tr>
+          </j:forEach>
+        </j:forEach>
+      </table>
+      <j:if test="${!it.hideExludedCommits}">
+        <script>
+          gitDigestShowExcluded(true);
+        </script>
+      </j:if>
+    </j:otherwise>
+  </j:choose>
 </j:jelly>
