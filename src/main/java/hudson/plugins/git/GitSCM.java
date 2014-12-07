@@ -1065,7 +1065,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             } else {
                 for (Branch b : revToBuild.getBranches()) {
                     Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
-                    if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
+                    if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
                         changelog.excludes(lastRevWas.getSHA1());
                         exclusion = true;
                     }
