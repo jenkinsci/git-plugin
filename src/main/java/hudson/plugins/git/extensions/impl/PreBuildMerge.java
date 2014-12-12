@@ -86,7 +86,7 @@ public class PreBuildMerge extends GitSCMExtension {
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
             scm.getBuildData(build).saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
-            throw new AbortException("Branch not suitable for integration as it does not merge cleanly");
+            throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
 
         build.addAction(new MergeRecord(remoteBranchRef,target.getName()));
