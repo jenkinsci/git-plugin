@@ -392,14 +392,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         EnvVars env = build.getEnvironment(listener);
 
         for (RemoteConfig oldRepo : Util.fixNull(remoteRepositories)) {
-            expandedRepos.add(
-                newRemoteConfig(
-                    getParameterString(oldRepo.getName(), env),
-                    getParameterString(oldRepo.getURIs().get(0).toPrivateString(), env),
-                    getRefSpecs(oldRepo, env).toArray(new RefSpec[0])));
+            expandedRepos.add(getParamExpandedRepo(env, oldRepo));
         }
 
         return expandedRepos;
+    }
+    
+    /**
+     * Expand Parameters in the supplied remote repository with the parameter values provided in the given environment variables }
+     * @param env Environment variables with parameter values
+     * @param remoteRepository Remote repository with parameters
+     * @return remote repository with expanded parameters
+     */
+    public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository){
+    	return newRemoteConfig(
+                getParameterString(remoteRepository.getName(), env),
+                getParameterString(remoteRepository.getURIs().get(0).toPrivateString(), env),
+                getRefSpecs(remoteRepository, env).toArray(new RefSpec[0]));
     }
 
     public RemoteConfig getRepositoryByName(String repoName) {

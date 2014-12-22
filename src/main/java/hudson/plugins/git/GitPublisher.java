@@ -232,6 +232,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                     if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                         RemoteConfig remote = mergeOptions.getMergeRemote();
+                        
+                        // expand environment variables in remote repository
+                        remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        
                         listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
 
                         remoteURI = remote.getURIs().get(0);
@@ -266,11 +270,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     final String targetRepo = environment.expand(t.getTargetRepoName());
 
                     try {
-                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                    	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
+                        RemoteConfig remote = gitSCM.getRepositoryByName(t.getTargetRepoName());
 
                         if (remote == null)
                             throw new AbortException("No repository found for target repo name " + targetRepo);
-
+                        
+                        // expand environment variables in remote repository
+                        remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        
                         boolean tagExists = git.tagExists(tagName.replace(' ', '_'));
                         if (t.isCreateTag() || t.isUpdateTag()) {
                             if (tagExists && !t.isUpdateTag()) {
@@ -315,11 +323,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     final String targetRepo = environment.expand(b.getTargetRepoName());
                     
                     try {
-                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                    	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
+                        RemoteConfig remote = gitSCM.getRepositoryByName(b.getTargetRepoName());
 
                         if (remote == null)
                             throw new AbortException("No repository found for target repo name " + targetRepo);
-
+                        
+                        // expand environment variables in remote repository
+                        remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
                         remoteURI = remote.getURIs().get(0);
@@ -348,13 +360,17 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     final boolean noteReplace = b.getnoteReplace();
                     
                     try {
-                        RemoteConfig remote = gitSCM.getRepositoryByName(targetRepo);
+                    	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
+                        RemoteConfig remote = gitSCM.getRepositoryByName(b.getTargetRepoName());
 
                         if (remote == null) {
                             listener.getLogger().println("No repository found for target repo name " + targetRepo);
                             return false;
                         }
-
+                        
+                        // expand environment variables in remote repository
+                        remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        
                         listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
                         if ( noteReplace )
