@@ -397,7 +397,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         return expandedRepos;
     }
-    
+
     /**
      * Expand Parameters in the supplied remote repository with the parameter values provided in the given environment variables }
      * @param env Environment variables with parameter values
