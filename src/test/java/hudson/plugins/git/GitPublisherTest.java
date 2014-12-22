@@ -369,7 +369,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         Set<String> tags = gitRepo.git.getTagNames("*");
         return tags.contains(tag);
     }
-    
+
     private boolean containsTagMessage(String tag, String str) throws InterruptedException {
         String msg = git.getTagMessage(tag);
         return msg.contains(str);
