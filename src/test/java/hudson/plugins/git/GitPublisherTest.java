@@ -39,7 +39,6 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
-
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jvnet.hudson.test.Bug;
@@ -146,11 +145,11 @@ public class GitPublisherTest extends AbstractGitTestCase {
     	TestGitRepo testTargetRepo = new TestGitRepo("target", this, listener);
     	testTargetRepo.git.init_().workspace(testTargetRepo.gitDir.getAbsolutePath()).bare(true).execute();
     	testTargetRepo.commit("lostTargetFile", johnDoe, "Initial Target Commit");
-    	
+
     	// add second test repository as remote repository with environment variables
     	List<UserRemoteConfig> remoteRepositories = createRemoteRepositories();
     	remoteRepositories.add(new UserRemoteConfig("$TARGET_URL", "$TARGET_NAME", "+refs/heads/$TARGET_BRANCH:refs/remotes/$TARGET_NAME/$TARGET_BRANCH", null));
-    	
+
         GitSCM scm = new GitSCM(
                 remoteRepositories,
                 Collections.singletonList(new BranchSpec("origin/master")),
@@ -158,16 +157,16 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
-        
-        // add parameters for remote repository configuration 
+
+        // add parameters for remote repository configuration
         project.addProperty(new ParametersDefinitionProperty(
         		new StringParameterDefinition("TARGET_URL", testTargetRepo.gitDir.getAbsolutePath()),
         		new StringParameterDefinition("TARGET_NAME", "target"),
         		new StringParameterDefinition("TARGET_BRANCH", "master")));
-        
+
         String tag_name = "test-tag";
         String note_content = "Test Note";
-        
+
         project.getPublishersList().add(new GitPublisher(
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
                 Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
@@ -177,15 +176,15 @@ public class GitPublisherTest extends AbstractGitTestCase {
         commit("commitFile", johnDoe, "Initial Commit");
         testRepo.git.tag(tag_name, "Comment");
         ObjectId expectedCommit = testRepo.git.revParse("master");
-        
+
         build(project, Result.SUCCESS, "commitFile");
-        
+
         // check if everything reached target repository
         assertEquals(expectedCommit, testTargetRepo.git.revParse("master"));
         assertTrue(existsTagInRepo(testTargetRepo, tag_name));
-        
+
     }
-    
+
     @Issue("JENKINS-24082")
     public void testForcePush() throws Exception {
     	FreeStyleProject project = setupSimpleProject("master");
@@ -364,12 +363,12 @@ public class GitPublisherTest extends AbstractGitTestCase {
     private boolean existsTag(String tag) throws InterruptedException {
         return existsTagInRepo(testRepo, tag);
     }
-    
+
     private boolean existsTagInRepo(TestGitRepo gitRepo, String tag) throws InterruptedException {
         Set<String> tags = gitRepo.git.getTagNames("*");
         return tags.contains(tag);
     }
-    
+
     private boolean containsTagMessage(String tag, String str) throws InterruptedException {
         String msg = git.getTagMessage(tag);
         return msg.contains(str);
