@@ -8,11 +8,14 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.util.FormValidation;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * {@link GitSCMExtension} that ignores commits with specific messages.
@@ -51,6 +54,16 @@ public class MessageExclusion extends GitSCMExtension {
 
 	@Extension
 	public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+
+		public FormValidation doCheckExcludedMessage(@QueryParameter String value) {
+			try {
+				Pattern.compile(value);
+			} catch (PatternSyntaxException ex){
+				return FormValidation.error(ex.getMessage());
+			}
+			return FormValidation.ok();
+		}
+
 		@Override
 		public String getDisplayName() {
 			return "Polling ignores commits with certain messages";
