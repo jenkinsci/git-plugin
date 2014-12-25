@@ -1483,9 +1483,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
             build = build.getPreviousBuild();
         }
-        if (buildData != null) {
-            buildData.setScmName(getScmName());
-        }
 
         return buildData;
     }
