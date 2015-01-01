@@ -1204,6 +1204,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         p.setScm(scm);
         configRoundtrip(p);
         assertEqualDataBoundBeans(scm,p.getScm());
+        assertEquals("Wrong key", "git " + url, scm.getKey());
     }
 
     /**
