@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <!--
   Displays the Git change log digest for the build top page 
   when a build history link (or number) is followed

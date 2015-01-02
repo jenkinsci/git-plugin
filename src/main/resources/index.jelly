@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
   This plugin integrates <a href="http://git.or.cz/">GIT</a> with Jenkins.  
 </div>
