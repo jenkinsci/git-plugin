@@ -665,6 +665,33 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Bug(26271)
+    public void testBuildTagWithMultipleRepositories() throws Exception {
+        final String mytag = "mytag";
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        commit("commitFile1", johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, "commitFile1");
+
+        project.setScm(new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("refs/tags/"+mytag)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList()));
+
+        commit("commitFile2", johnDoe, "Commit number 2");
+        git.tag(mytag, "mytag initial");
+        commit("commitFile3", johnDoe, "Commit number 3");
+
+        build(project, Result.SUCCESS, "commitFile2");
+    }
+
     /**
      * Not specifying a branch string in the project implies that we should be polling for changes in
      * all branches.

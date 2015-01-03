@@ -106,15 +106,17 @@ public class DefaultBuildChooser extends BuildChooser {
                 verbose(listener, "Qualifying {0} as is -> {1}", branchSpec, fqbn);
                 possibleQualifiedBranches.add(fqbn);
 
-                for (RemoteConfig config : gitSCM.getRepositories()) {
-                    String repository = config.getName();
-                    if(branchSpec.startsWith("refs/heads/")) {
-                        fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
-                    } else {
-                        fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                if (!branchSpec.startsWith("refs/tags/")) {
+                    for (RemoteConfig config : gitSCM.getRepositories()) {
+                        String repository = config.getName();
+                        if(branchSpec.startsWith("refs/heads/")) {
+                            fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
+                        } else {
+                            fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                        }
+                        verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                        possibleQualifiedBranches.add(fqbn);
                     }
-                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                    possibleQualifiedBranches.add(fqbn);
                 }
             }
             for (String fqbn : possibleQualifiedBranches) {

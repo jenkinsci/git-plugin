@@ -462,6 +462,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // substitute build parameters if available
         branch = getParameterString(branch, env);
 
+        // if the branch name is a tag, qualify as a tag
+        String tag = null;
+        if (branch.startsWith("refs/tags/")) {
+            tag = branch.substring("refs/tags/".length());
+        } else if (branch.startsWith("tags/")) {
+            tag = branch.substring("tags/".length());
+        }
+        if (tag != null && !tag.equals("") && !tag.contains("*")) {
+            return "refs/tags/" + tag;
+        }
+
         if (getRepositories().size() != 1) {
         	for (RemoteConfig repo : getRepositories()) {
         		if (branch.startsWith(repo.getName() + "/")) {
