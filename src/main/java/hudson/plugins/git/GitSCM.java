@@ -564,17 +564,35 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
-            String gitRepo = getParamExpandedRepos(lastBuild, listener).get(0).getURIs().get(0).toString();
-            ObjectId head = git.getHeadRev(gitRepo, singleBranch);
-            if (head != null){
-                listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
-                if (buildData.lastBuild.getMarked().getSha1().equals(head)) {
-                    return NO_CHANGES;
+
+            String gitRepo = null;
+            if (getRepositories().size() > 1) {
+                for (RemoteConfig repo : getParamExpandedRepos(lastBuild, listener)) {
+                    if (singleBranch.startsWith(repo.getName() + "/") || singleBranch.startsWith("remotes/" + repo.getName() + "/")) {
+                        gitRepo = repo.getURIs().get(0).toString();
+                        break;
+                    }
+                }
+            } else {
+                gitRepo = getParamExpandedRepos(lastBuild, listener).get(0).getURIs().get(0).toString();
+            }
+
+            if (gitRepo != null) {
+                ObjectId head = git.getHeadRev(gitRepo, singleBranch);
+
+                if (head != null){
+                    listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
+                    if (buildData.lastBuild.getMarked().getSha1().equals(head)) {
+                        return NO_CHANGES;
+                    } else {
+                        return BUILD_NOW;
+                    }
                 } else {
+                    listener.getLogger().println("[poll] Couldn't get remote head revision");
                     return BUILD_NOW;
                 }
             } else {
-                listener.getLogger().println("[poll] Couldn't get remote head revision");
+                listener.getLogger().println("[poll] Couldn't find repository for: " + singleBranch);
                 return BUILD_NOW;
             }
         }
