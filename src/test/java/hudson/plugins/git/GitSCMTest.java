@@ -1183,6 +1183,41 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
+    @Bug(14846)
+    public void testEnvironmentVariableExpansionWithMultipleRepositories() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        project.setScm(new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList()));
+
+        commit("commitFile1", johnDoe, "Commit number 1");
+        secondTestRepo.commit("commitFile2", johnDoe, "Commit number 2");
+
+        ParametersDefinitionProperty firstVar = new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "origin/master"));
+        ParametersDefinitionProperty secondVar = new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "origin1/master"));
+
+        // Build both remotes
+        project.addProperty(secondVar);
+        build(project, Result.SUCCESS, "commitFile2");
+        project.removeProperty(secondVar);
+        project.addProperty(firstVar);
+        build(project, Result.SUCCESS, "commitFile1");
+        project.removeProperty(firstVar);
+
+        // Now try to build the second remote again
+        project.addProperty(secondVar);
+        build(project, Result.SUCCESS, "commitFile2");
+    }
+
     private List<UserRemoteConfig> createRepoList(String url) {
         List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
         repoList.add(new UserRemoteConfig(url, null, null, null));
