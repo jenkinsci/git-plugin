@@ -459,6 +459,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         String branch = getBranches().get(0).getName();
         String repository = null;
 
+        // substitute build parameters if available
+        branch = getParameterString(branch, env);
+
         if (getRepositories().size() != 1) {
         	for (RemoteConfig repo : getRepositories()) {
         		if (branch.startsWith(repo.getName() + "/")) {
@@ -485,8 +488,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
 
-        // substitute build parameters if available
-        branch = getParameterString(branch, env);
 
         // Check for empty string - replace with "**" when seen.
         if (branch.equals("")) {
