@@ -461,7 +461,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (getRepositories().size() != 1) {
         	for (RemoteConfig repo : getRepositories()) {
-        		if (branch.startsWith(repo.getName() + "/")) {
+        		if (branch.startsWith(repo.getName() + "/") || branch.startsWith("remotes/" + repo.getName() + "/"))  {
         			repository = repo.getName();
         			break;
         		}
