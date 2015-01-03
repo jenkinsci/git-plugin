@@ -1514,6 +1514,44 @@ public class GitSCMTest extends AbstractGitTestCase {
 		assertFalse(pollingResult.hasChanges());
 	}
 
+    @Bug(26269)
+    public void testPollingWithMultipleRepositories() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        commit("commitFile1", johnDoe, "Commit number 1");
+        secondTestRepo.commit("commitFile2", johnDoe, "Commit number 2");
+
+        GitSCM scm1 = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("origin/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        GitSCM scm2 = new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("origin1/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+
+        // build from 1st repository
+        project.setScm(scm1);
+        assertTrue("scm polling should detect commit 1", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, "commitFile1");
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        // build from 2nd repository
+        project.setScm(scm2);
+        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, "commitFile2");
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
     /**
      * Test for JENKINS-24467.
      *
