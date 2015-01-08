@@ -50,7 +50,7 @@ THE SOFTWARE.
           <ol>
             <j:forEach var="c" items="${changeSet.iterator()}">
               <li>
-                ${c.msgAnnotated}
+                <j:out value="${c.msgAnnotated}"/>
 
                 &#8212;
 
