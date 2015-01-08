@@ -8,7 +8,7 @@
   <h2>Summary</h2>
   <ol>
     <j:forEach var="cs" items="${it.logs}" varStatus="loop">
-      <li>${cs.msgAnnotated} (<a href="#detail${loop.index}">details</a>)</li>
+      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#detail${loop.index}">details</a>)</li>
     </j:forEach>
   </ol>
   <table class="pane" style="border:none">
@@ -31,7 +31,7 @@
             <j:if test="${cs.branch!=null}">
               <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
             </j:if>
-            <pre>${cs.commentAnnotated}</pre>
+            <pre><j:out value="${cs.commentAnnotated}"/></pre>
           </div>
         </td>
       </tr>

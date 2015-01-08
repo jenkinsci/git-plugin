@@ -16,7 +16,7 @@
       <ol>
         <j:forEach var="cs" items="${it.logs}" varStatus="loop">
           <li>
-            ${cs.msgAnnotated}
+            <j:out value="${cs.msgAnnotated}"/>
             (<a href="changes#detail${loop.index}">detail</a>
             <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
             <j:if test="${cslink!=null}">
