@@ -27,6 +27,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.gitclient.PushCommand;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
@@ -236,6 +237,22 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         if (Util.isOverridden(GitSCMExtension.class, getClass(), "decorateCheckoutCommand", GitSCM.class, Run.class, GitClient.class, TaskListener.class, CheckoutCommand.class)) {
             decorateCheckoutCommand(scm, (Run) build, git, listener, cmd);
+        }
+    }
+    
+    /**
+     * Called before a {@link PushCommand} is executed to allow extensions to alter its behavior.
+     */
+    public void decoratePushCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, PushCommand cmd) throws IOException, InterruptedException, GitException {
+        if (build instanceof AbstractBuild && listener instanceof BuildListener) {
+            decoratePushCommand(scm, (AbstractBuild) build, git, (BuildListener) listener, cmd);
+        }
+    }
+    
+    @Deprecated
+    public void decoratePushCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, PushCommand cmd) throws IOException, InterruptedException, GitException {
+        if (Util.isOverridden(GitSCMExtension.class, getClass(), "decoratePushCommand", GitSCM.class, Run.class, GitClient.class, TaskListener.class, PushCommand.class)) {
+            decoratePushCommand(scm, (Run) build, git, listener, cmd);
         }
     }
 
