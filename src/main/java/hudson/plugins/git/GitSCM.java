@@ -70,6 +70,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
@@ -80,6 +81,8 @@ import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -162,13 +165,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
-        if (branches == null) {
-            branches = new ArrayList<BranchSpec>();
-        }
-        if (branches.isEmpty()) {
-            branches.add(new BranchSpec("*/master"));
-        }
-        this.branches = branches;
+        this.branches = (isEmpty(branches))? newArrayList(new BranchSpec("*/master")):branches;
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
