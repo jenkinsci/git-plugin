@@ -164,7 +164,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
-        this.branches = (isEmpty(branches))? newArrayList(new BranchSpec("*/master")):branches;
+        this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
