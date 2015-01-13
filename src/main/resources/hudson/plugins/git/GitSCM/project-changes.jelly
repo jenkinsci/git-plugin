@@ -48,7 +48,7 @@ THE SOFTWARE.
             (<i:formatDate value="${b.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>)</a></h2>
 
           <ol>
-            <j:forEach var="c" items="${changeSet.iterator()}">
+            <j:forEach var="c" items="${changeSet.logs}">
               <li>
                 <j:out value="${c.msgAnnotated}"/>
 

@@ -11,6 +11,9 @@
     <f:entry title="Create new accounts base on author/committer's email" field="createAccountBasedOnEmail">
            <f:checkbox name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
+    <f:entry title="Hide changes, exluded from polling to other plugins" field="hideExcludedInChangeList">
+           <f:checkbox name="hideExcludedInChangeList" checked="${descriptor.hideExcludedInChangeList}"/>
+    </f:entry>
     <!--
     <f:entry title="Default git client implementation" field="defaultClientType">
         <select>

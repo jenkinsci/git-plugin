@@ -119,6 +119,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final boolean DEFAULT_HIDE_EXCLUDED_COMMITS_IN_CHANGESET = Boolean
+            .getBoolean(GitSCM.class.getName() + "hideExcludedCommitsInChangeSet");
 
     /**
      * All the configured extensions attached to this.
@@ -339,6 +341,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
+    }
+
+    public boolean isHideExcludedInChangeList() {
+        final DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isHideExcludedInChangeList());
     }
 
     public BuildChooser getBuildChooser() {
@@ -1221,6 +1228,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean hideExcludedInChangeList = DEFAULT_HIDE_EXCLUDED_COMMITS_IN_CHANGESET;
+
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
 
         public DescriptorImpl() {
@@ -1299,6 +1308,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
+        }
+
+        public void setHideExcludedInChangeList(boolean hideExcludedInChangeList) {
+            this.hideExcludedInChangeList = hideExcludedInChangeList;
+        }
+
+        /**
+         * Returns whether to exclude changes excluded from polling from
+         * external plugins
+         * @return <code>true</code> to exclude excluded changes
+         */
+        public boolean isHideExcludedInChangeList() {
+            return hideExcludedInChangeList;
         }
 
         /**
