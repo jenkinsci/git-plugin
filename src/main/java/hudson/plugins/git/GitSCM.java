@@ -1592,7 +1592,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
-    public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
+    public static boolean VERBOSE = true;// Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
 
     /**
      * To avoid pointlessly large changelog, we'll limit the number of changes up to this.
