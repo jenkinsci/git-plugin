@@ -116,7 +116,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
     
-    private String log = "";
+    private String summary = "";
 
     /**
      * All the configured extensions attached to this.
@@ -973,7 +973,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData buildData = copyBuildData(build.getPreviousBuild());
         build.addAction(buildData);
         if (buildData.lastBuild != null) {
-        	log += "\nThe last build revision was " + buildData.lastBuild.revision;
+        	summary += "\nThe last build revision was " + buildData.lastBuild.revision;
         	if(VERBOSE){
         		listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         	}
@@ -989,7 +989,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
-        log += "\nCommit to build is " + revToBuild.revision.getSha1String();
+        summary += "\nCommit to build is " + revToBuild.revision.getSha1String();
         
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
@@ -997,7 +997,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             environment.put(GIT_BRANCH, getBranchName(branch));
         }
         
-        log += "\nHead branch is " + branch.getName();
+        summary += "\nHead branch is " + branch.getName();
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
@@ -1024,7 +1024,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.onCheckoutCompleted(this, build, git,listener);
         }
         
-        listener.getLogger().println(log);
+        listener.getLogger().println(summary);
     }
 
     /**
