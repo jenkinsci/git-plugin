@@ -546,7 +546,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
-    	listener.getLogger().println("Comparing remote revision with implementation in GitSCM.java");
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
         final Run lastBuild = project.getLastBuild();
@@ -686,7 +685,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException, IOException {
 
-    	listener.getLogger().println("fetching information from repositoryin GitSCM.java");
         boolean first = true;
         for (URIish url : remoteRepository.getURIs()) {
             try {
@@ -852,7 +850,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final GitClient git,
                                               final TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
-        log.println("Determining Revision to build in GitSCM.java");
         Collection<Revision> candidates = Collections.EMPTY_LIST;
 
         // every MatrixRun should build the same marked commit ID
@@ -923,7 +920,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
-        log.println("Retrieving changes in GitSCM.java");
 
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
@@ -967,7 +963,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
-    	listener.getLogger().println("Running checkout in GitSCM.java");
+
         if (VERBOSE)
             listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
@@ -1065,7 +1061,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
-        listener.getLogger().println("Computing change log in GitSCM.java");
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
@@ -1597,7 +1592,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
-    public static boolean VERBOSE = true;// Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
+    public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
 
     /**
      * To avoid pointlessly large changelog, we'll limit the number of changes up to this.
