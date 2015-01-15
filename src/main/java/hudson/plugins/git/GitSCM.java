@@ -1015,7 +1015,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
         
-        // This  is a comment
+        // 
         summary += "\nThe revision checked out from SCM is " + revToBuild.revision;
 
         build.addAction(new GitTagAction(build, workspace, buildData));
