@@ -1030,6 +1030,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         
         // Print final summary
         listener.getLogger().println(summary);
+<<<<<<< HEAD
+=======
+        // Clear summary for next build because it is a static variable
+>>>>>>> b3
         summary = "";
     }
 
