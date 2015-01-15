@@ -116,6 +116,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
     
+    // Summarizes procedure for human reading at end
     private static String summary = "";
 
     /**
