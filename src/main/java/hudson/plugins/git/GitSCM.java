@@ -1012,6 +1012,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
         
+        summary += "\nPrevious Git commit is " + env.get(GIT_PREVIOUS_COMMIT);
+        summary += "\nPrevious successful Git commit is " + env.get(GIT_PREVIOUS_SUCCESSFUL_COMMIT);
         summary += "\nThe revision checked out from SCM is " + revToBuild.revision;
 
         build.addAction(new GitTagAction(build, workspace, buildData));
@@ -1126,8 +1128,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (prevSuccessfulCommit != null) {
                     env.put(GIT_PREVIOUS_SUCCESSFUL_COMMIT, prevSuccessfulCommit);
                 }
-                summary += "\nPrevious Git commit is " + env.get(GIT_PREVIOUS_COMMIT);
-                summary += "\nPrevious successful Git commit is " + env.get(GIT_PREVIOUS_SUCCESSFUL_COMMIT);
             }
 
             env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
