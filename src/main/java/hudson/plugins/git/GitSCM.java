@@ -115,6 +115,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    
+    private String summary = "";
 
     /**
      * All the configured extensions attached to this.
@@ -970,8 +972,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
         build.addAction(buildData);
-        if (VERBOSE && buildData.lastBuild != null) {
-            listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
+        if (buildData.lastBuild != null) {
+        	summary += "The last build revision was " + buildData.lastBuild.revision;
+        	if(VERBOSE){
+        		listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
+        	}
         }
 
         EnvVars environment = build.getEnvironment(listener);
@@ -984,11 +989,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
+        summary += "\nCommit to build is " + revToBuild.revision.getSha1String();
+        
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
         }
+        
+        summary += "\nHead branch is " + branch.getName();
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
@@ -1014,6 +1023,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
         }
+        
+        listener.getLogger().println(summary);
     }
 
     /**
