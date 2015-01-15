@@ -1030,6 +1030,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         
         // Print final summary
         listener.getLogger().println(summary);
+        // Clear summary for next build
         summary = "";
     }
 
