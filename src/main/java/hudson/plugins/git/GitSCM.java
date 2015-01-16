@@ -115,8 +115,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
-    
-    // Summarizes procedure for human reading at end
+
     public String summary;
 
     /**
@@ -886,7 +885,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
             candidates = getBuildChooser().getCandidateRevisions(
                     false, singleBranch, git, listener, buildData, context);
-            
+
             summary += "\nThis build is not a matrix run, there is only one configuration"
             		+ "\nThere was no build parameter forcing this revision to be built"
             		+ "\nThe only branch to choose from is " + singleBranch;
@@ -997,13 +996,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
-        
+
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
         }
-        
+
         summary += "\nMarked commit is                  " + revToBuild.marked.getSha1String();
         summary += "\nCommit to build is                " + environment.get(GIT_COMMIT);
         summary += "\nHead branch is                    " + environment.get(GIT_BRANCH);
@@ -1034,8 +1033,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
         }
-        
-        // Print final summary and clear
+
         listener.getLogger().println(summary + "\n");
         summary = "\nGit Plugin Summary";
     }
@@ -1610,7 +1608,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));
         Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig", RemoteConfig.class);
     }
-    
+
     public void appendSummary(String log) {
     	if(summary == null)
     		summary = "\nGit Plugin Summary";
