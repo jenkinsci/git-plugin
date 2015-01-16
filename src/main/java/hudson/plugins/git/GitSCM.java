@@ -1612,7 +1612,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
     
     public void appendSummary(String log) {
-    	if(summary.equals(""))
+    	if(summary == null)
     		summary = "\nGit Plugin Summary";
     	summary += log;
     }
