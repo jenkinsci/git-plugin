@@ -117,7 +117,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
     
     // Summarizes procedure for human reading at end
-    public static String summary = "\nGit Plugin Summary";
+    public String summary = "\nGit Plugin Summary";
 
     /**
      * All the configured extensions attached to this.
@@ -1609,6 +1609,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Run.XSTREAM.registerConverter(new ObjectIdConverter());
         Items.XSTREAM.registerConverter(new RemoteConfigConverter(Items.XSTREAM));
         Items.XSTREAM.alias("org.spearce.jgit.transport.RemoteConfig", RemoteConfig.class);
+    }
+    
+    public void appendSummary(String log) {
+    	summary += log;
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitSCM.class.getName());
