@@ -263,7 +263,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
                             break;
                         }
-
+                        git.summary += "Triggered by notify commit";
+                        LOGGER.info("Appended trigger message to console output");
                     }
                 }
                 if (!scmFound) {
