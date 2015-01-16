@@ -194,6 +194,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
+            LOGGER.info("entering notifycommit");
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
 
@@ -210,6 +211,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         }
                         GitSCM git = (GitSCM) scm;
                         scmFound = true;
+                        
+                        git.summary += "Triggered by notify commit";
+                        LOGGER.info("Appended trigger message to console output");
 
                         for (RemoteConfig repository : git.getRepositories()) {
                             boolean repositoryMatches = false,
@@ -263,8 +267,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
                             break;
                         }
-                        git.summary += "Triggered by notify commit";
-                        LOGGER.info("Appended trigger message to console output");
                     }
                 }
                 if (!scmFound) {
