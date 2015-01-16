@@ -982,7 +982,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData buildData = copyBuildData(build.getPreviousBuild());
         build.addAction(buildData);
         if (buildData.lastBuild != null) {
-        	summary += "\nThe last build revision was       " + buildData.lastBuild.revision;
+        	appendSummary("\nThe last build revision was       " + buildData.lastBuild.revision);
         	if(VERBOSE){
         		listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         	}
@@ -1037,7 +1037,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         
         // Print final summary and clear
         listener.getLogger().println(summary + "\n");
-        summary = "Git Plugin Summary";
+        summary = "\nGit Plugin Summary";
     }
 
     /**
