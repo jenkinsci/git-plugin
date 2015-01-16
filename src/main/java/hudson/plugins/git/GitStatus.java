@@ -212,7 +212,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         scmFound = true;
                         
                         git.summary += "Triggered by notify commit";
-                        LOGGER.info(git.summary);
+                        LOGGER.info(git.summary); 
                         LOGGER.info("Appended trigger message to console output");
 
                         for (RemoteConfig repository : git.getRepositories()) {
