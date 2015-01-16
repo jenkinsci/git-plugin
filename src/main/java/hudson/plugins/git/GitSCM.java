@@ -117,7 +117,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
     
     // Summarizes procedure for human reading at end
-    public String summary = "\nGit Plugin Summary";
+    public String summary;
 
     /**
      * All the configured extensions attached to this.
@@ -1612,6 +1612,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
     
     public void appendSummary(String log) {
+    	if(summary.equals(""))
+    		summary = "\nGit Plugin Summary";
     	summary += log;
     }
 
