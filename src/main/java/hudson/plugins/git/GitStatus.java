@@ -10,10 +10,12 @@ import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.Item;
 import hudson.model.UnprotectedRootAction;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
@@ -21,15 +23,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
 import javax.servlet.ServletException;
+
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.triggers.SCMTriggerItem;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -40,6 +49,11 @@ import org.kohsuke.stapler.*;
  */
 @Extension
 public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+	
+	private static final String NOTIFY_COMMIT_FILE_LOC = "/home/mbehlke/log.txt";
+	private static Logger notifyCommitLogger = initNotifyCommitLogger();
+	private static FileHandler notifyCommitFile;
+	
     public String getDisplayName() {
         return "Git";
     }
@@ -211,7 +225,22 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         GitSCM git = (GitSCM) scm;
                         scmFound = true;
 
-                        git.appendSummary("\nTriggered by notify commit");
+                        git.appendSummary("\nTriggered by notify commit url");
+                        if(branches.length == 0) {
+                        	git.appendSummary(" with no branch specified");
+                        } else if(branches.length == 1) {
+                        	git.appendSummary(" specified with branch " + branches[0]);
+                        } else {
+                        	git.appendSummary(" specified with branches:");
+                        	for(String branch : branches) {
+                        		git.appendSummary("  " + branch);
+                        	}
+                        }
+                        if(sha1 == null || sha1.equals("")) {
+                        	git.appendSummary("\n. No sha1 was specified");
+                        } else {
+                        	git.appendSummary("\n. Sha1 specified as " + sha1);
+                        }
 
                         for (RemoteConfig repository : git.getRepositories()) {
                             boolean repositoryMatches = false,
@@ -252,12 +281,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
+                                    //notifyCommitLogger.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
+                                    //notifyCommitLogger.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
                                     break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
@@ -395,5 +426,21 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
+    
+    private static Logger initNotifyCommitLogger() {
+    	notifyCommitLogger = Logger.getLogger("NotifyCommitLogger");
+    	try {
+    		notifyCommitFile = new FileHandler(NOTIFY_COMMIT_FILE_LOC);
+    		notifyCommitLogger.addHandler(notifyCommitFile);
+    		SimpleFormatter formatter = new SimpleFormatter();
+    		notifyCommitFile.setFormatter(formatter);
+    		notifyCommitLogger.setUseParentHandlers(false);
+    	} catch(SecurityException e) {
+    		e.printStackTrace();
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	}
+    	return notifyCommitLogger;
+    }
 }
 
