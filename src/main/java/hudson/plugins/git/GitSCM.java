@@ -980,7 +980,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
         if(summary != null && summary.contains("notify commit url")) {
-        	buildData.trigger = "Notify commit url";
+        	buildData.trigger = summary;
         }
         else {
         	buildData.trigger = "";
@@ -1041,7 +1041,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         listener.getLogger().println(summary + "\n");
-        summary = "\nGit Plugin Summary";
+        summary = "\n";
     }
 
     /**
@@ -1617,7 +1617,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public void appendSummary(String log) {
     	if(summary == null)
-    		summary = "\nGit Plugin Summary";
+    		summary = "\n";
     	summary += log;
     }
 
