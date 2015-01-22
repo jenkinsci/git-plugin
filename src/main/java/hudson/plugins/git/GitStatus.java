@@ -10,10 +10,12 @@ import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.Item;
 import hudson.model.UnprotectedRootAction;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
@@ -21,15 +23,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
+
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.triggers.SCMTriggerItem;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -40,6 +47,7 @@ import org.kohsuke.stapler.*;
  */
 @Extension
 public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+
     public String getDisplayName() {
         return "Git";
     }
@@ -211,6 +219,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         GitSCM git = (GitSCM) scm;
                         scmFound = true;
 
+                        git.appendSummary("\nTriggered by notify commit url.\n");
+
                         for (RemoteConfig repository : git.getRepositories()) {
                             boolean repositoryMatches = false,
                                     branchMatches = false;
@@ -249,13 +259,19 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (isNotEmpty(sha1)) {
-                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
+                                	String msg = " to build commit " 
+                                			+ sha1 + ". " + addBranchLog(branches);
+                                	git.appendSummary(project.getFullDisplayName() + " was scheduled " + msg);
+                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + msg);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else if (trigger != null) {
-                                    LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
+                                	String msg = " with no SHA-1 specified. " + addBranchLog(branches);
+                                	git.appendSummary(project.getFullDisplayName() + " was triggered by polling " + msg);
+                                    LOGGER.info("Triggering the polling of " + project.getFullDisplayName()
+                                			+ msg);
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
                                     break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
@@ -263,7 +279,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
                             break;
                         }
-
                     }
                 }
                 if (!scmFound) {
@@ -278,6 +293,20 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             } finally {
                 SecurityContextHolder.setContext(old);
             }
+        }
+        
+        private String addBranchLog(String... branches) {
+        	String msg = "";
+        	if(branches.length == 0) {
+        		msg += " with no branch specified in notify commit url";
+        	}
+        	else {
+        		msg += "\nNotify commit url contained branches:";
+        		for(String branch : branches) {
+        			msg += "\n" + branch;
+        		}
+        	}
+        	return msg;
         }
 
         /**

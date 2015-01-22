@@ -52,6 +52,11 @@ public class BuildData implements Action, Serializable, Cloneable {
      * The URLs that have been referenced.
      */
     public Set<String> remoteUrls = new HashSet<String>();
+    
+    /**
+     * The cause for starting the build
+     */
+    public String trigger;
 
     public BuildData() {
     }
