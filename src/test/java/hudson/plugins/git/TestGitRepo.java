@@ -28,10 +28,8 @@ public class TestGitRepo {
 	public File gitDir; // was "workDir"
 	public FilePath gitDirPath; // was "workspace"
 	public GitClient git;
-	
-	private EnvVars envVars;
-	
-	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
+
+    public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
 	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener)
@@ -42,8 +40,8 @@ public class TestGitRepo {
     public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
-		
-		envVars = new EnvVars();
+
+        EnvVars envVars = new EnvVars();
 		
 		gitDir = tmpDir;
 		User john = User.get(johnDoe.getName(), true);
@@ -61,26 +59,64 @@ public class TestGitRepo {
         // finally: initialize the repo
 		git.init();
 	}
-	
-    public void commit(final String fileName, final PersonIdent committer, final String message)
+
+    /**
+     * Creates a commit in current repo.
+     * @param fileName relative path to the file to be commited with default content
+     * @param committer author and committer of this commit
+     * @param message commit message
+     * @return SHA1 of latest commit
+     * @throws GitException
+     * @throws InterruptedException
+     */
+    public String commit(final String fileName, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
-        commit(fileName, fileName, committer, committer, message);
+        return commit(fileName, fileName, committer, committer, message);
     }
 
-    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
-
+    /**
+     * Creates a commit in current repo.
+     * @param fileName relative path to the file to be commited with default content
+     * @param author author of the commit
+     * @param committer committer of this commit
+     * @param message commit message
+     * @return SHA1 of latest commit
+     * @throws GitException
+     * @throws InterruptedException
+     */
+    public String commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
-        commit(fileName, fileName, author, committer, message);
+        return commit(fileName, fileName, author, committer, message);
     }
 
-    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
-
+    /**
+     * Creates a commit in current repo.
+     * @param fileName relative path to the file to be commited with the given content
+     * @param fileContent content of the commit
+     * @param committer author and committer of this commit
+     * @param message commit message
+     * @return SHA1 of latest commit
+     * @throws GitException
+     * @throws InterruptedException
+     */
+    public String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
-        commit(fileName, fileContent, committer, committer, message);
+        return commit(fileName, fileContent, committer, committer, message);
     }
 
-    public void commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
-                        final String message) throws GitException, InterruptedException {
+    /**
+     * Creates a commit in current repo.
+     * @param fileName relative path to the file to be commited with the given content
+     * @param fileContent content of the commit
+     * @param author author of the commit
+     * @param committer committer of this commit
+     * @param message commit message
+     * @return SHA1 of latest commit
+     * @throws GitException
+     * @throws InterruptedException
+     */
+    public String commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
+                         final String message) throws GitException, InterruptedException {
         FilePath file = gitDirPath.child(fileName);
         try {
             file.write(fileContent, null);
@@ -91,6 +127,7 @@ public class TestGitRepo {
         git.setAuthor(author);
         git.setCommitter(committer);
         git.commit(message);
+        return git.revParse("HEAD").getName();
     }
 
     public void tag(String tagName, String comment) throws GitException, InterruptedException {
