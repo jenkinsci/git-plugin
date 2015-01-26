@@ -70,8 +70,13 @@
                     add="${%Add Branch}">
         <table width="100%">
           <br/>
+          <f:entry field="srcBranchName"
+                   title="${%Source branch}">
+            <f:textbox checkUrl="'descriptorByName/GitPublisher/checkBranchName?value='+escape(this.value)"
+                       default="HEAD"/>
+          </f:entry>
           <f:entry field="branchName"
-                   title="${%Branch to push}">
+                   title="${%Destination branch}">
             <f:textbox checkUrl="'descriptorByName/GitPublisher/checkBranchName?value='+escape(this.value)" />
           </f:entry>
           <f:entry field="targetRepoName"
