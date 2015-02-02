@@ -1,5 +1,5 @@
-Contributing to the Git Client Plugin
-=====================================
+Contributing to the Git Plugin
+==============================
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
