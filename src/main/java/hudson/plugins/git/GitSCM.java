@@ -1101,7 +1101,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 		}
 	}
 
-	private boolean isGitUrlChanged(File file, String remoteUrl,TaskListener listener) {
+	
+	/**
+	 * 
+	 * validate if the git url is changed comparing between the  remote urls in .git/config  and  remote urls in job config.xml
+	 * @param remoteUrl the remote url from .git/config file
+	 * @return true the git url changed, false the git url is not changed
+	 */
+	private boolean isGitUrlChanged(String remoteUrl) {
 		ArrayList<String> remoteUrls = new ArrayList<String>();
 		for (UserRemoteConfig uc : getUserRemoteConfigs()) {
 			remoteUrls.add(uc.getUrl());
@@ -1139,13 +1146,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 		if (git.hasGitRepo()) {
 
 			XmlFile configXml = build.getParent().getConfigFile();
-
+            //get git repository
 	        Repository repository = new RepositoryBuilder().setWorkTree(new File(workspace.toURI().getPath())).build();
 			StoredConfig config = repository.getConfig();
+			
+			// find all the remote url
 			Set<String> repos = config.getSubsections("remote");
 			for (String repo : repos) {
 				String remoteUrl = config.getString("remote",repo, "url");
-				if (isGitUrlChanged(configXml.getFile(), remoteUrl, listener)) {
+				if (isGitUrlChanged(remoteUrl)) {
 					listener.getLogger().println(" git url is changed, wipeout workspace");
 					workspace.deleteRecursive();
 					git = createClient(listener, environment, build, workspace);
