@@ -1101,15 +1101,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 		}
 	}
 
-	private boolean isGitUrlChanged(File file, String remoteUrl,
-			TaskListener listener) {
-		ArrayList<String> arr = new ArrayList<String>();
+	private boolean isGitUrlChanged(File file, String remoteUrl,TaskListener listener) {
+		ArrayList<String> remoteUrls = new ArrayList<String>();
 		for (UserRemoteConfig uc : getUserRemoteConfigs()) {
-			arr.add(uc.getUrl());
+			remoteUrls.add(uc.getUrl());
 		}
 
 		if (remoteUrl != null) {
-			return !arr.contains(remoteUrl.trim());
+			return !remoteUrls.contains(remoteUrl.trim());
 		}
 		return true;
 	}
