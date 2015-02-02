@@ -42,6 +42,9 @@ import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -77,8 +80,10 @@ import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.util.IOUtils;
 import hudson.util.LogTaskListener;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -976,7 +981,28 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         EnvVars environment = build.getEnvironment(listener);
         GitClient git = createClient(listener, environment, build, workspace);
+		// if git url is changed, should wipe out workspace to generate new .git folder
+		if (git.hasGitRepo()) {
 
+			XmlFile configXml = build.getParent().getConfigFile();
+            //get git repository
+	        Repository repository = new RepositoryBuilder().setWorkTree(new File(workspace.toURI().getPath())).build();
+			StoredConfig config = repository.getConfig();
+			
+			// find all the remote urls in .git/config file
+			Set<String> repos = config.getSubsections("remote");
+			for (String repo : repos) {
+				String remoteUrl = config.getString("remote",repo, "url");
+				if (isGitUrlChanged(remoteUrl)) {
+					listener.getLogger().println(" git url is changed, wipe out workspace");
+					workspace.deleteRecursive();
+					git = createClient(listener, environment, build, workspace);
+					break;
+				}
+
+			}
+
+		}
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
         }
@@ -1015,6 +1041,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.onCheckoutCompleted(this, build, git,listener);
         }
     }
+	
+	/**
+	 * 
+	 * validate if the git url is changed comparing between the  remote urls in .git/config  and  remote urls in job config.xml
+	 * @param remoteUrl the remote url from .git/config file
+	 * @return true the git url changed, false the git url is not changed
+	 */
+	private boolean isGitUrlChanged(String remoteUrl) {
+		ArrayList<String> remoteUrls = new ArrayList<String>();
+		for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+			remoteUrls.add(uc.getUrl());
+		}
+
+		if (remoteUrl != null) {
+			return !remoteUrls.contains(remoteUrl.trim());
+		}
+		return true;
+	} 
 
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}.
