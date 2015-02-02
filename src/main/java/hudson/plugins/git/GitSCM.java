@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -28,6 +29,7 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
 import hudson.scm.*;
 import hudson.security.ACL;
 import hudson.tasks.Builder;
@@ -42,6 +44,8 @@ import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -52,6 +56,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
@@ -1098,37 +1103,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
 	private boolean isGitUrlChanged(File file, String remoteUrl,
 			TaskListener listener) {
-		BufferedReader br = null;
-		try {
-			br = new BufferedReader(new FileReader(file));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		ArrayList<String> arr = new ArrayList<String>();
+		for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+			arr.add(uc.getUrl());
 		}
-		try {
-			StringBuilder sb = new StringBuilder();
-			String line = br.readLine();
 
-			while (line != null) {
-				sb.append(line);
-				sb.append(System.getProperty("line.separator"));
-				line = br.readLine();
-			}
-			String everything = sb.toString();
-
-			return everything.indexOf(remoteUrl) == -1;
-		} catch (Exception e) {
-
-		} finally {
-			try {
-				if (br != null)
-					br.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		if (remoteUrl != null) {
+			return !arr.contains(remoteUrl.trim());
 		}
-		return false;
+		return true;
 	}
 
 	@Override
@@ -1150,25 +1133,27 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 		}
 
 		EnvVars environment = build.getEnvironment(listener);
-		GitClient git = createClient(listener, environment, build, workspace);
+		
+		
+		GitClient git =createClient(listener, environment, build, workspace);
+		// if git url is changed, should wipeout workspace to generate new .git folder
 		if (git.hasGitRepo()) {
 
 			XmlFile configXml = build.getParent().getConfigFile();
 
-			StoredConfig config = git.getRepository().getConfig();
-
+	        Repository repository = new RepositoryBuilder().setWorkTree(new File(workspace.toURI().getPath())).build();
+			StoredConfig config = repository.getConfig();
 			Set<String> repos = config.getSubsections("remote");
-
 			for (String repo : repos) {
-				if (config.getString("remote", repo, "url") != null) {
-					String remoteUrl = config.getString("remote", repo, "url");
-					if (isGitUrlChanged(configXml.getFile(), remoteUrl,listener)) {
-						listener.getLogger().println(" git url is changed, wipeout workspace");
-						workspace.deleteRecursive();
-						git = createClient(listener, environment, build,workspace);
-						break;
-					}
+				String remoteUrl = config.getString("remote",repo, "url");
+				if (isGitUrlChanged(configXml.getFile(), remoteUrl, listener)) {
+					listener.getLogger().println(
+							" git url is changed, wipeout workspace");
+					workspace.deleteRecursive();
+					git = createClient(listener, environment, build, workspace);
+					break;
 				}
+
 			}
 
 		}
