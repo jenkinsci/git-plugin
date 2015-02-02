@@ -1147,8 +1147,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 			for (String repo : repos) {
 				String remoteUrl = config.getString("remote",repo, "url");
 				if (isGitUrlChanged(configXml.getFile(), remoteUrl, listener)) {
-					listener.getLogger().println(
-							" git url is changed, wipeout workspace");
+					listener.getLogger().println(" git url is changed, wipeout workspace");
 					workspace.deleteRecursive();
 					git = createClient(listener, environment, build, workspace);
 					break;
