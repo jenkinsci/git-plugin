@@ -562,29 +562,34 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
 
-        // fast remote polling needs a single branch and an existing last build
-        if (singleBranch != null                                                      // branch spec can be resolved to a single branch
-            && buildData.lastBuild != null && buildData.lastBuild.getMarked() != null // we know previous build commit
-            && !requiresWorkspaceForPolling()                                         // remote polling hasn't been intentionally disabled
-           ) {
+        if (!requiresWorkspaceForPolling()) {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
-            String gitRepo = getParamExpandedRepos(lastBuild, listener).get(0).getURIs().get(0).toString();
-            ObjectId head = git.getHeadRev(gitRepo, singleBranch);
-            if (head != null){
-                listener.getLogger().println("[poll] Latest remote head revision is: " + head.getName());
-                if (buildData.lastBuild.getMarked().getSha1().equals(head)) {
-                    return NO_CHANGES;
-                } else {
-                    return BUILD_NOW;
+            for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
+                for (URIish urIish : remoteConfig.getURIs()) {
+                    String gitRepo = urIish.toString();
+                    Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
+                    if (heads==null || heads.isEmpty()) {
+                        listener.getLogger().println("[poll] Couldn't get remote head revision");
+                        return BUILD_NOW;
+                    }
+
+                    for (BranchSpec branchSpec : getBranches()) {
+                        Collection<String> branches = branchSpec.filterMatching(heads.keySet(), environment);
+                        for (String branch : branches) {
+                            ObjectId head = heads.get(branch);
+                            if (buildData.hasBeenBuilt(head)) continue;
+
+                            listener.getLogger().println("[poll] Latest remote head revision on " + branch + " is: " + head.getName());
+                            return BUILD_NOW;
+                        }
+                    }
                 }
-            } else {
-                listener.getLogger().println("[poll] Couldn't get remote head revision");
-                return BUILD_NOW;
             }
+            return NO_CHANGES;
         }
 
         final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
@@ -623,6 +628,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("No Git repository yet, an initial checkout is required");
             return PollingResult.SIGNIFICANT;
         }
+    }
+
+    private Build lastBuildOfBranch(String key, BuildData buildData, RemoteConfig remoteConfig) {
+        // normalize
+        if (!key.startsWith("refs/heads/")) key = "refs/heads/"+key;
+        String ref = "refs/remotes/"+remoteConfig.getName()+"/"+key.substring("refs/heads/".length());
+        return buildData.getLastBuildOfBranch(ref);
+    }
+
+    private Build lastBuildOfTag(String key, BuildData buildData, RemoteConfig remoteConfig) {
+        if (!key.startsWith("refs/tags/")) key = "refs/tags/" + key;
+        return buildData.getLastBuildOfBranch(key);
     }
 
     /**

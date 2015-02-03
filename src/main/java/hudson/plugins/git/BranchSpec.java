@@ -63,7 +63,10 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     public boolean matches(String item, EnvVars env) {
         return getPattern(env).matcher(item).matches();
     }
-    
+
+    /**
+     * @deprecated use filterMatching(Collection<String>, EnvVars)
+     */
     public List<String> filterMatching(Collection<String> branches) {
         EnvVars env = new EnvVars();
         return filterMatching(branches, env);
@@ -117,7 +120,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             qualifiedName = expandedName;
         
         // build a pattern into this builder
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder("(refs/heads/)?");
         
         // was the last token a wildcard?
         boolean foundWildcard = false;
