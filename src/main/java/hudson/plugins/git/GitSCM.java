@@ -569,6 +569,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
+                String remote = remoteConfig.getName();
                 for (URIish urIish : remoteConfig.getURIs()) {
                     String gitRepo = urIish.toString();
                     Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
@@ -580,15 +581,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     for (BranchSpec branchSpec : getBranches()) {
                         Set<String> names = new HashSet<String>();
                         for (String head : heads.keySet()) {
+                            String name = remote + "/";
                             // head is "refs/(heads|tags)/branchName
-                            names.add(head.substring(head.indexOf('/', 5)));
-                        }
-                        Collection<String> branches = branchSpec.filterMatching(names, environment);
-                        for (String branch : branches) {
-                            ObjectId head = heads.get(branch);
-                            if (buildData.hasBeenBuilt(head)) continue;
+                            if (head.startsWith("refs/heads/")) name += head.substring(11);
+                            else if (head.startsWith("refs/tags/")) name += head.substring(10);
+                            else name += head;
 
-                            listener.getLogger().println("[poll] Latest remote head revision on " + branch + " is: " + head.getName());
+                            if (!branchSpec.matches(name, environment)) continue;
+
+                            ObjectId sha1 = heads.get(head);
+                            Build built = buildData.getLastBuild(sha1);
+                            if (built != null) {
+                                listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
+                                continue;
+                            }
+
+                            listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName());
                             return BUILD_NOW;
                         }
                     }

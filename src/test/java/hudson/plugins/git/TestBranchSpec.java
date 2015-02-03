@@ -9,9 +9,6 @@ import junit.framework.TestCase;
 public class TestBranchSpec extends TestCase {
     public void testMatch() {
 
-        BranchSpec dev3 = new BranchSpec("dev3");
-        Assert.assertFalse(dev3.matches("refs/heads/rc/dev3"));
-
         BranchSpec l = new BranchSpec("master");
         Assert.assertTrue(l.matches("origin/master"));
         Assert.assertFalse(l.matches("origin/something/master"));
@@ -41,7 +38,7 @@ public class TestBranchSpec extends TestCase {
         Assert.assertTrue(n.matches("origin/my.branch/b1"));
         Assert.assertFalse(n.matches("origin/my-branch/b1"));
         Assert.assertFalse(n.matches("remote/origin/my.branch/b1"));
-        Assert.assertFalse(n.matches("remotes/origin/my.branch/b1"));
+        Assert.assertTrue(n.matches("remotes/origin/my.branch/b1"));
       
         BranchSpec o = new BranchSpec("**");
         
