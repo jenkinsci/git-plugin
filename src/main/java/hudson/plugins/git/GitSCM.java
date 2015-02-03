@@ -578,7 +578,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
 
                     for (BranchSpec branchSpec : getBranches()) {
-                        Collection<String> branches = branchSpec.filterMatching(heads.keySet(), environment);
+                        Set<String> names = new HashSet<String>();
+                        for (String head : heads.keySet()) {
+                            // head is "refs/(heads|tags)/branchName
+                            names.add(head.substring(head.indexOf('/', 5)));
+                        }
+                        Collection<String> branches = branchSpec.filterMatching(names, environment);
                         for (String branch : branches) {
                             ObjectId head = heads.get(branch);
                             if (buildData.hasBeenBuilt(head)) continue;

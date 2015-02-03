@@ -120,7 +120,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             qualifiedName = expandedName;
         
         // build a pattern into this builder
-        StringBuilder builder = new StringBuilder("(refs/heads/)?");
+        StringBuilder builder = new StringBuilder();
         
         // was the last token a wildcard?
         boolean foundWildcard = false;
