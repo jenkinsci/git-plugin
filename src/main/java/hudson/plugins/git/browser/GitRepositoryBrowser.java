@@ -5,6 +5,8 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.scm.RepositoryBrowser;
+
+import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
