@@ -58,7 +58,7 @@ public class PreBuildMerge extends GitSCMExtension {
             return rev;
 
         // Only merge if there's a branch to merge that isn't us..
-        listener.getLogger().println("Merging " + rev + " onto " + remoteBranchRef + " using " + scm.getUserMergeOptions().getMergeStrategy().toString() + " strategy");
+        listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef + ", " + scm.getUserMergeOptions().toString());
 
         // checkout origin/blah
         ObjectId target = git.revParse(remoteBranchRef);
@@ -100,6 +100,7 @@ public class PreBuildMerge extends GitSCMExtension {
     public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
         if (scm.getUserMergeOptions().getMergeStrategy() != null)
             cmd.setStrategy(scm.getUserMergeOptions().getMergeStrategy());
+        cmd.setGitPluginFastForwardMode(scm.getUserMergeOptions().getFastForwardMode());
     }
 
     @Override
