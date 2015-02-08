@@ -77,6 +77,7 @@ import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.util.IOUtils;
 import hudson.util.LogTaskListener;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -579,17 +580,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
 
                     for (BranchSpec branchSpec : getBranches()) {
-                        Set<String> names = new HashSet<String>();
-                        for (String head : heads.keySet()) {
-                            String name = remote + "/";
+                        for (Entry<String, ObjectId> entry : heads.entrySet()) {
+                            final String head = entry.getKey();
+                            String name;
                             // head is "refs/(heads|tags)/branchName
-                            if (head.startsWith("refs/heads/")) name += head.substring(11);
-                            else if (head.startsWith("refs/tags/")) name += head.substring(10);
-                            else name += head;
+                            if (head.startsWith("refs/heads/")) name = remote + "/" + head.substring(11);
+                            else if (head.startsWith("refs/tags/")) name = remote + "/" + head.substring(10);
+                            else name = remote + "/" + head;
 
                             if (!branchSpec.matches(name, environment)) continue;
 
-                            ObjectId sha1 = heads.get(head);
+                            final ObjectId sha1 = entry.getValue();
                             Build built = buildData.getLastBuild(sha1);
                             if (built != null) {
                                 listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
