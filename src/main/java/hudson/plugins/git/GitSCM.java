@@ -986,6 +986,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                  * GitException. See JENKINS-20531. */
                 String message = "Error fetching remote repo '" + remoteRepository.getName() + "'";
                 listener.error(message);
+                ex.printStackTrace(listener.getLogger());
                 throw new AbortException(message);
             }
         }
