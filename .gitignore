@@ -14,3 +14,7 @@ pom.xml.releaseBackup
 .idea
 *.sublime-project
 *.sublime-workspace
+
+# vim
+*.swp
+Session.vim
