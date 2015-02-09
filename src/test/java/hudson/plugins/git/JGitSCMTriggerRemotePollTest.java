@@ -2,17 +2,18 @@ package hudson.plugins.git;
 
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
+import org.junit.*;
 
-public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
+
+public class JGitSCMTriggerRemotePollTest extends JUnit4SCMTriggerTestAdapter
 {
 
     /**
      * Currently some tests still fail due to bugs in productive code.
      * TODO: Fix bugs and enable tests.
      */
-    private boolean SKIP_FAILING_TESTS = true;
 
-    
+
     @Override
     protected EnforceGitClient getGitClient()
     {
@@ -25,22 +26,27 @@ public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
         return false;
     }
 
+
     @Override
+    @Ignore(value = "Currently some tests still fail due to bugs in productive code. TODO: Fix bugs and enable tests.")
+    @Test
     public void testNamespaces_with_master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testNamespaces_with_master();
     }
 
     @Override
+    @Ignore(value = "Currently some tests still fail due to bugs in productive code. TODO: Fix bugs and enable tests.")
+    @Test
     public void testNamespaces_with_namespace2Master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testNamespaces_with_namespace2Master();
     }
     
     @Override
+    @Ignore(value = "Currently some tests still fail due to bugs in productive code. TODO: Fix bugs and enable tests.")
+    @Test
     public void testCommitAsBranchSpec() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
         super.testCommitAsBranchSpec();
     }
-    
+
+
 }
