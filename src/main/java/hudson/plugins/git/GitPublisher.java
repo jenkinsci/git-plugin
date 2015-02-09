@@ -34,6 +34,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.CheckForNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.Serializable;
@@ -54,7 +55,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     private boolean forcePush;
     
     private List<TagToPush> tagsToPush;
-    // Pushes HEAD to these locations
+    // Pushes defined src to dst
     private List<BranchToPush> branchesToPush;
     // notes support
     private List<NoteToPush> notesToPush;
@@ -313,12 +314,16 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             
             if (isPushBranches()) {
                 for (final BranchToPush b : branchesToPush) {
+                    if (b.getSrcBranchName() == null)
+                        throw new AbortException("No src branch to push defined");
+
                     if (b.getBranchName() == null)
-                        throw new AbortException("No branch to push defined");
+                        throw new AbortException("No dst branch to push defined");
 
                     if (b.getTargetRepoName() == null)
-                        throw new AbortException("No branch repo to push to defined");
+                        throw new AbortException("No target repo to push defined");
 
+                    final String srcBranchName = environment.expand(b.getSrcBranchName());
                     final String branchName = environment.expand(b.getBranchName());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
                     
@@ -332,16 +337,17 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         // expand environment variables in remote repository
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
 
-                        listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
+                        listener.getLogger().println("Pushing " + srcBranchName + " to " + branchName + " at repo "
                                                      + targetRepo);
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
+                        PushCommand push = git.push().to(remoteURI).ref(srcBranchName + ":" + branchName);
                         if (forcePush) {
                           push.force();
                         }
                         push.execute();
                     } catch (GitException e) {
-                        e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
+                        e.printStackTrace(listener.error("Failed to push " + srcBranchName + " to " + branchName
+                                + " to " + targetRepo));
                         return false;
                     }
                 }
@@ -409,6 +415,14 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             if (tagsToPush == null) {
                 this.pushMerge = true;
             }
+            this.configVersion = 1L;
+        }
+
+        if (this.configVersion < 2L && isPushBranches()) {
+            for (BranchToPush branch : branchesToPush){
+                 branch.setSrcBranchName("HEAD");
+            }
+            this.configVersion = 2L;
         }
 
         return this;
@@ -492,7 +506,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     }
 
     public static abstract class PushConfig extends AbstractDescribableImpl<PushConfig> implements Serializable {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
         
         private String targetRepoName;
 
@@ -500,6 +514,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             this.targetRepoName = Util.fixEmptyAndTrim(targetRepoName);
         }
         
+        @CheckForNull
         public String getTargetRepoName() {
             return targetRepoName;
         }
@@ -516,16 +531,47 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     }
 
     public static final class BranchToPush extends PushConfig {
-        private String branchName;
+        private String branchName;   // dstBranchName
+        private String srcBranchName;
 
+        @CheckForNull
         public String getBranchName() {
             return branchName;
         }
 
-        @DataBoundConstructor
+        /**
+         * @deprecated This method doesn't allow to set source branch for push. Use
+         * {@link hudson.plugins.git.GitPublisher.BranchToPush#BranchToPush(java.lang.String, java.lang.String, java.lang.String)}
+         */
+        @Deprecated
         public BranchToPush(String targetRepoName, String branchName) {
+            this(targetRepoName, "HEAD", branchName);
+        }
+
+        /**
+         *
+         * @param targetRepoName Repository name to push to
+         * @param srcBranchName Source branch for push
+         * @param branchName Destination branch for push
+         */
+        @DataBoundConstructor
+        public BranchToPush(String targetRepoName, String srcBranchName, String branchName) {
             super(targetRepoName);
+            this.srcBranchName = Util.fixEmptyAndTrim(srcBranchName);
             this.branchName = Util.fixEmptyAndTrim(branchName);
+        }
+
+        @CheckForNull
+        public String getSrcBranchName() {
+            return srcBranchName;
+        }
+
+        public void setSrcBranchName(String srcBranchName) {
+            this.srcBranchName = srcBranchName;
+        }
+
+        public void setBranchName(String branchName) {
+            this.branchName = branchName;
         }
 
         @Extension
