@@ -27,4 +27,18 @@ public class DefaultBuildChooserTest extends AbstractGitTestCase {
         candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), git, null, null, null);
         assertTrue(candidateRevisions.isEmpty());
     }
+    /**
+     * RegExp patterns prefixed with : should pass through to DefaultBuildChooser.getAdvancedCandidateRevisions
+     * @throws Exception
+     */
+    public void testIsAdvancedSpec() throws Exception {
+        DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
+
+        assertFalse(buildChooser.isAdvancedSpec("origin/master"));
+        assertTrue(buildChooser.isAdvancedSpec("origin/master-*"));
+        assertTrue(buildChooser.isAdvancedSpec("origin**"));
+        // regexp use case
+        assertTrue(buildChooser.isAdvancedSpec(":origin/master"));
+        assertTrue(buildChooser.isAdvancedSpec(":origin/master-\\d{*}"));
+    }
 }
