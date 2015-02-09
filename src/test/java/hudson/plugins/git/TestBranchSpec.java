@@ -147,4 +147,13 @@ public class TestBranchSpec extends TestCase {
     	assertFalse(m.matches("origin/prefix"));
     	assertFalse(m.matches("origin/prefix-abc"));
     }
+
+    public void testUsesJavaPatternWithRepetition() {
+    	// match pattern from JENKINS-26842
+    	BranchSpec m = new BranchSpec(":origin/release-\\d{8}");
+    	assertTrue(m.matches("origin/release-20150101"));
+    	assertFalse(m.matches("origin/release-2015010"));
+    	assertFalse(m.matches("origin/release-201501011"));
+    	assertFalse(m.matches("origin/release-20150101-something"));
+    }
 }

@@ -49,7 +49,7 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // if the branch name contains more wildcards then the simple usecase
         // does not apply and we need to skip to the advanced usecase
-        if (branchSpec == null || branchSpec.contains("*"))
+        if (isAdvancedSpec(branchSpec))
             return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data, context);
 
         // check if we're trying to build a specific commit
@@ -306,5 +306,18 @@ public class DefaultBuildChooser extends BuildChooser {
         public String getLegacyId() {
             return "Default";
         }
+    }
+
+    /**
+     * Helper to determine if the branchSpec requires advanced matching
+     *
+     * - if the branch name contains more wildcards then the simple usecase
+     * - if the branch name should be treated as regexp
+     * @param branchSpec
+     * @return
+     */
+    boolean isAdvancedSpec(String branchSpec) {
+        // null or wildcards or regexp
+        return (branchSpec == null || branchSpec.contains("*") || branchSpec.startsWith(":"));
     }
 }
