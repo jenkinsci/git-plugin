@@ -111,7 +111,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool = null;
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
+    public static final String ORIGIN = "origin";
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_BRANCH_SHORT = "GIT_BRANCH_SHORT";
+    public static final String GIT_BRANCH_SONAR = "GIT_BRANCH_SONAR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1018,6 +1021,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
+            environment.put(GIT_BRANCH_SHORT, getShortBranchName(branch));
+            environment.put(GIT_BRANCH_SONAR, getSonarBranchName(branch));
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
@@ -1134,6 +1139,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
+                env.put(GIT_BRANCH_SHORT, getShortBranchName(branch));
+                env.put(GIT_BRANCH_SONAR, getSonarBranchName(branch));
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1166,13 +1173,54 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
     
+    /**
+     * Gets the name of the current branch.
+     * 
+     * @param branch the current branch
+     * 
+     * @return the name of the current branch
+     */
     private String getBranchName(Branch branch)
     {
+
         String name = branch.getName();
         if(name.startsWith("refs/remotes/")) {
             //Restore expected previous behaviour
             name = name.substring("refs/remotes/".length());
         }
+        return name;
+    }
+
+    /**
+     * Gets the short name of the current branch (everything behind origin/).
+     * 
+     * @param branch the current branch
+     * 
+     * @return the short name of the current branch
+     */
+    private String getShortBranchName(Branch branch)
+    {
+
+        String name = getBranchName(branch);
+        if (name.lastIndexOf(ORIGIN + "/") > -1) {
+            // remove everything except the plain branch name
+            name = name.substring(name.lastIndexOf(ORIGIN + "/") + ORIGIN.length() + 1);
+        }
+        return name;
+    }
+
+    /**
+     * Gets the sonar-style name of the current branch (everything behind origin/ and slashes replaced by "-").
+     * 
+     * @param branch the current branch
+     * 
+     * @return the sonar style name of the current branch
+     */
+    private String getSonarBranchName(Branch branch)
+    {
+
+        String name = getShortBranchName(branch);
+        name.replace('/', '-');
         return name;
     }
 

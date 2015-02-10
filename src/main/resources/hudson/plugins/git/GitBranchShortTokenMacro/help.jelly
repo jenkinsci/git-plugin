@@ -1,8 +1,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core">
-  <dt>$${GIT_BRANCH}</dt>
+  <dt>$${GIT_BRANCH_SHORT}</dt>
   <dd>
-    Expands to the name of the branch that was built.
+    Expands to the plain name of the branch that was built. 
   </dd>
 
   <h3>Parameters</h3>
@@ -15,7 +15,7 @@
     <dt>fullName</dt>
     <dd>
       If specified, this token expands to the full branch name, such as 'refs/remotes/origin/master'.
-      Otherwise, it only expands to the short name, such as 'remotes/origin/master'.
+      Otherwise, it only expands to the short name, such as 'master'.
     </dd>
   </dl>
 </j:jelly>

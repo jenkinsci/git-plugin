@@ -582,6 +582,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
         assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
+        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH_SHORT));
+        assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH_SHORT), build1);
+
+        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH_SONAR));
+        assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH_SONAR), build1);
+
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         final String commitFile2 = "commitFile2";
@@ -594,6 +600,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
         assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
+
 
     // For HUDSON-7411
     public void testNodeEnvVarsAvailable() throws Exception {
