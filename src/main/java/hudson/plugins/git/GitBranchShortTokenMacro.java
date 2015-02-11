@@ -36,4 +36,3 @@ public class GitBranchShortTokenMacro extends GitBranchTokenMacro {
     }
 
 }
-

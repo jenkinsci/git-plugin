@@ -601,7 +601,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
-
     // For HUDSON-7411
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
