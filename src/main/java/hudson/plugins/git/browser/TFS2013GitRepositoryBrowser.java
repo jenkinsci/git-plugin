@@ -88,7 +88,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
         @Override
         public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
             try {
-                JSONObject form = req.getSubmittedForm();
+                req.getSubmittedForm();
             } catch (ServletException e) {
                 e.printStackTrace();
             }
@@ -119,7 +119,8 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 return FormValidation.errorWithMarkup("The URL should end like <tt>.../_git/foobar/</tt>");
 
             // Connect to URL and check content only if we have admin permission
-            if (!Jenkins.getInstance().hasPermission(Hudson.ADMINISTER))
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins != null && jenkins.hasPermission(Hudson.ADMINISTER))
                 return FormValidation.ok();
 
             final String finalValue = value;
