@@ -1022,7 +1022,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
             environment.put(GIT_BRANCH_SHORT, getShortBranchName(branch));
-            environment.put(GIT_BRANCH_SONAR, getSonarBranchName(branch));
+            environment.put(GIT_BRANCH_SONAR, getShortBranchName(branch).replace('/', '-'));
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
@@ -1140,7 +1140,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
                 env.put(GIT_BRANCH_SHORT, getShortBranchName(branch));
-                env.put(GIT_BRANCH_SONAR, getSonarBranchName(branch));
+                env.put(GIT_BRANCH_SONAR, getShortBranchName(branch).replace('/', '-'));
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1206,21 +1206,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             // remove everything except the plain branch name
             name = name.substring(name.lastIndexOf(ORIGIN + "/") + ORIGIN.length() + 1);
         }
-        return name;
-    }
-
-    /**
-     * Gets the sonar-style name of the current branch (everything behind origin/ and slashes replaced by "-").
-     * 
-     * @param branch the current branch
-     * 
-     * @return the sonar style name of the current branch
-     */
-    private String getSonarBranchName(Branch branch)
-    {
-
-        String name = getShortBranchName(branch);
-        name.replace('/', '-');
         return name;
     }
 
