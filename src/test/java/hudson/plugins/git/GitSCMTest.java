@@ -12,8 +12,6 @@ import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.*;
-import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -40,7 +38,6 @@ import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
@@ -57,7 +54,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
