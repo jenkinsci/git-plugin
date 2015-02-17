@@ -17,5 +17,10 @@
       If specified, this token expands to the full branch name, such as 'refs/remotes/origin/master'.
       Otherwise, it only expands to the short name, such as 'remotes/origin/master'.
     </dd>
+    <dt>shortName</dt>
+    <dd>
+      If specified, this token expands to the plain branch name, such as 'master'.
+      Otherwise, it only expands to the short name, such as 'remotes/origin/master'.
+    </dd>
   </dl>
 </j:jelly>

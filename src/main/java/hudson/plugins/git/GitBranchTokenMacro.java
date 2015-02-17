@@ -27,6 +27,7 @@ import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
+
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
@@ -50,6 +51,12 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
      */
     @Parameter
     public boolean fullName;
+
+    /**
+     * If true, include just the plain branch name, without any prefix
+     */
+    @Parameter
+    public boolean shortName;
 
     @Override
     public boolean acceptsMacroName(String macroName) {
@@ -81,7 +88,13 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
     private String format(Branch b) {
         String n = b.getName();
         if (fullName)   return n;
+        if (shortName) {
+            // if single branch and not fullName requested, then remove everything except the plain branch name
+            if (n.lastIndexOf(GitSCM.ORIGIN + "/") > -1) {
+                return n.substring(n.lastIndexOf(GitSCM.ORIGIN + "/") + GitSCM.ORIGIN.length() + 1);
+            }
+
+        }
         return n.substring(n.indexOf('/')+1); // trim off '/'
     }
 }
-
