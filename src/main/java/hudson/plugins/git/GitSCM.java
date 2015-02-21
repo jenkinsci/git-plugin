@@ -969,9 +969,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 cmd.execute();
             } catch (GitException ex) {
-                String message = "Error cloning remote repo '" + rc.getName() + "'";
-                listener.error(message);
-                throw new AbortException(message);
+                throw new AbortException("Error cloning remote repo '" + rc.getName() + "'" + ex.getMessage());
             }
         }
 
@@ -979,12 +977,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             try {
                 fetchFrom(git, listener, remoteRepository);
             } catch (GitException ex) {
-                /* Allow retry by throwing AbortException instead of
-                 * GitException. See JENKINS-20531. */
-                String message = "Error fetching remote repo '" + remoteRepository.getName() + "'";
-                listener.error(message);
-                ex.printStackTrace(listener.getLogger());
-                throw new AbortException(message);
+                // Allow retry by throwing AbortException instead of GitException. See JENKINS-20531.
+                throw new AbortException("Error fetching remote repo '" + remoteRepository.getName() + "'" + ex.getMessage());
             }
         }
     }
@@ -1119,7 +1113,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 executed = true;
             }
         } catch (GitException ge) {
-            ge.printStackTrace(listener.error("Unable to retrieve changeset"));
+            listener.error("Unable to retrieve changeset/n" + ge.getMessage());
         } finally {
             if (!executed) changelog.abort();
             IOUtils.closeQuietly(out);
@@ -1589,7 +1583,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             // every commit got excluded
             return true;
         } catch (GitException e) {
-            e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
+            listener.error("Failed to determine if we want to exclude " + r.getSha1String() + "/n" + e.getMessage());
             return false;   // for historical reason this is not considered a fatal error.
         }
     }
