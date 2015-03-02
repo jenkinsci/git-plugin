@@ -1175,7 +1175,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
+            String sha1 = fixEmpty(rev.getSha1String());
+            if (sha1 != null && !sha1.isEmpty()) {
+                env.put(GIT_COMMIT, sha1);
+            }
         }
 
        
