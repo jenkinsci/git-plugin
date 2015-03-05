@@ -4,6 +4,10 @@
 
   <p>The safest way is to use the <tt>refs/heads/&lt;branchName&gt;</tt> syntax. This way the expected branch
   is unambiguous.</p>
+  
+  <p>If your branch name has a <tt>/</tt> in it make sure to use the full reference above. When not presented 
+  with a full path the plugin will only use the part of the string right of the last slash. 
+  Meaning <tt>foo/bar</tt> will actually match <tt>bar</tt></p>
 
   <p>Possible options:
     <ul>
