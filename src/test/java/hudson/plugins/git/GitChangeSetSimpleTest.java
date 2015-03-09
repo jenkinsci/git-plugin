@@ -122,11 +122,6 @@ public class GitChangeSetSimpleTest {
     }
 
     @Test
-    public void testGetTimestamp() {
-        assertEquals(useAuthorName ? 1234568000L : 1234566000L, changeSet.getTimestamp());
-    }
-
-    @Test
     public void testGetCommitId() {
         assertEquals(id, changeSet.getCommitId());
     }

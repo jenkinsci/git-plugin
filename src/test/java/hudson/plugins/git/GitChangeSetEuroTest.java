@@ -64,11 +64,6 @@ public class GitChangeSetEuroTest {
     }
 
     @Test
-    public void testGetTimestamp() {
-        assertEquals(useAuthorName ? 1363879004000L : 1364199539000L, changeSet.getTimestamp());
-    }
-
-    @Test
     public void testGetCommitId() {
         assertEquals(id, changeSet.getCommitId());
     }
