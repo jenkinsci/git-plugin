@@ -8,6 +8,7 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -20,6 +21,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +45,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
 
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
-    private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+    private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
 
     /**
      * This is broken as a part of the 1.5 refactoring.
@@ -172,12 +175,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     /** Convert to iso date format if required */
     private String isoDateFormat(String s) {
-        if (s.length() == 25 /* already in ISO 8601 */) return s;
-
-        // legacy mode
-        int i = s.indexOf(' ');
-        long time = Long.parseLong(s.substring(0,i));
-        return FastDateFormat.getInstance(ISO_8601).format(new Date(time * 1000)) + s.substring(i);
+        String date = s;
+        String timezone = "Z";
+        int spaceIndex = s.indexOf(' ');
+        if (spaceIndex > 0) {
+            date = s.substring(0, spaceIndex);
+            timezone = s.substring(spaceIndex+1);
+        }
+        if (NumberUtils.isDigits(date)) {
+            // legacy mode
+            long time = Long.parseLong(date);
+            DateFormat formatter = new SimpleDateFormat(ISO_8601);
+            formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+            return formatter.format(new Date(time * 1000)) + timezone;
+        } else {
+            // already in ISO format
+            return s;
+        }
     }
 
     private String parseHash(String hash) {
@@ -192,7 +206,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @Override
     public long getTimestamp() {
         try {
-            return new SimpleDateFormat(ISO_8601).parse(getDate()).getTime();
+            return new SimpleDateFormat(ISO_8601_WITH_TZ).parse(getDate()).getTime();
         } catch (ParseException e) {
             return -1;
         }

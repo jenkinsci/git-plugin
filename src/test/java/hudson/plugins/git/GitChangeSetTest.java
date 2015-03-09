@@ -9,6 +9,7 @@ import hudson.tasks.Mailer.UserProperty;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -146,6 +147,30 @@ public class GitChangeSetTest extends HudsonTestCase {
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, csAuthorEmail, true));
     }
 
+    public void testIsoDate() {
+
+        GitChangeSet c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
+        assertEquals("2015-03-03T09:22:42-0700",c.getDate());
+        assertEquals(1425399762000L, c.getTimestamp());
+
+        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-07:00"), true);
+        assertEquals("2015-03-03T09:22:42-07:00",c.getDate());
+        assertEquals(1425399762000L,c.getTimestamp());
+
+        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T16:22:42Z"), true);
+        assertEquals("2015-03-03T16:22:42Z",c.getDate());
+        assertEquals(1425399762000L,c.getTimestamp());
+
+        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 1425399762"), true);
+        assertEquals("2015-03-03T16:22:42Z",c.getDate());
+        assertEquals(1425399762000L,c.getTimestamp());
+
+        c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 1425374562 -0700"), true);
+        assertEquals("2015-03-03T09:22:42-0700",c.getDate());
+        assertEquals(1425399762000L,c.getTimestamp());
+    }
+
+
     private GitChangeSet genChangeSetForSwedCase(boolean authorOrCommitter) {
         ArrayList<String> lines = new ArrayList<String>();
         lines.add("commit 1567861636cd854f4dd6fa40bf94c0c657681dd5");
@@ -180,4 +205,5 @@ public class GitChangeSetTest extends HudsonTestCase {
 
         assertEquals("mistera", authorCS.getAuthorName());
     }
+
 }
