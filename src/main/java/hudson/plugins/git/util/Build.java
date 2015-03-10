@@ -47,20 +47,23 @@ public class Build implements Serializable, Cloneable {
      */
     public Revision revision;
 
+    public String revisionAuthor;
+
     public int      hudsonBuildNumber;
     public Result   hudsonBuildResult;
 
     // TODO: We don't currently store the result correctly.
 
-    public Build(Revision marked, Revision revision, int buildNumber, Result result) {
+    public Build(Revision marked, Revision revision, String revisionAuthor, int buildNumber, Result result) {
         this.marked = marked;
         this.revision = revision;
+        this.revisionAuthor = revisionAuthor;
         this.hudsonBuildNumber = buildNumber;
         this.hudsonBuildResult = result;
     }
 
-    public Build(Revision revision, int buildNumber, Result result) {
-        this(revision,revision,buildNumber,result);
+    public Build(Revision revision, String revisionAuthor, int buildNumber, Result result) {
+        this(revision,revision,revisionAuthor,buildNumber,result);
     }
 
     public ObjectId getSHA1() {
