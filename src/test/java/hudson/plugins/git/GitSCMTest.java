@@ -1402,6 +1402,42 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
     }
 
+    public void testPollingAfterManualBuildWithParametrizedBranchSpec() throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "trackedbranch")));
+
+        // Initial commit to master
+        commit("file1", johnDoe, "Initial Commit");
+        
+        // Create the branches
+        git.branch("trackedbranch");
+        git.branch("manualbranch");
+        
+        final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
+        final Action[] actions = {new ParametersAction(branchParam)};
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        assertBuildStatus(Result.SUCCESS, build);
+
+        assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
+
+        git.checkout("manualbranch");
+        commit("file2", johnDoe, "Commit to manually build branch");
+        assertFalse("No changes to tracked branch", project.poll(listener).hasChanges());
+
+        git.checkout("trackedbranch");
+        commit("file3", johnDoe, "Commit to tracked branch");
+        assertTrue("A change should be detected in tracked branch", project.poll(listener).hasChanges());
+        
+    }
+    
     private final class FakeParametersAction implements EnvironmentContributingAction, Serializable {
         // Test class for testPolling_environmentValueAsEnvironmentContributingAction test case
         final ParametersAction m_forwardingAction;
