@@ -113,7 +113,11 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     private String getExpandedName(EnvVars env) {
-        return env.expand(name);
+        String expandedName = env.expand(name);
+        if (expandedName.length() == 0) {
+            return "**";
+        }
+        return expandedName;
     }
     
     private Pattern getPattern(EnvVars env) {
