@@ -5,17 +5,31 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Computer;
 import hudson.model.Descriptor.FormException;
+import hudson.model.Hudson;
 import hudson.model.Hudson.MasterComputer;
+import hudson.model.Items;
+import hudson.model.Job;
+import hudson.model.Node;
+import hudson.model.Run;
+import hudson.model.Saveable;
+import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -26,9 +40,18 @@ import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.*;
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserContext;
+import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.Channel;
-import hudson.scm.*;
+import hudson.scm.ChangeLogParser;
+import hudson.scm.PollingResult;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMDescriptor;
+import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
@@ -36,10 +59,11 @@ import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.IOException2;
+import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -66,22 +90,26 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.google.common.collect.Lists.newArrayList;
-import static hudson.Util.*;
-import static hudson.init.InitMilestone.JOB_LOADED;
-import static hudson.init.InitMilestone.PLUGINS_STARTED;
-import hudson.plugins.git.browser.GithubWeb;
-import static hudson.scm.PollingResult.*;
-import hudson.util.IOUtils;
-import hudson.util.LogTaskListener;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static hudson.Util.fixEmpty;
+import static hudson.Util.fixEmptyAndTrim;
+import static hudson.Util.fixNull;
+import static hudson.init.InitMilestone.JOB_LOADED;
+import static hudson.init.InitMilestone.PLUGINS_STARTED;
+import static hudson.scm.PollingResult.BUILD_NOW;
+import static hudson.scm.PollingResult.NO_CHANGES;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -117,8 +145,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String GIT_COMMIT_AUTHOR_EMAIL = "GIT_COMMIT_AUTHOR_EMAIL";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+
+    // email address can have a lot of different variants so being lenient with matcher
+    private static final Matcher commitAuthorEmailMatcher = Pattern.compile("author.+<(.+?@.+)>").matcher("");
 
     /**
      * All the configured extensions attached to this.
@@ -921,7 +953,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
-        Build revToBuild = new Build(marked, rev, build.getNumber(), null);
+        String revAuthor = getCommitAuthorEmailAddress(git, rev);
+        Build revToBuild = new Build(marked, rev, revAuthor, build.getNumber(), null);
         buildData.saveBuild(revToBuild);
 
         if (candidates.size() > 1) {
@@ -1014,6 +1047,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
+        environment.put(GIT_COMMIT_AUTHOR_EMAIL, revToBuild.revisionAuthor);
+
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
@@ -1129,6 +1164,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
+        String revAuthor = fixNull(getBuildData(build)).getLastBuiltRevisionAuthor();
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null) {
@@ -1146,6 +1182,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             env.put(GIT_COMMIT, fixEmpty(rev.getSha1String()));
+            env.put(GIT_COMMIT_AUTHOR_EMAIL, fixEmpty(revAuthor));
         }
 
        
@@ -1164,7 +1201,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.populateEnvironmentVariables(this, env);
         }
     }
-    
+
+    public String getCommitAuthorEmailAddress(GitClient git, Revision rev) throws
+            InterruptedException {
+        List<String> commitLines = git.showRevision(rev.getSha1());
+        for (String commitLine : commitLines) {
+            commitAuthorEmailMatcher.reset(commitLine);
+            if (commitAuthorEmailMatcher.find()) {
+                return commitAuthorEmailMatcher.group(1);
+            }
+        }
+
+        return null;
+    }
+
     private String getBranchName(Branch branch)
     {
         String name = branch.getName();

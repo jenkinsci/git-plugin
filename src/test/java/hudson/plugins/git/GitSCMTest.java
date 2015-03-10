@@ -562,7 +562,11 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     private String checkoutString(FreeStyleProject project, String envVar) {
-        return "checkout -f " + getEnvVars(project).get(envVar);
+        return "checkout -f " + getEnvVar(project, envVar);
+    }
+
+    private String getEnvVar(FreeStyleProject project, String envVar) {
+        return getEnvVars(project).get(envVar);
     }
 
     public void testEnvVarsAvailable() throws Exception {
@@ -576,6 +580,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        assertEquals("Git commit author mismatch", getEnvVar(project, GitSCM.GIT_COMMIT_AUTHOR_EMAIL), "john@doe.com");
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
