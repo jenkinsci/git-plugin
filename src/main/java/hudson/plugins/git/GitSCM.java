@@ -1143,7 +1143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
-            if (branch!=null) {
+            if (branch!=null && branch.getName()!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
