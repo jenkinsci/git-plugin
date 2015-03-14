@@ -70,7 +70,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
@@ -81,8 +80,6 @@ import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
@@ -119,6 +116,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static String GIT_PREMERGE_BRANCH = "GIT_PREMERGE_BRANCH";
+    public static String GIT_PREMERGE_COMMIT = "GIT_PREMERGE_COMMIT";
 
     /**
      * All the configured extensions attached to this.
@@ -165,7 +164,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<GitSCMExtension> extensions) {
 
         // moved from createBranches
-        this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
+        if (branches == null) {
+            branches = new ArrayList<BranchSpec>();
+        }
+        if (branches.isEmpty()) {
+            branches.add(new BranchSpec("*/master"));
+        }
+        this.branches = branches;
 
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
@@ -1016,7 +1021,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
-            environment.put(GIT_BRANCH, getBranchName(branch));
+        	environment.put(GIT_BRANCH, getBranchName(branch));
+        	GIT_PREMERGE_COMMIT = revToBuild.marked.getSha1String();
+        	
+        	for(Branch b : revToBuild.marked.getBranches()) {
+        		if(b.getSHA1().equals(revToBuild.marked.getSha1())) {
+        			GIT_PREMERGE_BRANCH = b.getName();
+        		}
+        	}
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
@@ -1133,7 +1145,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
-
+                env.put("GIT_PREMERGE_COMMIT", GIT_PREMERGE_COMMIT);
+                env.put("GIT_PREMERGE_BRANCH", GIT_PREMERGE_BRANCH);
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
                     env.put(GIT_PREVIOUS_COMMIT, prevCommit);
