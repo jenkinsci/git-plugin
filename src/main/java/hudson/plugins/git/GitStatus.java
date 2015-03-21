@@ -423,7 +423,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         @Override
         public String getShortDescription() {
-            return "commit notification " + sha1 + " for repository " + matchedURL;
+            return "commit notification " + sha1 + getRepositoryDescription();
+        }
+
+        private String getRepositoryDescription() {
+            if (matchedURL == null) {
+                return " for unknown repository";
+            }
+            return " for repository " + matchedURL;
         }
 
         public boolean isFor(SCM scm) {
