@@ -31,6 +31,8 @@ import hudson.model.Queue.QueueAction;
 import hudson.model.queue.FoldableAction;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.Serializable;
@@ -52,15 +54,25 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     public final String commit;
     public final boolean combineCommits;
     public final Revision revision;
+    private final URIish repoURL;
 
     public RevisionParameterAction(String commit) {
-        this(commit, false);
+        this(commit, false, null);
+    }
+
+    public RevisionParameterAction(String commit, URIish repoURL) {
+        this(commit, false, repoURL);
     }
 
     public RevisionParameterAction(String commit, boolean combineCommits) {
+        this(commit, combineCommits, null);
+    }
+
+    public RevisionParameterAction(String commit, boolean combineCommits, URIish repoURL) {
         this.commit = commit;
         this.combineCommits = combineCommits;
         this.revision = null;
+        this.repoURL = repoURL;
     }
     
     public RevisionParameterAction(Revision revision) {
@@ -71,6 +83,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     	this.revision = revision;
     	this.commit = revision.getSha1String();
     	this.combineCommits = combineCommits;
+        this.repoURL = null;
     }   
 
     @Deprecated
@@ -91,6 +104,29 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
                 ObjectId.toString(sha1), true));
         revision.getBranches().addAll(branches);
         return revision;
+    }
+
+    /**
+     * This method tries to determine whether the commit is from given remotes.
+     * To achieve that it uses remote URL supplied during construction of this instance.
+     *
+     * @param remotes candidate remotes for this commit
+     * @return <code>false</code> if remote URL was supplied during construction and matches none
+     * of given remote URLs, otherwise <code>true</code>
+     */
+    public boolean canOriginateFrom(Iterable<RemoteConfig> remotes) {
+        if (repoURL == null) {
+            return true;
+        }
+
+        for (RemoteConfig remote : remotes) {
+            for (URIish remoteURL : remote.getURIs()) {
+                if (remoteURL.equals(repoURL)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -170,7 +206,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         }
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = Logger.getLogger(RevisionParameterAction.class.getName());
 }
 

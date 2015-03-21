@@ -283,8 +283,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
-                                            new CauseAction(new CommitHookCause(sha1, matchedURL)),
-                                            new RevisionParameterAction(sha1), new ParametersAction(buildParameters));
+                                            new CauseAction(new CommitHookCause(sha1)),
+                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
@@ -414,39 +414,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     public static class CommitHookCause extends Cause {
 
         public final String sha1;
-        private final URIish matchedURL;
 
-        public CommitHookCause(String sha1, URIish matchedURL) {
+        public CommitHookCause(String sha1) {
             this.sha1 = sha1;
-            this.matchedURL = matchedURL;
         }
 
         @Override
         public String getShortDescription() {
-            return "commit notification " + sha1 + getRepositoryDescription();
-        }
-
-        private String getRepositoryDescription() {
-            if (matchedURL == null) {
-                return " for unknown repository";
-            }
-            return " for repository " + matchedURL;
-        }
-
-        public boolean isFor(SCM scm) {
-            if (!(scm instanceof GitSCM)) {
-                return false;
-            }
-            GitSCM git = (GitSCM) scm;
-
-            for (RemoteConfig repository : git.getRepositories()) {
-                for (URIish remoteURL : repository.getURIs()) {
-                    if (looselyMatches(matchedURL, remoteURL)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return "commit notification " + sha1;
         }
     }
 

@@ -933,14 +933,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // parameter forcing the commit ID to build
         if (candidates.isEmpty() ) {
             final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
-            final Cause cause = build.getCause(GitStatus.CommitHookCause.class);
             if (rpa != null) {
                 // in case the checkout is due to a commit notification on a
-                // multiple scm configuration, it should be verified if the triggering repo
-                // matches current repo to avoid https://github.com/janinko/ghprb/issues/171
-                if (cause == null || ((GitStatus.CommitHookCause) cause).isFor(this)) {
+                // multiple scm configuration, it should be verified if the triggering repo remote
+                // matches current repo remote to avoid JENKINS-26587
+                if (rpa.canOriginateFrom(this.getRepositories())) {
                     candidates = Collections.singleton(rpa.toRevision(git));
-                } else{
+                } else {
                     log.println("skipping resolution of commit " + rpa.commit + ", since it originates from another repository");
                 }
             }
