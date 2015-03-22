@@ -1016,6 +1016,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
         BuiltRevision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+        Revision revision = revToBuild.revision;
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
@@ -1040,7 +1041,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
 
-        build.addAction(new GitTagAction(build, workspace, buildData));
+        build.addAction(new GitTagAction(build, workspace, revision));
 
         if (changelogFile != null) {
             computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
