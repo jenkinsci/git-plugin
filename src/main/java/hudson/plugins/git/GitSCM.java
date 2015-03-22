@@ -38,6 +38,8 @@ import hudson.util.FormValidation;
 import hudson.util.IOException2;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.BuiltRevision;
+import jenkins.plugins.git.BuiltRevisionMap;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
@@ -872,7 +874,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * messed up (such as HEAD pointing to a random branch.) It is expected that this method brings it back
      * to the predictable clean state by the time this method returns.
      */
-    private @NonNull Build determineRevisionToBuild(final Run build,
+    private @NonNull BuiltRevision determineRevisionToBuild(final Run build,
                                               final BuildData buildData,
                                               final EnvVars environment,
                                               final GitClient git,
@@ -921,7 +923,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
-        Build revToBuild = new Build(marked, rev, build.getNumber(), null);
+        BuiltRevision revToBuild = new BuiltRevision(marked, rev, build.getNumber(), null);
         buildData.saveBuild(revToBuild);
 
         if (candidates.size() > 1) {
@@ -1011,12 +1013,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         retrieveChanges(build, git, listener);
-        Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+
+        BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
+        BuiltRevision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
+            builtRevisions.addBuild(branch.getName(), revToBuild);
+        } else {
+            builtRevisions.addDetached(revToBuild);
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
