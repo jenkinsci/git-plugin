@@ -49,7 +49,15 @@ public class BuiltRevisionMap implements Action, Saveable {
             it.configFile = configFile;
             return it;
         } else {
-            return new BuiltRevisionMap(configFile);
+            BuiltRevisionMap revisionMap = new BuiltRevisionMap(configFile);
+            // migrate legacy data
+            BuildData data = job.getLastBuild().getAction(BuildData.class);
+            if (data != null) {
+                for (Map.Entry<String, BuiltRevision> entry : data.getBuildsByBranchName().entrySet()) {
+                    revisionMap.addBuild(entry.getKey(), entry.getValue());
+                }
+            }
+            return revisionMap;
         }
     }
 

@@ -9,6 +9,7 @@ import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import jenkins.plugins.git.BuiltRevision;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -24,8 +25,8 @@ import static hudson.Util.fixNull;
  * <p>
  * This object is added to {@link AbstractBuild#getActions()}.
  * This persists the Git related information of that build.
+ * @deprecated replaced by {@link jenkins.plugins.git.BuiltRevisionMap}
  */
-@ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
@@ -36,12 +37,12 @@ public class BuildData implements Action, Serializable, Cloneable {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to) 
      */
-    public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
+    public Map<String, BuiltRevision> buildsByBranchName = new HashMap<String, BuiltRevision>();
 
     /**
      * The last build that we did (among the values in {@link #buildsByBranchName}.)
      */
-    public Build lastBuild;
+    public BuiltRevision lastBuild;
 
     /**
      * The name of the SCM as given by the user.
@@ -91,11 +92,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
+        Map<String,BuiltRevision> newBuildsByBranchName = new HashMap<String,BuiltRevision>();
         
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+        for (Map.Entry<String, BuiltRevision> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
-            Build build = buildByBranchName.getValue();
+            BuiltRevision build = buildByBranchName.getValue();
             newBuildsByBranchName.put(branchName, build);
         }
 
@@ -117,11 +118,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     	return getLastBuild(sha1) != null;
     }
 
-    public Build getLastBuild(ObjectId sha1) {
+    public BuiltRevision getLastBuild(ObjectId sha1) {
         // fast check
         if (lastBuild != null && (lastBuild.revision.equals(sha1) || lastBuild.marked.equals(sha1))) return lastBuild;
         try {
-            for(Build b : buildsByBranchName.values()) {
+            for(BuiltRevision b : buildsByBranchName.values()) {
                 if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
                     return b;
             }
@@ -133,13 +134,19 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
     }
 
-    public void saveBuild(Build build) {
-    	lastBuild = build;
-    	for(Branch branch : build.marked.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
-    	}
-        for(Branch branch : build.revision.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
+    public void saveBuild(Build b) {
+        if (b instanceof BuiltRevision) {
+            BuiltRevision build = (BuiltRevision) b;
+            lastBuild = build;
+            for (Branch branch : build.marked.getBranches()) {
+                buildsByBranchName.put(fixNull(branch.getName()), build);
+            }
+            for (Branch branch : build.revision.getBranches()) {
+                buildsByBranchName.put(fixNull(branch.getName()), build);
+            }
+        } else {
+            // even this is a public method, doesn't make sense to be used outside git-plugin, or is a terrible hack
+            throw new UnsupportedOperationException("You are using a legacy API");
         }
     }
 
@@ -158,7 +165,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     @Exported
-    public Map<String,Build> getBuildsByBranchName() {
+    public Map<String,BuiltRevision> getBuildsByBranchName() {
         return buildsByBranchName;
     }
 
@@ -198,18 +205,18 @@ public class BuildData implements Action, Serializable, Cloneable {
             throw new RuntimeException("Error cloning BuildData", e);
         }
 
-        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
+        IdentityHashMap<BuiltRevision, BuiltRevision> clonedBuilds = new IdentityHashMap<BuiltRevision, BuiltRevision>();
 
-        clone.buildsByBranchName = new HashMap<String, Build>();
+        clone.buildsByBranchName = new HashMap<String, BuiltRevision>();
         clone.remoteUrls = new HashSet<String>();
 
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
+        for (Map.Entry<String, BuiltRevision> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();
             if (branchName == null) {
                 branchName = "";
             }
-            Build build = buildByBranchName.getValue();
-            Build clonedBuild = clonedBuilds.get(build);
+            BuiltRevision build = buildByBranchName.getValue();
+            BuiltRevision clonedBuild = clonedBuilds.get(build);
             if (clonedBuild == null) {
                 clonedBuild = build.clone();
                 clonedBuilds.put(build, clonedBuild);

@@ -1,8 +1,11 @@
 package hudson.plugins.git.util;
 
+import hudson.model.Items;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import hudson.scm.SCMRevisionState;
+import jenkins.plugins.git.BuiltRevision;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -16,7 +19,7 @@ import java.io.Serializable;
  * @see BuildData#buildsByBranchName
  */
 @ExportedBean(defaultVisibility = 999)
-public class Build implements Serializable, Cloneable {
+public class Build extends SCMRevisionState implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -92,10 +95,10 @@ public class Build implements Serializable, Cloneable {
     }
 
     @Override
-    public Build clone() {
-        Build clone;
+    public BuiltRevision clone() {
+        BuiltRevision clone;
         try {
-            clone = (Build) super.clone();
+            clone = (BuiltRevision) super.clone();
         }
         catch (CloneNotSupportedException e) {
             throw new RuntimeException("Error cloning Build", e);
@@ -116,6 +119,6 @@ public class Build implements Serializable, Cloneable {
     public Object readResolve() throws IOException {
         if (marked==null) // this field was introduced later than 'revision'
             marked = revision;
-        return this;
+        return new BuiltRevision(marked, revision, hudsonBuildNumber, hudsonBuildResult);
     }
 }
