@@ -875,10 +875,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * to the predictable clean state by the time this method returns.
      */
     private @NonNull BuiltRevision determineRevisionToBuild(final Run build,
-                                              final BuildData buildData,
-                                              final EnvVars environment,
-                                              final GitClient git,
-                                              final TaskListener listener) throws IOException, InterruptedException {
+                                                            final BuiltRevisionMap builtRevisions,
+                                                            final BuildData buildData,
+                                                            final EnvVars environment,
+                                                            final GitClient git,
+                                                            final TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         Collection<Revision> candidates = Collections.EMPTY_LIST;
 
@@ -886,6 +887,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
+                BuiltRevision rev = parentBuild.getAction(BuiltRevision.class);
+                if (rev != null) return rev;
+
                 BuildData parentBuildData = getBuildData(parentBuild);
                 if (parentBuildData != null) {
                     Build lastBuild = parentBuildData.lastBuild;
@@ -908,7 +912,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
             candidates = getBuildChooser().getCandidateRevisions(
-                    false, singleBranch, git, listener, buildData, context);
+                    false, singleBranch, git, listener, builtRevisions, buildData, context);
         }
 
         if (candidates.isEmpty()) {
@@ -924,7 +928,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
         BuiltRevision revToBuild = new BuiltRevision(marked, rev, build.getNumber(), null);
-        buildData.saveBuild(revToBuild);
 
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
@@ -1015,11 +1018,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
 
         BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
-        BuiltRevision revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
+        BuiltRevision revToBuild = determineRevisionToBuild(build, builtRevisions, buildData, environment, git, listener);
+        buildData.saveBuild(revToBuild);
+        build.addAction(revToBuild);
+
         Revision revision = revToBuild.revision;
 
-        environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
-        Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
+        environment.put(GIT_COMMIT, revision.getSha1String());
+        Branch branch = Iterables.getFirst(revision.getBranches(), null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
             builtRevisions.addBuild(branch.getName(), revToBuild);
@@ -1027,9 +1033,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             builtRevisions.addDetached(revToBuild);
         }
 
-        listener.getLogger().println("Checking out " + revToBuild.revision);
+        listener.getLogger().println("Checking out " + revision);
 
-        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build, listener)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build, listener)).ref(revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }
@@ -1038,13 +1044,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
           checkoutCommand.execute();
         } catch(GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
-            throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+            throw new IOException("Could not checkout " + revision.getSha1String(), e);
         }
 
         build.addAction(new GitTagAction(build, workspace, revision));
 
         if (changelogFile != null) {
-            computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
+            computeChangeLog(git, revision, listener, previousBuildData, new FilePath(changelogFile),
                     new BuildChooserContextImpl(build.getParent(), build, environment));
         }
 

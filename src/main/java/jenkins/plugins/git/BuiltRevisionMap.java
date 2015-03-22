@@ -7,6 +7,10 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
+import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
+import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
@@ -14,24 +18,28 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
+@ExportedBean
 public class BuiltRevisionMap implements Action, Saveable {
 
     public static final String FILE = BuiltRevisionMap.class.getName() + ".xml";
 
     private Map<String, BuiltRevision> revisions;
     private Set<BuiltRevision> detached;
+    private BuiltRevision last;
 
     private transient XmlFile configFile;
 
     private BuiltRevisionMap(XmlFile configFile) {
         this.configFile = configFile;
         this.revisions = new HashMap<String, BuiltRevision>();
+        this.detached = new HashSet<BuiltRevision>();
     }
 
     public static BuiltRevisionMap forProject(Job job) throws IOException {
@@ -63,11 +71,14 @@ public class BuiltRevisionMap implements Action, Saveable {
 
     public synchronized void addBuild(String branch, BuiltRevision revision) throws IOException {
         revisions.put(branch, revision);
+        last = revision;
         save();
     }
 
-    public synchronized void addDetached(BuiltRevision revToBuild) {
-        detached.add(revToBuild);
+    public synchronized void addDetached(BuiltRevision revision) throws IOException {
+        detached.add(revision);
+        last = revision;
+        save();
     }
 
 
@@ -98,4 +109,17 @@ public class BuiltRevisionMap implements Action, Saveable {
         return "git-built-revisions";
     }
 
+    public boolean hasBeenBuilt(ObjectId sha1) {
+        // fast check
+        if (last != null && (last.revision.equals(sha1) || last.marked.equals(sha1))) return true;
+        for(BuiltRevision b : revisions.values()) {
+            if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
+                return true;
+        }
+        return false;
+    }
+
+    public BuiltRevision getLastBuiltRevision() {
+        return last;
+    }
 }
