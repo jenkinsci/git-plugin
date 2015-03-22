@@ -1,0 +1,19 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" >
+	<l:layout title="Git Built Revisions">
+	
+    <l:main-panel>
+       	<h1>Git Built Revisions</h1>
+
+		<ul>
+			<j:forEach var="e" items="${it.revisions}">
+				<li>${e.value}</li>
+			</j:forEach>
+			<j:forEach var="rev" items="${it.detached}">
+				<li>${rev}</li>
+			</j:forEach>
+		</ul>
+
+	</l:main-panel>
+  	</l:layout>
+</j:jelly>

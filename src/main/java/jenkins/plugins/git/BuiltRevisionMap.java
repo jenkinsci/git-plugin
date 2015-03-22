@@ -1,0 +1,101 @@
+package jenkins.plugins.git;
+
+import hudson.BulkChange;
+import hudson.Functions;
+import hudson.XmlFile;
+import hudson.model.Action;
+import hudson.model.Job;
+import hudson.model.Saveable;
+import hudson.model.listeners.SaveableListener;
+
+import javax.annotation.CheckForNull;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
+ */
+public class BuiltRevisionMap implements Action, Saveable {
+
+    public static final String FILE = BuiltRevisionMap.class.getName() + ".xml";
+
+    private Map<String, BuiltRevision> revisions;
+    private Set<BuiltRevision> detached;
+
+    private transient XmlFile configFile;
+
+    private BuiltRevisionMap(XmlFile configFile) {
+        this.configFile = configFile;
+        this.revisions = new HashMap<String, BuiltRevision>();
+    }
+
+    public static BuiltRevisionMap forProject(Job job) throws IOException {
+        XmlFile configFile = new XmlFile(new File(job.getRootDir(), FILE));
+        if (configFile.exists()) {
+            BuiltRevisionMap it = (BuiltRevisionMap) configFile.read();
+            it.configFile = configFile;
+            return it;
+        } else {
+            return new BuiltRevisionMap(configFile);
+        }
+    }
+
+    public Collection<String> getBranches() {
+        return Collections.unmodifiableCollection(revisions.keySet());
+    }
+
+    public Map<String, BuiltRevision> getRevisions() {
+        return Collections.unmodifiableMap(revisions);
+    }
+
+    public @CheckForNull BuiltRevision lastBuiltOnBranch(String branch) {
+        return revisions.get(branch);
+    }
+
+    public Collection<BuiltRevision> getDetached() {
+        return Collections.unmodifiableCollection(detached);
+    }
+
+    public synchronized void addBuild(String branch, BuiltRevision revision) throws IOException {
+        revisions.put(branch, revision);
+        save();
+    }
+
+    public synchronized void addDetached(BuiltRevision revToBuild) {
+        detached.add(revToBuild);
+    }
+
+
+    public void save() throws IOException {
+        if (BulkChange.contains(this)) return;
+        configFile.write(this);
+        SaveableListener.fireOnChange(this, configFile);
+    }
+
+    private Object readResolve() {
+        if (revisions == null)
+            revisions = new HashMap<String, BuiltRevision>();
+        if (detached == null)
+            detached = new HashSet<BuiltRevision>();
+        return this;
+    }
+
+
+    public String getDisplayName() {
+        return "Built Git Revisions";
+    }
+
+    public String getIconFileName() {
+        return Functions.getResourcePath()+"/plugin/git/icons/git-32x32.png";
+    }
+
+    public String getUrlName() {
+        return "git-built-revisions";
+    }
+
+}
