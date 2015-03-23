@@ -555,9 +555,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        final BuildData buildData = fixNull(getBuildData(lastBuild));
-        if (buildData.lastBuild != null) {
-            listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
+        BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(project);
+        BuiltRevision lastBuiltRevision = builtRevisions.getLastBuiltRevision();
+        if (lastBuiltRevision != null) {
+            listener.getLogger().println("[poll] Last Built Revision: " + lastBuiltRevision.revision);
         }
 
         final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
@@ -590,7 +591,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             if (!branchSpec.matches(name, environment)) continue;
 
                             final ObjectId sha1 = entry.getValue();
-                            Build built = buildData.getLastBuild(sha1);
+                            Build built = builtRevisions.getBuildFor(sha1);
                             if (built != null) {
                                 listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
                                 continue;
@@ -628,10 +629,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("Polling for changes in");
 
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
+                    true, singleBranch, git, listener, builtRevisions, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
-                if (!isRevExcluded(git, c, listener, buildData)) {
+                if (!isRevExcluded(git, c, listener, lastBuiltRevision != null ? lastBuiltRevision.revision : null)) {
                     return PollingResult.SIGNIFICANT;
                 }
             }
@@ -1566,11 +1567,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param listener
      * @return true if any exclusion files are matched, false otherwise.
      */
-    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, BuildData buildData) throws IOException, InterruptedException {
+    private boolean isRevExcluded(GitClient git, Revision r, TaskListener listener, Revision lastBuild) throws IOException, InterruptedException {
         try {
             List<String> revShow;
-            if (buildData != null && buildData.lastBuild != null) {
-                revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+            if (lastBuild != null) {
+                revShow  = git.showRevision(lastBuild.getSha1(), r.getSha1());
             } else {
                 revShow  = git.showRevision(r.getSha1());
             }
@@ -1584,7 +1585,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
-                        excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
+                        excludeThisCommit = ext.isRevExcluded(this, git, change, listener);
                         if (excludeThisCommit!=null)
                             break;
                     }
