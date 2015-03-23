@@ -1033,7 +1033,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
 
-        build.addAction(new GitTagAction(build, workspace, buildData));
+        build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
 
         if (changelogFile != null) {
             computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
