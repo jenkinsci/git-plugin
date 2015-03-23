@@ -5,10 +5,10 @@ import hudson.Functions;
 import hudson.XmlFile;
 import hudson.model.Action;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static hudson.Util.fixNull;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -51,14 +53,21 @@ public class BuiltRevisionMap implements Action, Saveable {
             return it;
         } else {
             BuiltRevisionMap revisionMap = new BuiltRevisionMap(configFile);
-            // migrate legacy data
-            BuildData data = job.getLastBuild().getAction(BuildData.class);
+            revisionMap.migrateLegacyBuildData(job);
+            return revisionMap;
+        }
+    }
+
+    private void migrateLegacyBuildData(Job job) throws IOException {
+        Run lastBuild = job.getLastBuild();
+        if (lastBuild != null) {
+            BuildData data = lastBuild.getAction(BuildData.class);
             if (data != null) {
                 for (Map.Entry<String, BuiltRevision> entry : data.getBuildsByBranchName().entrySet()) {
-                    revisionMap.addBuild(entry.getKey(), entry.getValue());
+                    revisions.put(entry.getKey(), entry.getValue());
                 }
+                save();
             }
-            return revisionMap;
         }
     }
 
@@ -124,16 +133,29 @@ public class BuiltRevisionMap implements Action, Saveable {
     }
 
     public boolean hasBeenBuilt(ObjectId sha1) {
+        return getBuildFor(sha1) != null;
+    }
+
+    public BuiltRevision getBuildFor(ObjectId sha1) {
         // fast check
-        if (last != null && (last.revision.equals(sha1) || last.marked.equals(sha1))) return true;
+        if (last != null && (last.revision.equals(sha1) || last.marked.equals(sha1))) return last;
         for(BuiltRevision b : revisions.values()) {
             if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
-                return true;
+                return b;
         }
-        return false;
+        return null;
     }
 
     public BuiltRevision getLastBuiltRevision() {
         return last;
+    }
+
+    @Override
+    public String toString() {
+        return "BuiltRevisionMap{" +
+                "revisions=" + revisions +
+                ", detached=" + detached +
+                ", last=" + last +
+                '}';
     }
 }
