@@ -3,6 +3,7 @@ package hudson.plugins.git.util;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
 import hudson.model.Describable;
 import hudson.model.Hudson;
 import hudson.model.Item;
@@ -11,6 +12,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import jenkins.plugins.git.BuiltRevision;
 import jenkins.plugins.git.BuiltRevisionMap;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -124,7 +126,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *
      * @param branch
      *      The branch name.
-     * @param data
+     * @param builtRevisions
      *      Information that captures what we did during the last build.
      * @param git
      *      Used for invoking Git
@@ -132,6 +134,19 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Object that provides access back to the model object. This is because
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
+     */
+    public Revision previousRevisionForChangelog(String branch, BuiltRevisionMap builtRevisions, GitClient git, BuildChooserContext context) throws IOException, InterruptedException {
+        if (Util.isOverridden(BuildChooser.class, getClass(), "prevBuildForChangelog", String.class, BuildData.class, GitClient.class, BuildChooserContext.class)) {
+            return prevBuildForChangelog(branch, new BuildData(builtRevisions), git, context).getMarked();
+        }
+        BuiltRevision previous = builtRevisions==null ? null : builtRevisions.getLastBuildOfBranch(branch);
+        return previous != null ? previous.marked : null;
+    }
+
+
+    /**
+     * @deprecated
+     *     Use and override {@link #previousRevisionForChangelog(String, jenkins.plugins.git.BuiltRevisionMap, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data, (IGitAPI) git, context);

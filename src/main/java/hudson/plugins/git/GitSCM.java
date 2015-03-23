@@ -6,7 +6,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
 import hudson.init.Initializer;
@@ -26,7 +25,11 @@ import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.*;
+import hudson.plugins.git.util.BuildChooser;
+import hudson.plugins.git.util.BuildChooserContext;
+import hudson.plugins.git.util.BuildChooserDescriptor;
+import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
 import hudson.remoting.Channel;
 import hudson.scm.*;
 import hudson.security.ACL;
@@ -644,18 +647,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private Build lastBuildOfBranch(String key, BuildData buildData, RemoteConfig remoteConfig) {
-        // normalize
-        if (!key.startsWith("refs/heads/")) key = "refs/heads/"+key;
-        String ref = "refs/remotes/"+remoteConfig.getName()+"/"+key.substring("refs/heads/".length());
-        return buildData.getLastBuildOfBranch(ref);
-    }
-
-    private Build lastBuildOfTag(String key, BuildData buildData, RemoteConfig remoteConfig) {
-        if (!key.startsWith("refs/tags/")) key = "refs/tags/" + key;
-        return buildData.getLastBuildOfBranch(key);
-    }
-
     /**
      * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
      * perform additional git operations.
@@ -697,10 +688,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // TODO add default credentials
 
         return c;
-    }
-
-    private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
     /**
@@ -874,7 +861,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private @NonNull BuiltRevision determineRevisionToBuild(final Run build,
                                                             final BuiltRevisionMap builtRevisions,
-                                                            final BuildData buildData,
                                                             final EnvVars environment,
                                                             final GitClient git,
                                                             final TaskListener listener) throws IOException, InterruptedException {
@@ -903,7 +889,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
             candidates = getBuildChooser().getCandidateRevisions(
-                    false, singleBranch, git, listener, builtRevisions, buildData, context);
+                    false, singleBranch, git, listener, builtRevisions, context);
         }
 
         if (candidates.isEmpty()) {
@@ -992,10 +978,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (VERBOSE)
             listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
 
-        BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
-        BuildData buildData = copyBuildData(build.getPreviousBuild());
-        if (VERBOSE && buildData.lastBuild != null) {
-            listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
+        BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
+        if (VERBOSE && builtRevisions.getLastBuiltRevision() != null) {
+            listener.getLogger().println("Last Built Revision: " + builtRevisions.getLastBuiltRevision().revision);
         }
 
         EnvVars environment = build.getEnvironment(listener);
@@ -1007,14 +992,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         retrieveChanges(build, git, listener);
 
-        BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
-        BuiltRevision revToBuild = determineRevisionToBuild(build, builtRevisions, buildData, environment, git, listener);
-        builtRevisions.addBuild(revToBuild);
-        build.addAction(revToBuild);
-        // legacy
-        buildData.saveBuild(revToBuild);
-        build.addAction(buildData);
-
+        BuiltRevision revToBuild = determineRevisionToBuild(build, builtRevisions, environment, git, listener);
         Revision revision = revToBuild.revision;
 
         environment.put(GIT_COMMIT, revision.getSha1String());
@@ -1022,6 +1000,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
         }
+
+        if (changelogFile != null) {
+            computeChangeLog(git, revision, listener, builtRevisions, new FilePath(changelogFile),
+                    new BuildChooserContextImpl(build.getParent(), build, environment));
+        }
+
+        builtRevisions.addBuild(revToBuild);
+        build.addAction(revToBuild);
 
         listener.getLogger().println("Checking out " + revision);
 
@@ -1038,11 +1024,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         build.addAction(new GitTagAction(build, workspace, revision));
-
-        if (changelogFile != null) {
-            computeChangeLog(git, revision, listener, previousBuildData, new FilePath(changelogFile),
-                    new BuildChooserContextImpl(build.getParent(), build, environment));
-        }
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
@@ -1080,18 +1061,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Picture yourself developing a feature branch that closely tracks a busy mainline, then you might
      * not really care the changes going on in the main line. In this way, the changelog only lists your changes,
      * so "notify those who break the build" will not spam upstream developers, too.
-     *
-     * @param git
+     *  @param git
      *      Used for invoking Git
      * @param revToBuild
      *      Points to the revision we'll be building. This includes all the branches we've merged.
      * @param listener
-     *      Used for writing to build console
-     * @param previousBuildData
-     *      Information that captures what we did during the last build. We need this for changelog,
-     *      or else we won't know where to stop.
+ *      Used for writing to build console
+     * @param builtRevisions
+*      Information that captures what we did during the last build. We need this for changelog,
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuiltRevisionMap builtRevisions, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
         boolean executed = false;
@@ -1106,9 +1085,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 exclusion = true;
             } else {
                 for (Branch b : revToBuild.getBranches()) {
-                    Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
-                    if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
-                        changelog.excludes(lastRevWas.getSHA1());
+                    Revision lastRevWas = getBuildChooser().previousRevisionForChangelog(b.getName(), builtRevisions, git, context);
+                    if (lastRevWas != null && git.isCommitInRepo(lastRevWas.getSha1())) {
+                        changelog.excludes(lastRevWas.getSha1());
                         exclusion = true;
                     }
                 }
@@ -1476,63 +1455,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Deprecated
     public PreBuildMergeOptions getMergeOptions() throws FormException {
         return DescriptorImpl.createMergeOptions(getUserMergeOptions(), remoteRepositories);
-    }
-
-    private boolean isRelevantBuildData(BuildData bd) {
-        for(UserRemoteConfig c : getUserRemoteConfigs()) {
-            if(bd.hasBeenReferenced(c.getUrl())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @deprecated
-     */
-    public BuildData getBuildData(Run build, boolean clone) {
-        return clone ? copyBuildData(build) : getBuildData(build);
-    }
-
-    /**
-     * Like {@link #getBuildData(Run)}, but copy the data into a new object,
-     * which is used as the first step for updating the data for the next build.
-     */
-    public BuildData copyBuildData(Run build) {
-        BuildData base = getBuildData(build);
-        if (base==null)
-            return new BuildData(getScmName(), getUserRemoteConfigs());
-        else {
-           BuildData buildData = base.clone();
-           buildData.setScmName(getScmName());
-           return buildData;
-        }
-    }
-
-    /**
-     * Find the build log (BuildData) recorded with the last build that completed. BuildData
-     * may not be recorded if an exception occurs in the plugin logic.
-     *
-     * @param build
-     * @return the last recorded build data
-     */
-    public @CheckForNull BuildData getBuildData(Run build) {
-        BuildData buildData = null;
-        while (build != null) {
-            List<BuildData> buildDataList = build.getActions(BuildData.class);
-            for (BuildData bd : buildDataList) {
-                if (bd != null && isRelevantBuildData(bd)) {
-                    buildData = bd;
-                    break;
-                }
-            }
-            if (buildData != null) {
-                break;
-            }
-            build = build.getPreviousBuild();
-        }
-
-        return buildData;
     }
 
     /**

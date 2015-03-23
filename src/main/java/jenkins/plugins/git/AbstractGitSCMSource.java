@@ -383,17 +383,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         @Override
         public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, GitClient git,
-                                                          TaskListener listener, BuildData buildData,
+                                                          TaskListener listener, BuiltRevisionMap builtRevisions,
                                                           BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
             return Collections.singleton(revision);
         }
 
         @Override
-        public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
+        public Revision previousRevisionForChangelog(String branch, @Nullable BuiltRevisionMap builtRevisions, GitClient git,
                                            BuildChooserContext context) throws IOException, InterruptedException {
             // we have ditched that crazy multiple branch stuff from the regular GIT SCM.
-            return data == null ? null : data.lastBuild;
+            return builtRevisions == null ? null : builtRevisions.getLastBuiltRevision().getMarked();
         }
 
         @Extension
