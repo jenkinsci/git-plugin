@@ -34,7 +34,6 @@ public class BuiltRevisionMap implements Action, Saveable {
     public static final String FILE = BuiltRevisionMap.class.getName() + ".xml";
 
     private Map<String, BuiltRevision> revisions;
-    private Set<BuiltRevision> detached;
     private BuiltRevision last;
 
     private transient XmlFile configFile;
@@ -42,7 +41,6 @@ public class BuiltRevisionMap implements Action, Saveable {
     private BuiltRevisionMap(XmlFile configFile) {
         this.configFile = configFile;
         this.revisions = new HashMap<String, BuiltRevision>();
-        this.detached = new HashSet<BuiltRevision>();
     }
 
     public static BuiltRevisionMap forProject(Job job) throws IOException {
@@ -83,10 +81,6 @@ public class BuiltRevisionMap implements Action, Saveable {
         return revisions.get(branch);
     }
 
-    public Collection<BuiltRevision> getDetached() {
-        return Collections.unmodifiableCollection(detached);
-    }
-
     public synchronized void addBuild(BuiltRevision revision) throws IOException {
         for (Branch branch : revision.marked.getBranches()) {
             revisions.put(fixNull(branch.getName()), revision);
@@ -94,12 +88,6 @@ public class BuiltRevisionMap implements Action, Saveable {
         for (Branch branch : revision.revision.getBranches()) {
             revisions.put(fixNull(branch.getName()), revision);
         }
-        last = revision;
-        save();
-    }
-
-    public synchronized void addDetached(BuiltRevision revision) throws IOException {
-        detached.add(revision);
         last = revision;
         save();
     }
@@ -114,8 +102,6 @@ public class BuiltRevisionMap implements Action, Saveable {
     private Object readResolve() {
         if (revisions == null)
             revisions = new HashMap<String, BuiltRevision>();
-        if (detached == null)
-            detached = new HashSet<BuiltRevision>();
         return this;
     }
 
@@ -154,7 +140,6 @@ public class BuiltRevisionMap implements Action, Saveable {
     public String toString() {
         return "BuiltRevisionMap{" +
                 "revisions=" + revisions +
-                ", detached=" + detached +
                 ", last=" + last +
                 '}';
     }
