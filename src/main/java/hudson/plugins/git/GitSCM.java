@@ -886,14 +886,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
                 BuiltRevision rev = parentBuild.getAction(BuiltRevision.class);
-                if (rev != null) return rev;
-
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        candidates = Collections.singleton(lastBuild.getMarked());
-                }
+                if (rev != null) candidates = Collections.singleton(rev.getMarked());
             }
         }
 
