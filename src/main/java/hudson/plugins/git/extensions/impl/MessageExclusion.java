@@ -7,7 +7,6 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.BuildData;
 import hudson.util.FormValidation;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -39,7 +38,7 @@ public class MessageExclusion extends GitSCMExtension {
 	public String getExcludedMessage() { return excludedMessage; }
 
 	@Override
-	public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
+	public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener) throws IOException, InterruptedException, GitException {
 		if (excludedPattern == null){
 			excludedPattern = Pattern.compile(excludedMessage);
 		}

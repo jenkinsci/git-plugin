@@ -7,7 +7,6 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.BuildData;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -90,7 +89,7 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     @Override
-    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener) {
         Collection<String> paths = commit.getAffectedPaths();
         if (paths.isEmpty()) {// nothing modified, so no need to compute any of this
             return null;

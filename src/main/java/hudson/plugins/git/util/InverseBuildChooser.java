@@ -5,6 +5,8 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
+import jenkins.plugins.git.BuiltRevision;
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
@@ -40,7 +42,7 @@ public class InverseBuildChooser extends BuildChooser {
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall,
             String singleBranch, GitClient git, TaskListener listener,
-            BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+            BuiltRevisionMap builtRevisions, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
         GitUtils utils = new GitUtils(listener, git);
@@ -82,15 +84,15 @@ public class InverseBuildChooser extends BuildChooser {
         // Filter out branch revisions that have already been built
         for (Iterator<Revision> i = branchRevs.iterator(); i.hasNext(); ) {
             Revision r = i.next();
-            if (buildData.hasBeenBuilt(r.getSha1())) {
+            if (builtRevisions.hasBeenBuilt(r.getSha1())) {
                 i.remove();
             }
         }
 
         // If we're in a build (not an SCM poll) and nothing new was found, run the last build again
-        if (!isPollCall && branchRevs.isEmpty() && buildData.getLastBuiltRevision() != null) {
+        if (!isPollCall && branchRevs.isEmpty() && builtRevisions.getLastBuiltRevision().revision != null) {
             listener.getLogger().println(Messages.BuildChooser_BuildingLastRevision());
-            return Collections.singletonList(buildData.getLastBuiltRevision());
+            return Collections.singletonList(builtRevisions.getLastBuiltRevision().revision);
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling

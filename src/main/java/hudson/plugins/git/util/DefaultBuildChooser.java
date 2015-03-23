@@ -253,7 +253,8 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", builtRevisions.getRevisions());
-        Revision lastBuiltRevision = builtRevisions.getLastBuiltRevision().revision;
+        Revision lastBuiltRevision =
+                builtRevisions.getLastBuiltRevision() != null ? builtRevisions.getLastBuiltRevision().revision : null;
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
             Revision r = i.next();
 

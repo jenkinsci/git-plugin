@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -49,10 +50,10 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
 
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
-                GitClient git, final TaskListener listener, BuildData data, BuildChooserContext context)
+                GitClient git, final TaskListener listener, BuiltRevisionMap revisions, BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
         
-        final Collection<Revision> candidates = super.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
+        final Collection<Revision> candidates = super.getCandidateRevisions(isPollCall, branchSpec, git, listener, revisions, context);
         
         // filter candidates based on branch age and ancestry
         return git.withRepository(new RepositoryCallback<List<Revision>>() {

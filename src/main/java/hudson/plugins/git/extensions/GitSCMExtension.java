@@ -22,6 +22,8 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
@@ -58,7 +60,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *      false to trigger a build from this commit, regardless of what later {@link GitSCMExtension}s say.
      *      null to allow other {@link GitSCMExtension}s to decide.
      */
-    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
+    public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener) throws IOException, InterruptedException, GitException {
         return null;
     }
 
