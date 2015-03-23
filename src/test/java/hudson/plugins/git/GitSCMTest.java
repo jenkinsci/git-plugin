@@ -38,6 +38,7 @@ import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
@@ -886,7 +887,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         for (RemoteConfig remoteConfig : gitSCM.getRepositories()) {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
-        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getAction(BuiltRevisionMap.class), null);
         assertEquals(1, candidateRevisions.size());
     }
 

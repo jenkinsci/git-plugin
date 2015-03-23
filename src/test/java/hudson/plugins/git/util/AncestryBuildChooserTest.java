@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -136,8 +137,8 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
         // mock necessary objects
         GitClient git = Mockito.spy(this.git);
         Mockito.when(git.getRemoteBranches()).thenReturn(this.git.getBranches());
-        
-        BuildData buildData = Mockito.mock(BuildData.class);
+
+        BuiltRevisionMap buildData = Mockito.mock(BuiltRevisionMap.class);
         Mockito.when(buildData.hasBeenBuilt(git.revParse(rootCommit))).thenReturn(false);
         
         BuildChooserContext context = Mockito.mock(BuildChooserContext.class);

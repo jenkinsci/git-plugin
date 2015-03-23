@@ -5,6 +5,7 @@ import java.util.Collection;
 import hudson.plugins.git.AbstractGitTestCase;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
+import jenkins.plugins.git.BuiltRevisionMap;
 
 /**
  * @author Arnout Engelen
@@ -19,12 +20,12 @@ public class DefaultBuildChooserTest extends AbstractGitTestCase {
 
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, shaHashCommit1, git, null, null, null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, shaHashCommit1, git, null, (BuiltRevisionMap) null, null);
 
         assertEquals(1, candidateRevisions.size());
         assertEquals(shaHashCommit1, candidateRevisions.iterator().next().getSha1String());
 
-        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), git, null, null, null);
+        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), git, null, (BuiltRevisionMap) null, null);
         assertTrue(candidateRevisions.isEmpty());
     }
     /**
