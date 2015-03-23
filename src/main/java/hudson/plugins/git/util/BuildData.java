@@ -244,4 +244,21 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
     }
+
+    /**
+     * Remove branches from BuildData that have been seen in the past but do not exist anymore
+     * @param keepBranches all branches available in current repository state
+     */
+    public void purgeStaleBranches(Set<Branch> keepBranches) {
+        Set<String> names = new HashSet<String>(buildsByBranchName.keySet());
+        for (Branch branch : keepBranches) {
+            String name = branch.getName();
+            if (name.startsWith("remotes/")) {
+                names.remove(name.substring(8));
+            }
+        }
+        for (String name : names) {
+            buildsByBranchName.remove(name);
+        }
+    }
 }
