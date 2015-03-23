@@ -13,6 +13,8 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
+import jenkins.plugins.git.BuiltRevision;
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -85,7 +87,9 @@ public class PreBuildMerge extends GitSCMExtension {
             // record the fact that we've tried building 'rev' and it failed, or else
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
-            scm.getBuildData(build).saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
+            BuiltRevision failure = new BuiltRevision(marked, rev, build.number, FAILURE);
+            build.addAction(failure);
+            BuiltRevisionMap.forProject(build.getParent()).addBuild(failure);
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
 
