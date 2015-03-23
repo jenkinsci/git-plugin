@@ -71,16 +71,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuiltRevisionMap builtRevisions, BuildChooserContext context) throws IOException, InterruptedException {
-        return null;
-    }
-
-    public final Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuiltRevisionMap builtRevisions, BuildData buildData, BuildChooserContext context) throws IOException, InterruptedException {
-        Collection<Revision> candidates = getCandidateRevisions(isPollCall, singleBranch, git, listener, builtRevisions, context);
-        if (candidates == null) {
-            // legacy API
-            candidates = getCandidateRevisions(isPollCall, singleBranch, git, listener, buildData, context);
-        }
-        return candidates;
+        return getCandidateRevisions(isPollCall, singleBranch, git, listener, new BuildData(builtRevisions), context);
     }
 
     /**

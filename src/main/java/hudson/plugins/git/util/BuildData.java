@@ -10,6 +10,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import jenkins.plugins.git.BuiltRevision;
+import jenkins.plugins.git.BuiltRevisionMap;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -67,6 +68,13 @@ public class BuildData implements Action, Serializable, Cloneable {
             remoteUrls.add(c.getUrl());
         }
     }
+
+    public BuildData(BuiltRevisionMap revisions) {
+        this.buildsByBranchName = revisions.getRevisions();
+        this.lastBuild = revisions.getLastBuiltRevision();
+    }
+
+
 
     /**
      * Returns the build data display name, optionally with SCM name.

@@ -29,6 +29,7 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 import hudson.Functions;
+import jenkins.plugins.git.BuiltRevision;
 
 import java.util.concurrent.Future;
 import java.util.Collections;
@@ -177,7 +178,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
         
-        Revision r1 = b1.getAction(BuildData.class).getLastBuiltRevision();
+        Revision r1 = b1.getAction(BuiltRevision.class).getRevision();
         
         // create a second commit
         final String commitFile2 = "commitFile2";
@@ -189,18 +190,16 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         System.out.println(b2.getLog());
         
 		// Check revision built for b2 matches the r1 revision
-		assertEquals(b2.getAction(BuildData.class)
-				.getLastBuiltRevision().getSha1String(), r1.getSha1String());
-		assertEquals(b2.getAction(BuildData.class)
-				.getLastBuiltRevision().getBranches().iterator().next()
-				.getName(), r1.getBranches().iterator().next().getName());
+		assertEquals(b2.getAction(BuiltRevision.class).getRevision().getSha1String(),
+                     r1.getSha1String());
+		assertEquals(b2.getAction(BuiltRevision.class).getRevision().getBranches().iterator().next().getName(),
+                     r1.getBranches().iterator().next().getName());
 		
 		// create a third build
 		FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
 		
 		// Check revision built for b3 does not match r1 revision
-		assertFalse(b3.getAction(BuildData.class)
-				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
+		assertFalse(b3.getAction(BuiltRevision.class).getRevision().getSha1String().equals(r1.getSha1String()));
 		
 		if (Functions.isWindows()) {
 		  System.gc(); // Prevents exceptions cleaning up temp dirs during tearDown
