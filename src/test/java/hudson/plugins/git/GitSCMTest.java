@@ -38,6 +38,7 @@ import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 
+import jenkins.plugins.git.BuiltRevision;
 import jenkins.plugins.git.BuiltRevisionMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -1517,71 +1518,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
-     * Tests that builds have the correctly specified Custom SCM names, associated with
-     * each build.
-     * @throws Exception on various exceptions
-     */
-    public void testCustomSCMName() throws Exception {
-        final String branchName = "master";
-        final FreeStyleProject project = setupProject(branchName, false);
-        GitSCM git = (GitSCM) project.getScm();
-        setupJGit(git);
-
-        final String commitFile1 = "commitFile1";
-        final String scmNameString1 = "";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should not detect any more changes after build",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-        final ObjectId commit1 = testRepo.git.revListAll().get(0);
-
-        // Check unset build SCM Name carries
-        final int buildNumber1 = notifyAndCheckScmName(
-            project, commit1, scmNameString1, 1, git);
-
-        final String scmNameString2 = "ScmName2";
-        git.getExtensions().replace(new ScmName(scmNameString2));
-
-        commit("commitFile2", johnDoe, "Commit number 2");
-        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
-        final ObjectId commit2 = testRepo.git.revListAll().get(0);
-
-        // Check second set SCM Name
-        final int buildNumber2 = notifyAndCheckScmName(
-            project, commit2, scmNameString2, 2, git);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-
-        final String scmNameString3 = "ScmName3";
-        git.getExtensions().replace(new ScmName(scmNameString3));
-
-        commit("commitFile3", johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3", project.poll(listener).hasChanges());
-        final ObjectId commit3 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name
-        final int buildNumber3 = notifyAndCheckScmName(
-            project, commit3, scmNameString3, 3, git);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-
-        commit("commitFile4", johnDoe, "Commit number 4");
-        assertTrue("scm polling should detect commit 4", project.poll(listener).hasChanges());
-        final ObjectId commit4 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name still set
-        final int buildNumber4 = notifyAndCheckScmName(
-            project, commit4, scmNameString3, 4, git);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-        checkNumberedBuildScmName(project, buildNumber3, scmNameString3, git);
-    }
-
-    /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
-     * and tests for custom SCM name build data consistency.
      * @param project project to build
      * @param commit commit to build
-     * @param expectedBranch branch, that is expected to be built
      * @param ordinal number of commit to log into errors, if any
      * @param git git SCM
      * @throws Exception on various exceptions occur
@@ -1591,31 +1530,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
 
         final Build build = project.getLastBuild();
-        final BuildData buildData = git.getBuildData(build);
-        assertEquals("Commit " + ordinal + " should be built", commit, buildData
-                .getLastBuiltRevision().getSha1());
-
-        assertEquals("SCM Name should be <" + expectedScmName + ">", expectedScmName, buildData
-                .getScmName());
+        final BuiltRevision r = build.getAction(BuiltRevision.class);
+        assertEquals("Commit " + ordinal + " should be built", commit, r.getRevision().getSha1());
 
         return build.getNumber();
     }
 
-    private void checkNumberedBuildScmName(FreeStyleProject project, int buildNumber,
-            String expectedScmName, GitSCM git) throws Exception {
-
-        final BuildData buildData = git.getBuildData(project.getBuildByNumber(buildNumber));
-        System.out.println(buildData.toString());
-        assertEquals("SCM Name should be " + expectedScmName, expectedScmName, buildData
-                .getScmName());
-    }
 
     /**
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
-     * @see JENKINS-24133
      * @throws Exception on various exceptions
      */
+    @Issue("JENKINS-24133")
     public void testSha1NotificationBranches() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
@@ -1651,10 +1578,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
             String expectedBranch, int ordinal, GitSCM git) throws Exception {
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
-        final BuildData buildData = git.getBuildData(project.getLastBuild());
-        final Collection<Branch> builtBranches = buildData.lastBuild.getRevision().getBranches();
-        assertEquals("Commit " + ordinal + " should be built", commit, buildData
-                .getLastBuiltRevision().getSha1());
+        final BuiltRevision r = project.getLastBuild().getAction(BuiltRevision.class);
+        final Collection<Branch> builtBranches = r.getRevision().getBranches();
+        assertEquals("Commit " + ordinal + " should be built", commit, r.getRevision().getSha1());
 
         final String expectedBranchString = "origin/" + expectedBranch;
         assertFalse("Branches should be detected for the build", builtBranches.isEmpty());
