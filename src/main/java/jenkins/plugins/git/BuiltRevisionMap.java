@@ -19,9 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import static hudson.Util.fixNull;
 
@@ -77,7 +75,7 @@ public class BuiltRevisionMap implements Action, Saveable {
         return Collections.unmodifiableMap(revisions);
     }
 
-    public @CheckForNull BuiltRevision lastBuiltOnBranch(String branch) {
+    public @CheckForNull BuiltRevision getLastBuildOfBranch(String branch) {
         return revisions.get(branch);
     }
 
@@ -132,6 +130,15 @@ public class BuiltRevisionMap implements Action, Saveable {
         return null;
     }
 
+    public BuiltRevision getBuildFor(String sha1) {
+        for(BuiltRevision b : revisions.values()) {
+            if(b.isFor(sha1))
+                return b;
+        }
+        return null;
+    }
+
+
     public BuiltRevision getLastBuiltRevision() {
         return last;
     }
@@ -143,4 +150,5 @@ public class BuiltRevisionMap implements Action, Saveable {
                 ", last=" + last +
                 '}';
     }
+
 }
