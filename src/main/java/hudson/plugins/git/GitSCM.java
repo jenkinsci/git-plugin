@@ -1019,6 +1019,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
         BuiltRevision revToBuild = determineRevisionToBuild(build, builtRevisions, buildData, environment, git, listener);
+        builtRevisions.addBuild(revToBuild);
         buildData.saveBuild(revToBuild);
         build.addAction(revToBuild);
 
@@ -1028,9 +1029,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Branch branch = Iterables.getFirst(revision.getBranches(), null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
-            builtRevisions.addBuild(branch.getName(), revToBuild);
-        } else {
-            builtRevisions.addDetached(revToBuild);
         }
 
         listener.getLogger().println("Checking out " + revision);

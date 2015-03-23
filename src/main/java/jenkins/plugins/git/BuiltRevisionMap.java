@@ -7,6 +7,7 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
@@ -77,8 +78,13 @@ public class BuiltRevisionMap implements Action, Saveable {
         return Collections.unmodifiableCollection(detached);
     }
 
-    public synchronized void addBuild(String branch, BuiltRevision revision) throws IOException {
-        revisions.put(branch, revision);
+    public synchronized void addBuild(BuiltRevision revision) throws IOException {
+        for (Branch branch : revision.marked.getBranches()) {
+            revisions.put(fixNull(branch.getName()), revision);
+        }
+        for (Branch branch : revision.revision.getBranches()) {
+            revisions.put(fixNull(branch.getName()), revision);
+        }
         last = revision;
         save();
     }
