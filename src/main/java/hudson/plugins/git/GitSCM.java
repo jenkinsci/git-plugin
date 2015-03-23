@@ -805,14 +805,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * Web-bound method to let people look up a build by their SHA1 commit.
      */
-    public AbstractBuild<?,?> getBySHA1(String sha1) {
+    public AbstractBuild<?,?> getBySHA1(String sha1) throws IOException {
         AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        for (AbstractBuild b : p.getBuilds()) {
-            BuildData d = b.getAction(BuildData.class);
-            if (d!=null && d.lastBuild!=null) {
-                Build lb = d.lastBuild;
-                if (lb.isFor(sha1)) return b;
-            }
+        BuiltRevision b = BuiltRevisionMap.forProject(p).getBuildFor(sha1);
+        if (b != null) {
+            return p.getBuildByNumber(b.getBuildNumber());
         }
         return null;
     }
@@ -1004,7 +1001,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
-        build.addAction(buildData);
         if (VERBOSE && buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
@@ -1021,8 +1017,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuiltRevisionMap builtRevisions = BuiltRevisionMap.forProject(build.getParent());
         BuiltRevision revToBuild = determineRevisionToBuild(build, builtRevisions, buildData, environment, git, listener);
         builtRevisions.addBuild(revToBuild);
-        buildData.saveBuild(revToBuild);
         build.addAction(revToBuild);
+        // legacy
+        buildData.saveBuild(revToBuild);
+        build.addAction(buildData);
 
         Revision revision = revToBuild.revision;
 
@@ -1141,13 +1139,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
-        Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
+
+        BuiltRevisionMap builtRevisions = null;
+        try {
+            builtRevisions = BuiltRevisionMap.forProject(build.getParent());
+        } catch (IOException e) {
+            // Nop
+        }
+
+        BuiltRevision lastBuiltRevision = builtRevisions != null ? builtRevisions.getLastBuiltRevision() : null;
+        Revision rev = lastBuiltRevision != null ? lastBuiltRevision.revision : null;
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
 
-                String prevCommit = getLastBuiltCommitOfBranch(build, branch);
+                String prevCommit = getLastBuiltCommitOfBranch(builtRevisions, branch);
                 if (prevCommit != null) {
                     env.put(GIT_PREVIOUS_COMMIT, prevCommit);
                 }
@@ -1188,30 +1195,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return name;
     }
 
-    private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
-        String prevCommit = null;
-        if (build.getPreviousBuiltBuild() != null) {
-            final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
-            if (lastBuildOfBranch != null) {
-                Revision previousRev = lastBuildOfBranch.getRevision();
-                if (previousRev != null) {
-                    prevCommit = previousRev.getSha1String();
-                }
+    private String getLastBuiltCommitOfBranch(BuiltRevisionMap builtRevisions, Branch branch) {
+        final Build lastBuildOfBranch = builtRevisions.getLastBuildOfBranch(branch.getName());
+        if (lastBuildOfBranch != null) {
+            Revision previousRev = lastBuildOfBranch.getRevision();
+            if (previousRev != null) {
+                return previousRev.getSha1String();
             }
         }
-        return prevCommit;
+        return null;
     }
 
     private String getLastSuccessfulBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
         String prevCommit = null;
-        if (build.getPreviousSuccessfulBuild() != null) {
-            final Build lastSuccessfulBuildOfBranch = fixNull(getBuildData(build.getPreviousSuccessfulBuild())).getLastBuildOfBranch(branch.getName());
-            if (lastSuccessfulBuildOfBranch != null) {
-                Revision previousRev = lastSuccessfulBuildOfBranch.getRevision();
-                if (previousRev != null) {
-                    prevCommit = previousRev.getSha1String();
-                }
+        AbstractBuild<?, ?> successfulBuild = build.getPreviousSuccessfulBuild();
+        while (successfulBuild != null) {
+            BuiltRevision r = successfulBuild.getAction(BuiltRevision.class);
+            if (r != null && r.revision.containsBranchName(branch.name)) {
+                return r.revision.getSha1String();
             }
+            successfulBuild = successfulBuild.getPreviousSuccessfulBuild();
         }
 
         return prevCommit;
