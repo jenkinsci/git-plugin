@@ -465,7 +465,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         hudson.setNumExecutors(0);
-        hudson.setNodes(hudson.getNodes());
+        hudson.setNodes(hudson.getNodes()); // TODO https://github.com/jenkinsci/jenkins/pull/1596 renders this workaround unnecessary
 
         project.setAssignedLabel(createSlave().getSelfLabel());
 
