@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -70,6 +71,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
@@ -116,6 +118,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_BRANCH_NAME = "GIT_BRANCH_NAME";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1017,6 +1020,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch!=null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
+            environment.put(GIT_BRANCH_NAME, getShortBranchName(branch));
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
@@ -1133,7 +1137,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
-
+                env.put(GIT_BRANCH_NAME, getShortBranchName(branch));
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
                     env.put(GIT_PREVIOUS_COMMIT, prevCommit);
@@ -1173,6 +1177,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             name = name.substring("refs/remotes/".length());
         }
         return name;
+    }
+
+
+    private String getShortBranchName(Branch branch) {
+        String name = firstNonNull(branch.getName(), "");
+        Iterable<String> parts = Splitter.on("/").omitEmptyStrings().split(name);
+        return Iterables.getLast(parts);
     }
 
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
