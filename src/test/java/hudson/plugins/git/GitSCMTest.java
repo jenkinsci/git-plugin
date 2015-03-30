@@ -58,12 +58,17 @@ import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jvnet.hudson.test.Issue;
 
+import static com.google.common.collect.Maps.newHashMap;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
-    
+
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
      * Next test that polling works correctly, make another commit, check that polling finds it,
@@ -573,6 +578,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH_NAME));
         assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
@@ -736,6 +742,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild db = d.getLastBuild();
         assertNotNull("downstream build didn't happen",db);
         assertBuildStatusSuccess(db);
+    }
+
+    public void testBuildEnvVars() throws Exception {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        BuildData lastBuild = mock(BuildData.class);
+        Revision rev = mock(Revision.class);
+        UserRemoteConfig userRemoteConfig = mock(UserRemoteConfig.class);
+        Branch branch = mock(Branch.class);
+
+        Map<String, String> env = newHashMap();
+        GitSCM gitscm = new GitSCM(
+                Collections.singletonList(userRemoteConfig),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+
+        when(build.getActions(BuildData.class)).thenReturn(Collections.singletonList(lastBuild));
+        when(lastBuild.hasBeenReferenced(anyString())).thenReturn(true);
+        when(lastBuild.getLastBuiltRevision()).thenReturn(rev);
+        when(rev.getBranches()).thenReturn(Collections.singletonList(branch));
+
+        when(branch.getName()).thenReturn("origin/master");
+        gitscm.buildEnvVars(build, env);
+        assertEquals("master", env.get(GitSCM.GIT_BRANCH_NAME));
+
+        when(branch.getName()).thenReturn("origin/develop/pre_8.2");
+        gitscm.buildEnvVars(build, env);
+        assertEquals("develop/pre_8.2", env.get(GitSCM.GIT_BRANCH_NAME));
+
+        when(branch.getName()).thenReturn("noslashes");
+        gitscm.buildEnvVars(build, env);
+        assertEquals("noslashes", env.get(GitSCM.GIT_BRANCH_NAME));
+
     }
 
     public void testBuildChooserContext() throws Exception {
