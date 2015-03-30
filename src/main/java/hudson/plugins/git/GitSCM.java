@@ -1182,7 +1182,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private String getShortBranchName(Branch branch) {
         String name = firstNonNull(branch.getName(), "");
-        Iterable<String> parts = Splitter.on("/").omitEmptyStrings().split(name);
+        Iterable<String> parts = Splitter.on("/").omitEmptyStrings().limit(2).split(name);
         return Iterables.getLast(parts);
     }
 

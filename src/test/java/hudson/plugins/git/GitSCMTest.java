@@ -768,9 +768,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         gitscm.buildEnvVars(build, env);
         assertEquals("master", env.get(GitSCM.GIT_BRANCH_NAME));
 
-        when(branch.getName()).thenReturn("refs/remotes/weird");
+        when(branch.getName()).thenReturn("origin/develop/pre_8.2");
         gitscm.buildEnvVars(build, env);
-        assertEquals("weird", env.get(GitSCM.GIT_BRANCH_NAME));
+        assertEquals("develop/pre_8.2", env.get(GitSCM.GIT_BRANCH_NAME));
 
         when(branch.getName()).thenReturn("noslashes");
         gitscm.buildEnvVars(build, env);
