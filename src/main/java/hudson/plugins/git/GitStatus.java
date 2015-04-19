@@ -178,7 +178,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
             List<ParameterValue> buildParameters = Collections.EMPTY_LIST;
-            return onNotifyCommit(uri, null, buildParameters, branches);
+            return onNotifyCommit(uri, sha1, buildParameters, branches);
         }
 
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
