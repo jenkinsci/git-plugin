@@ -24,7 +24,7 @@
   <properties>
     <findbugs-maven-plugin.version>3.0.0</findbugs-maven-plugin.version>
     <jacoco-maven-plugin.version>0.7.2.201409121644</jacoco-maven-plugin.version>
-    <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4</maven-enforcer-plugin.version>
     <maven-hpi-plugin.version>1.112</maven-hpi-plugin.version>
     <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
