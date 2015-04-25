@@ -313,7 +313,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
-      <version>0.4-beta-1</version>
+      <version>0.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
