@@ -22,7 +22,7 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
   
   <properties>
-    <findbugs-maven-plugin.version>3.0.0</findbugs-maven-plugin.version>
+    <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4</maven-enforcer-plugin.version>
