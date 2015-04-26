@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -190,6 +192,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          */
         @Override
         public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, String... branches) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
+            }
+            
             List<ResponseContributor> result = new ArrayList<ResponseContributor>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -231,15 +237,28 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 continue;
                             }
 
-                            Boolean branchFound = false;
+                            boolean branchFound = false,
+                                    parametrizedBranchSpec = false;
                             if (branches.length == 0) {
                                 branchFound = true;
                             } else {
                                 OUT: for (BranchSpec branchSpec : git.getBranches()) {
-                                    for (String branch : branches) {
-                                        if (branchSpec.matches(repository.getName() + "/" + branch)) {
-                                            branchFound = true;
-                                            break OUT;
+                                    if (branchSpec.getName().contains("$")) {
+                                        // If the branchspec is parametrized, always run the polling
+                                        if (LOGGER.isLoggable(Level.FINE)) {
+                                            LOGGER.fine("Branch Spec is parametrized for " + project.getFullDisplayName() + ". ");
+                                        }
+                                        branchFound = true;
+                                        parametrizedBranchSpec = true;
+                                    } else {
+                                        for (String branch : branches) {
+                                            if (branchSpec.matches(repository.getName() + "/" + branch)) {
+                                                if (LOGGER.isLoggable(Level.FINE)) {
+                                                    LOGGER.fine("Branch Spec " + branchSpec + " matches modified branch " + branch + " for " + project.getFullDisplayName() + ". ");
+                                                }
+                                                branchFound = true;
+                                                break OUT;
+                                            }
                                         }
                                     }
                                 }
@@ -248,7 +267,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             urlFound = true;
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
-                                if (isNotEmpty(sha1)) {
+                                if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),

@@ -127,6 +127,17 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    public void testDoNotifyCommitWithParametrizedBranch() throws Exception {
+        SCMTrigger aMasterTrigger = setupProject("a", "$BRANCH_TO_BUILD", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+
+        this.gitStatus.doNotifyCommit("a", "master", null);
+        Mockito.verify(aMasterTrigger).run();
+        Mockito.verify(bMasterTrigger, Mockito.never()).run();
+        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+    }
+
     public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", true);
 
