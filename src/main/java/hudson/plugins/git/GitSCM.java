@@ -628,10 +628,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                     true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
-            for (Revision c : candidates) {
-                if (!isRevExcluded(git, c, listener, buildData)) {
-                    return PollingResult.SIGNIFICANT;
-                }
+            if (!candidates.isEmpty()&& !isRevExcluded(git, candidates.iterator().next(), listener, buildData)) {
+                return PollingResult.SIGNIFICANT;
             }
 
             return NO_CHANGES;
