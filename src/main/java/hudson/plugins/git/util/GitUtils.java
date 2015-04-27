@@ -272,6 +272,17 @@ public class GitUtils implements Serializable {
                 }
             }
         }
+        
+        // Use the default parameter values (if any) instead of the ones from the last build
+        ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) b.getProject().getProperty(ParametersDefinitionProperty.class);
+        if (paramDefProp != null) {
+            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
+               ParameterValue defaultValue  = paramDefinition.getDefaultParameterValue();
+               if (defaultValue != null) {
+                   defaultValue.buildEnvironment(b, env);
+               }
+            }
+        }
     }
 
     public static String[] fixupNames(String[] names, String[] urls) {

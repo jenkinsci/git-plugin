@@ -510,11 +510,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
+        // TODO would need to use hudson.plugins.git.util.GitUtils.getPollEnvironment
+        return requiresWorkspaceForPolling(new EnvVars());
+    }
+
+    private boolean requiresWorkspaceForPolling(EnvVars environment) {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
-        // TODO would need to use hudson.plugins.git.util.GitUtils.getPollEnvironment
-        return getSingleBranch(new EnvVars()) == null;
+        return getSingleBranch(environment) == null;
     }
 
     @Override
@@ -558,9 +562,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final String singleBranch = getSingleBranch(lastBuild.getEnvironment(listener));
+        final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
 
-        if (!requiresWorkspaceForPolling()) {
+        final String singleBranch = getSingleBranch(pollEnv);
+
+        if (!requiresWorkspaceForPolling(pollEnv)) {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
