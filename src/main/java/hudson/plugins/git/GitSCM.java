@@ -518,7 +518,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
-        return getSingleBranch(environment) == null;
+        return false;
     }
 
     @Override
@@ -563,8 +563,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
-
-        final String singleBranch = getSingleBranch(pollEnv);
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
@@ -631,6 +629,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             listener.getLogger().println("Polling for changes in");
 
+            final String singleBranch = getSingleBranch(pollEnv);
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
                     true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
