@@ -16,9 +16,11 @@ import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -32,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -262,11 +265,31 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!project.isDisabled()) {
                                 if (isNotEmpty(sha1)) {
-                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
-                                    project.scheduleBuild2(project.getQuietPeriod(),
-                                            new CommitHookCause(sha1),
-                                            new RevisionParameterAction(sha1));
-                                    result.add(new ScheduledResponseContributor(project));
+                                    final ObjectId id = ObjectId.fromString(sha1);
+                                    boolean revIsIncluded = false;
+                                    try {
+                                        final Boolean revIsExcluded = git.isRevExcluded(project,
+                                                id, new LogTaskListener(LOGGER, Level.FINE));
+                                        if (revIsExcluded == null) {
+                                            LOGGER.info("No previous build detected for project "
+                                                    + project.getName() + ". Forcing a build");
+                                            revIsIncluded = true;
+                                        } else {
+                                            revIsIncluded = !revIsExcluded;
+                                        }
+                                    } catch (IOException e) {
+                                        LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+                                    } catch (InterruptedException e) {
+                                        LOGGER.log(Level.INFO, "Error probing revision " + sha1, e);
+                                    }
+                                    if (revIsIncluded) {
+                                        LOGGER.info("Scheduling " + project.getFullDisplayName()
+                                                + " to build commit " + sha1);
+                                        project.scheduleBuild2(project.getQuietPeriod(),
+                                                new CommitHookCause(sha1),
+                                                new RevisionParameterAction(sha1));
+                                        result.add(new ScheduledResponseContributor(project));
+                                    }
                                 } else if (trigger != null) {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();

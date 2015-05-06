@@ -34,13 +34,13 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.util.IOException2;
+import hudson.util.IOUtils;
 import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -1620,8 +1620,75 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
+     * Unit test to guarantee that notifyCommit URL triggering is aware of
+     * exclusions.
+     * @throws Exception on various exceptions
+     * @see JENKINS-25048
+     */
+    public void testNotifyCommitOnExcluded() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, ".*excl", null, null);
+
+        final String initialCommitFile = "initialFile";
+        commit(initialCommitFile, johnDoe, "initial commit");
+        build(project, Result.SUCCESS, initialCommitFile);
+        assertFalse("scm polling should not detect already built commit", project.poll(listener)
+                .hasChanges());
+
+        final String commitFile1 = "commitFile1-excl";
+        commit(commitFile1, janeDoe, "Commit number 1");
+        assertFalse("scm polling should not detected commit 1", project.poll(listener).hasChanges());
+        assertFalse("notifyCommit should not detect commit 1", notifyLastCommit(project));
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
+        assertTrue("notifyCommit should detect commit 2", notifyLastCommit(project));
+    }
+
+    /**
+     * Unit test for mixed builds - poll-initiated and notifyCommit-initiated.
+     * @throws Exception on various exceptions
+     */
+    public void testNotifyCommitMixedWithPoll() throws Exception {
+        final FreeStyleProject project = setupProject("master", false, null, null, null, null);
+
+        final String initialCommitFile = "initialFile";
+        commit(initialCommitFile, johnDoe, "initial commit");
+        build(project, Result.SUCCESS, initialCommitFile);
+        assertFalse("scm polling should not detect already built commit", project.poll(listener)
+                .hasChanges());
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, janeDoe, "Commit number 1");
+        assertTrue("notifyCommit should detect commit 1", notifyLastCommit(project));
+        assertFalse("scm polling should not detected commit 1", project.poll(listener).hasChanges());
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling should detect commit 2", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile2);
+
+        assertFalse("scm polling should not detect commit 2 after build", project.poll(listener)
+                .hasChanges());
+        assertTrue("notifyCommit should detect commit 2 after build", notifyLastCommit(project));
+    }
+
+    /**
      * Method performs commit notification for the last committed SHA1 using
      * notifyCommit URL.
+     * @param project project to trigger
+     * @return whether the new build has been triggered (<code>true</code>) or
+     *         not (<code>false</code>).
+     * @throws Exception on various exceptions
+     */
+    private boolean notifyLastCommit(FreeStyleProject project) throws Exception {
+        final List<ObjectId> revs = testRepo.git.revListAll();
+        return notifyCommit(project, revs.get(0));
+    }
+
+    /**
+     * Method performs commit notification for the commit, specified by SHA1,
+     * using notifyCommit URL.
      * @param project project to trigger
      * @return whether the new build has been triggered (<code>true</code>) or
      *         not (<code>false</code>).
@@ -1631,12 +1698,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final int initialBuildNumber = project.getLastBuild().getNumber();
         final String commit1 = ObjectId.toString(commitId);
 
-        final int port = server.getConnectors()[0].getLocalPort();
-        if (port < 0) {
-            throw new IllegalStateException("Could not locate Jetty server port");
-        }
-        final String notificationPath = "http://localhost:" + Integer.toString(port)
-                + "/git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
+        final String notificationPath = getURL().toString() + "git/notifyCommit?url="
+                + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
         final InputStream is = notifyUrl.openStream();
         IOUtils.toString(is);
