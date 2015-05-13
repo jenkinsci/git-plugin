@@ -33,6 +33,7 @@ import hudson.scm.PollingResult;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
+import hudson.triggers.SCMTrigger;
 import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
 
@@ -1559,6 +1560,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
+        project.addTrigger(new SCMTrigger(""));
         GitSCM git = (GitSCM) project.getScm();
         setupJGit(git);
 
@@ -1654,6 +1656,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testSha1NotificationBranches() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
+        project.addTrigger(new SCMTrigger(""));
         final GitSCM git = (GitSCM) project.getScm();
         setupJGit(git);
 
