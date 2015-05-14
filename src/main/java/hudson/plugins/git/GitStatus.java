@@ -238,8 +238,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
 
                             SCMTrigger trigger = scmTriggerItem.getSCMTrigger();
-                            if (trigger != null && trigger.isIgnorePostCommitHooks()) {
-                                LOGGER.info("PostCommitHooks are disabled on " + project.getFullDisplayName());
+                            if (trigger == null || trigger.isIgnorePostCommitHooks()) {
+                                LOGGER.info("no trigger, or post-commit hooks disabled, on " + project.getFullDisplayName());
                                 continue;
                             }
 
@@ -266,7 +266,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                             new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1), new ParametersAction(buildParameters));
                                     result.add(new ScheduledResponseContributor(project));
-                                } else if (trigger != null) {
+                                } else {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
