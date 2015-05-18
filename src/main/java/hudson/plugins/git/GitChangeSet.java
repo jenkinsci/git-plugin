@@ -13,6 +13,7 @@ import org.apache.commons.lang.time.FastDateFormat;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -101,10 +102,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             if( line.length() < 1)
                 continue;
             if (line.startsWith("commit ")) {
-                this.id = line.split(" ")[1];
+                String[] split = line.split(" ");
+                if (split.length > 0) this.id = split[1];
+                else throw new IllegalArgumentException("Commit has no ID" + lines);
             } else if (line.startsWith("tree ")) {
             } else if (line.startsWith("parent ")) {
-                this.parentCommit = line.split(" ")[1];
+                String[] split = line.split(" ");
+                // parent may be null for initial commit or changelog computed from a shallow clone
+                if (split.length > 0) this.parentCommit = split[1];
             } else if (line.startsWith(PREFIX_COMMITTER)) {
                 Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
                 if (committerMatcher.matches()
@@ -222,7 +227,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         super.setParent(parent);
     }
 
-    public String getParentCommit() {
+    public @CheckForNull
+    String getParentCommit() {
         return parentCommit;
     }
 
