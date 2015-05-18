@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +34,8 @@ import static hudson.Util.fixEmpty;
  * @author Nigel Magnay
  */
 public class GitChangeSet extends ChangeLogSet.Entry {
+
+    private static final Logger log = Logger.getLogger(GitChangeSet.class.getName());
 
     private static final String PREFIX_AUTHOR = "author ";
     private static final String PREFIX_COMMITTER = "committer ";
@@ -98,68 +102,72 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         StringBuilder message = new StringBuilder();
 
         for (String line : lines) {
-            if( line.length() < 1)
-                continue;
-            if (line.startsWith("commit ")) {
-                this.id = line.split(" ")[1];
-            } else if (line.startsWith("tree ")) {
-            } else if (line.startsWith("parent ")) {
-                this.parentCommit = line.split(" ")[1];
-            } else if (line.startsWith(PREFIX_COMMITTER)) {
-                Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
-                if (committerMatcher.matches()
-                        && committerMatcher.groupCount() >= 3) {
-                    this.committer = committerMatcher.group(1).trim();
-                    this.committerEmail = committerMatcher.group(2);
-                    this.committerTime = isoDateFormat(committerMatcher.group(3));
-                }
-            } else if (line.startsWith(PREFIX_AUTHOR)) {
-                Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
-                if (authorMatcher.matches() && authorMatcher.groupCount() >= 3) {
-                    this.author = authorMatcher.group(1).trim();
-                    this.authorEmail = authorMatcher.group(2);
-                    this.authorTime = isoDateFormat(authorMatcher.group(3));
-                }
-            } else if (line.startsWith("    ")) {
-                message.append(line.substring(4)).append('\n');
-            } else if (':' == line.charAt(0)) {
-                Matcher fileMatcher = FILE_LOG_ENTRY.matcher(line);
-                if (fileMatcher.matches() && fileMatcher.groupCount() >= 4) {
-                    String mode = fileMatcher.group(3);
-                    if (mode.length() == 1) {
-                        String src = null;
-                        String dst = null;
-                        String path = fileMatcher.group(4);
-                        char editMode = mode.charAt(0);
-                        if (editMode == 'M' || editMode == 'A' || editMode == 'D'
-                            || editMode == 'R' || editMode == 'C') {
-                            src = parseHash(fileMatcher.group(1));
-                            dst = parseHash(fileMatcher.group(2));
-                        }
+            try {
+                if( line.length() < 1)
+                    continue;
+                if (line.startsWith("commit ")) {
+                    this.id = line.split(" ")[1];
+                } else if (line.startsWith("tree ")) {
+                } else if (line.startsWith("parent ")) {
+                    this.parentCommit = line.split(" ")[1];
+                } else if (line.startsWith(PREFIX_COMMITTER)) {
+                    Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
+                    if (committerMatcher.matches()
+                            && committerMatcher.groupCount() >= 3) {
+                        this.committer = committerMatcher.group(1).trim();
+                        this.committerEmail = committerMatcher.group(2);
+                        this.committerTime = isoDateFormat(committerMatcher.group(3));
+                    }
+                } else if (line.startsWith(PREFIX_AUTHOR)) {
+                    Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
+                    if (authorMatcher.matches() && authorMatcher.groupCount() >= 3) {
+                        this.author = authorMatcher.group(1).trim();
+                        this.authorEmail = authorMatcher.group(2);
+                        this.authorTime = isoDateFormat(authorMatcher.group(3));
+                    }
+                } else if (line.startsWith("    ")) {
+                    message.append(line.substring(4)).append('\n');
+                } else if (':' == line.charAt(0)) {
+                    Matcher fileMatcher = FILE_LOG_ENTRY.matcher(line);
+                    if (fileMatcher.matches() && fileMatcher.groupCount() >= 4) {
+                        String mode = fileMatcher.group(3);
+                        if (mode.length() == 1) {
+                            String src = null;
+                            String dst = null;
+                            String path = fileMatcher.group(4);
+                            char editMode = mode.charAt(0);
+                            if (editMode == 'M' || editMode == 'A' || editMode == 'D'
+                                    || editMode == 'R' || editMode == 'C') {
+                                src = parseHash(fileMatcher.group(1));
+                                dst = parseHash(fileMatcher.group(2));
+                            }
 
-                        // Handle rename as two operations - a delete and an add
-                        if (editMode == 'R') {
-                            Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
-                            if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
-                                String oldPath = renameSplitMatcher.group(1);
-                                String newPath = renameSplitMatcher.group(2);
-                                this.paths.add(new Path(src, dst, 'D', oldPath, this));
-                                this.paths.add(new Path(src, dst, 'A', newPath, this));
+                            // Handle rename as two operations - a delete and an add
+                            if (editMode == 'R') {
+                                Matcher renameSplitMatcher = RENAME_SPLIT.matcher(path);
+                                if (renameSplitMatcher.matches() && renameSplitMatcher.groupCount() >= 2) {
+                                    String oldPath = renameSplitMatcher.group(1);
+                                    String newPath = renameSplitMatcher.group(2);
+                                    this.paths.add(new Path(src, dst, 'D', oldPath, this));
+                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
+                                }
                             }
-                        }
-                        // Handle copy as an add
-                        else if (editMode == 'C') {
-                            Matcher copySplitMatcher = RENAME_SPLIT.matcher(path);
-                            if (copySplitMatcher.matches() && copySplitMatcher.groupCount() >= 2) {
-                                String newPath = copySplitMatcher.group(2);
-                                this.paths.add(new Path(src, dst, 'A', newPath, this));
+                            // Handle copy as an add
+                            else if (editMode == 'C') {
+                                Matcher copySplitMatcher = RENAME_SPLIT.matcher(path);
+                                if (copySplitMatcher.matches() && copySplitMatcher.groupCount() >= 2) {
+                                    String newPath = copySplitMatcher.group(2);
+                                    this.paths.add(new Path(src, dst, 'A', newPath, this));
+                                }
                             }
-                        }
-                        else {
-                            this.paths.add(new Path(src, dst, editMode, path, this));
+                            else {
+                                this.paths.add(new Path(src, dst, editMode, path, this));
+                            }
                         }
                     }
                 }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                log.log(Level.WARNING, "Error while parsing commit details. Line was " + line, e);
             }
         }
 
