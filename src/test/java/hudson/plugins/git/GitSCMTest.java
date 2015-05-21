@@ -1629,11 +1629,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         final Build build = project.getLastBuild();
         final BuildData buildData = git.getBuildData(build);
-        assertEquals("Commit " + ordinal + " should be built", commit, buildData
+        assertEquals("Expected SHA1 != built SHA1 for commit " + ordinal, commit, buildData
                 .getLastBuiltRevision().getSha1());
+        assertEquals("Expected SHA1 != retrieved SHA1 for commit " + ordinal, commit, buildData.getLastBuild(commit).getSHA1());
+        assertTrue("Commit " + ordinal + " not marked as built", buildData.hasBeenBuilt(commit));
 
-        assertEquals("SCM Name should be <" + expectedScmName + ">", expectedScmName, buildData
-                .getScmName());
+        assertEquals("Wrong SCM Name for commit " + ordinal, expectedScmName, buildData.getScmName());
 
         return build.getNumber();
     }
@@ -1642,9 +1643,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             String expectedScmName, GitSCM git) throws Exception {
 
         final BuildData buildData = git.getBuildData(project.getBuildByNumber(buildNumber));
-        System.out.println(buildData.toString());
-        assertEquals("SCM Name should be " + expectedScmName, expectedScmName, buildData
-                .getScmName());
+        assertEquals("Wrong SCM Name", expectedScmName, buildData.getScmName());
     }
 
     /**
