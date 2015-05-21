@@ -974,9 +974,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 cmd.execute();
             } catch (GitException ex) {
-                String message = "Error cloning remote repo '" + rc.getName() + "'";
-                ex.printStackTrace(listener.error(message));
-                throw new AbortException(message);
+                ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
+                throw new AbortException();
             }
         }
 
@@ -986,9 +985,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             } catch (GitException ex) {
                 /* Allow retry by throwing AbortException instead of
                  * GitException. See JENKINS-20531. */
-                String message = "Error fetching remote repo '" + remoteRepository.getName() + "'";
-                ex.printStackTrace(listener.error(message));
-                throw new AbortException(message);
+                ex.printStackTrace(listener.error("Error fetching remote repo '" + remoteRepository.getName() + "'"));
+                throw new AbortException();
             }
         }
     }
