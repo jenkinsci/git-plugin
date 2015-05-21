@@ -79,7 +79,11 @@ public class RhodeCode extends GitRepositoryBrowser {
         URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "files/" + changeSet.getParentCommit().toString() + '/' + path.getPath());
+            String parentCommit = changeSet.getParentCommit();
+            if (parentCommit == null) {
+                parentCommit = ".";
+            }
+            return new URL(url, url.getPath() + "files/" + parentCommit + '/' + path.getPath());
         } else {
             return new URL(url, url.getPath() + "files/" + changeSet.getId().toString() + '/' + path.getPath());
         }
