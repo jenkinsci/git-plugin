@@ -193,7 +193,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     workerThread = null;
                 }
                 catch (GitException ex) {
-                    ex.printStackTrace(listener.error("Error taggin repo '%s' : %s", b, ex.getMessage()));
+                    ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", b, ex.getMessage()));
                     // Failed. Try the next one
                     listener.getLogger().println("Trying next branch");
                 }
