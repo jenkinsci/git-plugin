@@ -22,8 +22,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -39,6 +37,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
+    protected boolean expectChanges = false;
         
     @Override
     protected void tearDown() throws Exception
@@ -59,6 +58,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        expectChanges = false;
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
         tempAllocator = new TemporaryDirectoryAllocator();
@@ -68,7 +68,9 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     protected abstract EnforceGitClient getGitClient();
     
     protected abstract boolean isDisableRemotePoll();
-    
+
+    protected abstract boolean isChangeExpected();
+
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/master",
@@ -124,7 +126,35 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
-    
+
+    public void testNamespaces_with_namespace3_feature3_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "detached");
+    }
+
+    public void testNamespaces_with_namespace3_feature3_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "a_tests/b_namespace3/feature3",
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "origin/a_tests/b_namespace3/feature3");
+    }
+
+    public void testNamespaces_with_refsHeadsNamespace3_feature3_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "detached");
+    }
+
+    public void testNamespaces_with_refsHeadsNamespace3_feature3_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "refs/heads/a_tests/b_namespace3/feature3",
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "origin/a_tests/b_namespace3/feature3");
+    }
+
     public void testTags_with_TagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagA",
@@ -153,6 +183,20 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "refs/tags/TagBAnnotated");
     }
 
+    public void testCommitAsBranchSpec_feature4_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                "detached");
+    }
+
+    public void testCommitAsBranchSpec_feature4_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "refs/heads/b_namespace3/feature4",
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                "origin/b_namespace3/feature4");
+    }
+
     public void testCommitAsBranchSpec() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), 
@@ -179,7 +223,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         assertNotNull("Job has not been triggered", build1);
 
         PollingResult poll = project.poll(listener);
-        assertFalse("Polling found new changes although nothing new", poll.hasChanges());
+        assertEquals("Expected and actual polling results disagree", isChangeExpected(), poll.hasChanges());
         
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
