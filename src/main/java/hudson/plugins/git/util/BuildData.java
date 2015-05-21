@@ -239,7 +239,8 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return super.toString()+"[scmName="+scmName==null?"<null>":scmName+
+        final String scmNameString = scmName == null ? "<null>" : scmName;
+        return super.toString()+"[scmName="+scmNameString+
                 ",remoteUrls="+remoteUrls+
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
