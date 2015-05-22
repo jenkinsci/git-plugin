@@ -3,16 +3,14 @@ package hudson.plugins.git;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 
+/**
+ * Remote polling and local polling behave differently due to bugs in productive
+ * code which probably cannot be fixed without serious compatibility problems.
+ * The isChangeExpected() method adjusts the tests to the difference between
+ * local and remote polling.
+ */
 public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
 {
-
-    /**
-     * Currently some tests still fail due to bugs in productive code.
-     * TODO: Fix bugs and enable tests.
-     */
-    private boolean SKIP_FAILING_TESTS = true;
-
-    
     @Override
     protected EnforceGitClient getGitClient()
     {
@@ -26,21 +24,8 @@ public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
     }
 
     @Override
-    public void testNamespaces_with_master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
-        super.testNamespaces_with_master();
+    protected boolean isChangeExpected()
+    {
+        return true;
     }
-
-    @Override
-    public void testNamespaces_with_namespace2Master() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
-        super.testNamespaces_with_namespace2Master();
-    }
-    
-    @Override
-    public void testCommitAsBranchSpec() throws Exception {
-        if(SKIP_FAILING_TESTS) return; //TODO Fix productive code
-        super.testCommitAsBranchSpec();
-    }
-    
 }
