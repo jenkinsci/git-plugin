@@ -69,8 +69,6 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     
     protected abstract boolean isDisableRemotePoll();
 
-    protected abstract boolean isChangeExpected();
-
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/master",
@@ -223,7 +221,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         assertNotNull("Job has not been triggered", build1);
 
         PollingResult poll = project.poll(listener);
-        assertEquals("Expected and actual polling results disagree", isChangeExpected(), poll.hasChanges());
+        assertEquals("Expected and actual polling results disagree", false, poll.hasChanges());
         
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
