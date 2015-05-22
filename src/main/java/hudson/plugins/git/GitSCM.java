@@ -545,6 +545,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return j;
     }
 
+    public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
+
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
@@ -588,10 +590,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             // first, check the a canonical git reference is configured
                             if (!branchSpec.matches(head, environment)) {
 
-                                // convert head `refs/*` into shortcut notation `remote/branch`
+                                // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
                                 String name = head;
-                                if (head.startsWith("refs/heads/")) name = remote + "/" + head.substring(11);
-                                else if (head.startsWith("refs/tags/")) name = remote + "/" + head.substring(10);
+                                Matcher matcher = GIT_REF.matcher(head);
+                                if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
                                 else name = remote + "/" + head;
 
                                 if (!branchSpec.matches(name, environment)) continue;
