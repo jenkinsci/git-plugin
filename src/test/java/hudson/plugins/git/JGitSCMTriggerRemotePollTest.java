@@ -26,6 +26,6 @@ public class JGitSCMTriggerRemotePollTest extends SCMTriggerTest
     @Override
     protected boolean isChangeExpected()
     {
-        return true;
+        return false;
     }
 }
