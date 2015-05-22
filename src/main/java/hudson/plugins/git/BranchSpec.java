@@ -60,8 +60,21 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return matches(item, env);
     }
 
-    public boolean matches(String item, EnvVars env) {
-        return getPattern(env).matcher(item).matches();
+    /**
+     * Compare a git branch reference to configured pattern.
+     * <p>
+     * reference uses normalized format `ref/(heads|tags)/xx`
+     * pattern do support
+     * <ul>
+     *     <li>ref/heads/branch</li>
+     *     <li>(remote-name)?/branch</li>
+     *     <li>ref/remotes/branch</li>
+     *     <li>tag</li>
+     *     <li>(commit sha1)</li>
+     * </ul>
+     */
+    public boolean matches(String ref, EnvVars env) {
+        return getPattern(env).matcher(ref).matches();
     }
 
     /**
