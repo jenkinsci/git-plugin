@@ -34,12 +34,20 @@ public class GitChangeSetTest extends HudsonTestCase {
     }
 
     private GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat) {
+        return genChangeSet(authorOrCommitter, useLegacyFormat, true);
+    }
+
+    private GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
         ArrayList<String> lines = new ArrayList<String>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");
         lines.add("commit 123abc456def");
         lines.add("tree 789ghi012jkl");
-        lines.add("parent 345mno678pqr");
+        if (hasParent) {
+            lines.add("parent 345mno678pqr");
+        } else {
+            lines.add("parent ");
+        }
         lines.add("author John Author <jauthor@nospam.com> 1234567 -0600");
         lines.add("committer John Committer <jcommitter@nospam.com> 1234567 -0600");
         lines.add("");
@@ -68,6 +76,12 @@ public class GitChangeSetTest extends HudsonTestCase {
     public void testChangeSet() {
         GitChangeSet changeSet = genChangeSet(false, false);
         assertChangeSet(changeSet);
+    }
+
+    public void testChangeSetNoParent() {
+        GitChangeSet changeSet = genChangeSet(false, false, false);
+        assertChangeSet(changeSet);
+        assertNull(changeSet.getParentCommit());
     }
 
     private void assertChangeSet(GitChangeSet changeSet) {

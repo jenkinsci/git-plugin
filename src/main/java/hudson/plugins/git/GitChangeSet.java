@@ -103,13 +103,13 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 continue;
             if (line.startsWith("commit ")) {
                 String[] split = line.split(" ");
-                if (split.length > 0) this.id = split[1];
+                if (split.length > 1) this.id = split[1];
                 else throw new IllegalArgumentException("Commit has no ID" + lines);
             } else if (line.startsWith("tree ")) {
             } else if (line.startsWith("parent ")) {
                 String[] split = line.split(" ");
                 // parent may be null for initial commit or changelog computed from a shallow clone
-                if (split.length > 0) this.parentCommit = split[1];
+                if (split.length > 1) this.parentCommit = split[1];
             } else if (line.startsWith(PREFIX_COMMITTER)) {
                 Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
                 if (committerMatcher.matches()
