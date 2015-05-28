@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
+import hudson.AbortException;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
@@ -40,6 +41,8 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
@@ -1378,6 +1381,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
                 mergeOptions.setMergeRemote(mergeRemote);
                 mergeOptions.setMergeTarget(mergeOptionsBean.getMergeTarget());
+                mergeOptions.setMergeSource(mergeOptionsBean.getMergeSource());
                 mergeOptions.setMergeStrategy(mergeOptionsBean.getMergeStrategy());
                 mergeOptions.setFastForwardMode(mergeOptionsBean.getFastForwardMode());
             }
@@ -1478,6 +1482,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
         return false;
+    }
+
+    public String getRef(PreBuildMergeOptions options) {
+        final String mergeTarget = options.getMergeTarget();
+        if (StringUtils.isNotBlank(mergeTarget)) {
+            return mergeTarget;
+        } else if (getBranches().size() == 1) {
+            return getBranches().get(0).getName();
+        } else {
+            throw new NotImplementedException(
+                    "Merge target is considered the configured branch to build, but there are multiple. This is not implemented");
+        }
     }
 
     /**

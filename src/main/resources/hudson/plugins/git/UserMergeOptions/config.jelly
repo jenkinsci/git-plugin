@@ -8,7 +8,10 @@
                      +encodeAllInputs('&amp;', this.form, 'repo.url')"/ -->
   </f:entry>
   <f:entry title="${%Branch to merge to}" field="mergeTarget">
-    <f:textbox id="git.mergeTarget" clazz="required"/>
+    <f:textbox id="git.mergeTarget" checkUrl=" 'descriptorByName/UserMergeOptions/checkBranchToMerge/?mergeTarget=' + escape(this.value) + '&amp;mergeSource=' + escape(document.getElementById('git.mergeSource').value) "/>
+  </f:entry>
+  <f:entry title="${%Branch to merge from}" field="mergeSource">
+    <f:textbox id="git.mergeSource" checkUrl=" 'descriptorByName/UserMergeOptions/checkBranchToMerge/?mergeTarget=' + escape(document.getElementById('git.mergeTarget').value) + '&amp;mergeSource=' + escape(this.value) "/>
   </f:entry>
   <f:entry title="Merge strategy" field="mergeStrategy">
       <f:select />

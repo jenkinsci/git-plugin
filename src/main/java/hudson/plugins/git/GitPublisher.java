@@ -228,7 +228,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                     PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
 
-                    String mergeTarget = environment.expand(mergeOptions.getMergeTarget());
+                    String pushTarget = gitSCM.getRef(mergeOptions);
 
                     if (mergeOptions.doMerge() && buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
                         RemoteConfig remote = mergeOptions.getMergeRemote();
@@ -236,10 +236,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         // expand environment variables in remote repository
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
 
-                        listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
+                        listener.getLogger().println("Pushing HEAD to branch " + pushTarget + " of " + remote.getName() + " repository");
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + mergeTarget);
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + pushTarget);
                         if (forcePush) {
                           push.force();
                         }

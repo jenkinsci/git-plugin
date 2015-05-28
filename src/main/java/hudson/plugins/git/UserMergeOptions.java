@@ -4,9 +4,12 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
 
@@ -19,28 +22,32 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     private String mergeRemote;
     private String mergeTarget;
+    private String mergeSource;
     private String mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
-
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
      */
     @Deprecated
-    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
-        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeSource, String mergeStrategy) {
+        this(mergeRemote, mergeTarget, mergeSource, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
     }
-
     @DataBoundConstructor
-    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeSource, String mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
+        this.mergeSource = mergeSource;
         this.mergeStrategy = mergeStrategy;
         this.fastForwardMode = fastForwardMode;
     }
 
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
+        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeSource(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
+    }
+
+    public String getMergeSource() {
+        return mergeSource;
     }
 
     /**
@@ -59,7 +66,13 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     public String getRef() {
-        return mergeRemote + "/" + mergeTarget;
+        final StringBuilder refBuilder = new StringBuilder(mergeRemote).append("/");
+        if (StringUtils.isNotBlank(mergeTarget)) {
+            refBuilder.append(mergeTarget);
+        } else {
+            refBuilder.append(mergeSource);
+        }
+        return refBuilder.toString();
     }
 
     public MergeCommand.Strategy getMergeStrategy() {
@@ -81,6 +94,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return "UserMergeOptions{" +
                 "mergeRemote='" + mergeRemote + '\'' +
                 ", mergeTarget='" + mergeTarget + '\'' +
+                ", mergeSource='" + mergeSource + '\'' +
                 ", mergeStrategy='" + mergeStrategy + '\'' +
                 ", fastForwardMode='" + fastForwardMode + '\'' +
                 '}';
@@ -97,11 +111,14 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                     || (mergeRemote == null && that.mergeRemote == null)) {
                 if ((mergeTarget != null && mergeTarget.equals(that.mergeTarget))
                         || (mergeTarget == null && that.mergeTarget == null)) {
-                    if ((mergeStrategy != null && mergeStrategy.equals(that.mergeStrategy))
-                            || (mergeStrategy == null && that.mergeStrategy == null)) {
-                        if ((fastForwardMode != null && fastForwardMode.equals(that.fastForwardMode))
-                                || (fastForwardMode == null && that.fastForwardMode == null)) {
-                            return true;
+                    if ((mergeSource != null && mergeSource.equals(that.mergeTarget))
+                            || (mergeSource == null && that.mergeSource == null)) {
+                        if ((mergeStrategy != null && mergeStrategy.equals(that.mergeStrategy))
+                                || (mergeStrategy == null && that.mergeStrategy == null)) {
+                            if ((fastForwardMode != null && fastForwardMode.equals(that.fastForwardMode))
+                                    || (fastForwardMode == null && that.fastForwardMode == null)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -115,6 +132,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     public int hashCode() {
         int result = mergeRemote != null ? mergeRemote.hashCode() : 0;
         result = 31 * result + (mergeTarget != null ? mergeTarget.hashCode() : 0);
+        result = 31 * result + (mergeSource != null ? mergeSource.hashCode() : 0);
         result = 31 * result + (mergeStrategy != null ? mergeStrategy.hashCode() : 0);
         result = 31 * result + (fastForwardMode != null ? fastForwardMode.hashCode() : 0);
         return result;
@@ -133,6 +151,16 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
             for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
                 m.add(strategy.toString(), strategy.toString());
             return m;
+        }
+
+        public FormValidation doCheckBranchToMerge(@QueryParameter String mergeTarget, @QueryParameter String mergeSource) {
+            if (StringUtils.isBlank(mergeTarget) && StringUtils.isBlank(mergeSource)) {
+                return FormValidation.error("Either Branch to merge to or Branch to merge from is required.");
+            }
+            if (StringUtils.isNotBlank(mergeTarget) && StringUtils.isNotBlank(mergeSource)) {
+                return FormValidation.error("One of Branch to merge to or Branch to merge from can be defined. Not both.");
+            }
+            return FormValidation.ok();
         }
     }
 }

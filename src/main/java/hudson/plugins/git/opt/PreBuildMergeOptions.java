@@ -22,16 +22,26 @@ public class PreBuildMergeOptions implements Serializable {
     public RemoteConfig mergeRemote = null;
 
     /**
-     * Remote ref to merge.
+     * Remote ref to merge to.
      */
     public String mergeTarget = null;
-
+    /**
+     * Remote ref to merge from.
+     */
+    public String mergeSource = null;
     /**
      * Merge strategy.
      */
     public String mergeStrategy = MergeCommand.Strategy.DEFAULT.toString();
-
     public MergeCommand.GitPluginFastForwardMode fastForwardMode = MergeCommand.GitPluginFastForwardMode.FF;
+
+    public String getMergeSource() {
+        return mergeSource;
+    }
+
+    public void setMergeSource(String mergeSource) {
+        this.mergeSource = mergeSource;
+    }
 
     public RemoteConfig getMergeRemote() {
         return mergeRemote;
@@ -80,6 +90,14 @@ public class PreBuildMergeOptions implements Serializable {
     }
 
     public boolean doMerge() {
+        return mergeToTarget() || mergeFromSource();
+    }
+
+    public boolean mergeToTarget() {
         return mergeTarget != null;
+    }
+
+    public boolean mergeFromSource() {
+        return mergeSource != null;
     }
 }
