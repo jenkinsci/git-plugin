@@ -60,8 +60,21 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return matches(item, env);
     }
 
-    public boolean matches(String item, EnvVars env) {
-        return getPattern(env).matcher(item).matches();
+    /**
+     * Compare a git branch reference to configured pattern.
+     * <p>
+     * reference uses normalized format `ref/(heads|tags)/xx`
+     * pattern do support
+     * <ul>
+     *     <li>ref/heads/branch</li>
+     *     <li>(remote-name)?/branch</li>
+     *     <li>ref/remotes/branch</li>
+     *     <li>tag</li>
+     *     <li>(commit sha1)</li>
+     * </ul>
+     */
+    public boolean matches(String ref, EnvVars env) {
+        return getPattern(env).matcher(ref).matches();
     }
 
     /**
@@ -110,26 +123,28 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             String regexSubstring = expandedName.substring(1, expandedName.length());
             return Pattern.compile(regexSubstring);
         }
-        
-        // if an unqualified branch was given add a "*/" so it will match branches
-        // from remote repositories as the user probably intended
-        String qualifiedName;
-        if (!expandedName.contains("**") && !expandedName.contains("/"))
-            qualifiedName = "*/" + expandedName;
-        else
-            qualifiedName = expandedName;
-        
+
         // build a pattern into this builder
         StringBuilder builder = new StringBuilder();
 
         // for legacy reasons (sic) we do support various branch spec format to declare remotes / branches
-        builder.append("(refs/heads/|refs/remotes/|remotes/)?");
+        builder.append("(refs/heads/");
+
+
+        // if an unqualified branch was given, consider all remotes (with various possible syntaxes)
+        // so it will match branches from  any remote repositories as the user probably intended
+        if (!expandedName.contains("**") && !expandedName.contains("/")) {
+            builder.append("|refs/remotes/[^/]+/|remotes/[^/]+/|[^/]+/");
+        } else {
+            builder.append("|refs/remotes/|remotes/");
+        }
+        builder.append(")?");
         
         // was the last token a wildcard?
         boolean foundWildcard = false;
         
         // split the string at the wildcards
-        StringTokenizer tokenizer = new StringTokenizer(qualifiedName, "*", true);
+        StringTokenizer tokenizer = new StringTokenizer(expandedName, "*", true);
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
             

@@ -12,7 +12,7 @@ public class TestBranchSpec extends TestCase {
         BranchSpec l = new BranchSpec("master");
         Assert.assertTrue(l.matches("origin/master"));
         Assert.assertFalse(l.matches("origin/something/master"));
-        Assert.assertFalse(l.matches("master"));
+        Assert.assertTrue(l.matches("master"));
         Assert.assertFalse(l.matches("dev"));
         
         
@@ -67,7 +67,7 @@ public class TestBranchSpec extends TestCase {
         BranchSpec l = new BranchSpec("${master}");
         Assert.assertTrue(l.matches("origin/master", env));
         Assert.assertFalse(l.matches("origin/something/master", env));
-        Assert.assertFalse(l.matches("master", env));
+        Assert.assertTrue(l.matches("master", env));
         Assert.assertFalse(l.matches("dev", env));
 
 

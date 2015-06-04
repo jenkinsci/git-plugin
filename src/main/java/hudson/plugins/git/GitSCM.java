@@ -545,6 +545,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return j;
     }
 
+    public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
+
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
@@ -583,22 +585,28 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     for (BranchSpec branchSpec : getBranches()) {
                         for (Entry<String, ObjectId> entry : heads.entrySet()) {
                             final String head = entry.getKey();
-                            String name;
                             // head is "refs/(heads|tags)/branchName
-                            if (head.startsWith("refs/heads/")) name = remote + "/" + head.substring(11);
-                            else if (head.startsWith("refs/tags/")) name = remote + "/" + head.substring(10);
-                            else name = remote + "/" + head;
 
-                            if (!branchSpec.matches(name, environment)) continue;
+                            // first, check the a canonical git reference is configured
+                            if (!branchSpec.matches(head, environment)) {
+
+                                // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
+                                String name = head;
+                                Matcher matcher = GIT_REF.matcher(head);
+                                if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
+                                else name = remote + "/" + head;
+
+                                if (!branchSpec.matches(name, environment)) continue;
+                            }
 
                             final ObjectId sha1 = entry.getValue();
                             Build built = buildData.getLastBuild(sha1);
                             if (built != null) {
-                                listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
+                                listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
                                 continue;
                             }
 
-                            listener.getLogger().println("[poll] Latest remote head revision on " + name + " is: " + sha1.getName());
+                            listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
                             return BUILD_NOW;
                         }
                     }
