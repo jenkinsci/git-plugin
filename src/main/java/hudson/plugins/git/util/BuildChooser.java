@@ -13,6 +13,7 @@ import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -164,4 +165,22 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     }
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * In a general case, a working tree is a left-over from the previous build, so it can be quite
+     * messed up (such as HEAD pointing to a random branch). This method is responsible to bring the
+     * working copy to a predictable clean state where candidate revisions can be evaluated.
+     * <p>
+     * Typical use-case is a BuildChooser which do handle pull-request merge for validation. Such a
+     * BuildChooser will run the merge on working copy, and expose the merge commit as
+     * {@link BuildChooser#getCandidateRevisions(boolean, String, org.jenkinsci.plugins.gitclient.GitClient, hudson.model.TaskListener, BuildData, BuildChooserContext)}
+     *
+     * @param git client to execute git commands on working tree
+     * @param listener build log
+     * @param context back-channel to master so implementation can interact with Jenkins model
+     */
+    @ParametersAreNonnullByDefault
+    public void prepareWorkingTree(GitClient git, TaskListener listener, BuildChooserContext context) throws IOException,InterruptedException {
+        // Nop
+    }
 }

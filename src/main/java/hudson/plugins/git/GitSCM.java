@@ -892,6 +892,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         Collection<Revision> candidates = Collections.EMPTY_LIST;
+        final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
+        getBuildChooser().prepareWorkingTree(git, listener, context);
+
 
         // every MatrixRun should build the same marked commit ID
         if (build instanceof MatrixRun) {
@@ -917,7 +920,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (candidates.isEmpty() ) {
             final String singleBranch = environment.expand( getSingleBranch(environment) );
 
-            final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
             candidates = getBuildChooser().getCandidateRevisions(
                     false, singleBranch, git, listener, buildData, context);
         }
