@@ -11,7 +11,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -22,11 +21,26 @@ public class GitLab extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     private final double version;
+    
+    /* package */
+    static final double DEFAULT_VERSION = 7.11;
 
     @DataBoundConstructor
     public GitLab(String repoUrl, String version) {
         super(repoUrl);
-        this.version = Double.valueOf(version);
+        double tmpVersion;
+        try {
+            tmpVersion = Double.valueOf(version);
+            if (tmpVersion < 0
+                    || tmpVersion > DEFAULT_VERSION
+                    || Double.isNaN(tmpVersion)
+                    || Double.isInfinite(tmpVersion)) {
+                tmpVersion = DEFAULT_VERSION;
+            }
+        } catch (NumberFormatException nfe) {
+            tmpVersion = DEFAULT_VERSION;
+        }
+        this.version = tmpVersion;
     }
 
     public double getVersion() {
@@ -44,9 +58,7 @@ public class GitLab extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        String  commitPrefix;
-
-        return new URL(getUrl(), calculatePrefix() + changeSet.getId().toString());
+        return new URL(getUrl(), calculatePrefix() + changeSet.getId());
     }
 
     /**
@@ -62,7 +74,7 @@ public class GitLab extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(getUrl(), calculatePrefix() + changeSet.getId().toString() + "#" + path.getPath());
+        return new URL(getUrl(), calculatePrefix() + changeSet.getId() + "#" + path.getPath());
     }
 
     /**

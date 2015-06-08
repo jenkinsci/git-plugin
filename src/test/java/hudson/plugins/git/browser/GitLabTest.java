@@ -7,7 +7,6 @@ import hudson.plugins.git.GitChangeSet.Path;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -23,15 +22,32 @@ public class GitLabTest extends TestCase {
     private final GitLab gitlab42 = new GitLab(GITLAB_URL, "4.2");
     private final GitLab gitlab50 = new GitLab(GITLAB_URL, "5.0");
     private final GitLab gitlab51 = new GitLab(GITLAB_URL, "5.1");
+    private final GitLab gitlab711 = new GitLab(GITLAB_URL, "7.11");
+    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11.4.ee");
+    private final GitLab gitlabDefault = new GitLab(GITLAB_URL, "");
+    private final GitLab gitlabNaN = new GitLab(GITLAB_URL, "NaN");
+    private final GitLab gitlabInfinity = new GitLab(GITLAB_URL, "Infinity");
+    private final GitLab gitlabNegative = new GitLab(GITLAB_URL, "-1");
+    private final GitLab gitlabGreater = new GitLab(GITLAB_URL, "9999");
+
+    private final String SHA1 = "396fc230a3db05c427737aa5c2eb7856ba72b05d";
+    private final String fileName = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
 
     /**
      * Test method for {@link hudson.plugins.git.browser.GitLab#getVersion()}.
      */
     public void testGetVersion() {
-        assertEquals(gitlab29.getVersion(), 2.9);
-        assertEquals(gitlab42.getVersion(), 4.2);
-        assertEquals(gitlab50.getVersion(), 5.0);
-        assertEquals(gitlab51.getVersion(), 5.1);
+        assertEquals(2.9, gitlab29.getVersion());
+        assertEquals(4.2, gitlab42.getVersion());
+        assertEquals(5.0, gitlab50.getVersion());
+        assertEquals(5.1, gitlab51.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlab711.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlab7114ee.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabNegative.getVersion());
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabGreater.getVersion());
     }
 
     /**
@@ -39,14 +55,19 @@ public class GitLabTest extends TestCase {
      * @throws IOException
      */
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
-        assertEquals(GITLAB_URL + "commits/396fc230a3db05c427737aa5c2eb7856ba72b05d",
-                     gitlab29.getChangeSetLink(createChangeSet("rawchangelog")).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
-                     gitlab42.getChangeSetLink(createChangeSet("rawchangelog")).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
-                     gitlab50.getChangeSetLink(createChangeSet("rawchangelog")).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d",
-                     gitlab51.getChangeSetLink(createChangeSet("rawchangelog")).toString());
+        final GitChangeSet changeSet = createChangeSet("rawchangelog");
+        final String expectedURL = GITLAB_URL + "commit/" + SHA1;
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlab42.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlab50.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlab51.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlab711.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlab7114ee.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlabDefault.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlabNaN.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlabInfinity.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlabNegative.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL, gitlabGreater.getChangeSetLink(changeSet).toString());
     }
 
     /**
@@ -55,15 +76,19 @@ public class GitLabTest extends TestCase {
      */
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
-        final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(GITLAB_URL + "commits/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab29.getDiffLink(modified1).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab42.getDiffLink(modified1).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab50.getDiffLink(modified1).toString());
-        assertEquals(GITLAB_URL + "commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab51.getDiffLink(modified1).toString());
+        final Path modified1 = pathMap.get(fileName);
+        final String expectedURL = GITLAB_URL + "commit/" + SHA1 + "#" + fileName;
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlab42.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlab50.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlab51.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlab711.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlab7114ee.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlabDefault.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlabNaN.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlabInfinity.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlabNegative.getDiffLink(modified1).toString());
+        assertEquals(expectedURL, gitlabGreater.getDiffLink(modified1).toString());
     }
 
     /**
@@ -72,15 +97,21 @@ public class GitLabTest extends TestCase {
      */
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
-        final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(GITLAB_URL + "tree/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab29.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "tree/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab42.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab50.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java",
-                     gitlab51.getFileLink(path).toString());
+        final Path path = pathMap.get(fileName);
+        final String expectedURL = GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/" + fileName;
+        final String expectedV29 = expectedURL.replace("blob/", "tree/");
+        final String expectedV50 = GITLAB_URL + "396fc230a3db05c427737aa5c2eb7856ba72b05d/tree/" + fileName;
+        assertEquals(expectedV29, gitlab29.getFileLink(path).toString());
+        assertEquals(expectedV29, gitlab42.getFileLink(path).toString());
+        assertEquals(expectedV50, gitlab50.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab51.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab711.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab7114ee.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabDefault.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabNaN.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabInfinity.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabNegative.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabGreater.getFileLink(path).toString());
     }
 
     /**
@@ -90,14 +121,11 @@ public class GitLabTest extends TestCase {
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
-        assertEquals(GITLAB_URL + "commits/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
-                     gitlab29.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
-                     gitlab42.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
-                     gitlab50.getFileLink(path).toString());
-        assertEquals(GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar",
-                     gitlab51.getFileLink(path).toString());
+        final String expectedURL = GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar";
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab42.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab50.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab51.getFileLink(path).toString());
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
