@@ -59,6 +59,11 @@ import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jvnet.hudson.test.Issue;
 
+import org.mockito.Mockito;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
@@ -1675,6 +1680,43 @@ public class GitSCMTest extends AbstractGitTestCase {
         notifyAndCheckBranch(project, commit1, branchName, 1, git);
     }
 
+    /* A null pointer exception was detected because the plugin failed to
+     * write a branch name to the build data, so there was a SHA1 recorded 
+     * in the build data, but no branch name.
+     */
+    public void testNoNullPointerExceptionWithNullBranch() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+        /* This is the null that causes NPE */
+        Branch branch = new Branch(null, sha1);
+
+        List<Branch> branchList = new ArrayList<Branch>();
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        /* BuildData mock that will use the Revision with null branch name */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<BuildData>();
+        buildDataList.add(buildData);
+
+        /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.buildEnvVars(build, new EnvVars()); // NPE here before fix applied
+
+        /* Verify mocks were called as expected */
+        verify(buildData, times(1)).getLastBuiltRevision();
+        verify(buildData, times(1)).hasBeenReferenced(anyString());
+        verify(build, times(1)).getActions(BuildData.class);
+    }
 
     @Issue("JENKINS-17348")
     public void testPurgeDeletedBranch() throws Exception {
