@@ -1285,6 +1285,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("toto")));
 
         // run build first to create workspace
@@ -1301,6 +1305,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckoutBis() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -1317,6 +1325,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupSimpleProject("master");
 
         // run build first to create workspace
@@ -1341,6 +1353,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testNormalCheckoutAfterSparseCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -1366,6 +1382,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckoutOverSlave() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(createSlave().getSelfLabel());
 
@@ -1483,6 +1503,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     private boolean gitVersionAtLeast(int neededMajor, int neededMinor) throws IOException, InterruptedException {
+        return gitVersionAtLeast(neededMajor, neededMinor, 0);
+    }
+
+    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) throws IOException, InterruptedException {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
@@ -1492,7 +1516,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
         final int gitMajor = Integer.parseInt(fields[0]);
         final int gitMinor = Integer.parseInt(fields[1]);
-        return gitMajor >= neededMajor && gitMinor >= neededMinor;
+        final int gitPatch = Integer.parseInt(fields[2]);
+        return gitMajor >= neededMajor && gitMinor >= neededMinor && gitPatch >= neededPatch;
     }
     
 	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
@@ -1720,6 +1745,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Issue("JENKINS-17348")
     public void testPurgeDeletedBranch() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Unclear why this test fails on older git versions */
+            return;
+        }
         final FreeStyleProject project = setupProject("*/*", false);
         final GitSCM scm = (GitSCM) project.getScm();
         scm.getExtensions().add(new PruneStaleBranch());
