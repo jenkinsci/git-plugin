@@ -46,8 +46,8 @@ public class GitLabTest extends TestCase {
         assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion());
         assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion());
         assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabNegative.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabGreater.getVersion());
+        assertEquals(-1.0, gitlabNegative.getVersion());
+        assertEquals(9999.0, gitlabGreater.getVersion());
     }
 
     /**
@@ -66,7 +66,7 @@ public class GitLabTest extends TestCase {
         assertEquals(expectedURL, gitlabDefault.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabNaN.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabInfinity.getChangeSetLink(changeSet).toString());
-        assertEquals(expectedURL, gitlabNegative.getChangeSetLink(changeSet).toString());
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlabNegative.getChangeSetLink(changeSet).toString());
         assertEquals(expectedURL, gitlabGreater.getChangeSetLink(changeSet).toString());
     }
 
@@ -87,7 +87,7 @@ public class GitLabTest extends TestCase {
         assertEquals(expectedURL, gitlabDefault.getDiffLink(modified1).toString());
         assertEquals(expectedURL, gitlabNaN.getDiffLink(modified1).toString());
         assertEquals(expectedURL, gitlabInfinity.getDiffLink(modified1).toString());
-        assertEquals(expectedURL, gitlabNegative.getDiffLink(modified1).toString());
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlabNegative.getDiffLink(modified1).toString());
         assertEquals(expectedURL, gitlabGreater.getDiffLink(modified1).toString());
     }
 
@@ -110,7 +110,7 @@ public class GitLabTest extends TestCase {
         assertEquals(expectedURL, gitlabDefault.getFileLink(path).toString());
         assertEquals(expectedURL, gitlabNaN.getFileLink(path).toString());
         assertEquals(expectedURL, gitlabInfinity.getFileLink(path).toString());
-        assertEquals(expectedURL, gitlabNegative.getFileLink(path).toString());
+        assertEquals(expectedV29, gitlabNegative.getFileLink(path).toString());
         assertEquals(expectedURL, gitlabGreater.getFileLink(path).toString());
     }
 
@@ -126,6 +126,13 @@ public class GitLabTest extends TestCase {
         assertEquals(expectedURL, gitlab42.getFileLink(path).toString());
         assertEquals(expectedURL, gitlab50.getFileLink(path).toString());
         assertEquals(expectedURL, gitlab51.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab711.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlab7114ee.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabDefault.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabNaN.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabInfinity.getFileLink(path).toString());
+        assertEquals(expectedURL.replace("commit/", "commits/"), gitlabNegative.getFileLink(path).toString());
+        assertEquals(expectedURL, gitlabGreater.getFileLink(path).toString());
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
