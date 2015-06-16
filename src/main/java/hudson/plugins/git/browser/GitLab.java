@@ -6,12 +6,15 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
+import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.URL;
+import javax.servlet.ServletException;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Git Browser for GitLab
@@ -21,22 +24,27 @@ public class GitLab extends GitRepositoryBrowser {
     private static final long serialVersionUID = 1L;
 
     private final double version;
-    
+
     /* package */
     static final double DEFAULT_VERSION = 7.11;
+
+    private static double valueOfVersion(String version) throws NumberFormatException {
+        double tmpVersion = Double.valueOf(version);
+        if (Double.isNaN(tmpVersion)) {
+            throw new NumberFormatException("Version cannot be NaN (not a number)");
+        }
+        if (Double.isInfinite(tmpVersion)) {
+            throw new NumberFormatException("Version cannot be infinite");
+        }
+        return tmpVersion;
+    }
 
     @DataBoundConstructor
     public GitLab(String repoUrl, String version) {
         super(repoUrl);
         double tmpVersion;
         try {
-            tmpVersion = Double.valueOf(version);
-            if (tmpVersion < 0
-                    || tmpVersion > DEFAULT_VERSION
-                    || Double.isNaN(tmpVersion)
-                    || Double.isInfinite(tmpVersion)) {
-                tmpVersion = DEFAULT_VERSION;
-            }
+            tmpVersion = valueOfVersion(version);
         } catch (NumberFormatException nfe) {
             tmpVersion = DEFAULT_VERSION;
         }
@@ -111,6 +119,27 @@ public class GitLab extends GitRepositoryBrowser {
         @Override
         public GitLab newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
             return req.bindJSON(GitLab.class, jsonObject);
+        }
+
+        /**
+         * Validate the contents of the version field.
+         *
+         * @param version gitlab version value entered by the user
+         * @return validation result, either ok() or error(msg)
+         * @throws IOException
+         * @throws ServletException
+         */
+        public FormValidation doCheckVersion(@QueryParameter(fixEmpty = true) final String version)
+                throws IOException, ServletException {
+            if (version == null) {
+                return FormValidation.error("Version is required");
+            }
+            try {
+                valueOfVersion(version);
+            } catch (NumberFormatException nfe) {
+                return FormValidation.error("Can't convert '" + version + "' to a number: " + nfe.getMessage());
+            }
+            return FormValidation.ok();
         }
     }
 
