@@ -62,6 +62,7 @@ public class TestBranchSpec extends TestCase {
         envMap.put("mybranch", "my.branch");
         envMap.put("anyLong", "**");
         envMap.put("anyShort", "*");
+        envMap.put("anyEmpty", "");
         EnvVars env = new EnvVars(envMap);
 
         BranchSpec l = new BranchSpec("${master}");
@@ -103,6 +104,12 @@ public class TestBranchSpec extends TestCase {
 
         Assert.assertTrue(p.matches("origin/x", env));
         Assert.assertFalse(p.matches("origin/my-branch/b1", env));
+
+        BranchSpec q = new BranchSpec("${anyEmpty}");
+
+        Assert.assertTrue(q.matches("origin/my.branch/b1", env));
+        Assert.assertTrue(q.matches("origin/my-branch/b1", env));
+        Assert.assertTrue(q.matches("remote/origin/my.branch/b1", env));
     }
 
     public void testEmptyName() {
