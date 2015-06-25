@@ -27,6 +27,7 @@ import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
 import org.kohsuke.stapler.AncestorInPath;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
     private static final long serialVersionUID = 1L;
@@ -370,20 +372,31 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                         // expand environment variables in remote repository
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        remoteURI = remote.getURIs().get(0);
 
                         listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
-                        if ( noteReplace )
-                            git.addNote(    noteMsg, noteNamespace );
-                        else
-                            git.appendNote( noteMsg, noteNamespace );
+                        for (int i = 0;; ++i) {
+                            RefSpec notesRef = new RefSpec("+refs/notes/*:refs/notes/*");
+                            git.fetch_().from(remoteURI, Collections.singletonList(notesRef)).execute();
+                            if ( noteReplace )
+                                git.addNote(    noteMsg, noteNamespace );
+                            else
+                                git.appendNote( noteMsg, noteNamespace );
 
-                        remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
-                        if (forcePush) {
-                          push.force();
+                            PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
+                            try {
+                                if (forcePush) {
+                                    push.force();
+                                }
+                                push.execute();
+                            } catch (GitException e) {
+                                e.printStackTrace(listener.error("Failed to add note (retrying): \n" + noteMsg  + "\n******"));
+                                if (i < 3) continue;
+                                else throw e;
+                            }
+                            break;
                         }
-                        push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
                         return false;
