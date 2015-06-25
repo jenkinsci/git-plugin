@@ -574,6 +574,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
+                List<RefSpec> refSpecs = getRefSpecs(remoteConfig, environment);
+
                 for (URIish urIish : remoteConfig.getURIs()) {
                     String gitRepo = urIish.toString();
                     Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
@@ -582,10 +584,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         return BUILD_NOW;
                     }
 
+                    listener.getLogger().println("Found "+ heads.size() +" remote heads on " + urIish);
+
+                    Iterator<Entry<String, ObjectId>> it = heads.entrySet().iterator();
+                    while (it.hasNext()) {
+                        String head = it.next().getKey();
+                        for (RefSpec spec : refSpecs) {
+                            if (!spec.matchSource(head)) {
+                                listener.getLogger().println("Ignoring " + head + " as it doesn't match configured refspecs");
+                                it.remove();
+                                break;
+                            }
+                        }
+                    }
+
+
                     for (BranchSpec branchSpec : getBranches()) {
                         for (Entry<String, ObjectId> entry : heads.entrySet()) {
                             final String head = entry.getKey();
-                            // head is "refs/(heads|tags)/branchName
+                            // head is "refs/(heads|tags|whatever)/branchName
 
                             // first, check the a canonical git reference is configured
                             if (!branchSpec.matches(head, environment)) {
