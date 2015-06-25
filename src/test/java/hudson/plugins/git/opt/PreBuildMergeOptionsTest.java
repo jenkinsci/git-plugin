@@ -30,12 +30,13 @@ import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
-import java.util.Collections;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.junit.Test;
 import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.Collections;
 
 public class PreBuildMergeOptionsTest {
 
@@ -44,7 +45,7 @@ public class PreBuildMergeOptionsTest {
     @Issue("JENKINS-9843")
     @Test public void exporting() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
-        p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.<GitSCMExtension>singletonList(new PreBuildMerge(new UserMergeOptions("repo", "master", MergeCommand.Strategy.DEFAULT.name(), MergeCommand.GitPluginFastForwardMode.FF)))));
+        p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.<GitSCMExtension>singletonList(new PreBuildMerge(new UserMergeOptions("repo", "master", null, MergeCommand.Strategy.DEFAULT.name(), MergeCommand.GitPluginFastForwardMode.FF)))));
         r.createWebClient().goToXml(p.getUrl() + "api/xml?depth=2");
     }
 

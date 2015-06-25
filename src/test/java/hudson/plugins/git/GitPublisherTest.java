@@ -148,7 +148,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF)));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null, MergeCommand.GitPluginFastForwardMode.FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
@@ -232,7 +232,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
@@ -320,7 +320,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF_ONLY)));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null, MergeCommand.GitPluginFastForwardMode.FF_ONLY)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 

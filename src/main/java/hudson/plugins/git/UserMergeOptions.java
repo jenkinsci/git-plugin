@@ -46,6 +46,10 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeSource(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
     }
 
+    /**
+     * Ref in the repository that becomes the input of the merge. The publisher will not push to this branch.
+     * Normally a branch name like 'master'.
+     */
     public String getMergeSource() {
         return mergeSource;
     }
@@ -58,7 +62,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     /**
-     * Ref in the repository that becomes the input of the merge.
+     * Ref in the repository that becomes the input of the merge. The publisher will push to this branch.
      * Normally a branch name like 'master'.
      */
     public String getMergeTarget() {
@@ -111,7 +115,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                     || (mergeRemote == null && that.mergeRemote == null)) {
                 if ((mergeTarget != null && mergeTarget.equals(that.mergeTarget))
                         || (mergeTarget == null && that.mergeTarget == null)) {
-                    if ((mergeSource != null && mergeSource.equals(that.mergeTarget))
+                    if ((mergeSource != null && mergeSource.equals(that.mergeSource))
                             || (mergeSource == null && that.mergeSource == null)) {
                         if ((mergeStrategy != null && mergeStrategy.equals(that.mergeStrategy))
                                 || (mergeStrategy == null && that.mergeStrategy == null)) {
