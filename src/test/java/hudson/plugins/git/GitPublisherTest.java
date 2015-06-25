@@ -39,6 +39,7 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -46,6 +47,7 @@ import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.Issue;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -617,6 +619,49 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertEquals(build1Head, testRepo.git.revParse(Constants.HEAD).name());
         assertEquals("Wrong head commit in build1", topicCommit.getName(), build1Head);
 
+    }
+
+    @Bug(23082)
+    public void testMergeNotes() throws Exception{
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("origin/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        String note_content = "Test Note";
+
+        project.getPublishersList().add(new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.<BranchToPush>emptyList(),
+                Collections.singletonList(new NoteToPush("origin", note_content, Constants.R_NOTES_COMMITS, false)),
+                false, false, false));
+
+        commit("commitFile", johnDoe, "Initial Commit");
+
+        build(project, Result.SUCCESS, "commitFile");
+        testRepo.git.appendNote(note_content + "1", Constants.R_NOTES_COMMITS);
+        build(project, Result.SUCCESS, "commitFile");
+
+        String expected = Constants.R_NOTES + "expected";
+
+        testRepo.git.appendNote(note_content, expected);
+        testRepo.git.appendNote(note_content + "1", expected);
+        testRepo.git.appendNote(note_content, expected);
+
+        ObjectId head = testRepo.git.revParse(Constants.HEAD);
+
+        testRepo.git.checkout().ref(Constants.R_NOTES_COMMITS).execute();
+        String a = FileUtils.readFileToString(new File(testRepo.gitDir, head.name()));
+
+        testRepo.git.checkout().ref(expected).execute();
+        String b = FileUtils.readFileToString(new File(testRepo.gitDir, head.name()));
+
+        assertEquals(a, b);
     }
 
     private boolean existsTag(String tag) throws InterruptedException {
