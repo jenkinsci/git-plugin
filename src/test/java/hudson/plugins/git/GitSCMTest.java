@@ -1428,6 +1428,29 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
     }
 
+    @Issue("JENKINS-29066")
+    public void testPolling_parentHead() throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("**")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        // commit something in order to create an initial base version in git
+        commit("toto/commitFile1", johnDoe, "Commit number 1");
+        git.branch("someBranch");
+        commit("toto/commitFile2", johnDoe, "Commit number 2");
+
+        // build the project
+        build(project, Result.SUCCESS);
+
+        assertFalse("polling should not detect changes",project.poll(listener).hasChanges());
+    }
+
     public void testPollingAfterManualBuildWithParametrizedBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
