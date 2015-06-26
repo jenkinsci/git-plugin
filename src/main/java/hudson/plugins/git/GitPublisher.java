@@ -25,11 +25,13 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -376,24 +378,38 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
                         listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
 
-                        for (int i = 0;; ++i) {
-                            RefSpec notesRef = new RefSpec("+refs/notes/*:refs/notes/*");
-                            git.fetch_().from(remoteURI, Collections.singletonList(notesRef)).execute();
+                        // this needs the wildcards for prune to work
+                        RefSpec notesRef = new RefSpec("+refs/notes/*:refs/notes/*");
+                        // without prune it may not be consistent if the ref has been removed from the remote
+                        FetchCommand fetch = git.fetch_().prune().from(remoteURI, Collections.singletonList(notesRef));
+                        fetch.execute();
+                        ObjectId notesId = git.refExists(noteNamespace) ? git.revParse(noteNamespace) : ObjectId.zeroId();
+                        for (;;) {
                             if ( noteReplace )
                                 git.addNote(    noteMsg, noteNamespace );
                             else
                                 git.appendNote( noteMsg, noteNamespace );
 
-                            PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
+                            // HACK: test for retry logic
+                            // ***Don't uncomment except for testing***
+                            //git.addNote("blah", "refs/notes/test");
+                            //git.push().to(remoteURI).ref("refs/notes/test:" + noteNamespace).force().execute();
+
+                            PushCommand push = git.push().to(remoteURI).ref(noteNamespace);
                             try {
                                 if (forcePush) {
                                     push.force();
                                 }
                                 push.execute();
                             } catch (GitException e) {
-                                e.printStackTrace(listener.error("Failed to add note (retrying): \n" + noteMsg  + "\n******"));
-                                if (i < 3) continue;
-                                else throw e;
+                                fetch.execute();
+                                ObjectId id = git.revParse(noteNamespace);
+                                listener.getLogger().println("Notes ref \nWas: " + notesId + "\nNow: " + id + "\nRetrying");
+                                if (id != notesId) {
+                                    listener.getLogger().println("Notes ref has changed \nWas: " + notesId + "\nNow: " + id + "\nRetrying");
+                                    notesId = id;
+                                    continue;
+                                } else throw e;
                             }
                             break;
                         }
