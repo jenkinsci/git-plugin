@@ -26,7 +26,7 @@ public class CloneOption extends GitSCMExtension {
     private final Integer timeout;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
-        this(shallow, true, reference, timeout);
+        this(shallow, false, reference, timeout);
     }
 
     @DataBoundConstructor
