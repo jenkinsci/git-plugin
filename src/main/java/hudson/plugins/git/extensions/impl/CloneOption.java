@@ -20,13 +20,19 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class CloneOption extends GitSCMExtension {
-    private boolean shallow;
-    private String reference;
-    private Integer timeout;
+    private final boolean shallow;
+    private final boolean noTags;
+    private final String reference;
+    private final Integer timeout;
+
+    public CloneOption(boolean shallow, String reference, Integer timeout) {
+        this(shallow, true, reference, timeout);
+    }
 
     @DataBoundConstructor
-    public CloneOption(boolean shallow, String reference, Integer timeout) {
+    public CloneOption(boolean shallow, boolean noTags, String reference, Integer timeout) {
         this.shallow = shallow;
+        this.noTags = noTags;
         this.reference = reference;
         this.timeout = timeout;
     }
@@ -35,10 +41,14 @@ public class CloneOption extends GitSCMExtension {
         return shallow;
     }
 
+    public boolean isNoTags() {
+        return noTags;
+    }
+
     public String getReference() {
         return reference;
     }
-    
+
     public Integer getTimeout() {
         return timeout;
     }
@@ -49,13 +59,18 @@ public class CloneOption extends GitSCMExtension {
             listener.getLogger().println("Using shallow clone");
             cmd.shallow();
         }
+        if (noTags) {
+            listener.getLogger().println("Avoid fetching tags");
+            cmd.tags(false);
+        }
         cmd.timeout(timeout);
         cmd.reference(build.getEnvironment(listener).expand(reference));
     }
     
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
-    	cmd.timeout(timeout);
+        cmd.tags(!noTags);
+        cmd.timeout(timeout);
     }
 
     @Override
