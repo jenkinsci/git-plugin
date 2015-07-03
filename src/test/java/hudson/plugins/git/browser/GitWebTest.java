@@ -13,16 +13,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
 
-public class GitWebTest extends TestCase {
+public class GitWebTest {
 
-    /**
-     *
-     */
     private static final String GITWEB_URL = "https://SERVER/gitweb?repo.git";
     private final GitWeb gitwebWeb = new GitWeb(GITWEB_URL);
 
@@ -31,6 +29,7 @@ public class GitWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GitWeb#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(gitwebWeb.getUrl()), GITWEB_URL);
     }
@@ -40,6 +39,7 @@ public class GitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = gitwebWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITWEB_URL + "&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -50,6 +50,7 @@ public class GitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -61,6 +62,7 @@ public class GitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -73,6 +75,7 @@ public class GitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
