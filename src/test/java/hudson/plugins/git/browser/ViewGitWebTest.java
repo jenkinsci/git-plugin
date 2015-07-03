@@ -13,14 +13,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
 /**
  * @author Paul Nyheim (paul.nyheim@gmail.com)
  */
-public class ViewGitWebTest extends TestCase {
+public class ViewGitWebTest {
 
     private static final String VIEWGIT_URL = "http://SERVER/viewgit";
     private static final String PROJECT_NAME = "PROJECT";
@@ -31,6 +32,7 @@ public class ViewGitWebTest extends TestCase {
      * 
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(viewGitWeb.getUrl()), VIEWGIT_URL + "/");
     }
@@ -40,6 +42,7 @@ public class ViewGitWebTest extends TestCase {
      * 
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new ViewGitWeb(VIEWGIT_URL + "/", PROJECT_NAME).getUrl()), VIEWGIT_URL + "/");
     }
@@ -52,6 +55,7 @@ public class ViewGitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = viewGitWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals("http://SERVER/viewgit/?p=PROJECT&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -65,6 +69,7 @@ public class ViewGitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -83,6 +88,7 @@ public class ViewGitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -91,6 +97,7 @@ public class ViewGitWebTest extends TestCase {
                 String.valueOf(fileLink));
     }
     
+    @Test
     public void testGetDiffLinkForDeletedFile() throws Exception{
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
@@ -106,6 +113,7 @@ public class ViewGitWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
