@@ -8,8 +8,6 @@ import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
-import hudson.plugins.git.GitSCM;
-import hudson.scm.RepositoryBrowser;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +17,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
@@ -28,11 +27,8 @@ import org.xml.sax.SAXException;
  * @author fauxpark
  *
  */
-public class GitListTest extends TestCase {
+public class GitListTest {
 
-    /**
-     *
-     */
     private static final String GITLIST_URL = "http://gitlist.org/REPO";
     private final GitList gitlist = new GitList(GITLIST_URL);
 
@@ -40,6 +36,7 @@ public class GitListTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GitList#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(gitlist.getUrl()), GITLIST_URL + "/");
     }
@@ -48,6 +45,7 @@ public class GitListTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GitList#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GitList(GITLIST_URL + "/").getUrl()), GITLIST_URL + "/");
     }
@@ -57,6 +55,7 @@ public class GitListTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = gitlist.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -67,6 +66,7 @@ public class GitListTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -82,6 +82,7 @@ public class GitListTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -94,6 +95,7 @@ public class GitListTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
