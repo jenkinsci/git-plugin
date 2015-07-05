@@ -28,25 +28,27 @@ import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
-import hudson.Functions;
 
 import java.util.concurrent.Future;
 import java.util.Collections;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Tests for {@link RevisionParameterAction}
  * 
  * @author Chris Johnson
  */
-public class RevisionParameterActionTest extends AbstractGitTestCase {
-    
+public class RevisionParameterActionTest extends AbstractGitProject {
+
     /**
      * Test covering the behaviour after 1.1.26 where passing different revision 
      * actions to a job in the queue creates separate builds
      */
+    @Test
     public void testCombiningScheduling() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
@@ -57,14 +59,15 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         assertNotNull(b2);
         
         // Check that two builds occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
     }
     /** test when existing revision is already in the queue
     */
+    @Test
     public void testCombiningScheduling2() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
@@ -77,14 +80,15 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         */
         
         // Check that only one build occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
     }
     /** test when there is no revision on the item in the queue
     */
+    @Test
     public void testCombiningScheduling3() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3);
@@ -95,15 +99,16 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         assertNotNull(b2);
         
         // Check that two builds occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
     }
 
     /** test when a different revision is already in the queue, and combine requests is required.
     */
+    @Test
     public void testCombiningScheduling4() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
@@ -114,7 +119,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         //assertNull(b2);
 
         // Check that only one build occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
 
         //check that the correct commit id is present in build
@@ -124,9 +129,10 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 
     /** test when a same revision is already in the queue, and combine requests is required.
     */
+    @Test
     public void testCombiningScheduling5() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
@@ -137,7 +143,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         //assertNull(b2);
 
         // Check that only one build occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),1);
 
         //check that the correct commit id is present in build
@@ -146,9 +152,10 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 
     /** test when a job already in the queue with no revision(manually started), and combine requests is required.
     */
+    @Test
     public void testCombiningScheduling6() throws Exception {
 
-        FreeStyleProject fs = createFreeStyleProject("freestyle");
+        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
 
         // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
         Future b1 = fs.scheduleBuild2(3);
@@ -159,7 +166,7 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
         assertNotNull(b2);
 
         // Check that two builds occurred
-        waitUntilNoActivity();
+        jenkins.waitUntilNoActivity();
         assertEquals(fs.getBuilds().size(),2);
 
         //check that the correct commit id is present in 2nd build
@@ -168,25 +175,25 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
     }
     
 
+        @Test
 	public void testProvidingRevision() throws Exception {
 
 		FreeStyleProject p1 = setupSimpleProject("master");
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
+        commitNewFile(commitFile1);
         FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
         
         Revision r1 = b1.getAction(BuildData.class).getLastBuiltRevision();
         
         // create a second commit
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, janeDoe, "Commit number 2");       
+        commitNewFile(commitFile2);
 
 		// create second build and set revision parameter using r1
         FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserCause(),
 				Collections.singletonList(new RevisionParameterAction(r1))).get();
-        System.out.println(b2.getLog());
         
 		// Check revision built for b2 matches the r1 revision
 		assertEquals(b2.getAction(BuildData.class)
@@ -201,11 +208,6 @@ public class RevisionParameterActionTest extends AbstractGitTestCase {
 		// Check revision built for b3 does not match r1 revision
 		assertFalse(b3.getAction(BuildData.class)
 				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
-		
-		if (Functions.isWindows()) {
-		  System.gc(); // Prevents exceptions cleaning up temp dirs during tearDown
-		}
-
 	}
 }
 
