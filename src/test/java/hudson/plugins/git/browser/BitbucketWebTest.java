@@ -8,26 +8,23 @@ import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
-import junit.framework.TestCase;
 import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * @author mattsemar
  *
  */
-public class BitbucketWebTest extends TestCase {
+public class BitbucketWebTest {
 
-    /**
-     *
-     */
     private static final String BITBUCKET_URL = "http://bitbucket.org/USER/REPO";
     private final BitbucketWeb bitbucketWeb = new BitbucketWeb(BITBUCKET_URL);
 
@@ -35,6 +32,7 @@ public class BitbucketWebTest extends TestCase {
      * Test method for {@link BitbucketWeb#getUrl()}.
      * @throws java.net.MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(bitbucketWeb.getUrl()), BITBUCKET_URL + "/");
     }
@@ -43,6 +41,7 @@ public class BitbucketWebTest extends TestCase {
      * Test method for {@link BitbucketWeb#getUrl()}.
      * @throws java.net.MalformedURLException
      */
+    @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new BitbucketWeb(BITBUCKET_URL + "/").getUrl()), BITBUCKET_URL + "/");
     }
@@ -52,6 +51,7 @@ public class BitbucketWebTest extends TestCase {
      * @throws org.xml.sax.SAXException
      * @throws java.io.IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = bitbucketWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -62,6 +62,7 @@ public class BitbucketWebTest extends TestCase {
      * @throws org.xml.sax.SAXException
      * @throws java.io.IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final String path1Str = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
@@ -82,6 +83,7 @@ public class BitbucketWebTest extends TestCase {
      * @throws org.xml.sax.SAXException
      * @throws java.io.IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -94,6 +96,7 @@ public class BitbucketWebTest extends TestCase {
      * @throws org.xml.sax.SAXException
      * @throws java.io.IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");

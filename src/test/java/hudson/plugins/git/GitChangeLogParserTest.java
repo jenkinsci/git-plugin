@@ -1,47 +1,36 @@
 package hudson.plugins.git;
 
-import hudson.Functions;
-import hudson.model.Run;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-
-import org.jvnet.hudson.test.HudsonTestCase;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Unit tests of {@link GitChangeLogParser}
  */
-public class GitChangeLogParserTest extends HudsonTestCase {
+public class GitChangeLogParserTest {
 
-    @Override
-    protected void tearDown() throws Exception
-    {
-        try { //Avoid test failures due to failed cleanup tasks
-            super.tearDown();
-        }
-        catch (Exception e) {
-            if (e instanceof IOException && Functions.isWindows()) {
-                return;
-            }
-            e.printStackTrace();
-        }
-    }
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
 
     /**
      * Test duplicate changes filtered from parsed change set list.
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testDuplicatesFiltered() throws Exception {
         GitChangeLogParser parser = new GitChangeLogParser(true);
-        File log = File.createTempFile(getClass().getName(), ".tmp");
+        File log = tmpFolder.newFile();
         FileWriter writer = new FileWriter(log);
         writer.write("commit 123abc456def\n");
         writer.write("    first message\n");
         writer.write("commit 123abc456def\n");
         writer.write("    second message");
         writer.close();
-        GitChangeSetList list = parser.parse((Run) null, null, log);
+        GitChangeSetList list = parser.parse(null, null, log);
         assertNotNull(list);
         assertNotNull(list.getLogs());
         assertEquals(1, list.getLogs().size());

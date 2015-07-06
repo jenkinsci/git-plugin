@@ -1,6 +1,6 @@
 package hudson.plugins.git.util;
 
-import hudson.plugins.git.AbstractGitTestCase;
+import hudson.plugins.git.AbstractGitRepository;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 
@@ -9,14 +9,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CommitTimeComparatorTest extends AbstractGitTestCase {
+public class CommitTimeComparatorTest extends AbstractGitRepository {
+
     /**
      * Verifies that the sort is old to new.
      */
+    @Test
     public void testSort() throws Exception {
         boolean first = true;
         // create repository with three commits
@@ -25,13 +29,13 @@ public class CommitTimeComparatorTest extends AbstractGitTestCase {
             if (first)      first = false;
             else            Thread.sleep(1000);
 
-            commit("file" + i, johnDoe, "Commit #" + i);
-            git.branch("branch" + i);
+            commitNewFile("file" + i);
+            testGitClient.branch("branch" + i);
         }
 
         Map<Revision,Branch> branches = new HashMap<Revision,Branch>();
         List<Revision> revs = new ArrayList<Revision>();
-        for (Branch b : git.getBranches()) {
+        for (Branch b : testGitClient.getBranches()) {
             if (!b.getName().startsWith("branch"))  continue;
             Revision r = new Revision(b.getSHA1());
             revs.add(r);
@@ -42,7 +46,7 @@ public class CommitTimeComparatorTest extends AbstractGitTestCase {
         for (int i=0; i<16; i++) {
             // shuffle, then sort.
             Collections.shuffle(revs);
-            Collections.sort(revs, new CommitTimeComparator(git.getRepository()));
+            Collections.sort(revs, new CommitTimeComparator(testGitClient.getRepository()));
 
             // it should be always branch1, branch2, branch3
             for (int j=0; j<3; j++)

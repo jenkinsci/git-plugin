@@ -12,19 +12,16 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
 /**
  * @author mfriedenhagen
  */
-public class RedmineWebTest extends TestCase {
+public class RedmineWebTest {
 
-    /**
-     *
-     */
     private static final String REDMINE_URL = "https://SERVER/PATH/projects/PROJECT/repository";
     private final RedmineWeb redmineWeb = new RedmineWeb(REDMINE_URL);
 
@@ -32,6 +29,7 @@ public class RedmineWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(redmineWeb.getUrl()), REDMINE_URL  + "/");
     }
@@ -40,6 +38,7 @@ public class RedmineWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new RedmineWeb(REDMINE_URL + "/").getUrl()), REDMINE_URL  + "/");
     }
@@ -49,6 +48,7 @@ public class RedmineWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = redmineWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(REDMINE_URL + "/diff?rev=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -59,6 +59,7 @@ public class RedmineWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -75,6 +76,7 @@ public class RedmineWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -87,6 +89,7 @@ public class RedmineWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");

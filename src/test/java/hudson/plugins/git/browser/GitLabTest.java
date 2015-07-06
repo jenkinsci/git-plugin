@@ -11,11 +11,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
-public class GitLabTest extends TestCase {
+public class GitLabTest {
 
     private static final String GITLAB_URL = "https://SERVER/USER/REPO/";
     private final GitLab gitlab29 = new GitLab(GITLAB_URL, "2.9");
@@ -36,24 +37,28 @@ public class GitLabTest extends TestCase {
     /**
      * Test method for {@link hudson.plugins.git.browser.GitLab#getVersion()}.
      */
+    @Test
     public void testGetVersion() {
-        assertEquals(2.9, gitlab29.getVersion());
-        assertEquals(4.2, gitlab42.getVersion());
-        assertEquals(5.0, gitlab50.getVersion());
-        assertEquals(5.1, gitlab51.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlab711.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlab7114ee.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion());
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion());
-        assertEquals(-1.0, gitlabNegative.getVersion());
-        assertEquals(9999.0, gitlabGreater.getVersion());
+        assertEquals(2.9, gitlab29.getVersion(), .001);
+        assertEquals(4.2, gitlab42.getVersion(), .001);
+        assertEquals(5.0, gitlab50.getVersion(), .001);
+        assertEquals(5.1, gitlab51.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlab711.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlab7114ee.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion(), .001);
+        assertEquals(-1.0, gitlabNegative.getVersion(), .001);
+        assertEquals(9999.0, gitlabGreater.getVersion(), .001);
     }
 
     /**
-     * Test method for {@link hudson.plugins.git.browser.GitLab#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
+     * Test method for
+     * {@link hudson.plugins.git.browser.GitLab#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
+     *
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final GitChangeSet changeSet = createChangeSet("rawchangelog");
         final String expectedURL = GITLAB_URL + "commit/" + SHA1;
@@ -71,9 +76,12 @@ public class GitLabTest extends TestCase {
     }
 
     /**
-     * Test method for {@link hudson.plugins.git.browser.GitLab#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
+     * Test method for
+     * {@link hudson.plugins.git.browser.GitLab#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
+     *
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get(fileName);
@@ -92,11 +100,14 @@ public class GitLabTest extends TestCase {
     }
 
     /**
-     * Test method for {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
+     * Test method for
+     * {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
+     *
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
-        final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
+        final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get(fileName);
         final String expectedURL = GITLAB_URL + "blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/" + fileName;
         final String expectedV29 = expectedURL.replace("blob/", "tree/");
@@ -115,11 +126,14 @@ public class GitLabTest extends TestCase {
     }
 
     /**
-     * Test method for {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
+     * Test method for
+     * {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
+     *
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
-        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
+        final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final String expectedURL = GITLAB_URL + "commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar";
         assertEquals(expectedURL.replace("commit/", "commits/"), gitlab29.getFileLink(path).toString());

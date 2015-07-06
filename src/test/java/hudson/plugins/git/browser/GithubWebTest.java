@@ -19,7 +19,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 import org.xml.sax.SAXException;
 
@@ -27,11 +28,8 @@ import org.xml.sax.SAXException;
  * @author mirko
  *
  */
-public class GithubWebTest extends TestCase {
+public class GithubWebTest {
 
-    /**
-     *
-     */
     private static final String GITHUB_URL = "http://github.com/USER/REPO";
     private final GithubWeb githubWeb = new GithubWeb(GITHUB_URL);
 
@@ -39,6 +37,7 @@ public class GithubWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(githubWeb.getUrl()), GITHUB_URL  + "/");
     }
@@ -47,15 +46,18 @@ public class GithubWebTest extends TestCase {
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
      * @throws MalformedURLException
      */
+    @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()), GITHUB_URL  + "/");
     }
+
 
     /**
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = githubWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
@@ -66,6 +68,7 @@ public class GithubWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -81,6 +84,7 @@ public class GithubWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
@@ -93,6 +97,7 @@ public class GithubWebTest extends TestCase {
      * @throws SAXException
      * @throws IOException
      */
+    @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
@@ -100,6 +105,7 @@ public class GithubWebTest extends TestCase {
         assertEquals(GITHUB_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#diff-0", String.valueOf(fileLink));
     }
 
+    @Test
     public void testGuessBrowser() {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");

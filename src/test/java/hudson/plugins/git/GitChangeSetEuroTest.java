@@ -12,7 +12,6 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class GitChangeSetEuroTest {
 
-    private GitChangeSet changeSet = null;
     private final String id = "1567861636cd854f4dd6fa40bf94c0c657681dd5";
     private final String parent = "e74a24e995305bd67a180f0ebc57927e2b8783ce";
     private final String authorName = "Mr. Åhłañder";
@@ -21,7 +20,8 @@ public class GitChangeSetEuroTest {
     private final String comment1 = "Including earlier updates.";
     private final String commentStartText = msg + "\n\n" + comment1 + "\n";
 
-    protected final boolean useAuthorName;
+    private GitChangeSet changeSet = null;
+    private final boolean useAuthorName;
 
     public GitChangeSetEuroTest(String useAuthorName) {
         this.useAuthorName = Boolean.valueOf(useAuthorName);
@@ -131,6 +131,16 @@ public class GitChangeSetEuroTest {
 
     @Test
     public void testEquals() {
-        assertFalse(changeSet.equals(null));
+        assertEquals(changeSet, changeSet);
+
+        assertEquals(GitChangeSetUtil.genChangeSet(false, false), GitChangeSetUtil.genChangeSet(false, false));
+        assertEquals(GitChangeSetUtil.genChangeSet(true, false), GitChangeSetUtil.genChangeSet(true, false));
+        assertEquals(GitChangeSetUtil.genChangeSet(false, true), GitChangeSetUtil.genChangeSet(false, true));
+        assertEquals(GitChangeSetUtil.genChangeSet(true, true), GitChangeSetUtil.genChangeSet(true, true));
+
+        assertNotEquals(changeSet, GitChangeSetUtil.genChangeSet(false, false));
+        assertNotEquals(GitChangeSetUtil.genChangeSet(true, false), changeSet);
+        assertNotEquals(changeSet, GitChangeSetUtil.genChangeSet(false, true));
+        assertNotEquals(GitChangeSetUtil.genChangeSet(true, true), changeSet);
     }
 }
