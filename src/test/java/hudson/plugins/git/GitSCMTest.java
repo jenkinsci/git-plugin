@@ -1428,6 +1428,46 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
     }
 
+    @Issue("JENKINS-29066")
+    public void baseTestPolling_parentHead(List<GitSCMExtension> extensions) throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("**")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                extensions);
+        project.setScm(scm);
+
+        // commit something in order to create an initial base version in git
+        commit("toto/commitFile1", johnDoe, "Commit number 1");
+        git.branch("someBranch");
+        commit("toto/commitFile2", johnDoe, "Commit number 2");
+
+        assertTrue("polling should detect changes",project.poll(listener).hasChanges());
+
+        // build the project
+        build(project, Result.SUCCESS);
+
+        /* Expects 1 build because the build of someBranch incorporates all
+         * the changes from the master branch as well as the changes from someBranch.
+         */
+        assertEquals("Wrong number of builds", 1, project.getBuilds().size());
+
+        assertFalse("polling should not detect changes",project.poll(listener).hasChanges());
+    }
+
+    @Issue("JENKINS-29066")
+    public void testPolling_parentHead() throws Exception {
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>emptyList());
+    }
+
+    @Issue("JENKINS-29066")
+    public void testPolling_parentHead_DisableRemotePoll() throws Exception {
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>singletonList(new DisableRemotePoll()));
+    }
+
     public void testPollingAfterManualBuildWithParametrizedBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
