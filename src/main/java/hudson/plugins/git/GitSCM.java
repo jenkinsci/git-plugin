@@ -115,6 +115,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool = null;
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
+    private String scmNameEnvPrefix = null;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
@@ -1166,38 +1167,56 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    public void scmNameEnvPut(java.util.Map<String, String> env, String propertyName, String value) {
+        // Populate prefix if not already done.
+        if (scmNameEnvPrefix == null) {
+            if (getScmName() != null) {
+                scmNameEnvPrefix = getScmName().replaceAll("[^\\w]", "_") + "_";
+            } else {
+                scmNameEnvPrefix = "";
+            }
+        }
+
+        // Set environment variable and namespace variable as well.
+        env.put(propertyName, value);
+        if (scmNameEnvPrefix != "") {
+            env.put(scmNameEnvPrefix + propertyName, value);
+        }
+    }
+
     public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
         super.buildEnvVars(build, env);
+
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null && branch.getName()!=null) {
-                env.put(GIT_BRANCH, getBranchName(branch));
+                scmNameEnvPut(env, GIT_BRANCH, getBranchName(branch));
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
-                    env.put(GIT_PREVIOUS_COMMIT, prevCommit);
+                    scmNameEnvPut(env, GIT_PREVIOUS_COMMIT, prevCommit);
                 }
 
                 String prevSuccessfulCommit = getLastSuccessfulBuiltCommitOfBranch(build, branch);
                 if (prevSuccessfulCommit != null) {
-                    env.put(GIT_PREVIOUS_SUCCESSFUL_COMMIT, prevSuccessfulCommit);
+                    scmNameEnvPut(env, GIT_PREVIOUS_SUCCESSFUL_COMMIT, prevSuccessfulCommit);
                 }
             }
 
             String sha1 = fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
-                env.put(GIT_COMMIT, sha1);
+                scmNameEnvPut(env, GIT_COMMIT, sha1);
             }
         }
 
        
         if (userRemoteConfigs.size()==1){
-            env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
+            scmNameEnvPut(env, "GIT_URL", userRemoteConfigs.get(0).getUrl());
         } else {
             int count=1;
             for(UserRemoteConfig config:userRemoteConfigs)   {
-                env.put("GIT_URL_"+count, config.getUrl());
+                scmNameEnvPut(env, "GIT_URL_"+count, config.getUrl());
                 count++;
             }  
         }
