@@ -1,6 +1,10 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
+    <j:set var="scmd" value="${null}"/>
+    <j:if test="${instance != null}">
+      <j:set var="scm" value="${instance}"/>
+    </j:if>
     <script><![CDATA[
     function encodeAllInputs(sep, form, field) {
         var inputs = Form.getInputs(form, null, field);
