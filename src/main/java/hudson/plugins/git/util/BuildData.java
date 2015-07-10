@@ -1,7 +1,6 @@
 package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
@@ -83,7 +82,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public String getIconFileName() {
-        return Functions.getResourcePath()+"/plugin/git/icons/git-32x32.png";
+        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-32x32.png";
     }
 
     public String getUrlName() {

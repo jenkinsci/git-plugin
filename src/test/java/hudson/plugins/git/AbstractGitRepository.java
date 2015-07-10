@@ -12,7 +12,6 @@ import org.junit.After;
 import org.junit.Before;
 
 import hudson.EnvVars;
-import hudson.Functions;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
@@ -48,7 +47,7 @@ public abstract class AbstractGitRepository {
 
     @After
     public void removeGitRepository() throws IOException, InterruptedException {
-        if (Functions.isWindows()) {
+        if (isWindows()) {
             System.gc(); // Reduce Windows file busy exceptions cleaning up temp dirs
         }
 
@@ -93,5 +92,10 @@ public abstract class AbstractGitRepository {
         List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
         list.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), "origin", "", null));
         return list;
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
     }
 }

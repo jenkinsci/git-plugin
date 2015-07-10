@@ -24,7 +24,6 @@
 package hudson.plugins.git;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -557,7 +556,7 @@ public class GitPublisherTest extends AbstractGitProject {
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        String envName = Functions.isWindows() ? "COMPUTERNAME" : "LOGNAME";
+        String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
         assertNotNull("Env " + envName + " not set", envValue);
         assertFalse("Env " + envName + " empty", envValue.isEmpty());
@@ -660,5 +659,10 @@ public class GitPublisherTest extends AbstractGitProject {
             }
         }
         return false;
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
     }
 }

@@ -9,7 +9,6 @@ import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
 import hudson.util.IOUtils;
 import hudson.util.RunList;
-import hudson.Functions;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
@@ -53,7 +52,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             tempAllocator.dispose();
         }
         catch (Exception e) {
-            if (e instanceof IOException && Functions.isWindows()) {
+            if (e instanceof IOException && isWindows()) {
                 return;
             }
             e.printStackTrace();
@@ -324,4 +323,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         }
     }
 
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
+    }
 }
