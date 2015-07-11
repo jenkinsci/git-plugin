@@ -239,7 +239,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + mergeTarget);
+                        PushCommand push = git.push().to(remoteURI).ref("refs/heads/" + mergeTarget + ":refs/heads/" + mergeTarget);
                         if (forcePush) {
                           push.force();
                         }
@@ -335,7 +335,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
+                        PushCommand push = git.push().to(remoteURI).ref("refs/heads/" + branchName + ":refs/heads/" + branchName);
                         if (forcePush) {
                           push.force();
                         }
