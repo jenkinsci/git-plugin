@@ -1,4 +1,5 @@
 <div>
   The default behavior is to use the Git commit's "Committer" value in Jenkins' build changesets.
   If this option is selected, the Git commit's "Author" value would be used instead.
+  N.B. using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds.
 </div>
