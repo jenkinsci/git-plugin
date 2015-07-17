@@ -39,26 +39,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>${findbugs-maven-plugin.version}</version>
-          <configuration>
-            <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
-            <failOnError>${maven.findbugs.failure.strict}</failOnError>
-            <xmlOutput>true</xmlOutput>
-            <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
-          </configuration>
-          <executions>
-            <execution>
-              <id>run-findbugs</id>
-              <phase>verify</phase> 
-              <goals>
-                <goal>check</goal> 
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>${maven-enforcer-plugin.version}</version>
@@ -208,6 +188,26 @@
               <!-- Sets the output directory for the code coverage report. -->
               <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>${findbugs-maven-plugin.version}</version>
+        <configuration>
+          <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
+          <failOnError>${maven.findbugs.failure.strict}</failOnError>
+          <xmlOutput>true</xmlOutput>
+          <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+        </configuration>
+        <executions>
+          <execution>
+            <id>run-findbugs</id>
+            <phase>verify</phase> 
+            <goals>
+              <goal>check</goal> 
+            </goals>
           </execution>
         </executions>
       </plugin>
