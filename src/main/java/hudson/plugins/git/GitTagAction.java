@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.*;
-import hudson.plugins.git.util.BuildData;
 import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
@@ -187,12 +186,12 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     .getClient();
 
 
-            for (String b : tagSet.keySet()) {
+            for (Map.Entry<String, String> entry : tagSet.entrySet()) {
                 try {
                     String buildNum = "jenkins-"
                                      + getRun().getParent().getName().replace(" ", "_")
-                                     + "-" + tagSet.get(b);
-                    git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
+                                     + "-" + entry.getValue();
+                    git.tag(entry.getValue(), "Jenkins Build #" + buildNum);
 
                     for (Map.Entry<String, String> e : tagSet.entrySet())
                         GitTagAction.this.tags.get(e.getKey()).add(e.getValue());
@@ -201,7 +200,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     workerThread = null;
                 }
                 catch (GitException ex) {
-                    ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", b, ex.getMessage()));
+                    ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", entry.getKey(), ex.getMessage()));
                     // Failed. Try the next one
                     listener.getLogger().println("Trying next branch");
                 }
