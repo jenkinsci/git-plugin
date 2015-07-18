@@ -62,10 +62,10 @@ public class RhodeCodeTest {
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path modified1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(modified1).toString());
+        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(modified1).toString());
         // For added files returns a link to the commit.
         final Path added = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
-        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(added).toString());
+        assertEquals(RHODECODE_URL + "/diff/src/main/java/hudson/plugins/git/browser/GithubWeb.java?diff2=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff&diff1=396fc230a3db05c427737aa5c2eb7856ba72b05d&diff=diff+to+revision", rhodecode.getDiffLink(added).toString());
     }
 
     /**
