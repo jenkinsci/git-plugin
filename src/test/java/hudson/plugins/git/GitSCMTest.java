@@ -1783,46 +1783,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(build, times(1)).getActions(BuildData.class);
     }
 
-    @Issue("JENKINS-17348")
-    public void testPurgeDeletedBranch() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
-            /* Unclear why this test fails on older git versions */
-            return;
-        }
-        final FreeStyleProject project = setupProject("*/*", false);
-        final GitSCM scm = (GitSCM) project.getScm();
-        scm.getExtensions().add(new PruneStaleBranch());
-
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should detect commit 1",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-
-        git.checkout().ref("master").branch("topic-1").execute();
-        final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2 on topic-1");
-        assertTrue("scm polling should detect commit 2",
-                project.poll(listener).hasChanges());
-        FreeStyleBuild b2 = build(project, Result.SUCCESS, commitFile2);
-        BuildData data = b2.getAction(BuildData.class);
-        assertTrue("topic-1 branch should have been added", data.buildsByBranchName.containsKey("origin/topic-1"));
-        assertTrue("master branch should have been kept", data.buildsByBranchName.containsKey("origin/master"));
-
-        git.checkout().ref("master").execute();
-        git.deleteBranch("topic-1");
-
-        final String commitFile3 = "commitFile3";
-        commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3",
-                project.poll(listener).hasChanges());
-        FreeStyleBuild b3 = build(project, Result.SUCCESS, commitFile3);
-        data = b3.getAction(BuildData.class);
-        assertFalse("topic-1 branch should have been purged", data.buildsByBranchName.containsKey("origin/topic-1"));
-        assertTrue("master branch should have been kept", data.buildsByBranchName.containsKey("origin/master"));
-    }
-
-
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
