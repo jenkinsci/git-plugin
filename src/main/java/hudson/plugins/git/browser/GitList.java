@@ -38,7 +38,7 @@ public class GitList extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + changeSet.getId().toString());
+        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
     }
 
     /**

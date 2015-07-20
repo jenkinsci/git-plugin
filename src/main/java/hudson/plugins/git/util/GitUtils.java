@@ -210,10 +210,10 @@ public class GitUtils implements Serializable {
         }
 
         if (reuseLastBuildEnv) {
-            Node lastBuiltOn = b.getBuiltOn();
-
-            if (lastBuiltOn != null) {
-                env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
+            final Node lastBuiltOn = b.getBuiltOn();
+            final Computer computer = lastBuiltOn != null ? lastBuiltOn.toComputer() : null;
+            if (computer != null) {
+                env = computer.getEnvironment().overrideAll(b.getCharacteristicEnvVars());
                 for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
                     Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
                     if (environment != null) {

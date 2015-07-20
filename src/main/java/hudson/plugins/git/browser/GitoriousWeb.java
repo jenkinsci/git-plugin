@@ -28,7 +28,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(getUrl(), "commit/" + changeSet.getId().toString());
+        return new URL(getUrl(), "commit/" + changeSet.getId());
     }
 
     /**
@@ -43,7 +43,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(getUrl(), "commit/" + changeSet.getId().toString() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
+        return new URL(getUrl(), "commit/" + changeSet.getId() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
     }
 
     /**

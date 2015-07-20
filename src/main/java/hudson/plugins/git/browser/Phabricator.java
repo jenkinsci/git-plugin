@@ -43,7 +43,7 @@ public class Phabricator extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId().toString()));
+        return new URL(getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId()));
     }
 
     /**
@@ -59,7 +59,7 @@ public class Phabricator extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final String sha = changeSet.getId().toString();
+        final String sha = changeSet.getId();
         final String spec = String.format("/diffusion/%s/change/master/%s;%s", this.getRepo(), path.getPath(), sha);
         return new URL(getUrl(), spec);
     }
@@ -75,7 +75,7 @@ public class Phabricator extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final String sha = changeSet.getId().toString();
+        final String sha = changeSet.getId();
         final String spec = String.format("/diffusion/%s/history/master/%s;%s", this.getRepo(), path.getPath(), sha);
         return new URL(getUrl(), spec);
     }

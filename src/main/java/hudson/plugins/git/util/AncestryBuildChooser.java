@@ -27,6 +27,8 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Date;
 
 public class AncestryBuildChooser extends DefaultBuildChooser {
 
@@ -76,7 +78,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 try {
                     for (Revision currentRevision : candidates) {
                         RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
-                        
+                                               
                         if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
                             continue;
                         }
@@ -113,6 +115,9 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         }
         
         public boolean apply(RevCommit rev) {
+            if (rev == null) {
+                throw new NullPointerException("RevCommit must be non-null");
+            }
             return new DateTime(rev.getCommitterIdent().getWhen()).isAfter(this.oldestAllowableCommitDate);
         }
         
@@ -131,7 +136,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
             this.ancestor = ancestor;
         }
         
-        public boolean apply(RevCommit rev) {
+        public boolean apply(@NonNull RevCommit rev) {
             try {
                 return revwalk.isMergedInto(ancestor, rev);
 

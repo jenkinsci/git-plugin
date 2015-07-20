@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.RelativePath;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -270,12 +271,14 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     }
 
     @Deprecated
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "Deprecated API")
     public String[] getExcludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
         return pr!=null ? pr.getExcludedRegionsNormalized() : null;
     }
 
     @Deprecated
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "Deprecated API")
     public String[] getIncludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
         return pr!=null ? pr.getIncludedRegionsNormalized() : null;
@@ -296,6 +299,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     }
 
     @Deprecated
+    @SuppressFBWarnings(value = "PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification = "Deprecated API")
     public Set<String> getExcludedUsersNormalized() {
         UserExclusion ue = getExtensions().get(UserExclusion.class);
         return ue!=null ? ue.getExcludedUsersNormalized() : null;

@@ -14,6 +14,11 @@ public abstract class GitSCMExtensionDescriptor extends Descriptor<GitSCMExtensi
     }
 
     public static DescriptorExtensionList<GitSCMExtension,GitSCMExtensionDescriptor> all() {
-        return Jenkins.getInstance().getDescriptorList(GitSCMExtension.class);
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            return jenkins.getDescriptorList(GitSCMExtension.class);
+        } else {
+            return DescriptorExtensionList.createDescriptorList((Jenkins)null, GitSCMExtension.class);
+        }
     }
 }

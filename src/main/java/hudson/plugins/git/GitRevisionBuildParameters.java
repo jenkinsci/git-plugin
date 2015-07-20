@@ -51,22 +51,32 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	public GitRevisionBuildParameters() {
 	}
 
-	@Override
-	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
-		BuildData data = build.getAction(BuildData.class);
-		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {
+    @Override
+    public Action getAction(AbstractBuild<?, ?> build, TaskListener listener) {
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            return null;
+        }
+
+        BuildData data = build.getAction(BuildData.class);
+        if (data == null && jenkins.getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
                 data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);
             }
         }
         if (data == null) {
-			listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
-			return null;
-		}
+            listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
+            return null;
+        }
 
-		return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
-	}
+        final Revision lastBuiltRevision = data.getLastBuiltRevision();
+        if (lastBuiltRevision == null) {
+            listener.getLogger().println("Last build revision is not specified");
+            return null;
+        }
+        return new RevisionParameterAction(lastBuiltRevision, getCombineQueuedCommits());
+    }
 
 	public boolean getCombineQueuedCommits() {
 		return combineQueuedCommits;

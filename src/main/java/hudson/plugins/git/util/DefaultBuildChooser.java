@@ -172,12 +172,6 @@ public class DefaultBuildChooser extends BuildChooser {
         }
     }
 
-    private Revision objectId2Revision(String singleBranch, ObjectId sha1) {
-        Revision revision = new Revision(sha1);
-        revision.getBranches().add(new Branch(singleBranch, sha1));
-        return revision;
-    }
-
     /**
      * In order to determine which Revisions to build.
      *

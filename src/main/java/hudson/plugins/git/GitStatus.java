@@ -36,6 +36,9 @@ import org.kohsuke.stapler.*;
  */
 @Extension
 public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+    
+    private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
+    
     public String getDisplayName() {
         return "Git";
     }
@@ -82,7 +85,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         final List<ResponseContributor> contributors = new ArrayList<ResponseContributor>();
-        for (Listener listener : Jenkins.getInstance().getExtensionList(Listener.class)) {
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.warning("Jenkins instance is not ready. Cannot process notifications");
+            return HttpResponses.error(404, "Jenkins instance is not ready");
+        }
+        
+        for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(uri, sha1, buildParameters, branchesArray));
         }
 
@@ -206,8 +215,14 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
-
-            List<ResponseContributor> result = new ArrayList<ResponseContributor>();
+            
+            List<ResponseContributor> result = new ArrayList<ResponseContributor>();      
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                LOGGER.warning("Jenkins instance is not ready. Cannot process notifications");
+                return result;
+            }
+        
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
@@ -216,7 +231,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 boolean scmFound = false,
                         urlFound = false;
-                for (final Item project : Jenkins.getInstance().getAllItems()) {
+                for (final Item project : jenkins.getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
                     if (scmTriggerItem == null) {
                         continue;

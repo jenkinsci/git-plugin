@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
@@ -55,6 +56,7 @@ public class UserExclusion extends GitSCMExtension {
     }
 
     @Override
+    @SuppressFBWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "The method cannot make a decision when there is no author")
     public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         String author = commit.getAuthorName();
         if (getExcludedUsersNormalized().contains(author)) {

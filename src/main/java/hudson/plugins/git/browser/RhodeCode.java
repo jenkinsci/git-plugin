@@ -85,7 +85,7 @@ public class RhodeCode extends GitRepositoryBrowser {
             }
             return new URL(url, url.getPath() + "files/" + parentCommit + '/' + path.getPath());
         } else {
-            return new URL(url, url.getPath() + "files/" + changeSet.getId().toString() + '/' + path.getPath());
+            return new URL(url, url.getPath() + "files/" + changeSet.getId() + '/' + path.getPath());
         }
     }
 
