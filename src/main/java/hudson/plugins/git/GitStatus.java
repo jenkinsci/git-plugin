@@ -37,8 +37,6 @@ import org.kohsuke.stapler.*;
 @Extension
 public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
     
-    private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
-    
     public String getDisplayName() {
         return "Git";
     }
