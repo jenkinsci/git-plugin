@@ -797,6 +797,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Test
+    public void testMultipleBranchesWithTags() throws Exception {
+        List<BranchSpec> branchSpecs = Arrays.asList(
+                new BranchSpec("refs/tags/v*"),
+                new BranchSpec("refs/remotes/origin/non-existent"));
+        FreeStyleProject project = setupProject(branchSpecs, false, null, null, janeDoe.getName(), null, false, null);
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+
+        // there are no branches to be build
+        FreeStyleBuild freeStyleBuild = build(project, Result.FAILURE);
+
+        final String v1 = "v1";
+
+        git.tag(v1, "version 1");
+        assertTrue("v1 tag exists", git.tagExists(v1));
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+        assertTrue("change set is empty", freeStyleBuild.getChangeSet().isEmptySet());
+
+        commit("file1", johnDoe, "change to file1");
+        git.tag("none", "latest");
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+
+        ObjectId tag = git.revParse(Constants.R_TAGS + v1);
+        GitSCM scm = (GitSCM)project.getScm();
+        BuildData buildData = scm.getBuildData(freeStyleBuild);
+
+        assertEquals("last build matches the v1 tag revision", tag, buildData.lastBuild.getSHA1());
+    }
+
     @Issue("JENKINS-19037")
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     @Test
