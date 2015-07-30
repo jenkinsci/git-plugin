@@ -2,7 +2,7 @@ package hudson.plugins.git.util;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
-import hudson.plugins.git.AbstractGitTestCase;
+import hudson.plugins.git.AbstractGitRepository;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -31,8 +31,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import static org.junit.Assert.*;
+import org.junit.Before;
 
-public class AncestryBuildChooserTest extends AbstractGitTestCase {
+public class AncestryBuildChooserTest extends AbstractGitRepository {
     
     private String rootCommit = null;
     private String ancestorCommit = null;
@@ -44,6 +46,8 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
     private final DateTime tenDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(10);
     private final DateTime twentyDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(20);
     
+    private final PersonIdent johnDoe = new PersonIdent("John Doe", "john@example.com");
+
     /*
      * 20 days old ->  O O    <- 10 days old
      *                 |/
@@ -53,30 +57,28 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
      * 
      * Creates a small repository of 5 commits with different branches and ages.
      */
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
+        Set<String> prevBranches = stringifyBranches(testGitClient.getBranches());
         
-        Set<String> prevBranches = stringifyBranches(git.getBranches());
-        
-        git.commit("Root Commit");
+        testGitClient.commit("Root Commit");
         rootCommit = getLastCommitSha1(prevBranches);
         
-        git.commit("Ancestor Commit");
+        testGitClient.commit("Ancestor Commit");
         ancestorCommit = getLastCommitSha1(prevBranches);
         
-        git.branch("20-days-old-branch");
-        git.checkoutBranch("20-days-old-branch", ancestorCommit);
+        testGitClient.branch("20-days-old-branch");
+        testGitClient.checkoutBranch("20-days-old-branch", ancestorCommit);
         this.commit("20 days ago commit message", new PersonIdent(johnDoe, twentyDaysAgo.toDate()), new PersonIdent(johnDoe, twentyDaysAgo.toDate()));
         twentyDaysAgoCommit = getLastCommitSha1(prevBranches);
         
-        git.checkout().ref(ancestorCommit).execute();
-        git.checkoutBranch("10-days-old-branch", ancestorCommit);
+        testGitClient.checkout().ref(ancestorCommit).execute();
+        testGitClient.checkoutBranch("10-days-old-branch", ancestorCommit);
         this.commit("10 days ago commit message", new PersonIdent(johnDoe, tenDaysAgo.toDate()), new PersonIdent(johnDoe, tenDaysAgo.toDate()));
         tenDaysAgoCommit = getLastCommitSha1(prevBranches);
         
-        git.checkout().ref(rootCommit).execute();
-        git.checkoutBranch("5-days-old-branch", rootCommit);
+        testGitClient.checkout().ref(rootCommit).execute();
+        testGitClient.checkoutBranch("5-days-old-branch", rootCommit);
         this.commit("5 days ago commit message", new PersonIdent(johnDoe, fiveDaysAgo.toDate()), new PersonIdent(johnDoe, fiveDaysAgo.toDate()));
         fiveDaysAgoCommit = getLastCommitSha1(prevBranches);
     }
@@ -92,7 +94,7 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
     }
     
     private String getLastCommitSha1(Set<String> prevBranches) throws Exception {
-        Set<String> newBranches = stringifyBranches(git.getBranches());
+        Set<String> newBranches = stringifyBranches(testGitClient.getBranches());
         
         SetView<String> difference = Sets.difference(newBranches, prevBranches);
         
@@ -111,7 +113,7 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
     private void commit(String message, PersonIdent author, PersonIdent committer) {
         Repository repo = null;
         try {
-            repo = testRepo.git.getRepository();
+            repo = testGitClient.getRepository();
             CommitCommand cmd = Git.wrap(repo).commit().setMessage(message);
             if (author != null)
                 cmd.setAuthor(author);
@@ -134,8 +136,8 @@ public class AncestryBuildChooserTest extends AbstractGitTestCase {
         assertEquals(ancestorCommitSha1, chooser.getAncestorCommitSha1());
         
         // mock necessary objects
-        GitClient git = Mockito.spy(this.git);
-        Mockito.when(git.getRemoteBranches()).thenReturn(this.git.getBranches());
+        GitClient git = Mockito.spy(this.testGitClient);
+        Mockito.when(git.getRemoteBranches()).thenReturn(this.testGitClient.getBranches());
         
         BuildData buildData = Mockito.mock(BuildData.class);
         Mockito.when(buildData.hasBeenBuilt(git.revParse(rootCommit))).thenReturn(false);

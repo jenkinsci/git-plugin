@@ -7,23 +7,17 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class GitChangeSetSimpleTest {
 
-    private final String id = "123abc456def";
-    private final String parent = "345mno678pqr";
-    private final String authorName = "John Author";
-    private final String committerName = "John Committer";
-    private final String commitTitle = "Commit title.";
-    private final String comment = commitTitle + "\n";
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private GitChangeSet changeSet = null;
     private final boolean useAuthorName;
@@ -49,35 +43,13 @@ public class GitChangeSetSimpleTest {
 
     @Before
     public void createSimpleChangeSet() {
-        List<String> gitChangeLog = new ArrayList<String>();
-        gitChangeLog.add("Some header junk we should ignore...");
-        gitChangeLog.add("header line 2");
-        gitChangeLog.add("commit " + id);
-        gitChangeLog.add("tree 789ghi012jkl");
-        gitChangeLog.add("parent " + parent);
-        gitChangeLog.add("author " + authorName + " <jauthor@nospam.com> 1234568 -0600");
-        gitChangeLog.add("committer " + committerName + " <jcommitter@nospam.com> 1234566 -0600");
-        gitChangeLog.add("");
-        gitChangeLog.add("    " + commitTitle);
-        gitChangeLog.add("    Commit extended description.");
-        gitChangeLog.add("");
-        if (useLegacyFormat) {
-            gitChangeLog.add("123abc456def");
-            gitChangeLog.add(" create mode 100644 some/file1");
-            gitChangeLog.add(" delete mode 100644 other/file2");
-        }
-        gitChangeLog.add(":000000 123456 0000000000000000000000000000000000000000 123abc456def789abc012def345abc678def901a A\tsrc/test/add.file");
-        gitChangeLog.add(":123456 000000 123abc456def789abc012def345abc678def901a 0000000000000000000000000000000000000000 D\tsrc/test/deleted.file");
-        gitChangeLog.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 M\tsrc/test/modified.file");
-        gitChangeLog.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 R012\tsrc/test/renamedFrom.file\tsrc/test/renamedTo.file");
-        gitChangeLog.add(":000000 123456 bc234def567abc890def123abc456def789abc01 123abc456def789abc012def345abc678def901a C100\tsrc/test/original.file\tsrc/test/copyOf.file");
-        changeSet = new GitChangeSet(gitChangeLog, useAuthorName);
+        changeSet = GitChangeSetUtil.genChangeSet(useAuthorName, useLegacyFormat);
     }
 
     @Test
     public void testChangeSetDetails() {
-        assertEquals("123abc456def", changeSet.getId());
-        assertEquals("Commit title.", changeSet.getMsg());
+        assertEquals(GitChangeSetUtil.ID, changeSet.getId());
+        assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
         assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
         HashSet<String> expectedAffectedPaths = new HashSet<String>(7);
         expectedAffectedPaths.add("src/test/add.file");
@@ -123,7 +95,7 @@ public class GitChangeSetSimpleTest {
 
     @Test
     public void testGetCommitId() {
-        assertEquals(id, changeSet.getCommitId());
+        assertEquals(GitChangeSetUtil.ID, changeSet.getCommitId());
     }
 
     @Test
@@ -134,7 +106,7 @@ public class GitChangeSetSimpleTest {
 
     @Test
     public void testGetParentCommit() {
-        assertEquals(parent, changeSet.getParentCommit());
+        assertEquals(GitChangeSetUtil.PARENT, changeSet.getParentCommit());
     }
 
     @Test
@@ -144,28 +116,28 @@ public class GitChangeSetSimpleTest {
 
     @Test
     public void testGetAuthorName() {
-        assertEquals(useAuthorName ? authorName : committerName, changeSet.getAuthorName());
+        assertEquals(useAuthorName ? GitChangeSetUtil.AUTHOR_NAME : GitChangeSetUtil.COMMITTER_NAME, changeSet.getAuthorName());
     }
 
     @Test
     public void testGetMsg() {
-        assertEquals(commitTitle, changeSet.getMsg());
+        assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
     }
 
     @Test
     public void testGetId() {
-        assertEquals(id, changeSet.getId());
+        assertEquals(GitChangeSetUtil.ID, changeSet.getId());
     }
 
     @Test
     public void testGetRevision() {
-        assertEquals(id, changeSet.getRevision());
+        assertEquals(GitChangeSetUtil.ID, changeSet.getRevision());
     }
 
     @Test
     public void testGetComment() {
         String changeComment = changeSet.getComment();
-        assertTrue("Comment '" + changeComment + "' does not start with '" + comment + "'", changeComment.startsWith(comment));
+        assertTrue("Comment '" + changeComment + "' does not start with '" + GitChangeSetUtil.COMMENT + "'", changeComment.startsWith(GitChangeSetUtil.COMMENT));
     }
 
     @Test
@@ -184,4 +156,13 @@ public class GitChangeSetSimpleTest {
         assertFalse(changeSet.equals(new GitChangeSet(new ArrayList<String>(), false)));
     }
 
+    @Test
+    public void testChangeSetExceptionMessage() {
+        final String expectedLineContent = "commit ";
+        ArrayList<String> lines = new ArrayList<String>();
+        lines.add(expectedLineContent);
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Commit has no ID[" + expectedLineContent + "]");
+        GitChangeSet badChangeSet = new GitChangeSet(lines, true);
+    }
 }

@@ -127,8 +127,12 @@ public class PathRestriction extends GitSCMExtension {
             }
         }
 
-        // If every affected path is excluded, return true.
-        if (includedPaths.size() == excludedPaths.size()) {
+        if (excluded.isEmpty() && !included.isEmpty() && includedPaths.isEmpty()) {
+            listener.getLogger().println("Ignored commit " + commit.getCommitId()
+                                         + ": No paths matched included region whitelist");
+            return true;
+        } else if (includedPaths.size() == excludedPaths.size()) {
+             // If every affected path is excluded, return true.
             listener.getLogger().println("Ignored commit " + commit.getCommitId()
                     + ": Found only excluded paths: "
                     + Util.join(excludedPaths, ", "));

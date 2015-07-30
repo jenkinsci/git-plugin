@@ -3,7 +3,6 @@ package hudson.plugins.git;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
@@ -82,7 +81,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         try { //Avoid test failures due to failed cleanup tasks
             super.tearDown();
         } catch (Exception e) {
-            if (e instanceof IOException && Functions.isWindows()) {
+            if (e instanceof IOException && isWindows()) {
                 return;
             }
             e.printStackTrace();
@@ -296,5 +295,10 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
         System.out.println(out.toString());
         out.close();
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
     }
 }

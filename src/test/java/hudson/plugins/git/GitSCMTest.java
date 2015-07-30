@@ -59,6 +59,11 @@ import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jvnet.hudson.test.Issue;
 
+import org.mockito.Mockito;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
@@ -1280,6 +1285,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("toto")));
 
         // run build first to create workspace
@@ -1296,6 +1305,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckoutBis() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -1312,6 +1325,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupSimpleProject("master");
 
         // run build first to create workspace
@@ -1336,6 +1353,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testNormalCheckoutAfterSparseCheckout() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
@@ -1361,6 +1382,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     public void testInitSparseCheckoutOverSlave() throws Exception {
+        if (!gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
         FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(createSlave().getSelfLabel());
 
@@ -1401,6 +1426,46 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS);
 
         assertFalse("No changes to git since last build, thus no new build is expected", project.poll(listener).hasChanges());
+    }
+
+    @Issue("JENKINS-29066")
+    public void baseTestPolling_parentHead(List<GitSCMExtension> extensions) throws Exception {
+        // create parameterized project with environment value in branch specification
+        FreeStyleProject project = createFreeStyleProject();
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("**")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                extensions);
+        project.setScm(scm);
+
+        // commit something in order to create an initial base version in git
+        commit("toto/commitFile1", johnDoe, "Commit number 1");
+        git.branch("someBranch");
+        commit("toto/commitFile2", johnDoe, "Commit number 2");
+
+        assertTrue("polling should detect changes",project.poll(listener).hasChanges());
+
+        // build the project
+        build(project, Result.SUCCESS);
+
+        /* Expects 1 build because the build of someBranch incorporates all
+         * the changes from the master branch as well as the changes from someBranch.
+         */
+        assertEquals("Wrong number of builds", 1, project.getBuilds().size());
+
+        assertFalse("polling should not detect changes",project.poll(listener).hasChanges());
+    }
+
+    @Issue("JENKINS-29066")
+    public void testPolling_parentHead() throws Exception {
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>emptyList());
+    }
+
+    @Issue("JENKINS-29066")
+    public void testPolling_parentHead_DisableRemotePoll() throws Exception {
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>singletonList(new DisableRemotePoll()));
     }
 
     public void testPollingAfterManualBuildWithParametrizedBranchSpec() throws Exception {
@@ -1478,6 +1543,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     private boolean gitVersionAtLeast(int neededMajor, int neededMinor) throws IOException, InterruptedException {
+        return gitVersionAtLeast(neededMajor, neededMinor, 0);
+    }
+
+    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) throws IOException, InterruptedException {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
@@ -1487,7 +1556,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
         final int gitMajor = Integer.parseInt(fields[0]);
         final int gitMinor = Integer.parseInt(fields[1]);
-        return gitMajor >= neededMajor && gitMinor >= neededMinor;
+        final int gitPatch = Integer.parseInt(fields[2]);
+        return gitMajor >= neededMajor && gitMinor >= neededMinor && gitPatch >= neededPatch;
     }
     
 	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
@@ -1675,42 +1745,43 @@ public class GitSCMTest extends AbstractGitTestCase {
         notifyAndCheckBranch(project, commit1, branchName, 1, git);
     }
 
+    /* A null pointer exception was detected because the plugin failed to
+     * write a branch name to the build data, so there was a SHA1 recorded 
+     * in the build data, but no branch name.
+     */
+    public void testNoNullPointerExceptionWithNullBranch() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
-    @Issue("JENKINS-17348")
-    public void testPurgeDeletedBranch() throws Exception {
+        /* This is the null that causes NPE */
+        Branch branch = new Branch(null, sha1);
+
+        List<Branch> branchList = new ArrayList<Branch>();
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        /* BuildData mock that will use the Revision with null branch name */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<BuildData>();
+        buildDataList.add(buildData);
+
+        /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
         final FreeStyleProject project = setupProject("*/*", false);
-        final GitSCM scm = (GitSCM) project.getScm();
-        scm.getExtensions().add(new PruneStaleBranch());
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.buildEnvVars(build, new EnvVars()); // NPE here before fix applied
 
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should detect commit 1",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-
-        git.checkout().ref("master").branch("topic-1").execute();
-        final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2 on topic-1");
-        assertTrue("scm polling should detect commit 2",
-                project.poll(listener).hasChanges());
-        FreeStyleBuild b2 = build(project, Result.SUCCESS, commitFile2);
-        BuildData data = b2.getAction(BuildData.class);
-        assertTrue("topic-1 branch should have been added", data.buildsByBranchName.containsKey("origin/topic-1"));
-        assertTrue("master branch should have been kept", data.buildsByBranchName.containsKey("origin/master"));
-
-        git.checkout().ref("master").execute();
-        git.deleteBranch("topic-1");
-
-        final String commitFile3 = "commitFile3";
-        commit(commitFile3, johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3",
-                project.poll(listener).hasChanges());
-        FreeStyleBuild b3 = build(project, Result.SUCCESS, commitFile3);
-        data = b3.getAction(BuildData.class);
-        assertFalse("topic-1 branch should have been purged", data.buildsByBranchName.containsKey("origin/topic-1"));
-        assertTrue("master branch should have been kept", data.buildsByBranchName.containsKey("origin/master"));
+        /* Verify mocks were called as expected */
+        verify(buildData, times(1)).getLastBuiltRevision();
+        verify(buildData, times(1)).hasBeenReferenced(anyString());
+        verify(build, times(1)).getActions(BuildData.class);
     }
-
 
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1

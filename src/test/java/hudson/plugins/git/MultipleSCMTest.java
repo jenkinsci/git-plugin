@@ -18,7 +18,6 @@ import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -46,7 +45,6 @@ public class MultipleSCMTest {
 		repo1 = new TestGitRepo("repo1", tmp.newFolder(), listener);
 	}
 
-    @Ignore("https://github.com/jenkinsci/multiple-scms-plugin/pull/5 broke this; cf. JENKINS-14537")
 	@Test public void basic() throws Exception
 	{
 		FreeStyleProject project = setupBasicProject("master");

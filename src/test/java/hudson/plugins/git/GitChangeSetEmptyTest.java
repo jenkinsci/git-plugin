@@ -90,7 +90,8 @@ public class GitChangeSetEmptyTest {
 
     @Test
     public void testEquals() {
-        assertFalse(changeSet.equals(null));
+        assertEquals(changeSet, changeSet);
+        assertNotEquals(changeSet, GitChangeSetUtil.genChangeSet(true, true));
     }
 
 }

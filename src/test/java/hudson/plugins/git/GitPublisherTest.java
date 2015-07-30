@@ -24,7 +24,6 @@
 package hudson.plugins.git;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -39,10 +38,10 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.Issue;
 
 import java.io.IOException;
@@ -51,22 +50,33 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests for {@link GitPublisher}
  * 
  * @author Kohsuke Kawaguchi
  */
-public class GitPublisherTest extends AbstractGitTestCase {
-    @Bug(5005)
+public class GitPublisherTest extends AbstractGitProject {
+
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
+
+    @Issue("JENKINS-5005")
+    @Test
     public void testMatrixBuild() throws Exception {
         final AtomicInteger run = new AtomicInteger(); // count the number of times the perform is called
 
-        commit("a", johnDoe, "commit #1");
+        commitNewFile("a");
 
-        MatrixProject mp = createMatrixProject("xyz");
+        MatrixProject mp = jenkins.createMatrixProject("xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
-        mp.setScm(new GitSCM(workDir.getAbsolutePath()));
+        mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
@@ -92,8 +102,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
-        System.out.println(b.getLog());
+        MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
 
         assertTrue(existsTag("foo"));
 
@@ -103,11 +112,12 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertEquals(3,run.get());
     }
 
+    @Test
     public void testMergeAndPush() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
@@ -123,27 +133,28 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 true, true, false));
 
         // create initial commit and then run the build against it:
-        commit("commitFileBase", johnDoe, "Initial Commit");
-        testRepo.git.branch("integration");
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
         build(project, Result.SUCCESS, "commitFileBase");
 
-        testRepo.git.checkout(null, "topic1");
+        testGitClient.checkout(null, "topic1");
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
+        commitNewFile(commitFile1);
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
         String sha1 = getHeadRevision(build1, "integration");
-        assertEquals(sha1, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals(sha1, testGitClient.revParse(Constants.HEAD).name());
 
     }
 
     @Issue("JENKINS-12402")
+    @Test
     public void testMergeAndPushFF() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
@@ -159,21 +170,21 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 true, true, false));
 
         // create initial commit and then run the build against it:
-        commit("commitFileBase", johnDoe, "Initial Commit");
-        testRepo.git.branch("integration");
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, "commitFileBase");
         assertTrue(build1.getWorkspace().child("commitFileBase").exists());
         String shaIntegration = getHeadRevision(build1, "integration");
-        assertEquals("the integration branch should be at HEAD",shaIntegration, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals("the integration branch should be at HEAD", shaIntegration, testGitClient.revParse(Constants.HEAD).name());
 
         // create a new branch and build, this results in a fast-forward merge
-        testRepo.git.checkout("master");
-        ObjectId master = testRepo.git.revParse("HEAD");
-        testRepo.git.branch("branch1");
-        testRepo.git.checkout("branch1");
+        testGitClient.checkout("master");
+        ObjectId master = testGitClient.revParse("HEAD");
+        testGitClient.branch("branch1");
+        testGitClient.checkout("branch1");
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        String shaBranch1 = testRepo.git.revParse("branch1").name();
+        commitNewFile(commitFile1);
+        String shaBranch1 = testGitClient.revParse("branch1").name();
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile1);
 
         // Test that the build (including publish) performed as expected.
@@ -184,22 +195,22 @@ public class GitPublisherTest extends AbstractGitTestCase {
         //
         assertTrue(build2.getWorkspace().child("commitFile1").exists());
         shaIntegration = getHeadRevision(build2, "integration");
-        String shaHead = testRepo.git.revParse(Constants.HEAD).name();
+        String shaHead = testGitClient.revParse(Constants.HEAD).name();
         assertEquals("the integration branch and branch1 should line up",shaIntegration, shaBranch1);
         assertEquals("the integration branch should be at HEAD",shaIntegration, shaHead);
         // integration should have master as the parent commit
-        List<ObjectId> revList = testRepo.git.revList("integration^1");
+        List<ObjectId> revList = testGitClient.revList("integration^1");
         ObjectId integrationParent = revList.get(0);
         assertEquals("Fast-forward merge should have had master as a parent",master,integrationParent);
 
         // create a second branch off of master, so as to force a merge commit and to test
         // that --ff gracefully falls back to a merge commit
-        testRepo.git.checkout("master");
-        testRepo.git.branch("branch2");
-        testRepo.git.checkout("branch2");
+        testGitClient.checkout("master");
+        testGitClient.branch("branch2");
+        testGitClient.checkout("branch2");
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-        String shaBranch2 = testRepo.git.revParse("branch2").name();
+        commitNewFile(commitFile2);
+        String shaBranch2 = testGitClient.revParse("branch2").name();
         final FreeStyleBuild build3 = build(project, Result.SUCCESS, commitFile2);
 
         // Test that the build (including publish) performed as expected
@@ -216,18 +227,19 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
         assertTrue(build1.getWorkspace().child(commitFile2).exists());
         // the integration branch should have branch1 and branch2 as parents
-        revList = testRepo.git.revList("integration^1");
+        revList = testGitClient.revList("integration^1");
         assertEquals("Integration should have branch1 as a parent",revList.get(0).name(),shaBranch1);
-        revList = testRepo.git.revList("integration^2");
+        revList = testGitClient.revList("integration^2");
         assertEquals("Integration should have branch2 as a parent",revList.get(0).name(),shaBranch2);
     }
 
     @Issue("JENKINS-12402")
+    @Test
     public void testMergeAndPushNoFF() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
@@ -243,24 +255,24 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 true, true, false));
 
         // create initial commit and then run the build against it:
-        commit("commitFileBase", johnDoe, "Initial Commit");
-        testRepo.git.branch("integration");
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, "commitFileBase");
         assertTrue(build1.getWorkspace().child("commitFileBase").exists());
         String shaIntegration = getHeadRevision(build1, "integration");
-        assertEquals("integration branch should be at HEAD",shaIntegration, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals("integration branch should be at HEAD", shaIntegration, testGitClient.revParse(Constants.HEAD).name());
 
         // create a new branch and build
         // This would be a fast-forward merge, but we're calling for --no-ff and that should work
-        testRepo.git.checkout("master");
-        ObjectId master = testRepo.git.revParse("HEAD");
-        testRepo.git.branch("branch1");
-        testRepo.git.checkout("branch1");
+        testGitClient.checkout("master");
+        ObjectId master = testGitClient.revParse("HEAD");
+        testGitClient.branch("branch1");
+        testGitClient.checkout("branch1");
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        String shaBranch1 = testRepo.git.revParse("branch1").name();
+        commitNewFile(commitFile1);
+        String shaBranch1 = testGitClient.revParse("branch1").name();
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile1);
-        ObjectId mergeCommit = testRepo.git.revParse("integration");
+        ObjectId mergeCommit = testGitClient.revParse("integration");
 
         // Test that the build and publish performed as expected.
         //   - commitFile1 is in the workspace
@@ -272,18 +284,18 @@ public class GitPublisherTest extends AbstractGitTestCase {
         //     * 3066c87 (master) Initial Commit
         //
         assertTrue(build2.getWorkspace().child("commitFile1").exists());
-        List<ObjectId> revList = testRepo.git.revList("integration^1");
+        List<ObjectId> revList = testGitClient.revList("integration^1");
         assertEquals("Integration should have master as a parent",revList.get(0),master);
-        revList = testRepo.git.revList("integration^2");
+        revList = testGitClient.revList("integration^2");
         assertEquals("Integration should have branch1 as a parent",revList.get(0).name(),shaBranch1);
 
         // create a second branch off of master, so as to test that --no-ff is published as expected
-        testRepo.git.checkout("master");
-        testRepo.git.branch("branch2");
-        testRepo.git.checkout("branch2");
+        testGitClient.checkout("master");
+        testGitClient.branch("branch2");
+        testGitClient.checkout("branch2");
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-        String shaBranch2 = testRepo.git.revParse("branch2").name();
+        commitNewFile(commitFile2);
+        String shaBranch2 = testGitClient.revParse("branch2").name();
         final FreeStyleBuild build3 = build(project, Result.SUCCESS, commitFile2);
 
         // Test that the build performed as expected
@@ -304,18 +316,19 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertTrue("commitFile1 should exist in the workspace",build1.getWorkspace().child(commitFile1).exists());
         assertTrue("commitFile2 should exist in the workspace",build1.getWorkspace().child(commitFile2).exists());
         // the integration branch should have branch1 and branch2 as parents
-        revList = testRepo.git.revList("integration^1");
+        revList = testGitClient.revList("integration^1");
         assertEquals("Integration should have the first merge commit as a parent",revList.get(0),mergeCommit);
-        revList = testRepo.git.revList("integration^2");
+        revList = testGitClient.revList("integration^2");
         assertEquals("Integration should have branch2 as a parent",revList.get(0).name(),shaBranch2);
     }
 
     @Issue("JENKINS-12402")
+    @Test
     public void testMergeAndPushFFOnly() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
@@ -331,24 +344,24 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 true, true, false));
 
         // create initial commit and then run the build against it:
-        commit("commitFileBase", johnDoe, "Initial Commit");
-        testRepo.git.branch("integration");
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, "commitFileBase");
         assertTrue(build1.getWorkspace().child("commitFileBase").exists());
         String shaIntegration = getHeadRevision(build1, "integration");
-        assertEquals("integration should be at HEAD",shaIntegration, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals("integration should be at HEAD", shaIntegration, testGitClient.revParse(Constants.HEAD).name());
 
         // create a new branch and build
         // This merge can work with --ff-only
-        testRepo.git.checkout("master");
-        ObjectId master = testRepo.git.revParse("HEAD");
-        testRepo.git.branch("branch1");
-        testRepo.git.checkout("branch1");
+        testGitClient.checkout("master");
+        ObjectId master = testGitClient.revParse("HEAD");
+        testGitClient.branch("branch1");
+        testGitClient.checkout("branch1");
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        String shaBranch1 = testRepo.git.revParse("branch1").name();
+        commitNewFile(commitFile1);
+        String shaBranch1 = testGitClient.revParse("branch1").name();
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile1);
-        ObjectId mergeCommit = testRepo.git.revParse("integration");
+        ObjectId mergeCommit = testGitClient.revParse("integration");
 
         // Test that the build (including publish) performed as expected.
         //   - commitFile1 is in the workspace
@@ -358,24 +371,23 @@ public class GitPublisherTest extends AbstractGitTestCase {
         //
         assertTrue("commitFile1 should exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
         shaIntegration = getHeadRevision(build2, "integration");
-        String shaHead = testRepo.git.revParse(Constants.HEAD).name();
+        String shaHead = testGitClient.revParse(Constants.HEAD).name();
         assertEquals("integration and branch1 should line up",shaIntegration, shaBranch1);
         assertEquals("integration and head should line up",shaIntegration, shaHead);
         // integration should have master as the parent commit
-        List<ObjectId> revList = testRepo.git.revList("integration^1");
+        List<ObjectId> revList = testGitClient.revList("integration^1");
         ObjectId integrationParent = revList.get(0);
         assertEquals("Fast-forward merge should have had master as a parent",master,integrationParent);
 
         // create a second branch off of master, so as to force a merge commit
         // but the publish will fail as --ff-only cannot work with a parallel branch
-        testRepo.git.checkout("master");
-        testRepo.git.branch("branch2");
-        testRepo.git.checkout("branch2");
+        testGitClient.checkout("master");
+        testGitClient.branch("branch2");
+        testGitClient.checkout("branch2");
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-        String shaBranch2 = testRepo.git.revParse("branch2").name();
+        commitNewFile(commitFile2);
+        String shaBranch2 = testGitClient.revParse("branch2").name();
         final FreeStyleBuild build3 = build(project, Result.FAILURE, commitFile2);
-        showRepo(testRepo,"After merge commit build and a failed published");
 
         // Test that the publish did not merge the branches
         //   - The workspace will contain commitFile2, but not branch1's file (commitFile1)
@@ -386,10 +398,10 @@ public class GitPublisherTest extends AbstractGitTestCase {
         //     * ebffeb3 (master) Initial Commit
         assertFalse("commitFile1 should not exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
         assertTrue("commitFile2 should exist in the worksapce",build2.getWorkspace().child("commitFile2").exists());
-        revList = testRepo.git.revList("branch2^1");
+        revList = testGitClient.revList("branch2^1");
         assertEquals("branch2 should have master as a parent",revList.get(0),master);
         try {
-          revList = testRepo.git.revList("branch2^2");
+          revList = testGitClient.revList("branch2^2");
           assertTrue("branch2 should have no other parent than master",false);
         } catch (java.lang.NullPointerException err) {
           // expected
@@ -397,16 +409,18 @@ public class GitPublisherTest extends AbstractGitTestCase {
     }
 
     @Issue("JENKINS-24786")
+    @Test
     public void testPushEnvVarsInRemoteConfig() throws Exception{
     	FreeStyleProject project = setupSimpleProject("master");
 
-    	// create second (bare) test repository as target
-    	TestGitRepo testTargetRepo = new TestGitRepo("target", this, listener);
+        // create second (bare) test repository as target
+        TaskListener listener = StreamTaskListener.fromStderr();
+        TestGitRepo testTargetRepo = new TestGitRepo("target", tmpFolder.newFolder("push_env_vars"), listener);
     	testTargetRepo.git.init_().workspace(testTargetRepo.gitDir.getAbsolutePath()).bare(true).execute();
-    	testTargetRepo.commit("lostTargetFile", johnDoe, "Initial Target Commit");
+        testTargetRepo.commit("lostTargetFile", new PersonIdent("John Doe", "john@example.com"), "Initial Target Commit");
 
-    	// add second test repository as remote repository with environment variables
-    	List<UserRemoteConfig> remoteRepositories = createRemoteRepositories();
+        // add second test repository as remote repository with environment variables
+        List<UserRemoteConfig> remoteRepositories = remoteConfigs();
     	remoteRepositories.add(new UserRemoteConfig("$TARGET_URL", "$TARGET_NAME", "+refs/heads/$TARGET_BRANCH:refs/remotes/$TARGET_NAME/$TARGET_BRANCH", null));
 
         GitSCM scm = new GitSCM(
@@ -432,24 +446,25 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
                 true, false, true));
 
-        commit("commitFile", johnDoe, "Initial Commit");
-        testRepo.git.tag(tag_name, "Comment");
-        ObjectId expectedCommit = testRepo.git.revParse("master");
+        commitNewFile("commitFile");
+        testGitClient.tag(tag_name, "Comment");
+        ObjectId expectedCommit = testGitClient.revParse("master");
 
         build(project, Result.SUCCESS, "commitFile");
 
         // check if everything reached target repository
         assertEquals(expectedCommit, testTargetRepo.git.revParse("master"));
-        assertTrue(existsTagInRepo(testTargetRepo, tag_name));
+        assertTrue(existsTagInRepo(testTargetRepo.git, tag_name));
 
     }
 
     @Issue("JENKINS-24082")
+    @Test
     public void testForcePush() throws Exception {
     	FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
@@ -462,31 +477,32 @@ public class GitPublisherTest extends AbstractGitTestCase {
                 Collections.<NoteToPush>emptyList(),
                 true, true, true));
 
-        commit("commitFile", johnDoe, "Initial Commit");
+        commitNewFile("commitFile");
 
-        testRepo.git.branch("otherbranch");
-        testRepo.git.checkout("otherbranch");
-        commit("otherCommitFile", johnDoe, "commit lost on force push");
-        
-        testRepo.git.checkout("master");
-        commit("commitFile2", johnDoe, "commit to be pushed");
-        
-        ObjectId expectedCommit = testRepo.git.revParse("master");
-        
+        testGitClient.branch("otherbranch");
+        testGitClient.checkout("otherbranch");
+        commitNewFile("otherCommitFile");
+
+        testGitClient.checkout("master");
+        commitNewFile("commitFile2");
+
+        ObjectId expectedCommit = testGitClient.revParse("master");
+
         build(project, Result.SUCCESS, "commitFile");
 
-        assertEquals(expectedCommit, testRepo.git.revParse("otherbranch"));
+        assertEquals(expectedCommit, testGitClient.revParse("otherbranch"));
     }
 
     /**
      * Fix push to remote when skipTag is enabled
      */
-    @Bug(17769)
+    @Issue("JENKINS-17769")
+    @Test
     public void testMergeAndPushWithSkipTagEnabled() throws Exception {
       FreeStyleProject project = setupSimpleProject("master");
 
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, new ArrayList<GitSCMExtension>());
@@ -502,21 +518,22 @@ public class GitPublisherTest extends AbstractGitTestCase {
           true, true, false));
 
       // create initial commit and then run the build against it:
-      commit("commitFileBase", johnDoe, "Initial Commit");
-      testRepo.git.branch("integration");
+      commitNewFile("commitFileBase");
+      testGitClient.branch("integration");
       build(project, Result.SUCCESS, "commitFileBase");
 
-      testRepo.git.checkout(null, "topic1");
+      testGitClient.checkout(null, "topic1");
       final String commitFile1 = "commitFile1";
-      commit(commitFile1, johnDoe, "Commit number 1");
+      commitNewFile(commitFile1);
       final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
       assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
       String sha1 = getHeadRevision(build1, "integration");
-      assertEquals(sha1, testRepo.git.revParse(Constants.HEAD).name());
+      assertEquals(sha1, testGitClient.revParse(Constants.HEAD).name());
     }
 
-    @Bug(24786)
+    @Issue("JENKINS-24786")
+    @Test
     public void testMergeAndPushWithCharacteristicEnvVar() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -534,11 +551,12 @@ public class GitPublisherTest extends AbstractGitTestCase {
         checkEnvVar(project, envName, envValue);
     }
 
-    @Bug(24786)
+    @Issue("JENKINS-24786")
+    @Test
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        String envName = Functions.isWindows() ? "COMPUTERNAME" : "LOGNAME";
+        String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
         assertNotNull("Env " + envName + " not set", envValue);
         assertFalse("Env " + envName + " empty", envValue.isEmpty());
@@ -554,7 +572,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         scmExtensions.add(new PreBuildMerge(new UserMergeOptions("origin", envReference, null, null)));
         scmExtensions.add(new LocalBranch(envReference));
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, scmExtensions);
@@ -579,33 +597,33 @@ public class GitPublisherTest extends AbstractGitTestCase {
         project.getPublishersList().add(publisher);
 
         // create initial commit
-        commit("commitFileBase", johnDoe, "Initial Commit");
-        ObjectId initialCommit = testRepo.git.getHeadRev(testRepo.gitDir.getAbsolutePath(), "master");
-        assertTrue(testRepo.git.isCommitInRepo(initialCommit));
+        commitNewFile("commitFileBase");
+        ObjectId initialCommit = testGitClient.getHeadRev(testGitDir.getAbsolutePath(), "master");
+        assertTrue(testGitClient.isCommitInRepo(initialCommit));
 
         // Create branch in the test repo (pulled into the project workspace at build)
         assertFalse("Test repo has " + envValue + " branch", hasBranch(envValue));
-        testRepo.git.branch(envValue);
+        testGitClient.branch(envValue);
         assertTrue("Test repo missing " + envValue + " branch", hasBranch(envValue));
-        assertFalse(tagNameValue + " in " + testRepo, testRepo.git.tagExists(tagNameValue));
+        assertFalse(tagNameValue + " in " + testGitClient, testGitClient.tagExists(tagNameValue));
 
         // Build the branch
         final FreeStyleBuild build0 = build(project, Result.SUCCESS, "commitFileBase");
 
         String build0HeadBranch = getHeadRevision(build0, envValue);
         assertEquals(build0HeadBranch, initialCommit.getName());
-        assertTrue(tagNameValue + " not in " + testRepo, testRepo.git.tagExists(tagNameValue));
+        assertTrue(tagNameValue + " not in " + testGitClient, testGitClient.tagExists(tagNameValue));
         assertTrue(tagNameValue + " not in build", build0.getWorkspace().child(".git/refs/tags/" + tagNameValue).exists());
 
         // Create a topic branch in the source repository and commit to topic branch
         String topicBranch = envValue + "-topic1";
         assertFalse("Test repo has " + topicBranch + " branch", hasBranch(topicBranch));
-        testRepo.git.checkout(null, topicBranch);
+        testGitClient.checkout(null, topicBranch);
         assertTrue("Test repo has no " + topicBranch + " branch", hasBranch(topicBranch));
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        ObjectId topicCommit = testRepo.git.getHeadRev(testRepo.gitDir.getAbsolutePath(), topicBranch);
-        assertTrue(testRepo.git.isCommitInRepo(topicCommit));
+        commitNewFile(commitFile1);
+        ObjectId topicCommit = testGitClient.getHeadRev(testGitDir.getAbsolutePath(), topicBranch);
+        assertTrue(testGitClient.isCommitInRepo(topicCommit));
 
         // Run a build, should be on the topic branch, tagged, and noted
         final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
@@ -614,32 +632,37 @@ public class GitPublisherTest extends AbstractGitTestCase {
         assertTrue("Tag " + tagNameValue + " not in build", myWorkspace.child(".git/refs/tags/" + tagNameValue).exists());
 
         String build1Head = getHeadRevision(build1, envValue);
-        assertEquals(build1Head, testRepo.git.revParse(Constants.HEAD).name());
+        assertEquals(build1Head, testGitClient.revParse(Constants.HEAD).name());
         assertEquals("Wrong head commit in build1", topicCommit.getName(), build1Head);
 
     }
 
     private boolean existsTag(String tag) throws InterruptedException {
-        return existsTagInRepo(testRepo, tag);
+        return existsTagInRepo(testGitClient, tag);
     }
 
-    private boolean existsTagInRepo(TestGitRepo gitRepo, String tag) throws InterruptedException {
-        Set<String> tags = gitRepo.git.getTagNames("*");
+    private boolean existsTagInRepo(GitClient gitClient, String tag) throws InterruptedException {
+        Set<String> tags = gitClient.getTagNames("*");
         return tags.contains(tag);
     }
 
     private boolean containsTagMessage(String tag, String str) throws InterruptedException {
-        String msg = git.getTagMessage(tag);
+        String msg = testGitClient.getTagMessage(tag);
         return msg.contains(str);
     }
 
     private boolean hasBranch(String branchName) throws GitException, InterruptedException {
-        Set<Branch> testRepoBranches = testRepo.git.getBranches();
+        Set<Branch> testRepoBranches = testGitClient.getBranches();
         for (Branch branch : testRepoBranches) {
             if (branch.getName().equals(branchName)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
     }
 }

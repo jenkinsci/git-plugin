@@ -1,73 +1,64 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package hudson.plugins.git;
 
-import hudson.Functions;
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.triggers.SCMTrigger;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 
 import org.eclipse.jgit.transport.URIish;
-import org.jvnet.hudson.test.HudsonTestCase;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.jvnet.hudson.test.WithoutJenkins;
+
 import javax.servlet.http.HttpServletRequest;
 
-public class GitStatusTest extends HudsonTestCase {
+public class GitStatusTest extends AbstractGitProject {
+
     private GitStatus gitStatus;
     private HttpServletRequest requestWithNoParameter;
     private HttpServletRequest requestWithParameter;
 
-    public GitStatusTest(String testName) {
-        super(testName);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         this.gitStatus = new GitStatus();
         this.requestWithNoParameter = mock(HttpServletRequest.class);
         this.requestWithParameter = mock(HttpServletRequest.class);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        try { //Avoid test failures due to failed cleanup tasks
-            super.tearDown();
-        } catch (Exception e) {
-            if (e instanceof IOException && Functions.isWindows()) {
-                return;
-            }
-            e.printStackTrace();
-        }
-    }
-
+    @WithoutJenkins
+    @Test
     public void testGetDisplayName() {
         assertEquals("Git", this.gitStatus.getDisplayName());
     }
 
+    @WithoutJenkins
+    @Test
     public void testGetSearchUrl() {
         assertEquals("git", this.gitStatus.getSearchUrl());
     }
 
+    @WithoutJenkins
+    @Test
     public void testGetIconFileName() {
         assertNull(this.gitStatus.getIconFileName());
     }
 
+    @WithoutJenkins
+    @Test
     public void testGetUrlName() {
         assertEquals("git", this.gitStatus.getUrlName());
     }
 
+    @Test
     public void testDoNotifyCommitWithNoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -81,6 +72,7 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    @Test
     public void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -94,6 +86,7 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    @Test
     public void testDoNotifyCommitWithOneBranch() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -107,6 +100,7 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    @Test
     public void testDoNotifyCommitWithTwoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -120,6 +114,7 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    @Test
     public void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -133,6 +128,19 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
     }
 
+    @Test
+    public void testDoNotifyCommitWithParametrizedBranch() throws Exception {
+        SCMTrigger aMasterTrigger = setupProject("a", "$BRANCH_TO_BUILD", false);
+        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
+        Mockito.verify(aMasterTrigger).run();
+        Mockito.verify(bMasterTrigger, Mockito.never()).run();
+        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+    }
+
+    @Test
     public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", true);
 
@@ -140,13 +148,14 @@ public class GitStatusTest extends HudsonTestCase {
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
     }
 
-
+    @Test
     public void testDoNotifyCommitWithNoScmTrigger() throws Exception {
         setupProject("a", "master", null);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "");
         // no expectation here, however we shouldn't have a build triggered, and no exception
     }
 
+    @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
         SCMTrigger aMasterTrigger = setupProject("a", "master", false);
         SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
@@ -190,7 +199,7 @@ public class GitStatusTest extends HudsonTestCase {
     }
 
     private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
-        FreeStyleProject project = createFreeStyleProject();
+        FreeStyleProject project = jenkins.createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
@@ -201,7 +210,8 @@ public class GitStatusTest extends HudsonTestCase {
         if (trigger != null) project.addTrigger(trigger);
     }
 
-
+    @WithoutJenkins
+    @Test
     public void testLooseMatch() throws URISyntaxException {
         String[] list = new String[]{
             "https://github.com/jenkinsci/git-plugin.git",
@@ -217,7 +227,7 @@ public class GitStatusTest extends HudsonTestCase {
 
         for (URIish lhs : uris) {
             for (URIish rhs : uris) {
-                assertTrue(lhs+" and "+rhs+" didn't match",new GitStatus().looselyMatches(lhs,rhs));
+                assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
             }
         }
     }

@@ -9,7 +9,8 @@ import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
 import hudson.util.IOUtils;
 import hudson.util.RunList;
-import hudson.Functions;
+import hudson.model.TaskListener;
+import hudson.util.StreamTaskListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,43 +23,45 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
+import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
-public abstract class SCMTriggerTest extends AbstractGitTestCase
+public abstract class SCMTriggerTest extends AbstractGitProject
 {
     
     private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
+    protected boolean expectChanges = false;
         
-    @Override
-    protected void tearDown() throws Exception
+    @After
+    public void tearDown() throws Exception
     {
         try { //Avoid test failures due to failed cleanup tasks
-            super.tearDown();
             singleThreadExecutor.shutdownNow();
             tempAllocator.dispose();
         }
         catch (Exception e) {
-            if (e instanceof IOException && Functions.isWindows()) {
+            if (e instanceof IOException && isWindows()) {
                 return;
             }
             e.printStackTrace();
         }
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
+        expectChanges = false;
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
         tempAllocator = new TemporaryDirectoryAllocator();
@@ -68,7 +71,8 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
     protected abstract EnforceGitClient getGitClient();
     
     protected abstract boolean isDisableRemotePoll();
-    
+
+    @Test
     public void testNamespaces_with_refsHeadsMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/master",
@@ -76,6 +80,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/master");
     }
 
+    @Test
     public void testNamespaces_with_remotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "remotes/origin/master", 
@@ -83,6 +88,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/master");
     }
 
+    @Test
     public void testNamespaces_with_refsRemotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/remotes/origin/master", 
@@ -90,6 +96,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/master");
     }
 
+    @Test
     public void testNamespaces_with_master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "master",
@@ -97,6 +104,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/master");
     }
 
+    @Test
     public void testNamespaces_with_namespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "a_tests/b_namespace1/master",
@@ -104,6 +112,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/a_tests/b_namespace1/master");
     }
 
+    @Test
     public void testNamespaces_with_refsHeadsNamespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/a_tests/b_namespace1/master", 
@@ -111,6 +120,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/a_tests/b_namespace1/master");
     }
 
+    @Test
     public void testNamespaces_with_namespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "a_tests/b_namespace2/master",
@@ -118,13 +128,47 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "origin/a_tests/b_namespace2/master");
     }
 
+    @Test
     public void testNamespaces_with_refsHeadsNamespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/a_tests/b_namespace2/master", 
             namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace2/master"),
             "origin/a_tests/b_namespace2/master");
     }
-    
+
+    @Test
+    public void testNamespaces_with_namespace3_feature3_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "detached");
+    }
+
+    @Test
+    public void testNamespaces_with_namespace3_feature3_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "a_tests/b_namespace3/feature3",
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "origin/a_tests/b_namespace3/feature3");
+    }
+
+    @Test
+    public void testNamespaces_with_refsHeadsNamespace3_feature3_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "detached");
+    }
+
+    @Test
+    public void testNamespaces_with_refsHeadsNamespace3_feature3_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "refs/heads/a_tests/b_namespace3/feature3",
+                namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
+                "origin/a_tests/b_namespace3/feature3");
+    }
+
+    @Test
     public void testTags_with_TagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagA",
@@ -132,6 +176,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "TagA"); //TODO: What do we expect!?
     }
 
+    @Test
     public void testTags_with_TagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagBAnnotated", 
@@ -139,6 +184,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "TagBAnnotated"); //TODO: What do we expect!?
     }
 
+    @Test
     public void testTags_with_refsTagsTagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/tags/TagA",
@@ -146,6 +192,7 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "refs/tags/TagA"); //TODO: What do we expect!?
     }
 
+    @Test
     public void testTags_with_refsTagsTagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/tags/TagBAnnotated",
@@ -153,6 +200,23 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
             "refs/tags/TagBAnnotated");
     }
 
+    @Test
+    public void testCommitAsBranchSpec_feature4_sha1() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                "detached");
+    }
+
+    @Test
+    public void testCommitAsBranchSpec_feature4_branchName() throws Exception {
+        check(namespaceRepoZip, namespaceRepoCommits,
+                "refs/heads/b_namespace3/feature4",
+                namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
+                "origin/b_namespace3/feature4");
+    }
+
+    @Test
     public void testCommitAsBranchSpec() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), 
@@ -178,8 +242,9 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         FreeStyleBuild build1 = waitForBuildFinished(project, 1, 60000);
         assertNotNull("Job has not been triggered", build1);
 
+        TaskListener listener = StreamTaskListener.fromStderr();
         PollingResult poll = project.poll(listener);
-        assertFalse("Polling found new changes although nothing new", poll.hasChanges());
+        assertEquals("Expected and actual polling results disagree", false, poll.hasChanges());
         
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
@@ -258,4 +323,8 @@ public abstract class SCMTriggerTest extends AbstractGitTestCase
         }
     }
 
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
+    }
 }
