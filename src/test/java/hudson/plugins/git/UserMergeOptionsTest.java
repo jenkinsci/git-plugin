@@ -1,13 +1,17 @@
 package hudson.plugins.git;
 
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(Parameterized.class)
 public class UserMergeOptionsTest {
@@ -17,34 +21,43 @@ public class UserMergeOptionsTest {
 
     private final String expectedMergeRemote;
     private final String expectedMergeTarget;
+    private final String expectedMergeSource;
     private final MergeCommand.Strategy expectedMergeStrategy;
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
 
     public UserMergeOptionsTest(
             String mergeRemote,
             String mergeTarget,
+            String mergeSource,
             MergeCommand.Strategy mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.expectedMergeRemote = mergeRemote;
         this.expectedMergeTarget = mergeTarget;
+        this.expectedMergeSource = mergeSource;
         this.expectedMergeStrategy = mergeStrategy;
         this.expectedFastForwardMode = fastForwardMode;
         options = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
+                mergeSource,
                 mergeStrategy == null ? null : mergeStrategy.toString(),
                 fastForwardMode);
         deprecatedOptions = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
+                mergeSource,
                 mergeStrategy == null ? null : mergeStrategy.toString());
     }
 
-    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
+    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}+{4}")
     public static Collection mergeOptionVariants() {
         List<Object[]> mergeOptions = new ArrayList<Object[]>();
-        String[] remotes = new String[]{null, "src_remote"};
-        String[] targets = new String[]{null, "dst_remote"};
+        String[] remotes = new String[]{"src_remote"};
+        MergeInput[] inputs = new MergeInput[]{
+                new MergeInput(null, null),
+                new MergeInput("merge_source", null),
+                new MergeInput(null, "merge_target")
+        };
         MergeCommand.Strategy[] mergeStrategies = new MergeCommand.Strategy[]{
             null,
             MergeCommand.Strategy.DEFAULT,
@@ -61,10 +74,10 @@ public class UserMergeOptionsTest {
             MergeCommand.GitPluginFastForwardMode.NO_FF
         };
         for (String remote : remotes) {
-            for (String target : targets) {
+            for (MergeInput input : inputs) {
                 for (MergeCommand.Strategy strategy : mergeStrategies) {
                     for (MergeCommand.GitPluginFastForwardMode mode : fastForwardModes) {
-                        Object[] mergeOption = {remote, target, strategy, mode};
+                        Object[] mergeOption = {remote, input.getMergeTarget(), input.getMergeSource(), strategy, mode};
                         mergeOptions.add(mergeOption);
                     }
                 }
@@ -85,7 +98,9 @@ public class UserMergeOptionsTest {
 
     @Test
     public void testGetRef() {
-        assertEquals(expectedMergeRemote + "/" + expectedMergeTarget, options.getRef());
+        final String expectedMergeInput =
+                StringUtils.isNotBlank(expectedMergeTarget) ? expectedMergeTarget : expectedMergeSource;
+        assertEquals(expectedMergeRemote + "/" + expectedMergeInput, options.getRef());
     }
 
     @Test
@@ -103,6 +118,7 @@ public class UserMergeOptionsTest {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
+                + "mergeSource='" + expectedMergeSource + "', "
                 + "mergeStrategy='" + expectedMergeStrategy + "', "
                 + "fastForwardMode='" + expectedFastForwardMode + "'"
                 + '}';
@@ -114,6 +130,7 @@ public class UserMergeOptionsTest {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertEquals(expected, options);
@@ -125,6 +142,7 @@ public class UserMergeOptionsTest {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         /* reflexive */
@@ -137,11 +155,13 @@ public class UserMergeOptionsTest {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         UserMergeOptions expected1 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertEquals(expected, expected1);
@@ -163,15 +183,24 @@ public class UserMergeOptionsTest {
         UserMergeOptions notExpected1 = new UserMergeOptions(
                 "x" + this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertNotEquals(notExpected1, options);
         UserMergeOptions notExpected2 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 "y" + this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertNotEquals(notExpected2, options);
+        UserMergeOptions notExpected3 = new UserMergeOptions(
+                this.expectedMergeRemote,
+                this.expectedMergeTarget,
+                "z" + this.expectedMergeSource,
+                this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
+                this.expectedFastForwardMode);
+        assertNotEquals(notExpected3, options);
         assertNotEquals(options, "A different data type");
     }
 
@@ -180,9 +209,29 @@ public class UserMergeOptionsTest {
         UserMergeOptions expected = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
+                this.expectedMergeSource,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
                 this.expectedFastForwardMode);
         assertEquals(expected, options);
         assertEquals(expected.hashCode(), options.hashCode());
+    }
+
+    private static class MergeInput {
+
+        private final String mergeSource;
+        private final String mergeTarget;
+
+        public MergeInput(String mergeSource, String mergeTarget) {
+            this.mergeSource = mergeSource;
+            this.mergeTarget = mergeTarget;
+        }
+
+        public String getMergeSource() {
+            return mergeSource;
+        }
+
+        public String getMergeTarget() {
+            return mergeTarget;
+        }
     }
 }
