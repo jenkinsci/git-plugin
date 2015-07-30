@@ -93,6 +93,10 @@ public class TestGitRepo {
         git.commit(message);
     }
 
+    public void tag(String tagName, String comment) throws GitException, InterruptedException {
+        git.tag(tagName, comment);
+    }
+
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
         List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
