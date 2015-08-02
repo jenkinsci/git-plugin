@@ -38,7 +38,7 @@ public class AssemblaWebTest {
     @Test
     public void testGetChangeSetLink() throws Exception {
         URL result = (new AssemblaWeb(repoUrl)).getChangeSetLink(sample.changeSet);
-        assertEquals(new URL(repoUrl + "commit/" + sample.id), result);
+        assertEquals(new URL(repoUrl + "commits/" + sample.id), result);
     }
 
     @Test
@@ -47,7 +47,7 @@ public class AssemblaWebTest {
         for (GitChangeSet.Path path : sample.changeSet.getPaths()) {
             URL diffLink = assemblaWeb.getDiffLink(path);
             EditType editType = path.getEditType();
-            URL expectedDiffLink = new URL(repoUrl + "commit/" + sample.id);
+            URL expectedDiffLink = new URL(repoUrl + "commits/" + sample.id);
             String msg = "Wrong link for path: " + path.getPath() + ", edit type: " + editType.getName();
             assertEquals(msg, expectedDiffLink, diffLink);
         }
