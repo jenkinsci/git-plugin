@@ -60,6 +60,9 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jvnet.hudson.test.Issue;
 
 import org.mockito.Mockito;
+
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -1844,6 +1847,32 @@ public class GitSCMTest extends AbstractGitTestCase {
             }
             return true;
         }
+    }
+
+    public void testReadDescribe() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        //--- FIRST COMMIT, NO TAG
+        commit("commitFile1", johnDoe, "Commit number 1");
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, "commitFile1");
+
+        String gitDescribe1 = ((GitSCM) project.getScm()).readGitDescribe(build1, null);
+        assertEquals(null, gitDescribe1);
+
+        //--- SECOND COMMIT WITH TAG ON IT
+        commit("commitFile2", johnDoe, "Commit number 2");
+        testRepo.tag("1.0.6", "");
+        build1 = build(project, Result.SUCCESS, "commitFile2");
+
+        String gitDescribe2 = ((GitSCM) project.getScm()).readGitDescribe(build1, null);
+        assertEquals("1.0.6", gitDescribe2);
+
+        //--- THIRD COMMIT
+        commit("commitFile3", johnDoe, "Commit number 3");
+        build1 = build(project, Result.SUCCESS, "commitFile3");
+
+        String gitDescribe3 = ((GitSCM) project.getScm()).readGitDescribe(build1, null);
+        assertThat(gitDescribe3, startsWith("1.0.6-1-g"));
     }
 
     private void setupJGit(GitSCM git) {

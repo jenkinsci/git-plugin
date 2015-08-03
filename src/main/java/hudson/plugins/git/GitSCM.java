@@ -697,7 +697,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
+        return createClient(listener, environment, build.getParent(), workspaceToNode(workspace), ws);
     }
 
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
@@ -843,6 +843,31 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (d!=null && d.lastBuild!=null) {
                 Build lb = d.lastBuild;
                 if (lb.isFor(sha1)) return b;
+            }
+        }
+        return null;
+    }
+
+
+    String readGitDescribe(AbstractBuild<?, ?> ctx, TaskListener listener) throws InterruptedException, IOException {
+
+        BuildData buildData = ctx.getAction(BuildData.class);
+        if (buildData==null){
+            return "";
+        }
+        Revision rev = buildData.getLastBuiltRevision();
+        if (rev == null) {
+            return "";
+        }
+
+        try {
+            GitClient client = createClient(listener, ctx.getEnvironment(listener), ctx, ctx.getWorkspace());
+            return client.describe(rev.getSha1String());
+        } catch (GitException e) {
+            if (e.getMessage().contains("No names found, cannot describe anything")){
+                //ignore
+            } else {
+                LOGGER.log(Level.WARNING, "Error while creating client", e);
             }
         }
         return null;
