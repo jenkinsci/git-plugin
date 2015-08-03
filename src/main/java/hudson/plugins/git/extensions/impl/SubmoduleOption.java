@@ -1,18 +1,28 @@
 package hudson.plugins.git.extensions.impl;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.model.Run;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.impl.Credentials;
 import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import hudson.security.ACL;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -40,13 +50,26 @@ public class SubmoduleOption extends GitSCMExtension {
     private boolean recursiveSubmodules;
     private boolean trackingSubmodules;
     private Integer timeout;
+    List<Credentials> credentials;
 
     @DataBoundConstructor
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, Integer timeout, List<Credentials> credentials) {
+        this.disableSubmodules = disableSubmodules;
+        this.recursiveSubmodules = recursiveSubmodules;
+        this.trackingSubmodules = trackingSubmodules;
+        this.timeout = timeout;
+        if (credentials == null)
+            this.credentials = new ArrayList<Credentials>();
+        else
+            this.credentials = credentials;
+    }
+
     public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, Integer timeout) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
         this.timeout = timeout;
+        this.credentials = new ArrayList<Credentials>();
     }
 
     public boolean isDisableSubmodules() {
@@ -70,6 +93,24 @@ public class SubmoduleOption extends GitSCMExtension {
         if (!disableSubmodules && git.hasGitModules()) {
             git.submoduleClean(recursiveSubmodules);
         }
+    }
+
+    @Override
+    public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+        for (Credentials creds : credentials) {
+            StandardCredentials credentials = CredentialsMatchers
+                .firstOrNull(CredentialsProvider.lookupCredentials(StandardCredentials.class,
+                            (Item) null,
+                            ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(creds.getUrl()).build()),
+                        CredentialsMatchers.allOf(CredentialsMatchers.withId(creds.getCredentialsId()),
+                            GitClient.CREDENTIALS_MATCHER));
+            if (credentials != null) {
+                git.addCredentials(creds.getUrl(), credentials);
+            }
+        }
+
+        return git;
     }
 
     @Override
