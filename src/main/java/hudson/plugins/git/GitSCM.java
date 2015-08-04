@@ -568,9 +568,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final String singleBranch = getSingleBranch(pollEnv);
 
-        if (!requiresWorkspaceForPolling(pollEnv)) {
+        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
+        if (!requiresWorkspaceForPolling(pollEnv)) {
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
@@ -633,8 +633,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
             return NO_CHANGES;
         }
-
-        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
