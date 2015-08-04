@@ -116,6 +116,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_BRANCH_SHORT = "GIT_BRANCH_SHORT";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1050,6 +1051,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch != null && branch.getName() != null) { // null for a detached HEAD
             environment.put(GIT_BRANCH, getBranchName(branch));
+            environment.put(GIT_BRANCH_SHORT, getBranchNameShort(branch));
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
@@ -1166,6 +1168,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null && branch.getName()!=null) {
                 env.put(GIT_BRANCH, getBranchName(branch));
+                env.put(GIT_BRANCH_SHORT, getBranchNameShort(branch));
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1209,6 +1212,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             name = name.substring("refs/remotes/".length());
         }
         return name;
+    }
+
+    private String getBranchNameShort(Branch branch)
+    {
+        String name = branch.getName();
+        return name.substring(name.lastIndexOf('/')+1);
     }
 
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
