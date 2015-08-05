@@ -598,12 +598,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                 break;
                             }
                         }
-                        if(! match) {
-                            listener.getLogger().println("Ignoring " + head + " as it doesn't match configured refspecs");
+                        if (!match) {
+                            listener.getLogger().println("Ignoring " + head + " as it doesn't match any of the configured refspecs");
                             it.remove();
                         }
                     }
-
 
                     for (BranchSpec branchSpec : getBranches()) {
                         for (Entry<String, ObjectId> entry : heads.entrySet()) {
