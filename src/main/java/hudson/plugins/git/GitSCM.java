@@ -591,12 +591,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     Iterator<Entry<String, ObjectId>> it = heads.entrySet().iterator();
                     while (it.hasNext()) {
                         String head = it.next().getKey();
+                        boolean match = false;
                         for (RefSpec spec : refSpecs) {
-                            if (!spec.matchSource(head)) {
-                                listener.getLogger().println("Ignoring " + head + " as it doesn't match configured refspecs");
-                                it.remove();
+                            if (spec.matchSource(head)) {
+                                match = true;
                                 break;
                             }
+                        }
+                        if(! match) {
+                            listener.getLogger().println("Ignoring " + head + " as it doesn't match configured refspecs");
+                            it.remove();
                         }
                     }
 
