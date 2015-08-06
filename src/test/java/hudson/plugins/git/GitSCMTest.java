@@ -60,6 +60,8 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jvnet.hudson.test.Issue;
 
 import org.mockito.Mockito;
+import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -580,8 +582,11 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
         assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        assertNull(getEnvVars(project).get(GitSCM.GIT_DESCRIBE));
 
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+
+        testRepo.tag("1.0.6", "");
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
@@ -592,6 +597,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
         assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        assertThat(getEnvVars(project).get(GitSCM.GIT_DESCRIBE), startsWith("1.0.6-1-g"));
     }
 
     // For HUDSON-7411

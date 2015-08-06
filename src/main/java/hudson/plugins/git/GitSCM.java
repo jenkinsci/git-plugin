@@ -119,6 +119,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final String GIT_DESCRIBE = "GIT_DESCRIBE";
 
     /**
      * All the configured extensions attached to this.
@@ -1066,6 +1067,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
 
+        //read ´git describe´
+        try {
+            environment.put(GIT_DESCRIBE, git.describe(revToBuild.revision.getSha1String()));
+        } catch (GitException e) {
+            //ignore
+        }
+
         build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
 
         if (changelogFile != null) {
@@ -1181,6 +1189,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String sha1 = fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
+            }
+
+            //read ´git describe´
+            try {
+                GitClient client = createClient(TaskListener.NULL, ((EnvVars) env), build, build.getWorkspace());
+                env.put(GIT_DESCRIBE, client.describe(sha1));
+            } catch (GitException e) {
+                //ignore
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                //ignore
             }
         }
 
