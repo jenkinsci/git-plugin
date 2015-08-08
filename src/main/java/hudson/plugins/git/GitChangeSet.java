@@ -214,6 +214,19 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return new SimpleDateFormat(ISO_8601_WITH_TZ).parse(getDate()).getTime();
         } catch (ParseException e) {
             return -1;
+        } catch (IllegalArgumentException ia) {
+            /* Java 6 does not accept "X" as a format string, use "Z"
+             * instead and remove the ':' from the source time zone
+             * string to satisfy that format string.
+             * http://stackoverflow.com/questions/15505658/unparseable-date-using-dateformat-parse
+             */
+            final String java6FormatDef = ISO_8601_WITH_TZ.replace("X", "Z");
+            final String java6Date = getDate().replaceAll(":(\\d\\d)$", "$1");
+            try {
+                return new SimpleDateFormat(java6FormatDef).parse(java6Date).getTime();
+            } catch (ParseException e) {
+                return -1;
+            }
         }
     }
 
