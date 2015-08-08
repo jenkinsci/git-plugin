@@ -471,26 +471,85 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
-        project.getPublishersList().add(new GitPublisher(
+        GitPublisher forcedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, true));
+                true, true, true);
+        project.getPublishersList().add(forcedPublisher);
 
+        // Create a commit on the master branch in the test repo
         commitNewFile("commitFile");
+        ObjectId masterCommit1 = testGitClient.revParse("master");
 
+        // Checkout and commit to "otherbranch" in the test repo
         testGitClient.branch("otherbranch");
         testGitClient.checkout("otherbranch");
         commitNewFile("otherCommitFile");
+        ObjectId otherCommit = testGitClient.revParse("otherbranch");
 
         testGitClient.checkout("master");
         commitNewFile("commitFile2");
+        ObjectId masterCommit2 = testGitClient.revParse("master");
 
-        ObjectId expectedCommit = testGitClient.revParse("master");
+        // masterCommit1 parent of both masterCommit2 and otherCommit
+        assertEquals(masterCommit1, testGitClient.revParse("master^"));
+        assertEquals(masterCommit1, testGitClient.revParse("otherbranch^"));
 
-        build(project, Result.SUCCESS, "commitFile");
+        // Confirm that otherbranch still points to otherCommit
+        // build will merge and push to "otherbranch" in test repo
+        // Without force, this would fail
+        assertEquals(otherCommit, testGitClient.revParse("otherbranch")); // not merged yet
+        assertTrue("otherCommit not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit));
+        build(project, Result.SUCCESS, "commitFile2");
+        assertEquals(masterCommit2, testGitClient.revParse("otherbranch")); // merge done
+        assertFalse("otherCommit in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit));
 
-        assertEquals(expectedCommit, testGitClient.revParse("otherbranch"));
+        // Commit to otherbranch in test repo so that next merge will fail
+        testGitClient.checkout("otherbranch");
+        commitNewFile("otherCommitFile2");
+        ObjectId otherCommit2 = testGitClient.revParse("otherbranch");
+        assertNotEquals(masterCommit2, otherCommit2);
+
+        // Commit to master branch in test repo
+        testGitClient.checkout("master");
+        commitNewFile("commitFile3");
+        ObjectId masterCommit3 = testGitClient.revParse("master");
+
+        // Remove forcedPublisher, add unforcedPublisher
+        project.getPublishersList().remove(forcedPublisher);
+        GitPublisher unforcedPublisher = new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false);
+        project.getPublishersList().add(unforcedPublisher);
+
+        // build will attempts to merge and push to "otherbranch" in test repo.
+        // Without force, will fail
+        assertEquals(otherCommit2, testGitClient.revParse("otherbranch")); // not merged yet
+        assertTrue("otherCommit2 not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
+        build(project, Result.FAILURE, "commitFile3");
+        assertEquals(otherCommit2, testGitClient.revParse("otherbranch")); // still not merged
+        assertTrue("otherCommit2 not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
+
+        // Remove unforcedPublisher, add forcedPublisher
+        project.getPublishersList().remove(unforcedPublisher);
+        project.getPublishersList().add(forcedPublisher);
+
+        // Commit to master branch in test repo
+        testGitClient.checkout("master");
+        commitNewFile("commitFile4");
+        ObjectId masterCommit4 = testGitClient.revParse("master");
+
+        // build will merge and push to "otherbranch" in test repo.
+        assertEquals(otherCommit2, testGitClient.revParse("otherbranch"));
+        assertTrue("otherCommit2 not in test repo", testGitClient.isCommitInRepo(otherCommit2));
+        assertTrue("otherCommit2 not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
+        build(project, Result.SUCCESS, "commitFile4");
+        assertEquals(masterCommit4, testGitClient.revParse("otherbranch"));
+        assertEquals(masterCommit3, testGitClient.revParse("otherbranch^"));
+        assertFalse("otherCommit2 in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
     }
 
     /**
