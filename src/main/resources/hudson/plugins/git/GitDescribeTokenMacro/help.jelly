@@ -1,0 +1,23 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+  <dt>$${GIT_DESCRIBE}</dt>
+  <dd>
+    Expands to the description of a commit using the most recent tag reachable from it: 'git describe'.
+  </dd>
+
+  <h3>Parameters</h3>
+  <dl>
+    <dt>tag (default to true)</dt>
+    <dd>
+      Include tag part
+    </dd>
+    <dt>distance (default to true)</dt>
+    <dd>
+      Include distance part
+    </dd>
+    <dt>revision (default to true)</dt>
+    <dd>
+      Include revision part
+    </dd>
+  </dl>
+</j:jelly>
