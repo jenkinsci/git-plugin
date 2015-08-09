@@ -253,6 +253,9 @@ public class BuildData implements Action, Serializable, Cloneable {
         Set<String> names = new HashSet<String>(buildsByBranchName.keySet());
         for (Branch branch : keepBranches) {
             String name = branch.getName();
+            if (name.startsWith("refs/")) {
+                names.remove(name.substring(5));
+            }
             if (name.startsWith("remotes/")) {
                 names.remove(name.substring(8));
             }

@@ -48,7 +48,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
+        return new URL(url, url.getPath() + "commits/" + changeSet.getId());
     }
 
     /**
