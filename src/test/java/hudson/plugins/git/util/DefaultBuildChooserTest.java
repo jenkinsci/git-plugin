@@ -94,7 +94,7 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", client, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
         String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
-        assertTrue(name.equals("origin/tags/tag/c") || name.equals("origin/tags/tag/b"));
+        assertTrue("Wrong name: '" + name + "'", name.equals("origin/tags/tag/c") || name.equals("origin/tags/tag/b"));
     }
 
     /**
