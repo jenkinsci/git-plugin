@@ -46,7 +46,11 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     }
 
     public Descriptor<GitTagAction> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorOrDie(getClass());
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            throw new IllegalStateException("Jenkins instance is not ready");
+        }
+        return jenkins.getDescriptorOrDie(getClass());
     }
 
     @Override
@@ -198,6 +202,15 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     listener.getLogger().println("Trying next branch");
                 }
             }
+        }
+
+        /**
+         * Gets a comment for the thread 
+         * @return Comment
+         * @since TODO
+         */
+        public String getComment() {
+            return comment;
         }
     }
 

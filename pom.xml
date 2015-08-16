@@ -23,6 +23,7 @@
   
   <properties>
     <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
+    <findbugs.failOnError>false</findbugs.failOnError>
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4</maven-enforcer-plugin.version>
@@ -38,15 +39,6 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>${findbugs-maven-plugin.version}</version>
-          <configuration>
-            <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
-            <failOnError>${maven.findbugs.failure.strict}</failOnError>
-          </configuration>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -200,6 +192,26 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>${findbugs-maven-plugin.version}</version>
+        <configuration>
+          <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
+          <failOnError>${findbugs.failOnError}</failOnError>
+          <xmlOutput>true</xmlOutput>
+          <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+        </configuration>
+        <executions>
+          <execution>
+            <id>run-findbugs</id>
+            <phase>verify</phase> 
+            <goals>
+              <goal>check</goal> 
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -327,6 +339,12 @@
           <artifactId>sisu-guava</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <version>3.0.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 

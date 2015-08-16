@@ -33,6 +33,9 @@ public class SubmoduleConfig implements java.io.Serializable {
     }
 
     public boolean branchMatchesInterest(Branch br) {
+        if (branches == null) {
+            return false;
+        }
         for (String regex : branches) {
             if (!Pattern.matches(regex, br.getName())) {
                 return false;

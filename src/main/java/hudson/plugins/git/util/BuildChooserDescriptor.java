@@ -20,7 +20,13 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
     }
 
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.getInstance().getDescriptorList(BuildChooser.class);
+        // TODO: replace by a method in Jenkins core when it becomes available
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            return jenkins.getDescriptorList(BuildChooser.class);
+        } else {
+            return DescriptorExtensionList.createDescriptorList((Jenkins)null, BuildChooser.class);
+        }
     }
 
     /**

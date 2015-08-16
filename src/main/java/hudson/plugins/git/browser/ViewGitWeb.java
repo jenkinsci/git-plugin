@@ -56,13 +56,13 @@ public class ViewGitWeb extends GitRepositoryBrowser {
 
 	private String buildCommitDiffSpec(URL url, Path path)
 			throws UnsupportedEncodingException {
-        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()).toString() + "#" +  URLEncoder.encode(path.getPath(),"UTF-8").toString();
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(),"UTF-8");
 	}
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()));
     }
 
     private QueryBuilder param(URL url) {

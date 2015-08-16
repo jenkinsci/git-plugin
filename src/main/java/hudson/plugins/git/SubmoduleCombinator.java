@@ -170,8 +170,8 @@ public class SubmoduleCombinator {
 
         for (IndexEntry entry : entries) {
             Revision b = null;
-            for (IndexEntry e : item.keySet()) {
-                if (e.getFile().equals(entry.getFile())) b = item.get(e);
+            for (Entry<IndexEntry, Revision> e : item.entrySet()) {
+                if (e.getKey().getFile().equals(entry.getFile())) b = item.get(e.getKey());
             }
 
             if (b == null) return -1;

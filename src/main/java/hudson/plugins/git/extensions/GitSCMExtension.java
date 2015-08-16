@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -58,6 +59,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *      false to trigger a build from this commit, regardless of what later {@link GitSCMExtension}s say.
      *      null to allow other {@link GitSCMExtension}s to decide.
      */
+    @SuppressFBWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "As designed in this API, null by default")
     public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
         return null;
     }

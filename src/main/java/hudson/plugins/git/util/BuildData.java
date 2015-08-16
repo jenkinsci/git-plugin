@@ -126,8 +126,9 @@ public class BuildData implements Action, Serializable, Cloneable {
             }
 
             return null;
-        }
-        catch(Exception ex) {
+        } catch (Error error) {
+            throw error;
+        } catch(Throwable ex) { // We suppress all other errors
             return null;
         }
     }

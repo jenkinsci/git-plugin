@@ -31,7 +31,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, "diff?rev=" + changeSet.getId().toString());
+        return new URL(url, "diff?rev=" + changeSet.getId());
     }
 
     /**
@@ -52,7 +52,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        final URL changeSetLink = new URL(url, "revisions/" + changeSet.getId().toString());
+        final URL changeSetLink = new URL(url, "revisions/" + changeSet.getId());
         final URL difflink;
         if (path.getEditType().equals(EditType.ADD)) {
             difflink = getFileLink(path);

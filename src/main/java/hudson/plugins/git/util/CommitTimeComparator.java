@@ -30,6 +30,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import java.io.IOException;
 import java.util.Comparator;
 
+//TODO: serialization issue. RevWalk is not serializable
 /**
  * Compares {@link Revision} by their timestamps.
  * 

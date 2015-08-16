@@ -153,18 +153,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     	if (build == null){
     		return input;
     	}
-        String buildResult = build.getResult().toString();
-        String buildDuration = build.getDurationString();
-
-        if ( buildResult == null){ 
-        	buildResult = ""; 
-        }
-        if ( buildDuration == null){ 
-        	buildDuration = ""; 
-        }
-        else{
-        	buildDuration = buildDuration.replaceAll("and counting", "");
-        }
+        
+        final Result result = build.getResult();
+        final String buildResult = result != null ? result.toString() : "";
+        final String buildDuration = build.getDurationString().replaceAll("and counting", "");
         
         input = input.replaceAll("\\$BUILDRESULT", buildResult);
         input = input.replaceAll("\\$BUILDDURATION", buildDuration);

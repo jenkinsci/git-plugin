@@ -83,6 +83,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -90,6 +92,8 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractGitSCMSource extends SCMSource {
 
+    private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
+    
     /**
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
      */
@@ -120,6 +124,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
+            if (cacheDir == null) {
+                throw new IOException("Cannot get the cache directory for envirumnent variables");
+            }
             Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
@@ -156,6 +163,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
+            if (cacheDir == null) {
+                throw new IOException("Cannot get the cache directory for envirumnent variables");
+            }
             Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
@@ -247,9 +257,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return "git-" + Util.getDigestOf(getRemote());
     }
 
+    @CheckForNull
     protected static File getCacheDir(String cacheEntry) {
-        File cacheDir = new File(new File(Jenkins.getInstance().getRootDir(), "caches"), cacheEntry);
-        cacheDir.getParentFile().mkdirs();
+        final Jenkins jenkins = Jenkins.getInstance();
+        final File rootDir = jenkins != null ? jenkins.getRootDir() : null;
+        if (rootDir == null) {
+            return null;
+        }
+        File cacheDir = new File(new File(rootDir, "caches"), cacheEntry);
+        final File parentFile = cacheDir.getParentFile();
+        if (parentFile == null || !parentFile.mkdirs()) {
+            LOGGER.log(Level.WARNING, "Cannot create a parent directory for {0}", cacheDir);
+        }
         return cacheDir;
     }
 
