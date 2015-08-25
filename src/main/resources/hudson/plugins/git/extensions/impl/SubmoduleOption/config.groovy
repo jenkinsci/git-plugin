@@ -11,6 +11,9 @@ f.entry(title:_("Recursively update submodules"), field:"recursiveSubmodules") {
 f.entry(title:_("Update tracking submodules to tip of branch"), field:"trackingSubmodules") {
     f.checkbox()
 }
+f.entry(title:_("Path of the reference repo to use during submodule update"), field:"reference") {
+    f.textbox()
+}
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
     f.textbox()
 }
