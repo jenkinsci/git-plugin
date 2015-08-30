@@ -263,7 +263,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                         parametrizedBranchSpec = true;
                                     } else {
                                         for (String branch : branches) {
-                                            if (branchSpec.matches(repository.getName() + "/" + branch)) {
+                                            if (branchSpec.matches(branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
                                                     LOGGER.fine("Branch Spec " + branchSpec + " matches modified branch " + branch + " for " + project.getFullDisplayName() + ". ");
                                                 }
