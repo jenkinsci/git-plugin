@@ -28,9 +28,16 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
+import hudson.model.Descriptor;
 import hudson.model.ParameterValue;
 import hudson.plugins.git.GitStatus;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.scm.RepositoryBrowser;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
@@ -76,18 +83,44 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final boolean ignoreOnPushNotifications;
 
+    private final GitRepositoryBrowser browser;
+
+    private final String gitTool;
+
+    private final List<GitSCMExtension> extensions;
+
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes,
+            boolean ignoreOnPushNotifications, GitRepositoryBrowser browser, String gitTool,
+            List<GitSCMExtension> extensions) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
         this.includes = includes;
         this.excludes = excludes;
         this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+        this.browser = browser;
+        this.gitTool = gitTool;
+        this.extensions = Util.fixNull(extensions);
     }
 
     public boolean isIgnoreOnPushNotifications() {
       return ignoreOnPushNotifications;
+    }
+
+    @Override
+    public GitRepositoryBrowser getBrowser() {
+        return browser;
+    }
+
+    @Override
+    public String getGitTool() {
+        return gitTool;
+    }
+
+    @Override
+    public List<GitSCMExtension> getExtensions() {
+        return extensions;
     }
 
     @Override
@@ -140,7 +173,25 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
+        public GitSCM.DescriptorImpl getSCMDescriptor() {
+            return (GitSCM.DescriptorImpl)Jenkins.getInstance().getDescriptor(GitSCM.class);
+        }
 
+        public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
+            return getSCMDescriptor().getExtensionDescriptors();
+        }
+
+        public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
+            return getSCMDescriptor().getBrowserDescriptors();
+        }
+
+        public boolean showGitToolOptions() {
+            return getSCMDescriptor().showGitToolOptions();
+        }
+
+        public ListBoxModel doFillGitToolItems() {
+            return getSCMDescriptor().doFillGitToolItems();
+        }
     }
 
     @Extension

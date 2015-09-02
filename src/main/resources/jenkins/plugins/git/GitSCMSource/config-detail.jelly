@@ -33,6 +33,20 @@
   <f:entry title="${%Ignore on push notifications}" field="ignoreOnPushNotifications">
     <f:checkbox/>
   </f:entry>
+
+  <j:set var="scm" value="${instance}" />
+
+  <j:if test="${descriptor.showGitToolOptions()}">
+    <f:entry title="${%Git executable}" field="gitTool">
+      <f:select />
+    </f:entry>
+  </j:if>
+  <t:listScmBrowsers name="git.browser" />
+  <f:entry title="${%Additional Behaviours}">
+    <f:hetero-list name="extensions" items="${instance.extensions}" descriptors="${descriptor.getExtensionDescriptors()}"
+      hasHeader="true" />
+  </f:entry>
+
   <f:advanced>
     <f:entry title="${%Include branches}" field="includes">
       <f:textbox default="*"/>
