@@ -1,21 +1,16 @@
-Git SCM plugin
-==============
+# Git SCM plugin
 
 Git software configuration management support for Jenkins
 
 * see [Jenkins wiki](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin) for detailed feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
-Master Branch
-=============
+## Master Branch
 
-This is the master branch of the git plugin. It depends on a more
-recent version of jenkins core so that it can support the workflow
-plugin. This branch is the primary development branch for the git
-plugin.
+This is the master branch of the git plugin and is the primary
+development branch for the git plugin.
 
-Contributing to the Plugin
-==========================
+## Contributing to the Plugin
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
@@ -39,8 +34,7 @@ when you submit.
 Before submitting your change, please review the findbugs output to
 assure that you haven't introduced new findbugs warnings.
 
-To Do
-=====
+## To Do
 
 * Fix [bugs](https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+"In+Progress"%2C+Reopened%29+AND+component+%3D+git-plugin)
 * Create submodule tests
