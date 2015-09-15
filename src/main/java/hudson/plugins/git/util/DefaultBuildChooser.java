@@ -246,8 +246,8 @@ public class DefaultBuildChooser extends BuildChooser {
         verbose(listener, "After branch filtering: {0}", revs);
 
         // 3. We only want 'tip' revisions
-        revs = utils.filterTipBranches(revs);
-        verbose(listener, "After non-tip filtering: {0}", revs);
+//        revs = utils.filterTipBranches(revs);
+//        verbose(listener, "After non-tip filtering: {0}", revs);
 
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
