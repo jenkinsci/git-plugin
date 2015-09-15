@@ -522,6 +522,83 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
+    public PollingResult compareRemoteRevisionWith(Job<?, ?> project, Launcher launcher, TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+        EnvVars environment = GitUtils.getPollEnvironment(project, null, launcher, listener);
+        final Run lastBuild = project.getLastBuild();
+        if (lastBuild == null) {
+            // If we've never been built before, well, gotta build!
+            listener.getLogger().println("[poll] No previous build, so forcing an initial build.");
+            return PollingResult.BUILD_NOW;
+        }
+
+        final BuildData buildData = fixNull(getBuildData(lastBuild));
+
+        GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
+
+        for (RemoteConfig remoteConfig : remoteRepositories) {
+            String remote = remoteConfig.getName();
+            List<RefSpec> refSpecs = getRefSpecs(remoteConfig, environment);
+
+            for (URIish urIish : remoteConfig.getURIs()) {
+                String gitRepo = urIish.toString();
+                Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
+                if (heads==null || heads.isEmpty()) {
+                    listener.getLogger().println("[poll] Couldn't get remote head revision");
+                    return PollingResult.BUILD_NOW;
+                }
+
+                listener.getLogger().println("Found "+ heads.size() +" remote heads on " + urIish);
+
+                Iterator<Entry<String, ObjectId>> it = heads.entrySet().iterator();
+                while (it.hasNext()) {
+                    String head = it.next().getKey();
+                    boolean match = false;
+                    for (RefSpec spec : refSpecs) {
+                        if (spec.matchSource(head)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        listener.getLogger().println("Ignoring " + head + " as it doesn't match any of the configured refspecs");
+                        it.remove();
+                    }
+                }
+
+                for (BranchSpec branchSpec : getBranches()) {
+                    for (Entry<String, ObjectId> entry : heads.entrySet()) {
+                        final String head = entry.getKey();
+                        // head is "refs/(heads|tags|whatever)/branchName
+
+                        // first, check the a canonical git reference is configured
+                        if (!branchSpec.matches(head, environment)) {
+
+                            // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
+                            String name = head;
+                            Matcher matcher = GIT_REF.matcher(head);
+                            if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
+                            else name = remote + "/" + head;
+
+                            if (!branchSpec.matches(name, environment)) continue;
+                        }
+
+                        final ObjectId sha1 = entry.getValue();
+                        Build built = buildData.getLastBuild(sha1);
+                        if (built != null) {
+                            listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
+                            continue;
+                        }
+
+                        listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
+                        return PollingResult.SIGNIFICANT;
+                    }
+                }
+            }
+        }
+        return PollingResult.NO_CHANGES;
+    }
+
+    @Override
     public PollingResult compareRemoteRevisionWith(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
@@ -570,76 +647,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
-
-            GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
-
-            for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
-                String remote = remoteConfig.getName();
-                List<RefSpec> refSpecs = getRefSpecs(remoteConfig, environment);
-
-                for (URIish urIish : remoteConfig.getURIs()) {
-                    String gitRepo = urIish.toString();
-                    Map<String, ObjectId> heads = git.getHeadRev(gitRepo);
-                    if (heads==null || heads.isEmpty()) {
-                        listener.getLogger().println("[poll] Couldn't get remote head revision");
-                        return BUILD_NOW;
-                    }
-
-                    listener.getLogger().println("Found "+ heads.size() +" remote heads on " + urIish);
-
-                    Iterator<Entry<String, ObjectId>> it = heads.entrySet().iterator();
-                    while (it.hasNext()) {
-                        String head = it.next().getKey();
-                        boolean match = false;
-                        for (RefSpec spec : refSpecs) {
-                            if (spec.matchSource(head)) {
-                                match = true;
-                                break;
-                            }
-                        }
-                        if (!match) {
-                            listener.getLogger().println("Ignoring " + head + " as it doesn't match any of the configured refspecs");
-                            it.remove();
-                        }
-                    }
-
-                    for (BranchSpec branchSpec : getBranches()) {
-                        for (Entry<String, ObjectId> entry : heads.entrySet()) {
-                            final String head = entry.getKey();
-                            // head is "refs/(heads|tags|whatever)/branchName
-
-                            // first, check the a canonical git reference is configured
-                            if (!branchSpec.matches(head, environment)) {
-
-                                // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
-                                String name = head;
-                                Matcher matcher = GIT_REF.matcher(head);
-                                if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
-                                else name = remote + "/" + head;
-
-                                if (!branchSpec.matches(name, environment)) continue;
-                            }
-
-                            final ObjectId sha1 = entry.getValue();
-                            Build built = buildData.getLastBuild(sha1);
-                            if (built != null) {
-                                listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName() + " - already built by " + built.getBuildNumber());
-                                continue;
-                            }
-
-                            listener.getLogger().println("[poll] Latest remote head revision on " + head + " is: " + sha1.getName());
-                            return BUILD_NOW;
-                        }
-                    }
-                }
-            }
-            return NO_CHANGES;
+            return compareRemoteRevisionWith(project, launcher, listener, null);
         }
 
         final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
 
-        FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
+        FilePath workingDirectory = workingDirectory(project, workspace, environment, listener);
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {

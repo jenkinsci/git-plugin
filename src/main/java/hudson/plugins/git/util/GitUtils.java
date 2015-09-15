@@ -189,7 +189,7 @@ public class GitUtils implements Serializable {
         }
     }
 
-    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener)
+    public static EnvVars getPollEnvironment(Job p, FilePath ws, Launcher launcher, TaskListener listener)
         throws IOException, InterruptedException {
         return getPollEnvironment(p, ws, launcher, listener, true);
     }
@@ -199,38 +199,41 @@ public class GitUtils implements Serializable {
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
      * Cribbed from various places.
      */
-    public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
+    public static EnvVars getPollEnvironment(Job p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
         EnvVars env;
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
-        AbstractBuild b = p.getLastBuild();
 
-        if (b == null) {
-            // If there is no last build, we need to trigger a new build anyway, and
-            // GitSCM.compareRemoteRevisionWithImpl() will short-circuit and never call this code
-            // ("No previous build, so forcing an initial build.").
-            throw new IllegalArgumentException("Last build must not be null. If there really is no last build, " +
-                    "a new build should be triggered without polling the SCM.");
-        }
+        if (p instanceof AbstractProject) {
 
-        if (reuseLastBuildEnv) {
-            Node lastBuiltOn = b.getBuiltOn();
+            AbstractBuild b = ((AbstractProject)p).getLastBuild();
 
-            if (lastBuiltOn != null) {
-                env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
-                for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
-                    Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
-                    if (environment != null) {
-                        environment.buildEnvVars(env);
-                    }
-                }
-            } else {
-                env = new EnvVars(System.getenv());
+            if (b == null) {
+                // If there is no last build, we need to trigger a new build anyway, and
+                // GitSCM.compareRemoteRevisionWithImpl() will short-circuit and never call this code
+                // ("No previous build, so forcing an initial build.").
+                throw new IllegalArgumentException("Last build must not be null. If there really is no last build, " +
+                        "a new build should be triggered without polling the SCM.");
             }
 
-            p.getScm().buildEnvVars(b,env);
+            if (reuseLastBuildEnv) {
+                Node lastBuiltOn = b.getBuiltOn();
+
+                if (lastBuiltOn != null) {
+                    env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
+                    for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
+                        Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
+                        if (environment != null) {
+                            environment.buildEnvVars(env);
+                        }
+                    }
+                } else {
+                    env = new EnvVars(System.getenv());
+                }
+
+                ((AbstractProject)p).getScm().buildEnvVars(b,env);
         } else {
-            env = new EnvVars(System.getenv());
+            env = new EnvVars(EnvVars.masterEnvVars);
         }
 
         String rootUrl = Hudson.getInstance().getRootUrl();
