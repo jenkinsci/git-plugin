@@ -17,7 +17,7 @@
   <artifactId>git</artifactId>
   <version>2.4.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <name>Jenkins GIT plugin</name>
+  <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
   
