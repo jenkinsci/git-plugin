@@ -4,12 +4,10 @@
  */
 package hudson.plugins.git;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.junit.Before;
 import org.junit.Rule;
@@ -27,10 +25,13 @@ import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 
+import javax.servlet.http.HttpServletRequest;
+
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class GitStatusMultipleSCMTest {
 
@@ -57,12 +58,12 @@ public class GitStatusMultipleSCMTest {
      */
     @Test
     public void commitNotificationIsPropagatedOnlyToSourceRepository() throws Exception {
-        setupProject(repo0.remoteConfigs().get(0).getUrl(), "master", false);
+        setupProject("master", false);
 
         repo0.commit("repo0", repo1.johnDoe, "repo0 commit 1");
         final String repo1sha1 = repo1.commit("repo1", repo1.janeDoe, "repo1 commit 1");
 
-        this.gitStatus.doNotifyCommit(repo1.remoteConfigs().get(0).getUrl(), null, repo1sha1);
+        this.gitStatus.doNotifyCommit(requestWithoutParameters(), repo1.remoteConfigs().get(0).getUrl(), null, repo1sha1);
         assertTrue("expected a build start on notify", r.isSomethingHappening());
 
         r.waitUntilNoActivity();
@@ -77,13 +78,17 @@ public class GitStatusMultipleSCMTest {
         }
     }
 
-    private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
+    private HttpServletRequest requestWithoutParameters() {
+        return mock(HttpServletRequest.class);
+    }
+
+    private SCMTrigger setupProject(String branchString, boolean ignoreNotifyCommit) throws Exception {
         SCMTrigger trigger = new SCMTrigger("", ignoreNotifyCommit);
-        setupProject(url, branchString, trigger);
+        setupProject(branchString, trigger);
         return trigger;
     }
 
-    private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
+    private void setupProject(String branchString, SCMTrigger trigger) throws Exception {
         List<BranchSpec> branch = Collections.singletonList(new BranchSpec(branchString));
 
         SCM repo0Scm = new GitSCM(
@@ -113,6 +118,8 @@ public class GitStatusMultipleSCMTest {
         project.setScm(scm);
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
 
-        if (trigger != null) project.addTrigger(trigger);
+        if (trigger != null) {
+            project.addTrigger(trigger);
+        }
     }
 }
