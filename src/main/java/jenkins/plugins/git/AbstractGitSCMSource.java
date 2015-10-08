@@ -113,9 +113,15 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public abstract GitRepositoryBrowser getBrowser();
 
+    public abstract void setBrowser(GitRepositoryBrowser browser);
+
     public abstract String getGitTool();
 
+    public abstract void setGitTool(String gitTool);
+
     public abstract List<GitSCMExtension> getExtensions();
+
+    public abstract void setExtensions(List<GitSCMExtension> extensions);
 
     public String getRemoteName() {
       return "origin";
