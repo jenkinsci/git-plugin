@@ -27,7 +27,7 @@ public class TestGitRepo {
 	public File gitDir; // was "workDir"
 	public FilePath gitDirPath; // was "workspace"
 	public GitClient git;
-
+	
 	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
@@ -39,9 +39,9 @@ public class TestGitRepo {
     public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
-
+		
 		EnvVars envVars = new EnvVars();
-
+		
 		gitDir = tmpDir;
 		User john = User.get(johnDoe.getName(), true);
 		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
@@ -58,7 +58,7 @@ public class TestGitRepo {
         // finally: initialize the repo
 		git.init();
 	}
-
+	
     /**
      * Creates a commit in current repo.
      * @param fileName relative path to the file to be commited with default content
