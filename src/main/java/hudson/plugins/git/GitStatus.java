@@ -231,9 +231,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                         for (RemoteConfig repository : git.getRepositories()) {
                             boolean repositoryMatches = false,
                                     branchMatches = false;
+                            URIish matchedURL = null;
                             for (URIish remoteURL : repository.getURIs()) {
                                 if (looselyMatches(uri, remoteURL)) {
                                     repositoryMatches = true;
+                                    matchedURL = remoteURL;
                                     break;
                                 }
                             }
@@ -282,7 +284,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1), new ParametersAction(buildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
