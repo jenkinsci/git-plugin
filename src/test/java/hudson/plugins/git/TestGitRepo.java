@@ -28,7 +28,7 @@ public class TestGitRepo {
 	public FilePath gitDirPath; // was "workspace"
 	public GitClient git;
 
-    public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
+	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
 	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener)
@@ -40,8 +40,8 @@ public class TestGitRepo {
 		this.name = name;
 		this.listener = listener;
 
-        EnvVars envVars = new EnvVars();
-		
+		EnvVars envVars = new EnvVars();
+
 		gitDir = tmpDir;
 		User john = User.get(johnDoe.getName(), true);
 		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
