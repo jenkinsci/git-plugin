@@ -23,6 +23,11 @@ public class GitChangeSetEmptyTest {
     }
 
     @Test
+    public void testGetTimestamp() {
+        assertEquals(-1L, changeSet.getTimestamp());
+    }
+
+    @Test
     public void testGetCommitId() {
         assertNull(changeSet.getCommitId());
     }
