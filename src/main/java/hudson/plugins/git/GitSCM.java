@@ -934,7 +934,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (candidates.isEmpty() ) {
             final RevisionParameterAction rpa = build.getAction(RevisionParameterAction.class);
             if (rpa != null) {
-                candidates = Collections.singleton(rpa.toRevision(git));
+                // in case the checkout is due to a commit notification on a
+                // multiple scm configuration, it should be verified if the triggering repo remote
+                // matches current repo remote to avoid JENKINS-26587
+                if (rpa.canOriginateFrom(this.getRepositories())) {
+                    candidates = Collections.singleton(rpa.toRevision(git));
+                } else {
+                    log.println("skipping resolution of commit " + rpa.commit + ", since it originates from another repository");
+                }
             }
         }
 
