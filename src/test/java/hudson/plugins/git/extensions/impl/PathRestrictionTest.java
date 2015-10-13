@@ -88,7 +88,7 @@ public class PathRestrictionTest {
         @Test
         public void test() throws Exception {
             GitChangeSet commit = new FakePathGitChangeSet(new HashSet<String>());
-            assertNull(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
+            assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
     }
 

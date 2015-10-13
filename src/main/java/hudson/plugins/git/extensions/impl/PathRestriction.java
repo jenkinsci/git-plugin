@@ -93,7 +93,7 @@ public class PathRestriction extends GitSCMExtension {
     public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         Collection<String> paths = commit.getAffectedPaths();
         if (paths.isEmpty()) {// nothing modified, so no need to compute any of this
-            return null;
+            return true;
         }
 
         List<Pattern> included = getIncludedPatterns();
