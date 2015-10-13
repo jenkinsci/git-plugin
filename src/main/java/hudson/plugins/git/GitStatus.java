@@ -281,13 +281,17 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
-                                List<JobProperty> jobProperties = ((Job) project).getAllProperties();
-                                for (JobProperty jobProperty : jobProperties) {
-                                    if(jobProperty instanceof ParametersDefinitionProperty) {
-                                        ParametersDefinitionProperty parametersDefinitionProperty = (ParametersDefinitionProperty) jobProperty;
-                                        for (ParameterDefinition parameterDefinition : parametersDefinitionProperty.getParameterDefinitions()) {
-                                            parameterDefinition.getDefaultParameterValue();
-                                            buildParameters.add(parameterDefinition.getDefaultParameterValue());
+                                if (project instanceof Job) {
+                                    List<JobProperty> jobProperties = ((Job) project).getAllProperties();
+                                    for (JobProperty jobProperty : jobProperties) {
+                                        if (jobProperty instanceof ParametersDefinitionProperty) {
+                                            ParametersDefinitionProperty parametersDefinitionProperty = (ParametersDefinitionProperty) jobProperty;
+                                            for (ParameterDefinition parameterDefinition : parametersDefinitionProperty.getParameterDefinitions()) {
+                                                ParameterValue parameterValue = parameterDefinition.getDefaultParameterValue();
+                                                if (parameterValue != null) {
+                                                    buildParameters.add(parameterValue);
+                                                }
+                                            }
                                         }
                                     }
                                 }
