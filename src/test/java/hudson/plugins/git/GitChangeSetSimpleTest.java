@@ -120,6 +120,11 @@ public class GitChangeSetSimpleTest {
     }
 
     @Test
+    public void testGetDate() {
+        assertEquals(useAuthorName ? GitChangeSetUtil.AUTHOR_DATE_FORMATTED : GitChangeSetUtil.COMMITTER_DATE_FORMATTED, changeSet.getDate());
+    }
+
+    @Test
     public void testGetMsg() {
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
     }

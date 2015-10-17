@@ -43,6 +43,24 @@ public class GitChangeSetBasicTest {
     }
 
     @Test
+    public void testGetDate() {
+        assertEquals("1970-01-15T06:56:08-0600", genChangeSet(true, false).getDate());
+    }
+
+    @Test
+    public void testGetTimestamp() {
+        assertEquals(1256168000L, genChangeSet(true, false).getTimestamp());
+    }
+
+    @Test
+    public void testInvalidDate() {
+        final String badDateString = "2015-03-03x09:22:42 -0700";
+        GitChangeSet c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> " + badDateString), true);
+        assertEquals(badDateString, c.getDate());
+        assertEquals(-1L, c.getTimestamp());
+    }
+
+    @Test
     public void testIsoDate() {
 
         GitChangeSet c = new GitChangeSet(Arrays.asList("author John Doe <john.doe@jenkins-ci.org> 2015-03-03T09:22:42-0700"), true);
@@ -99,5 +117,15 @@ public class GitChangeSetBasicTest {
     @Test
     public void testSwedishAuthorName() {
         assertEquals("misterÅ", genChangeSetForSwedCase(true).getAuthorName());
+    }
+
+    @Test
+    public void testSwedishDate() {
+        assertEquals("2013-03-21T15:16:44+0100", genChangeSetForSwedCase(true).getDate());
+    }
+
+    @Test
+    public void testSwedishTimestamp() {
+        assertEquals(1363875404000L, genChangeSetForSwedCase(true).getTimestamp());
     }
 }
