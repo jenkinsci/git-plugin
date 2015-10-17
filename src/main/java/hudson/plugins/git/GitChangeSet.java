@@ -31,7 +31,6 @@ import static hudson.Util.fixEmpty;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
-import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
@@ -291,13 +290,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 DateTime dateTime = DateTime.parse(date, dateFormatter);
                 return dateTime.getMillis();
             } catch (IllegalArgumentException ia) {
-                LOGGER.log(Level.WARNING, "Joda failed to parse date: {0}", date);
             }
         }
         try {
             return new SimpleDateFormat(ISO_8601_WITH_TZ).parse(date).getTime();
         } catch (ParseException e) {
-            LOGGER.log(Level.WARNING, "Failed to parse date: ''{0}''", date);
             return -1;
         } catch (IllegalArgumentException ia) {
             /* Java 6 does not accept "X" as a format string, use "Z"
