@@ -46,7 +46,7 @@ public class GitChangeSetPluginHistoryTest {
     /* git 1.7.1 on CentOS 6.7 "whatchanged" generates no output for
      * the SHA1 hashes (from this repository) in this list. Rather
      * than skip testing on that old git version, this exclusion list
-     * allows most tests to run.
+     * allows most tests to run. Debian 6 / git 1.7.2.5 also has the issue.
      */
     private static final String[] git171exceptions = {
         "750b6806",
@@ -69,20 +69,20 @@ public class GitChangeSetPluginHistoryTest {
     private static String getGitVersion() throws IOException {
         Process process = new ProcessBuilder("git", "--version").start();
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	String version = "unknown";
+        String version = "unknown";
         String line;
         while ((line = reader.readLine()) != null) {
-	    version = line.trim();
-	}
+            version = line.trim();
+        }
         reader.close();
         process.destroy();
-	return version;
+        return version;
     }
 
     /**
-     * Merge changes won't compute their date in GitChangeSet,
-     * apparently as an intentional design choice. Return all changes
-     * for this repository which are not merges.
+     * Merge changes won't compute their date in GitChangeSet, apparently as an
+     * intentional design choice. Return all changes for this repository which
+     * are not merges.
      *
      * @return ObjectId list for all changes which aren't merges
      */
@@ -115,7 +115,7 @@ public class GitChangeSetPluginHistoryTest {
 
     @Parameterized.Parameters(name = "{2}-{1}")
     public static Collection<Object[]> generateData() throws IOException, InterruptedException {
-	gitVersion = getGitVersion();
+        gitVersion = getGitVersion();
 
         List<Object[]> args = new ArrayList<Object[]>();
         String[] implementations = new String[]{"git", "jgit"};
@@ -125,8 +125,11 @@ public class GitChangeSetPluginHistoryTest {
             EnvVars envVars = new EnvVars();
             TaskListener listener = StreamTaskListener.fromStdout();
             GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(implementation).getClient();
-	    List<ObjectId> allNonMergeChanges = getNonMergeChanges(gitVersion.equals("git version 1.7.1") && implementation.equals("git"));
-	    int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
+            boolean honorExclusions = implementation.equals("git")
+                    && (gitVersion.equals("git version 1.7.1") || gitVersion.equals("git version 1.7.2.5"));
+            List<ObjectId> allNonMergeChanges = getNonMergeChanges(honorExclusions);
+            int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
+
             for (boolean authorOrCommitter : choices) {
                 for (int index = 0; index < count; index++) {
                     ObjectId sha1 = allNonMergeChanges.get(index);
