@@ -12,7 +12,11 @@ public class GitChangeSetUtil {
     static final String ID = "123abc456def";
     static final String PARENT = "345mno678pqr";
     static final String AUTHOR_NAME = "John Author";
+    static final String AUTHOR_DATE = "1234568 -0600";
+    static final String AUTHOR_DATE_FORMATTED = "1970-01-15T06:56:08-0600";
     static final String COMMITTER_NAME = "John Committer";
+    static final String COMMITTER_DATE = "1234566 -0600";
+    static final String COMMITTER_DATE_FORMATTED = "1970-01-15T06:56:06-0600";
     static final String COMMIT_TITLE = "Commit title.";
     static final String COMMENT = COMMIT_TITLE + "\n";
 
@@ -31,8 +35,8 @@ public class GitChangeSetUtil {
         } else {
             lines.add("parent ");
         }
-        lines.add("author " + AUTHOR_NAME + " <jauthor@nospam.com> 1234568 -0600");
-        lines.add("committer " + COMMITTER_NAME + " <jcommitter@nospam.com> 1234566 -0600");
+        lines.add("author " + AUTHOR_NAME + " <jauthor@nospam.com> " + AUTHOR_DATE);
+        lines.add("committer " + COMMITTER_NAME + " <jcommitter@nospam.com> " + COMMITTER_DATE);
         lines.add("");
         lines.add("    " + COMMIT_TITLE);
         lines.add("    Commit extended description.");
