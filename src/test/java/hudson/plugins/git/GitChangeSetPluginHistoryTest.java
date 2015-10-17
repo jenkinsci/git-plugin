@@ -65,6 +65,8 @@ public class GitChangeSetPluginHistoryTest {
         while ((line = reader.readLine()) != null) {
             nonMergeChanges.add(ObjectId.fromString(line));
         }
+        reader.close();
+        process.destroy();
         Collections.shuffle(nonMergeChanges);
         return nonMergeChanges;
     }
