@@ -51,6 +51,12 @@ public class GitChangeSetPluginHistoryTest {
         changeSet = new GitChangeSet(changeLogStrings, authorOrCommitter);
     }
 
+    /**
+     * Merge changes won't compute their date in GitChangeSet, apparently as an
+     * intentional design choice. Return all changes for this repository which
+     * are not merges
+     * @return ObjectId list for all changes which aren't merges
+     */
     private static List<ObjectId> getNonMergeChanges() throws IOException {
         List<ObjectId> nonMergeChanges = new ArrayList<ObjectId>();
         Process process = new ProcessBuilder("git", "rev-list", "--no-merges", "HEAD").start();
