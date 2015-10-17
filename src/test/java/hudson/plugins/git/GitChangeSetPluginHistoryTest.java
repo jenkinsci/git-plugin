@@ -41,29 +41,71 @@ public class GitChangeSetPluginHistoryTest {
 
     private final GitChangeSet changeSet;
 
-    public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, ObjectId sha1) throws IOException, InterruptedException {
+    private static String gitVersion = "Unknown";
+
+    /* git 1.7.1 on CentOS 6.7 "whatchanged" generates no output for
+     * the SHA1 hashes (from this repository) in this list. Rather
+     * than skip testing on that old git version, this exclusion list
+     * allows most tests to run.
+     */
+    private static final String[] git171exceptions = {
+        "750b6806",
+        "7eeb070b",
+        "87988f4d",
+        "a571899e",
+        "bc71cd2d"
+    };
+
+    public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws IOException, InterruptedException {
         this.git = git;
         this.authorOrCommitter = authorOrCommitter;
-        this.sha1 = sha1;
+        this.sha1 = ObjectId.fromString(sha1String);
         StringWriter stringWriter = new StringWriter();
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();
         List<String> changeLogStrings = new ArrayList<String>(Arrays.asList(stringWriter.toString().split("\n")));
         changeSet = new GitChangeSet(changeLogStrings, authorOrCommitter);
     }
 
+    private static String getGitVersion() throws IOException {
+        Process process = new ProcessBuilder("git", "--version").start();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	String version = "unknown";
+        String line;
+        while ((line = reader.readLine()) != null) {
+	    version = line.trim();
+	}
+        reader.close();
+        process.destroy();
+	return version;
+    }
+
     /**
-     * Merge changes won't compute their date in GitChangeSet, apparently as an
-     * intentional design choice. Return all changes for this repository which
-     * are not merges
+     * Merge changes won't compute their date in GitChangeSet,
+     * apparently as an intentional design choice. Return all changes
+     * for this repository which are not merges.
+     *
      * @return ObjectId list for all changes which aren't merges
      */
-    private static List<ObjectId> getNonMergeChanges() throws IOException {
+    private static List<ObjectId> getNonMergeChanges(boolean honorExclusions) throws IOException {
         List<ObjectId> nonMergeChanges = new ArrayList<ObjectId>();
         Process process = new ProcessBuilder("git", "rev-list", "--no-merges", "HEAD").start();
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
-            nonMergeChanges.add(ObjectId.fromString(line));
+            if (honorExclusions) {
+                boolean ignore = false;
+                for (String exclusion : git171exceptions) {
+                    if (line.startsWith(exclusion)) {
+                        ignore = true;
+                        break;
+                    }
+                }
+                if (!ignore) {
+                    nonMergeChanges.add(ObjectId.fromString(line));
+                }
+            } else {
+                nonMergeChanges.add(ObjectId.fromString(line));
+            }
         }
         reader.close();
         process.destroy();
@@ -71,22 +113,24 @@ public class GitChangeSetPluginHistoryTest {
         return nonMergeChanges;
     }
 
-    @Parameterized.Parameters(name = "{0}-{1}-{2}")
+    @Parameterized.Parameters(name = "{2}-{1}")
     public static Collection<Object[]> generateData() throws IOException, InterruptedException {
+	gitVersion = getGitVersion();
+
         List<Object[]> args = new ArrayList<Object[]>();
-        List<ObjectId> allNonMergeChanges = getNonMergeChanges();
         String[] implementations = new String[]{"git", "jgit"};
         boolean[] choices = {true, false};
-        int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
 
         for (final String implementation : implementations) {
             EnvVars envVars = new EnvVars();
             TaskListener listener = StreamTaskListener.fromStdout();
             GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(implementation).getClient();
+	    List<ObjectId> allNonMergeChanges = getNonMergeChanges(gitVersion.equals("git version 1.7.1") && implementation.equals("git"));
+	    int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
             for (boolean authorOrCommitter : choices) {
                 for (int index = 0; index < count; index++) {
                     ObjectId sha1 = allNonMergeChanges.get(index);
-                    Object[] argList = {git, authorOrCommitter, sha1};
+                    Object[] argList = {git, authorOrCommitter, sha1.getName()};
                     args.add(argList);
                 }
             }
@@ -95,7 +139,7 @@ public class GitChangeSetPluginHistoryTest {
     }
 
     @Test
-    public void testTimestampInRange() {
+    public void timestampInRange() {
         long timestamp = changeSet.getTimestamp();
         assertThat(timestamp, is(greaterThanOrEqualTo(FIRST_COMMIT_TIMESTAMP)));
         assertThat(timestamp, is(lessThan(NOW)));
