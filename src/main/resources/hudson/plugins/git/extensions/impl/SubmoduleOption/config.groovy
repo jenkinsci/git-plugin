@@ -14,6 +14,9 @@ f.entry(title:_("Update tracking submodules to tip of branch"), field:"trackingS
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
     f.textbox()
 }
+f.entry(title:_("Submodule Credentials")) {
+    f.repeatableProperty(field:"credentials", noAddButton:"false")
+}
 
 /*
   This needs more thought
