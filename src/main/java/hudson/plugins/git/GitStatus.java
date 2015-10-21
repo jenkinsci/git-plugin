@@ -342,8 +342,16 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          *
          */
         private List<ParameterValue> getDefaultParametersValues(Job job) {
-            ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) job.getProperty(ParametersDefinitionProperty.class);
-            ArrayList<ParameterValue> defValues = new ArrayList<ParameterValue>();
+            ArrayList<ParameterValue> defValues;
+            ParametersDefinitionProperty paramDefProp = ((Job<?,?>)job).getProperty(ParametersDefinitionProperty.class);
+
+            if (paramDefProp != null) {
+                List <ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
+                defValues = new ArrayList<ParameterValue>(parameterDefinition.size());
+
+            } else {
+                defValues = new ArrayList<ParameterValue>(0);
+            }
 
             /*
              * This check is made ONLY if someone will call this method even if isParametrized() is false.
