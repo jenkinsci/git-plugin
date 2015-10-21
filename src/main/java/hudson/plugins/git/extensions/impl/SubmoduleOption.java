@@ -39,13 +39,15 @@ public class SubmoduleOption extends GitSCMExtension {
     private boolean disableSubmodules;
     private boolean recursiveSubmodules;
     private boolean trackingSubmodules;
+    private boolean useParentCredentials;
     private Integer timeout;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, Integer timeout) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, boolean useParentCredentials, Integer timeout) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
+        this.useParentCredentials = useParentCredentials;
         this.timeout = timeout;
     }
 
@@ -102,6 +104,13 @@ public class SubmoduleOption extends GitSCMExtension {
             SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
             combinator.createSubmoduleCombinations();
         }
+    }
+
+    @Override
+    public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
+        git.submodulesUseParentCreds(useParentCreds);
+
+        return git;
     }
 
     @Extension
