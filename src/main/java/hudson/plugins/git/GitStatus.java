@@ -341,16 +341,16 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * Get the default parameters values from a job
          *
          */
-        private List<ParameterValue> getDefaultParametersValues(Job job) {
+        private ArrayList<ParameterValue> getDefaultParametersValues(Job<?,?> job) {
             ArrayList<ParameterValue> defValues;
-            ParametersDefinitionProperty paramDefProp = ((Job<?,?>)job).getProperty(ParametersDefinitionProperty.class);
+            ParametersDefinitionProperty paramDefProp = job.getProperty(ParametersDefinitionProperty.class);
 
             if (paramDefProp != null) {
                 List <ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
                 defValues = new ArrayList<ParameterValue>(parameterDefinition.size());
 
             } else {
-                defValues = new ArrayList<ParameterValue>(0);
+                defValues = new ArrayList<ParameterValue>();
             }
 
             /*
