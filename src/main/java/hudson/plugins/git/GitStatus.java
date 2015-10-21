@@ -202,11 +202,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
-        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> urlBuildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
-            List<ParameterValue> allBuildParameters = new ArrayList<ParameterValue>(urlBuildParameters);
             List<ResponseContributor> result = new ArrayList<ResponseContributor>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -282,22 +281,22 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                         List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
-                                        for (ParameterValue parameterValue : urlBuildParameters) {
+                                        ListIterator<ParameterValue> buildParameterListIterator = buildParameters.listIterator();
+                                        while (buildParameterListIterator.hasNext()) {
+                                            buildParameterListIterator.next();
                                             for (ParameterValue defaultParameterValue : jobParametersValues) {
-                                                if (!parameterValueExist(urlBuildParameters, defaultParameterValue.getName())) {
-                                                    allBuildParameters.add(defaultParameterValue);
+                                                if (!parameterValueExist(buildParameters, defaultParameterValue.getName())) {
+                                                    buildParameterListIterator.add(defaultParameterValue);
                                                 }
                                             }
                                         }
                                 }
 
-                                urlBuildParameters = allBuildParameters;
-
                                 if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
@@ -330,7 +329,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          *
          */
         private boolean parameterValueExist (List<ParameterValue> parameterValues, String name) {
-            for(ParameterValue parameterValue : parameterValues) {
+            for (ParameterValue parameterValue : parameterValues) {
                 if (parameterValue.getName().equals(name)) {
                     return true;
                 }
@@ -346,19 +345,20 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) job.getProperty(ParametersDefinitionProperty.class);
             ArrayList<ParameterValue> defValues = new ArrayList<ParameterValue>();
 
-        /*
-         * This check is made ONLY if someone will call this method even if isParametrized() is false.
-         */
-            if(paramDefProp == null)
+            /*
+             * This check is made ONLY if someone will call this method even if isParametrized() is false.
+             */
+            if (paramDefProp == null) {
                 return defValues;
+            }
 
-        /* Scan for all parameter with an associated default values */
-            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions())
-            {
+            /* Scan for all parameter with an associated default values */
+            for (ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
                 ParameterValue defaultValue  = paramDefinition.getDefaultParameterValue();
 
-                if(defaultValue != null)
+                if (defaultValue != null) {
                     defValues.add(defaultValue);
+                }
             }
 
             return defValues;
