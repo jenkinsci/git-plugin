@@ -108,7 +108,7 @@ public class SubmoduleOption extends GitSCMExtension {
 
     @Override
     public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
-        git.submodulesUseParentCreds(useParentCreds);
+        git.submodulesUseParentCreds(useParentCredentials);
 
         return git;
     }
