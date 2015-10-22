@@ -206,6 +206,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
+            List<ParameterValue> allBuildParameters = new ArrayList<ParameterValue>(buildParameters);
             List<ResponseContributor> result = new ArrayList<ResponseContributor>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -280,23 +281,23 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
-                                        List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
-                                        ListIterator<ParameterValue> buildParameterListIterator = buildParameters.listIterator();
-                                        while (buildParameterListIterator.hasNext()) {
-                                            buildParameterListIterator.next();
-                                            for (ParameterValue defaultParameterValue : jobParametersValues) {
-                                                if (!parameterValueExist(buildParameters, defaultParameterValue.getName())) {
-                                                    buildParameterListIterator.add(defaultParameterValue);
-                                                }
-                                            }
-                                        }
-                                }
+                                    Set<String> buildParametersNames = new HashSet<String>();
+                                    for (ParameterValue val: allBuildParameters) {
+                                        buildParametersNames.add(val.getName());
+                                    }
 
+                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
+                                    for (ParameterValue defaultParameterValue : jobParametersValues) {
+                                        if (!buildParametersNames.contains(defaultParameterValue.getName())) {
+                                            allBuildParameters.add(defaultParameterValue);
+                                        }
+                                    }
+                                }
                                 if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
@@ -322,19 +323,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             } finally {
                 SecurityContextHolder.setContext(old);
             }
-        }
-
-        /**
-         * Check if there is a ParameterValue with the same name
-         *
-         */
-        private boolean parameterValueExist (List<ParameterValue> parameterValues, String name) {
-            for (ParameterValue parameterValue : parameterValues) {
-                if (parameterValue.getName().equals(name)) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         /**
