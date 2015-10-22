@@ -282,8 +282,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<String>();
-                                    for (ParameterValue val: allBuildParameters) {
-                                        buildParametersNames.add(val.getName());
+                                    for (ParameterValue parameterValue: allBuildParameters) {
+                                        buildParametersNames.add(parameterValue.getName());
                                     }
 
                                     List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
