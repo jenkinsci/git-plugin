@@ -339,12 +339,6 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
             } else {
                 defValues = new ArrayList<ParameterValue>();
-            }
-
-            /*
-             * This check is made ONLY if someone will call this method even if isParametrized() is false.
-             */
-            if (paramDefProp == null) {
                 return defValues;
             }
 
