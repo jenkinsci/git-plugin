@@ -119,7 +119,7 @@ public class GithubWebTest {
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final File rawchangelog = new File(URLDecoder.decode(BitbucketWebTest.class.getResource(rawchangelogpath), "utf-8").getFile());
+        final File rawchangelog = new File(URLDecoder.decode(GithubWebTest.class.getResource(rawchangelogpath).getFile(), "utf-8"));
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
         final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
         return changeSetList.get(0);
