@@ -7,6 +7,7 @@ import hudson.plugins.git.GitChangeSet.Path;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -150,7 +151,7 @@ public class GitLabTest {
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final File rawchangelog = new File(GitLabTest.class.getResource(rawchangelogpath).getFile());
+        final File rawchangelog = new File(URLDecoder.decode(BitbucketWebTest.class.getResource(rawchangelogpath), "utf-8").getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
         final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
         return changeSetList.get(0);
