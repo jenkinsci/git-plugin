@@ -594,6 +594,51 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
+    public void testEnvVarsAvailableBySCMName() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        final String scmNameString1 = "ScmName1";
+        GitSCM git1 = (GitSCM) project.getScm();
+        git1.getExtensions().replace(new ScmName(scmNameString1));
+
+        // Initial commit for clean repo.
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        EnvVars env1 = getEnvVars(project);
+
+        // Non-SCM namespaced variables
+        assertEquals("origin/master", env1.get(GitSCM.GIT_BRANCH));
+        assertLogContains(env1.get(GitSCM.GIT_BRANCH), build1);
+
+        assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+
+        // SCM namespaced variables
+        assertEquals("origin/master", env1.get(scmNameString1 + "_" + GitSCM.GIT_BRANCH));
+        assertEquals(env1.get(GitSCM.GIT_COMMIT), env1.get(scmNameString1 + "_" + GitSCM.GIT_COMMIT));
+
+        // Second commit for clean repo.
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+
+        EnvVars env2 = getEnvVars(project);
+
+        // Non-SCM namespaced variables
+        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
+        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+
+        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
+        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+
+        // SCM namespaced variables
+        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_COMMIT));
+        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT));
+
+        assertEquals(env1.get(GitSCM.GIT_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_COMMIT));
+    }
+
     // For HUDSON-7411
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
