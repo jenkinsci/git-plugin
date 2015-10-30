@@ -132,6 +132,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     public List<GitSCMExtension> getExtensions() {
+        if (extensions == null) {
+            extensions = new ArrayList<GitSCMExtension>();
+        }
         return extensions;
     }
 
