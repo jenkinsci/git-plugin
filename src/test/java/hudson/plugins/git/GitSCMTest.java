@@ -597,7 +597,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testEnvVarsAvailableBySCMName() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        final String scmNameString1 = "ScmName1";
+        // SCM Names need to be made environment variable name safe.
+        final String scmNameString1 = "Scm Name 1";
+        final String scmNameString1Prefix = "Scm_Name_1_";
+
         GitSCM git1 = (GitSCM) project.getScm();
         git1.getExtensions().replace(new ScmName(scmNameString1));
 
@@ -615,8 +618,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         // SCM namespaced variables
-        assertEquals("origin/master", env1.get(scmNameString1 + "_" + GitSCM.GIT_BRANCH));
-        assertEquals(env1.get(GitSCM.GIT_COMMIT), env1.get(scmNameString1 + "_" + GitSCM.GIT_COMMIT));
+        assertEquals("origin/master", env1.get(scmNameString1Prefix + GitSCM.GIT_BRANCH));
+        assertEquals(env1.get(GitSCM.GIT_COMMIT), env1.get(scmNameString1Prefix + GitSCM.GIT_COMMIT));
 
         // Second commit for clean repo.
         final String commitFile2 = "commitFile2";
@@ -633,10 +636,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
 
         // SCM namespaced variables
-        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_COMMIT));
-        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT));
+        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_COMMIT), env2.get(scmNameString1Prefix + GitSCM.GIT_PREVIOUS_COMMIT));
+        assertEquals(env2.get(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), env2.get(scmNameString1Prefix + GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT));
 
-        assertEquals(env1.get(GitSCM.GIT_COMMIT), env2.get(scmNameString1 + "_" + GitSCM.GIT_PREVIOUS_COMMIT));
+        assertEquals(env1.get(GitSCM.GIT_COMMIT), env2.get(scmNameString1Prefix + GitSCM.GIT_PREVIOUS_COMMIT));
     }
 
     // For HUDSON-7411
