@@ -23,6 +23,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
+import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -1588,7 +1589,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             List<String> revShow;
             if (buildData != null && buildData.lastBuild != null) {
-                revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+                if (getExtensions().get(PathRestriction.class) != null) {
+                    revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1());
+                } else {
+                    revShow  = git.showRevision(buildData.lastBuild.revision.getSha1(), r.getSha1(), false);
+                }
             } else {
                 revShow  = git.showRevision(r.getSha1());
             }
