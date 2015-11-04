@@ -1,6 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
+    <j:if test="${scmd != null}">
+        <j:if test="${scmd.getClass().getName().equals(&quot;org.jenkinsci.plugins.multiplescms.MultiSCM$DescriptorImpl&quot;)}">
+            <j:set var="scmd" value="${null}"/>
+            <j:if test="${instance != null}">
+                <j:set var="scm" value="${instance}"/>
+            </j:if>
+        </j:if>
+    </j:if>
     <script><![CDATA[
     function encodeAllInputs(sep, form, field) {
         var inputs = Form.getInputs(form, null, field);
