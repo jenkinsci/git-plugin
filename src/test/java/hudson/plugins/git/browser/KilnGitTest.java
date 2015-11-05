@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -100,9 +99,8 @@ public class KilnGitTest {
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final File rawchangelog = new File(URLDecoder.decode(KilnGitTest.class.getResource(rawchangelogpath).getFile()), "utf-8");
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse(KilnGitTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 

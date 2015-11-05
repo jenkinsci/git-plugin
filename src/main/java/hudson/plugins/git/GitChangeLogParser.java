@@ -5,12 +5,14 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.RepositoryBrowser;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,6 +31,10 @@ public class GitChangeLogParser extends ChangeLogParser {
     public GitChangeLogParser(boolean authorOrCommitter) {
         super();
         this.authorOrCommitter = authorOrCommitter;
+    }
+    
+    public List<GitChangeSet> parse(@Nonnull InputStream changelog) throws IOException {
+        return parse(IOUtils.readLines(changelog, "UTF-8"));
     }
 
     public List<GitChangeSet> parse(@Nonnull List<String> changelog) {
