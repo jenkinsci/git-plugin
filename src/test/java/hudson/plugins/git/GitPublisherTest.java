@@ -81,7 +81,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
                 Collections.<BranchToPush>emptyList(),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false) {
+                true, true, false, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 run.incrementAndGet();
@@ -130,7 +130,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false));
+                true, true, false, false));
 
         // create initial commit and then run the build against it:
         commitNewFile("commitFileBase");
@@ -167,7 +167,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false));
+                true, true, false, false));
 
         // create initial commit and then run the build against it:
         commitNewFile("commitFileBase");
@@ -252,7 +252,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false));
+                true, true, false, false));
 
         // create initial commit and then run the build against it:
         commitNewFile("commitFileBase");
@@ -341,7 +341,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false));
+                true, true, false, false));
 
         // create initial commit and then run the build against it:
         commitNewFile("commitFileBase");
@@ -444,7 +444,7 @@ public class GitPublisherTest extends AbstractGitProject {
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
                 Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
-                true, false, true));
+                true, false, true, false));
 
         commitNewFile("commitFile");
         testGitClient.tag(tag_name, "Comment");
@@ -456,6 +456,85 @@ public class GitPublisherTest extends AbstractGitProject {
         assertEquals(expectedCommit, testTargetRepo.git.revParse("master"));
         assertTrue(existsTagInRepo(testTargetRepo.git, tag_name));
 
+    }
+
+    @Test
+    public void testIgnoreGitErrors() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                remoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        // Test whether ignoreGitErrors prevents failure of GitPublisher
+        GitPublisher ignoreErrorPublisher = new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false, true);
+        project.getPublishersList().add(ignoreErrorPublisher);
+
+        // Create a commit on the master branch in the test repo
+        commitNewFile("commitFile");
+        ObjectId masterCommit1 = testGitClient.revParse("master");
+
+        // Checkout and commit to "otherbranch" in the test repo
+        testGitClient.branch("otherbranch");
+        testGitClient.checkout("otherbranch");
+        commitNewFile("otherCommitFile");
+        ObjectId otherCommit = testGitClient.revParse("otherbranch");
+
+        testGitClient.checkout("master");
+        commitNewFile("commitFile2");
+        ObjectId masterCommit2 = testGitClient.revParse("master");
+
+        // masterCommit1 parent of both masterCommit2 and otherCommit
+        assertEquals(masterCommit1, testGitClient.revParse("master^"));
+        assertEquals(masterCommit1, testGitClient.revParse("otherbranch^"));
+
+        // Confirm that otherbranch still points to otherCommit
+        // build will merge and push to "otherbranch" in test repo, but
+        // will fail without force. Build should still succeed due to
+        // ignoreGitErrors.
+        // Ensure that otherbranch does not change in the process.
+        assertEquals(otherCommit, testGitClient.revParse("otherbranch")); // not merged yet
+        assertTrue("otherCommit not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit));
+        build(project, Result.SUCCESS, "commitFile2");
+        assertEquals(otherCommit, testGitClient.revParse("otherbranch")); // merge did not succeed
+        assertTrue("otherCommit not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit));
+
+        // Commit to otherbranch in test repo so that next merge will fail
+        testGitClient.checkout("otherbranch");
+        commitNewFile("otherCommitFile2");
+        ObjectId otherCommit2 = testGitClient.revParse("otherbranch");
+        assertNotEquals(masterCommit2, otherCommit2);
+
+        // Commit to master branch in test repo
+        testGitClient.checkout("master");
+        commitNewFile("commitFile3");
+        ObjectId masterCommit3 = testGitClient.revParse("master");
+
+        // Remove forcedPublisher, add unforcedPublisher
+        project.getPublishersList().remove(ignoreErrorPublisher);
+        GitPublisher unforcedPublisher = new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false, false);
+        project.getPublishersList().add(unforcedPublisher);
+
+        // build will attempts to merge and push to "otherbranch" in test repo.
+        // Without force, will fail and build result will fail due to no
+        // ignoreGitErrors
+        assertEquals(otherCommit2, testGitClient.revParse("otherbranch")); // not merged yet
+        assertTrue("otherCommit2 not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
+        build(project, Result.FAILURE, "commitFile3");
+        assertEquals(otherCommit2, testGitClient.revParse("otherbranch")); // still not merged
+        assertTrue("otherCommit2 not in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
     }
 
     @Issue("JENKINS-24082")
@@ -475,7 +554,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, true);
+                true, true, true, false);
         project.getPublishersList().add(forcedPublisher);
 
         // Create a commit on the master branch in the test repo
@@ -522,7 +601,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<TagToPush>emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
-                true, true, false);
+                true, true, false, false);
         project.getPublishersList().add(unforcedPublisher);
 
         // build will attempts to merge and push to "otherbranch" in test repo.
@@ -574,7 +653,7 @@ public class GitPublisherTest extends AbstractGitProject {
           Collections.<TagToPush>emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
           Collections.<NoteToPush>emptyList(),
-          true, true, false));
+          true, true, false, false));
 
       // create initial commit and then run the build against it:
       commitNewFile("commitFileBase");
@@ -646,7 +725,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
                 Collections.singletonList(new BranchToPush("origin", envReference)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
-                true, true, true);
+                true, true, true, false);
         assertTrue(publisher.isForcePush());
         assertTrue(publisher.isPushBranches());
         assertTrue(publisher.isPushMerge());
