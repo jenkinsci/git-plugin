@@ -63,6 +63,10 @@ public class SubmoduleOption extends GitSCMExtension {
         return trackingSubmodules;
     }
 
+    public boolean isParentCredentials() {
+        return parentCredentials;
+    }
+
     public Integer getTimeout() {
         return timeout;
     }
