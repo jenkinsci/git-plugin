@@ -7,6 +7,15 @@ f.entry(title:_("Repository URL"), field:"url") {
     f.textbox()
 }
 
+f.entry(title:_("Username"), field:"username") {
+    f.textbox()
+}
+
+f.entry(title:_("password"), field:"password") {
+    f.password()
+}
+
+/*
 f.entry(title:_("Credentials"), field:"credentialsId") {
     c.select(onchange="""{
             var self = this.targetElement ? this.targetElement : this;
@@ -14,8 +23,11 @@ f.entry(title:_("Credentials"), field:"credentialsId") {
             r.onchange(r);
             self = null;
             r = null;
-    }""" /* workaround for JENKINS-19124 */)
+    }""" */
+/* workaround for JENKINS-19124 *//*
+)
 }
+*/
 
 f.advanced {
     f.entry(title:_("Name"), field:"name") {

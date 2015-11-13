@@ -2,8 +2,10 @@ package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.collect.Iterables;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -135,7 +137,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     static private List<UserRemoteConfig> createRepoList(String url) {
         List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig(url, null, null, null));
+        repoList.add(new UserRemoteConfig(url, null, null, null,null));
         return repoList;
     }
 
@@ -273,7 +275,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (cfg.getFetchRefSpecs().size() > 0 && cfg.getFetchRefSpecs().get(0) != null)
                     refspec = cfg.getFetchRefSpecs().get(0).toString();
 
-                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec, null));
+                userRemoteConfigs.add(new UserRemoteConfig(url, cfg.getName(), refspec, null,null));
             }
         }
 
@@ -711,15 +713,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
-            if (uc.getCredentialsId() != null) {
+            if (uc.getUsername() != null && uc.getPassword() != null) {
                 String url = uc.getUrl();
                 url = getParameterString(url, environment);
-                StandardUsernameCredentials credentials = CredentialsMatchers
-                        .firstOrNull(
-                                CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
-                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build()),
-                                CredentialsMatchers.allOf(CredentialsMatchers.withId(uc.getCredentialsId()),
-                                        GitClient.CREDENTIALS_MATCHER));
+                StandardUsernameCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, "", uc.getUsername(), uc.getPassword());
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                 }

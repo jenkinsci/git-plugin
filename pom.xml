@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.580</version>
+    <version>1.609</version>
   </parent>
   
   <licenses>
@@ -38,7 +38,7 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
+        <!--<plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>findbugs-maven-plugin</artifactId>
           <version>${findbugs-maven-plugin.version}</version>
@@ -46,7 +46,7 @@
             <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
             <failOnError>${maven.findbugs.failure.strict}</failOnError>
           </configuration>
-        </plugin>
+        </plugin>-->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -161,7 +161,7 @@
             <java.awt.headless>true</java.awt.headless>
           </systemPropertyVariables>
           <!-- Sets the VM argument line used when unit tests are run. -->
-          <argLine>${surefireArgLine}</argLine>
+          <!--<argLine>${surefireArgLine}</argLine>-->
         </configuration>
       </plugin>
       <plugin>

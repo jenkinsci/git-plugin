@@ -35,14 +35,15 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     private String name;
     private String refspec;
     private String url;
-    private String credentialsId;
-
+    private String username;
+    private String password;
     @DataBoundConstructor
-    public UserRemoteConfig(String url, String name, String refspec, String credentialsId) {
+    public UserRemoteConfig(String url, String name, String refspec, String username,String password) {
         this.url = fixEmptyAndTrim(url);
         this.name = fixEmpty(name);
         this.refspec = fixEmpty(refspec);
-        this.credentialsId = fixEmpty(credentialsId);
+        this.username = username;
+        this.password = password;
     }
 
     @Exported
@@ -60,16 +61,27 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         return url;
     }
 
-    @Exported
-    public String getCredentialsId() {
-        return credentialsId;
-    }
-
     public String toString() {
         return getRefspec() + " => " + getUrl() + " (" + getName() + ")";
     }
 
     private final static Pattern SCP_LIKE = Pattern.compile("(.*):(.*)");
+    @Exported
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    @Exported
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
