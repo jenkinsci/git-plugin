@@ -25,8 +25,10 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -99,7 +101,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         super(id);
     }
 
-    public abstract String getCredentialsId();
+    public abstract String getUsername();
+
+    public abstract String getPassword();
 
     public abstract String getRemote();
 
@@ -262,12 +266,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected StandardUsernameCredentials getCredentials() {
-        return CredentialsMatchers
-                .firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, getOwner(),
-                                ACL.SYSTEM, URIRequirementBuilder.fromUri(getRemote()).build()),
-                        CredentialsMatchers.allOf(CredentialsMatchers.withId(getCredentialsId()),
-                                GitClient.CREDENTIALS_MATCHER));
+
+      return   new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, "", getUsername(), getPassword());
     }
 
     protected abstract List<RefSpec> getRefSpecs();
@@ -289,7 +289,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>(refSpecs.size());
         String remote = getRemote();
         for (RefSpec refSpec : refSpecs) {
-            result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getCredentialsId()));
+            result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getUsername(),getPassword()));
         }
         return result;
     }
@@ -307,7 +307,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns the pattern corresponding to the branches containing wildcards. 
      * 
-     * @param branchName
+     * @param branches
      * @return pattern corresponding to the branches containing wildcards
      */
     private String getPattern(String branches){

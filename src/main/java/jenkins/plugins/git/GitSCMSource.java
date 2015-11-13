@@ -67,8 +67,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final String remote;
 
-    private final String credentialsId;
-
+    private final String username;
+    private final String password;
     private final String includes;
 
     private final String excludes;
@@ -76,10 +76,11 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private final boolean ignoreOnPushNotifications;
 
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+    public GitSCMSource(String id, String remote, String username,String password, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
-        this.credentialsId = credentialsId;
+        this.username = username;
+        this.password = password;
         this.includes = includes;
         this.excludes = excludes;
         this.ignoreOnPushNotifications = ignoreOnPushNotifications;
@@ -89,9 +90,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
       return ignoreOnPushNotifications;
     }
 
+
     @Override
-    public String getCredentialsId() {
-        return credentialsId;
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     public String getRemote() {
