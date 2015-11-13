@@ -40,3 +40,9 @@ assure that you haven't introduced new findbugs warnings.
 * Create submodule tests
 * Improve code coverage
 * Improve javadoc
+
+**所做的修改：**
+
+   根据项目的需求，不同的团队可能使用同一个Jenkins来进行构建，每个JOB维护一个版本库的用户名和密码，不同的JOB之间不共用Credentials
+
+   防止了一个团队能够使用其他团队创建Credentials从而看到其他团队的代码的问题
