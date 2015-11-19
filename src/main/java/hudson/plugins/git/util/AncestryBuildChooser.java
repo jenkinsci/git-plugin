@@ -1,12 +1,5 @@
 package hudson.plugins.git.util;
 
-import hudson.Extension;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.Messages;
-import hudson.plugins.git.Revision;
-import hudson.remoting.VirtualChannel;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,15 +21,29 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class AncestryBuildChooser extends DefaultBuildChooser {
+import hudson.Extension;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.Messages;
+import hudson.plugins.git.Revision;
+import hudson.remoting.VirtualChannel;
+import jenkins.model.Jenkins;
 
+public class AncestryBuildChooser extends BuildChooser {
+
+    private BuildChooser buildChooser;
     private final Integer maximumAgeInDays;
     private final String ancestorCommitSha1;
-    
+
     @DataBoundConstructor
-    public AncestryBuildChooser(Integer maximumAgeInDays, String ancestorCommitSha1) {
+    public AncestryBuildChooser(BuildChooser buildChooser, Integer maximumAgeInDays, String ancestorCommitSha1) {
+        this.buildChooser = buildChooser;
         this.maximumAgeInDays = maximumAgeInDays;
         this.ancestorCommitSha1 = ancestorCommitSha1;
+    }
+    
+    public BuildChooser getBuildChooser() {
+        return buildChooser;
     }
     
     public Integer getMaximumAgeInDays() {
@@ -52,7 +59,10 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
                 GitClient git, final TaskListener listener, BuildData data, BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
         
-        final Collection<Revision> candidates = super.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
+        // this BuildChooser's gitSCM exists, but the BuildChooser's gitSCM in the constructor doesn't
+        buildChooser.gitSCM = gitSCM;
+
+        final Collection<Revision> candidates = buildChooser.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
         
         // filter candidates based on branch age and ancestry
         return git.withRepository(new RepositoryCallback<List<Revision>>() {
@@ -151,6 +161,15 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         @Override
         public String getDisplayName() {
             return Messages.BuildChooser_Ancestry();
+        }
+        
+        public List<BuildChooserDescriptor> getBuildChooserDescriptors() {
+            Jenkins jenkins = Jenkins.getInstance();
+
+            return Lists.newArrayList(
+                (BuildChooserDescriptor) jenkins.getDescriptor(DefaultBuildChooser.class),
+                (BuildChooserDescriptor) jenkins.getDescriptor(InverseBuildChooser.class)
+            );
         }
     }
     

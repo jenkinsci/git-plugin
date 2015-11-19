@@ -1,13 +1,8 @@
 package hudson.plugins.git.util;
 
-import hudson.EnvVars;
-import hudson.model.TaskListener;
-import hudson.plugins.git.AbstractGitRepository;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.Revision;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -23,6 +18,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -31,8 +27,15 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import hudson.EnvVars;
+import hudson.model.TaskListener;
+import hudson.plugins.git.AbstractGitRepository;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 
 public class AncestryBuildChooserTest extends AbstractGitRepository {
     
@@ -129,8 +132,12 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     }
     
     private List<String> getFilteredTestCandidates(Integer maxAgeInDays, String ancestorCommitSha1) throws Exception {
+        return getFilteredTestCandidates(new DefaultBuildChooser(), maxAgeInDays, ancestorCommitSha1);
+    }
+    
+    private List<String> getFilteredTestCandidates(BuildChooser buildChooser, Integer maxAgeInDays, String ancestorCommitSha1) throws Exception {
         GitSCM gitSCM = new GitSCM("foo");
-        AncestryBuildChooser chooser = new AncestryBuildChooser(maxAgeInDays, ancestorCommitSha1);
+        AncestryBuildChooser chooser = new AncestryBuildChooser(new DefaultBuildChooser(), maxAgeInDays, ancestorCommitSha1);
         gitSCM.getExtensions().add(new BuildChooserSetting(chooser));
         assertEquals(maxAgeInDays, chooser.getMaximumAgeInDays());
         assertEquals(ancestorCommitSha1, chooser.getAncestorCommitSha1());
@@ -243,5 +250,16 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         assertEquals(2, candidateSha1s.size());
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
+    }
+    
+    @Test
+    public void testFilteringWithInverseBuildChooser() throws Exception {
+        final Integer maxAgeInDays = 15;
+        final String ancestorCommitSha1 = ancestorCommit;
+        
+        List<String> candidateSha1s = getFilteredTestCandidates(new InverseBuildChooser(), maxAgeInDays, ancestorCommitSha1);
+        
+        assertEquals(1, candidateSha1s.size());
+        assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
     }
 }
