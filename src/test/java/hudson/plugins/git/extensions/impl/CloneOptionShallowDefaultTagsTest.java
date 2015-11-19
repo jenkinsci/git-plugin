@@ -34,7 +34,7 @@ public class CloneOptionShallowDefaultTagsTest extends GitSCMExtensionTest {
         final boolean shallowClone = true;
         final String noReference = null;
         final Integer noTimeout = null;
-        return new CloneOption(shallowClone, noReference, noTimeout);
+        return new CloneOption(shallowClone, false, noReference, noTimeout, 1);
     }
 
     @Test

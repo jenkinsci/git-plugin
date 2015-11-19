@@ -8,6 +8,9 @@ f.entry(title:_("Shallow clone"), field:"shallow") {
 f.entry(title:_("Do not fetch tags"), field:"noTags") {
 	f.checkbox()
 }
+f.entry(title:_("Shallow clone depth"), field:"depth") {
+    f.textbox()
+}
 f.entry(title:_("Path of the reference repo to use during clone"), field:"reference") {
     f.textbox()
 }
