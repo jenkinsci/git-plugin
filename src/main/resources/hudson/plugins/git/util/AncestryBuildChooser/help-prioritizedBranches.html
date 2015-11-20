@@ -1,0 +1,15 @@
+<div>
+  Prioritized branches use substring to match repository branches. This can be useful if branch names containing 'CRITICAL' need to jump ahead of other user builds.
+  <p/>
+  <pre>This example illustrates the build order when CRITICAL and RELEASE are specified:
+	Commit order:
+		feature/my-other-feature
+		user/CRITICAL/my-critical-feature
+		RELEASE/0.0.1
+	Build order:
+		user/CRITICAL/my-critical-feature
+		RELEASE/0.0.1
+		feature/my-other-feature
+  </pre>
+  Multiple branch priority names must be separated by a new line, and leaving the textbox empty means no branch priority sorting is done.
+</div>

@@ -22,3 +22,11 @@ f.description {
 f.entry(title:_("Commit in Ancestry"), field:"ancestorCommitSha1") {
     f.textbox()
 }
+
+f.description {
+    raw(_("prioritized_branches_blurb"))
+}
+
+f.entry(title:_("Prioritized Branches"), field:"prioritizedBranches") {
+    f.expandableTextbox()
+}
