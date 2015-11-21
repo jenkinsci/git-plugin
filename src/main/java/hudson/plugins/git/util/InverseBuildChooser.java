@@ -39,7 +39,7 @@ public class InverseBuildChooser extends BuildChooser {
 
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall,
-            String singleBranch, GitClient git, TaskListener listener,
+            String singleBranch, boolean filterTipRevisions, GitClient git, TaskListener listener,
             BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
@@ -72,7 +72,9 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Filter out branch revisions that aren't leaves
-        branchRevs = utils.filterTipBranches(branchRevs);
+        if (filterTipRevisions) {
+            branchRevs = utils.filterTipBranches(branchRevs);
+        }
 
         // Warn the user that they've done something crazy such as excluding all branches
         if (branchRevs.isEmpty()) {

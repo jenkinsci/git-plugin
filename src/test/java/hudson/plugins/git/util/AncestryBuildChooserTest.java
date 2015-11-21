@@ -174,7 +174,7 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         TaskListener listener = TaskListener.NULL;
 
         // get filtered candidates
-        Collection<Revision> candidateRevisions = gitSCM.getBuildChooser().getCandidateRevisions(true, "**-days-old-branch", git, listener, buildData, context);
+        Collection<Revision> candidateRevisions = gitSCM.getBuildChooser().getCandidateRevisions(true, "**-days-old-branch", true, git, listener, buildData, context);
 
         // transform revision candidates to sha1 strings
         List<String> candidateSha1s = Lists.newArrayList(Iterables.transform(candidateRevisions, new Function<Revision, String>() {

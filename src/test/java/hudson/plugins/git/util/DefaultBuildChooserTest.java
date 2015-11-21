@@ -22,12 +22,12 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
 
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();
 
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, shaHashCommit1, testGitClient, null, null, null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, shaHashCommit1, true, testGitClient, null, null, null);
 
         assertEquals(1, candidateRevisions.size());
         assertEquals(shaHashCommit1, candidateRevisions.iterator().next().getSha1String());
 
-        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), testGitClient, null, null, null);
+        candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), true, testGitClient, null, null, null);
         assertTrue(candidateRevisions.isEmpty());
     }
     /**

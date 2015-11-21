@@ -88,13 +88,13 @@ public class AncestryBuildChooser extends BuildChooser {
     }
 
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec, GitClient git, final TaskListener listener, BuildData data, BuildChooserContext context)
-            throws GitException, IOException, InterruptedException {
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec, boolean filterTipRevisions, GitClient git,
+            final TaskListener listener, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         // this BuildChooser's gitSCM exists, but the BuildChooser's gitSCM in the constructor doesn't
         buildChooser.gitSCM = gitSCM;
 
-        final Collection<Revision> candidates = buildChooser.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
+        final Collection<Revision> candidates = buildChooser.getCandidateRevisions(isPollCall, branchSpec, filterTipRevisions, git, listener, data, context);
 
         // filter candidates based on branch age and ancestry
         final List<Revision> filteredCandidates = git.withRepository(new RepositoryCallback<List<Revision>>() {

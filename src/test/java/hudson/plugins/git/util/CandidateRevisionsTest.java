@@ -117,7 +117,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         BuildChooserContext context = Mockito.mock(BuildChooserContext.class);
         Mockito.when(context.getEnvironment()).thenReturn(new EnvVars());
 
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", true, testGitClient2, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
         String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
         assertTrue("Wrong name: '" + name + "'", name.equals("origin/tags/tag/c") || name.equals("origin/tags/tag/b"));

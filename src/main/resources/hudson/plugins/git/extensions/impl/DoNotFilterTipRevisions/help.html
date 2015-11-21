@@ -1,0 +1,14 @@
+<div>
+       By default if two branches are seen by the git-plugin; <i>feature</i>, and <i>master</i>, where feature points to a commit that is an <b>ancestor</b> of master 
+       then only master will be built. This option prevents feature from being filtered. This functionality is desired when teams are working on
+       a branch that is contained within another branch, and would like their commits built regardless.
+       <pre>
+       
+       With Filtering:                               Without Filtering:
+       o <-- master (buildable)                      o <-- master (buildable)
+       |\                                            |\
+       | o <-- feature (filtered)                    | o <-- feature (buildable)
+       |/                                            |/
+       o                                             o
+       </pre>
+</div>

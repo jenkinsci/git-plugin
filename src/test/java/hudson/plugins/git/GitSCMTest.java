@@ -892,7 +892,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         for (RemoteConfig remoteConfig : gitSCM.getRepositories()) {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
-        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", true, git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
     }
 

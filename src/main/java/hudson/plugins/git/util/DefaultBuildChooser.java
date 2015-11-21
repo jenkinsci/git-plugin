@@ -41,7 +41,7 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws GitException
      */
     @Override
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec, boolean filterTipRevisions,
                                                       GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
             throws GitException, IOException, InterruptedException {
 
@@ -50,7 +50,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // if the branch name contains more wildcards then the simple usecase
         // does not apply and we need to skip to the advanced usecase
         if (isAdvancedSpec(branchSpec))
-            return getAdvancedCandidateRevisions(isPollCall,listener,new GitUtils(listener,git),data, context);
+            return getAdvancedCandidateRevisions(isPollCall,listener,filterTipRevisions,new GitUtils(listener,git),data, context);
 
         // check if we're trying to build a specific commit
         // this only makes sense for a build, there is no
@@ -196,7 +196,8 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
-    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+    private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, boolean filterTipRevisions,
+            GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
 
@@ -246,8 +247,10 @@ public class DefaultBuildChooser extends BuildChooser {
         verbose(listener, "After branch filtering: {0}", revs);
 
         // 3. We only want 'tip' revisions
-        revs = utils.filterTipBranches(revs);
-        verbose(listener, "After non-tip filtering: {0}", revs);
+        if (filterTipRevisions) {
+            revs = utils.filterTipBranches(revs);
+            verbose(listener, "After non-tip filtering: {0}", revs);
+        }
 
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());

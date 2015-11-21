@@ -382,8 +382,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
 
         @Override
-        public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, GitClient git,
-                                                          TaskListener listener, BuildData buildData,
+        public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, boolean filterTipRevisions,
+                                                          GitClient git, TaskListener listener, BuildData buildData,
                                                           BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
             return Collections.singleton(revision);

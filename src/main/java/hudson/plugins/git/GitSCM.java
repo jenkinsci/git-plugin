@@ -23,6 +23,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
+import hudson.plugins.git.extensions.impl.DoNotFilterTipRevisions;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -659,8 +660,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             listener.getLogger().println("Polling for changes in");
 
+            boolean filterTipRevisions = getExtensions().get(DoNotFilterTipRevisions.class) == null ? true : false;
+
             Collection<Revision> candidates = getBuildChooser().getCandidateRevisions(
-                    true, singleBranch, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
+                    true, singleBranch, filterTipRevisions, git, listener, buildData, new BuildChooserContextImpl(project, null, environment));
 
             for (Revision c : candidates) {
                 if (!isRevExcluded(git, c, listener, buildData)) {
@@ -948,8 +951,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (candidates.isEmpty() ) {
             final String singleBranch = environment.expand( getSingleBranch(environment) );
 
+            boolean filterTipRevisions = getExtensions().get(DoNotFilterTipRevisions.class) == null ? true : false;
+
             candidates = getBuildChooser().getCandidateRevisions(
-                    false, singleBranch, git, listener, buildData, context);
+                    false, singleBranch, filterTipRevisions, git, listener, buildData, context);
         }
 
         if (candidates.isEmpty()) {
