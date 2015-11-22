@@ -1,5 +1,7 @@
 <div>
   If set, and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed by users in this list when determining if a build needs to be triggered. This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
+  <p/>
+N.B. using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the <b>Force polling using workspace</b> extension as well.
   <p/>Each exclusion uses literal pattern matching, and must be separated by a new line.
   <p/>
   <pre>
