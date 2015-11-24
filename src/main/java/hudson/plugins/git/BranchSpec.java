@@ -4,13 +4,16 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -75,6 +78,27 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      */
     public boolean matches(String ref, EnvVars env) {
         return getPattern(env).matcher(ref).matches();
+    }
+
+    /**
+     * Compare the configured pattern to a git branch defined by the a repository name and the branch name itself.
+     */
+    public boolean matchesRepositoryBranch(String repositoryName, String branchName) {
+        String pattern;
+        String expandedName = getExpandedName(new EnvVars());
+        // use regex syntax directly if name starts with colon
+        if (expandedName.startsWith(":") && expandedName.length() > 1) {
+            pattern = expandedName.substring(1, expandedName.length());
+        } else {
+            // remove the "refs/.../" stuff from the branch-spec if necessary
+            pattern = cutRefs(expandedName)
+                    // remove a leading "remotes/" from the branch spec
+                    .replaceAll("^remotes/", "");
+            pattern = convertWildcardStringToRegex(pattern);
+        }
+        String branchWithoutRefs = cutRefs(branchName);
+        return branchWithoutRefs != null &&
+                (branchWithoutRefs.matches(pattern) || join(repositoryName, branchWithoutRefs).matches(pattern));
     }
 
     /**
@@ -143,7 +167,16 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             builder.append("|refs/remotes/|remotes/");
         }
         builder.append(")?");
-        
+
+        builder.append(convertWildcardStringToRegex(expandedName));
+
+
+        return Pattern.compile(builder.toString());
+    }
+
+    private String convertWildcardStringToRegex(String expandedName) {
+        StringBuilder builder = new StringBuilder();
+
         // was the last token a wildcard?
         boolean foundWildcard = false;
         
@@ -183,8 +216,20 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         if (foundWildcard) {
             builder.append("[^/]*");
         }
-        
-        return Pattern.compile(builder.toString());
+        return builder.toString();
+    }
+
+    private String cutRefs(String name) {
+        if (name != null) {
+            Matcher matcher = GitSCM.GIT_REF.matcher(name);
+            return matcher.matches() ? matcher.group(2) : name;
+        } else {
+            return null;
+        }
+    }
+
+    private String join(String repositoryName, String branchWithoutRefs) {
+        return StringUtils.join(Arrays.asList(repositoryName, branchWithoutRefs), "/");
     }
 
     @Extension
