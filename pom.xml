@@ -28,7 +28,7 @@
     <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
     <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
     <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
-    <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
+    <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-site-plugin.version>3.4</maven-site-plugin.version>
     <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
