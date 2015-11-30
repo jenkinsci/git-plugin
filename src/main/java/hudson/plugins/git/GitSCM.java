@@ -1179,7 +1179,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Set environment variable and namespace variable as well.
         env.put(propertyName, value);
-        if (scmNameEnvPrefix != "") {
+        if (!scmNameEnvPrefix.equals("")) {
             env.put(scmNameEnvPrefix + propertyName, value);
         }
     }
