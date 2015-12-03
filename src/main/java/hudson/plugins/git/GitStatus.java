@@ -165,25 +165,31 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     public static abstract class Listener implements ExtensionPoint {
 
         /**
-         * Called when there is a change notification on a specific repository url.
-         *
-         * @param uri      the repository uri.
-         * @param branches the (optional) branch information.
-         * @return any response contributors for the response to the push request.
-         * @since 1.4.1
-         * @deprecated implement #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, String...)
+         * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
-            return onNotifyCommit(uri, null, branches);
+            throw new AbstractMethodError();
         }
 
+        /**
+         * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
+         */
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
-            List<ParameterValue> buildParameters = Collections.EMPTY_LIST;
-            return onNotifyCommit(uri, sha1, buildParameters, branches);
+            return onNotifyCommit(uri, branches);
         }
 
+        /**
+         * Called when there is a change notification on a specific repository url.
+         *
+         * @param uri             the repository uri.
+         * @param sha1            ?
+         * @param buildParameters ?
+         * @param branches        the (optional) branch information.
+         * @return any response contributors for the response to the push request.
+         * @since 2.4.0
+         */
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
-            return Collections.EMPTY_LIST;
+            return onNotifyCommit(uri, sha1, branches);
         }
 
 
