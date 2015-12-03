@@ -1,11 +1,19 @@
 package hudson.plugins.git;
 
 import hudson.model.Action;
+import hudson.model.Cause;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.StringParameterDefinition;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.tasks.BatchFile;
+import hudson.tasks.CommandInterpreter;
+import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
+import java.io.File;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -26,12 +34,18 @@ public class GitStatusTest extends AbstractGitProject {
     private GitStatus gitStatus;
     private HttpServletRequest requestWithNoParameter;
     private HttpServletRequest requestWithParameter;
+    private String repoURL;
+    private String branch;
+    private String sha1;
 
     @Before
     public void setUp() throws Exception {
         this.gitStatus = new GitStatus();
         this.requestWithNoParameter = mock(HttpServletRequest.class);
         this.requestWithParameter = mock(HttpServletRequest.class);
+        this.repoURL = new File(".").getAbsolutePath();
+        this.branch = "**";
+        this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
     }
 
     @WithoutJenkins
@@ -231,20 +245,124 @@ public class GitStatusTest extends AbstractGitProject {
             "git@github.com:jenkinsci/git-plugin.git/"
         };
         List<URIish> uris = new ArrayList<URIish>();
-        for (String repoURL : equivalentRepoURLs) {
-            uris.add(new URIish(repoURL));
+        for (String testURL : equivalentRepoURLs) {
+            uris.add(new URIish(testURL));
         }
 
         /* Extra slashes on end of URL probably should be considered equivalent,
-         * but current implementation does not consider them as loose matches 
+         * but current implementation does not consider them as loose matches
          */
-        URIish badURL = new URIish(equivalentRepoURLs[0] + "///");
+        URIish badURLTrailingSlashes = new URIish(equivalentRepoURLs[0] + "///");
+        /* Different hostname should always fail match check */
+        URIish badURLHostname = new URIish(equivalentRepoURLs[0].replace("github.com", "bitbucket.org"));
 
         for (URIish lhs : uris) {
-            assertFalse(lhs + " matches " + badURL, GitStatus.looselyMatches(lhs, badURL));
+            assertFalse(lhs + " matches trailing slashes " + badURLTrailingSlashes, GitStatus.looselyMatches(lhs, badURLTrailingSlashes));
+            assertFalse(lhs + " matches bad hostname " + badURLHostname, GitStatus.looselyMatches(lhs, badURLHostname));
             for (URIish rhs : uris) {
                 assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
             }
         }
+    }
+
+    private FreeStyleProject setupNotifyProject() throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        project.setQuietPeriod(0);
+        GitSCM git = new GitSCM(
+                Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
+                Collections.singletonList(new BranchSpec(branch)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(git);
+        project.addTrigger(new SCMTrigger("")); // Required for GitStatus to see polling request
+        return project;
+    }
+
+    private Map<String, String[]> setupParameterMap() {
+        Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+        String[] repoURLs = {repoURL};
+        parameterMap.put("url", repoURLs);
+        String[] branches = {branch};
+        parameterMap.put("branches", branches);
+        String[] hashes = {sha1};
+        parameterMap.put("sha1", hashes);
+        return parameterMap;
+    }
+
+    private Map<String, String[]> setupParameterMap(String extraValue) {
+        Map<String, String[]> parameterMap = setupParameterMap();
+        String[] extra = {extraValue};
+        parameterMap.put("extra", extra);
+        return parameterMap;
+    }
+
+    @Test
+    public void testDoNotifyCommitNoParameters() throws Exception {
+        setupNotifyProject();
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, repoURL, branch, sha1);
+        assertEquals("URL: " + repoURL
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+    }
+
+    @Test
+    public void testDoNotifyCommitWithExtraParameter() throws Exception {
+        setupNotifyProject();
+        String extraValue = "An-extra-value";
+        when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
+        this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1);
+        assertEquals("URL: " + repoURL
+                + " SHA1: " + sha1
+                + " Branches: " + branch
+                + " Parameters: extra='" + extraValue + "'"
+                + " More parameters: extra='" + extraValue + "'", this.gitStatus.toString());
+    }
+
+    @Test
+    public void testDoNotifyCommitWithNullValueExtraParameter() throws Exception {
+        setupNotifyProject();
+        when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(null));
+        this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1);
+        assertEquals("URL: " + repoURL
+                + " SHA1: " + sha1
+                + " Branches: " + branch, this.gitStatus.toString());
+    }
+
+    @Test
+    public void testDoNotifyCommitWithDefaultParameter() throws Exception {
+        // Use official repo for this single test
+        this.repoURL = "https://github.com/jenkinsci/git-plugin.git";
+        FreeStyleProject project = setupNotifyProject();
+        project.addProperty(new ParametersDefinitionProperty(
+                new StringParameterDefinition("A", "aaa"),
+                new StringParameterDefinition("C", "ccc"),
+                new StringParameterDefinition("B", "$A$C")
+        ));
+        final CommandInterpreter script = isWindows()
+                ? new BatchFile("echo %A% %B% %C%")
+                : new Shell("echo $A $B $C");
+        project.getBuildersList().add(script);
+
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+
+        jenkins.assertLogContains("aaa aaaccc ccc", build);
+
+        String extraValue = "An-extra-value";
+        when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
+        this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1);
+        assertEquals("URL: " + repoURL
+                + " SHA1: " + sha1
+                + " Branches: " + branch
+                + " Parameters: extra='" + extraValue + "'"
+                + " More parameters: extra='" + extraValue + "',A='aaa',C='ccc',B='$A$C'", this.gitStatus.toString());
+    }
+
+    /**
+     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
+     * remote classloader issue
+     */
+    private boolean isWindows() {
+        return File.pathSeparatorChar == ';';
     }
 }

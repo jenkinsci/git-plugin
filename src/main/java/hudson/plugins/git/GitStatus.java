@@ -53,9 +53,62 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return "git";
     }
 
+    private String lastURL = "";        // Required query parameter
+    private String lastBranches = null; // Optional query parameter
+    private String lastSHA1 = null;     // Optional query parameter
+    private List<ParameterValue> lastBuildParameters = null;
+    private static List<ParameterValue> lastStaticBuildParameters = null;
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        s.append("URL: ");
+        s.append(lastURL);
+
+        if (lastSHA1 != null) {
+            s.append(" SHA1: ");
+            s.append(lastSHA1);
+        }
+
+        if (lastBranches != null) {
+            s.append(" Branches: ");
+            s.append(lastBranches);
+        }
+
+        if (lastBuildParameters != null && !lastBuildParameters.isEmpty()) {
+            s.append(" Parameters: ");
+            for (ParameterValue buildParameter : lastBuildParameters) {
+                s.append(buildParameter.getName());
+                s.append("='");
+                s.append(buildParameter.getValue());
+                s.append("',");
+            }
+            s.delete(s.length() - 1, s.length());
+        }
+
+        if (lastStaticBuildParameters != null && !lastStaticBuildParameters.isEmpty()) {
+            s.append(" More parameters: ");
+            for (ParameterValue buildParameter : lastStaticBuildParameters) {
+                s.append(buildParameter.getName());
+                s.append("='");
+                s.append(buildParameter.getValue());
+                s.append("',");
+            }
+            s.delete(s.length() - 1, s.length());
+        }
+
+        return s.toString();
+    }
+
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
+        lastURL = url;
+        lastBranches = branches;
+        lastSHA1 = sha1;
+        lastBuildParameters = null;
+        lastStaticBuildParameters = null;
         URIish uri;
         List<ParameterValue> buildParameters = new ArrayList<ParameterValue>();
 
@@ -71,6 +124,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 if (entry.getValue()[0] != null)
                     buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
         }
+        lastBuildParameters = buildParameters;
 
         branches = Util.fixEmptyAndTrim(branches);
 
@@ -207,6 +261,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
 
+            lastStaticBuildParameters = null;
+            List<ParameterValue> allBuildParameters = new ArrayList<ParameterValue>(buildParameters);
             List<ResponseContributor> result = new ArrayList<ResponseContributor>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -281,12 +337,20 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
+                                    /* If SHA1 and not a parameterized branch spec, then schedule build.
+                                     * NOTE: This is SCHEDULING THE BUILD, not triggering polling of the repo.
+                                     * If no SHA1 or the branch spec is parameterized, it will only poll.
+                                     */
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
+                                    /* Poll the repository for changes
+                                     * NOTE: This is not scheduling the build, just polling for changes
+                                     * If the polling detects changes, it will schedule the build
+                                     */
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
@@ -306,6 +370,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     .join(branches, ",")));
                 }
 
+                lastStaticBuildParameters = allBuildParameters;
                 return result;
             } finally {
                 SecurityContextHolder.setContext(old);
