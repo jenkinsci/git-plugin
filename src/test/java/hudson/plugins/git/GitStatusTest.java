@@ -212,20 +212,36 @@ public class GitStatusTest extends AbstractGitProject {
 
     @WithoutJenkins
     @Test
-    public void testLooseMatch() throws URISyntaxException {
-        String[] list = new String[]{
+    public void testLooselyMatches() throws URISyntaxException {
+        String[] equivalentRepoURLs = new String[]{
+            "https://github.com/jenkinsci/git-plugin",
+            "https://github.com/jenkinsci/git-plugin/",
             "https://github.com/jenkinsci/git-plugin.git",
-            "git://github.com/jenkinsci/git-plugin.git",
-            "ssh://git@github.com/jenkinsci/git-plugin.git",
+            "https://github.com/jenkinsci/git-plugin.git/",
             "https://someone@github.com/jenkinsci/git-plugin.git",
-            "git@github.com:jenkinsci/git-plugin.git"
+            "https://someone:somepassword@github.com/jenkinsci/git-plugin/",
+            "git://github.com/jenkinsci/git-plugin",
+            "git://github.com/jenkinsci/git-plugin/",
+            "git://github.com/jenkinsci/git-plugin.git",
+            "git://github.com/jenkinsci/git-plugin.git/",
+            "ssh://git@github.com/jenkinsci/git-plugin",
+            "ssh://github.com/jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin/",
+            "git@github.com:jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin.git/"
         };
         List<URIish> uris = new ArrayList<URIish>();
-        for (String s : list) {
-            uris.add(new URIish(s));
+        for (String repoURL : equivalentRepoURLs) {
+            uris.add(new URIish(repoURL));
         }
 
+        /* Extra slashes on end of URL probably should be considered equivalent,
+         * but current implementation does not consider them as loose matches 
+         */
+        URIish badURL = new URIish(equivalentRepoURLs[0] + "///");
+
         for (URIish lhs : uris) {
+            assertFalse(lhs + " matches " + badURL, GitStatus.looselyMatches(lhs, badURL));
             for (URIish rhs : uris) {
                 assertTrue(lhs + " and " + rhs + " didn't match", GitStatus.looselyMatches(lhs, rhs));
             }
