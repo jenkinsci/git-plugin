@@ -60,10 +60,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "", null);
         Mockito.verify(aMasterTrigger).run();
@@ -74,10 +74,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoMatchingUrl() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "nonexistent", "", null);
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
@@ -88,10 +88,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithOneBranch() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
         Mockito.verify(aMasterTrigger).run();
@@ -102,10 +102,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic", null);
         Mockito.verify(aMasterTrigger).run();
@@ -116,10 +116,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithNoMatchingBranches() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "nonexistent", null);
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
@@ -130,9 +130,9 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithParametrizedBranch() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "$BRANCH_TO_BUILD", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "$BRANCH_TO_BUILD", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
         Mockito.verify(aMasterTrigger).run();
@@ -142,7 +142,7 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithIgnoredRepository() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", true);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", true);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
@@ -157,10 +157,10 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
-        SCMTrigger aMasterTrigger = setupProject("a", "master", false);
-        SCMTrigger aTopicTrigger = setupProject("a", "topic", false);
-        SCMTrigger bMasterTrigger = setupProject("b", "master", false);
-        SCMTrigger bTopicTrigger = setupProject("b", "topic", false);
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+        SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         Map<String, String[]> parameterMap = new HashMap<String, String[]>();
         parameterMap.put("paramKey1", new String[] {"paramValue1"});
@@ -191,7 +191,7 @@ public class GitStatusTest extends AbstractGitProject {
         }
     }
 
-    private SCMTrigger setupProject(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
+    private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
         SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
         Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
         setupProject(url, branchString, trigger);
