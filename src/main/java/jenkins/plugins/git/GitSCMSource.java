@@ -27,8 +27,10 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.ParameterValue;
 import hudson.plugins.git.GitStatus;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
@@ -146,7 +148,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public static class ListenerImpl extends GitStatus.Listener {
 
         @Override
-        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, String sha1, String... branches) {
+        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
             List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
             boolean notified = false;
             // run in high privilege to see all the projects anonymous users don't see.
