@@ -334,8 +334,21 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             }
                             if (!branchFound) continue;
                             urlFound = true;
-
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
+                                //JENKINS-30178 Add default parameters defined in the job
+                                if (project instanceof Job) {
+                                    Set<String> buildParametersNames = new HashSet<String>();
+                                    for (ParameterValue parameterValue: allBuildParameters) {
+                                        buildParametersNames.add(parameterValue.getName());
+                                    }
+
+                                    List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
+                                    for (ParameterValue defaultParameterValue : jobParametersValues) {
+                                        if (!buildParametersNames.contains(defaultParameterValue.getName())) {
+                                            allBuildParameters.add(defaultParameterValue);
+                                        }
+                                    }
+                                }
                                 if (!parametrizedBranchSpec && isNotEmpty(sha1)) {
                                     /* If SHA1 and not a parameterized branch spec, then schedule build.
                                      * NOTE: This is SCHEDULING THE BUILD, not triggering polling of the repo.
@@ -344,7 +357,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(buildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     /* Poll the repository for changes
@@ -375,6 +388,35 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             } finally {
                 SecurityContextHolder.setContext(old);
             }
+        }
+
+        /**
+         * Get the default parameters values from a job
+         *
+         */
+        private ArrayList<ParameterValue> getDefaultParametersValues(Job<?,?> job) {
+            ArrayList<ParameterValue> defValues;
+            ParametersDefinitionProperty paramDefProp = job.getProperty(ParametersDefinitionProperty.class);
+
+            if (paramDefProp != null) {
+                List <ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
+                defValues = new ArrayList<ParameterValue>(parameterDefinition.size());
+
+            } else {
+                defValues = new ArrayList<ParameterValue>();
+                return defValues;
+            }
+
+            /* Scan for all parameter with an associated default values */
+            for (ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
+                ParameterValue defaultValue  = paramDefinition.getDefaultParameterValue();
+
+                if (defaultValue != null) {
+                    defValues.add(defaultValue);
+                }
+            }
+
+            return defValues;
         }
 
         /**
