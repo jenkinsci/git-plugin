@@ -92,6 +92,21 @@ public class Build implements Serializable, Cloneable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Build)) {
+            return false;
+        } else {
+            Build otherBuild = (Build) o;
+            if (otherBuild.hudsonBuildNumber == this.hudsonBuildNumber
+                    && otherBuild.revision.equals(this.revision)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    @Override
     public Build clone() {
         Build clone;
         try {

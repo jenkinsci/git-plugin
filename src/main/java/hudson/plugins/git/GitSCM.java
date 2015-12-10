@@ -1038,7 +1038,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
-        build.addAction(buildData);
+
         if (VERBOSE && buildData.lastBuild != null) {
             listener.getLogger().println("Last Built Revision: " + buildData.lastBuild.revision);
         }
@@ -1068,16 +1068,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         try {
           checkoutCommand.execute();
-        } catch(GitLockFailedException e) {
+        } catch (GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
 
-        build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
+        // Don't add the tag and changelog if we've already processed this BuildData before.
+        if (!build.getActions(BuildData.class).contains(buildData)) {
+            build.addAction(buildData);
+            build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
 
-        if (changelogFile != null) {
-            computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                    new BuildChooserContextImpl(build.getParent(), build, environment));
+            if (changelogFile != null) {
+                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
+                        new BuildChooserContextImpl(build.getParent(), build, environment));
+            }
         }
 
         for (GitSCMExtension ext : extensions) {
