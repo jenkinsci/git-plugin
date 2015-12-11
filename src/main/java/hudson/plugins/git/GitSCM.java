@@ -1053,8 +1053,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
+        // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
+        // revision info for this build etc. The default assumption is that it's a duplicate.
         boolean buildDataAlreadyPresent = true;
 
+        // If the BuildData is not already attached to this build, add it to the build and mark that
+        // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
+        // finishes.
         if (!build.getActions(BuildData.class).contains(buildData)) {
             build.addAction(buildData);
             buildDataAlreadyPresent = false;
