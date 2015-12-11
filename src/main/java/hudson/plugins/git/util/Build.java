@@ -98,7 +98,8 @@ public class Build implements Serializable, Cloneable {
         } else {
             Build otherBuild = (Build) o;
             if (otherBuild.hudsonBuildNumber == this.hudsonBuildNumber
-                    && otherBuild.revision.equals(this.revision)) {
+                    && otherBuild.revision == this.revision
+                    && otherBuild.marked == this.marked) {
                 return true;
             } else {
                 return false;
