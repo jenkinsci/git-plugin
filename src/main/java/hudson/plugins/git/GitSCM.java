@@ -1053,6 +1053,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
+        boolean buildDataAlreadyPresent = true;
+
+        if (!build.getActions(BuildData.class).contains(buildData)) {
+            build.addAction(buildData);
+            buildDataAlreadyPresent = false;
+        }
+
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         if (branch != null && branch.getName() != null) { // null for a detached HEAD
@@ -1074,8 +1081,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
-        if (!build.getActions(BuildData.class).contains(buildData)) {
-            build.addAction(buildData);
+        if (!buildDataAlreadyPresent) {
             build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
 
             if (changelogFile != null) {
