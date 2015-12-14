@@ -6,7 +6,6 @@ import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.triggers.SCMTrigger;
-
 import java.net.URISyntaxException;
 import java.util.*;
 import org.eclipse.jgit.transport.URIish;
@@ -194,7 +193,7 @@ public class GitStatusTest extends AbstractGitProject {
     };
 
     @Theory
-    public void testDoNotifyBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProject("remote", branchSpecPrefix + "feature/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
 
@@ -202,7 +201,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Theory
-    public void testDoNotifyBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProject("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null);
 
@@ -210,7 +209,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Theory
-    public void testDoNotifyBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
         SCMTrigger trigger = setupProject("remote", branchSpecPrefix + "awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null);
 
@@ -218,7 +217,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyBranchWithRegex() throws Exception {
+    public void testDoNotifyCommitBranchWithRegex() throws Exception {
         SCMTrigger trigger = setupProject("remote", ":[^/]*/awesome-feature", false);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
 
