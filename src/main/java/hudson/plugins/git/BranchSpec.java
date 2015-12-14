@@ -84,21 +84,10 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      * Compare the configured pattern to a git branch defined by the a repository name and the branch name itself.
      */
     public boolean matchesRepositoryBranch(String repositoryName, String branchName) {
-        String pattern;
-        String expandedName = getExpandedName(new EnvVars());
-        // use regex syntax directly if name starts with colon
-        if (expandedName.startsWith(":") && expandedName.length() > 1) {
-            pattern = expandedName.substring(1, expandedName.length());
-        } else {
-            // remove the "refs/.../" stuff from the branch-spec if necessary
-            pattern = cutRefs(expandedName)
-                    // remove a leading "remotes/" from the branch spec
-                    .replaceAll("^remotes/", "");
-            pattern = convertWildcardStringToRegex(pattern);
-        }
+        Pattern pattern = getPattern(new EnvVars(), repositoryName);
         String branchWithoutRefs = cutRefs(branchName);
         return branchWithoutRefs != null &&
-                (branchWithoutRefs.matches(pattern) || join(repositoryName, branchWithoutRefs).matches(pattern));
+                (pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches());
     }
 
     /**
@@ -143,35 +132,48 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         }
         return expandedName;
     }
-    
+
     private Pattern getPattern(EnvVars env) {
+        return getPattern(env, null);
+    }
+
+    private Pattern getPattern(EnvVars env, String repositoryName) {
         String expandedName = getExpandedName(env);
         // use regex syntax directly if name starts with colon
         if (expandedName.startsWith(":") && expandedName.length() > 1) {
             String regexSubstring = expandedName.substring(1, expandedName.length());
             return Pattern.compile(regexSubstring);
-        }
 
-        // build a pattern into this builder
-        StringBuilder builder = new StringBuilder();
+        } else if (repositoryName != null) {
+            // remove the "refs/.../" stuff from the branch-spec if necessary
+            String pattern = cutRefs(expandedName)
+                    // remove a leading "remotes/" from the branch spec
+                    .replaceAll("^remotes/", "");
+            pattern = convertWildcardStringToRegex(pattern);
+            return Pattern.compile(pattern);
 
-        // for legacy reasons (sic) we do support various branch spec format to declare remotes / branches
-        builder.append("(refs/heads/");
-
-
-        // if an unqualified branch was given, consider all remotes (with various possible syntaxes)
-        // so it will match branches from  any remote repositories as the user probably intended
-        if (!expandedName.contains("**") && !expandedName.contains("/")) {
-            builder.append("|refs/remotes/[^/]+/|remotes/[^/]+/|[^/]+/");
         } else {
-            builder.append("|refs/remotes/|remotes/");
+            // build a pattern into this builder
+            StringBuilder builder = new StringBuilder();
+
+            // for legacy reasons (sic) we do support various branch spec format to declare remotes / branches
+            builder.append("(refs/heads/");
+
+
+            // if an unqualified branch was given, consider all remotes (with various possible syntaxes)
+            // so it will match branches from  any remote repositories as the user probably intended
+            if (!expandedName.contains("**") && !expandedName.contains("/")) {
+                builder.append("|refs/remotes/[^/]+/|remotes/[^/]+/|[^/]+/");
+            } else {
+                builder.append("|refs/remotes/|remotes/");
+            }
+            builder.append(")?");
+
+            builder.append(convertWildcardStringToRegex(expandedName));
+
+
+            return Pattern.compile(builder.toString());
         }
-        builder.append(")?");
-
-        builder.append(convertWildcardStringToRegex(expandedName));
-
-
-        return Pattern.compile(builder.toString());
     }
 
     private String convertWildcardStringToRegex(String expandedName) {
