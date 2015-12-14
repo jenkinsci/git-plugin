@@ -225,6 +225,14 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(trigger).run();
     }
 
+    @Test
+    public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+        SCMTrigger trigger = setupProject("remote", "origin/feature/*", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
         for (Action action: actions) {
             if (action instanceof ParametersAction) {
