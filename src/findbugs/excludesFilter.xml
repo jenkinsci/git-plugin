@@ -127,4 +127,11 @@
     <Method name="onNotifyCommit"/>
   </Match>
 
+  <!-- Clears the static field on entry, used only in toString. -->
+  <Match>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    <Class name="hudson.plugins.git.GitStatus"/>
+    <Field name="lastStaticBuildParameters"/>
+  </Match>
+
 </FindBugsFilter>
