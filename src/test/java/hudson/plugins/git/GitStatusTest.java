@@ -198,7 +198,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @DataPoints("branchSpecPrefixes")
-    public static String[] branchSpecPrefixes = new String[] {
+    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
             "",
             "refs/remotes/",
             "refs/heads/",
