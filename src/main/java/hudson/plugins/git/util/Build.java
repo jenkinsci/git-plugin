@@ -1,5 +1,6 @@
 package hudson.plugins.git.util;
 
+import com.google.common.base.Objects;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
@@ -89,6 +90,22 @@ public class Build implements Serializable, Cloneable {
 
     public @Override String toString() {
         return "Build #" + hudsonBuildNumber + " of " + revision.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Build)) {
+            return false;
+        } else {
+            Build otherBuild = (Build) o;
+            if (otherBuild.hudsonBuildNumber == this.hudsonBuildNumber
+                    && Objects.equal(otherBuild.revision, this.revision)
+                    && Objects.equal(otherBuild.marked, this.marked)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     @Override
