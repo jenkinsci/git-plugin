@@ -57,7 +57,9 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
+import static org.junit.Assert.assertThat;
 
 import org.mockito.Mockito;
 import static org.mockito.Matchers.anyString;
@@ -1222,8 +1224,13 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     public void testDataCompatibility1() throws Exception {
         FreeStyleProject p = (FreeStyleProject) jenkins.createProjectFromXML("foo", getClass().getResourceAsStream("GitSCMTest/old1.xml"));
-        GitSCM git = (GitSCM) p.getScm();
-        assertEquals(Collections.emptyList(), git.getExtensions().toList());
+        GitSCM oldGit = (GitSCM) p.getScm();
+        assertEquals(Collections.emptyList(), oldGit.getExtensions().toList());
+        assertEquals(0, oldGit.getSubmoduleCfg().size());
+        assertEquals("git git://github.com/jenkinsci/model-ant-project.git", oldGit.getKey());
+        assertThat(oldGit.getEffectiveBrowser(), instanceOf(GithubWeb.class));
+        GithubWeb browser = (GithubWeb) oldGit.getEffectiveBrowser();
+        assertEquals(browser.getRepoUrl(), "https://github.com/jenkinsci/model-ant-project.git/");
     }
 
     public void testPleaseDontContinueAnyway() throws Exception {
@@ -1236,17 +1243,17 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertBuildStatusSuccess(p.scheduleBuild2(0));
 
         // this should fail as it fails to fetch
-        p.setScm(new GitSCM("http://www.google.com/no/such/repository.git"));
+        p.setScm(new GitSCM("http://localhost:4321/no/such/repository.git"));
         assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
     }
 
     @Issue("JENKINS-19108")
     public void testCheckoutToSpecificBranch() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
-        GitSCM git = new GitSCM("https://github.com/imod/dummy-tester.git");
-        setupJGit(git);
-        git.getExtensions().add(new LocalBranch("master"));
-        p.setScm(git);
+        GitSCM oldGit = new GitSCM("https://github.com/jenkinsci/model-ant-project.git/");
+        setupJGit(oldGit);
+        oldGit.getExtensions().add(new LocalBranch("master"));
+        p.setScm(oldGit);
 
         FreeStyleBuild b = assertBuildStatusSuccess(p.scheduleBuild2(0));
         GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
