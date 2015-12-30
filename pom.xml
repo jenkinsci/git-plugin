@@ -5,7 +5,7 @@
     <artifactId>plugin</artifactId>
     <version>1.580</version>
   </parent>
-  
+
   <licenses>
     <license>
       <name>The MIT License (MIT)</name>
@@ -20,7 +20,7 @@
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
-  
+
   <properties>
     <findbugs-maven-plugin.version>3.0.3</findbugs-maven-plugin.version>
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
@@ -122,7 +122,7 @@
           <artifactId>maven-hpi-plugin</artifactId>
           <version>${maven-hpi-plugin.version}</version>
           <extensions>true</extensions>
-      </plugin>    
+      </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
@@ -336,7 +336,7 @@
       <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
     </repository>
   </distributionManagement>
-  
+
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
@@ -350,5 +350,5 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
-</project>  
+</project>
 
