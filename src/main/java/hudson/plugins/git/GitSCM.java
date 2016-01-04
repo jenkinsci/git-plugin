@@ -45,13 +45,16 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.gitclient.AbstractLogCommand;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.GitCommand;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.LogCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -1145,16 +1148,31 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
 
         boolean executed = false;
-        ChangelogCommand changelog = git.changelog();
-        changelog.includes(revToBuild.getSha1());
+        AbstractLogCommand logCommand = null;
+        
         try {
-            boolean exclusion = false;
+            boolean exclusion = false;            
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
-                listener.getLogger().println("Using 'Changelog to branch' strategy.");
-                changelog.excludes(changelogToBranch.getOptions().getRef());
+            	LogCommand log = git.log();
+            	ChangelogToBranchOptions changelogToBranchOptions = changelogToBranch.getOptions();
+            	if(changelogToBranchOptions.isCherryPick())
+            	{
+	                listener.getLogger().println("Using 'Changelog to branch' strategy (from: "+changelogToBranchOptions.getRef()+", cherryPick: "+changelogToBranchOptions.isCherryPick()+").");
+	                log.revisionRange(changelogToBranchOptions.getRef(), revToBuild.getSha1().name(), changelogToBranchOptions.isCherryPick());
+	                logCommand = log;
+            	} else {
+            		//alternatively, we can use LogCommand here, but it didn't support jgit implementation
+            		ChangelogCommand changelog = git.changelog();
+            		changelog.includes(revToBuild.getSha1());
+            		changelog.excludes(changelogToBranch.getOptions().getRef());
+            		listener.getLogger().println("Using 'Changelog to branch' strategy.");   
+            		logCommand = changelog;
+            	}
                 exclusion = true;
             } else {
+            	ChangelogCommand changelog = git.changelog();
+                changelog.includes(revToBuild.getSha1());
                 for (Branch b : revToBuild.getBranches()) {
                     Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                     if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
@@ -1162,20 +1180,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         exclusion = true;
                     }
                 }
+                logCommand = changelog;
             }
-
+            
             if (!exclusion) {
                 // this is the first time we are building this branch, so there's no base line to compare against.
                 // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
                 listener.getLogger().println("First time build. Skipping changelog.");
             } else {
-                changelog.to(out).max(MAX_CHANGELOG).execute();
+            	logCommand.to(out).max(MAX_CHANGELOG).execute();
                 executed = true;
             }
         } catch (GitException ge) {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
-            if (!executed) changelog.abort();
+            if (!executed) logCommand.abort();
             IOUtils.closeQuietly(out);
         }
     }

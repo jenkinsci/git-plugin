@@ -13,17 +13,20 @@ import hudson.model.Descriptor;
  * @author <a href="mailto:dirk.reske@t-systems.com">Dirk Reske (dirk.reske@t-systems.com)</a>
  */
 public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogToBranchOptions> implements Serializable {
-    private String compareRemote;
+    
+	private String compareRemote;
     private String compareTarget;
+    private Boolean cherryPick;
 
     @DataBoundConstructor
-    public ChangelogToBranchOptions(String compareRemote, String compareTarget) {
+    public ChangelogToBranchOptions(String compareRemote, String compareTarget, Boolean cherryPick) {
         this.compareRemote = compareRemote;
         this.compareTarget = compareTarget;
+        this.cherryPick = cherryPick;
     }
 
     public ChangelogToBranchOptions(ChangelogToBranchOptions options) {
-        this(options.getCompareRemote(), options.getCompareTarget());
+        this(options.getCompareRemote(), options.getCompareTarget(), options.getCherryPick());
     }
 
     public String getCompareRemote() {
@@ -37,8 +40,16 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
     public String getRef() {
         return compareRemote + "/" + compareTarget;
     }
+    
+    public Boolean getCherryPick() {
+		return cherryPick;
+	}
+    
+    public boolean isCherryPick() {
+    	return cherryPick != null && cherryPick.booleanValue();
+    }
 
-    @Extension
+	@Extension
     public static class DescriptorImpl extends Descriptor<ChangelogToBranchOptions> {
 
         @Override

@@ -10,4 +10,7 @@
   <f:entry title="Name of branch" field="compareTarget">
     <f:textbox id="git.compareTarget" clazz="required"/>
   </f:entry>
+  <f:entry field="cherryPick" title="Exclude cherry picks">
+      <f:checkbox />
+  </f:entry>
 </j:jelly>
