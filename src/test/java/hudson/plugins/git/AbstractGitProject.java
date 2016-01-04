@@ -54,6 +54,7 @@ import org.eclipse.jgit.lib.ObjectId;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.remoting.RoleChecker;
 
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -246,6 +247,9 @@ public class AbstractGitProject extends AbstractGitRepository {
                     throw new RuntimeException(e);
                 }
             }
+
+			public void checkRoles(RoleChecker checker) throws SecurityException {				
+			}
         });
     }
 

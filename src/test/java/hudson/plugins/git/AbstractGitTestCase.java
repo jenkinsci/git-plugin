@@ -40,6 +40,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.remoting.RoleChecker;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 
@@ -285,6 +286,9 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
                         throw new RuntimeException(e);
                     }
                 }
+
+				public void checkRoles(RoleChecker checker) throws SecurityException {
+				}
             });
     }
 

@@ -47,6 +47,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.remoting.RoleChecker;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -787,6 +788,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 throw new IOException2(e);
             }
         }
+
+		public void checkRoles(RoleChecker checker) throws SecurityException {
+		}
     }
 
     // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])
