@@ -50,7 +50,7 @@ public class GitChangeSetSimpleTest {
     public void testChangeSetDetails() {
         assertEquals(GitChangeSetUtil.ID, changeSet.getId());
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
-        assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
+        assertEquals("Commit title.\nCommit extended description.", changeSet.getComment());
         HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");

@@ -155,9 +155,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         StringBuilder message = new StringBuilder();
 
         for (String line : lines) {
-            if( line.length() < 1)
-                continue;
-            if (line.startsWith("commit ")) {
+            if (line.isEmpty()) {
+                message.append('\n');
+            } else if (line.startsWith("commit ")) {
                 String[] split = line.split(" ");
                 if (split.length > 1) this.id = split[1];
                 else throw new IllegalArgumentException("Commit has no ID" + lines);
@@ -224,7 +224,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
 
-        this.comment = message.toString();
+        this.comment = message.toString().trim();
 
         int endOfFirstLine = this.comment.indexOf('\n');
         if (endOfFirstLine == -1) {

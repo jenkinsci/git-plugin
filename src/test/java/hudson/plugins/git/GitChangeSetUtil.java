@@ -71,8 +71,8 @@ public class GitChangeSetUtil {
     static void assertChangeSet(GitChangeSet changeSet) {
         TestCase.assertEquals("123abc456def", changeSet.getId());
         TestCase.assertEquals("Commit title.", changeSet.getMsg());
-        TestCase.assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
-        TestCase.assertEquals("Commit title.\nCommit extended description.\n".replace("\n", "<br>"), changeSet.getCommentAnnotated());
+        TestCase.assertEquals("Commit title.\nCommit extended description.", changeSet.getComment());
+        TestCase.assertEquals("Commit title.\nCommit extended description.".replace("\n", "<br>"), changeSet.getCommentAnnotated());
         HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
