@@ -32,7 +32,7 @@ public class BuildData implements Action, Serializable, Cloneable {
      *
      * <p>
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
-     * is attached to) 
+     * is attached to)
      */
     public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
 
@@ -90,7 +90,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public Object readResolve() {
         Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
-        
+
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
             Build build = buildByBranchName.getValue();
@@ -104,7 +104,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         return this;
     }
-    
+
     /**
      * Return true if the history shows this SHA1 has been built.
      * False otherwise.
@@ -147,7 +147,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /**
      * Gets revision of the previous build.
-     * @return revision of the last build. 
+     * @return revision of the last build.
      *    May be null will be returned if nothing has been checked out (e.g. due to wrong repository or branch)
      */
     @Exported
@@ -242,42 +242,5 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",remoteUrls="+remoteUrls+
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof BuildData)) {
-            return false;
-        } else {
-            BuildData otherBuildData = (BuildData) o;
-
-            if (otherBuildData.remoteUrls.equals(this.remoteUrls)
-                    && otherBuildData.buildsByBranchName.equals(this.buildsByBranchName)
-                    && otherBuildData.lastBuild.equals(this.lastBuild)) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Remove branches from BuildData that have been seen in the past but do not exist anymore
-     * @param keepBranches all branches available in current repository state
-     */
-    public void purgeStaleBranches(Set<Branch> keepBranches) {
-        Set<String> names = new HashSet<String>(buildsByBranchName.keySet());
-        for (Branch branch : keepBranches) {
-            String name = branch.getName();
-            if (name.startsWith("refs/")) {
-                names.remove(name.substring(5));
-            }
-            if (name.startsWith("remotes/")) {
-                names.remove(name.substring(8));
-            }
-        }
-        for (String name : names) {
-            buildsByBranchName.remove(name);
-        }
     }
 }
