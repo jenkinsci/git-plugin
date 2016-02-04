@@ -1049,6 +1049,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
         }
+        
+        for (GitSCMExtension ext : extensions) {
+        	if(!(ext.doCheckout(this, build, git, listener))){
+        		return;
+        	}
+        }
 
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);

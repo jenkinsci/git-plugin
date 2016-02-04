@@ -130,6 +130,13 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
             return rev;
         }
     }
+    
+     /**
+     * Called before the checkout activity (including fetch and checkout) starts, will skip whole Checkout if returned false.
+     */
+    public boolean doCheckout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
+    	return true;
+    }
 
     /**
      * Called before the checkout activity (including fetch and checkout) starts.
