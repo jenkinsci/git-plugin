@@ -96,9 +96,8 @@ public class GitoriousWebTest {
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final File rawchangelog = new File(GitoriousWebTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse(GitoriousWebTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 
