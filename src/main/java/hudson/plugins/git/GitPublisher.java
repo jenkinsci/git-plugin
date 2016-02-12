@@ -190,11 +190,6 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         final GitSCM gitSCM = (GitSCM) scm;
 
-        if(gitSCM.getUseShallowClone()) {
-        	listener.getLogger().println("GitPublisher disabled while using shallow clone.");
-        	return true;
-    	}
-        
         final String projectName = build.getProject().getName();
         final int buildNumber = build.getNumber();
         final Result buildResult = build.getResult();
