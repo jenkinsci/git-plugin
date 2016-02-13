@@ -371,7 +371,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                      * If the polling detects changes, it will schedule the build
                                      */
                                     LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
-                                    trigger.run();
+                                    trigger.run(new Action[] {new ParametersAction(allBuildParameters)});
                                     result.add(new PollingScheduledResponseContributor(project));
                                     break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
                                 }

@@ -18,7 +18,10 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 import org.eclipse.jgit.transport.URIish;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,10 +83,10 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "", null);
-        Mockito.verify(aMasterTrigger).run();
-        Mockito.verify(aTopicTrigger).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(aTopicTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -94,10 +97,10 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "nonexistent", "", null);
-        Mockito.verify(aMasterTrigger, Mockito.never()).run();
-        Mockito.verify(aTopicTrigger, Mockito.never()).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(aTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -108,10 +111,10 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
-        Mockito.verify(aMasterTrigger).run();
-        Mockito.verify(aTopicTrigger, Mockito.never()).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(aTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -122,10 +125,10 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic", null);
-        Mockito.verify(aMasterTrigger).run();
-        Mockito.verify(aTopicTrigger).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(aTopicTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -136,10 +139,10 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "nonexistent", null);
-        Mockito.verify(aMasterTrigger, Mockito.never()).run();
-        Mockito.verify(aTopicTrigger, Mockito.never()).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(aTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -149,9 +152,9 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
-        Mockito.verify(aMasterTrigger).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -159,7 +162,7 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", true);
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "");
-        Mockito.verify(aMasterTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger, Mockito.never()).run(argThat(noAdditionalParameters()));
     }
 
     @Test
@@ -171,25 +174,51 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
-        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        final SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
-        Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+        final Map<String, String[]> parameterMap = new HashMap<String, String[]>();
         parameterMap.put("paramKey1", new String[] {"paramValue1"});
         parameterMap.put("paramKey2", new String[] {"paramValue2"});
         when(requestWithParameter.getParameterMap()).thenReturn(parameterMap);
 
         this.gitStatus.doNotifyCommit(requestWithParameter, "a", "master,topic", null);
-        Mockito.verify(aMasterTrigger).run();
-        Mockito.verify(aTopicTrigger).run();
-        Mockito.verify(bMasterTrigger, Mockito.never()).run();
-        Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(aMasterTrigger).run(argThat(additionalParameters(parameterMap)));
+        Mockito.verify(aTopicTrigger).run(argThat(additionalParameters(parameterMap)));
+        Mockito.verify(bMasterTrigger, Mockito.never()).run(argThat(additionalParameters(parameterMap)));
+        Mockito.verify(bTopicTrigger, Mockito.never()).run(argThat(additionalParameters(parameterMap)));
 
         assertAdditionalParameters(aMasterTrigger.getProjectActions());
         assertAdditionalParameters(aTopicTrigger.getProjectActions());
 
+    }
+
+    private ArgumentMatcher<Action[]> noAdditionalParameters() {
+        return additionalParameters(new HashMap<String, String[]>());
+    }
+
+    private ArgumentMatcher<Action[]> additionalParameters(final Map<String, String[]> parameterMap) {
+        return new ArgumentMatcher<Action[]>() {
+            @Override
+            public boolean matches(Object argument) {
+                if (argument instanceof Action[]) {
+                    Action[] actions = (Action[]) argument;
+                    for (Action action : actions) {
+                        if (action instanceof ParametersAction) {
+                            ParametersAction parametersAction = (ParametersAction) action;
+                            boolean matches = true;
+                            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                                matches &= parametersAction.getParameter(entry.getKey()).getValue().equals(entry.getValue()[0]);
+                            }
+                            return matches;
+                        }
+                    }
+                }
+                return false;
+            }
+        };
     }
 
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
