@@ -244,7 +244,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 addIfMissing(new BuildChooserSetting(buildChooser));
             }
             if (isNotBlank(reference) || useShallowClone) {
-                addIfMissing(new CloneOption(useShallowClone, reference,null));
+                addIfMissing(new CloneOption(useShallowClone, false, reference,null, 1));
             }
         } catch (IOException e) {
             throw new AssertionError(e); // since our extensions don't have any real Saveable

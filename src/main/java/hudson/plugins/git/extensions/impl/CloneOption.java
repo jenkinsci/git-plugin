@@ -24,17 +24,21 @@ public class CloneOption extends GitSCMExtension {
     private final boolean noTags;
     private final String reference;
     private final Integer timeout;
+    private Integer depth = 1;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
-        this(shallow, false, reference, timeout);
+        this(shallow, false, reference, timeout, 1);
     }
 
     @DataBoundConstructor
-    public CloneOption(boolean shallow, boolean noTags, String reference, Integer timeout) {
+    public CloneOption(boolean shallow, boolean noTags, String reference, Integer timeout, Integer depth) {
         this.shallow = shallow;
         this.noTags = noTags;
         this.reference = reference;
         this.timeout = timeout;
+        if (depth != null) {
+            this.depth = depth;
+        }
     }
 
     public boolean isShallow() {
@@ -53,11 +57,16 @@ public class CloneOption extends GitSCMExtension {
         return timeout;
     }
 
+    public Integer getDepth() {
+        return depth;
+    }
+
     @Override
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (shallow) {
             listener.getLogger().println("Using shallow clone");
             cmd.shallow();
+            cmd.depth(depth);
         }
         if (noTags) {
             listener.getLogger().println("Avoid fetching tags");
