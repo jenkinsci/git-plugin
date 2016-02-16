@@ -13,7 +13,6 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,6 +47,10 @@ public abstract class GitSCMExtensionTest {
 	}
 
 	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
+		return setupBasicProject(repo, Collections.<GitSCMExtension>emptyList());
+	}
+
+	protected FreeStyleProject setupBasicProject(TestGitRepo repo, List<GitSCMExtension> additionalExtensions) throws Exception {
 		GitSCMExtension extension = getExtension();
 		FreeStyleProject project = j.createFreeStyleProject(extension.getClass() + "Project");
 		List<BranchSpec> branches = Collections.singletonList(new BranchSpec("master"));
@@ -58,8 +61,10 @@ public abstract class GitSCMExtensionTest {
 				null, null,
 				Collections.<GitSCMExtension>emptyList());
 		scm.getExtensions().add(extension);
+		scm.getExtensions().addAll(additionalExtensions);
 		project.setScm(scm);
 		project.getBuildersList().add(new CaptureEnvironmentBuilder());
 		return project;
 	}
+
 }
