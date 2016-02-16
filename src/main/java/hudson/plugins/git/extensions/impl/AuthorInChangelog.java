@@ -17,11 +17,6 @@ public class AuthorInChangelog extends FakeGitSCMExtension {
     public AuthorInChangelog() {
     }
 
-    @Override
-    public boolean requiresWorkspaceForPolling() {
-        return false;
-    }
-
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
