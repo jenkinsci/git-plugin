@@ -8,6 +8,9 @@ f.entry(title:_("Disable submodules processing"), field:"disableSubmodules") {
 f.entry(title:_("Recursively update submodules"), field:"recursiveSubmodules") {
     f.checkbox()
 }
+f.entry(title:_("Force update of submodules"), field:"forceSubmodules") {
+    f.checkbox()
+}
 f.entry(title:_("Update tracking submodules to tip of branch"), field:"trackingSubmodules") {
     f.checkbox()
 }
