@@ -24,13 +24,13 @@
   <properties>
     <findbugs-maven-plugin.version>3.0.3</findbugs-maven-plugin.version>
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
-    <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
     <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
     <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-site-plugin.version>3.4</maven-site-plugin.version>
-    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>

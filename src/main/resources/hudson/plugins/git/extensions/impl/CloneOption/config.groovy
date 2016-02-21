@@ -5,6 +5,9 @@ def f = namespace(lib.FormTagLib);
 f.entry(title:_("Shallow clone"), field:"shallow") {
     f.checkbox()
 }
+f.entry(title:_("Shallow clone depth"), field:"depth") {
+    f.textbox()
+}
 f.entry(title:_("Do not fetch tags"), field:"noTags") {
 	f.checkbox()
 }
