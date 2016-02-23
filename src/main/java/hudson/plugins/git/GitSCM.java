@@ -23,6 +23,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -116,6 +117,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1034,7 +1036,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throws IOException, InterruptedException {
 
         if (VERBOSE)
-            listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
+            listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
@@ -1066,13 +1068,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
+        String localBranchName = getParamLocalBranch(build, listener);
         if (branch != null && branch.getName() != null) { // null for a detached HEAD
-            environment.put(GIT_BRANCH, getBranchName(branch));
+            String remoteBranchName = getBranchName(branch);
+            environment.put(GIT_BRANCH, remoteBranchName);
+
+            LocalBranch lb = getExtensions().get(LocalBranch.class);
+            if (lb != null) {
+               if (lb.getLocalBranch() == null || lb.getLocalBranch().equals("**")) {
+                  // local branch is configured with empty value or "**" so use remote branch name for checkout
+                  localBranchName = remoteBranchName.replaceFirst("^origin/", "");
+               }
+               environment.put(GIT_LOCAL_BRANCH, localBranchName);
+            }
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-
-        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build, listener)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }
@@ -1186,7 +1198,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null && branch.getName()!=null) {
-                env.put(GIT_BRANCH, getBranchName(branch));
+               String remoteBranchName = getBranchName(branch);
+                env.put(GIT_BRANCH, remoteBranchName);
+                
+                LocalBranch lb = getExtensions().get(LocalBranch.class);
+                if (lb != null) {
+                   // Set GIT_LOCAL_BRANCH variable from the LocalBranch extension
+                   String localBranchName = lb.getLocalBranch();
+                   if (localBranchName == null || localBranchName.equals("**")) {
+                      // local branch is configured with empty value or "**" so use remote branch name for checkout
+                      localBranchName = remoteBranchName.replaceFirst("^origin/", "");
+                   }
+                   env.put(GIT_LOCAL_BRANCH, localBranchName);
+                }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
