@@ -7,8 +7,12 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- *
- *
+ * The Git plugin checks code out to a detached head.  Configure
+ * LocalBranch to force checkout to a specific local branch.
+ * Configure this extension as null or as "**" to signify that
+ * the local branch name should be the same as the remote branch
+ * name sans the remote repository prefix (origin for example).
+ * 
  * @author Kohsuke Kawaguchi
  */
 public class LocalBranch extends FakeGitSCMExtension {
@@ -27,7 +31,7 @@ public class LocalBranch extends FakeGitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Check out to specific local branch";
+            return "Check out to specific local branch, null to use remote branch name.";
         }
     }
 }

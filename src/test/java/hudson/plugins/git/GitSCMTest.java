@@ -1268,6 +1268,70 @@ public class GitSCMTest extends AbstractGitTestCase {
             }
         });
     }
+    
+    /**
+     * Verifies that if project specifies LocalBranch with value of "**" 
+     * that the checkout to a local branch using remote branch name sans 'origin'.
+     * This feature is necessary to support Maven release builds that push updated
+     * pom.xml to remote branch as 
+     * <br/>
+     * <pre>
+     * git push origin localbranch:localbranch
+     * </pre>
+     * @throws Exception
+     */
+    public void testCheckoutToDefaultLocalBranch_StarStar() throws Exception {
+       FreeStyleProject project = setupSimpleProject("master");
+
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       GitSCM git = (GitSCM)project.getScm();
+       git.getExtensions().add(new LocalBranch("**"));
+       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+       assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+    }
+
+    /**
+     * Verifies that if project specifies LocalBranch with null value (empty string) 
+     * that the checkout to a local branch using remote branch name sans 'origin'.
+     * This feature is necessary to support Maven release builds that push updated
+     * pom.xml to remote branch as 
+     * <br/>
+     * <pre>
+     * git push origin localbranch:localbranch
+     * </pre>
+     * @throws Exception
+     */
+    public void testCheckoutToDefaultLocalBranch_NULL() throws Exception {
+       FreeStyleProject project = setupSimpleProject("master");
+
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       GitSCM git = (GitSCM)project.getScm();
+       git.getExtensions().add(new LocalBranch(""));
+       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+       assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+    }
+
+    /**
+     * Verifies that GIT_LOCAL_BRANCH is not set if LocalBranch extension
+     * is not configured.
+     * @throws Exception
+     */
+    public void testCheckoutSansLocalBranchExtension() throws Exception {
+       FreeStyleProject project = setupSimpleProject("master");
+
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+       assertEquals("GIT_LOCAL_BRANCH", null, getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+    }
 
     public void testCheckoutFailureIsRetryable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
@@ -1789,7 +1853,126 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(buildData, times(1)).hasBeenReferenced(anyString());
         verify(build, times(1)).getActions(BuildData.class);
     }
+    
+    public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
+       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
+       /* This is the null that causes NPE */
+       Branch branch = new Branch("origin/master", sha1);
+
+       List<Branch> branchList = new ArrayList<Branch>();
+       branchList.add(branch);
+
+       Revision revision = new Revision(sha1, branchList);
+
+       /* BuildData mock that will use the Revision with null branch name */
+       BuildData buildData = Mockito.mock(BuildData.class);
+       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+       /* List of build data that will be returned by the mocked BuildData */
+       List<BuildData> buildDataList = new ArrayList<BuildData>();
+       buildDataList.add(buildData);
+
+       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+       AbstractBuild build = Mockito.mock(AbstractBuild.class);
+       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+       final FreeStyleProject project = setupProject("*/*", false);
+       GitSCM scm = (GitSCM) project.getScm();
+       scm.getExtensions().add(new LocalBranch("**"));
+
+       EnvVars env = new EnvVars();
+       scm.buildEnvVars(build, env); // NPE here before fix applied
+       
+       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+       assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+
+       /* Verify mocks were called as expected */
+       verify(buildData, times(1)).getLastBuiltRevision();
+       verify(buildData, times(1)).hasBeenReferenced(anyString());
+       verify(build, times(1)).getActions(BuildData.class);
+    }
+    
+    public void testBuildEnvVarsLocalBranchNull() throws Exception {
+       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+       /* This is the null that causes NPE */
+       Branch branch = new Branch("origin/master", sha1);
+
+       List<Branch> branchList = new ArrayList<Branch>();
+       branchList.add(branch);
+
+       Revision revision = new Revision(sha1, branchList);
+
+       /* BuildData mock that will use the Revision with null branch name */
+       BuildData buildData = Mockito.mock(BuildData.class);
+       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+       /* List of build data that will be returned by the mocked BuildData */
+       List<BuildData> buildDataList = new ArrayList<BuildData>();
+       buildDataList.add(buildData);
+
+       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+       AbstractBuild build = Mockito.mock(AbstractBuild.class);
+       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+       final FreeStyleProject project = setupProject("*/*", false);
+       GitSCM scm = (GitSCM) project.getScm();
+       scm.getExtensions().add(new LocalBranch(""));
+
+       EnvVars env = new EnvVars();
+       scm.buildEnvVars(build, env); // NPE here before fix applied
+       
+       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+       assertEquals("GIT_LOCAL_BRANCH", "master", env.get("GIT_LOCAL_BRANCH"));
+
+       /* Verify mocks were called as expected */
+       verify(buildData, times(1)).getLastBuiltRevision();
+       verify(buildData, times(1)).hasBeenReferenced(anyString());
+       verify(build, times(1)).getActions(BuildData.class);
+    }
+    
+    public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
+       ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+       /* This is the null that causes NPE */
+       Branch branch = new Branch("origin/master", sha1);
+
+       List<Branch> branchList = new ArrayList<Branch>();
+       branchList.add(branch);
+
+       Revision revision = new Revision(sha1, branchList);
+
+       /* BuildData mock that will use the Revision with null branch name */
+       BuildData buildData = Mockito.mock(BuildData.class);
+       Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+       Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+       /* List of build data that will be returned by the mocked BuildData */
+       List<BuildData> buildDataList = new ArrayList<BuildData>();
+       buildDataList.add(buildData);
+
+       /* AbstractBuild mock which returns the buildDataList that contains a null branch name */
+       AbstractBuild build = Mockito.mock(AbstractBuild.class);
+       Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+       final FreeStyleProject project = setupProject("*/*", false);
+       GitSCM scm = (GitSCM) project.getScm();
+
+       EnvVars env = new EnvVars();
+       scm.buildEnvVars(build, env); // NPE here before fix applied
+       
+       assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
+       assertEquals("GIT_LOCAL_BRANCH", null, env.get("GIT_LOCAL_BRANCH"));
+
+       /* Verify mocks were called as expected */
+       verify(buildData, times(1)).getLastBuiltRevision();
+       verify(buildData, times(1)).hasBeenReferenced(anyString());
+       verify(build, times(1)).getActions(BuildData.class);
+    }
+    
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
