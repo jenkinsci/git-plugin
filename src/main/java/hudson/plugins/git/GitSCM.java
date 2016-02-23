@@ -111,7 +111,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool = null;
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
-    public static final String ORIGIN = "origin";
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_BRANCH_SHORT = "GIT_BRANCH_SHORT";
     public static final String GIT_BRANCH_SONAR = "GIT_BRANCH_SONAR";
@@ -1201,12 +1200,42 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private String getShortBranchName(Branch branch)
     {
 
-        String name = getBranchName(branch);
-        if (name.lastIndexOf(ORIGIN + "/") > -1) {
-            // remove everything except the plain branch name
-            name = name.substring(name.lastIndexOf(ORIGIN + "/") + ORIGIN.length() + 1);
+        return buildShortBranchName(getBranchName(branch));
+    }
+
+    /**
+     * Formats the branch name to contain just the plain branch name.
+     * 
+     * Remote name 'origin' should not be the only allowed remote name.
+     * 
+     * Input "refs/remotes/origin/1.x" should return "1.x"
+     * Input "refs/remotes/origin/dev_origin/1.x" should return "dev_origin/1.x"
+     * Input "refs/remotes/upstream/1.x" should return "1.x"
+     * Input "refs/remotes/upstream/dev_origin/1.x" should return "dev_origin/1.x"
+     * Input "origin/1.x" should return "1.x"
+     * Input "upstream/1.x" should return "1.x"
+     * Input "origin/dev_origin/1.x" should return "dev_origin/1.x"
+     * Input "upstream/dev_origin/1.x" should return "dev_origin/1.x"
+     * 
+     * @param name the full qualified branch name
+     * @return the short branch name
+     */
+    public static String buildShortBranchName(String name) {
+
+        if (name == null || name.isEmpty()) {
+            return name;
         }
-        return name;
+        System.err.println("***** " + name);
+        String regexp = "";
+        if (name.contains("refs/remotes/")) {
+            regexp = "^.*/.*/.*/";
+        } else if (name.contains("remotes/")) {
+            regexp = "^.*/.*/";
+        } else {
+            // remove just the remote name
+            regexp = "^.*/";
+        }
+        return name.replaceAll(regexp, "");
     }
 
     private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {

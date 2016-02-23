@@ -89,11 +89,7 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
         String n = b.getName();
         if (fullName)   return n;
         if (shortName) {
-            // if single branch and not fullName requested, then remove everything except the plain branch name
-            if (n.lastIndexOf(GitSCM.ORIGIN + "/") > -1) {
-                return n.substring(n.lastIndexOf(GitSCM.ORIGIN + "/") + GitSCM.ORIGIN.length() + 1);
-            }
-
+            return GitSCM.buildShortBranchName(n);
         }
         return n.substring(n.indexOf('/')+1); // trim off '/'
     }
