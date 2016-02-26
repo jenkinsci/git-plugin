@@ -18,6 +18,8 @@ import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Result;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
+import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -25,6 +27,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -335,6 +338,17 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                           push.force();
                         }
                         push.execute();
+
+                        final String remoteRepoUrl = remoteURI.toString();
+                        final ObjectId sha1 = git.getHeadRev(remoteRepoUrl, branchName);
+                        final BuildData buildData = gitSCM.getBuildData(build);
+
+                        if (!buildData.hasBeenBuilt(sha1)) {
+                            final Revision marked = new Revision(sha1);
+                            final Revision revision = buildData.getLastBuiltRevision();
+                            final Build pushedBuild = new Build(marked, revision, buildNumber, buildResult);
+                            buildData.saveBuild(pushedBuild);
+                        }
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
                         return false;
