@@ -24,7 +24,7 @@ import java.net.URL;
 import java.util.regex.Pattern;
 
 /**
- * Browser for TFS 2013
+ * Browser for TFS 2013 and higher versions using the same format.
  */
 public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
@@ -82,7 +82,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         public String getDisplayName() {
-            return "Microsoft TFS 2013";
+            return "Microsoft Team Foundation Server";
         }
 
         @Override
