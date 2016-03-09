@@ -179,6 +179,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 e.printStackTrace(listener.error("Could not prune stale remotes"));
             }
             listener.getLogger().println("Getting remote branches...");
+
             SCMSourceCriteria branchCriteria = getCriteria();
             RevWalk walk = new RevWalk(repository);
             try {
@@ -293,20 +294,20 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         return result;
     }
-    
+
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
-     * 
+     *
      * @param branchName
      * @return true if branchName is excluded or is not included
      */
     protected boolean isExcluded (String branchName){
       return !Pattern.matches(getPattern(getIncludes()), branchName) || (Pattern.matches(getPattern(getExcludes()), branchName));
     }
-    
+
     /**
-     * Returns the pattern corresponding to the branches containing wildcards. 
-     * 
+     * Returns the pattern corresponding to the branches containing wildcards.
+     *
      * @param branchName
      * @return pattern corresponding to the branches containing wildcards
      */
@@ -315,7 +316,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
       for (String wildcard : branches.split(" ")){
         StringBuilder quotedBranch = new StringBuilder();
         for(String branch : wildcard.split("\\*")){
-          if (wildcard.startsWith("*") || quotedBranches.length()>0) {
+          quotedBranch.append("^");
+          if (wildcard.startsWith("*")) {
             quotedBranch.append(".*");
           }
           quotedBranch.append(Pattern.quote(branch));
@@ -323,11 +325,15 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (wildcard.endsWith("*")){
           quotedBranch.append(".*");
         }
+
+        quotedBranch.append("$");
+
         if (quotedBranches.length()>0) {
           quotedBranches.append("|");
         }
         quotedBranches.append(quotedBranch);
       }
+      System.err.println("QuotedBranches='" + quotedBranches.toString() + "'");
       return quotedBranches.toString();
     }
 
