@@ -582,6 +582,9 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
         assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        
+        assertEquals("master", getEnvVars(project).get(GitSCM.GIT_BRANCH_SHORT));
+        assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH_SHORT), build1);
 
         assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
