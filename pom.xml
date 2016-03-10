@@ -216,11 +216,6 @@
             <name>Kohsuke Kawaguchi</name>
         </developer>
         <developer>
-            <id>ndeloof</id>
-            <name>Nicolas De Loof</name>
-            <email>nicolas.deloof@gmail.com</email>
-        </developer>
-        <developer>
             <id>MarkEWaite</id>
             <name>Mark Waite</name>
             <email>mark.earl.waite@gmail.com</email>
@@ -248,7 +243,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1.24</version>
+      <version>1.25</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -319,7 +314,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>2.24.1</version>
+      <version>2.25</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
