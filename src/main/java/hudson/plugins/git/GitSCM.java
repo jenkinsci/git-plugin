@@ -358,6 +358,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
+    public boolean isShowRemoteBranches() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isShowRemoteBranches());
+    }
+
+    public boolean isShowTags() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isShowTags());
+    }
+
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
 
@@ -1343,6 +1353,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean showRemoteBranches;
+        private boolean showTags;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
 
         public DescriptorImpl() {
@@ -1432,6 +1444,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
+        }
+
+        public boolean isShowRemoteBranches() {
+            return showRemoteBranches;
+        }
+
+        public void setShowRemoteBranches(boolean showRemoteBranches) {
+            this.showRemoteBranches = showRemoteBranches;
+        }
+
+        public boolean isShowTags() {
+            return showTags;
+        }
+
+        public void setShowTags(boolean showTags) {
+            this.showTags = showTags;
         }
 
         /**
