@@ -180,10 +180,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     private static EnvVars getEnvVars() {
         EnvVars env = new EnvVars(EnvVars.masterEnvVars);
-        for (NodeProperty<?> nodeProperty : Jenkins.getInstance().getGlobalNodeProperties()) {
-            if (nodeProperty instanceof EnvironmentVariablesNodeProperty) {
-                EnvVars envVars = ((EnvironmentVariablesNodeProperty)nodeProperty).getEnvVars();
-                env.putAll(envVars);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            for (NodeProperty<?> nodeProperty : jenkins.getGlobalNodeProperties()) {
+                if (nodeProperty instanceof EnvironmentVariablesNodeProperty) {
+                    EnvVars envVars = ((EnvironmentVariablesNodeProperty)nodeProperty).getEnvVars();
+                    env.putAll(envVars);
+                }
             }
         }
         return env;
