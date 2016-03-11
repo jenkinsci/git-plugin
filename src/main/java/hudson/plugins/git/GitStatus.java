@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +32,7 @@ import jenkins.triggers.SCMTriggerItem;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.oro.text.regex.PatternMatcher;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -171,11 +173,29 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * @throws URISyntaxException
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) throws URISyntaxException {
-        EnvVars envVars = getEnvVars();
-        lhs = new URIish(envVars.expand(lhs.toPrivateString()));
-        rhs = new URIish(envVars.expand(rhs.toPrivateString()));
+        lhs = getExpandedUri(lhs);
+        rhs = getExpandedUri(rhs);
         return StringUtils.equals(lhs.getHost(),rhs.getHost())
             && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    /**
+     * @param uri
+     * @param envVars
+     * @return
+     * @throws URISyntaxException
+     */
+    private static URIish getExpandedUri(URIish uri) throws URISyntaxException {
+      String newUri = uri.toPrivateString();
+      Pattern pattern = Pattern.compile(".*\\$\\{.*\\}.*");
+      while (pattern.matcher(newUri).matches()) {
+          String expandedUri = getEnvVars().expand(newUri);
+          if (newUri.equals(expandedUri)) {
+            break;
+          }
+          newUri = expandedUri;
+      }
+      return new URIish(newUri);
     }
 
     private static EnvVars getEnvVars() {
