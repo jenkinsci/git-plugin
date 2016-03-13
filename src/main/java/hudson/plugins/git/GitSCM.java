@@ -437,6 +437,41 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         return remoteRepositories;
     }
+    
+    /**
+     * Derives a local branch name from the remote branch name by removing the name of the remote
+     * from the remote branch name.
+     * <p>
+     * Ex. origin/master becomes master
+     * <p>
+     * Cycles through the list of user remotes looking for a match allowing user to configure an
+     * alternalte (not origin) name for the remote.
+     * @param remoteBranchName
+     * @return a local branch name derived by stripping the remote repository name from the
+     * {@code remoteBranchName} parameter.  If a matching remote is not found, the original
+     * {@code remoteBranchName} will be returned.
+     */
+    public String deriveLocalBranchName(String remoteBranchName) {
+       // default remoteName is 'origin' used if list of user remote configs is empty.
+       String remoteName = "origin";
+       
+       for (final UserRemoteConfig remote : getUserRemoteConfigs()) {
+          remoteName = remote.getName();
+          if (remoteName == null || remoteName.isEmpty()) {
+              remoteName = "origin";
+          }
+          if (remoteBranchName.startsWith(remoteName + "/")) {
+             // found the remote config associated with remoteBranchName
+             LOGGER.log(Level.INFO, "Matched remote name: " + remoteName);
+             break;
+          }
+       }
+
+       // now strip the remote name and return the resulting local branch name.
+       LOGGER.log(Level.INFO, "Local branch name in checkout replacing '^" + remoteName + "/'");
+       String localBranchName = remoteBranchName.replaceFirst("^" + remoteName + "/", "");
+       return localBranchName;
+    }
 
     public String getGitTool() {
         return gitTool;
@@ -1077,8 +1112,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (lb != null) {
                if (lb.getLocalBranch() == null || lb.getLocalBranch().equals("**")) {
                   // local branch is configured with empty value or "**" so use remote branch name for checkout
-                  localBranchName = remoteBranchName.replaceFirst("^origin/", "");
+                  localBranchName = deriveLocalBranchName(remoteBranchName);
                }
+               LOGGER.log(Level.INFO, "Local branch name in checkout is '" + localBranchName + "'");
                environment.put(GIT_LOCAL_BRANCH, localBranchName);
             }
         }
@@ -1207,8 +1243,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                    String localBranchName = lb.getLocalBranch();
                    if (localBranchName == null || localBranchName.equals("**")) {
                       // local branch is configured with empty value or "**" so use remote branch name for checkout
-                      localBranchName = remoteBranchName.replaceFirst("^origin/", "");
+                      localBranchName = deriveLocalBranchName(remoteBranchName);
                    }
+                   LOGGER.log(Level.INFO, "Local branch name in build env vars is '" + localBranchName + "'");
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
 
