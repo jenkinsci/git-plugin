@@ -23,7 +23,7 @@
 
   <properties>
     <findbugs-maven-plugin.version>3.0.3</findbugs-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
     <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
@@ -350,6 +350,5 @@
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
-
-</project>  
+</project>
 
