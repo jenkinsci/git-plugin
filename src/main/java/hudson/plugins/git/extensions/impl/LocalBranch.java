@@ -31,7 +31,7 @@ public class LocalBranch extends FakeGitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Check out to specific local branch, null to use remote branch name.";
+            return "Check out to specific local branch";
         }
     }
 }
