@@ -469,6 +469,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         // now strip the remote name and return the resulting local branch name.
+        String localBranchName = remoteBranchName.replaceFirst("^" + remoteName + "/", "");
         return localBranchName;
     }
 
