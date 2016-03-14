@@ -464,14 +464,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
             if (remoteBranchName.startsWith(remoteName + "/")) {
                 // found the remote config associated with remoteBranchName
-                LOGGER.log(Level.INFO, "Matched remote name: " + remoteName);
                 break;
             }
         }
 
         // now strip the remote name and return the resulting local branch name.
-        LOGGER.log(Level.INFO, "Local branch name in checkout replacing '^" + remoteName + "/'");
-        String localBranchName = remoteBranchName.replaceFirst("^" + remoteName + "/", "");
         return localBranchName;
     }
 
@@ -1116,7 +1113,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                   // local branch is configured with empty value or "**" so use remote branch name for checkout
                   localBranchName = deriveLocalBranchName(remoteBranchName);
                }
-               LOGGER.log(Level.INFO, "Local branch name in checkout is '" + localBranchName + "'");
                environment.put(GIT_LOCAL_BRANCH, localBranchName);
             }
         }
@@ -1247,7 +1243,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                       // local branch is configured with empty value or "**" so use remote branch name for checkout
                       localBranchName = deriveLocalBranchName(remoteBranchName);
                    }
-                   LOGGER.log(Level.INFO, "Local branch name in build env vars is '" + localBranchName + "'");
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
 
