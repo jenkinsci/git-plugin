@@ -321,22 +321,28 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override public RepositoryBrowser<?> guessBrowser() {
-        if (remoteRepositories != null && remoteRepositories.size() == 1) {
-            List<URIish> uris = remoteRepositories.get(0).getURIs();
-            if (uris.size() == 1) {
-                String uri = uris.get(0).toString();
-                // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
-                Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
-                if (m.matches()) {
-                    return new GithubWeb(m.group(1) + "/");
-                }
-                m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
-                if (m.matches()) {
-                    return new GithubWeb("https://github.com/" + m.group(1) + "/");
+        Set<String> webUrls = new HashSet<String>();
+        if (remoteRepositories != null) {
+            for (RemoteConfig config : remoteRepositories) {
+                for (URIish uriIsh : config.getURIs()) {
+                    String uri = uriIsh.toString();
+                    // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
+                    Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
+                    if (m.matches()) {
+                        webUrls.add(m.group(1) + "/");
+                    }
+                    m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
+                    if (m.matches()) {
+                        webUrls.add("https://github.com/" + m.group(1) + "/");
+                    }
                 }
             }
         }
-        return null;
+        if (webUrls.size() == 1) {
+            return new GithubWeb(webUrls.iterator().next());
+        } else {
+            return null;
+        }
     }
 
     public boolean isCreateAccountBasedOnEmail() {
