@@ -83,6 +83,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -94,6 +95,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
      */
     private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<String, Lock>();
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
     public AbstractGitSCMSource(String id) {
         super(id);
@@ -248,8 +251,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected static File getCacheDir(String cacheEntry) {
-        File cacheDir = new File(new File(Jenkins.getInstance().getRootDir(), "caches"), cacheEntry);
-        cacheDir.getParentFile().mkdirs();
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.severe("Jenkins instance is null in AbstractGitSCMSource.getCacheDir");
+            return null;
+        }
+        File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
+        boolean ok = cacheDir.getParentFile().mkdirs();
+        if (!ok) LOGGER.info("Failed mkdirs of " + cacheDir.getParent());
         return cacheDir;
     }
 

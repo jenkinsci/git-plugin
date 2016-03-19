@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import com.google.common.base.Joiner;
+import java.util.Arrays;
 
 import java.util.regex.Pattern;
 
@@ -18,11 +19,21 @@ public class SubmoduleConfig implements java.io.Serializable {
     }
 
     public String[] getBranches() {
-        return branches;
+        /* findbugs correctly complains that returning branches exposes the
+         * internal representation of the class to callers.  Returning a copy
+         * of the array does not expose internal representation, at the possible
+         * expense of some additional memory.
+         */
+        return Arrays.copyOf(branches, branches.length);
     }
 
     public void setBranches(String[] branches) {
-        this.branches = branches;
+        /* findbugs correctly complains that assign to branches exposes the
+         * internal representation of the class to callers.  Assigning a copy
+         * of the array does not expose internal representation, at the possible
+         * expense of some additional memory.
+         */
+        this.branches = Arrays.copyOf(branches, branches.length);
     }
 
     public boolean revisionMatchesInterest(Revision r) {

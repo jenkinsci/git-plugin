@@ -126,7 +126,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * All the configured extensions attached to this.
      */
-    private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
+    private transient DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -893,8 +893,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
-        final Job project;
-        final Run build;
+        private static final long serialVersionUID = 1L;
+        final transient Job project;
+        final transient Run build;
         final EnvVars environment;
 
         BuildChooserContextImpl(Job project, Run build, EnvVars environment) {
@@ -1724,7 +1725,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        DescriptorImpl desc = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
+            return;
+        }
+        DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();
