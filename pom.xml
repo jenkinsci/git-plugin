@@ -26,7 +26,7 @@
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
-    <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
+    <maven-hpi-plugin.version>1.117</maven-hpi-plugin.version>
     <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <maven-site-plugin.version>3.5</maven-site-plugin.version>
