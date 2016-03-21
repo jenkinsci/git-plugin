@@ -15,7 +15,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>2.4.3-SNAPSHOT</version>
+  <version>2.4.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -26,10 +26,10 @@
     <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
     <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
-    <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
+    <maven-hpi-plugin.version>1.117</maven-hpi-plugin.version>
     <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-    <maven-site-plugin.version>3.4</maven-site-plugin.version>
+    <maven-site-plugin.version>3.5</maven-site-plugin.version>
     <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -216,11 +216,6 @@
             <name>Kohsuke Kawaguchi</name>
         </developer>
         <developer>
-            <id>ndeloof</id>
-            <name>Nicolas De Loof</name>
-            <email>nicolas.deloof@gmail.com</email>
-        </developer>
-        <developer>
             <id>MarkEWaite</id>
             <name>Mark Waite</name>
             <email>mark.earl.waite@gmail.com</email>
@@ -243,7 +238,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>1.19.5</version>
+      <version>1.19.6</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

@@ -1,4 +1,11 @@
 <div>
   If given, checkout the revision to build as HEAD on this branch.
+<p>
+  If selected, and its value is an empty string or "**", then the branch
+  name is computed from the remote branch without the origin.  In that
+  case, a remote branch origin/master will be checked out to a local
+  branch named master, and a remote branch origin/develop/new-feature
+  will be checked out to a local branch named develop/newfeature.
+<p>
   Please note that this has not been tested with submodules.
 </div>
