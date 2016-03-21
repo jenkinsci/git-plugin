@@ -344,8 +344,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         final BuildData buildData = gitSCM.getBuildData(build);
 
                         if (!buildData.hasBeenBuilt(sha1)) {
-                            final Revision marked = new Revision(sha1);
-                            final Revision revision = buildData.getLastBuiltRevision();
+                            final Revision marked = buildData.getLastBuiltRevision();
+                            final Revision revision = new Revision(sha1);
                             final Build pushedBuild = new Build(marked, revision, buildNumber, buildResult);
                             buildData.saveBuild(pushedBuild);
                         }
