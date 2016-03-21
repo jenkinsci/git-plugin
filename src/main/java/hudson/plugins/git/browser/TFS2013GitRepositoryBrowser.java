@@ -24,7 +24,7 @@ import java.net.URL;
 import java.util.regex.Pattern;
 
 /**
- * Browser for Git repositories on Microsoft Team Foundaation Server (TFS) 2013 and higher versions using the 
+ * Browser for Git repositories on Microsoft Team Foundation Server (TFS) 2013 and higher versions using the
  * same format. This includes Git repositories hosted with the Visual Studio Team Services.
  */
 public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
@@ -82,7 +82,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     @Extension
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
-        private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server / Visual Studio Team Services";
+        private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
         public String getDisplayName() {
             return REPOSITORY_BROWSER_LABEL;
         }
