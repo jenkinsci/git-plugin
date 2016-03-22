@@ -243,4 +243,22 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof BuildData)) {
+            return false;
+        } else {
+            BuildData otherBuildData = (BuildData) o;
+
+            if (otherBuildData.remoteUrls.equals(this.remoteUrls)
+                    && otherBuildData.buildsByBranchName.equals(this.buildsByBranchName)
+                    && otherBuildData.lastBuild.equals(this.lastBuild)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
 }
