@@ -126,7 +126,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * All the configured extensions attached to this.
      */
-    private transient DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
+    private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
@@ -893,9 +893,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
-        private static final long serialVersionUID = 1L;
-        final transient Job project;
-        final transient Run build;
+        final Job project;
+        final Run build;
         final EnvVars environment;
 
         BuildChooserContextImpl(Job project, Run build, EnvVars environment) {
