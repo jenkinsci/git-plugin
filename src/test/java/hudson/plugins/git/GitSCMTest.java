@@ -17,6 +17,7 @@ import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
@@ -34,6 +35,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
+import hudson.util.DescribableList;
 import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
 
@@ -1206,6 +1208,43 @@ public class GitSCMTest extends AbstractGitTestCase {
         configRoundtrip(p);
         assertEqualDataBoundBeans(scm,p.getScm());
         assertEquals("Wrong key", "git " + url, scm.getKey());
+    }
+
+    /**
+     * Makes sure that git extensions are preserved across config round trip.
+     */
+    @Issue("JENKINS-33695")
+    public void testConfigRoundtripExtensionsPreserved() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        final String url = "git://github.com/jenkinsci/git-plugin.git";
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList(url),
+                Collections.singletonList(new BranchSpec("*/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                browser, null, null);
+        p.setScm(scm);
+
+        /* Assert that no extensions are loaded initially */
+        assertEquals(Collections.emptyList(), scm.getExtensions().toList());
+
+        /* Add LocalBranch extension */
+        LocalBranch localBranchExtension = new LocalBranch("**");
+        scm.getExtensions().add(localBranchExtension);
+        assertTrue(scm.getExtensions().toList().contains(localBranchExtension));
+
+        /* Save the configuration */
+        configRoundtrip(p);
+        List<GitSCMExtension> extensions = scm.getExtensions().toList();;
+        assertTrue(extensions.contains(localBranchExtension));
+        assertEquals("Wrong extension count before reload", 1, extensions.size());
+
+        /* Reload configuration from disc */
+        p.doReload();
+        GitSCM reloadedGit = (GitSCM) p.getScm();
+        List<GitSCMExtension> reloadedExtensions = reloadedGit.getExtensions().toList();
+        assertEquals("Wrong extension count after reload", 1, reloadedExtensions.size());
+        LocalBranch reloadedLocalBranch = (LocalBranch) reloadedExtensions.get(0);
+        assertEquals(localBranchExtension.getLocalBranch(), reloadedLocalBranch.getLocalBranch());
     }
 
     /**
