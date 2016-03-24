@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GitUtils implements Serializable {
-    transient GitClient git;
+    GitClient git;
     TaskListener listener;
 
     public GitUtils(TaskListener listener, GitClient git) {
