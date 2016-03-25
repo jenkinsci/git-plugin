@@ -15,7 +15,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>2.4.4-SNAPSHOT</version>
+  <version>2.4.4</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -336,7 +336,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>HEAD</tag>
+    <tag>git-2.4.4</tag>
   </scm>
 
     <pluginRepositories>
