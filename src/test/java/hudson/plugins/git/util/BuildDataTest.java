@@ -118,7 +118,7 @@ public class BuildDataTest {
         String remoteUrl2 = "https://github.com/jenkinsci/git-plugin.git/";
         data.addRemoteUrl(remoteUrl2);
         assertFalse(data.getRemoteUrls().isEmpty());
-        assertEquals(remoteUrl2, data.getRemoteUrls().toArray()[1]);
+        assertTrue(data.getRemoteUrls().contains(remoteUrl2));
         assertEquals(2, data.getRemoteUrls().size());
     }
 
