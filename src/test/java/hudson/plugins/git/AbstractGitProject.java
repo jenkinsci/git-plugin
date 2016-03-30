@@ -56,6 +56,8 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import static org.junit.Assert.*;
+
+import org.jenkinsci.remoting.RoleChecker;
 import org.junit.Rule;
 
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -245,6 +247,11 @@ public class AbstractGitProject extends AbstractGitRepository {
                 } catch (GitException e) {
                     throw new RuntimeException(e);
                 }
+            }
+
+            @Override
+            public void checkRoles(RoleChecker checker) throws SecurityException {
+                // Nothing to do.
             }
         });
     }

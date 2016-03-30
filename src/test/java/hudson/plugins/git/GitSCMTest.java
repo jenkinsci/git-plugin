@@ -49,6 +49,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.remoting.RoleChecker;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -789,6 +790,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 throw new IOException2(e);
             }
         }
+
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // Nothing to do.
+        }
     }
 
     // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])
@@ -1119,7 +1125,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testMergeWithMatrixBuild() throws Exception {
         
         //Create a matrix project and a couple of axes
-        MatrixProject project = createMatrixProject("xyz");
+        MatrixProject project = jenkins.createProject(MatrixProject.class, "xyz");
         project.setAxes(new AxisList(new Axis("VAR","a","b")));
         
         GitSCM scm = new GitSCM(
@@ -2049,12 +2055,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final int initialBuildNumber = project.getLastBuild().getNumber();
         final String commit1 = ObjectId.toString(commitId);
 
-        final int port = server.getConnectors()[0].getLocalPort();
-        if (port < 0) {
-            throw new IllegalStateException("Could not locate Jetty server port");
-        }
-        final String notificationPath = "http://localhost:" + Integer.toString(port)
-                + "/git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
+        final String notificationPath = getURL().toExternalForm()
+                + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
         final InputStream is = notifyUrl.openStream();
         IOUtils.toString(is);
