@@ -32,7 +32,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the change set
-     * http://[RhodeCode URL]/changeset/[commit]
+     * {@literal http://[RhodeCode URL]/changeset/[commit]}
      *
      * @param changeSet commit hash
      * @return change set link
@@ -46,7 +46,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     * http://[RhodeCode URL]/diff/[path]?diff2=[commit]&diff1=[commit]&diff=diff+to+revision
+     * {@literal http://[RhodeCode URL]/diff/[path]?diff2=[commit]&diff1=[commit]&diff=diff+to+revision}
      *
      * @param path affected file path
      * @return diff link
@@ -61,7 +61,7 @@ public class RhodeCode extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file.
-     * http://[RhodeCode URL]/files/[commit]/[path]
+     * {@literal http://[RhodeCode URL]/files/[commit]/[path]}
      *
      * @param path affected file path
      * @return diff link

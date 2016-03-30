@@ -47,7 +47,7 @@ public class Stash extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     * http://[Stash URL]/diff/[path]?at=[commit]&until=[commit]
+     * {@literal http://[Stash URL]/diff/[path]?at=[commit]&until=[commit]}
      *
      * @param path affected file path
      * @return diff link
