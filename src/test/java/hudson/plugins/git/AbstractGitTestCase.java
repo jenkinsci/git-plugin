@@ -1,20 +1,17 @@
 package hudson.plugins.git;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleBuild;
-import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
-import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
@@ -26,7 +23,6 @@ import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.triggers.SCMTrigger;
-import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
@@ -41,9 +37,13 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import org.jvnet.hudson.test.JenkinsRule;
 
+import static org.junit.Assert.assertTrue;
 
 /**
  * Base class for single repository git plugin tests.
@@ -51,7 +51,13 @@ import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
  * @author Kohsuke Kawaguchi
  * @author ishaaq
  */
-public abstract class AbstractGitTestCase extends HudsonTestCase {
+public abstract class AbstractGitTestCase {
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
     protected TaskListener listener;
 
     protected TestGitRepo testRepo;
@@ -63,30 +69,16 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
     protected FilePath workspace; // aliases "gitDirPath"
     protected GitClient git;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         listener = StreamTaskListener.fromStderr();
 
-        testRepo = new TestGitRepo("unnamed", this, listener);
+        testRepo = new TestGitRepo("unnamed", tempFolder.newFolder(), listener);
         johnDoe = testRepo.johnDoe;
         janeDoe = testRepo.janeDoe;
         workDir = testRepo.gitDir;
         workspace = testRepo.gitDirPath;
         git = testRepo.git;
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        try { //Avoid test failures due to failed cleanup tasks
-            super.tearDown();
-        } catch (Exception e) {
-            if (e instanceof IOException && isWindows()) {
-                return;
-            }
-            e.printStackTrace();
-        }
     }
 
     protected void commit(final String fileName, final PersonIdent committer, final String message)
@@ -107,6 +99,10 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
 
     protected List<UserRemoteConfig> createRemoteRepositories() throws IOException {
         return testRepo.remoteConfigs();
+    }
+
+    protected FreeStyleProject createFreeStyleProject() throws IOException {
+        return rule.createFreeStyleProject();
     }
 
     protected FreeStyleProject setupProject(String branchString, boolean authorOrCommitter) throws Exception {
@@ -230,7 +226,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            assertBuildStatus(expectedResult, build);
+            rule.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -242,7 +238,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            assertBuildStatus(expectedResult, build);
+            rule.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -254,7 +250,7 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
         if(expectedResult != null) {
-            assertBuildStatus(expectedResult, build);
+            rule.assertBuildStatus(expectedResult, build);
         }
         return build;
     }
@@ -301,10 +297,5 @@ public abstract class AbstractGitTestCase extends HudsonTestCase {
         int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
         System.out.println(out.toString());
         out.close();
-    }
-
-    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
-    private boolean isWindows() {
-        return File.pathSeparatorChar==';';
     }
 }
