@@ -36,6 +36,13 @@ public class AbstractGitSCMSourceTest {
     assertTrue(abstractGitSCMSource.isExcluded("bugfix"));
     assertTrue(abstractGitSCMSource.isExcluded("bugfix/test"));
     assertTrue(abstractGitSCMSource.isExcluded("test"));
+
+    when(abstractGitSCMSource.getIncludes()).thenReturn("master feature/*");
+    when(abstractGitSCMSource.getExcludes()).thenReturn("feature/*/private");
+    assertFalse(abstractGitSCMSource.isExcluded("master"));
+    assertTrue(abstractGitSCMSource.isExcluded("devel"));
+    assertFalse(abstractGitSCMSource.isExcluded("feature/spiffy"));
+    assertTrue(abstractGitSCMSource.isExcluded("feature/spiffy/private"));
   }
 
 }
