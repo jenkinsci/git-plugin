@@ -44,7 +44,11 @@ public class PreBuildMergeOptionsTest {
     @Issue("JENKINS-9843")
     @Test public void exporting() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
-        p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.<GitSCMExtension>singletonList(new PreBuildMerge(new UserMergeOptions("repo", "master", MergeCommand.Strategy.DEFAULT.name(), MergeCommand.GitPluginFastForwardMode.FF)))));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("master");
+        userMergeOptions.setMergeRemote("repo");
+        userMergeOptions.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+        p.setScm(new GitSCM(Collections.singletonList(new UserRemoteConfig("http://wherever/thing.git", "repo", null, null)), null, null, null, null, null, Collections.<GitSCMExtension>singletonList(new PreBuildMerge(userMergeOptions))));
         r.createWebClient().goToXml(p.getUrl() + "api/xml?depth=2");
     }
 

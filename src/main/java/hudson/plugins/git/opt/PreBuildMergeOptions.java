@@ -29,7 +29,7 @@ public class PreBuildMergeOptions implements Serializable {
     /**
      * Merge strategy.
      */
-    public String mergeStrategy = MergeCommand.Strategy.DEFAULT.toString();
+    public MergeCommand.Strategy mergeStrategy = MergeCommand.Strategy.DEFAULT;
 
     public MergeCommand.GitPluginFastForwardMode fastForwardMode = MergeCommand.GitPluginFastForwardMode.FF;
 
@@ -53,13 +53,13 @@ public class PreBuildMergeOptions implements Serializable {
     @Exported
     public MergeCommand.Strategy getMergeStrategy() {
         for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
-            if (strategy.toString().equals(mergeStrategy))
+            if (strategy.equals(mergeStrategy))
                 return strategy;
         return MergeCommand.Strategy.DEFAULT;
     }
 
     public void setMergeStrategy(MergeCommand.Strategy mergeStrategy) {
-        this.mergeStrategy = mergeStrategy.toString();
+        this.mergeStrategy = mergeStrategy;
     }
 
     @Exported
