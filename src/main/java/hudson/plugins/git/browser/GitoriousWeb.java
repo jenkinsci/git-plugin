@@ -34,7 +34,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     /**
      * Creates a link to the commit diff.
      * 
-     * {@literal https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diffs?diffmode=sidebyside&fragment=1#[path to file]}
+     * {@code https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diffs?diffmode=sidebyside&fragment=1#[path to file]}
      * 
      * @param path
      * @return diff link
@@ -48,7 +48,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file.
-     * {@literal https://[Gitorious URL]/blobs/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/pom.xml}
+     * {@code https://[Gitorious URL]/blobs/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/pom.xml}
      * 
      * @param path
      * @return file link

@@ -35,11 +35,11 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
-import hudson.util.IOException2;
 import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Constants;
@@ -802,7 +802,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals(p.toString(), s.getChannel().call(new BuildChooserContextTestCallable(c)));
     }
 
-    private static class BuildChooserContextTestCallable implements Callable<String,IOException> {
+    private static class BuildChooserContextTestCallable extends MasterToSlaveCallable<String,IOException> {
         private final BuildChooserContext c;
 
         public BuildChooserContextTestCallable(BuildChooserContext c) {
@@ -819,14 +819,10 @@ public class GitSCMTest extends AbstractGitTestCase {
                     }
                 });
             } catch (InterruptedException e) {
-                throw new IOException2(e);
+                throw new IOException(e);
             }
         }
 
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // Nothing to do.
-        }
     }
 
     // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])

@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
 
 import org.jenkinsci.plugins.gitclient.Git;
@@ -239,7 +240,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
-        return build.getWorkspace().act(new FilePath.FileCallable<String>() {
+        return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
             public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 try {
                     ObjectId oid = Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/" + branch);
@@ -247,11 +248,6 @@ public class AbstractGitProject extends AbstractGitRepository {
                 } catch (GitException e) {
                     throw new RuntimeException(e);
                 }
-            }
-
-            @Override
-            public void checkRoles(RoleChecker checker) throws SecurityException {
-                // Nothing to do.
             }
         });
     }
