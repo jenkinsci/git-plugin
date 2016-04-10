@@ -28,8 +28,7 @@ plugin, and that we've communicated our intent to other developers in
 a way that they can detect when they run tests.
 
 Code coverage reporting is available as a maven target and is actively
-monitored.  Please try your best to improve code coverage with tests
-when you submit.
+monitored.  Please improve code coverage with tests when you submit.
 
 Before submitting your change, please review the findbugs output to
 assure that you haven't introduced new findbugs warnings.
