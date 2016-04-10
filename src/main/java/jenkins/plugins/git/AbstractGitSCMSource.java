@@ -323,14 +323,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
       StringBuilder quotedBranches = new StringBuilder();
       for (String wildcard : branches.split(" ")){
         StringBuilder quotedBranch = new StringBuilder();
-        for(String branch : wildcard.split("\\*")){
-          if (wildcard.startsWith("*") || quotedBranches.length()>0) {
+        for(String branch : wildcard.split("(?=[*])|(?<=[*])")){
+          if (branch.equals("*")) {
             quotedBranch.append(".*");
+          } else if (!branch.isEmpty()) {
+            quotedBranch.append(Pattern.quote(branch));
           }
-          quotedBranch.append(Pattern.quote(branch));
-        }
-        if (wildcard.endsWith("*")){
-          quotedBranch.append(".*");
         }
         if (quotedBranches.length()>0) {
           quotedBranches.append("|");
