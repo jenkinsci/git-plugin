@@ -2147,4 +2147,18 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.gitTool="jgit";
         rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
     }
+
+    /** We clean the environment, just in case the test is being run from a Jenkins job using this same plugin :). */
+    @TestExtension
+    public static class CleanEnvironment extends EnvironmentContributor {
+        @Override
+        public void buildEnvironmentFor(Run run, EnvVars envs, TaskListener listener) {
+            envs.remove(GitSCM.GIT_BRANCH);
+            envs.remove(GitSCM.GIT_LOCAL_BRANCH);
+            envs.remove(GitSCM.GIT_COMMIT);
+            envs.remove(GitSCM.GIT_PREVIOUS_COMMIT);
+            envs.remove(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT);
+        }
+    }
+
 }
