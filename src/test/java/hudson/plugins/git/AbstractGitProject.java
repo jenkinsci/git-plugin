@@ -24,7 +24,6 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
@@ -58,7 +57,6 @@ import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import static org.junit.Assert.*;
 
-import org.jenkinsci.remoting.RoleChecker;
 import org.junit.Rule;
 
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;

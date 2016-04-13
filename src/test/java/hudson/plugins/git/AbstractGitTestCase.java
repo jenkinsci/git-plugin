@@ -37,7 +37,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
-import org.jenkinsci.remoting.RoleChecker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
