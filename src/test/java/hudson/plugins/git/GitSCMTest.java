@@ -142,11 +142,11 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // create initial commit
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number in master");
+        commit(commitFile1, johnDoe, "Commit in master");
         // create branch and make initial commit
         git.branch("foo");
         git.checkout().branch("foo");
-        commit(commitFile1, johnDoe, "Commit number in foo");
+        commit(commitFile1, johnDoe, "Commit in foo");
 
         build(projectWithMaster, Result.FAILURE);
         build(projectWithFoo, Result.SUCCESS, commitFile1);
