@@ -473,16 +473,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         			break;
         		}
         	}
-        	if (repository == null) {
-        		return null;
-        	}
         } else {
         	repository = getRepositories().get(0).getName();
         }
 
 
         // replace repository wildcard with repository name
-        if (branch.startsWith("*/")) {
+        if (branch.startsWith("*/") && repository != null) {
             branch = repository + branch.substring(1);
         }
 
