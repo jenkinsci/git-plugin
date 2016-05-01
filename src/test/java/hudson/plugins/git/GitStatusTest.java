@@ -16,7 +16,6 @@ import hudson.triggers.SCMTrigger;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.*;
-
 import org.eclipse.jgit.transport.URIish;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -25,10 +24,16 @@ import static org.mockito.Mockito.when;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
 
+@RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
 
     private GitStatus gitStatus;
@@ -190,6 +195,55 @@ public class GitStatusTest extends AbstractGitProject {
         assertAdditionalParameters(aMasterTrigger.getProjectActions());
         assertAdditionalParameters(aTopicTrigger.getProjectActions());
 
+    }
+
+    @DataPoints("branchSpecPrefixes")
+    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
+            "",
+            "refs/remotes/",
+            "refs/heads/",
+            "origin/",
+            "remotes/origin/"
+    };
+
+    @Theory
+    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithRegex() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
     }
 
     private void assertAdditionalParameters(Collection<? extends Action> actions) {
