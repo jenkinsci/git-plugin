@@ -13,6 +13,7 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,14 +67,8 @@ public class GithubWeb extends GitRepositoryBrowser {
      * @throws IOException
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
-        final GitChangeSet changeSet = path.getChangeSet();
-        final ArrayList<String> affectedPaths = new ArrayList<String>(changeSet.getAffectedPaths());
-        // Github seems to sort the output alphabetically by the path.
-        Collections.sort(affectedPaths);
-        final String pathAsString = path.getPath();
-        final int i = Collections.binarySearch(affectedPaths, pathAsString);
-        assert i >= 0;
-        return new URL(getChangeSetLink(changeSet), "#diff-" + String.valueOf(i));
+    	// Github seems to sort the output alphabetically by the path.
+        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path)));
     }
 
     /**

@@ -13,6 +13,7 @@ import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,13 +67,8 @@ public class GitList extends GitRepositoryBrowser {
      * @throws IOException
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
-        final GitChangeSet changeSet = path.getChangeSet();
-        final ArrayList<String> affectedPaths = new ArrayList<String>(changeSet.getAffectedPaths());
-        Collections.sort(affectedPaths);
-        final String pathAsString = path.getPath();
-        final int i = Collections.binarySearch(affectedPaths, pathAsString);
-        assert i >= 0;
-        return new URL(getChangeSetLink(changeSet), "#" + String.valueOf(i + 1)); //GitList diff indices begin at 1
+    	//GitList diff indices begin at 1
+        return new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1));
     }
 
     /**
