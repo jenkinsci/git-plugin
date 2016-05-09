@@ -53,6 +53,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return "git";
     }
 
+    /* Package protected - not part of API, needed for testing */
+    /* package */
+    static void setAllowNotifyCommitParameters(boolean allowed) {
+        allowNotifyCommitParameters = allowed;
+    }
+
     private String lastURL = "";        // Required query parameter
     private String lastBranches = null; // Optional query parameter
     private String lastSHA1 = null;     // Optional query parameter
@@ -118,11 +124,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: " + url, e));
         }
 
-        final Map<String, String[]> parameterMap = request.getParameterMap();
-        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-            if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
-                if (entry.getValue()[0] != null)
-                    buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
+        if (allowNotifyCommitParameters) { // Allow SECURITY-275 bug
+            final Map<String, String[]> parameterMap = request.getParameterMap();
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
+                    if (entry.getValue()[0] != null)
+                        buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
+            }
         }
         lastBuildParameters = buildParameters;
 
@@ -353,8 +361,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<String>();
-                                    for (ParameterValue parameterValue: allBuildParameters) {
-                                        buildParametersNames.add(parameterValue.getName());
+                                    if (allowNotifyCommitParameters) {
+                                        for (ParameterValue parameterValue: allBuildParameters) {
+                                            buildParametersNames.add(parameterValue.getName());
+                                        }
                                     }
 
                                     List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
@@ -548,5 +558,25 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
-}
 
+    /** Allow arbitrary notify commit parameters.
+     *
+     * SECURITY-275 detected that allowing arbitrary parameters through
+     * the notifyCommit URL allows an unauthenticated user to set
+     * environment variables for a job.
+     *
+     * If this property is set to true, then the bug exposed by
+     * SECURITY-275 will be brought back. Only enable this if you
+     * trust all unauthenticated users to not pass harmful arguments
+     * to your jobs.
+     *
+     * -Dhudson.plugins.git.GitStatus.allowNotifyCommitParameters=true on command line
+     *
+     * Also honors the global Jenkins security setting
+     * "hudson.model.ParametersAction.keepUndefinedParameters" if it
+     * is set to true.
+     */
+    public static final boolean ALLOW_NOTIFY_COMMIT_PARAMETERS = Boolean.valueOf(System.getProperty(GitStatus.class.getName() + ".allowNotifyCommitParameters", "false"))
+            || Boolean.valueOf(System.getProperty("hudson.model.ParametersAction.keepUndefinedParameters", "false"));
+    private static boolean allowNotifyCommitParameters = ALLOW_NOTIFY_COMMIT_PARAMETERS;
+}
