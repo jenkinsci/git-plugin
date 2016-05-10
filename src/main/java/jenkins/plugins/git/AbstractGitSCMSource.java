@@ -379,6 +379,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         public int hashCode() {
             return hash != null ? hash.hashCode() : 0;
         }
+
+        @Override
+        public String toString() {
+            return hash;
+        }
+
     }
 
     public static class SpecificRevisionBuildChooser extends BuildChooser {
