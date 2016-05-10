@@ -8,6 +8,7 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -72,11 +73,7 @@ public class KilnGit extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final ArrayList<String> affectedPaths = new ArrayList<String>(changeSet.getAffectedPaths());
-        // Kiln seems to sort the output alphabetically by the path.
-        Collections.sort(affectedPaths);
-        final String pathAsString = path.getPath();
-        final int i = Collections.binarySearch(affectedPaths, pathAsString);
+        final int i = getIndexOfPath(path);
         if (i >= 0) {
             // Kiln diff indices begin at 1.
             URL url = getUrl();

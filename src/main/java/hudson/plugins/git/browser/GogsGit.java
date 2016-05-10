@@ -1,41 +1,39 @@
 package hudson.plugins.git.browser;
 
-import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.EnvironmentContributor;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
-import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
- * Git Browser URLs
+ * @author Norbert Lange (nolange79@gmail.com)
  */
-public class GitList extends GitRepositoryBrowser {
+public class GogsGit extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
 
     @DataBoundConstructor
-    public GitList(String repoUrl) {
+    public GogsGit(String repoUrl) {
         super(repoUrl);
     }
 
+    /**
+     * Creates a link to the change set
+     * http://[GogsGit URL]/commit/[commit]
+     *
+     * @param changeSet commit hash
+     * @return change set link
+     * @throws IOException
+     */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
@@ -44,7 +42,7 @@ public class GitList extends GitRepositoryBrowser {
 
     /**
      * Creates a link to the file diff.
-     * http://[GitList URL]/commit/6c99ffee4cb6d605d55a1cc7cb47f25a443f7f54#N
+     * http://[GogsGit URL]/commit/[commit]#diff-N
      *
      * @param path affected file path
      * @return diff link
@@ -52,8 +50,8 @@ public class GitList extends GitRepositoryBrowser {
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
-        if(path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
-            || path.getChangeSet().getParentCommit() == null) {
+        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
+                || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         return getDiffLinkRegardlessOfEditType(path);
@@ -67,16 +65,17 @@ public class GitList extends GitRepositoryBrowser {
      * @throws IOException
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
-    	//GitList diff indices begin at 1
-        return new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1));
+        // Gogs diff indices begin at 1.
+        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path) + 1));
     }
 
     /**
      * Creates a link to the file.
-     * http://[GitList URL]/blob/6c99ffee4cb6d605d55a1cc7cb47f25a443f7f54/src/gitlist/Application.php
+     * http://[GogsGit URL]/src/[commit]/[path]
+     * Deleted Files link to the parent version. No easy way to find it
      *
-     * @param path file
-     * @return file link
+     * @param path affected file path
+     * @return diff link
      * @throws IOException
      */
     @Override
@@ -84,21 +83,20 @@ public class GitList extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
-            final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
             URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId().toString() + "/" + path.getPath());
         }
     }
 
     @Extension
-    public static class GitListDescriptor extends Descriptor<RepositoryBrowser<?>> {
+    public static class GogsGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
         public String getDisplayName() {
-            return "gitlist";
+            return "gogs";
         }
 
         @Override
-        public GitList newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindJSON(GitList.class, jsonObject);
+        public GogsGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+            return req.bindJSON(GogsGit.class, jsonObject);
         }
     }
 }
