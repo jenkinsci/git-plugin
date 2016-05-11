@@ -4,7 +4,9 @@ import hudson.EnvVars;
 import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
+import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
+
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -82,6 +84,30 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     protected boolean getNormalizeUrl() {
 		return true;
 	}
+    
+    /**
+     * Calculate the index of the given path in a
+     * sorted list of affected files
+     *
+     * @param path affected file path
+     * @return The index in the lexicographical sorted filelist
+     */
+    protected int getIndexOfPath(Path path) throws IOException {
+    	final String pathAsString = path.getPath();
+    	final GitChangeSet changeSet = path.getChangeSet();
+    	int i = 0;
+    	boolean found = false;
+    	for (String affected : changeSet.getAffectedPaths())
+    	{
+    		int res = affected.compareTo(pathAsString);
+    		if (res == 0)
+    			found = true;
+    		else if (res < 0)
+    			i++;
+    	}
+    	assert found;
+    	return found ? i : -1;
+    }
 
     private static final long serialVersionUID = 1L;
 }

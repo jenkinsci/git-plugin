@@ -8,12 +8,15 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.URL;
+
 import javax.servlet.ServletException;
+
 import org.kohsuke.stapler.QueryParameter;
 
 /**
@@ -26,7 +29,7 @@ public class GitLab extends GitRepositoryBrowser {
     private final double version;
 
     /* package */
-    static final double DEFAULT_VERSION = 7.11;
+    static final double DEFAULT_VERSION = 8.7;
 
     private static double valueOfVersion(String version) throws NumberFormatException {
         double tmpVersion = Double.valueOf(version);
@@ -73,7 +76,8 @@ public class GitLab extends GitRepositoryBrowser {
      * Creates a link to the commit diff.
      *
      * v &lt; 3.0: [GitLab URL]/commits/[Hash]#[File path]
-     * else:       [GitLab URL]/commit/[Hash]#[File path]
+     * v &lt; 8.0: [GitLab URL]/commit/[Hash]#[File path]
+     * else:       [GitLab URL]/commit/[Hash]#diff-[index]
      *
      * @param path
      * @return diff link
@@ -82,7 +86,14 @@ public class GitLab extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(getUrl(), calculatePrefix() + changeSet.getId() + "#" + path.getPath());
+        String filelink = null;
+        if(getVersion() < 8.0) {
+        	filelink = "#" + path.getPath().toString();
+        } else
+        {
+        	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
+        }
+        return new URL(getUrl(), calculatePrefix() + changeSet.getId() + filelink);
     }
 
     /**
