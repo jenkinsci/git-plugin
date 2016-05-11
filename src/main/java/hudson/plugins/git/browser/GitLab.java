@@ -29,7 +29,7 @@ public class GitLab extends GitRepositoryBrowser {
     private final double version;
 
     /* package */
-    static final double DEFAULT_VERSION = 7.11;
+    static final double DEFAULT_VERSION = 8.7;
 
     private static double valueOfVersion(String version) throws NumberFormatException {
         double tmpVersion = Double.valueOf(version);

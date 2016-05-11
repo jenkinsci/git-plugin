@@ -23,9 +23,11 @@ public class GitLabTest {
     private final GitLab gitlab42 = new GitLab(GITLAB_URL, "4.2");
     private final GitLab gitlab50 = new GitLab(GITLAB_URL, "5.0");
     private final GitLab gitlab51 = new GitLab(GITLAB_URL, "5.1");
-    private final GitLab gitlab711 = new GitLab(GITLAB_URL, "7.11");
-    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11.4.ee");
+    private final GitLab gitlab711 = new GitLab(GITLAB_URL, "7.11"); /* Which is < 7.2 ! */
+//    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11.4.ee"); /* Totally borked */
+    private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11");  /* Which is < 7.2 ! */
     private final GitLab gitlab80 = new GitLab(GITLAB_URL, "8.0");
+    private final GitLab gitlab87 = new GitLab(GITLAB_URL, "8.7");
     private final GitLab gitlabDefault = new GitLab(GITLAB_URL, "");
     private final GitLab gitlabNaN = new GitLab(GITLAB_URL, "NaN");
     private final GitLab gitlabInfinity = new GitLab(GITLAB_URL, "Infinity");
@@ -44,8 +46,7 @@ public class GitLabTest {
         assertEquals(4.2, gitlab42.getVersion(), .001);
         assertEquals(5.0, gitlab50.getVersion(), .001);
         assertEquals(5.1, gitlab51.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlab711.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlab7114ee.getVersion(), .001);
+        assertEquals(GitLab.DEFAULT_VERSION, gitlab87.getVersion(), .001);
         assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion(), .001);
         assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion(), .001);
         assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion(), .001);
@@ -89,7 +90,7 @@ public class GitLabTest {
         final String expectedPre30 = GITLAB_URL + "commits/" + SHA1 + "#" + fileName;
         final String expectedPre80 = GITLAB_URL + "commit/" + SHA1 + "#" + fileName;
         final String expectedURL = GITLAB_URL + "commit/" + SHA1 + "#" + "diff-0";
-        final String expectedDefault = expectedPre80;
+        final String expectedDefault = expectedURL;
         assertEquals(expectedPre30, gitlabNegative.getDiffLink(modified1).toString());
         assertEquals(expectedPre30, gitlab29.getDiffLink(modified1).toString());
         assertEquals(expectedPre80, gitlab42.getDiffLink(modified1).toString());
@@ -146,7 +147,7 @@ public class GitLabTest {
         final String expectedPre30 = GITLAB_URL + "commits/" + SHA1 + "#" + fileName;
         final String expectedPre80 = GITLAB_URL + "commit/" + SHA1 + "#" + fileName;
         final String expectedURL = GITLAB_URL + "commit/" + SHA1 + "#" + "diff-0";
-        final String expectedDefault = expectedPre80;
+        final String expectedDefault = expectedURL;
  
         assertEquals(expectedPre30, gitlabNegative.getFileLink(path).toString());
         assertEquals(expectedPre30, gitlab29.getFileLink(path).toString());
