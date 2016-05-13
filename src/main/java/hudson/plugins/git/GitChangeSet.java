@@ -373,8 +373,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         } else {
             user = User.get(csAuthor, false);
 
-            if (user == null)
-                user = User.get(csAuthorEmail.split("@")[0], true);
+            if (user == null) {
+                // Ensure that malformed email addresses (in this case, just '@')
+                // don't mess us up.
+                String[] emailParts = csAuthorEmail.split("@");
+                if (emailParts.length > 0) {
+                    user = User.get(emailParts[0], true);
+                } else {
+                    return User.getUnknown();
+                }
+            }
         }
         // set email address for user if none is already available
         if (fixEmpty(csAuthorEmail) != null && hasHudsonTasksMailer() && !hasMail(user)) {
