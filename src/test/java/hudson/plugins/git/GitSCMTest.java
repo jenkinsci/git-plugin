@@ -148,6 +148,37 @@ public class GitSCMTest extends AbstractGitTestCase {
       build(projectHierarchicalBranch, Result.SUCCESS, commitFile1);
     }
 
+    public void testBranchSpecWithRemotesWildcard() throws Exception {
+        FreeStyleProject project = setupProject("remotes/origin/*", false, null, null, null, true, null);
+
+        // create initial commit and build
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+    }
+
+    @Bug(26268)
+    public void testBranchSpecWithRemotesFromMultipleRepos() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        project.setScm(new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec("remotes/origin/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList()));
+
+        // Create some commits
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+    }
+
     public void testBranchSpecUsingTagWithSlash() throws Exception {
         FreeStyleProject projectMasterBranch = setupProject("path/tag", false, null, null, null, true, null);
         // create initial commit and build

@@ -144,6 +144,12 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         }
         builder.append(")?");
         
+        // optionally match "remotes/" if specified
+        if (qualifiedName.startsWith("remotes/")) {
+            builder.append("(?:remotes/)?");
+            qualifiedName = qualifiedName.substring(8);
+        }
+
         // was the last token a wildcard?
         boolean foundWildcard = false;
         
