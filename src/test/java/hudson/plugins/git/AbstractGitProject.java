@@ -27,7 +27,6 @@ import hudson.EnvVars;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
-import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
@@ -205,7 +204,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -216,7 +215,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
@@ -227,7 +226,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final MatrixBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final MatrixBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
