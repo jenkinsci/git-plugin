@@ -909,7 +909,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        userMergeOptions.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -948,7 +952,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        userMergeOptions.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -982,7 +990,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1021,7 +1031,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        userMergeOptions.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -1058,8 +1072,16 @@ public class GitSCMTest extends AbstractGitTestCase {
     			null, null,
     			Collections.<GitSCMExtension>emptyList());
     	project.setScm(scm);
-	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
-	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        UserMergeOptions userMergeOptions1 = new UserMergeOptions("integration1");
+        userMergeOptions1.setMergeRemote("origin");
+        userMergeOptions1.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions1.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+	scm.getExtensions().add(new PreBuildMerge(userMergeOptions1));
+        UserMergeOptions userMergeOptions2 = new UserMergeOptions("integration2");
+        userMergeOptions2.setMergeRemote("origin");
+        userMergeOptions2.setMergeStrategy(MergeCommand.Strategy.DEFAULT);
+        userMergeOptions2.setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+	scm.getExtensions().add(new PreBuildMerge(userMergeOptions2));
     	
     	commit("dummyFile", johnDoe, "Initial Commit");
     	testRepo.git.branch("integration1");
@@ -1088,7 +1110,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1128,7 +1152,9 @@ public class GitSCMTest extends AbstractGitTestCase {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        UserMergeOptions userMergeOptions = new UserMergeOptions("integration");
+        userMergeOptions.setMergeRemote("origin");
+        scm.getExtensions().add(new PreBuildMerge(userMergeOptions));
         project.setScm(scm);
 
         // create initial commit and then run the build against it:

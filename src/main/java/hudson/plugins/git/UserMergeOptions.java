@@ -7,6 +7,7 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.Serializable;
 
@@ -19,7 +20,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     private String mergeRemote;
     private String mergeTarget;
-    private String mergeStrategy;
+    private MergeCommand.Strategy mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
 
     /**
@@ -27,20 +28,52 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      */
     @Deprecated
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
-        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
+        this(mergeTarget);
+        setMergeRemote(mergeRemote);
+        setMergeStrategy(mergeStrategy);
+        setFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF);
+    }
+
+    /**
+     * @Deprecated use the new @DataBoundConstructor where you only need to supply the necessary information.
+     */
+    @Deprecated
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy, MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+        this(mergeTarget);
+        setMergeRemote(mergeRemote);
+        setMergeStrategy(mergeStrategy);
+        setFastForwardMode(fastForwardMode);
     }
 
     @DataBoundConstructor
-    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
-        this.mergeRemote = mergeRemote;
+    public UserMergeOptions(String mergeTarget) {
         this.mergeTarget = mergeTarget;
+    }
+
+    @DataBoundSetter
+    public void setMergeRemote(String mergeRemote) {
+        this.mergeRemote = mergeRemote;
+    }
+
+    @DataBoundSetter
+    public void setMergeStrategy(MergeCommand.Strategy mergeStrategy) {
         this.mergeStrategy = mergeStrategy;
+    }
+
+    @DataBoundSetter
+    public void setFastForwardMode(MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.fastForwardMode = fastForwardMode;
     }
 
+    private void setMergeStrategy(String mergeStrategy) {
+        this.mergeStrategy = (mergeStrategy == null ? null : MergeCommand.Strategy.valueOf(mergeStrategy.toUpperCase()));
+    }
+
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
+        this(pbm.getMergeTarget());
+        this.mergeRemote = pbm.getRemoteBranchName();
+        this.mergeStrategy = pbm.getMergeStrategy();
+        this.fastForwardMode = pbm.getFastForwardMode();
     }
 
     /**
@@ -64,7 +97,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     public MergeCommand.Strategy getMergeStrategy() {
         for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
-            if (strategy.toString().equals(mergeStrategy))
+            if (strategy.equals(mergeStrategy))
                 return strategy;
         return MergeCommand.Strategy.DEFAULT;
     }
@@ -128,11 +161,5 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
             return "";
         }
 
-        public ListBoxModel doFillMergeStrategyItems() {
-            ListBoxModel m = new ListBoxModel();
-            for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
-                m.add(strategy.toString(), strategy.toString());
-            return m;
-        }
     }
 }
