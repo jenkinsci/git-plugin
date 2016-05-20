@@ -76,7 +76,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url) {
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel();
             }
             return new StandardListBoxModel()
@@ -93,7 +93,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
@@ -131,7 +131,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
