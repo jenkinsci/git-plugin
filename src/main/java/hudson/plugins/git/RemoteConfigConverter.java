@@ -90,21 +90,32 @@ public class RemoteConfigConverter implements Converter {
             for (Entry<String, Collection<String>> entry : map.entrySet()) {
                 String key = entry.getKey();
                 Collection<String> values = entry.getValue();
-                if (KEY_URL.equals(key))
-                    uris = values.toArray(new String[values.size()]);
-                else if (KEY_FETCH.equals(key))
-                    fetch = values.toArray(new String[values.size()]);
-                else if (KEY_PUSH.equals(key))
-                    push = values.toArray(new String[values.size()]);
-                else if (KEY_UPLOADPACK.equals(key))
-                    for (String value : values)
-                        uploadpack = value;
-                else if (KEY_RECEIVEPACK.equals(key))
-                    for (String value : values)
-                        receivepack = value;
-                else if (KEY_TAGOPT.equals(key))
-                    for (String value : values)
-                        tagopt = value;
+                if (null != key)
+                    switch (key) {
+                    case KEY_URL:
+                        uris = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_FETCH:
+                        fetch = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_PUSH:
+                        push = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_UPLOADPACK:
+                        for (String value : values)
+                            uploadpack = value;
+                        break;
+                    case KEY_RECEIVEPACK:
+                        for (String value : values)
+                            receivepack = value;
+                        break;
+                    case KEY_TAGOPT:
+                        for (String value : values)
+                            tagopt = value;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
