@@ -24,12 +24,12 @@ public class GitChangeLogParserTest {
     public void testDuplicatesFiltered() throws Exception {
         GitChangeLogParser parser = new GitChangeLogParser(true);
         File log = tmpFolder.newFile();
-        FileWriter writer = new FileWriter(log);
-        writer.write("commit 123abc456def\n");
-        writer.write("    first message\n");
-        writer.write("commit 123abc456def\n");
-        writer.write("    second message");
-        writer.close();
+        try (FileWriter writer = new FileWriter(log)) {
+            writer.write("commit 123abc456def\n");
+            writer.write("    first message\n");
+            writer.write("commit 123abc456def\n");
+            writer.write("    second message");
+        }
         GitChangeSetList list = parser.parse(null, null, log);
         assertNotNull(list);
         assertNotNull(list.getLogs());

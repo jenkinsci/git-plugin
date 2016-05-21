@@ -68,13 +68,14 @@ public class GitChangeSetPluginHistoryTest {
 
     private static String getGitVersion() throws IOException {
         Process process = new ProcessBuilder("git", "--version").start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String version = "unknown";
-        String line;
-        while ((line = reader.readLine()) != null) {
-            version = line.trim();
+        String version;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            version = "unknown";
+            String line;
+            while ((line = reader.readLine()) != null) {
+                version = line.trim();
+            }
         }
-        reader.close();
         process.destroy();
         return version;
     }
@@ -89,25 +90,25 @@ public class GitChangeSetPluginHistoryTest {
     private static List<ObjectId> getNonMergeChanges(boolean honorExclusions) throws IOException {
         List<ObjectId> nonMergeChanges = new ArrayList<ObjectId>();
         Process process = new ProcessBuilder("git", "rev-list", "--no-merges", "HEAD").start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (honorExclusions) {
-                boolean ignore = false;
-                for (String exclusion : git171exceptions) {
-                    if (line.startsWith(exclusion)) {
-                        ignore = true;
-                        break;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (honorExclusions) {
+                    boolean ignore = false;
+                    for (String exclusion : git171exceptions) {
+                        if (line.startsWith(exclusion)) {
+                            ignore = true;
+                            break;
+                        }
                     }
-                }
-                if (!ignore) {
+                    if (!ignore) {
+                        nonMergeChanges.add(ObjectId.fromString(line));
+                    }
+                } else {
                     nonMergeChanges.add(ObjectId.fromString(line));
                 }
-            } else {
-                nonMergeChanges.add(ObjectId.fromString(line));
             }
         }
-        reader.close();
         process.destroy();
         Collections.shuffle(nonMergeChanges);
         return nonMergeChanges;

@@ -64,9 +64,7 @@ public abstract class AbstractGitRepository {
     protected void commitNewFile(final String fileName) throws GitException, InterruptedException {
         File newFile = new File(testGitDir, fileName);
         assert !newFile.exists(); // Not expected to use commitNewFile to update existing file
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(newFile, "UTF-8");
+        try (PrintWriter writer = new PrintWriter(newFile, "UTF-8")) {
             writer.println("A file named " + fileName);
             writer.close();
             testGitClient.add(fileName);
@@ -75,10 +73,6 @@ public abstract class AbstractGitRepository {
             throw new GitException(notFound);
         } catch (UnsupportedEncodingException unsupported) {
             throw new GitException(unsupported);
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
         }
     }
 
