@@ -74,7 +74,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         commitNewFile("a");
 
-        MatrixProject mp = jenkins.createMatrixProject("xyz");
+        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
