@@ -26,7 +26,7 @@ public class AbstractGitSCMSourceTrivialTest {
     private final String expectedRemote = "origin";
 
     private final String expectedRefSpec = "+refs/heads/*:refs/remotes/origin/*";
-    private final List<RefSpec> expectedRefSpecs = new ArrayList<RefSpec>();
+    private final List<RefSpec> expectedRefSpecs = new ArrayList<>();
 
     @Before
     public void setUp() throws Exception {

@@ -43,7 +43,7 @@ public class GitUtils implements Serializable {
      * @throws GitException
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
-        Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
+        Map<ObjectId, Revision> revisions = new HashMap<>();
         for (Branch b : git.getRemoteBranches()) {
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
@@ -87,8 +87,8 @@ public class GitUtils implements Serializable {
     }
 
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder, EnvVars env) {
-        ArrayList<Branch> orderedBranches = new ArrayList<Branch>(revision.getBranches().size());
-        ArrayList<Branch> revisionBranches = new ArrayList<Branch>(revision.getBranches());
+        ArrayList<Branch> orderedBranches = new ArrayList<>(revision.getBranches().size());
+        ArrayList<Branch> revisionBranches = new ArrayList<>(revision.getBranches());
 
         for(BranchSpec branchSpec : branchOrder) {
             for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
@@ -117,7 +117,7 @@ public class GitUtils implements Serializable {
         //        \-----C
 
         // we only want (B) and (C), as (A) is an ancestor (old).
-        final List<Revision> l = new ArrayList<Revision>(revisions);
+        final List<Revision> l = new ArrayList<>(revisions);
 
         // Bypass any rev walks if only one branch or less
         if (l.size() <= 1)
@@ -128,10 +128,10 @@ public class GitUtils implements Serializable {
                 public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
 
                     // Commit nodes that we have already reached
-                    Set<RevCommit> visited = new HashSet<RevCommit>();
+                    Set<RevCommit> visited = new HashSet<>();
                     // Commits nodes that are tips if we don't reach them walking back from
                     // another node
-                    Map<RevCommit, Revision> tipCandidates = new HashMap<RevCommit, Revision>();
+                    Map<RevCommit, Revision> tipCandidates = new HashMap<>();
 
                     long calls = 0;
                     final long start = System.currentTimeMillis();
@@ -181,7 +181,7 @@ public class GitUtils implements Serializable {
                                 "Computed merge bases in {0} commit steps and {1} ms", calls,
                                 (System.currentTimeMillis() - start)));
 
-                    return new ArrayList<Revision>(tipCandidates.values());
+                    return new ArrayList<>(tipCandidates.values());
                 }
             });
         } catch (IOException e) {
@@ -291,7 +291,7 @@ public class GitUtils implements Serializable {
 
     public static String[] fixupNames(String[] names, String[] urls) {
         String[] returnNames = new String[urls.length];
-        Set<String> usedNames = new HashSet<String>();
+        Set<String> usedNames = new HashSet<>();
 
         for(int i=0; i<urls.length; i++) {
             String name = names[i];

@@ -25,7 +25,7 @@ public class GitChangeSetUtil {
     }
 
     static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");
         lines.add("commit " + ID);
@@ -59,7 +59,7 @@ public class GitChangeSetUtil {
         TestCase.assertEquals("Commit title.", changeSet.getMsg());
         TestCase.assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
         TestCase.assertEquals("Commit title.\nCommit extended description.\n".replace("\n", "<br>"), changeSet.getCommentAnnotated());
-        HashSet<String> expectedAffectedPaths = new HashSet<String>(7);
+        HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
         expectedAffectedPaths.add("src/test/modified.file");

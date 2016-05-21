@@ -112,13 +112,13 @@ public class RemoteConfigConverter implements Converter {
                 ClassNotFoundException {
             name = in.readUTF();
             final int items = in.readInt();
-            Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+            Map<String, Collection<String>> map = new HashMap<>();
             for (int i = 0; i < items; i++) {
                 String key = in.readUTF();
                 String value = in.readUTF();
                 Collection<String> values = map.get(key);
                 if (values == null) {
-                    values = new ArrayList<String>();
+                    values = new ArrayList<>();
                     map.put(key, values);
                 }
                 values.add(value);

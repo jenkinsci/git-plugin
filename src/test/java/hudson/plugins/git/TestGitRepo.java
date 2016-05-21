@@ -128,7 +128,7 @@ public class TestGitRepo {
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
-        List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> list = new ArrayList<>();
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }

@@ -47,7 +47,7 @@ public class UserExclusion extends GitSCMExtension {
             return Collections.emptySet();
         }
 
-        Set<String> users = new HashSet<String>();
+        Set<String> users = new HashSet<>();
         for (String user : s.split("[\\r\\n]+")) {
             users.add(user.trim());
         }

@@ -94,7 +94,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
      */
-    private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<String, Lock>();
+    private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<>();
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
@@ -298,7 +298,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     protected List<UserRemoteConfig> getRemoteConfigs() {
         List<RefSpec> refSpecs = getRefSpecs();
-        List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>(refSpecs.size());
+        List<UserRemoteConfig> result = new ArrayList<>(refSpecs.size());
         String remote = getRemote();
         for (RefSpec refSpec : refSpecs) {
             result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getCredentialsId()));

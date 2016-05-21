@@ -83,7 +83,7 @@ public abstract class AbstractGitRepository {
      * @throws IOException
      */
     protected List<UserRemoteConfig> remoteConfigs() throws IOException {
-        List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> list = new ArrayList<>();
         list.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }

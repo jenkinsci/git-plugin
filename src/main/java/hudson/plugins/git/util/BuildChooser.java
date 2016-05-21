@@ -156,7 +156,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @param item the item.
      */
     public static List<BuildChooserDescriptor> allApplicableTo(Item item) {
-        List<BuildChooserDescriptor> result = new ArrayList<BuildChooserDescriptor>();
+        List<BuildChooserDescriptor> result = new ArrayList<>();
         for (BuildChooserDescriptor d: all()) {
             if (d.isApplicable(item.getClass()))
                 result.add(d);

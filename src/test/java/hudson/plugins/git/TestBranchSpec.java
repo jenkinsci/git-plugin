@@ -57,7 +57,7 @@ public class TestBranchSpec {
     
     @Test
     public void testMatchEnv() {
-        HashMap<String, String> envMap = new HashMap<String, String>();
+        HashMap<String, String> envMap = new HashMap<>();
         envMap.put("master", "master");
         envMap.put("origin", "origin");
         envMap.put("dev", "dev");
@@ -174,7 +174,7 @@ public class TestBranchSpec {
     }
 
     private EnvVars createEnvMap(String key, String value) {
-        HashMap<String, String> envMap = new HashMap<String, String>();
+        HashMap<String, String> envMap = new HashMap<>();
         envMap.put(key, value);
         return new EnvVars(envMap);
     }

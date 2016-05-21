@@ -62,7 +62,7 @@ public class GitChangeSetPluginHistoryTest {
         this.sha1 = ObjectId.fromString(sha1String);
         StringWriter stringWriter = new StringWriter();
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();
-        List<String> changeLogStrings = new ArrayList<String>(Arrays.asList(stringWriter.toString().split("\n")));
+        List<String> changeLogStrings = new ArrayList<>(Arrays.asList(stringWriter.toString().split("\n")));
         changeSet = new GitChangeSet(changeLogStrings, authorOrCommitter);
     }
 
@@ -88,7 +88,7 @@ public class GitChangeSetPluginHistoryTest {
      * @return ObjectId list for all changes which aren't merges
      */
     private static List<ObjectId> getNonMergeChanges(boolean honorExclusions) throws IOException {
-        List<ObjectId> nonMergeChanges = new ArrayList<ObjectId>();
+        List<ObjectId> nonMergeChanges = new ArrayList<>();
         Process process = new ProcessBuilder("git", "rev-list", "--no-merges", "HEAD").start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
@@ -118,7 +118,7 @@ public class GitChangeSetPluginHistoryTest {
     public static Collection<Object[]> generateData() throws IOException, InterruptedException {
         gitVersion = getGitVersion();
 
-        List<Object[]> args = new ArrayList<Object[]>();
+        List<Object[]> args = new ArrayList<>();
         String[] implementations = new String[]{"git", "jgit"};
         boolean[] choices = {true, false};
 

@@ -110,7 +110,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
-            tagsToPush = new ArrayList<TagToPush>();
+            tagsToPush = new ArrayList<>();
         }
 
         return tagsToPush;
@@ -118,7 +118,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     public List<BranchToPush> getBranchesToPush() {
         if (branchesToPush == null) {
-            branchesToPush = new ArrayList<BranchToPush>();
+            branchesToPush = new ArrayList<>();
         }
 
         return branchesToPush;
@@ -126,7 +126,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public List<NoteToPush> getNotesToPush() {
         if (notesToPush == null) {
-            notesToPush = new ArrayList<NoteToPush>();
+            notesToPush = new ArrayList<>();
         }
 
         return notesToPush;

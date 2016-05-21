@@ -86,7 +86,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     public List<String> filterMatching(Collection<String> branches, EnvVars env) {
-        List<String> items = new ArrayList<String>();
+        List<String> items = new ArrayList<>();
         
         for(String b : branches) {
             if(matches(b, env))
@@ -102,7 +102,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     public List<Branch> filterMatchingBranches(Collection<Branch> branches, EnvVars env) {
-        List<Branch> items = new ArrayList<Branch>();
+        List<Branch> items = new ArrayList<>();
         
         for(Branch b : branches) {
             if(matches(b.getName(), env))

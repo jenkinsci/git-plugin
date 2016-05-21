@@ -34,23 +34,23 @@ public class SubmoduleCombinatorTest {
 
     @Test
     public void testDifferenceNulls() {
-        Map<IndexEntry, Revision> item = new HashMap<IndexEntry, Revision>();
-        List<IndexEntry> entries = new ArrayList<IndexEntry>();
+        Map<IndexEntry, Revision> item = new HashMap<>();
+        List<IndexEntry> entries = new ArrayList<>();
         assertEquals(0, combinator.difference(item, entries));
     }
 
     @Test
     public void testDifferenceDifferentSize() {
-        Map<IndexEntry, Revision> item = new HashMap<IndexEntry, Revision>();
-        List<IndexEntry> entries = new ArrayList<IndexEntry>();
+        Map<IndexEntry, Revision> item = new HashMap<>();
+        List<IndexEntry> entries = new ArrayList<>();
         assertTrue(entries.add(new IndexEntry("mode", "type", "object", "file")));
         assertEquals(-1, combinator.difference(item, entries));
     }
 
     @Test
     public void testDifferenceNoDifference() {
-        Map<IndexEntry, Revision> items = new HashMap<IndexEntry, Revision>();
-        List<IndexEntry> entries = new ArrayList<IndexEntry>();
+        Map<IndexEntry, Revision> items = new HashMap<>();
+        List<IndexEntry> entries = new ArrayList<>();
         ObjectId sha1 = ObjectId.fromString("1c2a9e6194e6ede0805cda4c9ccc7e373e835414");
         IndexEntry indexEntry1 = new IndexEntry("mode-1", "type-1", sha1.getName(), "file-1");
         assertTrue("Failed to add indexEntry1 to entries", entries.add(indexEntry1));
@@ -61,8 +61,8 @@ public class SubmoduleCombinatorTest {
 
     @Test
     public void testDifferenceOneDifference() {
-        Map<IndexEntry, Revision> items = new HashMap<IndexEntry, Revision>();
-        List<IndexEntry> entries = new ArrayList<IndexEntry>();
+        Map<IndexEntry, Revision> items = new HashMap<>();
+        List<IndexEntry> entries = new ArrayList<>();
         ObjectId sha1 = ObjectId.fromString("1c2a9e6194e6ede0805cda4c9ccc7e373e835414");
         String fileName = "fileName";
         IndexEntry indexEntry1 = new IndexEntry("mode-1", "type-1", sha1.getName(), fileName);

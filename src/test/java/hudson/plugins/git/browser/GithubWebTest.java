@@ -159,7 +159,7 @@ public class GithubWebTest {
         }
         @Override
         protected List<RefSpec> getRefSpecs() {
-            List<RefSpec> result = new ArrayList<RefSpec>();
+            List<RefSpec> result = new ArrayList<>();
             for (String refSpec : refSpecs) {
                 result.add(new RefSpec(refSpec));
             }
@@ -180,7 +180,7 @@ public class GithubWebTest {
      * @throws SAXException
      */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
-        final HashMap<String, Path> pathMap = new HashMap<String, Path>();
+        final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
         for (final Path path : changeSet) {
             pathMap.put(path.getPath(), path);

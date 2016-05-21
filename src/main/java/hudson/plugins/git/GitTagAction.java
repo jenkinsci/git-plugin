@@ -33,7 +33,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
      * If a module is not tagged, the value will be empty list.
      * Never an empty map.
      */
-    private final Map<String, List<String>> tags = new CopyOnWriteMap.Tree<String, List<String>>();
+    private final Map<String, List<String>> tags = new CopyOnWriteMap.Tree<>();
 
     private final String ws;
 
@@ -96,7 +96,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     @Exported(name = "tags")
     public List<TagInfo> getTagInfo() {
-        List<TagInfo> data = new ArrayList<TagInfo>();
+        List<TagInfo> data = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : tags.entrySet()) {
             String module = e.getKey();
             for (String tag : e.getValue())
@@ -146,7 +146,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
         MultipartFormDataParser parser = new MultipartFormDataParser(req);
 
-        Map<String, String> newTags = new HashMap<String, String>();
+        Map<String, String> newTags = new HashMap<>();
 
         int i = -1;
         for (String e : tags.keySet()) {

@@ -30,7 +30,7 @@ public class GitChangeSetSimpleTest {
 
     @Parameterized.Parameters(name = "{0},{1}")
     public static Collection permuteAuthorNameAndLegacyLayout() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String[] allowed = {"true", "false"};
         for (String authorName : allowed) {
             for (String legacyFormat : allowed) {
@@ -51,7 +51,7 @@ public class GitChangeSetSimpleTest {
         assertEquals(GitChangeSetUtil.ID, changeSet.getId());
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
         assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
-        HashSet<String> expectedAffectedPaths = new HashSet<String>(7);
+        HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
         expectedAffectedPaths.add("src/test/modified.file");
@@ -164,7 +164,7 @@ public class GitChangeSetSimpleTest {
     @Test
     public void testChangeSetExceptionMessage() {
         final String expectedLineContent = "commit ";
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add(expectedLineContent);
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Commit has no ID[" + expectedLineContent + "]");

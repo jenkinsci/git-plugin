@@ -84,7 +84,7 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     }
     
     private Set<String> stringifyBranches(Set<Branch> original) {
-        Set<String> result = new TreeSet<String>(); 
+        Set<String> result = new TreeSet<>(); 
         
         for (Iterator<Branch> iter = original.iterator(); iter.hasNext(); ) {
             result.add(iter.next().getSHA1String());

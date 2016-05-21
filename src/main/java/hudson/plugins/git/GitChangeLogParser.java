@@ -54,7 +54,7 @@ public class GitChangeLogParser extends ChangeLogParser {
     }
 
     private List<GitChangeSet> parse(Iterator<String> changelog) {
-        Set<GitChangeSet> r = new LinkedHashSet<GitChangeSet>();
+        Set<GitChangeSet> r = new LinkedHashSet<>();
         List<String> lines = null;
         while (changelog.hasNext()) {
             String line = changelog.next();
@@ -62,7 +62,7 @@ public class GitChangeLogParser extends ChangeLogParser {
                 if (lines != null) {
                     r.add(parseCommit(lines, authorOrCommitter));
                 }
-                lines = new ArrayList<String>();
+                lines = new ArrayList<>();
             }
 
             if (lines != null && lines.size()<THRESHOLD)
@@ -72,7 +72,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         if (lines != null) {
             r.add(parseCommit(lines, authorOrCommitter));
         }
-        return new ArrayList<GitChangeSet>(r);
+        return new ArrayList<>(r);
     }
 
     private GitChangeSet parseCommit(List<String> lines, boolean authorOrCommitter) {

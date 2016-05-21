@@ -42,7 +42,7 @@ public class UserMergeOptionsTest {
 
     @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
     public static Collection mergeOptionVariants() {
-        List<Object[]> mergeOptions = new ArrayList<Object[]>();
+        List<Object[]> mergeOptions = new ArrayList<>();
         String[] remotes = new String[]{null, "src_remote"};
         String[] targets = new String[]{null, "dst_remote"};
         MergeCommand.Strategy[] mergeStrategies = new MergeCommand.Strategy[]{

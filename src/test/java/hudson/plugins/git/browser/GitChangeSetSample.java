@@ -20,7 +20,7 @@ public class GitChangeSetSample {
     final String renamedFileDstName = "xt.py";
 
     public GitChangeSetSample(boolean useAuthorName) {
-        List<String> gitChangeLog = new ArrayList<String>();
+        List<String> gitChangeLog = new ArrayList<>();
         gitChangeLog.add("commit " + id);
         gitChangeLog.add("tree 9538ba330b18d079bf9792e7cd6362fa7cfc8039");
         gitChangeLog.add("parent " + parent);

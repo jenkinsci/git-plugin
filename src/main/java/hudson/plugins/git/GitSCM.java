@@ -136,7 +136,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     static private List<UserRemoteConfig> createRepoList(String url) {
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(url, null, null, null));
         return repoList;
     }
@@ -183,14 +183,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         if (submoduleCfg == null) {
-            submoduleCfg = new ArrayList<SubmoduleConfig>();
+            submoduleCfg = new ArrayList<>();
         }
         this.submoduleCfg = submoduleCfg;
 
         this.configVersion = 2L;
         this.gitTool = gitTool;
 
-        this.extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP,Util.fixNull(extensions));
+        this.extensions = new DescribableList<>(Saveable.NOOP,Util.fixNull(extensions));
 
         getBuildChooser(); // set the gitSCM field.
     }
@@ -238,11 +238,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
 
         if (source != null) {
-            remoteRepositories = new ArrayList<RemoteConfig>();
-            branches = new ArrayList<BranchSpec>();
+            remoteRepositories = new ArrayList<>();
+            branches = new ArrayList<>();
             doGenerateSubmoduleConfigurations = false;
 
-            List<RefSpec> rs = new ArrayList<RefSpec>();
+            List<RefSpec> rs = new ArrayList<>();
             rs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
             remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[0])));
             if (branch != null) {
@@ -264,7 +264,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         if (remoteRepositories != null && userRemoteConfigs == null) {
-            userRemoteConfigs = new ArrayList<UserRemoteConfig>();
+            userRemoteConfigs = new ArrayList<>();
             for(RemoteConfig cfg : remoteRepositories) {
                 // converted as in config.jelly
                 String url = "";
@@ -291,7 +291,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         if (extensions==null)
-            extensions = new DescribableList<GitSCMExtension, GitSCMExtensionDescriptor>(Saveable.NOOP);
+            extensions = new DescribableList<>(Saveable.NOOP);
 
         readBackExtensionsFromLegacy();
 
@@ -320,7 +320,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override public RepositoryBrowser<?> guessBrowser() {
-        Set<String> webUrls = new HashSet<String>();
+        Set<String> webUrls = new HashSet<>();
         if (remoteRepositories != null) {
             for (RemoteConfig config : remoteRepositories) {
                 for (URIish uriIsh : config.getURIs()) {
@@ -393,7 +393,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return can be empty but never null.
      */
     public List<RemoteConfig> getParamExpandedRepos(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
-        List<RemoteConfig> expandedRepos = new ArrayList<RemoteConfig>();
+        List<RemoteConfig> expandedRepos = new ArrayList<>();
 
         EnvVars env = build.getEnvironment(listener);
 
@@ -431,7 +431,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public List<UserRemoteConfig> getUserRemoteConfigs() {
         if (userRemoteConfigs == null) {
             /* Prevent NPE when no remote config defined */
-            userRemoteConfigs = new ArrayList<UserRemoteConfig>();
+            userRemoteConfigs = new ArrayList<>();
         }
         return Collections.unmodifiableList(userRemoteConfigs);
     }
@@ -439,7 +439,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
-            return new ArrayList<RemoteConfig>();
+            return new ArrayList<>();
         }
         return remoteRepositories;
     }
@@ -488,7 +488,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     private List<RefSpec> getRefSpecs(RemoteConfig repo, EnvVars env) {
-        List<RefSpec> refSpecs = new ArrayList<RefSpec>();
+        List<RefSpec> refSpecs = new ArrayList<>();
         for (RefSpec refSpec : repo.getFetchRefSpecs()) {
             refSpecs.add(new RefSpec(getParameterString(refSpec.toString(), env)));
         }
@@ -818,7 +818,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             // Make up a repo config from the request parameters
 
             repoConfig.setString("remote", name, "url", refUrl);
-            List<String> str = new ArrayList<String>();
+            List<String> str = new ArrayList<>();
             if(refSpec != null && refSpec.length > 0)
                 for (RefSpec rs: refSpec)
                     str.add(rs.toString());
@@ -1465,7 +1465,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
 
                 repoConfig.setString("remote", name, "url", url);
-                repoConfig.setStringList("remote", name, "fetch", new ArrayList<String>(Arrays.asList(refs[i].split("\\s+"))));
+                repoConfig.setStringList("remote", name, "fetch", new ArrayList<>(Arrays.asList(refs[i].split("\\s+"))));
             }
 
             try {
