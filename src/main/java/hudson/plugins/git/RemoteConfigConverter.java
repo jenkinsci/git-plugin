@@ -229,11 +229,7 @@ public class RemoteConfigConverter implements Converter {
             proxy.readExternal(objectInput);
             objectInput.popCallback();
             return proxy.toRemote();
-        } catch (IOException e) {
-            throw new ConversionException("Unmarshal failed", e);
-        } catch (ClassNotFoundException e) {
-            throw new ConversionException("Unmarshal failed", e);
-        } catch (URISyntaxException e) {
+        } catch (IOException | ClassNotFoundException | URISyntaxException e) {
             throw new ConversionException("Unmarshal failed", e);
         }
     }

@@ -300,9 +300,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (choosingStrategy.equals(d.getLegacyId())) {
                     try {
                         setBuildChooser(d.clazz.newInstance());
-                    } catch (InstantiationException e) {
-                        LOGGER.log(Level.WARNING, "Failed to instantiate the build chooser", e);
-                    } catch (IllegalAccessException e) {
+                    } catch (InstantiationException | IllegalAccessException e) {
                         LOGGER.log(Level.WARNING, "Failed to instantiate the build chooser", e);
                     }
                 }
@@ -863,9 +861,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (builtOn != null) {
             try {
                 tool = tool.forNode(builtOn, listener);
-            } catch (IOException e) {
-                listener.getLogger().println("Failed to get git executable");
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 listener.getLogger().println("Failed to get git executable");
             }
         }

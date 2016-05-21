@@ -69,10 +69,8 @@ public abstract class AbstractGitRepository {
             writer.close();
             testGitClient.add(fileName);
             testGitClient.commit("Added a file named " + fileName);
-        } catch (FileNotFoundException notFound) {
+        } catch (FileNotFoundException | UnsupportedEncodingException notFound) {
             throw new GitException(notFound);
-        } catch (UnsupportedEncodingException unsupported) {
-            throw new GitException(unsupported);
         }
     }
 

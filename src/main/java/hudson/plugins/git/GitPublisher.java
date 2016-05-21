@@ -237,10 +237,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                         //git.push(null);
                     }
-                } catch (FormException e) {
-                    e.printStackTrace(listener.error("Failed to push merge to origin repository"));
-                    return false;
-                } catch (GitException e) {
+                } catch (FormException | GitException e) {
                     e.printStackTrace(listener.error("Failed to push merge to origin repository"));
                     return false;
                 }

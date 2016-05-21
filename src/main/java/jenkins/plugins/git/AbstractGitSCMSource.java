@@ -176,9 +176,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             final Repository repository = client.getRepository();
             try {
                 client.prune(new RemoteConfig(repository.getConfig(), remoteName));
-            } catch (UnsupportedOperationException e) {
-                e.printStackTrace(listener.error("Could not prune stale remotes"));
-            } catch (URISyntaxException e) {
+            } catch (UnsupportedOperationException | URISyntaxException e) {
                 e.printStackTrace(listener.error("Could not prune stale remotes"));
             }
             listener.getLogger().println("Getting remote branches...");
