@@ -178,7 +178,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Contributes to a {@link #doNotifyCommit(String, String, String)} response.
+     * Contributes to a {@link #doNotifyCommit(HttpServletRequest, String, String, String)} response.
      *
      * @since 1.4.1
      */
