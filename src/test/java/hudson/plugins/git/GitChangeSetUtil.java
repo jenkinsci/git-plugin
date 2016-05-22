@@ -24,7 +24,7 @@ public class GitChangeSetUtil {
         return genChangeSet(authorOrCommitter, useLegacyFormat, true);
     }
 
-    static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
+    public static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
         ArrayList<String> lines = new ArrayList<String>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");

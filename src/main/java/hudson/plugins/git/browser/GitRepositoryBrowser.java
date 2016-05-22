@@ -105,8 +105,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     		else if (res < 0)
     			i++;
     	}
-    	assert found;
-    	return found ? i : -1;
+        return i;
     }
 
     private static final long serialVersionUID = 1L;
