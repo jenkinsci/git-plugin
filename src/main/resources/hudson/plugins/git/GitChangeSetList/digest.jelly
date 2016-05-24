@@ -5,7 +5,7 @@
   e.g http://<hudson server>/job/<project>/<build number>/
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <j:set var="browser" value="${it.build.parent.scm.effectiveBrowser}"/>
+  <j:set var="browser" value="${it.browser}"/>
 
   <j:choose>
     <j:when test="${it.emptySet}">
