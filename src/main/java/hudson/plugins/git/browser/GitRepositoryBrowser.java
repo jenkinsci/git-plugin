@@ -96,13 +96,9 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     	final String pathAsString = path.getPath();
     	final GitChangeSet changeSet = path.getChangeSet();
     	int i = 0;
-    	boolean found = false;
     	for (String affected : changeSet.getAffectedPaths())
     	{
-    		int res = affected.compareTo(pathAsString);
-    		if (res == 0)
-    			found = true;
-    		else if (res < 0)
+		if (affected.compareTo(pathAsString) < 0)
     			i++;
     	}
         return i;
