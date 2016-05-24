@@ -327,7 +327,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (URIish uriIsh : config.getURIs()) {
                     String uri = uriIsh.toString();
                     // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
-                    Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
+                    Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+?)(|/|[.]git)").matcher(uri);
                     if (m.matches()) {
                         webUrls.add(m.group(1) + "/");
                     }
