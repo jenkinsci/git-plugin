@@ -22,7 +22,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 /**
- * Git Browser URLs
+ * AssemblaWeb Git Browser URLs
  */
 public class AssemblaWeb extends GitRepositoryBrowser {
 
@@ -92,8 +92,8 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         }
 
         @Override
-        public CGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-            return req.bindJSON(CGit.class, jsonObject);
+        public AssemblaWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+            return req.bindJSON(AssemblaWeb.class, jsonObject);
         }
 
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)
