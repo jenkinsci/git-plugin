@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.ExtensionPoint;
@@ -124,11 +125,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: " + url, e));
         }
 
-        if (allowNotifyCommitParameters) { // Allow SECURITY-275 bug
+        if (allowNotifyCommitParameters || !safeParameters.isEmpty()) { // Allow SECURITY-275 bug
             final Map<String, String[]> parameterMap = request.getParameterMap();
             for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
                 if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
-                    if (entry.getValue()[0] != null)
+                    if (entry.getValue()[0] != null && (allowNotifyCommitParameters || safeParameters.contains(entry.getKey())))
                         buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
             }
         }
@@ -361,9 +362,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<String>();
-                                    if (allowNotifyCommitParameters) {
+                                    if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
                                         for (ParameterValue parameterValue: allBuildParameters) {
-                                            buildParametersNames.add(parameterValue.getName());
+                                            if (allowNotifyCommitParameters || safeParameters.contains(parameterValue.getName())) {
+                                                buildParametersNames.add(parameterValue.getName());
+                                            }
                                         }
                                     }
 
@@ -579,4 +582,49 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     public static final boolean ALLOW_NOTIFY_COMMIT_PARAMETERS = Boolean.valueOf(System.getProperty(GitStatus.class.getName() + ".allowNotifyCommitParameters", "false"))
             || Boolean.valueOf(System.getProperty("hudson.model.ParametersAction.keepUndefinedParameters", "false"));
     private static boolean allowNotifyCommitParameters = ALLOW_NOTIFY_COMMIT_PARAMETERS;
+
+    /* Package protected for test.
+     * If null is passed as argument, safe parameters are reset to defaults.
+     */
+    static void setSafeParametersForTest(String parameters) {
+        safeParameters = csvToSet(parameters != null ? parameters : SAFE_PARAMETERS);
+    }
+
+    private static Set<String> csvToSet(String csvLine) {
+        String[] tokens = csvLine.split(",");
+        Set<String> set = new HashSet<String>(Arrays.asList(tokens));
+        return set;
+    }
+
+    @NonNull
+    private static String getSafeParameters() {
+        String globalSafeParameters = System.getProperty("hudson.model.ParametersAction.safeParameters", "").trim();
+        String gitStatusSafeParameters = System.getProperty(GitStatus.class.getName() + ".safeParameters", "").trim();
+        if (globalSafeParameters.isEmpty()) {
+            return gitStatusSafeParameters;
+        }
+        if (gitStatusSafeParameters.isEmpty()) {
+            return globalSafeParameters;
+        }
+        return globalSafeParameters + "," + gitStatusSafeParameters;
+    }
+
+    /**
+     * Allow specifically declared safe parameters.
+     *
+     * SECURITY-275 detected that allowing arbitrary parameters through the
+     * notifyCommit URL allows an unauthenticated user to set environment
+     * variables for a job.
+     *
+     * If this property is set to a comma separated list of parameters, then
+     * those parameters will be allowed for any job. Only set this value for
+     * parameters you trust in all the jobs in your system.
+     *
+     * -Dhudson.plugins.git.GitStatus.safeParameters=PARM1,PARM1 on command line
+     *
+     * Also honors the global Jenkins safe parameter list
+     * "hudson.model.ParametersAction.safeParameters" if set.
+     */
+    public static final String SAFE_PARAMETERS = getSafeParameters();
+    private static Set<String> safeParameters = csvToSet(SAFE_PARAMETERS);
 }
