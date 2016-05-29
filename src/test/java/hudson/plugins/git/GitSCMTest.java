@@ -908,7 +908,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testBranchSpecAsSHA1WithMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -927,7 +927,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList()));
 
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
-        assertBuildStatusSuccess(build);
+        rule.assertBuildStatusSuccess(build);
     }
 
     @Issue("JENKINS-25639")
