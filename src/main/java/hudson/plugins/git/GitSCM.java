@@ -154,6 +154,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, null);
     }
+    
+    /** Convenience constructor that also sets a default branch. Mainly for testing purposes
+     * @param repositoryUrl Repository URL to clone from.
+     * @param defaultBranch The initial branch in the repo, to prevent {@code **} from breaking the tests
+     */
+    public GitSCM(String repositoryUrl, String defaultBranch) {
+        this(
+                createRepoList(repositoryUrl),
+                Collections.singletonList(new BranchSpec(defaultBranch)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, null);
+    }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
     @DataBoundConstructor
