@@ -125,7 +125,6 @@ public class CompoundBuildChooserTest extends AbstractGitRepository {
             if (author != null)
                 cmd.setAuthor(author);
             if (committer != null)
-                // cmd.setCommitter(new PersonIdent(committer,new Date()));
                 cmd.setCommitter(committer);
             cmd.call();
         } catch (GitAPIException e) {
@@ -222,6 +221,7 @@ public class CompoundBuildChooserTest extends AbstractGitRepository {
         List<String> candidateSha1s = getFilteredTestCandidates(maxAgeInDays, ancestorCommitSha1);
         
         assertEquals(3, candidateSha1s.size());
+        assertFalse("Excluded branch shows up in revision list!", candidateSha1s.contains(excludedBranchCommit));
         assertTrue(candidateSha1s.contains(fiveDaysAgoCommit));
         assertTrue(candidateSha1s.contains(tenDaysAgoCommit));
         assertTrue(candidateSha1s.contains(twentyDaysAgoCommit));
