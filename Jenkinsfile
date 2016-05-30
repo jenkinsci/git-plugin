@@ -4,9 +4,14 @@ node {
 
   // Checkout code from repository
   checkout([$class: 'GitSCM',
+            branches: [
+              [name: '*/*'],
+            ],
             browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/jenkinsci/git-plugin'],
+            doGenerateSubmoduleConfigurations: false,
             extensions: [[$class: 'LocalBranch', localBranch: '**']],
             gitTool: 'Default',
+            submoduleCfg: [],
             userRemoteConfigs: [[
                  url: 'git://github.com/jenkins-ci/git-plugin.git',
                ]
