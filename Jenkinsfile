@@ -5,7 +5,7 @@ node {
   // Checkout code from repository
   checkout([$class: 'GitSCM',
             branches: [
-              [name: '*/*'],
+              [name: '*/3.0.0-beta'],
             ],
             browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/jenkinsci/git-plugin'],
             doGenerateSubmoduleConfigurations: false,
