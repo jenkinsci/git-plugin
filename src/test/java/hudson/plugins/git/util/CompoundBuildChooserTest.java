@@ -36,7 +36,8 @@ import org.junit.Before;
 
 public class CompoundBuildChooserTest extends AbstractGitRepository {
     
-    private String rootCommit = null;
+    private static final String EXCLUDED_BRANCH = "excluded-branch";
+	private String rootCommit = null;
     private String ancestorCommit = null;
     private String fiveDaysAgoCommit = null;
     private String tenDaysAgoCommit = null;
@@ -47,6 +48,7 @@ public class CompoundBuildChooserTest extends AbstractGitRepository {
     private final DateTime twentyDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(20);
     
     private final PersonIdent johnDoe = new PersonIdent("John Doe", "john@example.com");
+	private String excludedBranchCommit;
 
     /*
      * 20 days old ->  O O    <- 10 days old
@@ -82,9 +84,10 @@ public class CompoundBuildChooserTest extends AbstractGitRepository {
         this.commit("5 days ago commit message", new PersonIdent(johnDoe, fiveDaysAgo.toDate()), new PersonIdent(johnDoe, fiveDaysAgo.toDate()));
         fiveDaysAgoCommit = getLastCommitSha1(prevBranches);
         
-        testGitClient.branch("excluded-branch");
-        testGitClient.checkoutBranch("excluded-branch", ancestorCommit);
+        testGitClient.branch(EXCLUDED_BRANCH);
+        testGitClient.checkoutBranch(EXCLUDED_BRANCH, ancestorCommit);
         this.commit("commit on excluded branch", new PersonIdent(johnDoe, fiveDaysAgo.toDate()), new PersonIdent(johnDoe, fiveDaysAgo.toDate()));
+        excludedBranchCommit = getLastCommitSha1(prevBranches);
     }
     
     private Set<String> stringifyBranches(Set<Branch> original) {
@@ -133,7 +136,7 @@ public class CompoundBuildChooserTest extends AbstractGitRepository {
     }
     
     private List<String> getFilteredTestCandidates(Integer maxAgeInDays, String ancestorCommitSha1) throws Exception {
-        GitSCM gitSCM = new GitSCM("foo");
+        GitSCM gitSCM = new GitSCM("foo", EXCLUDED_BRANCH);
         CompoundBuildChooser chooser = new CompoundBuildChooser(maxAgeInDays, ancestorCommitSha1);
         gitSCM.getExtensions().add(new BuildChooserSetting(chooser));
         assertEquals(maxAgeInDays, chooser.getMaximumAgeInDays());
