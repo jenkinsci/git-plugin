@@ -181,8 +181,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             listener.getLogger().println("Getting remote branches...");
             SCMSourceCriteria branchCriteria = getCriteria();
-            RevWalk walk = new RevWalk(repository);
-            try {
+            try (RevWalk walk = new RevWalk(repository)) {
                 walk.setRetainBody(false);
                 for (Branch b : client.getRemoteBranches()) {
                     if (!b.getName().startsWith(remoteName + "/")) {
@@ -210,13 +209,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
                             @Override
                             public boolean exists(@NonNull String path) throws IOException {
-                                TreeWalk tw = TreeWalk.forPath(repository, path, tree);
-                                try {
+                                try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
                                     return tw != null;
-                                } finally {
-                                    if (tw != null) {
-                                        tw.release();
-                                    }
                                 }
                             }
                         };
@@ -234,8 +228,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         return;
                     }
                 }
-            } finally {
-                walk.dispose();
             }
 
             listener.getLogger().println("Done.");
