@@ -33,6 +33,16 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+/**
+ * Compound build chooser enables excluding specific branches/wildcards from an age/ancestor restriction. 
+ * First, the provided revisions are filtered to remove any of the specified branches via the Inverse Build Chooser algorithm,
+ * then the remaining revisions undergo an Ancestor check to determine the final revision set to build.
+ * 
+ * Configurations are dual-sourced: job config provides the branch filters to the Inverse algorithm, while the plugin config
+ * provides the ancestor and age restriction.
+ * 
+ * @author Zalan Meggyesi
+ */
 public class CompoundBuildChooser extends DefaultBuildChooser {
 
     private final Integer maximumAgeInDays;
