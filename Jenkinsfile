@@ -13,7 +13,7 @@ node {
             gitTool: 'Default',
             submoduleCfg: [],
             userRemoteConfigs: [[
-                 url: 'git://github.com/jenkins-ci/git-plugin.git',
+                 url: 'git://github.com/jenkinsci/git-plugin.git',
                ]
              ],
            ]
