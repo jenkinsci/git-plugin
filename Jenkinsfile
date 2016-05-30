@@ -7,13 +7,13 @@ node {
             branches: [
               [name: '*/3.0.0-beta'],
             ],
-            browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/jenkinsci/git-plugin'],
+            browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/MarkEWaite/git-plugin'],
             doGenerateSubmoduleConfigurations: false,
             extensions: [[$class: 'LocalBranch', localBranch: '**']],
             gitTool: 'Default',
             submoduleCfg: [],
             userRemoteConfigs: [[
-                 url: 'git://github.com/jenkinsci/git-plugin.git',
+                 url: 'git://github.com/MarkEWaite/git-plugin.git',
                ]
              ],
            ]
