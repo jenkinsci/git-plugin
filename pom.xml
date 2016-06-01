@@ -28,7 +28,7 @@
     <concurrency>2</concurrency>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
-    <workflow.version>1.14.2-SNAPSHOT</workflow.version> <!-- TODO https://github.com/jenkinsci/pipeline-plugin/pull/389 -->
+    <workflow.version>1.14.2</workflow.version>
   </properties>
 
   <build>
