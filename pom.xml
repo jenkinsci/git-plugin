@@ -28,7 +28,7 @@
     <concurrency>2</concurrency>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
-    <workflow.version>1.14</workflow.version>
+    <workflow.version>1.14.2-SNAPSHOT</workflow.version> <!-- TODO https://github.com/jenkinsci/pipeline-plugin/pull/389 -->
   </properties>
 
   <build>
@@ -87,6 +87,7 @@
         <executions>
           <execution>
             <goals>
+              <!-- TODO check if http://stackoverflow.com/q/1771561/12916 lets us add the test-jar goal to attach-sources/attach-javadocs executions from the inherited jenkins-release profile -->
               <goal>test-jar</goal>
             </goals>
           </execution>
