@@ -84,7 +84,8 @@ public class GitStepTest {
         r.assertEqualDataBoundBeans(step, roundtrip);
     }
 
-    @Test public void basicCloneAndUpdate() throws Exception {
+    @Test
+    public void basicCloneAndUpdate() throws Exception {
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         r.createOnlineSlave(Label.get("remote"));
@@ -106,7 +107,8 @@ public class GitStepTest {
         assertTrue(b.getArtifactManager().root().child("nextfile").isFile());
     }
 
-    @Test public void changelogAndPolling() throws Exception {
+    @Test
+    public void changelogAndPolling() throws Exception {
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         p.addTrigger(new SCMTrigger("")); // no schedule, use notifyCommit only
@@ -138,7 +140,8 @@ public class GitStepTest {
         assertFalse(iterator.hasNext());
     }
 
-    @Test public void multipleSCMs() throws Exception {
+    @Test
+    public void multipleSCMs() throws Exception {
         sampleRepo.init();
         otherRepo.git("init");
         otherRepo.write("otherfile", "");
@@ -209,14 +212,14 @@ public class GitStepTest {
         otherRepo.git("commit", "--message=init");
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "demo");
         p.setDefinition(new CpsFlowDefinition(
-                "node {\n" +
-                        "    dir('main') {\n" +
-                        "        git($/" + otherRepo + "/$)\n" +
-                        "    }\n" +
-                        "    dir('other') {\n" +
-                        "        git($/" + otherRepo + "/$)\n" +
-                        "    }\n" +
-                        "}"));
+            "node {\n" +
+            "    dir('main') {\n" +
+            "        git($/" + otherRepo + "/$)\n" +
+            "    }\n" +
+            "    dir('other') {\n" +
+            "        git($/" + otherRepo + "/$)\n" +
+            "    }\n" +
+            "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         assertEquals(1, b.getActions(BuildData.class).size());
         assertEquals(1, b.getActions(GitTagAction.class).size());
@@ -234,7 +237,8 @@ public class GitStepTest {
         assertEquals(1, p.getSCMs().size());
     }
 
-    @Test public void commitToWorkspace() throws Exception {
+    @Test
+    public void commitToWorkspace() throws Exception {
         sampleRepo.init();
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
