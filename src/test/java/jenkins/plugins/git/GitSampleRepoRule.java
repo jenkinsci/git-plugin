@@ -38,7 +38,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         run("git", cmds);
     }
 
-    @Override public void init() throws Exception {
+    @Override
+    public void init() throws Exception {
         run(true, tmp.getRoot(), "git", "version");
         git("init");
         write("file", "");
