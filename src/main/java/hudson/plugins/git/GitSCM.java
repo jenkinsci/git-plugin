@@ -1088,6 +1088,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
+        for (ParametersAction action : build.getActions(ParametersAction.class)) {
+            for (ParameterValue param: action.getParameters()) {
+                param.buildEnvironment(build, environment);
+            }
+        }
+
         GitClient git = createClient(listener, environment, build, workspace);
 
         for (GitSCMExtension ext : extensions) {
