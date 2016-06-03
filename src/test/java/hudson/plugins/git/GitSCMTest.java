@@ -1202,7 +1202,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testEnvironmentVariableExpansion() throws Exception {
         FreeStyleProject project = createFreeStyleProject();
-        project.setScm(new GitSCM("${CAT}"+testRepo.gitDir.getPath()));
+        project.setScm(new GitSCM("${CAT}" + testRepo.gitDir.getPath()));
 
         // create initial commit and then run the build against it:
         commit("a.txt", johnDoe, "Initial Commit");
@@ -1218,6 +1218,20 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(r.hasChanges());
 
         build(project, Result.SUCCESS, "b.txt");
+
+        // Test branch expansion with environment contributors
+        FreeStyleProject project2 = createFreeStyleProject();
+        String url = "${CAT}";
+        git.branch("cheese");
+        commit("a.txt", johnDoe, "Initial Commit");
+        GitRepositoryBrowser browser = new GithubWeb(url);
+        GitSCM scm = new GitSCM(createRepoList("${CAT}"),
+                Collections.singletonList(new BranchSpec("${cheese}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                browser, null, null);
+        project2.setScm(scm);
+        PollingResult p = project2.poll(StreamTaskListener.fromStdout());
+        assertTrue(r.hasChanges());
     }
 
     @TestExtension("testEnvironmentVariableExpansion")
@@ -2155,6 +2169,13 @@ public class GitSCMTest extends AbstractGitTestCase {
             envs.remove(GitSCM.GIT_COMMIT);
             envs.remove(GitSCM.GIT_PREVIOUS_COMMIT);
             envs.remove(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT);
+        }
+    }
+
+    @TestExtension
+    public static class TestContributor extends EnvironmentContributor {
+        public void buildEnvironmentFor(Job j, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
+            envs.put("cheese", "gouda");
         }
     }
 

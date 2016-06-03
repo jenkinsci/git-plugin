@@ -607,13 +607,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             listener.getLogger().println("[poll] Last Built Revision: " + buildData.lastBuild.revision);
         }
 
-        final EnvVars pollEnv = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : lastBuild.getEnvironment(listener);
+        EnvVars pollEnv;
+        if (project instanceof AbstractProject) {
+            pollEnv = GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false);
+        } else {
+            try {
+                pollEnv = lastBuild.getEnvironment(listener);
+            } catch (Exception ex) {
+                LOGGER.log(Level.WARNING, "Exception in getting polling environment", ex);
+                pollEnv = new EnvVars();
+            }
+        }
 
         final String singleBranch = getSingleBranch(pollEnv);
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
+            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : project.getEnvironment(null, listener);;
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
@@ -681,8 +691,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
-
-        FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
+        FilePath workingDirectory = workingDirectory(project, workspace, environment, listener);
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
@@ -740,7 +749,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
+        return createClient(listener, environment, build.getParent(), workspaceToNode(workspace), ws);
     }
 
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
