@@ -3,21 +3,7 @@ node {
   stage 'Checkout'
 
   // Checkout code from repository
-  checkout([$class: 'GitSCM',
-            branches: [
-              [name: '*/3.0.0-beta'],
-            ],
-            browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/MarkEWaite/git-plugin'],
-            doGenerateSubmoduleConfigurations: false,
-            extensions: [[$class: 'LocalBranch', localBranch: '**']],
-            gitTool: 'Default',
-            submoduleCfg: [],
-            userRemoteConfigs: [[
-                 url: 'git://github.com/MarkEWaite/git-plugin.git',
-               ]
-             ],
-           ]
-          )
+  checkout scm
 
   // Mark the code build 'stage'....
   stage 'Build'
