@@ -78,7 +78,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     /**
-     * @deprecated use filterMatching(Collection<String>, EnvVars)
+     * @deprecated use {@link #filterMatching(Collection, EnvVars)}
      */
     public List<String> filterMatching(Collection<String> branches) {
         EnvVars env = new EnvVars();

@@ -192,7 +192,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         commitNewFile(commitFile2);
 
 		// create second build and set revision parameter using r1
-        FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserCause(),
+        FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserIdCause(),
 				Collections.singletonList(new RevisionParameterAction(r1))).get();
         
 		// Check revision built for b2 matches the r1 revision

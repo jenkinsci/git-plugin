@@ -257,8 +257,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
-        boolean ok = cacheDir.getParentFile().mkdirs();
-        if (!ok) LOGGER.info("Failed mkdirs of " + cacheDir.getParent());
+        File parentDir = cacheDir.getParentFile();
+        if (!parentDir.isDirectory()) {
+            boolean ok = parentDir.mkdirs();
+            if (!ok) LOGGER.info("Failed mkdirs of " + parentDir.getPath());
+        }
         return cacheDir;
     }
 
@@ -376,6 +379,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         public int hashCode() {
             return hash != null ? hash.hashCode() : 0;
         }
+
+        @Override
+        public String toString() {
+            return hash;
+        }
+
     }
 
     public static class SpecificRevisionBuildChooser extends BuildChooser {
