@@ -1,12 +1,10 @@
 #!groovy
 
-def nodeLabel = 'docker'
-
 /* Only keep the 10 most recent builds. */
 properties([[$class: 'BuildDiscarderProperty',
                 strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 
-node(nodeLabel) {
+node {
   stage 'Checkout'
   checkout scm
 
