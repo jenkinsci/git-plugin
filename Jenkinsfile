@@ -13,11 +13,14 @@ node {
   /* Call the maven build. */
   mvn "clean install -B"
 
+  /* Save Results. */
+  stage 'Results'
+
   /* Archive the test results */
   step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 
   /* Archive the build artifacts */
-  step([$class: 'ArtifactArchiver', artifacts: 'target/*.hpi'])
+  step([$class: 'ArtifactArchiver', artifacts: 'target/*.hpi,target/*.jpi'])
 }
 
 /* Run maven from tool "mvn" */
