@@ -904,8 +904,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
-    @Issue("JENKINS-26268")
-    public void testBranchSpecAsSHA1WithMultipleRepositories() throws Exception {
+    private void branchSpecWithMultipleRepositories(String branchName) throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
@@ -917,17 +916,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
 
-        String sha1 = testRepo.git.revParse("HEAD").getName();
-
         project.setScm(new GitSCM(
                 remotes,
-                Collections.singletonList(new BranchSpec(sha1)),
+                Collections.singletonList(new BranchSpec(branchName)),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList()));
 
         final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
         rule.assertBuildStatusSuccess(build);
+    }
+
+    @Issue("JENKINS-26268")
+    public void testBranchSpecAsSHA1WithMultipleRepositories() throws Exception {
+        branchSpecWithMultipleRepositories(testRepo.git.revParse("HEAD").getName());
+    }
+
+    @Issue("JENKINS-26268")
+    public void testBranchSpecAsRemotesOriginMasterWithMultipleRepositories() throws Exception {
+        branchSpecWithMultipleRepositories("remotes/origin/master");
     }
 
     @Issue("JENKINS-25639")
