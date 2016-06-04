@@ -32,7 +32,11 @@ void mvn(def args) {
     def mvnHome = tool name: 'mvn'
 
     /* Set JAVA_HOME, and special PATH variables. */
-    List javaEnv = ["PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}"]
+    List javaEnv = [
+      "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
+      /* Additional variables needed by tests. */
+      'GIT_COMMITTER_EMAIL=me@hatescake.com','GIT_COMMITTER_NAME=Hates','GIT_AUTHOR_NAME=Cake','GIT_AUTHOR_EMAIL=hates@cake.com', 'LOGNAME=hatescake'
+   ]
 
     /* Call maven tool with java envVars. */
     withEnv(javaEnv) {
