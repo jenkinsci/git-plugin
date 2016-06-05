@@ -904,6 +904,32 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    @Issue("JENKINS-26268")
+    public void testBranchSpecAsSHA1WithMultipleRepositories() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        TestGitRepo secondTestRepo = new TestGitRepo("second", this, listener);
+        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        remotes.addAll(testRepo.remoteConfigs());
+        remotes.addAll(secondTestRepo.remoteConfigs());
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+
+        String sha1 = testRepo.git.revParse("HEAD").getName();
+
+        project.setScm(new GitSCM(
+                remotes,
+                Collections.singletonList(new BranchSpec(sha1)),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList()));
+
+        final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile1);
+        assertBuildStatusSuccess(build);
+    }
+
     @Issue("JENKINS-25639")
     @Test
     public void testCommitDetectedOnlyOnceInMultipleRepositories() throws Exception {
