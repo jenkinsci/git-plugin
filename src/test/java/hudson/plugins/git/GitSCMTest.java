@@ -1217,22 +1217,27 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit("b.txt", johnDoe, "Another commit");
 
         r = project.poll(StreamTaskListener.fromStdout());
-        assertTrue(r.hasChanges());
+        assertEquals(PollingResult.Change.SIGNIFICANT, r.change);
 
         build(project, Result.SUCCESS, "b.txt");
 
         // Next we try expansion with both a repo an a branch
         FreeStyleProject project2 = createFreeStyleProject();
-        git.branch("cheese");
+        testRepo.git.branch("gouda");
+        testRepo.git.checkout("gouda");
         commit("a.txt", johnDoe, "Initial Commit");
+
         GitRepositoryBrowser browser = new GithubWeb(repoUrl);
-        GitSCM scm = new GitSCM(createRepoList(repoUrl),
-                Collections.singletonList(new BranchSpec("${cheese}")),
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*/${cheese}")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                browser, null, null);
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
         project2.setScm(scm);
+
         PollingResult p = project2.poll(StreamTaskListener.fromStdout());
-        assertTrue(r.hasChanges());
+        assertTrue(p.hasChanges());
     }
 
     @TestExtension("testEnvironmentVariableExpansion")
@@ -1240,6 +1245,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         @Override
         public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
             envs.put("CAT","");
+        }
+
+        @Override
+        public void buildEnvironmentFor(Job j, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
+            envs.put("cheese", "gouda");
         }
     }
 
@@ -2172,12 +2182,4 @@ public class GitSCMTest extends AbstractGitTestCase {
             envs.remove(GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT);
         }
     }
-
-    @TestExtension
-    public static class TestContributor extends EnvironmentContributor {
-        public void buildEnvironmentFor(Job j, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
-            envs.put("cheese", "gouda");
-        }
-    }
-
 }

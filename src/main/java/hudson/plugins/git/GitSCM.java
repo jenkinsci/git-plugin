@@ -623,7 +623,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if (!requiresWorkspaceForPolling(pollEnv)) {
 
-            final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : project.getEnvironment(null, listener);;
+            EnvVars environment = new EnvVars();
+            if (project instanceof AbstractProject) {
+                GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false);
+            } else {
+                try {
+                    environment = project.getEnvironment(null, listener);
+                } catch (Exception ex) {
+                    LOGGER.log(Level.WARNING, "Exception in getting polling environment", ex);
+                }
+            }
 
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
