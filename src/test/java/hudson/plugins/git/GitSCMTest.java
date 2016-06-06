@@ -1201,8 +1201,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testEnvironmentVariableExpansion() throws Exception {
+        // First we test environment expansion with just the repo, using an EnvironmentContributor
         FreeStyleProject project = createFreeStyleProject();
-        project.setScm(new GitSCM("${CAT}" + testRepo.gitDir.getPath()));
+        String repoUrl = "${CAT}";
+        project.setScm(new GitSCM(repoUrl + testRepo.gitDir.getPath()));
 
         // create initial commit and then run the build against it:
         commit("a.txt", johnDoe, "Initial Commit");
@@ -1219,13 +1221,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         build(project, Result.SUCCESS, "b.txt");
 
-        // Test branch expansion with environment contributors
+        // Next we try expansion with both a repo an a branch
         FreeStyleProject project2 = createFreeStyleProject();
-        String url = "${CAT}";
         git.branch("cheese");
         commit("a.txt", johnDoe, "Initial Commit");
-        GitRepositoryBrowser browser = new GithubWeb(url);
-        GitSCM scm = new GitSCM(createRepoList("${CAT}"),
+        GitRepositoryBrowser browser = new GithubWeb(repoUrl);
+        GitSCM scm = new GitSCM(createRepoList(repoUrl),
                 Collections.singletonList(new BranchSpec("${cheese}")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 browser, null, null);

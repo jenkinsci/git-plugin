@@ -691,7 +691,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
-        FilePath workingDirectory = workingDirectory(project, workspace, environment, listener);
+        FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {

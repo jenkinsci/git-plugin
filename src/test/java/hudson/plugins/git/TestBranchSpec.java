@@ -2,18 +2,11 @@ package hudson.plugins.git;
 
 import hudson.EnvVars;
 
-import java.io.IOException;
 import java.util.HashMap;
 import static org.junit.Assert.*;
 
-import hudson.model.EnvironmentContributor;
-import hudson.model.Job;
-import hudson.model.TaskListener;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.TestExtension;
-
-import javax.annotation.Nonnull;
 
 
 public class TestBranchSpec {
