@@ -25,22 +25,26 @@ node {
 
 /* Run maven from tool "mvn" */
 void mvn(def args) {
-    /* Get jdk tool. */
-    String jdktool = tool name: "jdk7", type: 'hudson.model.JDK'
+  /* Get jdk tool. */
+  String jdktool = tool name: "jdk7", type: 'hudson.model.JDK'
 
-    /* Get the maven tool. */
-    def mvnHome = tool name: 'mvn'
+  /* Get the maven tool. */
+  def mvnHome = tool name: 'mvn'
 
-    /* Set JAVA_HOME, and special PATH variables. */
-    List javaEnv = [
-      "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
-      // Additional variables needed by tests on machines
-      // that don't have global git user.name and user.email configured.
-      'GIT_COMMITTER_EMAIL=me@hatescake.com','GIT_COMMITTER_NAME=Hates','GIT_AUTHOR_NAME=Cake','GIT_AUTHOR_EMAIL=hates@cake.com', 'LOGNAME=hatescake'
-   ]
+  /* Set JAVA_HOME, and special PATH variables. */
+  List javaEnv = [
+    "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
+    // Additional variables needed by tests on machines
+    // that don't have global git user.name and user.email configured.
+    'GIT_COMMITTER_EMAIL=me@hatescake.com','GIT_COMMITTER_NAME=Hates','GIT_AUTHOR_NAME=Cake','GIT_AUTHOR_EMAIL=hates@cake.com', 'LOGNAME=hatescake'
+  ]
 
-    /* Call maven tool with java envVars. */
-    withEnv(javaEnv) {
+  /* Call maven tool with java envVars. */
+  withEnv(javaEnv) {
+    if (isUnix()) {
       sh "${mvnHome}/bin/mvn ${args}"
+    } else {
+      bat "${mvnHome}\\bin\\mvn ${args}"
     }
+  }
 }
