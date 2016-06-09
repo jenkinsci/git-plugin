@@ -10,19 +10,56 @@ node {
 
   stage 'Build'
 
-  /* Call the maven build. */
-  mvn "clean install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true"
+  /* Call the maven build.  No tests./ */
+  mvn "clean install -B -V -U -e -DskipTests"
+
+  stage 'Test'
+
+  /* Run tests in parallel on multiple nodes */
+  runParallelTests()
 
   /* Save Results. */
   stage 'Results'
-
-  /* Archive the test results */
-  step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 
   /* Archive the build artifacts */
   step([$class: 'ArtifactArchiver', artifacts: 'target/*.hpi,target/*.jpi'])
 }
 
+void runParallelTests() {
+  /* Request the test groupings.  Based on previous test exection. */
+  def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 4], generateInclusions: true
+
+  def testGroups = [:]
+  for (int i = 0; i < splits.size(); i++) {
+    def split = splits[i]
+
+    testGroups["split${i}"] = {
+      node {
+        checkout scm
+
+        sh 'mvn clean -B -V -U -e'
+
+        def mavenInstall = 'mvn install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true'
+
+        /* Write include or exclude file for maven tests.  Contents provided by splitTests. */
+        if (split.includes) {
+          writeFile file: "target/parallel-test-inclusions.txt", text: split.list.join("\n")
+          mavenInstall += " -Dsurefire.includesFile=target/parallel-test-inclusions.txt"
+        } else {
+          writeFile file: "target/parallel-test-exclusions.txt", text: split.list.join("\n")
+          mavenInstall += " -Dsurefire.excludesFile=target/parallel-test-exclusions.txt"
+        }
+
+        /* Call the maven build with tests. */
+        sh mavenInstall
+
+        /* Archive the test results */
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+      }
+    }
+  }
+  parallel testGroups
+}
 /* Run maven from tool "mvn" */
 void mvn(def args) {
   /* Get jdk tool. */
