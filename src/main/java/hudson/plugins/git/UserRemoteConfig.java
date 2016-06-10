@@ -4,16 +4,24 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Queue;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -23,11 +31,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.regex.Pattern;
-
-import static hudson.Util.*;
+import static hudson.Util.fixEmpty;
+import static hudson.Util.fixEmptyAndTrim;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
@@ -75,19 +80,22 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
-                                                     @QueryParameter String url) {
+                                                     @QueryParameter String url,
+                                                     @QueryParameter String credentialsId) {
             if (project == null || !project.hasPermission(Item.CONFIGURE)) {
-                return new StandardListBoxModel();
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
-                    .withEmptySelection()
-                    .withMatching(
-                            GitClient.CREDENTIALS_MATCHER,
-                            CredentialsProvider.lookupCredentials(StandardCredentials.class,
-                                    project,
-                                    ACL.SYSTEM,
-                                    GitURIRequirementsBuilder.fromUri(url).build())
-                    );
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            project instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf((Queue.Task) project)
+                                    : ACL.SYSTEM,
+                            project,
+                            StandardUsernameCredentials.class,
+                            URIRequirementBuilder.fromUri(url).build(),
+                            GitClient.CREDENTIALS_MATCHER)
+                    .includeCurrentValue(credentialsId);
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
@@ -114,17 +122,22 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             {
                 return FormValidation.ok();
             }
-
-            StandardCredentials credentials = lookupCredentials(project, value, url);
-
-            if (credentials == null) {
-                // no credentials available, can't check
-                return FormValidation.warning("Cannot find any credentials with id " + value);
+            for (ListBoxModel.Option o : CredentialsProvider
+                    .listCredentials(StandardUsernameCredentials.class, project, project instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf((Queue.Task) project)
+                                    : ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(url).build(),
+                            GitClient.CREDENTIALS_MATCHER)) {
+                if (StringUtils.equals(value, o.value)) {
+                    // TODO check if this type of credential is acceptable to the Git client or does it merit warning
+                    // NOTE: we would need to actually lookup the credential to do the check, which may require
+                    // fetching the actual credential instance from a remote credentials store. Perhaps this is
+                    // not required
+                    return FormValidation.ok();
+                }
             }
-
-            // TODO check if this type of credential is acceptible to the Git client or does it merit warning the user
-
-            return FormValidation.ok();
+            // no credentials available, can't check
+            return FormValidation.warning("Cannot find any credentials with id " + value);
         }
 
         public FormValidation doCheckUrl(@AncestorInPath Item project,
