@@ -103,7 +103,6 @@
         </developer>
     </developers>
 
-
   <dependencies>
     <dependency>
       <groupId>joda-time</groupId>
@@ -218,4 +217,3 @@
      </pluginRepository>
   </pluginRepositories>
 </project>
-
