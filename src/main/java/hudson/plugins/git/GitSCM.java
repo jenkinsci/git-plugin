@@ -135,9 +135,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.submoduleCfg = submoduleCfg;
     }
 
-    static private List<UserRemoteConfig> createRepoList(String url) {
-        List<UserRemoteConfig> repoList = new ArrayList<>();
-        repoList.add(new UserRemoteConfig(url, null, null, null));
+    public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
+        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        repoList.add(new UserRemoteConfig(url, null, null, credentialsId));
         return repoList;
     }
 
@@ -149,7 +149,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitSCM(String repositoryUrl) {
         this(
-                createRepoList(repositoryUrl),
+                createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, null);
