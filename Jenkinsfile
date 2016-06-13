@@ -27,21 +27,34 @@ node {
 
 void runParallelTests() {
   /* Request the test groupings.  Based on previous test exection. */
+  /* see https://wiki.jenkins-ci.org/display/JENKINS/Parallel+Test+Executor+Plugin and demo on github
+  /* Using arbitrary parallelism of 4 and "generateInclusions" feature added in v1.8. */
   def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 4], generateInclusions: true
 
+  /* Create dictionary to hold set of parallel test executions. */
   def testGroups = [:]
+
   for (int i = 0; i < splits.size(); i++) {
     def split = splits[i]
 
-    testGroups["split${i}"] = {
+    /* Loop over each record in splits to prepare the testGroups that we'll run in parallel. */
+    /* Split records returned from splitTests contain { includes: boolean, list: List<String> }. */
+    /*     includes = whether list specifies tests to include (true) or tests to exclude (false). */
+    /*     list = list of tests for inclusion or exclusion. */
+    /* The list of inclusions is constructed based on results gathered from */
+    /* the previous successfully completed job. One addtional record will exclude */
+    /* all known tests to run any tests not seen during the previous run.  */
+    testGroups["split${i}"] = {  // example, "split3"
       node {
         checkout scm
 
-        sh 'mvn clean -B -V -U -e'
+        /* Clean each test node to start. */
+        mvn 'clean -B -V -U -e'
 
-        def mavenInstall = 'mvn install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true'
+        def mavenInstall = 'install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true'
 
-        /* Write include or exclude file for maven tests.  Contents provided by splitTests. */
+        /* Write includesFile or excludesFile for tests.  Split record provided by splitTests. */
+        /* Tell maven to read the appropriate file. */
         if (split.includes) {
           writeFile file: "target/parallel-test-inclusions.txt", text: split.list.join("\n")
           mavenInstall += " -Dsurefire.includesFile=target/parallel-test-inclusions.txt"
@@ -51,7 +64,7 @@ void runParallelTests() {
         }
 
         /* Call the maven build with tests. */
-        sh mavenInstall
+        mvn mavenInstall
 
         /* Archive the test results */
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
