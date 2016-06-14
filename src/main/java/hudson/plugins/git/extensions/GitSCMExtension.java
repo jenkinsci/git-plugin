@@ -35,7 +35,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
  * @author Kohsuke Kawaguchi
  * @since 2.0.0
  */
-public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> implements Serializable {
+public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
 
     /**
      * @return <code>true</code> when this extension has a requirement to get a workspace during polling,
