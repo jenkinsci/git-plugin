@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -27,6 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GitUtils implements Serializable {
+    @SuppressFBWarnings(value="SE_BAD_FIELD",
+            justification = "The concrete GitClient implementations are serializable")
     GitClient git;
     TaskListener listener;
 

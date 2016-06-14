@@ -139,14 +139,14 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     }
 
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Hudson.getInstance().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor)Hudson.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     /**
      * All the registered build choosers.
      */
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Hudson.getInstance()
+        return Hudson.getActiveInstance()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 

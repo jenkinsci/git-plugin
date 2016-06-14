@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.model.Job;
 import hudson.model.TaskListener;
@@ -92,6 +93,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @param path affected file path
      * @return The index in the lexicographical sorted filelist
      */
+    @SuppressFBWarnings(value="UC_USELESS_CONDITION", justification = "Assertion may be turned off by cmdline flag")
     protected int getIndexOfPath(Path path) throws IOException {
     	final String pathAsString = path.getPath();
     	final GitChangeSet changeSet = path.getChangeSet();

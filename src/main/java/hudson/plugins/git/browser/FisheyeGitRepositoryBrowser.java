@@ -90,7 +90,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 				return FormValidation.errorWithMarkup("The URL should end like <tt>.../browse/foobar/</tt>");
 
 			// Connect to URL and check content only if we have admin permission
-			if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
+			if (!Hudson.getActiveInstance().hasPermission(Hudson.ADMINISTER))
 				return FormValidation.ok();
 
 			final String finalValue = value;

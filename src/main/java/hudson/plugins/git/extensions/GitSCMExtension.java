@@ -21,6 +21,7 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Map;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
@@ -34,7 +35,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
  * @author Kohsuke Kawaguchi
  * @since 2.0.0
  */
-public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> {
+public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExtension> implements Serializable {
 
     /**
      * @return <code>true</code> when this extension has a requirement to get a workspace during polling,

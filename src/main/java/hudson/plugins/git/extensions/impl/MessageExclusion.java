@@ -23,6 +23,9 @@ import java.util.regex.PatternSyntaxException;
  * @author Kanstantsin Shautsou
  */
 public class MessageExclusion extends GitSCMExtension {
+
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Java Pattern for matching messages to be ignored.
 	 */

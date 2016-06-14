@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
  * @author Kohsuke Kawaguchi
  */
 public class PathRestriction extends GitSCMExtension {
+    private static final long serialVersionUID = 1L;
+
     private final String includedRegions;
     private final String excludedRegions;
 

@@ -6,8 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.*;
 import hudson.*;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
@@ -125,6 +124,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * All the configured extensions attached to this.
      */
+    @SuppressFBWarnings(value = "SE_BAD_FIELD",
+            justification = "DescribableList extends PersistedList, if we can't marshall that, we are in trouble.")
     private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
@@ -848,9 +849,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Plugin depends on git-client which always provides implementations")
     public GitTool resolveGitTool(TaskListener listener) {
         if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
+        GitTool git =  Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
         if (git == null) {
             listener.getLogger().println("selected Git installation does not exists. Using Default");
             git = GitTool.getDefaultInstallation();
@@ -909,6 +911,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return null;
     }
 
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification = "If your project or run aren't serializable you've got bigger problems")
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         final Job project;
         final Run build;
@@ -1375,16 +1378,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return GitSCMExtensionDescriptor.all();
         }
 
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Plugin depends on git-client which always provides implementations")
         public boolean showGitToolOptions() {
-            return Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
+            return Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
 
         /**
          * Lists available toolinstallations.
          * @return  list of available git tools
          */
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "Plugin depends on git-client which always provides implementations")
         public List<GitTool> getGitTools() {
-            GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            GitTool[] gitToolInstallations = Hudson.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
         }
 
@@ -1771,6 +1776,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "Helpful to set at runtime")
     public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
 
     /**
