@@ -625,7 +625,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             EnvVars environment = new EnvVars();
             if (project instanceof AbstractProject) {
-                GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false);
+                environment = GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false);
             } else {
                 try {
                     environment = project.getEnvironment(null, listener);

@@ -1220,24 +1220,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals(PollingResult.Change.SIGNIFICANT, r.change);
 
         build(project, Result.SUCCESS, "b.txt");
-
-        // Next we try expansion with both a repo an a branch
-        FreeStyleProject project2 = createFreeStyleProject();
-        testRepo.git.branch("gouda");
-        testRepo.git.checkout("gouda");
-        commit("a.txt", johnDoe, "Initial Commit");
-
-        GitRepositoryBrowser browser = new GithubWeb(repoUrl);
-        GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
-                Collections.singletonList(new BranchSpec("*/${cheese}")),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, null,
-                Collections.<GitSCMExtension>emptyList());
-        project2.setScm(scm);
-
-        PollingResult p = project2.poll(StreamTaskListener.fromStdout());
-        assertTrue(p.hasChanges());
     }
 
     @TestExtension("testEnvironmentVariableExpansion")
@@ -1246,7 +1228,31 @@ public class GitSCMTest extends AbstractGitTestCase {
         public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
             envs.put("CAT","");
         }
+    }
 
+    @Test
+    public void testEnvironmentVariableBranchPolling() throws Exception {
+        // Next we try expansion with both a repo an a branch
+        FreeStyleProject project2 =
+                setupProject("*/${cheese}", false, null, null, null, true, null);
+
+        commit("startingpoint", johnDoe, "Initial Commit");
+        git.branch("gouda");
+        git.checkout("gouda");
+        commit("a.txt", johnDoe, "Another commit");
+
+        build(project2, Result.SUCCESS, "a.txt");
+        PollingResult p2 = project2.poll(listener);
+        assertFalse("Polling after build shows changes and it shouldn't!", p2.hasChanges());
+
+        commit("b.txt", johnDoe, "Followup commit");
+        p2 = project2.poll(listener);
+        assertTrue(p2.hasChanges());
+        build(project2, Result.SUCCESS, "b.txt");
+    }
+
+    @TestExtension("testEnvironmentVariableBranchPolling")
+    public static class SupplyCheesyEnvironmentVariable extends EnvironmentContributor {
         @Override
         public void buildEnvironmentFor(Job j, EnvVars envs, TaskListener listener) throws IOException, InterruptedException {
             envs.put("cheese", "gouda");
