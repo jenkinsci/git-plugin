@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
-import hudson.model.Job;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
@@ -98,7 +97,7 @@ public final class GitStep extends SCMStep {
             return delegate.doFillCredentialsIdItems(project, url);
         }
 
-        public FormValidation doCheckUrl(@AncestorInPath Job project,
+        public FormValidation doCheckUrl(@AncestorInPath Item project,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
             return delegate.doCheckUrl(project, credentialsId, value);

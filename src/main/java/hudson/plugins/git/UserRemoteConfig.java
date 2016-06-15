@@ -10,12 +10,10 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
-import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -129,7 +127,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckUrl(@AncestorInPath Job project,
+        public FormValidation doCheckUrl(@AncestorInPath Item project,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
@@ -146,7 +144,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
 
             // get git executable on master
-            final EnvVars environment = project.getEnvironment(Jenkins.getActiveInstance(), TaskListener.NULL);
+            final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
 
             GitClient git = Git.with(TaskListener.NULL, environment)
                     .using(GitTool.getDefaultInstallation().getGitExe())

@@ -8,11 +8,9 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
-import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -35,21 +33,6 @@ public class GitUtils implements Serializable {
     public GitUtils(TaskListener listener, GitClient git) {
         this.git = git;
         this.listener = listener;
-    }
-
-    public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
-        Jenkins j = Jenkins.getActiveInstance();
-        if (workspace != null && workspace.isRemote()) {
-            for (Computer c : j.getComputers()) {
-                if (c.getChannel() == workspace.getChannel()) {
-                    Node n = c.getNode();
-                    if (n != null) {
-                        return n;
-                    }
-                }
-            }
-        }
-        return j;
     }
 
     /**
@@ -242,12 +225,12 @@ public class GitUtils implements Serializable {
                     }
                 }
             } else {
-                env = p.getEnvironment(workspaceToNode(ws), TaskListener.NULL);
+                env = new EnvVars(System.getenv());
             }
 
             p.getScm().buildEnvVars(b,env);
         } else {
-            env = p.getEnvironment(workspaceToNode(ws), listener);
+            env = new EnvVars(System.getenv());
         }
 
         String rootUrl = Hudson.getInstance().getRootUrl();
