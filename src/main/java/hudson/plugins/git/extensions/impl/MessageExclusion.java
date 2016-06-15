@@ -23,7 +23,6 @@ import java.util.regex.PatternSyntaxException;
  * @author Kanstantsin Shautsou
  */
 public class MessageExclusion extends GitSCMExtension {
-
 	/**
 	 * Java Pattern for matching messages to be ignored.
 	 */

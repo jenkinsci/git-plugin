@@ -911,7 +911,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return null;
     }
 
-    @SuppressFBWarnings(value="SE_BAD_FIELD", justification = "If your project or run aren't serializable you've got bigger problems")
+    @SuppressFBWarnings(value="SE_BAD_FIELD",
+            justification = "If your project or run can't at least be marshalled by XStream then you've got bigger problems.")
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         final Job project;
         final Run build;
