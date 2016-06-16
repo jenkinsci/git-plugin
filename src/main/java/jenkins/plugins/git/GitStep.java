@@ -98,10 +98,10 @@ public final class GitStep extends SCMStep {
             return delegate.doFillCredentialsIdItems(project, url);
         }
 
-        public FormValidation doCheckUrl(@AncestorInPath Job project,
+        public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
-            return delegate.doCheckUrl(project, credentialsId, value);
+            return delegate.doCheckUrl(item, credentialsId, value);
         }
 
         @Override
