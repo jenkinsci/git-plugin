@@ -152,7 +152,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             if (item instanceof Job) {
                 environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
             } else {
-                environment = jenkins.getComputer("(master)").buildEnvironment(TaskListener.NULL);
+                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
             }
 
             GitClient git = Git.with(TaskListener.NULL, environment)
