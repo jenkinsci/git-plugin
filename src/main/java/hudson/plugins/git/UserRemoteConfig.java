@@ -8,12 +8,15 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -127,11 +130,11 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckUrl(@AncestorInPath Item project,
+        public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }
 
@@ -144,12 +147,18 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
 
             // get git executable on master
-            final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
+            EnvVars environment;
+            final Jenkins jenkins = Jenkins.getActiveInstance();
+            if (item instanceof Job) {
+                environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
+            } else {
+                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
+            }
 
             GitClient git = Git.with(TaskListener.NULL, environment)
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
-            git.addDefaultCredentials(lookupCredentials(project, credentialsId, url));
+            git.addDefaultCredentials(lookupCredentials(item, credentialsId, url));
 
             // attempt to connect the provided URL
             try {
