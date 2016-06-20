@@ -1,11 +1,8 @@
 package hudson.plugins.git;
 
-import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -23,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
@@ -40,12 +38,20 @@ public class GitStatusTest extends AbstractGitProject {
 
     @Before
     public void setUp() throws Exception {
+        GitStatus.setAllowNotifyCommitParameters(false);
+        GitStatus.setSafeParametersForTest(null);
         this.gitStatus = new GitStatus();
         this.requestWithNoParameter = mock(HttpServletRequest.class);
         this.requestWithParameter = mock(HttpServletRequest.class);
         this.repoURL = new File(".").getAbsolutePath();
         this.branch = "**";
         this.sha1 = "7bb68ef21dc90bd4f7b08eca876203b2e049198d";
+    }
+
+    @After
+    public void resetAllowNotifyCommitParameters() throws Exception {
+        GitStatus.setAllowNotifyCommitParameters(false);
+        GitStatus.setSafeParametersForTest(null);
     }
 
     @WithoutJenkins
@@ -72,6 +78,24 @@ public class GitStatusTest extends AbstractGitProject {
         assertEquals("git", this.gitStatus.getUrlName());
     }
 
+    @WithoutJenkins
+    @Test
+    public void testToString() {
+        assertEquals("URL: ", this.gitStatus.toString());
+    }
+
+    @WithoutJenkins
+    @Test
+    public void testAllowNotifyCommitParametersDisabled() {
+        assertEquals("SECURITY-275: ignore arbitrary notifyCommit parameters", false, GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
+    }
+
+    @WithoutJenkins
+    @Test
+    public void testSafeParametersEmpty() {
+        assertEquals("SECURITY-275: Safe notifyCommit parameters", "", GitStatus.SAFE_PARAMETERS);
+    }
+
     @Test
     public void testDoNotifyCommitWithNoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
@@ -84,6 +108,8 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(aTopicTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: ", this.gitStatus.toString());
     }
 
     @Test
@@ -98,6 +124,8 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+
+        assertEquals("URL: nonexistent Branches: ", this.gitStatus.toString());
     }
 
     @Test
@@ -112,20 +140,31 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: master", this.gitStatus.toString());
     }
 
     @Test
     public void testDoNotifyCommitWithTwoBranches() throws Exception {
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
+        SCMTrigger aFeatureTrigger = setupProjectWithTrigger("a", "feature/def", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
+        SCMTrigger bFeatureTrigger = setupProjectWithTrigger("b", "feature/def", false);
 
-        this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic", null);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic,feature/def", null);
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
+        // trigger containing slash is not called in current code, should be
+        // JENKINS-29603 may be related
+        Mockito.verify(aFeatureTrigger, Mockito.never()).run();
+
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+        Mockito.verify(bFeatureTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: master,topic,feature/def", this.gitStatus.toString());
     }
 
     @Test
@@ -140,6 +179,22 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(aTopicTrigger, Mockito.never()).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: nonexistent", this.gitStatus.toString());
+    }
+
+    @Test
+    public void testDoNotifyCommitWithSlashesInBranchNames() throws Exception {
+        SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
+        SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
+
+        SCMTrigger aSlashesTrigger = setupProjectWithTrigger("a", "name/with/slashes", false);
+
+        this.gitStatus.doNotifyCommit(requestWithParameter, "a", "name/with/slashes", null);
+        Mockito.verify(aSlashesTrigger, Mockito.never()).run(); // Should be run
+        Mockito.verify(bMasterTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: name/with/slashes", this.gitStatus.toString());
     }
 
     @Test
@@ -152,6 +207,8 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a Branches: master", this.gitStatus.toString());
     }
 
     @Test
@@ -160,6 +217,8 @@ public class GitStatusTest extends AbstractGitProject {
 
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "");
         Mockito.verify(aMasterTrigger, Mockito.never()).run();
+
+        assertEquals("URL: a SHA1: ", this.gitStatus.toString());
     }
 
     @Test
@@ -167,10 +226,43 @@ public class GitStatusTest extends AbstractGitProject {
         setupProject("a", "master", null);
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", null, "");
         // no expectation here, however we shouldn't have a build triggered, and no exception
+
+        assertEquals("URL: a SHA1: ", this.gitStatus.toString());
+    }
+
+    @Test
+    public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameterAllowed() throws Exception {
+        doNotifyCommitWithTwoBranchesAndAdditionalParameter(true, null);
     }
 
     @Test
     public void testDoNotifyCommitWithTwoBranchesAndAdditionalParameter() throws Exception {
+        doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, null);
+    }
+
+    @Test
+    public void testDoNotifyCommitWithTwoBranchesAndAdditionalSafeParameter() throws Exception {
+        doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "paramKey1");
+    }
+
+    @Test
+    public void testDoNotifyCommitWithTwoBranchesAndAdditionalUnsafeParameter() throws Exception {
+        doNotifyCommitWithTwoBranchesAndAdditionalParameter(false, "does,not,include,param");
+    }
+
+    private void doNotifyCommitWithTwoBranchesAndAdditionalParameter(final boolean allowed, String safeParameters) throws Exception {
+        if (allowed) {
+            GitStatus.setAllowNotifyCommitParameters(true);
+        }
+
+        boolean allowedParamKey1 = allowed;
+        if (safeParameters != null) {
+            GitStatus.setSafeParametersForTest(safeParameters);
+            if (safeParameters.contains("paramKey1")) {
+                allowedParamKey1 = true;
+            }
+        }
+
         SCMTrigger aMasterTrigger = setupProjectWithTrigger("a", "master", false);
         SCMTrigger aTopicTrigger = setupProjectWithTrigger("a", "topic", false);
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
@@ -178,7 +270,6 @@ public class GitStatusTest extends AbstractGitProject {
 
         Map<String, String[]> parameterMap = new HashMap<>();
         parameterMap.put("paramKey1", new String[] {"paramValue1"});
-        parameterMap.put("paramKey2", new String[] {"paramValue2"});
         when(requestWithParameter.getParameterMap()).thenReturn(parameterMap);
 
         this.gitStatus.doNotifyCommit(requestWithParameter, "a", "master,topic", null);
@@ -187,22 +278,10 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
 
-        assertAdditionalParameters(aMasterTrigger.getProjectActions());
-        assertAdditionalParameters(aTopicTrigger.getProjectActions());
-
-    }
-
-    private void assertAdditionalParameters(Collection<? extends Action> actions) {
-        for (Action action: actions) {
-            if (action instanceof ParametersAction) {
-                final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
-                assertEquals(2, parameters.size());
-                for (ParameterValue value : parameters) {
-                    assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))
-                            || (value.getName().equals("paramKey2") && value.getValue().equals("paramValue2")));
-                }
-            }
-        }
+        String expected = "URL: a Branches: master,topic"
+                + (allowedParamKey1 ? " Parameters: paramKey1='paramValue1'" : "")
+                + (allowedParamKey1 ? " More parameters: paramKey1='paramValue1'" : "");
+        assertEquals(expected, this.gitStatus.toString());
     }
 
     private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
@@ -298,7 +377,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
-    public void testDoNotifyCommitNoParameters() throws Exception {
+    public void testDoNotifyCommit() throws Exception { /* No parameters */
         setupNotifyProject();
         this.gitStatus.doNotifyCommit(requestWithNoParameter, repoURL, branch, sha1);
         assertEquals("URL: " + repoURL
@@ -307,16 +386,48 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
+    public void testDoNotifyCommitWithExtraParameterAllowed() throws Exception {
+        doNotifyCommitWithExtraParameterAllowed(true, null);
+    }
+
+    @Test
     public void testDoNotifyCommitWithExtraParameter() throws Exception {
+        doNotifyCommitWithExtraParameterAllowed(false, null);
+    }
+
+    @Test
+    public void testDoNotifyCommitWithExtraSafeParameter() throws Exception {
+        doNotifyCommitWithExtraParameterAllowed(false, "something,extra,is,here");
+    }
+
+    @Test
+    public void testDoNotifyCommitWithExtraUnsafeParameter() throws Exception {
+        doNotifyCommitWithExtraParameterAllowed(false, "something,is,not,here");
+    }
+
+    private void doNotifyCommitWithExtraParameterAllowed(final boolean allowed, String safeParameters) throws Exception {
+        if (allowed) {
+            GitStatus.setAllowNotifyCommitParameters(true);
+        }
+
+        boolean allowedExtra = allowed;
+        if (safeParameters != null) {
+            GitStatus.setSafeParametersForTest(safeParameters);
+            if (safeParameters.contains("extra")) {
+                allowedExtra = true;
+            }
+        }
         setupNotifyProject();
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1);
-        assertEquals("URL: " + repoURL
+
+        String expected = "URL: " + repoURL
                 + " SHA1: " + sha1
                 + " Branches: " + branch
-                + " Parameters: extra='" + extraValue + "'"
-                + " More parameters: extra='" + extraValue + "'", this.gitStatus.toString());
+                + (allowedExtra ? " Parameters: extra='" + extraValue + "'" : "")
+                + (allowedExtra ? " More parameters: extra='" + extraValue + "'" : "");
+        assertEquals(expected, this.gitStatus.toString());
     }
 
     @Test
@@ -330,7 +441,43 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @Test
+    public void testDoNotifyCommitWithDefaultParameterAllowed() throws Exception {
+        doNotifyCommitWithDefaultParameter(true, null);
+    }
+
+    @Test
     public void testDoNotifyCommitWithDefaultParameter() throws Exception {
+        doNotifyCommitWithDefaultParameter(false, null);
+    }
+
+    @Test
+    public void testDoNotifyCommitWithDefaultSafeParameter() throws Exception {
+        doNotifyCommitWithDefaultParameter(false, "A,B,C,extra");
+    }
+
+    @Test
+    public void testDoNotifyCommitWithDefaultUnsafeParameterC() throws Exception {
+        doNotifyCommitWithDefaultParameter(false, "A,B,extra");
+    }
+
+    @Test
+    public void testDoNotifyCommitWithDefaultUnsafeParameterExtra() throws Exception {
+        doNotifyCommitWithDefaultParameter(false, "A,B,C");
+    }
+
+    private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
+        if (allowed) {
+            GitStatus.setAllowNotifyCommitParameters(true);
+        }
+
+        boolean allowedExtra = allowed;
+        if (safeParameters != null) {
+            GitStatus.setSafeParametersForTest(safeParameters);
+            if (safeParameters.contains("extra")) {
+                allowedExtra = true;
+            }
+        }
+
         // Use official repo for this single test
         this.repoURL = "https://github.com/jenkinsci/git-plugin.git";
         FreeStyleProject project = setupNotifyProject();
@@ -351,11 +498,15 @@ public class GitStatusTest extends AbstractGitProject {
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
         this.gitStatus.doNotifyCommit(requestWithParameter, repoURL, branch, sha1);
-        assertEquals("URL: " + repoURL
+
+        String expected = "URL: " + repoURL
                 + " SHA1: " + sha1
                 + " Branches: " + branch
-                + " Parameters: extra='" + extraValue + "'"
-                + " More parameters: extra='" + extraValue + "',A='aaa',C='ccc',B='$A$C'", this.gitStatus.toString());
+                + (allowedExtra ? " Parameters: extra='" + extraValue + "'" : "")
+                + " More parameters: "
+                + (allowedExtra ? "extra='" + extraValue + "'," : "")
+                + "A='aaa',C='ccc',B='$A$C'";
+        assertEquals(expected, this.gitStatus.toString());
     }
 
     /**
