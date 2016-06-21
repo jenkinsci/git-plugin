@@ -10,10 +10,12 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -127,13 +129,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckUrl(@AncestorInPath Item project,
+        public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (Under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
-            if (project == null || !project.hasPermission(CredentialsProvider.USE_ITEM)) {
+            if (item == null || !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
 
@@ -146,12 +148,18 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return FormValidation.ok();
 
             // get git executable on master
-            final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
+            EnvVars environment;
+            final Jenkins jenkins = Jenkins.getActiveInstance();
+            if (item instanceof Job) {
+                environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
+            } else {
+                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
+            }
 
             GitClient git = Git.with(TaskListener.NULL, environment)
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
-            git.addDefaultCredentials(lookupCredentials(project, credentialsId, url));
+            git.addDefaultCredentials(lookupCredentials(item, credentialsId, url));
 
             // attempt to connect the provided URL
             try {

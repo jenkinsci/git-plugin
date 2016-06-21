@@ -15,7 +15,6 @@ import java.util.List;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jvnet.hudson.test.HudsonTestCase;
 
 public class TestGitRepo {
 	protected String name; // The name of this repository.
@@ -31,11 +30,6 @@ public class TestGitRepo {
 	public final PersonIdent johnDoe = new PersonIdent("John Doe", "john@doe.com");
 	public final PersonIdent janeDoe = new PersonIdent("Jane Doe", "jane@doe.com");
     
-	public TestGitRepo(String name, HudsonTestCase forTest, TaskListener listener)
-            throws IOException, InterruptedException {
-        this(name, forTest.createTmpDir(), listener);
-    }
-
     public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;

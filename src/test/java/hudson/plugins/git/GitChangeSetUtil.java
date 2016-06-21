@@ -1,6 +1,18 @@
 package hudson.plugins.git;
 
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.TaskListener;
 import hudson.scm.EditType;
+import hudson.util.StreamTaskListener;
+
+import org.eclipse.jgit.lib.ObjectId;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,7 +36,7 @@ public class GitChangeSetUtil {
         return genChangeSet(authorOrCommitter, useLegacyFormat, true);
     }
 
-    static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
+    public static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
         ArrayList<String> lines = new ArrayList<String>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");
@@ -100,4 +112,10 @@ public class GitChangeSetUtil {
         }
     }
 
+    public static GitChangeSet genChangeSet(ObjectId sha1, String gitImplementation, boolean authorOrCommitter) throws IOException, InterruptedException {
+        EnvVars envVars = new EnvVars();
+        TaskListener listener = StreamTaskListener.fromStdout();
+        GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(gitImplementation).getClient();
+        return new GitChangeSet(git.showRevision(sha1), authorOrCommitter);
+    }
 }

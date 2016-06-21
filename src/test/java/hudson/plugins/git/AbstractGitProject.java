@@ -24,11 +24,9 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
-import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
@@ -50,12 +48,14 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import static org.junit.Assert.*;
+
 import org.junit.Rule;
 
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -204,7 +204,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -215,7 +215,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final FreeStyleBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
@@ -226,7 +226,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String... expectedNewlyCommittedFiles) throws Exception {
-        final MatrixBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        final MatrixBuild build = project.scheduleBuild2(0).get();
         for (final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -237,7 +237,7 @@ public class AbstractGitProject extends AbstractGitRepository {
     }
 
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
-        return build.getWorkspace().act(new FilePath.FileCallable<String>() {
+        return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
             public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 try {
                     ObjectId oid = Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/" + branch);
