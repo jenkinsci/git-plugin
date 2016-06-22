@@ -257,8 +257,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
-        boolean ok = cacheDir.getParentFile().mkdirs();
-        if (!ok) LOGGER.info("Failed mkdirs of " + cacheDir.getParent());
+        File parentDir = cacheDir.getParentFile();
+        if (!parentDir.isDirectory()) {
+            boolean ok = parentDir.mkdirs();
+            if (!ok) LOGGER.info("Failed mkdirs of " + parentDir.getPath());
+        }
         return cacheDir;
     }
 
@@ -323,14 +326,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
       StringBuilder quotedBranches = new StringBuilder();
       for (String wildcard : branches.split(" ")){
         StringBuilder quotedBranch = new StringBuilder();
-        for(String branch : wildcard.split("\\*")){
-          if (wildcard.startsWith("*") || quotedBranches.length()>0) {
+        for(String branch : wildcard.split("(?=[*])|(?<=[*])")){
+          if (branch.equals("*")) {
             quotedBranch.append(".*");
+          } else if (!branch.isEmpty()) {
+            quotedBranch.append(Pattern.quote(branch));
           }
-          quotedBranch.append(Pattern.quote(branch));
-        }
-        if (wildcard.endsWith("*")){
-          quotedBranch.append(".*");
         }
         if (quotedBranches.length()>0) {
           quotedBranches.append("|");
@@ -378,6 +379,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         public int hashCode() {
             return hash != null ? hash.hashCode() : 0;
         }
+
+        @Override
+        public String toString() {
+            return hash;
+        }
+
     }
 
     public static class SpecificRevisionBuildChooser extends BuildChooser {

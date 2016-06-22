@@ -1,20 +1,5 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <script><![CDATA[
-    function encodeAllInputs(sep, form, field) {
-        var inputs = Form.getInputs(form, null, field);
-        if (inputs.length == 0)
-            return "";
-
-        var rv = sep;
-        for (var i = 0; i < inputs.length; ++i) {
-            if (i != 0)
-                rv += "&";
-            rv += field+"="+encode(inputs[i].value);
-        }
-        return rv;
-    }
-    ]]></script>
     <f:entry field="pushOnlyIfSuccess"
              title="${%Push Only If Build Succeeds}">
       <f:checkbox />

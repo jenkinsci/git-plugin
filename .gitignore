@@ -18,3 +18,4 @@ pom.xml.releaseBackup
 # vim
 *.swp
 Session.vim
+/nbproject/
