@@ -10,19 +10,24 @@ node {
 
   stage 'Build'
 
-  /* Call the maven build.  No tests./ */
-  mvn "clean install -B -V -U -e -DskipTests"
+  /* Call the maven build (with timeout).  No tests. */
+  timeout(5) {
+    mvn "clean install -B -V -U -e -DskipTests"
+  }
 
   stage 'Test'
 
-  /* Run tests in parallel on multiple nodes */
-  runParallelTests()
+  /* Run tests in parallel on multiple nodes (with timeout). */
+  timeout(20) {
+    runParallelTests()
+  }
+
 
   /* Save Results. */
   stage 'Results'
 
   /* Archive the build artifacts */
-  step([$class: 'ArtifactArchiver', artifacts: 'target/*.hpi,target/*.jpi'])
+  archive includes: 'target/*.hpi,target/*.jpi'
 }
 
 void runParallelTests() {
