@@ -109,6 +109,10 @@ public class GithubWebTest {
         assertEquals(GITHUB_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#diff-0", String.valueOf(fileLink));
     }
 
+    private String repoUrl(String baseUrl, boolean add_git_suffix, boolean add_slash_suffix) {
+        return baseUrl + (add_git_suffix ? ".git" : "") + (add_slash_suffix ? "/" : "");
+    }
+        
     @Test
     public void testGuessBrowser() {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
@@ -116,11 +120,20 @@ public class GithubWebTest {
         assertGuessURL("https://github.com/kohsuke/msv", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@git.apache.org:whatever.git", null);
+        final boolean allowed [] = { Boolean.TRUE, Boolean.FALSE };
+        for (final boolean add_git_suffix : allowed) {
+            for (final boolean add_slash_suffix : allowed) {
+                assertGuessURL(repoUrl("git@github.com:kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("https://github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("ssh://github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("ssh://git@github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+            }
+        }
     }
     private void assertGuessURL(String repo, String web) {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
-        assertEquals(web, actual);
+        assertEquals("For repo '" + repo + "':", web, actual);
     }
 
     @Issue("JENKINS-33409")
