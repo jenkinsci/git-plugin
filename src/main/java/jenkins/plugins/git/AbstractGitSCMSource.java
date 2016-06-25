@@ -42,6 +42,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.util.Build;
@@ -109,6 +110,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public abstract String getIncludes();
 
     public abstract String getExcludes();
+
+    public abstract GitRepositoryBrowser getBrowser();
+
+    public abstract void setBrowser(GitRepositoryBrowser browser);
+
+    public abstract String getGitTool();
+
+    public abstract void setGitTool(String gitTool);
+
+    public abstract List<GitSCMExtension> getExtensions();
+
+    public abstract void setExtensions(List<GitSCMExtension> extensions);
 
     public String getRemoteName() {
       return "origin";
@@ -279,11 +292,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         BuildChooser buildChooser = revision instanceof SCMRevisionImpl ? new SpecificRevisionBuildChooser(
                 (SCMRevisionImpl) revision) : new DefaultBuildChooser();
+        List<GitSCMExtension> extensions = getExtensions();
         return new GitSCM(
                 getRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head.getName())),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+                getBrowser(), getGitTool(),
+                extensions.isEmpty() ? Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)) : extensions);
     }
 
     protected List<UserRemoteConfig> getRemoteConfigs() {

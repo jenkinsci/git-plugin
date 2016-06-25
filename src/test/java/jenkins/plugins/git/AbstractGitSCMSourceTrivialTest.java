@@ -4,6 +4,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitSCMExtension;
+
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.SCMHead;
@@ -139,6 +142,33 @@ public class AbstractGitSCMSourceTrivialTest {
 
         public List<RefSpec> getRefSpecs() {
             return expectedRefSpecs;
+        }
+
+        @Override
+        public GitRepositoryBrowser getBrowser() {
+            return null;
+        }
+
+        @Override
+        public void setBrowser(GitRepositoryBrowser browser) {
+        }
+
+        @Override
+        public String getGitTool() {
+            return null;
+        }
+
+        @Override
+        public void setGitTool(String gitTool) {
+        }
+
+        @Override
+        public List<GitSCMExtension> getExtensions() {
+            return new ArrayList<GitSCMExtension>();
+        }
+
+        @Override
+        public void setExtensions(List<GitSCMExtension> extensions) {
         }
     }
 

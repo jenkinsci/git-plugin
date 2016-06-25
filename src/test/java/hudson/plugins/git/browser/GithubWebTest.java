@@ -8,6 +8,7 @@ import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.RepositoryBrowser;
 
 import java.io.IOException;
@@ -164,6 +165,27 @@ public class GithubWebTest {
                 result.add(new RefSpec(refSpec));
             }
             return result;
+        }
+        @Override
+        public GitRepositoryBrowser getBrowser() {
+            return null;
+        }
+        @Override
+        public void setBrowser(GitRepositoryBrowser browser) {
+        }
+        @Override
+        public String getGitTool() {
+            return null;
+        }
+        @Override
+        public void setGitTool(String gitTool) {
+        }
+        @Override
+        public List<GitSCMExtension> getExtensions() {
+            return new ArrayList<GitSCMExtension>();
+        }
+        @Override
+        public void setExtensions(List<GitSCMExtension> extensions) {
         }
     }
 
