@@ -112,6 +112,8 @@ public class GithubWebTest {
     @Test
     public void testGuessBrowser() {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
+        assertGuessURL("https://github.com/kohsuke/msv/", "https://github.com/kohsuke/msv/");
+        assertGuessURL("https://github.com/kohsuke/msv", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@git.apache.org:whatever.git", null);
     }
