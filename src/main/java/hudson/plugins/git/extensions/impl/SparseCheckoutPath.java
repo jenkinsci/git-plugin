@@ -55,7 +55,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     public Descriptor<SparseCheckoutPath> getDescriptor()
     {
-        return Hudson.getInstance().getDescriptor(getClass());
+        return Hudson.getActiveInstance().getDescriptor(getClass());
     }
 
     @Extension

@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -29,6 +30,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GitUtils implements Serializable {
+    @SuppressFBWarnings(value="SE_BAD_FIELD",
+            justification = "The concrete GitClient implementations are serializable")
     GitClient git;
     TaskListener listener;
 
@@ -277,8 +280,17 @@ public class GitUtils implements Serializable {
         // add env contributing actions' values from last build to environment - fixes JENKINS-22009
         addEnvironmentContributingActionsValues(env, b);
 
-        EnvVars.resolve(env);
+        // Just use environment contributors
 
+        try {  // Getting environment may trigger remoting in some cases which can throw errors.
+            for (EnvironmentContributor ec : EnvironmentContributor.all().reverseView())
+                ec.buildEnvironmentFor(p, env, listener);
+        } catch (IOException ioe) {
+            LOGGER.log(Level.WARNING, "Error getting polling environment", ioe);
+        } catch (InterruptedException ie) {
+            LOGGER.log(Level.WARNING, "Error getting polling environment", ie);
+        }
+        EnvVars.resolve(env);
         return env;
     }
 

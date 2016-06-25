@@ -1,8 +1,10 @@
 package hudson.plugins.git;
 
 import hudson.EnvVars;
+
 import java.util.HashMap;
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
