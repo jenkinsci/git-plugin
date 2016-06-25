@@ -319,6 +319,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return browser;
     }
 
+    private static final Pattern[] URL_PATTERNS = {
+        Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("ssh://(?:git@)?github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+    };
+
     @Override public RepositoryBrowser<?> guessBrowser() {
         Set<String> webUrls = new HashSet<String>();
         if (remoteRepositories != null) {
@@ -326,17 +332,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (URIish uriIsh : config.getURIs()) {
                     String uri = uriIsh.toString();
                     // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
-                    Matcher m = Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*").matcher(uri);
-                    if (m.matches()) {
-                        webUrls.add("https://github.com/" + m.group(1) + "/");
-                    }
-                    m = Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*").matcher(uri);
-                    if (m.matches()) {
-                        webUrls.add("https://github.com/" + m.group(1) + "/");
-                    }
-                    m = Pattern.compile("ssh://(?:git@)?github[.]com/([^/]+/[^/]+?)([.]git)*/*").matcher(uri);
-                    if (m.matches()) {
-                        webUrls.add("https://github.com/" + m.group(1) + "/");
+                    for (Pattern p : URL_PATTERNS) {
+                        Matcher m = p.matcher(uri);
+                        if (m.matches()) {
+                            webUrls.add("https://github.com/" + m.group(1) + "/");
+                        }
                     }
                 }
             }
