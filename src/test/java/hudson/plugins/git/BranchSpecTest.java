@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
 
-public class TestBranchSpec {
+public class BranchSpecTest {
     @Test
     public void testMatch() {
 
@@ -171,6 +171,17 @@ public class TestBranchSpec {
     	assertFalse(m.matches("origin/release-2015010"));
     	assertFalse(m.matches("origin/release-201501011"));
     	assertFalse(m.matches("origin/release-20150101-something"));
+    }
+
+    @Test
+    public void testUsesJavaPatternToExcludeMultipleBranches() {
+        BranchSpec m = new BranchSpec(":^(?!origin/master$|origin/develop$).*");
+        assertTrue(m.matches("origin/branch1"));
+        assertTrue(m.matches("origin/branch-2"));
+        assertTrue(m.matches("origin/master123"));
+        assertTrue(m.matches("origin/develop-123"));
+        assertFalse(m.matches("origin/master"));
+        assertFalse(m.matches("origin/develop"));
     }
 
     private EnvVars createEnvMap(String key, String value) {
