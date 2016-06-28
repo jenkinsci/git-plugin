@@ -161,7 +161,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitSCM(String repositoryUrl, String defaultBranch) {
         this(
-                createRepoList(repositoryUrl),
+                createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec(defaultBranch)),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, null);
