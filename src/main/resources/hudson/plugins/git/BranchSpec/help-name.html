@@ -53,7 +53,25 @@
            The syntax is of the form: <tt>:regexp</tt>.
            Regular expression syntax in branches to build will only
            build those branches whose names match the regular
-           expression.
+           expression.</br>
+           Examples:<br/>
+            <ul>
+                <li><tt>:^(?!(origin/prefix)).*</tt></li>
+                <ul>
+                    <li>matches: <tt>origin</tt> or <tt>origin/master</tt> or <tt>origin/feature</tt></li>
+                    <li>does not match: <tt>origin/prefix</tt> or <tt>origin/prefix_123</tt> or <tt>origin/prefix-abc</tt></li>
+                </ul>
+                <li><tt>:origin/release-\d{8}</tt></li>
+                <ul>
+                    <li>matches: <tt>origin/release-20150101</tt></li>
+                    <li>does not match: <tt>origin/release-2015010</tt> or <tt>origin/release-201501011</tt> or <tt>origin/release-20150101-something</tt></li>
+                </ul>
+                <li><tt>:^(?!origin/master$|origin/develop$).*</tt></li>
+                <ul>
+                    <li>matches: <tt>origin/branch1</tt> or <tt>origin/branch-2</tt> or <tt>origin/master123</tt> or <tt>origin/develop-123</tt></li>
+                    <li>does not match: <tt>origin/master</tt> or <tt>origin/develop</tt></li>
+                </ul>
+            </ul>
     </ul>
   </p>
 </div>
