@@ -15,7 +15,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>2.5.0-SNAPSHOT</version>
+  <version>2.5.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -28,16 +28,12 @@
     <concurrency>2</concurrency>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
+    <workflow.version>1.14.2</workflow.version>
   </properties>
 
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.7.4.201502262128</version>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -69,52 +65,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <java.awt.headless>true</java.awt.headless>
-          </systemPropertyVariables>
-          <!-- Sets the VM argument line used when unit tests are run. -->
-          <argLine>${surefireArgLine}</argLine>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>pre-unit-test</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <!-- Sets the path to the file which contains the execution data. -->
-              <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-              <!--
-                  Sets the name of the property containing the settings
-                  for JaCoCo runtime agent.
-              -->
-              <!-- Uncomment next line to measure and report test coverage -->
-              <propertyName>surefireArgLine</propertyName>
-            </configuration>
-          </execution>
-          <execution>
-            <id>post-unit-test</id>
-            <phase>test</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <!-- Sets the path to the file which contains the execution data. -->
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-              <!-- Sets the output directory for the code coverage report. -->
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
@@ -129,6 +79,17 @@
                 </enforceBytecodeVersion>
               </rules>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <!-- TODO check if http://stackoverflow.com/q/1771561/12916 lets us add the test-jar goal to attach-sources/attach-javadocs executions from the inherited jenkins-release profile -->
+              <goal>test-jar</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -186,6 +147,11 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
       <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-scm-step</artifactId>
+      <version>${workflow.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -252,6 +218,20 @@
           <artifactId>sisu-guava</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-aggregator</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

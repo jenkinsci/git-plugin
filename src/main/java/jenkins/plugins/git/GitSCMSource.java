@@ -27,24 +27,36 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
+import hudson.model.Descriptor;
 import hudson.model.ParameterValue;
 import hudson.plugins.git.GitStatus;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.scm.RepositoryBrowser;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -76,6 +88,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final boolean ignoreOnPushNotifications;
 
+    private GitRepositoryBrowser browser;
+
+    private String gitTool;
+
+    private List<GitSCMExtension> extensions;
+
     @DataBoundConstructor
     public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
@@ -88,6 +106,42 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     public boolean isIgnoreOnPushNotifications() {
       return ignoreOnPushNotifications;
+    }
+
+    @Override
+    public GitRepositoryBrowser getBrowser() {
+        return browser;
+    }
+
+    @Override
+    @DataBoundSetter
+    public void setBrowser(GitRepositoryBrowser browser) {
+        this.browser = browser;
+    }
+
+    @Override
+    public String getGitTool() {
+        return gitTool;
+    }
+
+    @Override
+    @DataBoundSetter
+    public void setGitTool(String gitTool) {
+        this.gitTool = gitTool;
+    }
+
+    @Override
+    public List<GitSCMExtension> getExtensions() {
+        if (extensions == null) {
+            extensions = new ArrayList<GitSCMExtension>();
+        }
+        return extensions;
+    }
+
+    @Override
+    @DataBoundSetter
+    public void setExtensions(List<GitSCMExtension> extensions) {
+        this.extensions = Util.fixNull(extensions);
     }
 
     @Override
@@ -140,7 +194,25 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
+        public GitSCM.DescriptorImpl getSCMDescriptor() {
+            return (GitSCM.DescriptorImpl)Jenkins.getInstance().getDescriptor(GitSCM.class);
+        }
 
+        public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
+            return getSCMDescriptor().getExtensionDescriptors();
+        }
+
+        public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
+            return getSCMDescriptor().getBrowserDescriptors();
+        }
+
+        public boolean showGitToolOptions() {
+            return getSCMDescriptor().showGitToolOptions();
+        }
+
+        public ListBoxModel doFillGitToolItems() {
+            return getSCMDescriptor().doFillGitToolItems();
+        }
     }
 
     @Extension
