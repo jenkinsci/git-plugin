@@ -196,7 +196,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         else {
             EnvVars environment = build.getEnvironment(listener);
 
-            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace());
+            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace(), launcher);
 
             URIish remoteURI;
 

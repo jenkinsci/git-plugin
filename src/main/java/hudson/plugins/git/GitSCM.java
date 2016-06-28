@@ -601,7 +601,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
+            GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null, launcher);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -676,7 +676,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, node, workingDirectory);
+        GitClient git = createClient(listener, environment, project, node, workingDirectory, launcher);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -721,19 +721,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
      * perform additional git operations.
      */
-    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?, ?> build, FilePath workspace, Launcher launcher) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws);
+        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, launcher);
     }
 
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
+    @Deprecated
+    GitClient createClient(TaskListener listener, EnvVars environment, Run<?, ?> build, FilePath workspace) throws IOException, InterruptedException {
+        return createClient(listener, environment, build, workspace, null);
+    }
+
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, Launcher launcher) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
-        Git git = Git.with(listener, environment).in(ws).using(gitExe);
+        Git git = Git.with(listener, environment).in(ws).using(gitExe).withLauncher(launcher);
 
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
@@ -1074,7 +1079,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
-        GitClient git = createClient(listener, environment, build, workspace);
+        GitClient git = createClient(listener, environment, build, workspace, launcher);
 
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
