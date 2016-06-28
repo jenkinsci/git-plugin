@@ -33,6 +33,16 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+/**
+ * Compound build chooser enables excluding specific branches/wildcards from an age/ancestor restriction. 
+ * First, the provided revisions are filtered to remove any of the specified branches via the Inverse Build Chooser algorithm,
+ * then the remaining revisions undergo an Ancestor check to determine the final revision set to build.<br>
+ * <br>
+ * Configurations are dual-sourced: job config provides the branch filters to the Inverse algorithm, while the plugin config
+ * provides the ancestor and age restriction.
+ * 
+ * @author Zalan Meggyesi
+ */
 public class CompoundBuildChooser extends DefaultBuildChooser {
 
     private final Integer maximumAgeInDays;
@@ -53,8 +63,12 @@ public class CompoundBuildChooser extends DefaultBuildChooser {
     }
 
     @Override
-    public Collection<Revision> getCandidateRevisions(final boolean isPollCall, String branchSpec,
-                GitClient git, final TaskListener listener, final BuildData data, BuildChooserContext context)
+    public Collection<Revision> getCandidateRevisions(final boolean isPollCall,
+    		String branchSpec,
+            GitClient git,
+            final TaskListener listener,
+            final BuildData data,
+            BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
         
     	// Start with the inverse filtering
@@ -63,39 +77,28 @@ public class CompoundBuildChooser extends DefaultBuildChooser {
         List<Revision> branchRevs = new ArrayList<Revision>(utils.getAllBranchRevisions());
         List<BranchSpec> specifiedBranches = gitSCM.getBranches();
 
-        // Iterate over all the revisions pointed to by branches in the repository
         for (Iterator<Revision> i = branchRevs.iterator(); i.hasNext(); ) {
             Revision revision = i.next();
-
-            // Iterate over each branch for this revision
             for (Iterator<Branch> j = revision.getBranches().iterator(); j.hasNext(); ) {
                 Branch branch = j.next();
-
-                // Check whether this branch matches a branch spec from the job config
                 for (BranchSpec spec : specifiedBranches) {
-                    // If the branch matches, throw it away as we do *not* want to build it
                     if (spec.matches(branch.getName(), env) || HEAD.matches(branch.getName(), env)) {
                         j.remove();
                         break;
                     }
                 }
             }
-
-            // If we discarded all branches for this revision, ignore the whole revision
             if (revision.getBranches().isEmpty()) {
                 i.remove();
             }
         }
 
-        // Filter out branch revisions that aren't leaves
         branchRevs = utils.filterTipBranches(branchRevs);
 
-        // Warn the user that they've done something crazy such as excluding all branches
         if (branchRevs.isEmpty()) {
             listener.getLogger().println(Messages.BuildChooser_Inverse_EverythingExcluded());
         }
 
-        // Filter out branch revisions that have already been built
         for (Iterator<Revision> i = branchRevs.iterator(); i.hasNext(); ) {
             Revision r = i.next();
             if (data.hasBeenBuilt(r.getSha1())) {
@@ -103,7 +106,6 @@ public class CompoundBuildChooser extends DefaultBuildChooser {
             }
         }
 
-        // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
         final List<Revision> in = branchRevs;
         
         // filter candidates based on branch age and ancestry
@@ -166,12 +168,16 @@ public class CompoundBuildChooser extends DefaultBuildChooser {
         
         public CommitAgeFilter(Integer oldestAllowableAgeInDays) {
             if (oldestAllowableAgeInDays != null && oldestAllowableAgeInDays >= 0) {
-                this.oldestAllowableCommitDate = new LocalDate().toDateTimeAtStartOfDay().minusDays(oldestAllowableAgeInDays);
+                this.oldestAllowableCommitDate = new LocalDate()
+                		.toDateTimeAtStartOfDay()
+                		.minusDays(oldestAllowableAgeInDays);
             }
         }
         
         public boolean apply(RevCommit rev) {
-            return new DateTime(rev.getCommitterIdent().getWhen()).isAfter(this.oldestAllowableCommitDate);
+            return new DateTime(rev.getCommitterIdent()
+            		.getWhen())
+            		.isAfter(this.oldestAllowableCommitDate);
         }
         
         public boolean isEnabled() {
