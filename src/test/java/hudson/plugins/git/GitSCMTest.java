@@ -140,7 +140,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         build(projectMasterBranch, Result.SUCCESS, commitFile1);
-      }
+    }
+
+    public void testSpecificRefspecs() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<UserRemoteConfig>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleProject projectWithFoo = setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+        // create branch and make initial commit
+        git.branch("foo");
+        git.checkout().branch("foo");
+        commit(commitFile1, johnDoe, "Commit in foo");
+
+        build(projectWithMaster, Result.FAILURE);
+        build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
 
     @Test
     public void testBranchSpecWithRemotesHierarchical() throws Exception {
