@@ -29,6 +29,6 @@ f.advanced {
 f.entry {
     div(align:"right") {
         input (type:"button", value:_("Add Repository"), class:"repeatable-add show-if-last")
-        input (type:"button", value:_("Delete Repository"), class:"repeatable-delete")
+        input (type:"button", value:_("Delete Repository"), class:"repeatable-delete show-if-not-only")
     }
 }
