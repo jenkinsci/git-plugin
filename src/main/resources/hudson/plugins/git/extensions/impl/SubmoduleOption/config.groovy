@@ -18,7 +18,7 @@ f.entry(title:_("Use credentials from default remote of parent repository"), fie
     f.checkbox()
 }
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
-    f.textbox()
+    f.number(clazz:"number", min:1, step:1)
 }
 
 /*
