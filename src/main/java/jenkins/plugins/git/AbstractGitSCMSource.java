@@ -111,17 +111,37 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public abstract String getExcludes();
 
-    public abstract GitRepositoryBrowser getBrowser();
+    /**
+     * Gets {@link GitRepositoryBrowser} to be used with this SCMSource.
+     * @return Repository browser or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    public GitRepositoryBrowser getBrowser() {
+        // Always return null by default
+        return null;
+    }
 
-    public abstract void setBrowser(GitRepositoryBrowser browser);
+    /**
+     * Gets Git tool to be used for this SCM Source.
+     * @return Git Tool or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    @CheckForNull
+    public String getGitTool() {
+        // Always return null by default
+        return null;
+    }
 
-    public abstract String getGitTool();
-
-    public abstract void setGitTool(String gitTool);
-
-    public abstract List<GitSCMExtension> getExtensions();
-
-    public abstract void setExtensions(List<GitSCMExtension> extensions);
+    /**
+     * Gets list of extensions, which should be used with this branch source.
+     * @return List of Extensions to be used. May be empty
+     * @since 2.5.1
+     */
+    @NonNull
+    public List<GitSCMExtension> getExtensions() {
+        // Always return empty list
+        return Collections.emptyList();
+    }
 
     public String getRemoteName() {
       return "origin";

@@ -27,6 +27,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import hudson.Extension;
 import hudson.Util;
@@ -67,6 +68,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * @author Stephen Connolly
@@ -88,8 +91,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final boolean ignoreOnPushNotifications;
 
+    @CheckForNull
     private GitRepositoryBrowser browser;
 
+    @CheckForNull
     private String gitTool;
 
     private List<GitSCMExtension> extensions;
@@ -113,7 +118,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return browser;
     }
 
-    @Override
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
     @DataBoundSetter
     public void setBrowser(GitRepositoryBrowser browser) {
         this.browser = browser;
@@ -124,7 +130,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return gitTool;
     }
 
-    @Override
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
     @DataBoundSetter
     public void setGitTool(String gitTool) {
         this.gitTool = gitTool;
@@ -138,7 +145,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return extensions;
     }
 
-    @Override
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
     @DataBoundSetter
     public void setExtensions(List<GitSCMExtension> extensions) {
         this.extensions = Util.fixNull(extensions);

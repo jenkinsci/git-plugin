@@ -113,7 +113,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private List<BranchSpec> branches;
     private boolean doGenerateSubmoduleConfigurations;
 
+    @CheckForNull
     public String gitTool = null;
+    @CheckForNull
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
@@ -162,9 +164,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            GitRepositoryBrowser browser,
-            String gitTool,
-            List<GitSCMExtension> extensions) {
+            @CheckForNull GitRepositoryBrowser browser,
+            @CheckForNull String gitTool,
+            @NonNull List<GitSCMExtension> extensions) {
 
         // moved from createBranches
         this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
@@ -483,6 +485,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return localBranchName;
     }
 
+    @CheckForNull
     public String getGitTool() {
         return gitTool;
     }
