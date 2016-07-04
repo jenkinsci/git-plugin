@@ -116,6 +116,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @return Repository browser or {@code null} if the default tool should be used.
      * @since 2.5.1
      */
+    @CheckForNull
     public GitRepositoryBrowser getBrowser() {
         // Always return null by default
         return null;
