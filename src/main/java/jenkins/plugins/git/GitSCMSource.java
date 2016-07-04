@@ -66,6 +66,7 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
@@ -134,15 +135,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Restricted(NoExternalUse.class)
     @DataBoundSetter
     public void setGitTool(String gitTool) {
-        this.gitTool = gitTool;
+        this.gitTool = Util.fixEmptyAndTrim(gitTool);
     }
 
     @Override
     public List<GitSCMExtension> getExtensions() {
         if (extensions == null) {
-            extensions = new ArrayList<GitSCMExtension>();
+            return Collections.emptyList();
         }
-        return extensions;
+        return Collections.unmodifiableList(new ArrayList<GitSCMExtension>(extensions));
     }
 
     // For Stapler only
