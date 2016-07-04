@@ -143,33 +143,6 @@ public class AbstractGitSCMSourceTrivialTest {
         public List<RefSpec> getRefSpecs() {
             return expectedRefSpecs;
         }
-
-        @Override
-        public GitRepositoryBrowser getBrowser() {
-            return null;
-        }
-
-        @Override
-        public void setBrowser(GitRepositoryBrowser browser) {
-        }
-
-        @Override
-        public String getGitTool() {
-            return null;
-        }
-
-        @Override
-        public void setGitTool(String gitTool) {
-        }
-
-        @Override
-        public List<GitSCMExtension> getExtensions() {
-            return new ArrayList<GitSCMExtension>();
-        }
-
-        @Override
-        public void setExtensions(List<GitSCMExtension> extensions) {
-        }
     }
 
     private class SCMRevisionImpl extends SCMRevision {
