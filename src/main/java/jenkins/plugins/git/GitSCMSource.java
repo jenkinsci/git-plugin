@@ -27,24 +27,37 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
+import hudson.model.Descriptor;
 import hudson.model.ParameterValue;
 import hudson.plugins.git.GitStatus;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.scm.RepositoryBrowser;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -53,8 +66,11 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * @author Stephen Connolly
@@ -76,6 +92,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final boolean ignoreOnPushNotifications;
 
+    @CheckForNull
+    private GitRepositoryBrowser browser;
+
+    @CheckForNull
+    private String gitTool;
+
+    private List<GitSCMExtension> extensions;
+
     @DataBoundConstructor
     public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
@@ -88,6 +112,45 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     public boolean isIgnoreOnPushNotifications() {
       return ignoreOnPushNotifications;
+    }
+
+    @Override
+    public GitRepositoryBrowser getBrowser() {
+        return browser;
+    }
+
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
+    @DataBoundSetter
+    public void setBrowser(GitRepositoryBrowser browser) {
+        this.browser = browser;
+    }
+
+    @Override
+    public String getGitTool() {
+        return gitTool;
+    }
+
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
+    @DataBoundSetter
+    public void setGitTool(String gitTool) {
+        this.gitTool = Util.fixEmptyAndTrim(gitTool);
+    }
+
+    @Override
+    public List<GitSCMExtension> getExtensions() {
+        if (extensions == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(new ArrayList<GitSCMExtension>(extensions));
+    }
+
+    // For Stapler only
+    @Restricted(NoExternalUse.class)
+    @DataBoundSetter
+    public void setExtensions(List<GitSCMExtension> extensions) {
+        this.extensions = Util.fixNull(extensions);
     }
 
     @Override
@@ -140,7 +203,25 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
+        public GitSCM.DescriptorImpl getSCMDescriptor() {
+            return (GitSCM.DescriptorImpl)Jenkins.getInstance().getDescriptor(GitSCM.class);
+        }
 
+        public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
+            return getSCMDescriptor().getExtensionDescriptors();
+        }
+
+        public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
+            return getSCMDescriptor().getBrowserDescriptors();
+        }
+
+        public boolean showGitToolOptions() {
+            return getSCMDescriptor().showGitToolOptions();
+        }
+
+        public ListBoxModel doFillGitToolItems() {
+            return getSCMDescriptor().doFillGitToolItems();
+        }
     }
 
     @Extension

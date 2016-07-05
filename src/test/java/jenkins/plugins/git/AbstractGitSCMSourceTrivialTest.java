@@ -4,6 +4,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitSCMExtension;
+
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.SCMHead;

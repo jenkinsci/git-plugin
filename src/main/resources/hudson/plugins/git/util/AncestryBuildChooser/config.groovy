@@ -7,7 +7,7 @@ f.description {
 }
 
 f.entry(title:_("Maximum Age of Commit"), field:"maximumAgeInDays") {
-    f.textbox()
+    f.number(clazz:"number", min:0, step:1)
 }
 
 f.description {
