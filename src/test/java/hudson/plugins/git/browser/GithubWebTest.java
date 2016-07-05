@@ -181,27 +181,6 @@ public class GithubWebTest {
             }
             return result;
         }
-        @Override
-        public GitRepositoryBrowser getBrowser() {
-            return null;
-        }
-        @Override
-        public void setBrowser(GitRepositoryBrowser browser) {
-        }
-        @Override
-        public String getGitTool() {
-            return null;
-        }
-        @Override
-        public void setGitTool(String gitTool) {
-        }
-        @Override
-        public List<GitSCMExtension> getExtensions() {
-            return new ArrayList<GitSCMExtension>();
-        }
-        @Override
-        public void setExtensions(List<GitSCMExtension> extensions) {
-        }
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
