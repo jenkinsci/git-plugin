@@ -1039,7 +1039,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             RemoteConfig rc = repos.get(0);
             try {
-                CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName()).refspecs(rc.getFetchRefSpecs());
+                CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
                 }
