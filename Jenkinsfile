@@ -10,18 +10,13 @@ node {
 
   stage 'Build'
 
-  /* Call the maven build (with timeout).  No tests. */
-  timeout(5) {
-    mvn "clean install -B -V -U -e -DskipTests"
-  }
+  /* Call the maven build.  No tests./ */
+  mvn "clean install -B -V -U -e -DskipTests"
 
   stage 'Test'
 
-  /* Run tests in parallel on multiple nodes (with timeout). */
-  timeout(20) {
-    runParallelTests()
-  }
-
+  /* Run tests in parallel on multiple nodes */
+  runParallelTests()
 
   /* Save Results. */
   stage 'Results'
@@ -50,7 +45,7 @@ void runParallelTests() {
     /* the previous successfully completed job. One addtional record will exclude */
     /* all known tests to run any tests not seen during the previous run.  */
     testGroups["split${i}"] = {  // example, "split3"
-      node {
+      node ('highmem'){
         checkout scm
 
         /* Clean each test node to start. */
