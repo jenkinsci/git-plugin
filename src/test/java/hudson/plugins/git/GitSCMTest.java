@@ -142,6 +142,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(projectMasterBranch, Result.SUCCESS, commitFile1);
     }
 
+    @Test
     public void testSpecificRefspecs() throws Exception {
         List<UserRemoteConfig> repos = new ArrayList<UserRemoteConfig>();
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
