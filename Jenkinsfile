@@ -96,12 +96,10 @@ void mvn(def args) {
 
   /* Call maven tool with java envVars. */
   withEnv(javaEnv) {
-    timeout(time: 60, unit: 'MINUTES') {
-      if (isUnix()) {
-        sh "${mvnHome}/bin/mvn ${args}"
-      } else {
-        bat "${mvnHome}\\bin\\mvn ${args}"
-      }
+    if (isUnix()) {
+      sh "${mvnHome}/bin/mvn ${args}"
+    } else {
+      bat "${mvnHome}\\bin\\mvn ${args}"
     }
   }
 }
