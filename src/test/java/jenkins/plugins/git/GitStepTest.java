@@ -253,4 +253,18 @@ public class GitStepTest {
         r.assertLogContains("+edited by build", b);
     }
 
+    @Test
+    public void checkoutTimeout() throws Exception {
+        sampleRepo.init();
+        WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "  checkout(\n" +
+            "    [$class: 'GitSCM', extensions: [[$class: 'CheckoutOption', timeout: 1234]],\n" +
+            "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n" +
+            "  )" +
+            "}"));
+        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        r.assertLogContains("# timeout=1234", b);
+    }
 }
