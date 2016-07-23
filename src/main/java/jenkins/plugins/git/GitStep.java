@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
-import hudson.model.Job;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
