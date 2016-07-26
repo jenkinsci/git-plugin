@@ -53,6 +53,35 @@ public class GitUtils implements Serializable {
     }
 
     /**
+     * Call close method on walk using reflection.  JGit 3 uses
+     * release(), but JGit 4 uses close().  If run-time dependency on
+     * JGit 3 is not satisfied (because JGit 4 is included in git
+     * client plugin 2.0.0), then try calling the JGit 4 close()
+     * method.
+     */
+    public static void callClose(Object walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+            return;
+        } catch (SecurityException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalArgumentException e) {
+            LOGGER.severe("Exception calling walk.close(): " + e);
+        } catch (IllegalAccessException e) {
+            LOGGER.severe("Exception calling walk.close(): " + e);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+        }
+    }
+
+    /**
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.
      * @return list of revisions
@@ -119,40 +148,6 @@ public class GitUtils implements Serializable {
 
         orderedBranches.addAll(revisionBranches);
         return new Revision(revision.getSha1(), orderedBranches);
-    }
-
-    /**
-     * Call close method on walk using reflection.  JGit 3 uses
-     * release(), but JGit 4 uses close().  If run-time dependency on
-     * JGit 3 is not satisfied (because JGit 4 is included in git
-     * client plugin 2.0.0), then try calling the JGit 4 close()
-     * method.
-     */
-    private void callClose(RevWalk walk) {
-        java.lang.reflect.Method closeMethod;
-        try {
-            closeMethod = walk.getClass().getDeclaredMethod("close");
-        } catch (NoSuchMethodException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
-            return;
-        // } catch (java.lang.reflect.InvocationTargetException e) {
-        //     LOGGER.severe("Exception calling walk.close():" + e);
-        //     return;
-        } catch (SecurityException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
-            return;
-        }
-        try {
-            closeMethod.invoke(walk);
-        } catch (IllegalArgumentException e) {
-            LOGGER.severe("Exception calling walk.close(): " + e);
-        } catch (IllegalAccessException e) {
-            LOGGER.severe("Exception calling walk.close(): " + e);
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
-        // } catch (InvocationTargetException e) {
-        //     LOGGER.severe("Exception calling walk.close(): " + e);
-        }
     }
 
     /**

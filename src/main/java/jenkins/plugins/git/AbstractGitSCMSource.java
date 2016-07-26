@@ -183,16 +183,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
-    /**
-     * Call close method on walk using reflection.  JGit 3 uses
-     * release(), but JGit 4 uses close().  If run-time dependency on
-     * JGit 3 is not satisfied (because JGit 4 is included in git
-     * client plugin 2.0.0), then try calling the JGit 4 close()
-     * method.
-     */
-    private void callClose(TreeWalk walk) {
-    }
-
     @NonNull
     @Override
     protected void retrieve(@NonNull final SCMHeadObserver observer,
@@ -264,7 +254,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         try {
                                             tw.release();
                                         } catch (NoSuchMethodError noMethod) {
-                                            callClose(tw);
+                                            hudson.plugins.git.util.GitUtils.callClose(tw);
                                         }
                                     }
                                 }
