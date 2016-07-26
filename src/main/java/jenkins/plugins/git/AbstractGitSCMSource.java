@@ -1,3 +1,4 @@
+
 /*
  * The MIT License
  *
@@ -74,6 +75,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,6 +86,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -183,6 +186,64 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
+    private static void _close(@NonNull Object walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        } catch (SecurityException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private static void _release(TreeWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private void _release(RevWalk walk) {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
+        }
+    }
+
     @NonNull
     @Override
     protected void retrieve(@NonNull final SCMHeadObserver observer,
@@ -250,9 +311,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 try {
                                     return tw != null;
                                 } finally {
-                                    if (tw != null) {
-                                        tw.release();
-                                    }
+                                    _release(tw);
                                 }
                             }
                         };
@@ -271,7 +330,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                 }
             } finally {
-                walk.dispose();
+                _release(walk);
             }
 
             listener.getLogger().println("Done.");
