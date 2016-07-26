@@ -122,6 +122,40 @@ public class GitUtils implements Serializable {
     }
 
     /**
+     * Call close method on walk using reflection.  JGit 3 uses
+     * release(), but JGit 4 uses close().  If run-time dependency on
+     * JGit 3 is not satisfied (because JGit 4 is included in git
+     * client plugin 2.0.0), then try calling the JGit 4 close()
+     * method.
+     */
+    private void callClose(RevWalk walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+            return;
+        // } catch (java.lang.reflect.InvocationTargetException e) {
+        //     LOGGER.severe("Exception calling walk.close():" + e);
+        //     return;
+        } catch (SecurityException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalArgumentException e) {
+            LOGGER.severe("Exception calling walk.close(): " + e);
+        } catch (IllegalAccessException e) {
+            LOGGER.severe("Exception calling walk.close(): " + e);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            LOGGER.severe("Exception calling walk.close():" + e);
+        // } catch (InvocationTargetException e) {
+        //     LOGGER.severe("Exception calling walk.close(): " + e);
+        }
+    }
+
+    /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
      * @param revisions
@@ -190,7 +224,11 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        walk.release();
+                        try {
+                            walk.release();
+                        } catch (NoSuchMethodError noMethod) {
+                            callClose(walk);
+                        }
                     }
 
                     if (log)
