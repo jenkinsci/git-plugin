@@ -1,3 +1,4 @@
+
 /*
  * The MIT License
  *
@@ -51,7 +52,6 @@ import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.DefaultBuildChooser;
-import hudson.plugins.git.util.GitUtils;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
@@ -193,6 +193,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @param walk object whose close or release method will be called
      */
     private static void _close(TreeWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
         if (walk instanceof Closeable) { // JGit 4
             ((Closeable) walk).close();
         } else { // JGit 3
@@ -267,13 +270,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 try {
                                     return tw != null;
                                 } finally {
-                                    if (tw != null) {
-                                        try {
-                                            tw.release();
-                                        } catch (NoSuchMethodError noMethod) {
-                                            _close(tw);
-                                        }
-                                    }
+                                    _close(tw);
                                 }
                             }
                         };
