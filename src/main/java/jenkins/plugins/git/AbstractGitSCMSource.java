@@ -51,6 +51,7 @@ import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.DefaultBuildChooser;
+import hudson.plugins.git.util.GitUtils;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
@@ -254,7 +255,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         try {
                                             tw.release();
                                         } catch (NoSuchMethodError noMethod) {
-                                            hudson.plugins.git.util.GitUtils.callClose(tw);
+                                            GitUtils.close(tw);
                                         }
                                     }
                                 }

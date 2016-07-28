@@ -12,6 +12,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
+import java.io.Closeable;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -27,6 +28,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eclipse.jgit.treewalk.TreeWalk;
 
 public class GitUtils implements Serializable {
     GitClient git;
@@ -53,31 +55,19 @@ public class GitUtils implements Serializable {
     }
 
     /**
-     * Call close method on walk using reflection.  JGit 3 uses
-     * release(), but JGit 4 uses close().  If run-time dependency on
-     * JGit 3 is not satisfied (because JGit 4 is included in git
-     * client plugin 2.0.0), then try calling the JGit 4 close()
-     * method.
+     * Call close method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     * 
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
      */
-    public static void callClose(Object walk) {
-        java.lang.reflect.Method closeMethod;
-        try {
-            closeMethod = walk.getClass().getDeclaredMethod("close");
-        } catch (NoSuchMethodException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
-            return;
-        } catch (SecurityException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
-            return;
-        }
-        try {
-            closeMethod.invoke(walk);
-        } catch (IllegalArgumentException e) {
-            LOGGER.severe("Exception calling walk.close(): " + e);
-        } catch (IllegalAccessException e) {
-            LOGGER.severe("Exception calling walk.close(): " + e);
-        } catch (java.lang.reflect.InvocationTargetException e) {
-            LOGGER.severe("Exception calling walk.close():" + e);
+    public static void close(Object walk) throws IOException {
+        if (walk instanceof Closeable) { // JGit 4
+            ((Closeable) walk).close();
+        } else if (walk instanceof RevWalk) { // JGit 3
+            ((RevWalk) walk).release();
+        } else if (walk instanceof TreeWalk) { // JGit 3
+            ((TreeWalk) walk).release();
         }
     }
 
@@ -219,11 +209,7 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        try {
-                            walk.release();
-                        } catch (NoSuchMethodError noMethod) {
-                            callClose(walk);
-                        }
+                        close(walk);
                     }
 
                     if (log)
