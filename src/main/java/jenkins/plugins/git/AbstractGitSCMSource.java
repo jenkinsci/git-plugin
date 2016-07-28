@@ -73,6 +73,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -184,6 +185,21 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
+    /**
+     * Call close method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     * 
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private static void _close(TreeWalk walk) throws IOException {
+        if (walk instanceof Closeable) { // JGit 4
+            ((Closeable) walk).close();
+        } else { // JGit 3
+            walk.release();
+        }
+    }
+
     @NonNull
     @Override
     protected void retrieve(@NonNull final SCMHeadObserver observer,
@@ -255,7 +271,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         try {
                                             tw.release();
                                         } catch (NoSuchMethodError noMethod) {
-                                            GitUtils.close(tw);
+                                            _close(tw);
                                         }
                                     }
                                 }

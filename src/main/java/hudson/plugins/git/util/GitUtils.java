@@ -61,13 +61,11 @@ public class GitUtils implements Serializable {
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
-    public static void close(Object walk) throws IOException {
+    private static void _close(RevWalk walk) throws IOException {
         if (walk instanceof Closeable) { // JGit 4
             ((Closeable) walk).close();
-        } else if (walk instanceof RevWalk) { // JGit 3
-            ((RevWalk) walk).release();
-        } else if (walk instanceof TreeWalk) { // JGit 3
-            ((TreeWalk) walk).release();
+        } else { // JGit 3
+            walk.release();
         }
     }
 
@@ -209,7 +207,7 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        close(walk);
+                        _close(walk);
                     }
 
                     if (log)
