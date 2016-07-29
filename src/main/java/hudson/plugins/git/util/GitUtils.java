@@ -19,6 +19,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -52,7 +54,7 @@ public class GitUtils implements Serializable {
         return j;
     }
 
-    private static void _close(RevWalk walk) {
+    private static void _close(@NonNull RevWalk walk) {
         LOGGER.info("Calling RevWalk close");
         java.lang.reflect.Method closeMethod;
         try {
@@ -79,11 +81,14 @@ public class GitUtils implements Serializable {
     /**
      * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
      * release resources.
-     * 
+     *
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
     private static void _release(RevWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
         try {
             LOGGER.info("Calling RevWalk release");
             walk.release(); // JGit 3

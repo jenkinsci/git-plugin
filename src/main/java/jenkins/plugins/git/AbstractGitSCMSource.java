@@ -186,7 +186,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
-    private static void _close(TreeWalk walk) {
+    private static void _close(@NonNull TreeWalk walk) {
         LOGGER.info("Calling TreeWalk close");
         java.lang.reflect.Method closeMethod;
         try {
@@ -213,11 +213,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
      * release resources.
-     * 
+     *
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
     private static void _release(TreeWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
         try {
             LOGGER.info("Calling TreeWalk release");
             walk.release(); // JGit 3
