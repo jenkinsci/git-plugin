@@ -8,11 +8,9 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
-import java.io.Closeable;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -24,11 +22,11 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jgit.treewalk.TreeWalk;
 
 public class GitUtils implements Serializable {
     GitClient git;
@@ -54,18 +52,44 @@ public class GitUtils implements Serializable {
         return j;
     }
 
+    private static void _close(RevWalk walk) {
+        LOGGER.info("Calling RevWalk close");
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException ex) {
+            LOGGER.log(Level.SEVERE, "Finding RevWalk close method exception {0}", ex);
+            return;
+        } catch (SecurityException ex) {
+            LOGGER.log(Level.SEVERE, "Finding RevWalk close method exception {0}", ex);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+        }
+        LOGGER.info("RevWalk close called");
+    }
+
     /**
-     * Call close method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
      * release resources.
      * 
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
-    private static void _close(RevWalk walk) throws IOException {
-        if (walk instanceof Closeable) { // JGit 4
-            ((Closeable) walk).close();
-        } else { // JGit 3
-            walk.release();
+    private static void _release(RevWalk walk) throws IOException {
+        try {
+            LOGGER.info("Calling RevWalk release");
+            walk.release(); // JGit 3
+            LOGGER.info("RevWalk release called");
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
         }
     }
 
@@ -207,7 +231,7 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        _close(walk);
+                        _release(walk);
                     }
 
                     if (log)
