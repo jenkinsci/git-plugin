@@ -187,7 +187,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     private static void _close(@NonNull TreeWalk walk) {
-        LOGGER.info("Calling TreeWalk close");
         java.lang.reflect.Method closeMethod;
         try {
             closeMethod = walk.getClass().getDeclaredMethod("close");
@@ -207,7 +206,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         } catch (InvocationTargetException ex) {
             LOGGER.log(Level.SEVERE, "Calling TreeWalk close method exception {0}", ex);
         }
-        LOGGER.info("TreeWalk close called");
     }
 
     /**
@@ -222,9 +220,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return;
         }
         try {
-            LOGGER.info("Calling TreeWalk release");
             walk.release(); // JGit 3
-            LOGGER.info("TreeWalk release called");
         } catch (NoSuchMethodError noMethod) {
             _close(walk);
         }

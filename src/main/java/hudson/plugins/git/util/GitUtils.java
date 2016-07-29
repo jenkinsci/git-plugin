@@ -55,7 +55,6 @@ public class GitUtils implements Serializable {
     }
 
     private static void _close(@NonNull RevWalk walk) {
-        LOGGER.info("Calling RevWalk close");
         java.lang.reflect.Method closeMethod;
         try {
             closeMethod = walk.getClass().getDeclaredMethod("close");
@@ -75,7 +74,6 @@ public class GitUtils implements Serializable {
         } catch (InvocationTargetException ex) {
             LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
         }
-        LOGGER.info("RevWalk close called");
     }
 
     /**
@@ -90,9 +88,7 @@ public class GitUtils implements Serializable {
             return;
         }
         try {
-            LOGGER.info("Calling RevWalk release");
             walk.release(); // JGit 3
-            LOGGER.info("RevWalk release called");
         } catch (NoSuchMethodError noMethod) {
             _close(walk);
         }
