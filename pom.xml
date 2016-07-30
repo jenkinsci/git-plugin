@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.10</version>
+    <version>2.12</version>
   </parent>
 
   <licenses>
@@ -20,6 +20,7 @@
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  <inceptionYear>2007</inceptionYear>
 
   <properties>
     <jenkins.version>1.625</jenkins.version>
