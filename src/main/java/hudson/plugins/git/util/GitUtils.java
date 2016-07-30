@@ -59,20 +59,20 @@ public class GitUtils implements Serializable {
         try {
             closeMethod = walk.getClass().getDeclaredMethod("close");
         } catch (NoSuchMethodException ex) {
-            LOGGER.log(Level.SEVERE, "Finding RevWalk close method exception {0}", ex);
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
             return;
         } catch (SecurityException ex) {
-            LOGGER.log(Level.SEVERE, "Finding RevWalk close method exception {0}", ex);
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
             return;
         }
         try {
             closeMethod.invoke(walk);
         } catch (IllegalAccessException ex) {
-            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
         } catch (IllegalArgumentException ex) {
-            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
         } catch (InvocationTargetException ex) {
-            LOGGER.log(Level.SEVERE, "Calling RevWalk close method exception {0}", ex);
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
         }
     }
 
