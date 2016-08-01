@@ -8,7 +8,6 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -20,9 +19,12 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -50,6 +52,46 @@ public class GitUtils implements Serializable {
             }
         }
         return j;
+    }
+
+    private static void _close(@NonNull RevWalk walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        } catch (SecurityException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private static void _release(RevWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
+        }
     }
 
     /**
@@ -190,7 +232,7 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        walk.release();
+                        _release(walk);
                     }
 
                     if (log)
