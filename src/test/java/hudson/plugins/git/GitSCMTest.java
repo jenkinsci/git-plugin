@@ -688,6 +688,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
+    @Test
     public void testEnvVarsAvailableBySCMName() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -707,9 +708,9 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // Non-SCM namespaced variables
         assertEquals("origin/master", env1.get(GitSCM.GIT_BRANCH));
-        assertLogContains(env1.get(GitSCM.GIT_BRANCH), build1);
+        rule.assertLogContains(env1.get(GitSCM.GIT_BRANCH), build1);
 
-        assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        rule.assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         // SCM namespaced variables
         assertEquals("origin/master", env1.get(scmNameString1Prefix + GitSCM.GIT_BRANCH));
@@ -723,11 +724,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         EnvVars env2 = getEnvVars(project);
 
         // Non-SCM namespaced variables
-        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
-        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+        rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
+        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
 
-        assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
-        assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
+        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
 
         // SCM namespaced variables
         assertEquals(env2.get(GitSCM.GIT_PREVIOUS_COMMIT), env2.get(scmNameString1Prefix + GitSCM.GIT_PREVIOUS_COMMIT));
