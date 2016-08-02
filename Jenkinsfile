@@ -34,7 +34,7 @@ void runParallelTests() {
   /* Request the test groupings.  Based on previous test exection. */
   /* see https://wiki.jenkins-ci.org/display/JENKINS/Parallel+Test+Executor+Plugin and demo on github
   /* Using arbitrary parallelism of 4 and "generateInclusions" feature added in v1.8. */
-  def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 4], generateInclusions: true
+  def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 3], generateInclusions: true
 
   /* Create dictionary to hold set of parallel test executions. */
   def testGroups = [:]
@@ -89,6 +89,7 @@ void mvn(def args) {
   /* Set JAVA_HOME, and special PATH variables. */
   List javaEnv = [
     "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
+    '_JAVA_OPTIONS=-Xmx256m -Djava.awt.headless=true',
     // Additional variables needed by tests on machines
     // that don't have global git user.name and user.email configured.
     'GIT_COMMITTER_EMAIL=me@hatescake.com','GIT_COMMITTER_NAME=Hates','GIT_AUTHOR_NAME=Cake','GIT_AUTHOR_EMAIL=hates@cake.com', 'LOGNAME=hatescake'
