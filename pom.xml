@@ -57,7 +57,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx256m -Djava.awt.headless=true</argLine>
+          <argLine>-XX:MaxPermSize=160m -Xmx256m -Djava.awt.headless=true</argLine>
         </configuration>
       </plugin>
       <plugin>
