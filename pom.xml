@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.580</version>
+    <version>2.12</version>
   </parent>
 
   <licenses>
@@ -15,114 +15,44 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>2.4.3-SNAPSHOT</version>
+  <version>2.5.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <findbugs-maven-plugin.version>3.0.3</findbugs-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
-    <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-    <maven-enforcer-plugin.version>1.4.1</maven-enforcer-plugin.version>
-    <maven-hpi-plugin.version>1.115</maven-hpi-plugin.version>
-    <maven-localizer-plugin.version>1.23</maven-localizer-plugin.version>
-    <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-    <maven-site-plugin.version>3.4</maven-site-plugin.version>
-    <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <jenkins.version>1.609.3</jenkins.version>
+    <java.level>6</java.level>
+    <!-- Use the same configuration than before. -->
+    <concurrency>2</concurrency>
+    <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
+    <findbugs.failOnError>false</findbugs.failOnError>
+    <workflow.version>1.14.2</workflow.version>
   </properties>
 
   <build>
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>${findbugs-maven-plugin.version}</version>
-          <configuration>
-            <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
-            <failOnError>${maven.findbugs.failure.strict}</failOnError>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>${maven-enforcer-plugin.version}</version>
-        </plugin>
-        <plugin>
-            <groupId>org.jvnet.localizer</groupId>
-            <artifactId>maven-localizer-plugin</artifactId>
-            <version>${maven-localizer-plugin.version}</version>
-        </plugin>
-        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
-        <plugin>
-            <groupId>org.eclipse.m2e</groupId>
-            <artifactId>lifecycle-mapping</artifactId>
-            <version>1.0.0</version>
-            <configuration>
-                <lifecycleMappingMetadata>
-                    <pluginExecutions>
-                        <pluginExecution>
-                            <pluginExecutionFilter>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-enforcer-plugin</artifactId>
-                                <versionRange>[1.0,)</versionRange>
-                                <goals>
-                                    <goal>display-info</goal>
-                                </goals>
-                            </pluginExecutionFilter>
-                            <action>
-                                <ignore />
-                            </action>
-                        </pluginExecution>
-                        <pluginExecution>
-                            <pluginExecutionFilter>
-                                <groupId>org.codehaus.gmaven</groupId>
-                                <artifactId>gmaven-plugin</artifactId>
-                                <versionRange>[1.3,)</versionRange>
-                                <goals>
-                                    <goal>generateTestStubs</goal>
-                                    <goal>testCompile</goal>
-                                </goals>
-                            </pluginExecutionFilter>
-                            <action>
-                                <ignore />
-                            </action>
-                        </pluginExecution>
-                        <pluginExecution>
-                            <pluginExecutionFilter>
-                                <groupId>com.infradna.tool</groupId>
-                                <artifactId>bridge-method-injector</artifactId>
-                                <versionRange>[1.4,)</versionRange>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                            </pluginExecutionFilter>
-                            <action>
-                                <ignore />
-                            </action>
-                        </pluginExecution>
-                    </pluginExecutions>
-                </lifecycleMappingMetadata>
-            </configuration>
+          <version>1.4.1</version>
         </plugin>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-site-plugin</artifactId>
-            <version>${maven-site-plugin.version}</version>
+            <version>3.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.5.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
-      <plugin>
-          <groupId>org.jenkins-ci.tools</groupId>
-          <artifactId>maven-hpi-plugin</artifactId>
-          <version>${maven-hpi-plugin.version}</version>
-          <extensions>true</extensions>
-      </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
@@ -136,67 +66,31 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-           <source>1.5</source>
-           <target>1.5</target>
-        </configuration>
-     </plugin>
-     <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>${maven-release-plugin.version}</version>
-        <configuration>
-          <goals>deploy</goals>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
-        <configuration>
-          <systemPropertyVariables>
-            <java.awt.headless>true</java.awt.headless>
-          </systemPropertyVariables>
-          <!-- Sets the VM argument line used when unit tests are run. -->
-          <argLine>${surefireArgLine}</argLine>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
+        <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
-            <id>pre-unit-test</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
+            <id>display-info</id>
             <configuration>
-              <!-- Sets the path to the file which contains the execution data. -->
-              <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-              <!--
-                  Sets the name of the property containing the settings
-                  for JaCoCo runtime agent.
-              -->
-              <!-- Uncomment next line to measure and report test coverage -->
-              <propertyName>surefireArgLine</propertyName>
+              <rules>
+                <enforceBytecodeVersion>
+                  <excludes combine.children="append">
+                    <!-- Loaded conditionally. -->
+                    <exclude>org.eclipse.jgit:org.eclipse.jgit.java7</exclude>
+                  </excludes>
+                </enforceBytecodeVersion>
+              </rules>
             </configuration>
           </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
           <execution>
-            <id>post-unit-test</id>
-            <phase>test</phase>
             <goals>
-              <goal>report</goal>
+              <!-- TODO check if http://stackoverflow.com/q/1771561/12916 lets us add the test-jar goal to attach-sources/attach-javadocs executions from the inherited jenkins-release profile -->
+              <goal>test-jar</goal>
             </goals>
-            <configuration>
-              <!-- Sets the path to the file which contains the execution data. -->
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-              <!-- Sets the output directory for the code coverage report. -->
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -206,7 +100,7 @@
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
 
@@ -256,6 +150,11 @@
       <version>1.0</version>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-scm-step</artifactId>
+      <version>${workflow.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <version>1.6</version>
@@ -266,23 +165,21 @@
       <version>1.16</version>
     </dependency>
 
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
       <version>1.10.19</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.4.1</version>
+      <version>4.5</version>
       <scope>test</scope>
     </dependency>
 
@@ -323,14 +220,21 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-aggregator</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
-  <distributionManagement>
-    <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
-    </repository>
-  </distributionManagement>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
@@ -339,11 +243,11 @@
     <tag>HEAD</tag>
   </scm>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-    </pluginRepositories>
+  <pluginRepositories>
+     <pluginRepository>
+       <id>repo.jenkins-ci.org</id>
+       <url>https://repo.jenkins-ci.org/public/</url>
+     </pluginRepository>
+  </pluginRepositories>
 </project>
 

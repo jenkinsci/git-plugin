@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -61,6 +62,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     public String getUrlName() {
         return "git";
+    }
+
+    /* Package protected - not part of API, needed for testing */
+    /* package */
+    static void setAllowNotifyCommitParameters(boolean allowed) {
+        allowNotifyCommitParameters = allowed;
     }
 
     private String lastURL = "";        // Required query parameter
@@ -128,11 +135,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Illegal URL: " + url, e));
         }
 
-        final Map<String, String[]> parameterMap = request.getParameterMap();
-        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-            if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
-                if (entry.getValue()[0] != null)
-                    buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
+        if (allowNotifyCommitParameters || !safeParameters.isEmpty()) { // Allow SECURITY-275 bug
+            final Map<String, String[]> parameterMap = request.getParameterMap();
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                if (!(entry.getKey().equals("url")) && !(entry.getKey().equals("branches")) && !(entry.getKey().equals("sha1")))
+                    if (entry.getValue()[0] != null && (allowNotifyCommitParameters || safeParameters.contains(entry.getKey())))
+                        buildParameters.add(new StringParameterValue(entry.getKey(), entry.getValue()[0]));
+            }
         }
         lastBuildParameters = buildParameters;
 
@@ -146,7 +155,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         final List<ResponseContributor> contributors = new ArrayList<ResponseContributor>();
-        for (Listener listener : Jenkins.getInstance().getExtensionList(Listener.class)) {
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
+        }
+        for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(uri, sha1, buildParameters, branchesArray));
         }
 
@@ -220,7 +233,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Contributes to a {@link #doNotifyCommit(String, String, String)} response.
+     * Contributes to a {@link #doNotifyCommit(HttpServletRequest, String, String, String)} response.
      *
      * @since 1.4.1
      */
@@ -326,6 +339,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 boolean scmFound = false,
                         urlFound = false;
+                Jenkins jenkins = Jenkins.getInstance();
+                if (jenkins == null) {
+                    LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
+                    return result;
+                }
                 for (final Item project : Jenkins.getInstance().getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
                     if (scmTriggerItem == null) {
@@ -392,8 +410,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
                                     Set<String> buildParametersNames = new HashSet<String>();
-                                    for (ParameterValue parameterValue: allBuildParameters) {
-                                        buildParametersNames.add(parameterValue.getName());
+                                    if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
+                                        for (ParameterValue parameterValue: allBuildParameters) {
+                                            if (allowNotifyCommitParameters || safeParameters.contains(parameterValue.getName())) {
+                                                buildParametersNames.add(parameterValue.getName());
+                                            }
+                                        }
                                     }
 
                                     List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
@@ -587,5 +609,70 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
-}
 
+    /** Allow arbitrary notify commit parameters.
+     *
+     * SECURITY-275 detected that allowing arbitrary parameters through
+     * the notifyCommit URL allows an unauthenticated user to set
+     * environment variables for a job.
+     *
+     * If this property is set to true, then the bug exposed by
+     * SECURITY-275 will be brought back. Only enable this if you
+     * trust all unauthenticated users to not pass harmful arguments
+     * to your jobs.
+     *
+     * -Dhudson.plugins.git.GitStatus.allowNotifyCommitParameters=true on command line
+     *
+     * Also honors the global Jenkins security setting
+     * "hudson.model.ParametersAction.keepUndefinedParameters" if it
+     * is set to true.
+     */
+    public static final boolean ALLOW_NOTIFY_COMMIT_PARAMETERS = Boolean.valueOf(System.getProperty(GitStatus.class.getName() + ".allowNotifyCommitParameters", "false"))
+            || Boolean.valueOf(System.getProperty("hudson.model.ParametersAction.keepUndefinedParameters", "false"));
+    private static boolean allowNotifyCommitParameters = ALLOW_NOTIFY_COMMIT_PARAMETERS;
+
+    /* Package protected for test.
+     * If null is passed as argument, safe parameters are reset to defaults.
+     */
+    static void setSafeParametersForTest(String parameters) {
+        safeParameters = csvToSet(parameters != null ? parameters : SAFE_PARAMETERS);
+    }
+
+    private static Set<String> csvToSet(String csvLine) {
+        String[] tokens = csvLine.split(",");
+        Set<String> set = new HashSet<String>(Arrays.asList(tokens));
+        return set;
+    }
+
+    @NonNull
+    private static String getSafeParameters() {
+        String globalSafeParameters = System.getProperty("hudson.model.ParametersAction.safeParameters", "").trim();
+        String gitStatusSafeParameters = System.getProperty(GitStatus.class.getName() + ".safeParameters", "").trim();
+        if (globalSafeParameters.isEmpty()) {
+            return gitStatusSafeParameters;
+        }
+        if (gitStatusSafeParameters.isEmpty()) {
+            return globalSafeParameters;
+        }
+        return globalSafeParameters + "," + gitStatusSafeParameters;
+    }
+
+    /**
+     * Allow specifically declared safe parameters.
+     *
+     * SECURITY-275 detected that allowing arbitrary parameters through the
+     * notifyCommit URL allows an unauthenticated user to set environment
+     * variables for a job.
+     *
+     * If this property is set to a comma separated list of parameters, then
+     * those parameters will be allowed for any job. Only set this value for
+     * parameters you trust in all the jobs in your system.
+     *
+     * -Dhudson.plugins.git.GitStatus.safeParameters=PARM1,PARM1 on command line
+     *
+     * Also honors the global Jenkins safe parameter list
+     * "hudson.model.ParametersAction.safeParameters" if set.
+     */
+    public static final String SAFE_PARAMETERS = getSafeParameters();
+    private static Set<String> safeParameters = csvToSet(SAFE_PARAMETERS);
+}

@@ -4,11 +4,13 @@ import hudson.DescriptorExtensionList;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import hudson.model.Item;
+import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
  */
 public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
+    private static final Logger LOGGER = Logger.getLogger(BuildChooserDescriptor.class.getName());
     /**
      * Before this extension point is formalized, existing {@link BuildChooser}s had
      * a hard-coded ID name used for the persistence.
@@ -20,7 +22,12 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
     }
 
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.getInstance().getDescriptorList(BuildChooser.class);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.severe("Jenkins instance is null in BuildChooserDescriptor");
+            return null;
+        }
+        return jenkins.getDescriptorList(BuildChooser.class);
     }
 
     /**

@@ -4,7 +4,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
-import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
@@ -28,7 +27,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Map of branch name -> build (Branch name to last built SHA1).
+     * Map of branch {@code name -> build} (Branch name to last built SHA1).
      *
      * <p>
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
@@ -242,5 +241,57 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",remoteUrls="+remoteUrls+
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof BuildData)) {
+            return false;
+        }
+
+        BuildData otherBuildData = (BuildData) o;
+
+        /* Not equal if exactly one of the two remoteUrls is null */
+        if ((this.remoteUrls == null) ^ (otherBuildData.remoteUrls == null)) {
+            return false;
+        }
+
+        /* Not equal if remoteUrls differ */
+        if ((this.remoteUrls != null) && (otherBuildData.remoteUrls != null)
+                && !this.remoteUrls.equals(otherBuildData.remoteUrls)) {
+            return false;
+        }
+
+        /* Not equal if exactly one of the two buildsByBranchName is null */
+        if ((this.buildsByBranchName == null) ^ (otherBuildData.buildsByBranchName == null)) {
+            return false;
+        }
+
+        /* Not equal if buildsByBranchName differ */
+        if ((this.buildsByBranchName != null) && (otherBuildData.buildsByBranchName != null)
+                && !this.buildsByBranchName.equals(otherBuildData.buildsByBranchName)) {
+            return false;
+        }
+
+        /* Not equal if exactly one of the two lastBuild is null */
+        if ((this.lastBuild == null) ^ (otherBuildData.lastBuild == null)) {
+            return false;
+        }
+
+        /* Not equal if lastBuild differs */
+        if ((this.lastBuild != null) && (otherBuildData.lastBuild != null)
+                && !this.lastBuild.equals(otherBuildData.lastBuild)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public int hashCode() {
+        int result = 3;
+        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
+        result = result * 17 + ((this.buildsByBranchName == null) ? 7 : this.buildsByBranchName.hashCode());
+        result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
+        return result;
     }
 }

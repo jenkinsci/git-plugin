@@ -11,6 +11,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
+import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -18,9 +19,12 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -33,6 +37,61 @@ public class GitUtils implements Serializable {
     public GitUtils(TaskListener listener, GitClient git) {
         this.git = git;
         this.listener = listener;
+    }
+
+    public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
+        Jenkins j = Jenkins.getActiveInstance();
+        if (workspace != null && workspace.isRemote()) {
+            for (Computer c : j.getComputers()) {
+                if (c.getChannel() == workspace.getChannel()) {
+                    Node n = c.getNode();
+                    if (n != null) {
+                        return n;
+                    }
+                }
+            }
+        }
+        return j;
+    }
+
+    private static void _close(@NonNull RevWalk walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        } catch (SecurityException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private static void _release(RevWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
+        }
     }
 
     /**
@@ -173,7 +232,7 @@ public class GitUtils implements Serializable {
                         }
 
                     } finally {
-                        walk.release();
+                        _release(walk);
                     }
 
                     if (log)
@@ -225,12 +284,12 @@ public class GitUtils implements Serializable {
                     }
                 }
             } else {
-                env = new EnvVars(System.getenv());
+                env = p.getEnvironment(workspaceToNode(ws), listener);
             }
 
             p.getScm().buildEnvVars(b,env);
         } else {
-            env = new EnvVars(System.getenv());
+            env = p.getEnvironment(workspaceToNode(ws), listener);
         }
 
         String rootUrl = Hudson.getInstance().getRootUrl();

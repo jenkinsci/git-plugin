@@ -15,7 +15,7 @@ f.entry(title:_("Path of the reference repo to use during submodule update"), fi
     f.textbox()
 }
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
-    f.textbox()
+    f.number(clazz:"number", min:1, step:1)
 }
 
 /*

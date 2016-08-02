@@ -24,6 +24,7 @@ import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -36,7 +37,6 @@ import hudson.tasks.Publisher;
 import hudson.triggers.SCMTrigger;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-import hudson.util.IOException2;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -113,10 +113,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private List<BranchSpec> branches;
     private boolean doGenerateSubmoduleConfigurations;
 
+    @CheckForNull
     public String gitTool = null;
+    @CheckForNull
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
+    public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -134,9 +137,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.submoduleCfg = submoduleCfg;
     }
 
-    static private List<UserRemoteConfig> createRepoList(String url) {
+    public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
         List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig(url, null, null, null));
+        repoList.add(new UserRemoteConfig(url, null, null, credentialsId));
         return repoList;
     }
 
@@ -148,10 +151,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public GitSCM(String repositoryUrl) {
         this(
-                createRepoList(repositoryUrl),
+                createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, null);
+                null, null, Collections.<GitSCMExtension>emptyList());
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -161,9 +164,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            GitRepositoryBrowser browser,
-            String gitTool,
-            List<GitSCMExtension> extensions) {
+            @CheckForNull GitRepositoryBrowser browser,
+            @CheckForNull String gitTool,
+            @NonNull List<GitSCMExtension> extensions) {
 
         // moved from createBranches
         this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
@@ -317,24 +320,34 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public GitRepositoryBrowser getBrowser() {
         return browser;
     }
-    
+
+    private static final Pattern[] URL_PATTERNS = {
+        Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("ssh://(?:git@)?github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+    };
+
     @Override public RepositoryBrowser<?> guessBrowser() {
-        if (remoteRepositories != null && remoteRepositories.size() == 1) {
-            List<URIish> uris = remoteRepositories.get(0).getURIs();
-            if (uris.size() == 1) {
-                String uri = uris.get(0).toString();
-                // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
-                Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
-                if (m.matches()) {
-                    return new GithubWeb(m.group(1) + "/");
-                }
-                m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
-                if (m.matches()) {
-                    return new GithubWeb("https://github.com/" + m.group(1) + "/");
+        Set<String> webUrls = new HashSet<String>();
+        if (remoteRepositories != null) {
+            for (RemoteConfig config : remoteRepositories) {
+                for (URIish uriIsh : config.getURIs()) {
+                    String uri = uriIsh.toString();
+                    // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
+                    for (Pattern p : URL_PATTERNS) {
+                        Matcher m = p.matcher(uri);
+                        if (m.matches()) {
+                            webUrls.add("https://github.com/" + m.group(1) + "/");
+                        }
+                    }
                 }
             }
         }
-        return null;
+        if (webUrls.size() == 1) {
+            return new GithubWeb(webUrls.iterator().next());
+        } else {
+            return null;
+        }
     }
 
     public boolean isCreateAccountBasedOnEmail() {
@@ -437,6 +450,42 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return remoteRepositories;
     }
 
+    /**
+     * Derives a local branch name from the remote branch name by removing the
+     * name of the remote from the remote branch name.
+     * <p>
+     * Ex. origin/master becomes master
+     * <p>
+     * Cycles through the list of user remotes looking for a match allowing user
+     * to configure an alternalte (not origin) name for the remote.
+     *
+     * @param remoteBranchName
+     * @return a local branch name derived by stripping the remote repository
+     *         name from the {@code remoteBranchName} parameter. If a matching
+     *         remote is not found, the original {@code remoteBranchName} will
+     *         be returned.
+     */
+    public String deriveLocalBranchName(String remoteBranchName) {
+        // default remoteName is 'origin' used if list of user remote configs is empty.
+        String remoteName = "origin";
+
+        for (final UserRemoteConfig remote : getUserRemoteConfigs()) {
+            remoteName = remote.getName();
+            if (remoteName == null || remoteName.isEmpty()) {
+                remoteName = "origin";
+            }
+            if (remoteBranchName.startsWith(remoteName + "/")) {
+                // found the remote config associated with remoteBranchName
+                break;
+            }
+        }
+
+        // now strip the remote name and return the resulting local branch name.
+        String localBranchName = remoteBranchName.replaceFirst("^" + remoteName + "/", "");
+        return localBranchName;
+    }
+
+    @CheckForNull
     public String getGitTool() {
         return gitTool;
     }
@@ -474,16 +523,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         			break;
         		}
         	}
-        	if (repository == null) {
-        		return null;
-        	}
         } else {
         	repository = getRepositories().get(0).getName();
         }
 
 
         // replace repository wildcard with repository name
-        if (branch.startsWith("*/")) {
+        if (branch.startsWith("*/") && repository != null) {
             branch = repository + branch.substring(1);
         }
 
@@ -527,23 +573,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             return compareRemoteRevisionWithImpl( project, launcher, workspace, listener);
         } catch (GitException e){
-            throw new IOException2(e);
+            throw new IOException(e);
         }
-    }
-
-    private static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
-        Jenkins j = Jenkins.getInstance();
-        if (workspace != null && workspace.isRemote()) {
-            for (Computer c : j.getComputers()) {
-                if (c.getChannel() == workspace.getChannel()) {
-                    Node n = c.getNode();
-                    if (n != null) {
-                        return n;
-                    }
-                }
-            }
-        }
-        return j;
     }
 
     public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
@@ -638,7 +669,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return NO_CHANGES;
         }
 
-        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : new EnvVars();
+        final Node node = GitUtils.workspaceToNode(workspace);
+        final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : project.getEnvironment(node, listener);
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 
@@ -647,7 +679,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, workspaceToNode(workspace), workingDirectory);
+        GitClient git = createClient(listener, environment, project, node, workingDirectory);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -698,7 +730,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), workspaceToNode(workspace), ws);
+        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws);
     }
 
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
@@ -1035,7 +1067,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throws IOException, InterruptedException {
 
         if (VERBOSE)
-            listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
+            listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
         BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
@@ -1067,13 +1099,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
         Branch branch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
+        String localBranchName = getParamLocalBranch(build, listener);
         if (branch != null && branch.getName() != null) { // null for a detached HEAD
-            environment.put(GIT_BRANCH, getBranchName(branch));
+            String remoteBranchName = getBranchName(branch);
+            environment.put(GIT_BRANCH, remoteBranchName);
+
+            LocalBranch lb = getExtensions().get(LocalBranch.class);
+            if (lb != null) {
+               if (lb.getLocalBranch() == null || lb.getLocalBranch().equals("**")) {
+                  // local branch is configured with empty value or "**" so use remote branch name for checkout
+                  localBranchName = deriveLocalBranchName(remoteBranchName);
+               }
+               environment.put(GIT_LOCAL_BRANCH, localBranchName);
+            }
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
-
-        CheckoutCommand checkoutCommand = git.checkout().branch(getParamLocalBranch(build, listener)).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
         }
@@ -1187,7 +1229,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
             if (branch!=null && branch.getName()!=null) {
-                env.put(GIT_BRANCH, getBranchName(branch));
+               String remoteBranchName = getBranchName(branch);
+                env.put(GIT_BRANCH, remoteBranchName);
+
+                LocalBranch lb = getExtensions().get(LocalBranch.class);
+                if (lb != null) {
+                   // Set GIT_LOCAL_BRANCH variable from the LocalBranch extension
+                   String localBranchName = lb.getLocalBranch();
+                   if (localBranchName == null || localBranchName.equals("**")) {
+                      // local branch is configured with empty value or "**" so use remote branch name for checkout
+                      localBranchName = deriveLocalBranchName(remoteBranchName);
+                   }
+                   env.put(GIT_LOCAL_BRANCH, localBranchName);
+                }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1206,7 +1260,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-       
+
         if (userRemoteConfigs.size()==1){
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
         } else {
@@ -1214,7 +1268,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             for(UserRemoteConfig config:userRemoteConfigs)   {
                 env.put("GIT_URL_"+count, config.getUrl());
                 count++;
-            }  
+            }
         }
 
         getDescriptor().populateEnvironmentVariables(env);
@@ -1222,7 +1276,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.populateEnvironmentVariables(this, env);
         }
     }
-    
+
     private String getBranchName(Branch branch)
     {
         String name = branch.getName();
@@ -1659,7 +1713,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        DescriptorImpl desc = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
+            return;
+        }
+        DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {
             String exe = desc.getOldGitExe();

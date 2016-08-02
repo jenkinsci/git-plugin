@@ -3,29 +3,18 @@ package hudson.plugins.git.browser;
 import hudson.model.*;
 import hudson.plugins.git.*;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.DisableRemotePoll;
-import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
-import hudson.triggers.SCMTrigger;
-import org.hamcrest.CoreMatchers;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.jvnet.hudson.test.HudsonTestCase;
-import org.mockito.Mockito;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
