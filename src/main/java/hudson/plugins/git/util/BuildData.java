@@ -4,7 +4,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
-import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
@@ -16,7 +15,6 @@ import java.io.Serializable;
 import java.util.*;
 
 import static hudson.Util.fixNull;
-
 /**
  * Captures the Git related information for a build.
  *
@@ -29,11 +27,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Map of branch name -> build (Branch name to last built SHA1).
+     * Map of branch {@code name -> build} (Branch name to last built SHA1).
      *
      * <p>
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
-     * is attached to) 
+     * is attached to)
      */
     public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
 
@@ -91,7 +89,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public Object readResolve() {
         Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
-        
+
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
             Build build = buildByBranchName.getValue();
@@ -105,7 +103,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
         return this;
     }
-    
+
     /**
      * Return true if the history shows this SHA1 has been built.
      * False otherwise.
@@ -148,7 +146,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     /**
      * Gets revision of the previous build.
-     * @return revision of the last build. 
+     * @return revision of the last build.
      *    May be null will be returned if nothing has been checked out (e.g. due to wrong repository or branch)
      */
     @Exported
@@ -245,23 +243,55 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",lastBuild="+lastBuild+"]";
     }
 
-    /**
-     * Remove branches from BuildData that have been seen in the past but do not exist anymore
-     * @param keepBranches all branches available in current repository state
-     */
-    public void purgeStaleBranches(Set<Branch> keepBranches) {
-        Set<String> names = new HashSet<String>(buildsByBranchName.keySet());
-        for (Branch branch : keepBranches) {
-            String name = branch.getName();
-            if (name.startsWith("refs/")) {
-                names.remove(name.substring(5));
-            }
-            if (name.startsWith("remotes/")) {
-                names.remove(name.substring(8));
-            }
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof BuildData)) {
+            return false;
         }
-        for (String name : names) {
-            buildsByBranchName.remove(name);
+
+        BuildData otherBuildData = (BuildData) o;
+
+        /* Not equal if exactly one of the two remoteUrls is null */
+        if ((this.remoteUrls == null) ^ (otherBuildData.remoteUrls == null)) {
+            return false;
         }
+
+        /* Not equal if remoteUrls differ */
+        if ((this.remoteUrls != null) && (otherBuildData.remoteUrls != null)
+                && !this.remoteUrls.equals(otherBuildData.remoteUrls)) {
+            return false;
+        }
+
+        /* Not equal if exactly one of the two buildsByBranchName is null */
+        if ((this.buildsByBranchName == null) ^ (otherBuildData.buildsByBranchName == null)) {
+            return false;
+        }
+
+        /* Not equal if buildsByBranchName differ */
+        if ((this.buildsByBranchName != null) && (otherBuildData.buildsByBranchName != null)
+                && !this.buildsByBranchName.equals(otherBuildData.buildsByBranchName)) {
+            return false;
+        }
+
+        /* Not equal if exactly one of the two lastBuild is null */
+        if ((this.lastBuild == null) ^ (otherBuildData.lastBuild == null)) {
+            return false;
+        }
+
+        /* Not equal if lastBuild differs */
+        if ((this.lastBuild != null) && (otherBuildData.lastBuild != null)
+                && !this.lastBuild.equals(otherBuildData.lastBuild)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public int hashCode() {
+        int result = 3;
+        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
+        result = result * 17 + ((this.buildsByBranchName == null) ? 7 : this.buildsByBranchName.hashCode());
+        result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
+        return result;
     }
 }

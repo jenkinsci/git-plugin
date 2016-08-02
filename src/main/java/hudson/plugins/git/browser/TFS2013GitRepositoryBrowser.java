@@ -24,7 +24,8 @@ import java.net.URL;
 import java.util.regex.Pattern;
 
 /**
- * Browser for TFS 2013
+ * Browser for Git repositories on Microsoft Team Foundation Server (TFS) 2013 and higher versions using the
+ * same format. This includes Git repositories hosted with the Visual Studio Team Services.
  */
 public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
@@ -81,8 +82,9 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     @Extension
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
+        private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
         public String getDisplayName() {
-            return "Microsoft TFS 2013";
+            return REPOSITORY_BROWSER_LABEL;
         }
 
         @Override
@@ -128,7 +130,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 @Override
                 protected FormValidation check() throws IOException, ServletException {
                     try {
-                        if (findText(open(new URL(finalValue)), "Team Foundation Server 2013")) {
+                        if (findText(open(new URL(finalValue)), REPOSITORY_BROWSER_LABEL)) {
                             return FormValidation.ok();
                         } else {
                             return FormValidation.error("This is a valid URL but it doesn't look like Microsoft TFS 2013");

@@ -4,23 +4,27 @@
 
 package hudson.plugins.git.browser;
 
-import hudson.model.Run;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.RepositoryBrowser;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.scm.api.SCMHead;
+import org.eclipse.jgit.transport.RefSpec;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import org.xml.sax.SAXException;
 
@@ -105,22 +109,83 @@ public class GithubWebTest {
         assertEquals(GITHUB_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#diff-0", String.valueOf(fileLink));
     }
 
+    private String repoUrl(String baseUrl, boolean add_git_suffix, boolean add_slash_suffix) {
+        return baseUrl + (add_git_suffix ? ".git" : "") + (add_slash_suffix ? "/" : "");
+    }
+        
     @Test
     public void testGuessBrowser() {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");
+        assertGuessURL("https://github.com/kohsuke/msv/", "https://github.com/kohsuke/msv/");
+        assertGuessURL("https://github.com/kohsuke/msv", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@github.com:kohsuke/msv.git", "https://github.com/kohsuke/msv/");
         assertGuessURL("git@git.apache.org:whatever.git", null);
+        final boolean allowed [] = { Boolean.TRUE, Boolean.FALSE };
+        for (final boolean add_git_suffix : allowed) {
+            for (final boolean add_slash_suffix : allowed) {
+                assertGuessURL(repoUrl("git@github.com:kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("https://github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("ssh://github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+                assertGuessURL(repoUrl("ssh://git@github.com/kohsuke/msv", add_git_suffix, add_slash_suffix), "https://github.com/kohsuke/msv/");
+            }
+        }
     }
     private void assertGuessURL(String repo, String web) {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
+        assertEquals("For repo '" + repo + "':", web, actual);
+    }
+
+    @Issue("JENKINS-33409")
+    @Test
+    public void guessBrowserSCMSource() throws Exception {
+        // like GitSCMSource:
+        assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/", "+refs/heads/*:refs/remotes/origin/*");
+        // like GitHubSCMSource:
+        assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/", "+refs/heads/*:refs/remotes/origin/*", "+refs/pull/*/merge:refs/remotes/origin/pr/*");
+    }
+    private void assertGuessURL(String remote, String web, String... refSpecs) {
+        RepositoryBrowser<?> guess = new MockSCMSource(remote, refSpecs).build(new SCMHead("master")).guessBrowser();
+        String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
         assertEquals(web, actual);
+    }
+    private static class MockSCMSource extends AbstractGitSCMSource {
+        private final String remote;
+        private final String[] refSpecs;
+        MockSCMSource(String remote, String[] refSpecs) {
+            super(null);
+            this.remote = remote;
+            this.refSpecs = refSpecs;
+        }
+        @Override
+        public String getCredentialsId() {
+            return null;
+        }
+        @Override
+        public String getRemote() {
+            return remote;
+        }
+        @Override
+        public String getIncludes() {
+            return "*";
+        }
+        @Override
+        public String getExcludes() {
+            return "";
+        }
+        @Override
+        protected List<RefSpec> getRefSpecs() {
+            List<RefSpec> result = new ArrayList<RefSpec>();
+            for (String refSpec : refSpecs) {
+                result.add(new RefSpec(refSpec));
+            }
+            return result;
+        }
     }
 
     private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final File rawchangelog = new File(GithubWebTest.class.getResource(rawchangelogpath).getFile());
         final GitChangeLogParser logParser = new GitChangeLogParser(false);
-        final List<GitChangeSet> changeSetList = logParser.parse((Run) null, null, rawchangelog).getLogs();
+        final List<GitChangeSet> changeSetList = logParser.parse(GithubWebTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 

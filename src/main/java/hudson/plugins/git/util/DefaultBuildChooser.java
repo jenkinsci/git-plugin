@@ -314,7 +314,7 @@ public class DefaultBuildChooser extends BuildChooser {
      * - if the branch name contains more wildcards then the simple usecase
      * - if the branch name should be treated as regexp
      * @param branchSpec
-     * @return
+     * @return true if branchSpec requires advanced matching
      */
     boolean isAdvancedSpec(String branchSpec) {
         // null or wildcards or regexp
