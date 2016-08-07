@@ -89,7 +89,7 @@ void mvn(def args) {
   /* Set JAVA_HOME, and special PATH variables. */
   List javaEnv = [
     "PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}",
-    '_JAVA_OPTIONS=-Xmx256m -Djava.awt.headless=true',
+    '_JAVA_OPTIONS=-XX:MaxPermSize=160m -Xmx256m -Djava.awt.headless=true',
     // Additional variables needed by tests on machines
     // that don't have global git user.name and user.email configured.
     'GIT_COMMITTER_EMAIL=me@hatescake.com','GIT_COMMITTER_NAME=Hates','GIT_AUTHOR_NAME=Cake','GIT_AUTHOR_EMAIL=hates@cake.com', 'LOGNAME=hatescake'
