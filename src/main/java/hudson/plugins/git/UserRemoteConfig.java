@@ -134,7 +134,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
-            // (Under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
+            // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
             if (item == null || !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
