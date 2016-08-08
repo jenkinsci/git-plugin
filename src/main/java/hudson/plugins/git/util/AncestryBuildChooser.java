@@ -57,47 +57,48 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         // filter candidates based on branch age and ancestry
         return git.withRepository(new RepositoryCallback<List<Revision>>() {
             public List<Revision> invoke(Repository repository, VirtualChannel channel) throws IOException {
-                RevWalk walk = new RevWalk(repository);
-                
-                RevCommit ancestor = null;
-                if (!Strings.isNullOrEmpty(ancestorCommitSha1)) {
+                try (RevWalk walk = new RevWalk(repository)) {
+
+                    RevCommit ancestor = null;
+                    if (!Strings.isNullOrEmpty(ancestorCommitSha1)) {
+                        try {
+                            ancestor = walk.parseCommit(ObjectId.fromString(ancestorCommitSha1));
+                        } catch (IllegalArgumentException e) {
+                            throw new GitException(e);
+                        }
+                    }
+
+                    final CommitAgeFilter ageFilter = new CommitAgeFilter(maximumAgeInDays);
+                    final AncestryFilter ancestryFilter = new AncestryFilter(walk, ancestor);
+
+                    final List<Revision> filteredCandidates = Lists.newArrayList();
+
                     try {
-                        ancestor = walk.parseCommit(ObjectId.fromString(ancestorCommitSha1));
-                    } catch (IllegalArgumentException e) {
-                        throw new GitException(e);
-                    }
-                }
-                
-                final CommitAgeFilter ageFilter = new CommitAgeFilter(maximumAgeInDays);
-                final AncestryFilter ancestryFilter = new AncestryFilter(walk, ancestor);
-                
-                final List<Revision> filteredCandidates = Lists.newArrayList();
-                
-                try {
-                    for (Revision currentRevision : candidates) {
-                        RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
-                        
-                        if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
-                            continue;
+                        for (Revision currentRevision : candidates) {
+                            RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
+
+                            if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
+                                continue;
+                            }
+
+                            if (ancestryFilter.isEnabled() && !ancestryFilter.apply(currentRev)) {
+                                continue;
+                            }
+
+                            filteredCandidates.add(currentRevision);
                         }
-                        
-                        if (ancestryFilter.isEnabled() && !ancestryFilter.apply(currentRev)) {
-                            continue;
-                        }
-                        
-                        filteredCandidates.add(currentRevision);
+                    } catch (Throwable e) {
+
+                        // if a wrapped IOException was thrown, unwrap before throwing it
+                        Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
+                        if (ioeIter.hasNext())
+                            throw ioeIter.next();
+                        else
+                            throw Throwables.propagate(e);
                     }
-                } catch (Throwable e) {
-                    
-                    // if a wrapped IOException was thrown, unwrap before throwing it
-                    Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
-                    if (ioeIter.hasNext()) 
-                        throw ioeIter.next();
-                    else
-                        throw Throwables.propagate(e);
+
+                    return filteredCandidates;
                 }
-                
-                return filteredCandidates;
             }
         });
     }
