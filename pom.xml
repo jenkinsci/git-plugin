@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.9</version>
+    <version>2.12</version>
   </parent>
 
   <licenses>
@@ -15,11 +15,12 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>2.5.1-SNAPSHOT</version>
+  <version>2.5.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  <inceptionYear>2007</inceptionYear>
 
   <properties>
     <jenkins.version>1.609.3</jenkins.version>
@@ -52,6 +53,13 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-XX:MaxPermSize=160m -Djava.awt.headless=true</argLine>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>

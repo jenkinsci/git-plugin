@@ -3,6 +3,8 @@ package hudson.plugins.git.extensions.impl;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
@@ -36,6 +38,12 @@ public class CheckoutOption extends FakeGitSCMExtension {
     }
 
     @Override
+    public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        cmd.timeout(timeout);
+    }
+
+    @Override
+    @Deprecated
     public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }

@@ -1,3 +1,4 @@
+
 /*
  * The MIT License
  *
@@ -42,6 +43,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.util.Build;
@@ -73,6 +75,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +86,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -109,6 +113,39 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public abstract String getIncludes();
 
     public abstract String getExcludes();
+
+    /**
+     * Gets {@link GitRepositoryBrowser} to be used with this SCMSource.
+     * @return Repository browser or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    @CheckForNull
+    public GitRepositoryBrowser getBrowser() {
+        // Always return null by default
+        return null;
+    }
+
+    /**
+     * Gets Git tool to be used for this SCM Source.
+     * @return Git Tool or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    @CheckForNull
+    public String getGitTool() {
+        // Always return null by default
+        return null;
+    }
+
+    /**
+     * Gets list of extensions, which should be used with this branch source.
+     * @return List of Extensions to be used. May be empty
+     * @since 2.5.1
+     */
+    @NonNull
+    public List<GitSCMExtension> getExtensions() {
+        // Always return empty list
+        return Collections.emptyList();
+    }
 
     public String getRemoteName() {
       return "origin";
@@ -146,6 +183,64 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return null;
         } finally {
             cacheLock.unlock();
+        }
+    }
+
+    private static void _close(@NonNull Object walk) {
+        java.lang.reflect.Method closeMethod;
+        try {
+            closeMethod = walk.getClass().getDeclaredMethod("close");
+        } catch (NoSuchMethodException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        } catch (SecurityException ex) {
+            LOGGER.log(Level.SEVERE, "Exception finding walker close method: {0}", ex);
+            return;
+        }
+        try {
+            closeMethod.invoke(walk);
+        } catch (IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (IllegalArgumentException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        } catch (InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, "Exception calling walker close method: {0}", ex);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private static void _release(TreeWalk walk) throws IOException {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
+        }
+    }
+
+    /**
+     * Call release method on walk.  JGit 3 uses release(), JGit 4 uses close() to
+     * release resources.
+     *
+     * This method should be removed once the code depends on git client 2.0.0.
+     * @param walk object whose close or release method will be called
+     */
+    private void _release(RevWalk walk) {
+        if (walk == null) {
+            return;
+        }
+        try {
+            walk.release(); // JGit 3
+        } catch (NoSuchMethodError noMethod) {
+            _close(walk);
         }
     }
 
@@ -216,9 +311,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 try {
                                     return tw != null;
                                 } finally {
-                                    if (tw != null) {
-                                        tw.release();
-                                    }
+                                    _release(tw);
                                 }
                             }
                         };
@@ -237,7 +330,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                 }
             } finally {
-                walk.dispose();
+                _release(walk);
             }
 
             listener.getLogger().println("Done.");
@@ -289,11 +382,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         BuildChooser buildChooser = revision instanceof SCMRevisionImpl ? new SpecificRevisionBuildChooser(
                 (SCMRevisionImpl) revision) : new DefaultBuildChooser();
+        List<GitSCMExtension> extensions = getExtensions();
         return new GitSCM(
                 getRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head.getName())),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)));
+                getBrowser(), getGitTool(),
+                extensions.isEmpty() ? Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)) : extensions);
     }
 
     protected List<UserRemoteConfig> getRemoteConfigs() {

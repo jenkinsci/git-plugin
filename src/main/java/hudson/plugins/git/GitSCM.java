@@ -113,7 +113,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private List<BranchSpec> branches;
     private boolean doGenerateSubmoduleConfigurations;
 
+    @CheckForNull
     public String gitTool = null;
+    @CheckForNull
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
@@ -152,7 +154,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, null);
+                null, null, Collections.<GitSCMExtension>emptyList());
     }
 
 //    @Restricted(NoExternalUse.class) // because this keeps changing
@@ -162,9 +164,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
-            GitRepositoryBrowser browser,
-            String gitTool,
-            List<GitSCMExtension> extensions) {
+            @CheckForNull GitRepositoryBrowser browser,
+            @CheckForNull String gitTool,
+            @NonNull List<GitSCMExtension> extensions) {
 
         // moved from createBranches
         this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
@@ -319,6 +321,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return browser;
     }
 
+    private static final Pattern[] URL_PATTERNS = {
+        Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*"),
+        Pattern.compile("ssh://(?:git@)?github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+    };
+
     @Override public RepositoryBrowser<?> guessBrowser() {
         Set<String> webUrls = new HashSet<String>();
         if (remoteRepositories != null) {
@@ -326,13 +334,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (URIish uriIsh : config.getURIs()) {
                     String uri = uriIsh.toString();
                     // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
-                    Matcher m = Pattern.compile("(https://github[.]com/[^/]+/[^/]+)[.]git").matcher(uri);
-                    if (m.matches()) {
-                        webUrls.add(m.group(1) + "/");
-                    }
-                    m = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git").matcher(uri);
-                    if (m.matches()) {
-                        webUrls.add("https://github.com/" + m.group(1) + "/");
+                    for (Pattern p : URL_PATTERNS) {
+                        Matcher m = p.matcher(uri);
+                        if (m.matches()) {
+                            webUrls.add("https://github.com/" + m.group(1) + "/");
+                        }
                     }
                 }
             }
@@ -479,6 +485,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return localBranchName;
     }
 
+    @CheckForNull
     public String getGitTool() {
         return gitTool;
     }
