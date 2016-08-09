@@ -8,7 +8,6 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
-import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -79,7 +78,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url) {
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel();
             }
             return new StandardListBoxModel()
@@ -96,7 +95,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
@@ -134,7 +133,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
-            if (item == null || !item.hasPermission(Item.CONFIGURE)) {
+            // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
+            // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
+            if (item == null || !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
 

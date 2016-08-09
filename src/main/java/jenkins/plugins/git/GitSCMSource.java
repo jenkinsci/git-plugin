@@ -187,7 +187,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String remote) {
-            if (context == null || !context.hasPermission(Item.CONFIGURE)) {
+            if (context == null || !context.hasPermission(Item.EXTENDED_READ)) {
                 return new ListBoxModel();
             }
             StandardListBoxModel result = new StandardListBoxModel();
