@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+  <j:set var="branchSpec" value="${it.getBranchSpecifier(job)}"/>
+  <td data="${branchSpec}">
+    <j:forEach items="${branchSpec.split(' ')}" var="i">
+        <p>${i}</p>
+    </j:forEach>
+</td>
+</j:jelly>
