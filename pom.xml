@@ -23,6 +23,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
+    <jacoco-maven-plugin.version>0.7.7.201606060606</jacoco-maven-plugin.version>
     <jenkins.version>1.609.3</jenkins.version>
     <java.level>6</java.level>
     <!-- Use the same configuration than before. -->
@@ -55,6 +56,25 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
