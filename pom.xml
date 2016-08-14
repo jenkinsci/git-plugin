@@ -27,7 +27,7 @@
     <java.level>6</java.level>
     <!-- Use the same configuration than before. -->
     <concurrency>2</concurrency>
-    <permgen.size>128m</permgen.size>
+    <permgen.size>160m</permgen.size>
     <argLine>-XX:MaxPermSize=${permgen.size}</argLine>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
@@ -58,9 +58,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>-XX:MaxPermSize=160m -Djava.awt.headless=true</argLine>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
