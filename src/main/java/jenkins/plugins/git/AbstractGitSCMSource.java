@@ -40,6 +40,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
@@ -152,6 +153,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     @CheckForNull
+    protected GitTool resolveGitTool() {
+        GitTool tool = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)
+            .getInstallation(getGitTool());
+        if (getGitTool() == null) {
+            tool = GitTool.getDefaultInstallation();
+        }
+        return tool;
+    }
+
+    @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
@@ -160,7 +171,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
-            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
+            GitTool tool = resolveGitTool();
+            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).using(tool.getGitExe()).in(cacheDir);
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
             if (!client.hasGitRepo()) {
@@ -254,7 +266,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
-            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
+            GitTool tool = resolveGitTool();
+            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).using(tool.getGitExe()).in(cacheDir);
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
             if (!client.hasGitRepo()) {

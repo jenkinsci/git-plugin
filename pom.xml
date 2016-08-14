@@ -27,6 +27,8 @@
     <java.level>6</java.level>
     <!-- Use the same configuration than before. -->
     <concurrency>2</concurrency>
+    <permgen.size>128m</permgen.size>
+    <argLine>-XX:MaxPermSize=${permgen.size}</argLine>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
@@ -181,6 +183,18 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>1.10.19</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <version>1.6.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <version>1.6.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
