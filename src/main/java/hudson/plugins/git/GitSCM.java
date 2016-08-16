@@ -824,7 +824,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (gitTool == null) return GitTool.getDefaultInstallation();
         GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
         if (git == null) {
-            listener.getLogger().println("selected Git installation does not exists. Using Default");
+            listener.getLogger().println("Selected Git installation does not exist. Using Default");
             git = GitTool.getDefaultInstallation();
         }
         return git;
