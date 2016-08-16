@@ -34,6 +34,8 @@ import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Descriptor;
 import hudson.model.ParameterValue;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -41,11 +43,13 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.RepositoryBrowser;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
@@ -186,21 +190,59 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter String remote) {
+                                                     @QueryParameter String remote,
+                                                     @QueryParameter String credentialsId) {
             if (context == null || !context.hasPermission(Item.EXTENDED_READ)) {
-                return new ListBoxModel();
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.withEmptySelection();
-            result.withMatching(GitClient.CREDENTIALS_MATCHER,
-                    CredentialsProvider.lookupCredentials(
-                            StandardUsernameCredentials.class,
+            return new StandardListBoxModel()
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            context instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task)context) : ACL.SYSTEM,
                             context,
-                            ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(remote).build()
-                    )
-            );
-            return result;
+                            StandardUsernameCredentials.class,
+                            URIRequirementBuilder.fromUri(remote).build(),
+                            GitClient.CREDENTIALS_MATCHER)
+                    .includeCurrentValue(credentialsId);
+        }
+
+        public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
+                                                   @QueryParameter String url,
+                                                   @QueryParameter String value) {
+            if (context == null || !context.hasPermission(Item.EXTENDED_READ)) {
+                return FormValidation.ok();
+            }
+
+            value = Util.fixEmptyAndTrim(value);
+            if (value == null) {
+                return FormValidation.ok();
+            }
+
+            url = Util.fixEmptyAndTrim(url);
+            if (url == null)
+            // not set, can't check
+            {
+                return FormValidation.ok();
+            }
+
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
+                    StandardUsernameCredentials.class,
+                    context,
+                    context instanceof Queue.Task
+                            ? Tasks.getAuthenticationOf((Queue.Task) context)
+                            : ACL.SYSTEM,
+                    URIRequirementBuilder.fromUri(url).build(),
+                    GitClient.CREDENTIALS_MATCHER)) {
+                if (StringUtils.equals(value, o.value)) {
+                    // TODO check if this type of credential is acceptable to the Git client or does it merit warning
+                    // NOTE: we would need to actually lookup the credential to do the check, which may require
+                    // fetching the actual credential instance from a remote credentials store. Perhaps this is
+                    // not required
+                    return FormValidation.ok();
+                }
+            }
+            // no credentials available, can't check
+            return FormValidation.warning("Cannot find any credentials with id " + value);
         }
 
         public GitSCM.DescriptorImpl getSCMDescriptor() {

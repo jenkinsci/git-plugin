@@ -93,8 +93,9 @@ public final class GitStep extends SCMStep {
         private UserRemoteConfig.DescriptorImpl delegate;
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
-                                                     @QueryParameter String url) {
-            return delegate.doFillCredentialsIdItems(project, url);
+                                                     @QueryParameter String url,
+                                                     @QueryParameter String credentialsId) {
+            return delegate.doFillCredentialsIdItems(project, url, credentialsId);
         }
 
         public FormValidation doCheckUrl(@AncestorInPath Item item,
