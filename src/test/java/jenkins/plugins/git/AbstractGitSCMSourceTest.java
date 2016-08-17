@@ -5,6 +5,7 @@ import hudson.util.StreamTaskListener;
 import jenkins.scm.api.SCMSource;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
@@ -56,6 +57,7 @@ public class AbstractGitSCMSourceTest {
   }
 
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
+    @Issue("JENKINS-37482")
     @Test
     public void retrieveHeads() throws Exception {
         sampleRepo.init();
