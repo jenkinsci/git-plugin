@@ -1,10 +1,15 @@
 package jenkins.plugins.git;
 
+import hudson.model.TaskListener;
+import hudson.util.StreamTaskListener;
+import jenkins.scm.api.SCMSource;
+import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
@@ -13,11 +18,16 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractGitSCMSourceTest {
 
+    @Rule
+    public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
   
   /*
    * Test excluded branches
-   * 
+   * TODO seems to overlap AbstractGitSCMSourceTrivialTest.testIsExcluded
    */
+  @WithoutJenkins // unnecessary if moved into, say, AbstractGitSCMSourceTrivialTest
   @Test
   public void basicTestIsExcluded(){
     AbstractGitSCMSource abstractGitSCMSource = mock(AbstractGitSCMSource.class);
@@ -44,5 +54,25 @@ public class AbstractGitSCMSourceTest {
     assertFalse(abstractGitSCMSource.isExcluded("feature/spiffy"));
     assertTrue(abstractGitSCMSource.isExcluded("feature/spiffy/private"));
   }
+
+    // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
+    @Test
+    public void retrieveHeads() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        TaskListener listener = StreamTaskListener.fromStderr();
+        // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        // And reuse cache:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        sampleRepo.git("checkout", "-b", "dev2");
+        sampleRepo.write("file", "modified again");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        // After changing data:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
 
 }

@@ -363,10 +363,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
-        File parentDir = cacheDir.getParentFile();
-        if (!parentDir.isDirectory()) {
-            boolean ok = parentDir.mkdirs();
-            if (!ok) LOGGER.info("Failed mkdirs of " + parentDir.getPath());
+        if (!cacheDir.isDirectory()) {
+            boolean ok = cacheDir.mkdirs();
+            if (!ok) {
+                LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+            }
         }
         return cacheDir;
     }
