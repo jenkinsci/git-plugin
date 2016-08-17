@@ -1,7 +1,12 @@
 package jenkins.plugins.git;
 
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.scm.SCMRevisionState;
 import hudson.util.StreamTaskListener;
+import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +80,46 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
         assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
+
+    @Issue("JENKINS-31155")
+    @Test
+    public void retrieveRevision() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        // Test retrieval of branches:
+        assertEquals("v2", fileAt("master", run));
+        assertEquals("v3", fileAt("dev", run));
+        // Tags:
+        assertEquals("v1", fileAt("v1", run));
+        // And commit hashes:
+        assertEquals("v1", fileAt(v1, run));
+        assertEquals("v1", fileAt(v1.substring(0, 7), run));
+        // Nonexistent stuff:
+        assertNull(fileAt("nonexistent", run));
+        assertNull(fileAt("1234567", run));
+    }
+    private String fileAt(String revision, Run<?,?> run) throws Exception {
+        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        TaskListener listener = StreamTaskListener.fromStderr();
+        SCMRevision rev = source.fetch(revision, listener);
+        if (rev == null) {
+            return null;
+        } else {
+            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision);
+            source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
+            return ws.child("file").readToString();
+        }
     }
 
 }
