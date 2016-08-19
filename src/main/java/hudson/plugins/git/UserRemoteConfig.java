@@ -96,7 +96,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                     : ACL.SYSTEM,
                             project,
                             StandardUsernameCredentials.class,
-                            URIRequirementBuilder.fromUri(url).build(),
+                            GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)
                     .includeCurrentValue(credentialsId);
         }
@@ -129,7 +129,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .listCredentials(StandardUsernameCredentials.class, project, project instanceof Queue.Task
                                     ? Tasks.getAuthenticationOf((Queue.Task) project)
                                     : ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(url).build(),
+                            GitURIRequirementsBuilder.fromUri(url).build(),
                             GitClient.CREDENTIALS_MATCHER)) {
                 if (StringUtils.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
