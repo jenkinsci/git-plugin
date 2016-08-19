@@ -7,6 +7,8 @@ import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.LauncherDecorator;
+import hudson.Proc;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
@@ -2179,7 +2181,33 @@ public class GitSCMTest extends AbstractGitTestCase {
        verify(buildData, times(1)).hasBeenReferenced(anyString());
        verify(build, times(1)).getActions(BuildData.class);
     }
-    
+
+    @TestExtension("testClientUsesLauncher")
+    public static final LauncherDecorator DECORATOR = new LauncherDecorator() {
+        @Override
+        public Launcher decorate(Launcher launcher, Node node) {
+            return new Launcher.DecoratedLauncher(launcher) {
+                @Override
+                public Proc launch(ProcStarter starter) throws IOException {
+                    starter.cmds("wil fail");
+                    return super.launch(starter);
+                }
+            };
+        }
+    };
+
+    @Issue("JENKINS-30600")
+    @Test
+    public void testClientUsesLauncher() throws Exception {
+        final FreeStyleProject project = setupProject("*/*", false);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+
+        final FreeStyleBuild build = build(project, Result.FAILURE);
+        assertTrue(build.getLog().contains("Cannot run program \"wil fail\""));
+    }
+
+
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
