@@ -8,6 +8,7 @@ import hudson.scm.SCMRevisionState;
 import hudson.util.StreamTaskListener;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -97,21 +98,23 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of branches:
-        assertEquals("v2", fileAt("master", run));
-        assertEquals("v3", fileAt("dev", run));
+        assertEquals("v2", fileAt("master", run, source, listener));
+        assertEquals("v3", fileAt("dev", run, source, listener));
         // Tags:
-        assertEquals("v1", fileAt("v1", run));
+        assertEquals("v1", fileAt("v1", run, source, listener));
         // And commit hashes:
-        assertEquals("v1", fileAt(v1, run));
-        assertEquals("v1", fileAt(v1.substring(0, 7), run));
+        assertEquals("v1", fileAt(v1, run, source, listener));
+        assertEquals("v1", fileAt(v1.substring(0, 7), run, source, listener));
         // Nonexistent stuff:
-        assertNull(fileAt("nonexistent", run));
-        assertNull(fileAt("1234567", run));
+        assertNull(fileAt("nonexistent", run, source, listener));
+        assertNull(fileAt("1234567", run, source, listener));
+        assertThat(source.fetchRevisions(listener), Matchers.hasItems("master", "dev", "v1"));
+        // we do not care to return commit hashes or other references
     }
-    private String fileAt(String revision, Run<?,?> run) throws Exception {
-        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        TaskListener listener = StreamTaskListener.fromStderr();
+    private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener);
         if (rev == null) {
             return null;

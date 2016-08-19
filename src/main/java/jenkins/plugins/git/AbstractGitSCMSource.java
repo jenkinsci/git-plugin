@@ -81,7 +81,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -369,6 +371,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                 }
                 return new SCMRevisionImpl(new SCMHead(revision), hash);
+            }
+        }, listener);
+    }
+
+    @CheckForNull
+    @Override
+    protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<Set<String>>() {
+            @Override
+            public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                Set<String> revisions = new HashSet<String>();
+                for (Branch branch : client.getRemoteBranches()) {
+                    revisions.add(branch.getName().replaceFirst("^origin/", ""));
+                }
+                revisions.addAll(client.getTagNames("*"));
+                return revisions;
             }
         }, listener);
     }
