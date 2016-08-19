@@ -111,6 +111,8 @@ public class AbstractGitSCMSourceTest {
         // Nonexistent stuff:
         assertNull(fileAt("nonexistent", run, source, listener));
         assertNull(fileAt("1234567", run, source, listener));
+        assertNull(fileAt("", run, source, listener));
+        assertNull(fileAt("\n", run, source, listener));
         assertThat(source.fetchRevisions(listener), Matchers.hasItems("master", "dev", "v1"));
         // we do not care to return commit hashes or other references
     }
