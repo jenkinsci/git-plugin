@@ -990,8 +990,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             // will build the last built thing.
             throw new AbortException("Couldn't find any revision to build. Verify the repository and branch configuration for this job.");
         }
+        
+        // Related to JENKINS-37263
+        // If we have multiple candidates, we want to select the remote one
+        // As our local candidate is probably the branch created by the local branch behaviour.
+        Iterator<Revision> candidatesIterator = candidates.iterator();
+        Revision marked = candidatesIterator.next();
+        while(candidatesIterator.hasNext()) {
+            Revision candidate = candidatesIterator.next();
+            
+            Branch candidateBranch = candidate.getBranches().iterator().next();
+            if (candidateBranch.getName().startsWith("refs/remotes/")) {
+                marked = candidate;
+            }
+        }
 
-        Revision marked = candidates.iterator().next();
         Revision rev = marked;
         // Modify the revision based on extensions
         for (GitSCMExtension ext : extensions) {
