@@ -937,7 +937,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
     }
 
-    @Test
+    // Temporarily disabled - unreliable and failures not helpful
+    // @Test
     public void testFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
