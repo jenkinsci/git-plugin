@@ -939,7 +939,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     // Temporarily disabled - unreliable and failures not helpful
     // @Test
-    public void testFetchFromMultipleRepositories() throws Exception {
+    public void xtestFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
