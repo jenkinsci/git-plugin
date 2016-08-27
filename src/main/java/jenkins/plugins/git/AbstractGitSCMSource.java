@@ -69,7 +69,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -90,6 +89,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.eclipse.jgit.transport.URIish;
 
 /**
  * @author Stephen Connolly
@@ -277,18 +277,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             String remoteName = getRemoteName();
             listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
             client.setRemoteUrl(remoteName, getRemote());
-            listener.getLogger().println("Fetching " + remoteName + "...");
+            listener.getLogger().println("Fetching & pruning " + remoteName + "...");
             List<RefSpec> refSpecs = getRefSpecs();
-            client.fetch(remoteName, refSpecs.toArray(new RefSpec[refSpecs.size()]));
-            listener.getLogger().println("Pruning stale remotes...");
-            final Repository repository = client.getRepository();
+            URIish remoteURI = null;
             try {
-                client.prune(new RemoteConfig(repository.getConfig(), remoteName));
-            } catch (UnsupportedOperationException e) {
-                e.printStackTrace(listener.error("Could not prune stale remotes"));
-            } catch (URISyntaxException e) {
-                e.printStackTrace(listener.error("Could not prune stale remotes"));
+                remoteURI = new URIish(remoteName);
+            } catch (URISyntaxException ex) {
+                listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
             }
+            client.fetch_().prune().from(remoteURI, getRefSpecs()).execute();
+            final Repository repository = client.getRepository();
             listener.getLogger().println("Getting remote branches...");
             SCMSourceCriteria branchCriteria = getCriteria();
             RevWalk walk = new RevWalk(repository);
