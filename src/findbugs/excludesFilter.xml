@@ -169,4 +169,28 @@
     <Field name="lastStaticBuildParameters"/>
   </Match>
 
+  <!-- Field 'extensions' intentionally non-transient -->
+  <Match>
+    <Bug pattern="SE_BAD_FIELD"/>
+    <Class name="hudson.plugins.git.GitSCM"/>
+    <Field name="extensions"/>
+  </Match>
+
+  <!-- Fields 'build' & 'project' known to be non-transient -->
+  <Match>
+    <Bug pattern="SE_BAD_FIELD"/>
+    <Class name="hudson.plugins.git.GitSCM$BuildChooserContextImpl"/>
+    <Or>
+      <Field name="build"/>
+      <Field name="project"/>
+    </Or>
+  </Match>
+
+  <!-- Field 'git known to be non-transient -->
+  <Match>
+    <Bug pattern="SE_BAD_FIELD"/>
+    <Class name="hudson.plugins.git.util.GitUtils"/>
+    <Field name="git"/>
+  </Match>
+
 </FindBugsFilter>
