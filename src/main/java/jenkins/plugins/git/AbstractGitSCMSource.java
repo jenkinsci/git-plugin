@@ -171,8 +171,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
+            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
             GitTool tool = resolveGitTool();
-            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).using(tool.getGitExe()).in(cacheDir);
+            if (tool != null) {
+                git.using(tool.getGitExe());
+            }
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
             if (!client.hasGitRepo()) {
@@ -266,8 +269,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         cacheLock.lock();
         try {
             File cacheDir = getCacheDir(cacheEntry);
+            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
             GitTool tool = resolveGitTool();
-            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).using(tool.getGitExe()).in(cacheDir);
+            if (tool != null) {
+                git.using(tool.getGitExe());
+            }
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
             if (!client.hasGitRepo()) {
