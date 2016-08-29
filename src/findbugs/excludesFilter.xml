@@ -53,6 +53,7 @@
       <Class name="hudson.plugins.git.GitSCM$DescriptorImpl"/>
     </Or>
     <Or>
+      <Method name="getGitTools"/>
       <Method name="onLoaded"/>
       <Method name="resolveGitTool"/>
       <Method name="showGitToolOptions"/>
@@ -117,7 +118,10 @@
   <Match>
     <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     <Class name="jenkins.plugins.git.AbstractGitSCMSource"/>
-    <Method name="getCacheDir"/>
+    <Or>
+      <Method name="getCacheDir"/>
+      <Method name="resolveGitTool"/>
+    </Or>
   </Match>
 
   <!-- Jenkins.getInstance() always returns a non-null. -->
@@ -125,6 +129,37 @@
     <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     <Class name="jenkins.plugins.git.GitSCMSource$ListenerImpl"/>
     <Method name="onNotifyCommit"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="jenkins.plugins.git.GitSCMSource$DescriptorImpl"/>
+    <Method name="getSCMDescriptor"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.browser.FisheyeGitRepositoryBrowser$FisheyeGitRepositoryBrowserDescriptor"/>
+    <Method name="doCheckUrl"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.extensions.impl.SparseCheckoutPath"/>
+    <Method name="getDescriptor"/>
+  </Match>
+
+  <!-- Jenkins.getInstance() always returns a non-null. -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="hudson.plugins.git.util.BuildChooser"/>
+    <Or>
+      <Method name="all"/>
+      <Method name="getDescriptor"/>
+    </Or>
   </Match>
 
   <!-- Clears the static field on entry, used only in toString. -->
