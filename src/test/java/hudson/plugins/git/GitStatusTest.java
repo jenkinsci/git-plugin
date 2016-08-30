@@ -163,9 +163,7 @@ public class GitStatusTest extends AbstractGitProject {
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic,feature/def", null);
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
-        // trigger containing slash is not called in current code, should be
-        // JENKINS-29603 may be related
-        Mockito.verify(aFeatureTrigger, Mockito.never()).run();
+        Mockito.verify(aFeatureTrigger).run();
 
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
@@ -198,7 +196,7 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger aSlashesTrigger = setupProjectWithTrigger("a", "name/with/slashes", false);
 
         this.gitStatus.doNotifyCommit(requestWithParameter, "a", "name/with/slashes", null);
-        Mockito.verify(aSlashesTrigger, Mockito.never()).run(); // Should be run
+        Mockito.verify(aSlashesTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
 
         assertEquals("URL: a Branches: name/with/slashes", this.gitStatus.toString());
