@@ -1,8 +1,11 @@
 package hudson.plugins.git;
 
+import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -14,7 +17,6 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
-
 import org.eclipse.jgit.transport.URIish;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -25,6 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +39,7 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+@RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
 
     private GitStatus gitStatus;
@@ -281,6 +289,68 @@ public class GitStatusTest extends AbstractGitProject {
                 + (allowedParamKey1 ? " Parameters: paramKey1='paramValue1'" : "")
                 + (allowedParamKey1 ? " More parameters: paramKey1='paramValue1'" : "");
         assertEquals(expected, this.gitStatus.toString());
+    }
+
+    @DataPoints("branchSpecPrefixes")
+    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
+            "",
+            "refs/remotes/",
+            "refs/heads/",
+            "origin/",
+            "remotes/origin/"
+    };
+
+    @Theory
+    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithRegex() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    private void assertAdditionalParameters(Collection<? extends Action> actions) {
+        for (Action action: actions) {
+            if (action instanceof ParametersAction) {
+                final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
+                assertEquals(2, parameters.size());
+                for (ParameterValue value : parameters) {
+                    assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))
+                            || (value.getName().equals("paramKey2") && value.getValue().equals("paramValue2")));
+                }
+            }
+        }
     }
 
     private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
