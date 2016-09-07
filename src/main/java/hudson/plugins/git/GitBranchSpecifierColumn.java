@@ -46,7 +46,7 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
 
         @Override
         public String getDisplayName() {
-            return "Git branches to build";
+            return "Git Branches";
         }
 
         @Override
