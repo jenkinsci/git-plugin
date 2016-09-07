@@ -6,6 +6,7 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.views.ListViewColumnDescriptor;
 import java.util.ArrayList;
+import java.util.List;
 import jenkins.triggers.SCMTriggerItem;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -20,22 +21,24 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
     @DataBoundConstructor
     public GitBranchSpecifierColumn() { }
 
-    public String getBranchSpecifier( final Item item ) {
-        String branchSpec = "";
+    public List<String> getBranchSpecifier( final Item item ) {
+        List<String> branchSpec = new ArrayList<String>();
         SCMTriggerItem s = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(item);
         if(s != null) {
             for(SCM scm : s.getSCMs()) {
                 if (scm instanceof GitSCM) {
                     GitSCM gitScm = (GitSCM)scm;
-                    ArrayList<String> branches = new ArrayList<String>();
                     for(BranchSpec spec : gitScm.getBranches()) {
-                        branches.add(spec.getName());
+                        branchSpec.add(spec.getName());
                     }
-                    branchSpec = StringUtils.join(branches, " ");
                 }
             }
         }
         return branchSpec;
+    }
+
+    public String breakOutString(List<String> branches) {
+        return StringUtils.join(branches, ", ");
     }
 
     @Extension
