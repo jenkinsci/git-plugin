@@ -110,6 +110,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         super(id);
     }
 
+    @CheckForNull
     public abstract String getCredentialsId();
 
     public abstract String getRemote();
@@ -423,12 +424,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return cacheLock;
     }
 
+    @CheckForNull
     protected StandardUsernameCredentials getCredentials() {
+        String credentialsId = getCredentialsId();
+        if (credentialsId == null) {
+            return null;
+        }
         return CredentialsMatchers
                 .firstOrNull(
                         CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, getOwner(),
                                 ACL.SYSTEM, URIRequirementBuilder.fromUri(getRemote()).build()),
-                        CredentialsMatchers.allOf(CredentialsMatchers.withId(getCredentialsId()),
+                        CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER));
     }
 
