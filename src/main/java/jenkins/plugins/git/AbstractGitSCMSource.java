@@ -397,15 +397,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @NonNull
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        BuildChooser buildChooser = revision instanceof SCMRevisionImpl ? new SpecificRevisionBuildChooser(
-                (SCMRevisionImpl) revision) : new DefaultBuildChooser();
-        List<GitSCMExtension> extensions = getExtensions();
+        List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>(getExtensions());
+        if (revision instanceof SCMRevisionImpl) {
+            extensions.add(new BuildChooserSetting(new SpecificRevisionBuildChooser((SCMRevisionImpl) revision)));
+        }
         return new GitSCM(
                 getRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head.getName())),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 getBrowser(), getGitTool(),
-                extensions.isEmpty() ? Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)) : extensions);
+                extensions);
     }
 
     protected List<UserRemoteConfig> getRemoteConfigs() {
