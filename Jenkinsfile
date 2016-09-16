@@ -13,6 +13,9 @@ node {
   /* Call the maven build. */
   mvn "clean install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true"
 
+  stage 'ATH'
+  runAthForPlugin("git","2.7.4","*Git*")
+
   /* Save Results. */
   stage 'Results'
 
@@ -47,6 +50,16 @@ void mvn(def args) {
       } else {
         bat "${mvnHome}\\bin\\mvn ${args}"
       }
+    }
+  }
+}
+
+void runAthForPlugin(String plugin, String coreVersion, String testPattern) {
+  dir ('acceptance-test-harness') {
+    git 'git@github.com:jenkinsci/acceptance-test-harness.git'
+    pluginOverride = "${plugin}.jpi=../target/${plugin}.hpi"
+    withEnv(["JENKINS_VERSION=$coreVersion",pluginOverride,"ONLY_FOR_PLUGINS=${plugin}"]){
+      mvn "clean test -Dtest=$testPattern -Dmaven.test.failure.ignore=true"
     }
   }
 }
