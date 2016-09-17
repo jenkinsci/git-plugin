@@ -1,9 +1,18 @@
 package jenkins.plugins.git;
 
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import static org.hamcrest.Matchers.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -20,7 +29,7 @@ public class AbstractGitSCMSourceTest {
     public JenkinsRule r = new JenkinsRule();
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-  
+
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
     @Issue("JENKINS-37482")
     @Test
@@ -80,5 +89,33 @@ public class AbstractGitSCMSourceTest {
 
         /* Fetch and confirm dev branch was pruned */
         assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
+
+    @Test
+    public void testSpecificRevisionBuildChooser() throws Exception {
+        sampleRepo.init();
+
+        /* Write a file to the master branch */
+        sampleRepo.write("master-file", "master-content-" + UUID.randomUUID().toString());
+        sampleRepo.git("add", "master-file");
+        sampleRepo.git("commit", "--message=master-branch-commit-message");
+
+        /* Fetch from sampleRepo */
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>();
+        assertThat(source.getExtensions(), is(empty()));
+        LocalBranch localBranchExtension = new LocalBranch("**");
+        extensions.add(localBranchExtension);
+        source.setExtensions(extensions);
+        assertEquals(source.getExtensions(), extensions);
+        TaskListener listener = StreamTaskListener.fromStderr();
+
+        /* Check that BuildChooserSetting has been added to extensions by build() */
+        SCMHead head = new SCMHead("master");
+        SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
+        GitSCM scm = (GitSCM) source.build(head, revision);
+        assertEquals(extensions.get(0), scm.getExtensions().get(0));
+        assertTrue(scm.getExtensions().get(1) instanceof BuildChooserSetting);
+        assertEquals(2, scm.getExtensions().size());
     }
 }
