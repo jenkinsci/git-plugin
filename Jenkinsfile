@@ -60,8 +60,8 @@ void runAthForPlugin(String plugin, String coreVersion, String testPattern) {
     pluginOverride = "${plugin}.jpi=../target/${plugin}.hpi"
     docker.image("selenium/standalone-firefox").withRun("--net=host -d -p 4444:4444") { c-> 
       withEnv(["JENKINS_VERSION=$coreVersion",pluginOverride,"ONLY_FOR_PLUGINS=${plugin}",
-               "BROWSER=remote-webdriver-firefox", "JENKINS_LOCAL_HOSTNAME=${env.DOCKER_HOST_IP?:localhost}",
-               "REMOTE_WEBDRIVER_URL=http://${env.DOCKER_CONTAINER_IP?:localhost}:4444/wd/hub"]){
+               "BROWSER=remote-webdriver-firefox", "JENKINS_LOCAL_HOSTNAME=${env.DOCKER_HOST_IP?:'localhost'}",
+               "REMOTE_WEBDRIVER_URL=http://${env.DOCKER_CONTAINER_IP?:'localhost'}:4444/wd/hub"]){
         mvn "clean test -Dtest=$testPattern -Dmaven.test.failure.ignore=true"
       }
     }
