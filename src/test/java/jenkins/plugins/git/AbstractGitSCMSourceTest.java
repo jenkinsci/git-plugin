@@ -110,12 +110,17 @@ public class AbstractGitSCMSourceTest {
         assertEquals(source.getExtensions(), extensions);
         TaskListener listener = StreamTaskListener.fromStderr();
 
-        /* Check that BuildChooserSetting has been added to extensions by build() */
         SCMHead head = new SCMHead("master");
         SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
-        GitSCM scm = (GitSCM) source.build(head, revision);
-        assertEquals(extensions.get(0), scm.getExtensions().get(0));
-        assertTrue(scm.getExtensions().get(1) instanceof BuildChooserSetting);
-        assertEquals(2, scm.getExtensions().size());
+
+        /* Check that BuildChooserSetting not added to extensions by build() */
+        GitSCM scm = (GitSCM) source.build(head);
+        assertEquals(extensions, scm.getExtensions());
+
+        /* Check that BuildChooserSetting has been added to extensions by build() */
+        GitSCM scmRevision = (GitSCM) source.build(head, revision);
+        assertEquals(extensions.get(0), scmRevision.getExtensions().get(0));
+        assertTrue(scmRevision.getExtensions().get(1) instanceof BuildChooserSetting);
+        assertEquals(2, scmRevision.getExtensions().size());
     }
 }
