@@ -4,7 +4,7 @@
 properties([[$class: 'BuildDiscarderProperty',
                 strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 
-node("docker") {
+node("highram") {
   stage 'Checkout'
   checkout scm
 
