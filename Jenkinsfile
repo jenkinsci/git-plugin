@@ -65,5 +65,6 @@ void runAthForPlugin(String plugin, String coreVersion, String testPattern) {
         mvn "clean test -Dtest=$testPattern -Dmaven.test.failure.ignore=true"
       }
     }
+    archiveArtifacts artifacts: 'target/diagnostics/**'
   }
 }
