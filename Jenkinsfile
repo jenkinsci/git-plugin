@@ -56,7 +56,7 @@ void mvn(def args) {
 
 void runAthForPlugin(String plugin, String coreVersion, String testPattern) {
   dir ('acceptance-test-harness') {
-    git 'git://github.com/recampbell/acceptance-test-harness.git'
+    git 'git://github.com/jenkinsci/acceptance-test-harness.git'
     pluginOverride = "${plugin}.jpi=../target/${plugin}.hpi"
     docker.image("selenium/standalone-firefox").withRun("--net=host -d -p 4444:4444") { c-> 
       withEnv(["JENKINS_VERSION=$coreVersion",pluginOverride,"ONLY_FOR_PLUGINS=${plugin}",
