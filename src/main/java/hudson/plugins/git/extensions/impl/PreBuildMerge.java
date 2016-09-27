@@ -89,6 +89,8 @@ public class PreBuildMerge extends GitSCMExtension {
             BuildData bd = scm.getBuildData(build);
             if(bd != null){
                 bd.saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
+            } else {
+                listener.getLogger().println("Was not possible to get build data");
             }
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
