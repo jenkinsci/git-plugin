@@ -116,7 +116,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.singletonList(new BranchToPush("origin", "HEAD", "integration")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -150,7 +150,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.singletonList(new BranchToPush("origin", "HEAD", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, true));
 
@@ -189,7 +189,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
 
       project.getPublishersList().add(new GitPublisher(
           Collections.<TagToPush>emptyList(),
-          Collections.singletonList(new BranchToPush("origin", "integration")),
+          Collections.singletonList(new BranchToPush("origin", "HEAD", "integration")),
           Collections.<NoteToPush>emptyList(),
           true, true, false));
 
@@ -259,7 +259,7 @@ public class GitPublisherTest extends AbstractGitTestCase {
         String noteValue = "note for " + envValue;
         GitPublisher publisher = new GitPublisher(
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
-                Collections.singletonList(new BranchToPush("origin", envReference)),
+                Collections.singletonList(new BranchToPush("origin", "HEAD", envReference)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
                 true, true, true);
         assertTrue(publisher.isForcePush());
