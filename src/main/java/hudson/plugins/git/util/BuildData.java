@@ -48,7 +48,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * The URLs that have been referenced.
      */
-    public Set<String> remoteUrls = new HashSet<String>();
+    public Set<String> remoteUrls = new LinkedHashSet<String>();
 
     public BuildData() {
     }
@@ -57,7 +57,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         this.scmName = scmName;
     }
 
-    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+    public BuildData(String scmName, List<UserRemoteConfig> remoteConfigs) {
         this.scmName = scmName;
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
@@ -99,7 +99,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         this.buildsByBranchName = newBuildsByBranchName;
 
         if(this.remoteUrls == null)
-            this.remoteUrls = new HashSet<String>();
+            this.remoteUrls = new LinkedHashSet<String>();
 
         return this;
     }
@@ -198,7 +198,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
 
         clone.buildsByBranchName = new HashMap<String, Build>();
-        clone.remoteUrls = new HashSet<String>();
+        clone.remoteUrls = new LinkedHashSet<String>();
 
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();

@@ -7,6 +7,7 @@ import hudson.plugins.git.Revision;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 import org.eclipse.jgit.lib.ObjectId;
 
@@ -120,6 +121,39 @@ public class BuildDataTest {
         assertFalse(data.getRemoteUrls().isEmpty());
         assertTrue("Second URL not found in remote URLs", data.getRemoteUrls().contains(remoteUrl2));
         assertEquals(2, data.getRemoteUrls().size());
+    }
+    
+    @Test
+    public void testRemoteUrlOrder() {
+    	assertEquals(1, data.getRemoteUrls().size());
+    	String remoteUrl2 = "git://github.com/jenkinsci/git-plugin8.git";
+        data.addRemoteUrl(remoteUrl2);
+        assertEquals(2, data.getRemoteUrls().size());
+        String remoteUrl3 = "git://github.com/jenkinsci/git-plugin2.git";
+        data.addRemoteUrl(remoteUrl3);
+        assertEquals(3, data.getRemoteUrls().size());
+        String remoteUrl4 = "git://github.com/jenkinsci/git-plugin4.git";
+        data.addRemoteUrl(remoteUrl4);
+        assertEquals(4, data.getRemoteUrls().size());
+        String remoteUrl5 = "git://github.com/jenkinsci/git-plugin5.git";
+        data.addRemoteUrl(remoteUrl5);
+        assertEquals(5, data.getRemoteUrls().size());
+        String remoteUrl6 = "git://github.com/jenkinsci/git-plugin7.git";
+        data.addRemoteUrl(remoteUrl6);
+        assertEquals(6, data.getRemoteUrls().size());
+        String remoteUrl7 = "git://github.com/jenkinsci/git-plugin3.git";
+        data.addRemoteUrl(remoteUrl7);
+        assertEquals(7, data.getRemoteUrls().size());
+        String remoteUrl8 = "git://github.com/jenkinsci/git-plugin6.git";
+        data.addRemoteUrl(remoteUrl8);
+        assertEquals(8, data.getRemoteUrls().size());
+        
+        String[] urlNumbers = { "", "8", "2", "4", "5", "7", "3", "6" };
+        int i = 0;
+        for (String url : data.getRemoteUrls()) {
+        	assertEquals("git://github.com/jenkinsci/git-plugin" + urlNumbers[i] + ".git", url);
+        	i++;
+        }
     }
 
     @Test
