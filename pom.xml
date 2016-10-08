@@ -33,6 +33,7 @@
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
+    <permgen.size>160m</permgen.size>
   </properties>
 
   <build>
@@ -119,6 +120,12 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-XX:MaxPermSize=${permgen.size} -Djava.awt.headless=true</argLine>
+        </configuration>
       </plugin>
     </plugins>
   </build>
