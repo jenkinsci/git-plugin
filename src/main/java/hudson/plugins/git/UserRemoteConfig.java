@@ -82,7 +82,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Job<?,?> project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
             if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {

@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
@@ -92,7 +93,7 @@ public final class GitStep extends SCMStep {
         @Inject
         private UserRemoteConfig.DescriptorImpl delegate;
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Job<?,?> project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
             return delegate.doFillCredentialsIdItems(project, url, credentialsId);
