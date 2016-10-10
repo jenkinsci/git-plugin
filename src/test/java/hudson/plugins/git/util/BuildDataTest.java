@@ -125,8 +125,8 @@ public class BuildDataTest {
     
     @Test
     public void testRemoteUrlOrder() {
-    	assertEquals(1, data.getRemoteUrls().size());
-    	String remoteUrl2 = "git://github.com/jenkinsci/git-plugin8.git";
+        assertEquals(1, data.getRemoteUrls().size());
+        String remoteUrl2 = "git://github.com/jenkinsci/git-plugin8.git";
         data.addRemoteUrl(remoteUrl2);
         assertEquals(2, data.getRemoteUrls().size());
         String remoteUrl3 = "git://github.com/jenkinsci/git-plugin2.git";

@@ -57,7 +57,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         this.scmName = scmName;
     }
 
-    public BuildData(String scmName, List<UserRemoteConfig> remoteConfigs) {
+    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
         this.scmName = scmName;
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
