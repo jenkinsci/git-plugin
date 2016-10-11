@@ -123,6 +123,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final String GIT_SINGLE_BRANCH_SELECTOR = "GIT_SINGLE_BRANCH_SELECTOR";
 
     /**
      * All the configured extensions attached to this.
@@ -509,11 +510,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Otherwise return null.
      */
     private String getSingleBranch(EnvVars env) {
-        // if we have multiple branches skip to advanced usecase
-        if (getBranches().size() != 1) {
-            return null;
-        }
-        String branch = getBranches().get(0).getName();
+    	String branch = env.get(GIT_SINGLE_BRANCH_SELECTOR, "").trim();
+
+    	// if the caller provides an overriding branch specification
+    	// use it otherwise fall back to original behavior.
+    	if (branch.isEmpty()) {
+	        // if we have multiple branches skip to advanced usecase
+	        if (getBranches().size() != 1) {
+	            return null;
+	        }
+	        branch = getBranches().get(0).getName();
+    	}
         String repository = null;
 
         if (getRepositories().size() != 1) {

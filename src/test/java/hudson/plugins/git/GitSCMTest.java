@@ -1991,6 +1991,71 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
+     * Confirm that a parameter GIT_SINGLE_BRANCH_SELECTOR will override the
+     * default branch selection and force a mutli-branch capable build to run
+     * with the selected branch instead.
+     */
+    @Issue("JENKINS-38406")
+    public void testSingleBranchSelectorOverrides() throws Exception {
+        // empty string will result in a project that tracks against changes in all branches:
+        final FreeStyleProject project = setupSimpleProject("");
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        // create a branch here so we can get back to this point  later...
+        final String fork = "fork";
+        git.branch(fork);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+        assertTrue("scm polling should detect changes in 'master' branch", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, commitFile1, commitFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+
+        // now jump back...
+        git.checkout(fork);
+
+        // add some commits to the fork branch...
+        final String forkFile1 = "forkFile1";
+        commit(forkFile1, johnDoe, "Fork commit number 1");
+        final String forkFile2 = "forkFile2";
+        commit(forkFile2, johnDoe, "Fork commit number 2");
+        assertTrue("scm polling should detect changes in 'fork' branch", project.poll(listener).hasChanges());
+        build(project, Result.SUCCESS, forkFile1, forkFile2);
+        assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
+
+        // Expect a new manual build will rebuild last successful branch
+        FreeStyleBuild build = build(project, Result.SUCCESS);
+
+        final String expectedBranchString = "origin/" + fork;
+        assertEquals("GIT_BRANCH", expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
+
+        final StringParameterValue masterSelector = new StringParameterValue(GitSCM.GIT_SINGLE_BRANCH_SELECTOR, "master");
+        final Action[] masterActions = {new ParametersAction(masterSelector)};
+        build = project.scheduleBuild2(0, new Cause.UserCause(), masterActions).get();
+        rule.assertBuildStatus(Result.SUCCESS, build);
+
+        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
+
+        final StringParameterValue forkSelector = new StringParameterValue(GitSCM.GIT_SINGLE_BRANCH_SELECTOR, fork);
+        final Action[] forkActions = {new ParametersAction(forkSelector)};
+        build = project.scheduleBuild2(0, new Cause.UserCause(), forkActions).get();
+        rule.assertBuildStatus(Result.SUCCESS, build);
+
+        assertEquals("GIT_BRANCH", expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
+
+        final StringParameterValue emptySelector = new StringParameterValue(GitSCM.GIT_SINGLE_BRANCH_SELECTOR, "");
+        final Action[] emptyActions = {new ParametersAction(emptySelector)};
+        build = project.scheduleBuild2(0, new Cause.UserCause(), emptyActions).get();
+        rule.assertBuildStatus(Result.SUCCESS, build);
+
+        assertEquals("GIT_BRANCH", expectedBranchString, getEnvVars(project).get(GitSCM.GIT_BRANCH));
+    }
+
+    /**
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
      * @throws Exception on various exceptions

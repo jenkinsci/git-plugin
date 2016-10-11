@@ -261,7 +261,6 @@ public class GitUtils implements Serializable {
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
         EnvVars env;
-        StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = p.getLastBuild();
 
         if (b == null) {
@@ -271,6 +270,8 @@ public class GitUtils implements Serializable {
             throw new IllegalArgumentException("Last build must not be null. If there really is no last build, " +
                     "a new build should be triggered without polling the SCM.");
         }
+
+        StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
 
         if (reuseLastBuildEnv) {
             Node lastBuiltOn = b.getBuiltOn();
@@ -335,7 +336,7 @@ public class GitUtils implements Serializable {
                 }
             }
         }
-        
+
         // Use the default parameter values (if any) instead of the ones from the last build
         ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) b.getProject().getProperty(ParametersDefinitionProperty.class);
         if (paramDefProp != null) {
