@@ -1,0 +1,9 @@
+<div>
+ Configure comma separated white- and blacklists of branches that trigger builds or avoid triggering builds.
+ You need to define the branch names without refs/, remotes/, origin prefixes. The branch names need to match exactly.
+ <p/>
+ If one of the lists is empty, it is not considered at all. If you define both, the whitelist is considered first.
+ If the branch is not whitelisted, the blacklist will not be considered.
+ <p>
+  Using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the <b>Force polling using workspace</b> extension as well.
+</div>

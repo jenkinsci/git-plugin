@@ -47,10 +47,9 @@ public abstract class GitSCMExtensionTest {
 		return build;
 	}
 
-	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
+	protected FreeStyleProject setupBasicProject(TestGitRepo repo, List<BranchSpec> branches) throws Exception {
 		GitSCMExtension extension = getExtension();
 		FreeStyleProject project = j.createFreeStyleProject(extension.getClass() + "Project");
-		List<BranchSpec> branches = Collections.singletonList(new BranchSpec("master"));
 		GitSCM scm = new GitSCM(
 				repo.remoteConfigs(),
 				branches,
@@ -61,5 +60,9 @@ public abstract class GitSCMExtensionTest {
 		project.setScm(scm);
 		project.getBuildersList().add(new CaptureEnvironmentBuilder());
 		return project;
+	}
+
+	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
+		return setupBasicProject(repo, Collections.singletonList(new BranchSpec("master")));
 	}
 }
