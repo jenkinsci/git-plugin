@@ -86,6 +86,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Git SCM.
@@ -247,7 +248,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             List<RefSpec> rs = new ArrayList<>();
             rs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-            remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[0])));
+            remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[rs.size()])));
             if (branch != null) {
                 branches.add(new BranchSpec(branch));
             } else {
@@ -425,10 +426,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return remote repository with expanded parameters
      */
     public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository){
+        List<RefSpec> refSpecs = getRefSpecs(remoteRepository, env);
     	return newRemoteConfig(
                 getParameterString(remoteRepository.getName(), env),
                 getParameterString(remoteRepository.getURIs().get(0).toPrivateString(), env),
-                getRefSpecs(remoteRepository, env).toArray(new RefSpec[0]));
+                refSpecs.toArray(new RefSpec[refSpecs.size()]));
     }
 
     public RemoteConfig getRepositoryByName(String repoName) {
