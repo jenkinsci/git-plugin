@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -46,7 +47,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     private String credentialsId;
 
     @DataBoundConstructor
-    public UserRemoteConfig(String url, String name, String refspec, String credentialsId) {
+    public UserRemoteConfig(String url, String name, String refspec, @CheckForNull String credentialsId) {
         this.url = fixEmptyAndTrim(url);
         this.name = fixEmpty(name);
         this.refspec = fixEmpty(refspec);
@@ -69,6 +70,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     }
 
     @Exported
+    @CheckForNull
     public String getCredentialsId() {
         return credentialsId;
     }
