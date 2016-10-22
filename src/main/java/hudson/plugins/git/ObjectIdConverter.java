@@ -37,8 +37,8 @@ public class ObjectIdConverter implements Converter {
     /**
      * Is the current reader node a legacy node?
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return true if legacy, false otherwise
      */
     protected boolean isLegacyNode(HierarchicalStreamReader reader,
@@ -50,8 +50,8 @@ public class ObjectIdConverter implements Converter {
     /**
      * Legacy unmarshalling of object id
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return object id
      */
     protected Object legacyUnmarshal(HierarchicalStreamReader reader,

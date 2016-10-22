@@ -60,7 +60,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @param path affected file path
      * @return
      *      null if the browser doesn't have any URL for diff.
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
     
@@ -71,7 +71,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @param path affected file path
      * @return
      *      null if the browser doesn't have any suitable URL.
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException;
 
@@ -91,6 +91,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      *
      * @param path affected file path
      * @return The index in the lexicographical sorted filelist
+     * @throws IOException on input or output error
      */
     protected int getIndexOfPath(Path path) throws IOException {
     	final String pathAsString = path.getPath();

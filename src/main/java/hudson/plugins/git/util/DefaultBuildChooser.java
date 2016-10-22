@@ -37,8 +37,8 @@ public class DefaultBuildChooser extends BuildChooser {
      * use the advanced usecase as defined in the getAdvancedCandidateRevisons
      * method.
      *
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
      */
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
@@ -193,8 +193,8 @@ public class DefaultBuildChooser extends BuildChooser {
      *  NB: Alternate BuildChooser implementations are possible - this
      *  may be beneficial if "only 1" branch is to be built, as much of
      *  this work is irrelevant in that usecase.
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
      */
     private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
@@ -313,7 +313,7 @@ public class DefaultBuildChooser extends BuildChooser {
      *
      * - if the branch name contains more wildcards then the simple usecase
      * - if the branch name should be treated as regexp
-     * @param branchSpec
+     * @param branchSpec branch specification
      * @return true if branchSpec requires advanced matching
      */
     boolean isAdvancedSpec(String branchSpec) {

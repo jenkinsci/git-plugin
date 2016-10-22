@@ -89,6 +89,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     /**
      * @see #tags
+     * @return tag names and annotations for this repository
      */
     public Map<String, List<String>> getTags() {
         return Collections.unmodifiableMap(tags);
@@ -140,6 +141,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     /**
      * Invoked to actually tag the workspace.
+     * @param req request for submit
+     * @param rsp response used to send result
+     * @throws IOException on input or output error
+     * @throws ServletException on servlet error
      */
     public synchronized void doSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         getACL().checkPermission(getPermission());

@@ -66,7 +66,7 @@ public class CloneOption extends GitSCMExtension {
      * the Gerrit Plugin assumes all references are fetched, even though it only
      * passes the refspec for one branch.
      *
-     * @param honorRefspec
+     * @param honorRefspec true if refspec should be honored on clone
      */
     @DataBoundSetter
     public void setHonorRefspec(boolean honorRefspec) {

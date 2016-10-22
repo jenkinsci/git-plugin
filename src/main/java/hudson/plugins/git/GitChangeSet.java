@@ -95,8 +95,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     /**
      * Create Git change set using information in given lines
      *
-     * @param lines
-     * @param authorOrCommitter
+     * @param lines change set lines read to construct change set
+     * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
         this.authorOrCommitter = authorOrCommitter;
@@ -478,6 +478,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     /**
      * Gets {@linkplain #getComment() the comment} fully marked up by {@link ChangeLogAnnotator}.
+     @return annotated comment
      */
     public String getCommentAnnotated() {
         MarkupText markup = new MarkupText(getComment());

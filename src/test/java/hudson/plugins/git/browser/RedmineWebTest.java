@@ -45,8 +45,8 @@ public class RedmineWebTest {
 
     /**
      * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException
-     * @throws IOException
+     * @throws SAXException on XML parsing exception
+     * @throws IOException on input or output error
      */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
@@ -56,8 +56,8 @@ public class RedmineWebTest {
 
     /**
      * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException
-     * @throws IOException
+     * @throws SAXException on XML parsing exception
+     * @throws IOException on input or output error
      */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
@@ -73,8 +73,8 @@ public class RedmineWebTest {
 
     /**
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException
-     * @throws IOException
+     * @throws SAXException on XML parsing exception
+     * @throws IOException on input or output error
      */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
@@ -86,8 +86,8 @@ public class RedmineWebTest {
 
     /**
      * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException
-     * @throws IOException
+     * @throws SAXException on XML parsing exception
+     * @throws IOException on input or output error
      */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
@@ -106,8 +106,8 @@ public class RedmineWebTest {
     /**
      * @param changelog
      * @return
-     * @throws IOException
-     * @throws SAXException
+     * @throws IOException on input or output error
+     * @throws SAXException on XML parsing exception
      */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();

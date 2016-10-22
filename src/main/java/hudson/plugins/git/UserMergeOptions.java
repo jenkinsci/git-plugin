@@ -24,12 +24,21 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
+     * @param mergeRemote remote name used for merge
+     * @param mergeTarget remote branch to be merged into currnet branch
+     * @param mergeStrategy merge strategy to be used
      */
     @Deprecated
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
         this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
     }
 
+    /**
+     * @param mergeRemote remote name used for merge
+     * @param mergeTarget remote branch to be merged into current branch
+     * @param mergeStrategy merge strategy
+     * @param fastForwardMode fast forward mode
+     */
     @DataBoundConstructor
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
@@ -39,12 +48,17 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         this.fastForwardMode = fastForwardMode;
     }
 
+    /**
+     * Construct UserMergeOptions from PreBuildMergeOptions.
+     * @param pbm pre-build merge options used to construct UserMergeOptions
+     */
     public UserMergeOptions(PreBuildMergeOptions pbm) {
         this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
     }
 
     /**
      * Repository name, such as 'origin' that designates which repository the branch lives in.
+     * @return repository name
      */
     public String getMergeRemote() {
         return mergeRemote;
@@ -53,11 +67,17 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     /**
      * Ref in the repository that becomes the input of the merge.
      * Normally a branch name like 'master'.
+     * @return branch name from which merge will be performed
      */
     public String getMergeTarget() {
         return mergeTarget;
     }
 
+    /**
+     * Ref in the repository that becomes the input of the merge, a
+     * slash separated concatenation of merge remote and merge target.
+     * @return ref from which merge will be performed
+     */
     public String getRef() {
         return mergeRemote + "/" + mergeTarget;
     }

@@ -72,6 +72,9 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      *     <li>tag</li>
      *     <li>(commit sha1)</li>
      * </ul>
+     * @param ref branch reference to compare
+     * @param env environment variables to use in comparison
+     * @return true if ref matches configured pattern
      */
     public boolean matches(String ref, EnvVars env) {
         return getPattern(env).matcher(ref).matches();
@@ -79,6 +82,8 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
 
     /**
      * @deprecated use {@link #filterMatching(Collection, EnvVars)}
+     * @param branches source branch list to be filtered by configured branch specification using a newly constructed EnvVars
+     * @return branch names which match
      */
     public List<String> filterMatching(Collection<String> branches) {
         EnvVars env = new EnvVars();

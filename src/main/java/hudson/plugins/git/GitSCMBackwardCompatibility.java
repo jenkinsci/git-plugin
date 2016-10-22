@@ -364,6 +364,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link CleanCheckout}
+     * @return true if clean before checkout extension is enabled
      */
     public boolean getClean() {
         return getExtensions().get(CleanCheckout.class)!=null;
@@ -372,6 +373,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link WipeWorkspace}
+     * @return true if wipe workspace extenstion is enabled
      */
     public boolean getWipeOutWorkspace() {
         return getExtensions().get(WipeWorkspace.class)!=null;
@@ -380,6 +382,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link CloneOption}
+     * @return true if shallow clone extension is enabled and shallow clone is configured
      */
     public boolean getUseShallowClone() {
         CloneOption m = getExtensions().get(CloneOption.class);
@@ -389,6 +392,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link CloneOption}
+     * @return reference repository or null if reference repository is not defined
      */
     public String getReference() {
         CloneOption m = getExtensions().get(CloneOption.class);
@@ -398,6 +402,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link hudson.plugins.git.extensions.impl.DisableRemotePoll}
+     * @return true if remote polling is allowed
      */
     public boolean getRemotePoll() {
         return getExtensions().get(DisableRemotePoll.class)==null;
@@ -409,6 +414,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
      *
      * @deprecated
      *      Moved to {@link AuthorInChangelog}
+     * @return true if commit author is used as the changeset author
      */
     public boolean getAuthorOrCommitter() {
         return getExtensions().get(AuthorInChangelog.class)!=null;
@@ -417,6 +423,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link IgnoreNotifyCommit}
+     * @return true if commit notifications are ignored
      */
     public boolean isIgnoreNotifyCommit() {
         return getExtensions().get(IgnoreNotifyCommit.class)!=null;
@@ -425,6 +432,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link ScmName}
+     * @return configured SCM name or null if none if not configured
      */
     public String getScmName() {
         ScmName sn = getExtensions().get(ScmName.class);
@@ -434,6 +442,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link LocalBranch}
+     * @return name of local branch used for checkout or null if LocalBranch extension is not enabled
      */
     public String getLocalBranch() {
         LocalBranch lb = getExtensions().get(LocalBranch.class);

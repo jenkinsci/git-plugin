@@ -143,7 +143,7 @@ public class RemoteConfigConverter implements Converter {
 
         /**
          * @return remote config
-         * @throws URISyntaxException
+         * @throws URISyntaxException on URI format error
          */
         public RemoteConfig toRemote() throws URISyntaxException {
             return new RemoteConfig(this, name);
@@ -156,7 +156,7 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Create remote config converter
      * 
-     * @param xStream
+     * @param xStream XStream used for remote configuration conversion
      */
     public RemoteConfigConverter(XStream xStream) {
         mapper = xStream.getMapper();
@@ -176,8 +176,8 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Is the current reader node a legacy node?
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return true if legacy, false otherwise
      */
     protected boolean isLegacyNode(HierarchicalStreamReader reader,
@@ -188,8 +188,8 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Legacy unmarshalling of remote config
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return remote config
      */
     protected Object legacyUnmarshal(final HierarchicalStreamReader reader,

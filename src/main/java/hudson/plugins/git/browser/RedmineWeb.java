@@ -46,7 +46,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * @param path
      *            affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -70,7 +70,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * @param path
      *            file
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

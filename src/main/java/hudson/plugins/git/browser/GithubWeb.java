@@ -48,7 +48,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -62,9 +62,9 @@ public class GithubWeb extends GitRepositoryBrowser {
     /**
      * Return a diff link regardless of the edit type by appending the index of the pathname in the changeset.
      *
-     * @param path
+     * @param path file path used in diff link
      * @return url for differences
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	// Github seems to sort the output alphabetically by the path.
@@ -79,7 +79,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      *
      * @param path file
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

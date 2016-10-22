@@ -415,7 +415,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
          * Performs on-the-fly validation on the file mask wildcard.
          *
          * I don't think this actually ever gets called, but I'm modernizing it anyway.
-         *
+         * @param project project context for evaluation
+         * @param value string to be evaluated
+         * @return form validation result
+         * @throws IOException on input or output error
          */
         public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value)
             throws IOException  {

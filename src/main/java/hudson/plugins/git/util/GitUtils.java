@@ -55,8 +55,9 @@ public class GitUtils implements Serializable {
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.
      * @return list of revisions
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
         Map<ObjectId, Revision> revisions = new HashMap<>();
@@ -73,10 +74,11 @@ public class GitUtils implements Serializable {
 
     /**
      * Return the revision containing the branch name.
-     * @param branchName
+     * @param branchName name of branch to be searched
      * @return revision containing branchName
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
         for(Revision revision : getAllBranchRevisions()) {
@@ -123,8 +125,9 @@ public class GitUtils implements Serializable {
     /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
-     * @param revisions
+     * @param revisions branches to be included in the search for tip branches
      * @return filtered tip branches
+     * @throws InterruptedException when interrupted
      */
     @WithBridgeMethods(Collection.class)
     public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws InterruptedException {
@@ -209,6 +212,14 @@ public class GitUtils implements Serializable {
     /**
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
      * Cribbed from various places.
+     * @param p abstract project to be considered
+     * @param ws workspace to be considered
+     * @param launcher launcher to use for calls to nodes
+     * @param listener build log
+     * @param reuseLastBuildEnv true if last build environment should be considered
+     * @return environment variables from previous build to be used for polling
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {

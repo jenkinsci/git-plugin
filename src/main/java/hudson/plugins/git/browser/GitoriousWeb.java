@@ -36,9 +36,9 @@ public class GitoriousWeb extends GitRepositoryBrowser {
      * 
      * {@code https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diffs?diffmode=sidebyside&fragment=1#[path to file]}
      * 
-     * @param path
+     * @param path file path used in diff link
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -50,9 +50,9 @@ public class GitoriousWeb extends GitRepositoryBrowser {
      * Creates a link to the file.
      * {@code https://[Gitorious URL]/blobs/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/pom.xml}
      * 
-     * @param path
+     * @param path file path used in diff link
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

@@ -40,6 +40,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
 
     /**
      * Short-hand to get to the display name.
+     * @return display name of this build chooser
      */
     public final String getDisplayName() {
         return getDescriptor().getDisplayName();
@@ -56,6 +57,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        this will be non-null only in the simple case, in advanced
      *        cases with multiple repositories and/or branches specified
      *        then this value will be null.
+     * @param git GitClient used to access repository
+     * @param listener build log
+     * @param buildData build data to be used
+     *      Information that captures what we did during the last build.
      * @param context
      *      Object that provides access back to the model object. This is because
      *      the build chooser can be invoked on a slave where there's no direct access
@@ -67,8 +72,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @return
      *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
      *
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                                       GitClient git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
@@ -79,6 +85,27 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     /**
      * @deprecated as of 1.2.0
      *     Use and override {@link #getCandidateRevisions(boolean, String, org.jenkinsci.plugins.gitclient.GitClient, hudson.model.TaskListener, BuildData, BuildChooserContext)}
+     * @param isPollCall true if this method is called from pollChanges.
+     * @param singleBranch contains the name of a single branch to be built
+     *        this will be non-null only in the simple case, in advanced
+     *        cases with multiple repositories and/or branches specified
+     *        then this value will be null.
+     * @param git GitClient used to access repository
+     * @param listener build log
+     * @param buildData build data to be used
+     *      Information that captures what we did during the last build.
+     * @param context
+     *      Object that provides access back to the model object. This is because
+     *      the build chooser can be invoked on a slave where there's no direct access
+     *      to the build/project for which this is invoked.
+     *
+     *      If {@code isPollCall} is false, then call back to both project and build are available.
+     *      If {@code isPollCall} is true, then only the callback to the project is available as there's
+     *      no contextual build object.
+     * @return
+     *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
@@ -90,6 +117,19 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     /**
      * @deprecated as of 1.1.17
      *      Use and override {@link #getCandidateRevisions(boolean, String, IGitAPI, TaskListener, BuildData, BuildChooserContext)}
+     * @param isPollCall true if this method is called from pollChanges.
+     * @param singleBranch contains the name of a single branch to be built
+     *        this will be non-null only in the simple case, in advanced
+     *        cases with multiple repositories and/or branches specified
+     *        then this value will be null.
+     * @param git GitClient used to access repository
+     * @param listener build log
+     * @param buildData build data to be used
+     *      Information that captures what we did during the last build.
+     * @return
+     *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
+     * @throws IOException on input or output error
+     * @throws GitException on git error
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {
@@ -99,9 +139,16 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     /**
      * @deprecated as of 1.1.25
      *      Use and override {@link #prevBuildForChangelog(String, BuildData, IGitAPI, BuildChooserContext)}
+     * @param branch
+     *      The branch name.
+     * @param buildData build data to be used
+     *      Information that captures what we did during the last build.
+     * @param git
+     *      Used for invoking Git
+     * @return preceding build
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git) {
-        return data==null?null:data.getLastBuildOfBranch(branch);
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData buildData, IGitAPI git) {
+        return buildData == null ? null : buildData.getLastBuildOfBranch(branch);
     }
 
     /**
@@ -125,6 +172,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Object that provides access back to the model object. This is because
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
+     * @return preceding build
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
@@ -133,6 +183,19 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
     /**
      * @deprecated as of 1.2.0
      *     Use and override {@link #prevBuildForChangelog(String, BuildData, org.jenkinsci.plugins.gitclient.GitClient, BuildChooserContext)}
+     * @param branch
+     *      The branch name.
+     * @param data
+     *      Information that captures what we did during the last build.
+     * @param git
+     *      Used for invoking Git
+     * @param context
+     *      Object that provides access back to the model object. This is because
+     *      the build chooser can be invoked on a slave where there's no direct access
+     *      to the build/project for which this is invoked.
+     * @return preceding build
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data,git);
@@ -144,6 +207,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
 
     /**
      * All the registered build choosers.
+     * @return all registered build choosers
      */
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
         return Hudson.getInstance()
@@ -154,6 +218,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * All the registered build choosers that are applicable to the specified item.
      *
      * @param item the item.
+     * @return All build choosers applicable to item.
      */
     public static List<BuildChooserDescriptor> allApplicableTo(Item item) {
         List<BuildChooserDescriptor> result = new ArrayList<>();
@@ -178,6 +243,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @param git client to execute git commands on working tree
      * @param listener build log
      * @param context back-channel to master so implementation can interact with Jenkins model
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     @ParametersAreNonnullByDefault
     public void prepareWorkingTree(GitClient git, TaskListener listener, BuildChooserContext context) throws IOException,InterruptedException {

@@ -403,7 +403,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
      * 
-     * @param branchName
+     * @param branchName name of branch to be tested
      * @return true if branchName is excluded or is not included
      */
     protected boolean isExcluded (String branchName){
@@ -413,7 +413,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns the pattern corresponding to the branches containing wildcards. 
      * 
-     * @param branchName
+     * @param branches branch names to evaluate
      * @return pattern corresponding to the branches containing wildcards
      */
     private String getPattern(String branches){
