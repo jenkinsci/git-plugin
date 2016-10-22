@@ -192,7 +192,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String remote,
                                                      @QueryParameter String credentialsId) {
-            if (context == null || !context.hasPermission(Item.EXTENDED_READ)) {
+            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                context != null && !context.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
@@ -209,7 +210,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (context == null || !context.hasPermission(Item.EXTENDED_READ)) {
+            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                context != null && !context.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
