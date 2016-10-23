@@ -37,7 +37,7 @@ public class GogsGit extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + changeSet.getId().toString());
+        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
     }
 
     /**
@@ -84,7 +84,7 @@ public class GogsGit extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             URL url = getUrl();
-            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId().toString() + "/" + path.getPath());
+            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath());
         }
     }
 

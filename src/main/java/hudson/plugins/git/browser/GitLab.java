@@ -88,7 +88,7 @@ public class GitLab extends GitRepositoryBrowser {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink = null;
         if(getVersion() < 8.0) {
-        	filelink = "#" + path.getPath().toString();
+                filelink = "#" + path.getPath();
         } else
         {
         	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
