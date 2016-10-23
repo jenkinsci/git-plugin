@@ -33,10 +33,6 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         super(repoUrl);
     }
 
-    private QueryBuilder param(URL url) {
-        return new QueryBuilder(url.getQuery());
-    }
-
     /**
      * Creates a link to the change set
      * http://[AssemblaWeb URL]/commits/[commit]
