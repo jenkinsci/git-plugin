@@ -718,18 +718,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private Build lastBuildOfBranch(String key, BuildData buildData, RemoteConfig remoteConfig) {
-        // normalize
-        if (!key.startsWith("refs/heads/")) key = "refs/heads/"+key;
-        String ref = "refs/remotes/"+remoteConfig.getName()+"/"+key.substring("refs/heads/".length());
-        return buildData.getLastBuildOfBranch(ref);
-    }
-
-    private Build lastBuildOfTag(String key, BuildData buildData, RemoteConfig remoteConfig) {
-        if (!key.startsWith("refs/tags/")) key = "refs/tags/" + key;
-        return buildData.getLastBuildOfBranch(key);
-    }
-
     /**
      * Allows {@link Builder}s and {@link Publisher}s to access a configured {@link GitClient} object to
      * perform additional git operations.
