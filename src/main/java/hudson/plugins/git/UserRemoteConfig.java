@@ -32,10 +32,12 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.regex.Pattern;
+import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
+import hudson.model.FreeStyleProject;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
@@ -89,6 +91,10 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
                 project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
+            }
+            if (project == null) {
+                /* Construct a fake project */
+                project = new FreeStyleProject(Jenkins.getInstance(), "fake-" + UUID.randomUUID().toString());
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
