@@ -38,7 +38,7 @@ public class GitWebTest {
      * Test method for {@link hudson.plugins.git.browser.GitWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
      * @throws SAXException on XML parsing exception
      * @throws IOException on input or output error
-`     */
+     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = gitwebWeb.getChangeSetLink(createChangeSet("rawchangelog"));

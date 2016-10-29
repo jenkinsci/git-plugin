@@ -111,7 +111,7 @@ public class GitLabTest {
      * {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
      *
      * @throws IOException on input or output error
-`     */
+     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");

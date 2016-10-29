@@ -47,7 +47,7 @@ public class GogsGit extends GitRepositoryBrowser {
      * @param path affected file path
      * @return diff link
      * @throws IOException on input or output error
-`     */
+     */
     @Override
     public URL getDiffLink(Path path) throws IOException {
         if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null

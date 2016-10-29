@@ -126,7 +126,7 @@ public class GitUtils implements Serializable {
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
      * @param revisions branches to be included in the search for tip branches
-`     * @return filtered tip branches
+     * @return filtered tip branches
      * @throws InterruptedException when interrupted
      */
     @WithBridgeMethods(Collection.class)
