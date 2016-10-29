@@ -39,14 +39,16 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     private boolean disableSubmodules;
     private boolean recursiveSubmodules;
+    private boolean forceSubmodules;
     private boolean trackingSubmodules;
     private String reference;
     private Integer timeout;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean forceSubmodules, boolean trackingSubmodules, String reference, Integer timeout) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
+        this.forceSubmodules = forceSubmodules;
         this.trackingSubmodules = trackingSubmodules;
         this.reference = reference;
         this.timeout = timeout;
@@ -58,6 +60,10 @@ public class SubmoduleOption extends GitSCMExtension {
 
     public boolean isRecursiveSubmodules() {
         return recursiveSubmodules;
+    }
+
+    public boolean isForceSubmodules() {
+        return forceSubmodules;
     }
 
     public boolean isTrackingSubmodules() {
@@ -89,6 +95,7 @@ public class SubmoduleOption extends GitSCMExtension {
             git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
             git.submoduleUpdate()
                 .recursive(recursiveSubmodules)
+                .force(forceSubmodules)
                 .remoteTracking(trackingSubmodules)
                 .ref(build.getEnvironment(listener).expand(reference))
                 .timeout(timeout)
