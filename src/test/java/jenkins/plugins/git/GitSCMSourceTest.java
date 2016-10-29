@@ -5,6 +5,7 @@ import hudson.model.TopLevelItem;
 import hudson.plugins.git.GitStatus;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,7 +13,9 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 
 import static org.mockito.Mockito.mock;
@@ -37,7 +40,7 @@ public class GitSCMSourceTest {
     }
 
     @Test
-    public void testSourceOwnerTriggeredByDoNotifyCommit() throws ServletException, IOException {
+    public void testSourceOwnerTriggeredByDoNotifyCommit() throws ServletException, IOException, URISyntaxException {
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
         jenkins.getInstance().add(scmSourceOwner, "gitSourceOwner");

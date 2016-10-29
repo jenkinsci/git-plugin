@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
@@ -9,13 +10,18 @@ import hudson.model.*;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.triggers.SCMTrigger;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,10 +29,14 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.triggers.SCMTriggerItem;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.oro.text.regex.PatternMatcher;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -110,7 +120,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
-                                       @QueryParameter(required=false) String sha1) throws ServletException, IOException {
+                                       @QueryParameter(required=false) String sha1) throws ServletException, IOException, URISyntaxException {
         lastURL = url;
         lastBranches = branches;
         lastSHA1 = sha1;
@@ -173,10 +183,46 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * Used to test if what we have in the job configuration matches what was submitted to the notification endpoint.
      * It is better to match loosely and wastes a few polling calls than to be pedantic and miss the push notification,
      * especially given that Git tends to support multiple access protocols.
+     * @throws URISyntaxException
      */
-    public static boolean looselyMatches(URIish lhs, URIish rhs) {
+    public static boolean looselyMatches(URIish lhs, URIish rhs) throws URISyntaxException {
+        lhs = getExpandedUri(lhs);
+        rhs = getExpandedUri(rhs);
         return StringUtils.equals(lhs.getHost(),rhs.getHost())
             && StringUtils.equals(normalizePath(lhs.getPath()), normalizePath(rhs.getPath()));
+    }
+
+    /**
+     * @param uri
+     * @param envVars
+     * @return
+     * @throws URISyntaxException
+     */
+    private static URIish getExpandedUri(URIish uri) throws URISyntaxException {
+      String newUri = uri.toPrivateString();
+      Pattern pattern = Pattern.compile(".*\\$\\{.*\\}.*");
+      while (pattern.matcher(newUri).matches()) {
+          String expandedUri = getEnvVars().expand(newUri);
+          if (newUri.equals(expandedUri)) {
+            break;
+          }
+          newUri = expandedUri;
+      }
+      return new URIish(newUri);
+    }
+
+    private static EnvVars getEnvVars() {
+        EnvVars env = new EnvVars(EnvVars.masterEnvVars);
+        Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            for (NodeProperty<?> nodeProperty : jenkins.getGlobalNodeProperties()) {
+                if (nodeProperty instanceof EnvironmentVariablesNodeProperty) {
+                    EnvVars envVars = ((EnvironmentVariablesNodeProperty)nodeProperty).getEnvVars();
+                    env.putAll(envVars);
+                }
+            }
+        }
+        return env;
     }
 
     private static String normalizePath(String path) {
@@ -260,9 +306,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * @param buildParameters ?
          * @param branches        the (optional) branch information.
          * @return any response contributors for the response to the push request.
+         * @throws URISyntaxException
          * @since 2.4.0
          */
-        public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) throws URISyntaxException {
             return onNotifyCommit(uri, sha1, branches);
         }
 
@@ -280,9 +327,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         /**
          * {@inheritDoc}
+         * @throws URISyntaxException
          */
         @Override
-        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) throws URISyntaxException {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
