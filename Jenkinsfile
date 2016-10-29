@@ -1,27 +1,38 @@
-#!groovy
+#!/usr/bin/env groovy
 
 /* Only keep the 10 most recent builds. */
 properties([[$class: 'BuildDiscarderProperty',
                 strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 
-node {
-  stage 'Checkout'
-  checkout scm
+List labels = ['linux', 'windows']
+Map platforms = [:]
 
-  stage 'Build'
+for (int i = 0; i < labels.size(); ++i) {
+    String label = labels[i]
+    platforms[label] = {
+        node(label) {
+            stage("Checkout ${label}") {
+                checkout scm
+            }
 
-  /* Call the maven build. */
-  mvn "clean install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true"
+            stage("Build ${label}") {
+                /* Call the maven build. */
+                mvn "clean install -B -V -U -e -Dsurefire.useFile=false -Dmaven.test.failure.ignore=true"
+            }
 
-  /* Save Results. */
-  stage 'Results'
+            /* Save Results. */
+            stage("Results ${label}") {
+                /* Archive the test results */
+                junit '**/target/surefire-reports/TEST-*.xml'
 
-  /* Archive the test results */
-  step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-
-  /* Archive the build artifacts */
-  step([$class: 'ArtifactArchiver', artifacts: 'target/*.hpi,target/*.jpi'])
+                /* Archive the build artifacts */
+                archiveArtifacts artifacts: 'target/*.hpi,target/*.jpi'
+            }
+        }
+    }
 }
+
+parallel(platforms)
 
 /* Run maven from tool "mvn" */
 void mvn(def args) {
