@@ -106,7 +106,7 @@ public class GogsGitTest {
 
     /**
      * @param changelog
-     * @return
+     * @return path map
      * @throws IOException on input or output error
      * @throws SAXException on XML parsing exception
      */

@@ -143,7 +143,7 @@ public class RemoteConfigConverter implements Converter {
 
         /**
          * @return remote config
-         * @throws URISyntaxException on URI format error
+         * @throws URISyntaxException on incorrect URI syntax
          */
         public RemoteConfig toRemote() throws URISyntaxException {
             return new RemoteConfig(this, name);
@@ -154,7 +154,7 @@ public class RemoteConfigConverter implements Converter {
     private final SerializableConverter converter;
 
     /**
-     * Create remote config converter
+     * Create remote config converter.
      * 
      * @param xStream XStream used for remote configuration conversion
      */

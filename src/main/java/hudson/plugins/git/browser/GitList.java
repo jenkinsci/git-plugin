@@ -48,7 +48,7 @@ public class GitList extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException on input or output error
+     * @throws IOException on I/O error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {

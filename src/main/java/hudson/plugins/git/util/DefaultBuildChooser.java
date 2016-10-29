@@ -39,6 +39,7 @@ public class DefaultBuildChooser extends BuildChooser {
      *
      * @throws IOException on input or output error
      * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
