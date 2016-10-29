@@ -107,7 +107,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * Return true if the history shows this SHA1 has been built.
      * False otherwise.
-     * @param sha1
+     * @param sha1 SHA1 has of commit to be checked
      * @return true if sha1 has been built
      */
     public boolean hasBeenBuilt(ObjectId sha1) {

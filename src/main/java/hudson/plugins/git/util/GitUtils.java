@@ -98,8 +98,9 @@ public class GitUtils implements Serializable {
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.
      * @return list of revisions
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on I/O error
+     * @throws GitException on I/O error
+     * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
         Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
@@ -116,10 +117,11 @@ public class GitUtils implements Serializable {
 
     /**
      * Return the revision containing the branch name.
-     * @param branchName
+     * @param branchName branch name to check
      * @return revision containing branchName
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on I/O error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
         for(Revision revision : getAllBranchRevisions()) {
@@ -166,8 +168,9 @@ public class GitUtils implements Serializable {
     /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
-     * @param revisions
+     * @param revisions revisions to be filtered
      * @return filtered tip branches
+     * @throws InterruptedException when interrupted
      */
     @WithBridgeMethods(Collection.class)
     public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws InterruptedException {

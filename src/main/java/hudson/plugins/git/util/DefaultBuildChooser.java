@@ -37,8 +37,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * use the advanced usecase as defined in the getAdvancedCandidateRevisons
      * method.
      *
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on I/O error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,

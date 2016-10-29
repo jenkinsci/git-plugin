@@ -468,7 +468,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
      * 
-     * @param branchName
+     * @param branchName name of branch
      * @return true if branchName is excluded or is not included
      */
     protected boolean isExcluded (String branchName){

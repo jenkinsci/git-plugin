@@ -16,6 +16,7 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
      * a hard-coded ID name used for the persistence.
      *
      * This method returns those legacy ID, if any, to keep compatibility with existing data.
+     * @return legacy ID, if any, for compatibility
      */
     public String getLegacyId() {
         return null;

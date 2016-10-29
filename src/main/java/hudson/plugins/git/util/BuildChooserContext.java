@@ -38,6 +38,9 @@ public interface BuildChooserContext {
          * @param channel
          *      The "back pointer" of the {@link Channel} that represents the communication
          *      with the node from where the code was sent.
+         * @return result of dispatching the method on the channel, with param parameters
+         * @throws IOException on I/O error
+         * @throws InterruptedException when interrupted
          */
         T invoke(P param, VirtualChannel channel) throws IOException, InterruptedException;
     }

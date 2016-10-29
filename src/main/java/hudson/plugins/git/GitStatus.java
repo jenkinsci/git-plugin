@@ -233,6 +233,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         /**
          * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
+         * @param uri URI of git repository
+         * @param branches names of branches to be checked
+         * @return list of response contributors
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
             throw new AbstractMethodError();
@@ -240,6 +243,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         /**
          * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
+         * @param uri URI of git repository
+         * @param sha1 SHA1 hash of commit to be checked
+         * @param branches names of branches to be checked
+         * @return list of response contributors
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
             return onNotifyCommit(uri, branches);
