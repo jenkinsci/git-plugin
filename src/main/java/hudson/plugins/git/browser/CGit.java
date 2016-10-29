@@ -37,7 +37,7 @@ public class CGit extends GitRepositoryBrowser {
      *
      * @param changeSet commit hash
      * @return change set link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -51,7 +51,7 @@ public class CGit extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -66,7 +66,7 @@ public class CGit extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

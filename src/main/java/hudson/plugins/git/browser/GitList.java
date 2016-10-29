@@ -48,7 +48,7 @@ public class GitList extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -62,9 +62,9 @@ public class GitList extends GitRepositoryBrowser {
     /**
      * Return a diff link regardless of the edit type by appending the index of the pathname in the changeset.
      *
-     * @param path
+     * @param path affected file path
      * @return url for differences
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
@@ -77,7 +77,7 @@ public class GitList extends GitRepositoryBrowser {
      *
      * @param path file
      * @return file link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

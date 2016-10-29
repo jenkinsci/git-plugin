@@ -39,7 +39,7 @@ public class Phabricator extends GitRepositoryBrowser {
      * https://[Phabricator URL]/r$repo$sha
      *
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -52,9 +52,9 @@ public class Phabricator extends GitRepositoryBrowser {
      * https://[Phabricator URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b#[path to file]
      *
      *
-     * @param path
+     * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -68,9 +68,9 @@ public class Phabricator extends GitRepositoryBrowser {
      * Creates a link to the file.
      * https://[Phabricator URL]/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/tree/pom.xml
      *
-     * @param path
+     * @param path affected file path
      * @return file link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

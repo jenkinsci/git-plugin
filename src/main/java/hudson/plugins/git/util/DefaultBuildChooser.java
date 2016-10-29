@@ -194,8 +194,8 @@ public class DefaultBuildChooser extends BuildChooser {
      *  NB: Alternate BuildChooser implementations are possible - this
      *  may be beneficial if "only 1" branch is to be built, as much of
      *  this work is irrelevant in that usecase.
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on I/O error
+     * throws GitException on git error
      */
     private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 

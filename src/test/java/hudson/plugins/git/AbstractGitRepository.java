@@ -58,8 +58,8 @@ public abstract class AbstractGitRepository {
      * Commit fileName to this git repository
      *
      * @param fileName name of file to create
-     * @throws GitException
-     * @throws InterruptedException
+     * throws GitException on git error
+     * throws InterruptedException when interrupted
      */
     protected void commitNewFile(final String fileName) throws GitException, InterruptedException {
         File newFile = new File(testGitDir, fileName);
@@ -86,7 +86,7 @@ public abstract class AbstractGitRepository {
      * Returns list of UserRemoteConfig for this repository.
      *
      * @return list of UserRemoteConfig for this repository
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     protected List<UserRemoteConfig> remoteConfigs() throws IOException {
         List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();

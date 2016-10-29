@@ -135,7 +135,6 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
      * @throws IOException on I/O error
      * @throws GitException on git error
-     * @throws InterruptedException if interrupted
      */
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
                                IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {

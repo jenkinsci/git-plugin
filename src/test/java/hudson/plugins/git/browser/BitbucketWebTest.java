@@ -48,8 +48,8 @@ public class BitbucketWebTest {
 
     /**
      * Test method for {@link BitbucketWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws org.xml.sax.SAXException
-     * @throws java.io.IOException
+     * throws SAXException on XML serialization error
+     * throws IOException on I/O error
      */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
@@ -59,8 +59,8 @@ public class BitbucketWebTest {
 
     /**
      * Test method for {@link BitbucketWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws org.xml.sax.SAXException
-     * @throws java.io.IOException
+     * throws SAXException on XML serialization error
+     * throws IOException on I/O error
      */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
@@ -80,8 +80,8 @@ public class BitbucketWebTest {
 
     /**
      * Test method for {@link GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws org.xml.sax.SAXException
-     * @throws java.io.IOException
+     * throws SAXException on XML serialization error
+     * throws IOException on I/O error
      */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
@@ -93,8 +93,8 @@ public class BitbucketWebTest {
 
     /**
      * Test method for {@link BitbucketWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws org.xml.sax.SAXException
-     * @throws java.io.IOException
+     * throws SAXException on XML serialization error
+     * throws IOException on I/O error
      */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
@@ -113,8 +113,8 @@ public class BitbucketWebTest {
     /**
      * @param changelog
      * @return
-     * @throws java.io.IOException
-     * @throws org.xml.sax.SAXException
+     * throws IOException on I/O error
+     * throws SAXException on XML serialization error
      */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<String, Path>();

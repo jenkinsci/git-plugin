@@ -38,7 +38,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
@@ -61,7 +61,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
      *
      * @param path file
      * @return file link
-     * @throws IOException
+     * @throws IOException on I/O error
      */
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {

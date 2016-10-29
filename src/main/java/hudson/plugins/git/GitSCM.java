@@ -773,8 +773,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param git
      * @param listener
      * @param remoteRepository
-     * @throws InterruptedException
-     * @throws IOException
+     * throws InterruptedException when interrupted
+     * @throws IOException on I/O error
      */
     private void fetchFrom(GitClient git,
             TaskListener listener,

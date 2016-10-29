@@ -52,8 +52,8 @@ public class ViewGitWebTest {
      * {@link hudson.plugins.git.browser.ViewGitWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}
      * .
      * 
-     * @throws SAXException
-     * @throws IOException
+     * throws SAXException on XML serialization error
+     * @throws IOException on I/O error
      */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
@@ -66,8 +66,8 @@ public class ViewGitWebTest {
      * {@link hudson.plugins.git.browser.ViewGitWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}
      * .
      * 
-     * @throws SAXException
-     * @throws IOException
+     * throws SAXException on XML serialization error
+     * @throws IOException on I/O error
      */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
@@ -85,8 +85,8 @@ public class ViewGitWebTest {
      * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
      * .
      * 
-     * @throws SAXException
-     * @throws IOException
+     * throws SAXException on XML serialization error
+     * @throws IOException on I/O error
      */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
@@ -110,8 +110,8 @@ public class ViewGitWebTest {
      * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
      * .
      * 
-     * @throws SAXException
-     * @throws IOException
+     * throws SAXException on XML serialization error
+     * @throws IOException on I/O error
      */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
@@ -130,8 +130,8 @@ public class ViewGitWebTest {
     /**
      * @param changelog
      * @return
-     * @throws IOException
-     * @throws SAXException
+     * @throws IOException on I/O error
+     * throws SAXException on XML serialization error
      */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<String, Path>();

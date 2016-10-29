@@ -132,7 +132,7 @@ public class RemoteConfigConverter implements Converter {
 
         /**
          * @return remote config
-         * @throws URISyntaxException
+         * @throws URISyntaxException on incorrect URI syntax
          */
         public RemoteConfig toRemote() throws URISyntaxException {
             return new RemoteConfig(this, name);
@@ -143,9 +143,9 @@ public class RemoteConfigConverter implements Converter {
     private final SerializableConverter converter;
 
     /**
-     * Create remote config converter
+     * Create remote config converter.
      * 
-     * @param xStream
+     * @param xStream stream to be converted
      */
     public RemoteConfigConverter(XStream xStream) {
         mapper = xStream.getMapper();
@@ -177,8 +177,8 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Legacy unmarshalling of remote config
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader from which configuration is read
+     * @param context unmarshalling context for the reader
      * @return remote config
      */
     protected Object legacyUnmarshal(final HierarchicalStreamReader reader,
