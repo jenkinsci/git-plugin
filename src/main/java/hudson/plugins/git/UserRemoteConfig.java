@@ -5,8 +5,8 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -84,10 +84,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
 
+        @SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
-            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
+            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
@@ -106,7 +108,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (project == null || !project.hasPermission(Item.EXTENDED_READ)) {
+            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
 
@@ -151,7 +154,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
-            if (item == null || !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                item != null && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
 
@@ -187,7 +191,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.ok();
         }
 
-        private static StandardCredentials lookupCredentials(Item project, String credentialId, String uri) {
+        private static StandardCredentials lookupCredentials(@CheckForNull Item project, String credentialId, String uri) {
             return (credentialId == null) ? null : CredentialsMatchers.firstOrNull(
                         CredentialsProvider.lookupCredentials(StandardCredentials.class, project, ACL.SYSTEM,
                                 GitURIRequirementsBuilder.fromUri(uri).build()),
