@@ -81,7 +81,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_remotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "remotes/origin/master", 
@@ -89,7 +89,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_refsRemotesOriginMaster() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/remotes/origin/master", 
@@ -97,7 +97,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "master",
@@ -105,7 +105,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_namespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "a_tests/b_namespace1/master",
@@ -113,7 +113,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/a_tests/b_namespace1/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_refsHeadsNamespace1Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/a_tests/b_namespace1/master", 
@@ -121,7 +121,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/a_tests/b_namespace1/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_namespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "a_tests/b_namespace2/master",
@@ -129,7 +129,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/a_tests/b_namespace2/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_refsHeadsNamespace2Master() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/heads/a_tests/b_namespace2/master", 
@@ -137,7 +137,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "origin/a_tests/b_namespace2/master");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_namespace3_feature3_sha1() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
@@ -145,7 +145,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "detached");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_namespace3_feature3_branchName() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 "a_tests/b_namespace3/feature3",
@@ -153,7 +153,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "origin/a_tests/b_namespace3/feature3");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_refsHeadsNamespace3_feature3_sha1() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 namespaceRepoCommits.getProperty("refs/heads/a_tests/b_namespace3/feature3"),
@@ -161,7 +161,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "detached");
     }
 
-    // @Test
+    @Test
     public void testNamespaces_with_refsHeadsNamespace3_feature3_branchName() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 "refs/heads/a_tests/b_namespace3/feature3",
@@ -169,7 +169,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "origin/a_tests/b_namespace3/feature3");
     }
 
-    // @Test
+    @Test
     public void testTags_with_TagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagA",
@@ -177,7 +177,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "TagA"); //TODO: What do we expect!?
     }
 
-    // @Test
+    @Test
     public void testTags_with_TagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "TagBAnnotated", 
@@ -185,7 +185,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "TagBAnnotated"); //TODO: What do we expect!?
     }
 
-    // @Test
+    @Test
     public void testTags_with_refsTagsTagA() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/tags/TagA",
@@ -193,7 +193,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "refs/tags/TagA"); //TODO: What do we expect!?
     }
 
-    // @Test
+    @Test
     public void testTags_with_refsTagsTagBAnnotated() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             "refs/tags/TagBAnnotated",
@@ -201,7 +201,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             "refs/tags/TagBAnnotated");
     }
 
-    // @Test
+    @Test
     public void testCommitAsBranchSpec_feature4_sha1() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 namespaceRepoCommits.getProperty("refs/heads/b_namespace3/feature4"),
@@ -209,7 +209,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "detached");
     }
 
-    // @Test
+    @Test
     public void testCommitAsBranchSpec_feature4_branchName() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
                 "refs/heads/b_namespace3/feature4",
@@ -217,7 +217,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "origin/b_namespace3/feature4");
     }
 
-    // @Test
+    @Test
     public void testCommitAsBranchSpec() throws Exception {
         check(namespaceRepoZip, namespaceRepoCommits,
             namespaceRepoCommits.getProperty("refs/heads/b_namespace3/master"), 
@@ -226,7 +226,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     }
 
     @Issue("JENKINS-29796")
-    // @Test
+    @Test
     public void testMultipleRefspecs() throws Exception {
         final String remote = prepareRepo(namespaceRepoZip);
         final UserRemoteConfig remoteConfig = new UserRemoteConfig(remote, "origin",
