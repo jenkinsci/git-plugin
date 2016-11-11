@@ -5,29 +5,29 @@ properties([[$class: 'BuildDiscarderProperty',
                 strategy: [$class: 'LogRotator', numToKeepStr: '10']]])
 
 node {
-  stage 'Checkout'
-  checkout scm
-
-  stage 'Build'
-
-  /* Call the maven build (with timeout).  No tests. */
-  timeout(5) {
-    mvn "clean install -B -V -U -e -DskipTests"
+  stage('Checkout') {
+    checkout scm
   }
 
-  stage 'Test'
-
-  /* Run tests in parallel on multiple nodes (with timeout). */
-  timeout(20) {
-    runParallelTests()
+  stage('Build') {
+    /* Call the maven build (with timeout).  No tests. */
+    timeout(5) {
+      mvn "clean install -B -V -U -e -DskipTests"
+    }
   }
 
+  stage('Test') {
+    /* Run tests in parallel on multiple nodes (with timeout). */
+    timeout(20) {
+      runParallelTests()
+    }
+  }
 
   /* Save Results. */
-  stage 'Results'
-
-  /* Archive the build artifacts */
-  archive includes: 'target/*.hpi,target/*.jpi'
+  stage('Results') {
+    /* Archive the build artifacts */
+    archive includes: 'target/*.hpi,target/*.jpi'
+  }
 }
 
 void runParallelTests() {
