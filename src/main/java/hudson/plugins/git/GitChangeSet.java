@@ -264,6 +264,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return authorOrCommitter ? authorTime : committerTime;
     }
 
+    @Exported
+    public String getAuthorEmail() {
+        return authorOrCommitter ? authorEmail : committerEmail;
+    }
+
     @Override
     public long getTimestamp() {
         String date = getDate();

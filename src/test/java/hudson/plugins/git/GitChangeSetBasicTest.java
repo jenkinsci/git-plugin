@@ -35,11 +35,13 @@ public class GitChangeSetBasicTest {
     @Test
     public void testCommitter() {
         assertEquals(GitChangeSetUtil.COMMITTER_NAME, genChangeSet(false, false).getAuthorName());
+        assertEquals(GitChangeSetUtil.COMMITTER_EMAIL, genChangeSet(false, false).getAuthorEmail());
     }
 
     @Test
     public void testAuthor() {
         assertEquals(GitChangeSetUtil.AUTHOR_NAME, genChangeSet(true, false).getAuthorName());
+        assertEquals(GitChangeSetUtil.AUTHOR_EMAIL, genChangeSet(true, false).getAuthorEmail());
     }
 
     @Test
