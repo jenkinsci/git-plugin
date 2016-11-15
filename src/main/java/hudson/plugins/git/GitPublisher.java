@@ -251,9 +251,19 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     if (t.getTargetRepoName() == null)
                         throw new AbortException("No target repo to push to defined");
 
-                    final String tagName = environment.expand(t.getTagName());
-                    final String tagMessage = hudson.Util.fixNull(environment.expand(t.getTagMessage()));
-                    final String targetRepo = environment.expand(t.getTargetRepoName());
+                    String tagName;
+                    String tagMessage;
+                    String targetRepo;
+                    try {
+                        Class.forName("org.jenkinsci.plugins.tokenmacro.TokenMacro");
+                        tagName= org.jenkinsci.plugins.tokenmacro.TokenMacro.expandAll(build, listener, t.getTagName());
+                        tagMessage = hudson.Util.fixNull(org.jenkinsci.plugins.tokenmacro.TokenMacro.expandAll(build, listener, t.getTagMessage()));
+                        targetRepo = org.jenkinsci.plugins.tokenmacro.TokenMacro.expandAll(build, listener, t.getTargetRepoName());
+                    } catch (Throwable ex) {
+                        tagName = environment.expand(t.getTagName());
+                        tagMessage = hudson.Util.fixNull(environment.expand(t.getTagMessage()));
+                        targetRepo = environment.expand(t.getTargetRepoName());
+                    }
 
                     try {
                     	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
