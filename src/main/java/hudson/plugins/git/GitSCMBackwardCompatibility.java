@@ -223,7 +223,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
                 userMergeOptions = null;
             }
             if (clean) {
-                addIfMissing(new CleanCheckout(false));
+                addIfMissing(new CleanCheckout());
             }
             if (wipeOutWorkspace) {
                 addIfMissing(new WipeWorkspace());

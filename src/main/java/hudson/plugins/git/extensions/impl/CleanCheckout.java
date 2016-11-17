@@ -25,7 +25,7 @@ public class CleanCheckout extends GitSCMExtension {
     }
 
     public CleanCheckout() {
-        this.cleanSubmodule = false;
+        this(false);
     }
 
     /**

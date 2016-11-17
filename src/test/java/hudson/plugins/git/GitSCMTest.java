@@ -423,7 +423,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testCleanBeforeCheckout() throws Exception {
     	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
-        ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout(false));
+        ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
         final String commitFile1 = "commitFile1";
         final String commitFile2 = "commitFile2";
         commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
