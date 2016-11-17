@@ -168,7 +168,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             Collection<SubmoduleConfig> submoduleCfg,
             @CheckForNull GitRepositoryBrowser browser,
             @CheckForNull String gitTool,
-            @NonNull List<GitSCMExtension> extensions) {
+            List<GitSCMExtension> extensions) {
 
         // moved from createBranches
         this.branches = isEmpty(branches) ? newArrayList(new BranchSpec("*/master")) : branches;
