@@ -17,8 +17,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  */
 public class CleanCheckout extends GitSCMExtension {
+
+    private boolean cleanSubmodule;
     @DataBoundConstructor
-    public CleanCheckout() {
+    public CleanCheckout(final boolean cleanSubmodule) {
+        this.cleanSubmodule = cleanSubmodule;
     }
 
     /**
@@ -27,7 +30,7 @@ public class CleanCheckout extends GitSCMExtension {
     @Override
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Cleaning workspace");
-        git.clean();
+        git.clean(cleanSubmodule);
         // TODO: revisit how to hand off to SubmoduleOption
         for (GitSCMExtension ext : scm.getExtensions()) {
             ext.onClean(scm, git);
