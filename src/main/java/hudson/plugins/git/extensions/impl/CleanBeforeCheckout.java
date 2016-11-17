@@ -24,6 +24,10 @@ public class CleanBeforeCheckout extends GitSCMExtension {
         this.cleanSubmodule = cleanSubmodule;
     }
 
+    public CleanBeforeCheckout() {
+        this.cleanSubmodule = false;
+    }
+
     public boolean isCleanSubmodule() {
         return cleanSubmodule;
     }

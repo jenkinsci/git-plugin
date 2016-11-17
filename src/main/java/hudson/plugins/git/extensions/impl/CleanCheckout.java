@@ -24,6 +24,10 @@ public class CleanCheckout extends GitSCMExtension {
         this.cleanSubmodule = cleanSubmodule;
     }
 
+    public CleanCheckout() {
+        this.cleanSubmodule = false;
+    }
+
     /**
      * {@inheritDoc}
      */
