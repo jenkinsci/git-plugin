@@ -190,7 +190,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return Messages.GitSCMSource_DisplayName();
         }
 
-        @SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
+        @SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="fixed in credentials 2.1.9")
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                                                      @QueryParameter String remote,
                                                      @QueryParameter String credentialsId) {
