@@ -154,6 +154,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.warning("Cannot find any credentials with id " + value);
         }
 
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
