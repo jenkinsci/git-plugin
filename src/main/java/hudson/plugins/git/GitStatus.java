@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
@@ -108,6 +109,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return s.toString();
     }
 
+    private static void clearLastStaticBuildParameters() {
+        lastStaticBuildParameters = null;
+    }
+
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
@@ -115,7 +120,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         lastBranches = branches;
         lastSHA1 = sha1;
         lastBuildParameters = null;
-        lastStaticBuildParameters = null;
+        clearLastStaticBuildParameters();
         URIish uri;
         List<ParameterValue> buildParameters = new ArrayList<>();
 
@@ -288,12 +293,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
 
-            lastStaticBuildParameters = null;
+            clearLastStaticBuildParameters();
             List<ParameterValue> allBuildParameters = new ArrayList<>(buildParameters);
             List<ResponseContributor> result = new ArrayList<>();
             // run in high privilege to see all the projects anonymous users don't see.
