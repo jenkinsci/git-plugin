@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -155,6 +156,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     @CheckForNull
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins instance never null")
     protected GitTool resolveGitTool() {
         GitTool tool = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)
             .getInstallation(getGitTool());
@@ -168,6 +170,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         T run(GitClient client, String remoteName) throws IOException, InterruptedException;
     }
 
+    @NonNull
     private <T> T doRetrieve(Retriever<T> retriever, @NonNull TaskListener listener, boolean prune)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
@@ -227,6 +230,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     @NonNull
     @Override
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable this")
     protected void retrieve(@NonNull final SCMHeadObserver observer,
                             @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
@@ -315,7 +319,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }, listener, false);
     }
 
-    @CheckForNull
+    @NonNull
     @Override
     protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
         return doRetrieve(new Retriever<Set<String>>() {
