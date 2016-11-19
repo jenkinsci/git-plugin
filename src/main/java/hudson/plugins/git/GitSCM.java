@@ -9,6 +9,8 @@ import com.google.common.collect.Iterables;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import hudson.*;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
@@ -128,6 +130,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /**
      * All the configured extensions attached to this.
      */
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable field")
     private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
@@ -827,6 +830,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public GitTool resolveGitTool(TaskListener listener) {
         if (gitTool == null) return GitTool.getDefaultInstallation();
         GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
@@ -893,7 +897,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
+        @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Job project;
+        @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Run build;
         final EnvVars environment;
 
@@ -1376,6 +1382,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return GitSCMExtensionDescriptor.all();
         }
 
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public boolean showGitToolOptions() {
             return Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
@@ -1384,8 +1391,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Lists available toolinstallations.
          * @return  list of available git tools
          */
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public List<GitTool> getGitTools() {
-            GitTool[] gitToolInstallations = Hudson.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            GitTool[] gitToolInstallations = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
         }
 
@@ -1797,6 +1805,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Set to true to enable more logging to build's {@link TaskListener}.
      * Used by various classes in this package.
      */
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="Not final so users can adjust log verbosity")
     public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName() + ".verbose");
 
     /**
