@@ -29,7 +29,7 @@ public class GitChangeSetEuroTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection permuteAuthorNameAndLegacyLayout() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String[] allowed = {"true", "false"};
         for (String authorName : allowed) {
             Object[] combination = {authorName};
@@ -40,7 +40,7 @@ public class GitChangeSetEuroTest {
 
     @Before
     public void createEuroChangeSet() {
-        ArrayList<String> gitChangeLog = new ArrayList<String>();
+        ArrayList<String> gitChangeLog = new ArrayList<>();
         gitChangeLog.add("commit " + id);
         gitChangeLog.add("tree 66236cf9a1ac0c589172b450ed01f019a5697c49");
         gitChangeLog.add("parent " + parent);

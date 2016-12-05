@@ -99,6 +99,11 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
 
         /**
          * Performs on-the-fly validation of the URL.
+         * @param value URL value to be checked
+         * @param project project context used for check
+         * @return form validation result
+         * @throws IOException on input or output error
+         * @throws ServletException on servlet error
          */
         public FormValidation doCheckRepoUrl(@QueryParameter(fixEmpty = true) String value, @AncestorInPath AbstractProject project) throws IOException,
                 ServletException {

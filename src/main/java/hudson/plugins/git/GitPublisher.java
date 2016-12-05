@@ -110,7 +110,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
-            tagsToPush = new ArrayList<TagToPush>();
+            tagsToPush = new ArrayList<>();
         }
 
         return tagsToPush;
@@ -118,7 +118,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     public List<BranchToPush> getBranchesToPush() {
         if (branchesToPush == null) {
-            branchesToPush = new ArrayList<BranchToPush>();
+            branchesToPush = new ArrayList<>();
         }
 
         return branchesToPush;
@@ -126,7 +126,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     
     public List<NoteToPush> getNotesToPush() {
         if (notesToPush == null) {
-            notesToPush = new ArrayList<NoteToPush>();
+            notesToPush = new ArrayList<>();
         }
 
         return notesToPush;
@@ -237,10 +237,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
                         //git.push(null);
                     }
-                } catch (FormException e) {
-                    e.printStackTrace(listener.error("Failed to push merge to origin repository"));
-                    return false;
-                } catch (GitException e) {
+                } catch (FormException | GitException e) {
                     e.printStackTrace(listener.error("Failed to push merge to origin repository"));
                     return false;
                 }
@@ -418,7 +415,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
          * Performs on-the-fly validation on the file mask wildcard.
          *
          * I don't think this actually ever gets called, but I'm modernizing it anyway.
-         *
+         * @param project project context for evaluation
+         * @param value string to be evaluated
+         * @return form validation result
+         * @throws IOException on input or output error
          */
         public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value)
             throws IOException  {

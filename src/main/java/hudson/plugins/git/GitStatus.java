@@ -117,7 +117,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         lastBuildParameters = null;
         lastStaticBuildParameters = null;
         URIish uri;
-        List<ParameterValue> buildParameters = new ArrayList<ParameterValue>();
+        List<ParameterValue> buildParameters = new ArrayList<>();
 
         try {
             uri = new URIish(url);
@@ -144,7 +144,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             branchesArray = branches.split(",");
         }
 
-        final List<ResponseContributor> contributors = new ArrayList<ResponseContributor>();
+        final List<ResponseContributor> contributors = new ArrayList<>();
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
@@ -173,6 +173,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
      * Used to test if what we have in the job configuration matches what was submitted to the notification endpoint.
      * It is better to match loosely and wastes a few polling calls than to be pedantic and miss the push notification,
      * especially given that Git tends to support multiple access protocols.
+     * @param lhs left-hand side of comparison
+     * @param rhs right-hand side of comparison
+     * @return true if left-hand side loosely matches right-hand side
      */
     public static boolean looselyMatches(URIish lhs, URIish rhs) {
         return StringUtils.equals(lhs.getHost(),rhs.getHost())
@@ -233,6 +236,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         /**
          * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
+         * @param uri             the repository uri.
+         * @param branches        the (optional) branch information.
+         * @return any response contributors for the response to the push request.
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, String[] branches) {
             throw new AbstractMethodError();
@@ -240,6 +246,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
         /**
          * @deprecated implement {@link #onNotifyCommit(org.eclipse.jgit.transport.URIish, String, List, String...)}
+         * @param uri             the repository uri.
+         * @param sha1            SHA1 hash of commit to build
+         * @param branches        the (optional) branch information.
+         * @return any response contributors for the response to the push request.
          */
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, String... branches) {
             return onNotifyCommit(uri, branches);
@@ -249,8 +259,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * Called when there is a change notification on a specific repository url.
          *
          * @param uri             the repository uri.
-         * @param sha1            ?
-         * @param buildParameters ?
+         * @param sha1            SHA1 hash of commit to build
+         * @param buildParameters parameters to be passed to the build.
+         *                        Ignored unless build parameter flag is set
+         *                        due to security risk of accepting parameters from
+         *                        unauthenticated sources
          * @param branches        the (optional) branch information.
          * @return any response contributors for the response to the push request.
          * @since 2.4.0
@@ -281,8 +294,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
             }
 
             lastStaticBuildParameters = null;
-            List<ParameterValue> allBuildParameters = new ArrayList<ParameterValue>(buildParameters);
-            List<ResponseContributor> result = new ArrayList<ResponseContributor>();
+            List<ParameterValue> allBuildParameters = new ArrayList<>(buildParameters);
+            List<ResponseContributor> result = new ArrayList<>();
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
@@ -428,10 +441,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
             if (paramDefProp != null) {
                 List <ParameterDefinition> parameterDefinition = paramDefProp.getParameterDefinitions();
-                defValues = new ArrayList<ParameterValue>(parameterDefinition.size());
+                defValues = new ArrayList<>(parameterDefinition.size());
 
             } else {
-                defValues = new ArrayList<ParameterValue>();
+                defValues = new ArrayList<>();
                 return defValues;
             }
 

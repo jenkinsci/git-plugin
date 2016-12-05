@@ -44,7 +44,7 @@ public class InverseBuildChooser extends BuildChooser {
 
         EnvVars env = context.getEnvironment();
         GitUtils utils = new GitUtils(listener, git);
-        List<Revision> branchRevs = new ArrayList<Revision>(utils.getAllBranchRevisions());
+        List<Revision> branchRevs = new ArrayList<>(utils.getAllBranchRevisions());
         List<BranchSpec> specifiedBranches = gitSCM.getBranches();
 
         // Iterate over all the revisions pointed to by branches in the repository

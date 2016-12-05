@@ -33,7 +33,7 @@ public class SubmoduleCombinator {
     }
 
     public void createSubmoduleCombinations() throws GitException, IOException, InterruptedException {
-        Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<IndexEntry, Collection<Revision>>();
+        Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<>();
 
         for (IndexEntry submodule : git.getSubmodules("HEAD")) {
             GitClient subGit = git.subGit(submodule.getFile());
@@ -65,7 +65,7 @@ public class SubmoduleCombinator {
         listener.getLogger().println("There are " + combinations.size() + " submodule/revision combinations possible");
 
         // Create a map which is SHA1 -> Submodule IDs that were present
-        Map<ObjectId, List<IndexEntry>> entriesMap = new HashMap<ObjectId, List<IndexEntry>>();
+        Map<ObjectId, List<IndexEntry>> entriesMap = new HashMap<>();
         // Knock out already-defined configurations
         for (ObjectId sha1 : git.revListAll()) {
             // What's the submodule configuration
@@ -188,15 +188,15 @@ public class SubmoduleCombinator {
 
     public List<Map<IndexEntry, Revision>> createCombinations(Map<IndexEntry, Collection<Revision>> moduleBranches) {
     
-        if (moduleBranches.keySet().size() == 0) return new ArrayList<Map<IndexEntry, Revision>>();
+        if (moduleBranches.keySet().size() == 0) return new ArrayList<>();
 
         // Get an entry:
-        List<Map<IndexEntry, Revision>> thisLevel = new ArrayList<Map<IndexEntry, Revision>>();
+        List<Map<IndexEntry, Revision>> thisLevel = new ArrayList<>();
 
         IndexEntry e = moduleBranches.keySet().iterator().next();
 
         for (Revision b : moduleBranches.remove(e)) {
-            Map<IndexEntry, Revision> result = new HashMap<IndexEntry, Revision>();
+            Map<IndexEntry, Revision> result = new HashMap<>();
 
             result.put(e, b);
             thisLevel.add(result);
@@ -206,12 +206,12 @@ public class SubmoduleCombinator {
         if (children.size() == 0) return thisLevel;
     
         // Merge the two together
-        List<Map<IndexEntry, Revision>> result = new ArrayList<Map<IndexEntry, Revision>>();
+        List<Map<IndexEntry, Revision>> result = new ArrayList<>();
 
         for (Map<IndexEntry, Revision> thisLevelEntry : thisLevel) {
       
             for (Map<IndexEntry, Revision> childLevelEntry : children) {
-                HashMap<IndexEntry, Revision> r = new HashMap<IndexEntry, Revision>();
+                HashMap<IndexEntry, Revision> r = new HashMap<>();
                 r.putAll(thisLevelEntry);
                 r.putAll(childLevelEntry);
                 result.add(r);

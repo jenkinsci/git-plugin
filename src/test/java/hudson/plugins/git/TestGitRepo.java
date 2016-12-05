@@ -59,8 +59,8 @@ public class TestGitRepo {
      * @param committer author and committer of this commit
      * @param message commit message
      * @return SHA1 of latest commit
-     * @throws GitException
-     * @throws InterruptedException
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public String commit(final String fileName, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
@@ -74,8 +74,8 @@ public class TestGitRepo {
      * @param committer committer of this commit
      * @param message commit message
      * @return SHA1 of latest commit
-     * @throws GitException
-     * @throws InterruptedException
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public String commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
@@ -89,8 +89,8 @@ public class TestGitRepo {
      * @param committer author and committer of this commit
      * @param message commit message
      * @return SHA1 of latest commit
-     * @throws GitException
-     * @throws InterruptedException
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
@@ -105,8 +105,8 @@ public class TestGitRepo {
      * @param committer committer of this commit
      * @param message commit message
      * @return SHA1 of latest commit
-     * @throws GitException
-     * @throws InterruptedException
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public String commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
                          final String message) throws GitException, InterruptedException {
@@ -128,7 +128,7 @@ public class TestGitRepo {
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
-        List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> list = new ArrayList<>();
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }

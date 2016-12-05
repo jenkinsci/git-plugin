@@ -30,7 +30,7 @@ public class GitChangeSetSimpleTest {
 
     @Parameterized.Parameters(name = "{0},{1}")
     public static Collection permuteAuthorNameAndLegacyLayout() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String[] allowed = {"true", "false"};
         for (String authorName : allowed) {
             for (String legacyFormat : allowed) {
@@ -51,7 +51,7 @@ public class GitChangeSetSimpleTest {
         assertEquals(GitChangeSetUtil.ID, changeSet.getId());
         assertEquals(GitChangeSetUtil.COMMIT_TITLE, changeSet.getMsg());
         assertEquals("Commit title.\nCommit extended description.\n", changeSet.getComment());
-        HashSet<String> expectedAffectedPaths = new HashSet<String>(7);
+        HashSet<String> expectedAffectedPaths = new HashSet<>(7);
         expectedAffectedPaths.add("src/test/add.file");
         expectedAffectedPaths.add("src/test/deleted.file");
         expectedAffectedPaths.add("src/test/modified.file");
@@ -63,32 +63,40 @@ public class GitChangeSetSimpleTest {
         Collection<GitChangeSet.Path> actualPaths = changeSet.getPaths();
         assertEquals(6, actualPaths.size());
         for (GitChangeSet.Path path : actualPaths) {
-            if ("src/test/add.file".equals(path.getPath())) {
-                assertEquals(EditType.ADD, path.getEditType());
-                assertNull(path.getSrc());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
-            } else if ("src/test/deleted.file".equals(path.getPath())) {
-                assertEquals(EditType.DELETE, path.getEditType());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                assertNull(path.getDst());
-            } else if ("src/test/modified.file".equals(path.getPath())) {
-                assertEquals(EditType.EDIT, path.getEditType());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
-            } else if ("src/test/renamedFrom.file".equals(path.getPath())) {
-                assertEquals(EditType.DELETE, path.getEditType());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
-            } else if ("src/test/renamedTo.file".equals(path.getPath())) {
-                assertEquals(EditType.ADD, path.getEditType());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
-                assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
-            } else if ("src/test/copyOf.file".equals(path.getPath())) {
-                assertEquals(EditType.ADD, path.getEditType());
-                assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
-                assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
-            } else {
-                fail("Unrecognized path.");
+            if (null != path.getPath()) switch (path.getPath()) {
+                case "src/test/add.file":
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertNull(path.getSrc());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                    break;
+                case "src/test/deleted.file":
+                    assertEquals(EditType.DELETE, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertNull(path.getDst());
+                    break;
+                case "src/test/modified.file":
+                    assertEquals(EditType.EDIT, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    break;
+                case "src/test/renamedFrom.file":
+                    assertEquals(EditType.DELETE, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    break;
+                case "src/test/renamedTo.file":
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getSrc());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getDst());
+                    break;
+                case "src/test/copyOf.file":
+                    assertEquals(EditType.ADD, path.getEditType());
+                    assertEquals("bc234def567abc890def123abc456def789abc01", path.getSrc());
+                    assertEquals("123abc456def789abc012def345abc678def901a", path.getDst());
+                    break;
+                default:
+                    fail("Unrecognized path.");
+                    break;
             }
         }
     }
@@ -164,7 +172,7 @@ public class GitChangeSetSimpleTest {
     @Test
     public void testChangeSetExceptionMessage() {
         final String expectedLineContent = "commit ";
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add(expectedLineContent);
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Commit has no ID[" + expectedLineContent + "]");

@@ -288,9 +288,9 @@ public abstract class AbstractGitTestCase {
     /** A utility method that displays a git repo. Useful to visualise merges. */
     public void showRepo(TestGitRepo repo, String msg) throws Exception {
         System.out.println("*********** "+msg+" ***********");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
-        System.out.println(out.toString());
-        out.close();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
+            System.out.println(out.toString());
+        }
     }
 }

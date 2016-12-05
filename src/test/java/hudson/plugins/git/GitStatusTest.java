@@ -268,7 +268,7 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger bMasterTrigger = setupProjectWithTrigger("b", "master", false);
         SCMTrigger bTopicTrigger = setupProjectWithTrigger("b", "topic", false);
 
-        Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+        Map<String, String[]> parameterMap = new HashMap<>();
         parameterMap.put("paramKey1", new String[] {"paramValue1"});
         when(requestWithParameter.getParameterMap()).thenReturn(parameterMap);
 
@@ -323,7 +323,7 @@ public class GitStatusTest extends AbstractGitProject {
             "git@github.com:jenkinsci/git-plugin.git",
             "git@github.com:jenkinsci/git-plugin.git/"
         };
-        List<URIish> uris = new ArrayList<URIish>();
+        List<URIish> uris = new ArrayList<>();
         for (String testURL : equivalentRepoURLs) {
             uris.add(new URIish(testURL));
         }
@@ -359,7 +359,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private Map<String, String[]> setupParameterMap() {
-        Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+        Map<String, String[]> parameterMap = new HashMap<>();
         String[] repoURLs = {repoURL};
         parameterMap.put("url", repoURLs);
         String[] branches = {branch};

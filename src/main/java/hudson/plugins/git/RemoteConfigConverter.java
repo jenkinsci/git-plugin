@@ -90,21 +90,32 @@ public class RemoteConfigConverter implements Converter {
             for (Entry<String, Collection<String>> entry : map.entrySet()) {
                 String key = entry.getKey();
                 Collection<String> values = entry.getValue();
-                if (KEY_URL.equals(key))
-                    uris = values.toArray(new String[values.size()]);
-                else if (KEY_FETCH.equals(key))
-                    fetch = values.toArray(new String[values.size()]);
-                else if (KEY_PUSH.equals(key))
-                    push = values.toArray(new String[values.size()]);
-                else if (KEY_UPLOADPACK.equals(key))
-                    for (String value : values)
-                        uploadpack = value;
-                else if (KEY_RECEIVEPACK.equals(key))
-                    for (String value : values)
-                        receivepack = value;
-                else if (KEY_TAGOPT.equals(key))
-                    for (String value : values)
-                        tagopt = value;
+                if (null != key)
+                    switch (key) {
+                    case KEY_URL:
+                        uris = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_FETCH:
+                        fetch = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_PUSH:
+                        push = values.toArray(new String[values.size()]);
+                        break;
+                    case KEY_UPLOADPACK:
+                        for (String value : values)
+                            uploadpack = value;
+                        break;
+                    case KEY_RECEIVEPACK:
+                        for (String value : values)
+                            receivepack = value;
+                        break;
+                    case KEY_TAGOPT:
+                        for (String value : values)
+                            tagopt = value;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -112,13 +123,13 @@ public class RemoteConfigConverter implements Converter {
                 ClassNotFoundException {
             name = in.readUTF();
             final int items = in.readInt();
-            Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+            Map<String, Collection<String>> map = new HashMap<>();
             for (int i = 0; i < items; i++) {
                 String key = in.readUTF();
                 String value = in.readUTF();
                 Collection<String> values = map.get(key);
                 if (values == null) {
-                    values = new ArrayList<String>();
+                    values = new ArrayList<>();
                     map.put(key, values);
                 }
                 values.add(value);
@@ -132,7 +143,7 @@ public class RemoteConfigConverter implements Converter {
 
         /**
          * @return remote config
-         * @throws URISyntaxException
+         * @throws URISyntaxException on incorrect URI syntax
          */
         public RemoteConfig toRemote() throws URISyntaxException {
             return new RemoteConfig(this, name);
@@ -143,9 +154,9 @@ public class RemoteConfigConverter implements Converter {
     private final SerializableConverter converter;
 
     /**
-     * Create remote config converter
+     * Create remote config converter.
      * 
-     * @param xStream
+     * @param xStream XStream used for remote configuration conversion
      */
     public RemoteConfigConverter(XStream xStream) {
         mapper = xStream.getMapper();
@@ -165,8 +176,8 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Is the current reader node a legacy node?
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return true if legacy, false otherwise
      */
     protected boolean isLegacyNode(HierarchicalStreamReader reader,
@@ -177,8 +188,8 @@ public class RemoteConfigConverter implements Converter {
     /**
      * Legacy unmarshalling of remote config
      * 
-     * @param reader
-     * @param context
+     * @param reader stream reader
+     * @param context usage context of reader
      * @return remote config
      */
     protected Object legacyUnmarshal(final HierarchicalStreamReader reader,
@@ -218,11 +229,7 @@ public class RemoteConfigConverter implements Converter {
             proxy.readExternal(objectInput);
             objectInput.popCallback();
             return proxy.toRemote();
-        } catch (IOException e) {
-            throw new ConversionException("Unmarshal failed", e);
-        } catch (ClassNotFoundException e) {
-            throw new ConversionException("Unmarshal failed", e);
-        } catch (URISyntaxException e) {
+        } catch (IOException | ClassNotFoundException | URISyntaxException e) {
             throw new ConversionException("Unmarshal failed", e);
         }
     }

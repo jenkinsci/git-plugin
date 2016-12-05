@@ -137,7 +137,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
      * @return list of branches without the "remote/" prefix.
      */
     private List<Branch> normalizeBranches(List<Branch> branches) {
-        final List<Branch> normalBranches = new ArrayList<Branch>(branches.size());
+        final List<Branch> normalBranches = new ArrayList<>(branches.size());
         final String remotesPrefix = "remotes/";
         for (Branch initialBranch : branches) {
             final String initialBranchName = initialBranch.getName();

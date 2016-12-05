@@ -103,7 +103,7 @@ public class GitStatusMultipleSCMTest {
                 null,
                 Collections.<GitSCMExtension>emptyList());
 
-        List<SCM> testScms = new ArrayList<SCM>();
+        List<SCM> testScms = new ArrayList<>();
         testScms.add(repo0Scm);
         testScms.add(repo1Scm);
 

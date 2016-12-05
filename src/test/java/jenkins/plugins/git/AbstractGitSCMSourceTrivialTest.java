@@ -4,8 +4,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.extensions.GitSCMExtension;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +14,8 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
 
 public class AbstractGitSCMSourceTrivialTest {
 
@@ -29,7 +29,7 @@ public class AbstractGitSCMSourceTrivialTest {
     private final String expectedRemote = "origin";
 
     private final String expectedRefSpec = "+refs/heads/*:refs/remotes/origin/*";
-    private final List<RefSpec> expectedRefSpecs = new ArrayList<RefSpec>();
+    private final List<RefSpec> expectedRefSpecs = new ArrayList<>();
 
     @Before
     public void setUp() throws Exception {
@@ -37,6 +37,33 @@ public class AbstractGitSCMSourceTrivialTest {
             expectedRefSpecs.add(new RefSpec(expectedRefSpec));
         }
         gitSCMSource = new AbstractGitSCMSourceImpl();
+    }
+
+    @Test
+    public void basicTestIsExcluded() {
+        AbstractGitSCMSource abstractGitSCMSource = mock(AbstractGitSCMSource.class);
+
+        when(abstractGitSCMSource.getIncludes()).thenReturn("*master release* fe?ture");
+        when(abstractGitSCMSource.getExcludes()).thenReturn("release bugfix*");
+        when(abstractGitSCMSource.isExcluded(Mockito.anyString())).thenCallRealMethod();
+
+        assertFalse(abstractGitSCMSource.isExcluded("master"));
+        assertFalse(abstractGitSCMSource.isExcluded("remote/master"));
+        assertFalse(abstractGitSCMSource.isExcluded("release/X.Y"));
+        assertFalse(abstractGitSCMSource.isExcluded("releaseX.Y"));
+        assertFalse(abstractGitSCMSource.isExcluded("fe?ture"));
+        assertTrue(abstractGitSCMSource.isExcluded("feature"));
+        assertTrue(abstractGitSCMSource.isExcluded("release"));
+        assertTrue(abstractGitSCMSource.isExcluded("bugfix"));
+        assertTrue(abstractGitSCMSource.isExcluded("bugfix/test"));
+        assertTrue(abstractGitSCMSource.isExcluded("test"));
+
+        when(abstractGitSCMSource.getIncludes()).thenReturn("master feature/*");
+        when(abstractGitSCMSource.getExcludes()).thenReturn("feature/*/private");
+        assertFalse(abstractGitSCMSource.isExcluded("master"));
+        assertTrue(abstractGitSCMSource.isExcluded("devel"));
+        assertFalse(abstractGitSCMSource.isExcluded("feature/spiffy"));
+        assertTrue(abstractGitSCMSource.isExcluded("feature/spiffy/private"));
     }
 
     @Test
@@ -142,33 +169,6 @@ public class AbstractGitSCMSourceTrivialTest {
 
         public List<RefSpec> getRefSpecs() {
             return expectedRefSpecs;
-        }
-
-        @Override
-        public GitRepositoryBrowser getBrowser() {
-            return null;
-        }
-
-        @Override
-        public void setBrowser(GitRepositoryBrowser browser) {
-        }
-
-        @Override
-        public String getGitTool() {
-            return null;
-        }
-
-        @Override
-        public void setGitTool(String gitTool) {
-        }
-
-        @Override
-        public List<GitSCMExtension> getExtensions() {
-            return new ArrayList<GitSCMExtension>();
-        }
-
-        @Override
-        public void setExtensions(List<GitSCMExtension> extensions) {
         }
     }
 

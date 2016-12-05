@@ -48,15 +48,19 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * Given a commit found during polling, check whether it should be disregarded.
      *
      *
-     * @param scm
+     * @param scm GitSCM object
      * @param git GitClient object
      * @param commit
      *      The commit whose exclusion is being tested.
-     * @param listener
+     * @param listener build log
+     * @param buildData build data to be used
      * @return
      *      true to disregard this commit and not trigger a build, regardless of what later {@link GitSCMExtension}s say.
      *      false to trigger a build from this commit, regardless of what later {@link GitSCMExtension}s say.
      *      null to allow other {@link GitSCMExtension}s to decide.
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) throws IOException, InterruptedException, GitException {
         return null;
@@ -65,7 +69,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Given the workspace root directory, gets the working directory, which is where the repository will be checked out.
      *
+     * @param scm GitSCM object
+     * @param context job context for workspace root
+     * @param workspace starting directory of workspace
+     * @param environment environment variables used to eval
+     * @param listener build log
      * @return working directory or null to let other {@link GitSCMExtension} control it.
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public FilePath getWorkingDirectory(GitSCM scm, Job<?, ?> context, FilePath workspace, EnvVars environment, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (context instanceof AbstractProject) {
@@ -106,6 +118,10 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * result. The primary example is for speculative merge with another branch (people use this to answer
      * the question of "what happens if I were to integrate this feature branch back to the master branch?")
      *
+     * @param scm GitSCM object
+     * @param git GitClient object
+     * @param build run context
+     * @param listener build log
      * @param marked
      * 		The revision that started this build. (e.g. pre-merge)
      * @param rev
@@ -113,6 +129,9 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @return
      *      The revision selected for this build. Unless you are decorating the given {@code rev}, return the value
      *      given in the {@code rev} parameter.
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public Revision decorateRevisionToBuild(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener, Revision marked, Revision rev) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -133,6 +152,13 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
     /**
      * Called before the checkout activity (including fetch and checkout) starts.
+     * @param scm GitSCM object
+     * @param build run context
+     * @param git GitClient
+     * @param listener build log
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void beforeCheckout(GitSCM scm, Run<?,?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -155,6 +181,13 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      *
      * Do not move the HEAD to another commit, as by this point the commit to be built is already determined
      * and recorded (such as changelog.)
+     * @param scm GitSCM object
+     * @param build run context
+     * @param git GitClient
+     * @param listener build log
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -173,6 +206,11 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * Signals when "git-clean" runs. Primarily for running "git submodule clean"
      *
      * TODO: revisit the abstraction
+     * @param scm GitSCM object
+     * @param git GitClient
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
     }
@@ -180,6 +218,12 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Called when {@link GitClient} is created to decorate its behaviour.
      * This allows extensions to customize the behaviour of {@link GitClient}.
+     * @param scm GitSCM object
+     * @param git GitClient
+     * @return GitClient to decorate
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         return git;
@@ -187,6 +231,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
     /**
      * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
+     * @param scm GitSCM object
+     * @param build run context
+     * @param git GitClient
+     * @param listener build log
+     * @param cmd clone command to be decorated
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -203,12 +255,27 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
     /**
      * Called before a {@link FetchCommand} is executed to allow extensions to alter its behaviour.
+     * @param scm GitSCM object
+     * @param git GitClient
+     * @param listener build log
+     * @param cmd fetch command to be decorated
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
     }
 
     /**
      * Called before a {@link MergeCommand} is executed to allow extensions to alter its behaviour.
+     * @param scm GitSCM object
+     * @param build run context
+     * @param git GitClient
+     * @param listener build log
+     * @param cmd merge command to be decorated
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -225,6 +292,14 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
     /**
      * Called before a {@link CheckoutCommand} is executed to allow extensions to alter its behaviour.
+     * @param scm GitSCM object
+     * @param build run context
+     * @param git GitClient
+     * @param listener build log
+     * @param cmd checkout command to be decorated
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
      */
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         if (build instanceof AbstractBuild && listener instanceof BuildListener) {
@@ -241,12 +316,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
 
     /**
      * Contribute additional environment variables for the Git invocation.
+     * @param scm GitSCM used as reference
+     * @param env environment variables to be added
      */
     public void populateEnvironmentVariables(GitSCM scm, Map <String, String> env) {}
 
     /**
      * Let extension declare required GitClient implementation. git-plugin will then detect conflicts, and fallback to
      * globally configured default git client
+     * @return git client type required for this extentsion
      */
     public GitClientType getRequiredClient() {
         return GitClientType.ANY;

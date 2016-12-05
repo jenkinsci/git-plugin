@@ -39,6 +39,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
@@ -67,8 +68,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -78,14 +79,18 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.eclipse.jgit.transport.URIish;
 
 /**
  * @author Stephen Connolly
@@ -95,7 +100,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
      */
-    private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<String, Lock>();
+    private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<>();
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
@@ -103,6 +108,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         super(id);
     }
 
+    @CheckForNull
     public abstract String getCredentialsId();
 
     public abstract String getRemote();
@@ -111,25 +117,58 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     public abstract String getExcludes();
 
-    public abstract GitRepositoryBrowser getBrowser();
+    /**
+     * Gets {@link GitRepositoryBrowser} to be used with this SCMSource.
+     * @return Repository browser or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    @CheckForNull
+    public GitRepositoryBrowser getBrowser() {
+        // Always return null by default
+        return null;
+    }
 
-    public abstract void setBrowser(GitRepositoryBrowser browser);
+    /**
+     * Gets Git tool to be used for this SCM Source.
+     * @return Git Tool or {@code null} if the default tool should be used.
+     * @since 2.5.1
+     */
+    @CheckForNull
+    public String getGitTool() {
+        // Always return null by default
+        return null;
+    }
 
-    public abstract String getGitTool();
-
-    public abstract void setGitTool(String gitTool);
-
-    public abstract List<GitSCMExtension> getExtensions();
-
-    public abstract void setExtensions(List<GitSCMExtension> extensions);
+    /**
+     * Gets list of extensions, which should be used with this branch source.
+     * @return List of Extensions to be used. May be empty
+     * @since 2.5.1
+     */
+    @NonNull
+    public List<GitSCMExtension> getExtensions() {
+        // Always return empty list
+        return Collections.emptyList();
+    }
 
     public String getRemoteName() {
       return "origin";
     }
 
     @CheckForNull
-    @Override
-    protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
+    protected GitTool resolveGitTool() {
+        GitTool tool = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)
+            .getInstallation(getGitTool());
+        if (getGitTool() == null) {
+            tool = GitTool.getDefaultInstallation();
+        }
+        return tool;
+    }
+
+    private interface Retriever<T> {
+        T run(GitClient client, String remoteName) throws IOException, InterruptedException;
+    }
+
+    private <T> T doRetrieve(Retriever<T> retriever, @NonNull TaskListener listener, boolean prune)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
@@ -137,6 +176,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         try {
             File cacheDir = getCacheDir(cacheEntry);
             Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
+            GitTool tool = resolveGitTool();
+            if (tool != null) {
+                git.using(tool.getGitExe());
+            }
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
             if (!client.hasGitRepo()) {
@@ -146,117 +189,146 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             String remoteName = getRemoteName();
             listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
             client.setRemoteUrl(remoteName, getRemote());
-            listener.getLogger().println("Fetching " + remoteName + "...");
-            List<RefSpec> refSpecs = getRefSpecs();
-            client.fetch(remoteName, refSpecs.toArray(new RefSpec[refSpecs.size()]));
-            // we don't prune remotes here, as we just want one head's revision
-            for (Branch b : client.getRemoteBranches()) {
-                String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
-                if (branchName.equals(head.getName())) {
-                    return new SCMRevisionImpl(head, b.getSHA1String());
-                }
+            listener.getLogger().println((prune ? "Fetching & pruning " : "Fetching ") + remoteName + "...");
+            FetchCommand fetch = client.fetch_();
+            if (prune) {
+                fetch = fetch.prune();
             }
-            return null;
+            URIish remoteURI = null;
+            try {
+                remoteURI = new URIish(remoteName);
+            } catch (URISyntaxException ex) {
+                listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
+            }
+            fetch.from(remoteURI, getRefSpecs()).execute();
+            return retriever.run(client, remoteName);
         } finally {
             cacheLock.unlock();
         }
     }
 
+    @CheckForNull
+    @Override
+    protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
+            throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<SCMRevision>() {
+            @Override
+            public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                for (Branch b : client.getRemoteBranches()) {
+                    String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                    if (branchName.equals(head.getName())) {
+                        return new SCMRevisionImpl(head, b.getSHA1String());
+                    }
+                }
+                return null;
+            }
+        }, listener, /* we don't prune remotes here, as we just want one head's revision */false);
+    }
+
     @NonNull
     @Override
     protected void retrieve(@NonNull final SCMHeadObserver observer,
-                            @NonNull TaskListener listener)
+                            @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
-        String cacheEntry = getCacheEntry();
-        Lock cacheLock = getCacheLock(cacheEntry);
-        cacheLock.lock();
-        try {
-            File cacheDir = getCacheDir(cacheEntry);
-            Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-            GitClient client = git.getClient();
-            client.addDefaultCredentials(getCredentials());
-            if (!client.hasGitRepo()) {
-                listener.getLogger().println("Creating git repository in " + cacheDir);
-                client.init();
-            }
-            String remoteName = getRemoteName();
-            listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
-            client.setRemoteUrl(remoteName, getRemote());
-            listener.getLogger().println("Fetching " + remoteName + "...");
-            List<RefSpec> refSpecs = getRefSpecs();
-            client.fetch(remoteName, refSpecs.toArray(new RefSpec[refSpecs.size()]));
-            listener.getLogger().println("Pruning stale remotes...");
-            final Repository repository = client.getRepository();
-            try {
-                client.prune(new RemoteConfig(repository.getConfig(), remoteName));
-            } catch (UnsupportedOperationException e) {
-                e.printStackTrace(listener.error("Could not prune stale remotes"));
-            } catch (URISyntaxException e) {
-                e.printStackTrace(listener.error("Could not prune stale remotes"));
-            }
-            listener.getLogger().println("Getting remote branches...");
-            SCMSourceCriteria branchCriteria = getCriteria();
-            RevWalk walk = new RevWalk(repository);
-            try {
-                walk.setRetainBody(false);
-                for (Branch b : client.getRemoteBranches()) {
-                    if (!b.getName().startsWith(remoteName + "/")) {
-                      continue;
-                    }
-                    final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
-                    listener.getLogger().println("Checking branch " + branchName);
-                    if (isExcluded(branchName)){
-                      continue;
-                    }
-                    if (branchCriteria != null) {
-                        RevCommit commit = walk.parseCommit(b.getSHA1());
-                        final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
-                        final RevTree tree = commit.getTree();
-                        SCMSourceCriteria.Probe probe = new SCMSourceCriteria.Probe() {
-                            @Override
-                            public String name() {
-                                return branchName;
-                            }
-
-                            @Override
-                            public long lastModified() {
-                                return lastModified;
-                            }
-
-                            @Override
-                            public boolean exists(@NonNull String path) throws IOException {
-                                TreeWalk tw = TreeWalk.forPath(repository, path, tree);
-                                try {
-                                    return tw != null;
-                                } finally {
-                                    if (tw != null) {
-                                        tw.release();
-                                    }
-                                }
-                            }
-                        };
-                        if (branchCriteria.isHead(probe, listener)) {
-                            listener.getLogger().println("Met criteria");
-                        } else {
-                            listener.getLogger().println("Does not meet criteria");
+        doRetrieve(new Retriever<Void>() {
+            @Override
+            public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                final Repository repository = client.getRepository();
+                listener.getLogger().println("Getting remote branches...");
+                SCMSourceCriteria branchCriteria = getCriteria();
+                try (RevWalk walk = new RevWalk(repository)) {
+                    walk.setRetainBody(false);
+                    for (Branch b : client.getRemoteBranches()) {
+                        if (!b.getName().startsWith(remoteName + "/")) {
                             continue;
                         }
-                    }
-                    SCMHead head = new SCMHead(branchName);
-                    SCMRevision hash = new SCMRevisionImpl(head, b.getSHA1String());
-                    observer.observe(head, hash);
-                    if (!observer.isObserving()) {
-                        return;
+                        final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                        listener.getLogger().println("Checking branch " + branchName);
+                        if (isExcluded(branchName)) {
+                            continue;
+                        }
+                        if (branchCriteria != null) {
+                            RevCommit commit = walk.parseCommit(b.getSHA1());
+                            final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                            final RevTree tree = commit.getTree();
+                            SCMSourceCriteria.Probe probe = new SCMSourceCriteria.Probe() {
+                                @Override
+                                public String name() {
+                                    return branchName;
+                                }
+
+                                @Override
+                                public long lastModified() {
+                                    return lastModified;
+                                }
+
+                                @Override
+                                public boolean exists(@NonNull String path) throws IOException {
+                                    try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
+                                        return tw != null;
+                                    }
+                                }
+                            };
+                            if (branchCriteria.isHead(probe, listener)) {
+                                listener.getLogger().println("Met criteria");
+                            } else {
+                                listener.getLogger().println("Does not meet criteria");
+                                continue;
+                            }
+                        }
+                        SCMHead head = new SCMHead(branchName);
+                        SCMRevision hash = new SCMRevisionImpl(head, b.getSHA1String());
+                        observer.observe(head, hash);
+                        if (!observer.isObserving()) {
+                            return null;
+                        }
                     }
                 }
-            } finally {
-                walk.dispose();
-            }
 
-            listener.getLogger().println("Done.");
-        } finally {
-            cacheLock.unlock();
-        }
+                listener.getLogger().println("Done.");
+                return null;
+            }
+        }, listener, true);
+    }
+
+    @CheckForNull
+    @Override
+    protected SCMRevision retrieve(@NonNull final String revision, @NonNull final TaskListener listener) throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<SCMRevision>() {
+            @Override
+            public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                String hash;
+                try {
+                    hash = client.revParse(revision).name();
+                } catch (GitException x) {
+                    // Try prepending origin/ in case it was a branch.
+                    try {
+                        hash = client.revParse("origin/" + revision).name();
+                    } catch (GitException x2) {
+                        listener.getLogger().println(x.getMessage());
+                        listener.getLogger().println(x2.getMessage());
+                        return null;
+                    }
+                }
+                return new SCMRevisionImpl(new SCMHead(revision), hash);
+            }
+        }, listener, false);
+    }
+
+    @CheckForNull
+    @Override
+    protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<Set<String>>() {
+            @Override
+            public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                Set<String> revisions = new HashSet<String>();
+                for (Branch branch : client.getRemoteBranches()) {
+                    revisions.add(branch.getName().replaceFirst("^origin/", ""));
+                }
+                revisions.addAll(client.getTagNames("*"));
+                return revisions;
+            }
+        }, listener, false);
     }
 
     protected String getCacheEntry() {
@@ -270,10 +342,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
-        File parentDir = cacheDir.getParentFile();
-        if (!parentDir.isDirectory()) {
-            boolean ok = parentDir.mkdirs();
-            if (!ok) LOGGER.info("Failed mkdirs of " + parentDir.getPath());
+        if (!cacheDir.isDirectory()) {
+            boolean ok = cacheDir.mkdirs();
+            if (!ok) {
+                LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+            }
         }
         return cacheDir;
     }
@@ -286,12 +359,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return cacheLock;
     }
 
+    @CheckForNull
     protected StandardUsernameCredentials getCredentials() {
+        String credentialsId = getCredentialsId();
+        if (credentialsId == null) {
+            return null;
+        }
         return CredentialsMatchers
                 .firstOrNull(
                         CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, getOwner(),
                                 ACL.SYSTEM, URIRequirementBuilder.fromUri(getRemote()).build()),
-                        CredentialsMatchers.allOf(CredentialsMatchers.withId(getCredentialsId()),
+                        CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER));
     }
 
@@ -300,20 +378,21 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @NonNull
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        BuildChooser buildChooser = revision instanceof SCMRevisionImpl ? new SpecificRevisionBuildChooser(
-                (SCMRevisionImpl) revision) : new DefaultBuildChooser();
-        List<GitSCMExtension> extensions = getExtensions();
+        List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>(getExtensions());
+        if (revision instanceof SCMRevisionImpl) {
+            extensions.add(new BuildChooserSetting(new SpecificRevisionBuildChooser((SCMRevisionImpl) revision)));
+        }
         return new GitSCM(
                 getRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head.getName())),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 getBrowser(), getGitTool(),
-                extensions.isEmpty() ? Collections.<GitSCMExtension>singletonList(new BuildChooserSetting(buildChooser)) : extensions);
+                extensions);
     }
 
     protected List<UserRemoteConfig> getRemoteConfigs() {
         List<RefSpec> refSpecs = getRefSpecs();
-        List<UserRemoteConfig> result = new ArrayList<UserRemoteConfig>(refSpecs.size());
+        List<UserRemoteConfig> result = new ArrayList<>(refSpecs.size());
         String remote = getRemote();
         for (RefSpec refSpec : refSpecs) {
             result.add(new UserRemoteConfig(remote, getRemoteName(), refSpec.toString(), getCredentialsId()));
@@ -324,7 +403,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
      * 
-     * @param branchName
+     * @param branchName name of branch to be tested
      * @return true if branchName is excluded or is not included
      */
     protected boolean isExcluded (String branchName){
@@ -334,7 +413,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns the pattern corresponding to the branches containing wildcards. 
      * 
-     * @param branchName
+     * @param branches branch names to evaluate
      * @return pattern corresponding to the branches containing wildcards
      */
     private String getPattern(String branches){

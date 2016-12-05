@@ -1,14 +1,12 @@
 <div>
-  Each exclusion uses regular expression pattern matching, and must be separated by a new line.
+  Each exclusion uses <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">java regular expression pattern matching</a>,
+    and must be separated by a new line.
   <p/>
   <pre>
-	myapp/src/main/web/.*\.html
-	myapp/src/main/web/.*\.jpeg
-	myapp/src/main/web/.*\.gif
+    myapp/src/main/web/.*\.html
+    myapp/src/main/web/.*\.jpeg
+    myapp/src/main/web/.*\.gif
   </pre>
   The example above illustrates that if only html/jpeg/gif files have been committed to
   the SCM a build will not occur.
-  <p/>
-  More information on regular expressions can be found
-  <a href="http://www.regular-expressions.info/" target="_blank">here</a>.
 </div>

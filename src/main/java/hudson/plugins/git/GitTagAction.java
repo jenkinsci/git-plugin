@@ -33,7 +33,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
      * If a module is not tagged, the value will be empty list.
      * Never an empty map.
      */
-    private final Map<String, List<String>> tags = new CopyOnWriteMap.Tree<String, List<String>>();
+    private final Map<String, List<String>> tags = new CopyOnWriteMap.Tree<>();
 
     private final String ws;
 
@@ -89,6 +89,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     /**
      * @see #tags
+     * @return tag names and annotations for this repository
      */
     public Map<String, List<String>> getTags() {
         return Collections.unmodifiableMap(tags);
@@ -96,7 +97,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     @Exported(name = "tags")
     public List<TagInfo> getTagInfo() {
-        List<TagInfo> data = new ArrayList<TagInfo>();
+        List<TagInfo> data = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : tags.entrySet()) {
             String module = e.getKey();
             for (String tag : e.getValue())
@@ -140,13 +141,17 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     /**
      * Invoked to actually tag the workspace.
+     * @param req request for submit
+     * @param rsp response used to send result
+     * @throws IOException on input or output error
+     * @throws ServletException on servlet error
      */
     public synchronized void doSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         getACL().checkPermission(getPermission());
 
         MultipartFormDataParser parser = new MultipartFormDataParser(req);
 
-        Map<String, String> newTags = new HashMap<String, String>();
+        Map<String, String> newTags = new HashMap<>();
 
         int i = -1;
         for (String e : tags.keySet()) {

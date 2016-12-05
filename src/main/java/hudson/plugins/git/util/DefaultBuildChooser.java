@@ -37,8 +37,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * use the advanced usecase as defined in the getAdvancedCandidateRevisons
      * method.
      *
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String branchSpec,
@@ -69,7 +70,7 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
-        Collection<Revision> revisions = new HashSet<Revision>();
+        Collection<Revision> revisions = new HashSet<>();
 
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
@@ -85,7 +86,7 @@ public class DefaultBuildChooser extends BuildChooser {
         } else {
             // either the branch is qualified (first part should match a valid remote)
             // or it is still unqualified, but the branch name contains a '/'
-            List<String> possibleQualifiedBranches = new ArrayList<String>();
+            List<String> possibleQualifiedBranches = new ArrayList<>();
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
                 String fqbn;
@@ -193,15 +194,15 @@ public class DefaultBuildChooser extends BuildChooser {
      *  NB: Alternate BuildChooser implementations are possible - this
      *  may be beneficial if "only 1" branch is to be built, as much of
      *  this work is irrelevant in that usecase.
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
      */
     private List<Revision> getAdvancedCandidateRevisions(boolean isPollCall, TaskListener listener, GitUtils utils, BuildData data, BuildChooserContext context) throws GitException, IOException, InterruptedException {
 
         EnvVars env = context.getEnvironment();
 
         // 1. Get all the (branch) revisions that exist
-        List<Revision> revs = new ArrayList<Revision>(utils.getAllBranchRevisions());
+        List<Revision> revs = new ArrayList<>(utils.getAllBranchRevisions());
         verbose(listener, "Starting with all the branches: {0}", revs);
 
         // 2. Filter out any revisions that don't contain any branches that we
@@ -313,7 +314,7 @@ public class DefaultBuildChooser extends BuildChooser {
      *
      * - if the branch name contains more wildcards then the simple usecase
      * - if the branch name should be treated as regexp
-     * @param branchSpec
+     * @param branchSpec branch specification
      * @return true if branchSpec requires advanced matching
      */
     boolean isAdvancedSpec(String branchSpec) {

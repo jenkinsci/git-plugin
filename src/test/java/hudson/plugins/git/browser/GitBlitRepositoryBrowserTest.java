@@ -28,7 +28,7 @@ public class GitBlitRepositoryBrowserTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection permuteAuthorName() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String[] allowed = {"true", "false"};
         for (String authorName : allowed) {
             Object[] combination = {authorName};

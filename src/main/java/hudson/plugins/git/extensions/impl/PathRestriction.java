@@ -77,7 +77,7 @@ public class PathRestriction extends GitSCMExtension {
 
     private List<Pattern> getRegionsPatterns(String[] regions) {
         if (regions != null) {
-            List<Pattern> patterns = new ArrayList<Pattern>(regions.length);
+            List<Pattern> patterns = new ArrayList<>(regions.length);
 
             for (String region : regions) {
                 patterns.add(Pattern.compile(region));
@@ -100,7 +100,7 @@ public class PathRestriction extends GitSCMExtension {
         List<Pattern> excluded = getExcludedPatterns();
 
         // Assemble the list of included paths
-        List<String> includedPaths = new ArrayList<String>(paths.size());
+        List<String> includedPaths = new ArrayList<>(paths.size());
         if (!included.isEmpty()) {
             for (String path : paths) {
                 for (Pattern pattern : included) {
@@ -115,7 +115,7 @@ public class PathRestriction extends GitSCMExtension {
         }
 
         // Assemble the list of excluded paths
-        List<String> excludedPaths = new ArrayList<String>();
+        List<String> excludedPaths = new ArrayList<>();
         if (!excluded.isEmpty()) {
             for (String path : includedPaths) {
                 for (Pattern pattern : excluded) {

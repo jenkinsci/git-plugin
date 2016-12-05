@@ -89,14 +89,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String title;
     private String id;
     private String parentCommit;
-    private Collection<Path> paths = new HashSet<Path>();
+    private Collection<Path> paths = new HashSet<>();
     private boolean authorOrCommitter;
 
     /**
      * Create Git change set using information in given lines
      *
-     * @param lines
-     * @param authorOrCommitter
+     * @param lines change set lines read to construct change set
+     * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
         this.authorOrCommitter = authorOrCommitter;
@@ -264,6 +264,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return authorOrCommitter ? authorTime : committerTime;
     }
 
+    @Exported
+    public String getAuthorEmail() {
+        return authorOrCommitter ? authorEmail : committerEmail;
+    }
+
     @Override
     public long getTimestamp() {
         String date = getDate();
@@ -321,7 +326,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     @Override
     public Collection<String> getAffectedPaths() {
-        Collection<String> affectedPaths = new HashSet<String>(this.paths.size());
+        Collection<String> affectedPaths = new HashSet<>(this.paths.size());
         for (Path file : this.paths) {
             affectedPaths.add(file.getPath());
         }
@@ -478,6 +483,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     /**
      * Gets {@linkplain #getComment() the comment} fully marked up by {@link ChangeLogAnnotator}.
+     @return annotated comment
      */
     public String getCommentAnnotated() {
         MarkupText markup = new MarkupText(getComment());

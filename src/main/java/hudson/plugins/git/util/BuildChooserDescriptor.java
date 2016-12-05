@@ -12,10 +12,11 @@ import java.util.logging.Logger;
 public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
     private static final Logger LOGGER = Logger.getLogger(BuildChooserDescriptor.class.getName());
     /**
-     * Before this extension point is formalized, existing {@link BuildChooser}s had
+     * Before this extension point was formalized, existing {@link BuildChooser}s had
      * a hard-coded ID name used for the persistence.
      *
      * This method returns those legacy ID, if any, to keep compatibility with existing data.
+     * @return legacy ID, if any, to keep compatibility with existing data.
      */
     public String getLegacyId() {
         return null;
