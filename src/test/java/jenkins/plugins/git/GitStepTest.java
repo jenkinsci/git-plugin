@@ -57,8 +57,9 @@ import org.jvnet.hudson.test.JenkinsRule;
  */
 public class GitStepTest {
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+    // Output build log to stderr
+    // @ClassRule
+    // public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule
     public JenkinsRule r = new JenkinsRule();
     @Rule

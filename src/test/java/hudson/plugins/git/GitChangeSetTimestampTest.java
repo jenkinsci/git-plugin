@@ -34,7 +34,7 @@ public class GitChangeSetTimestampTest {
     }
 
     private GitChangeSet genChangeSetForJenkins30073(boolean authorOrCommitter) {
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add("commit 302548f75c3eb6fa1db83634e4061d0ded416e5a");
         lines.add("tree e1bd430d3f45b7aae54a3061b7895ee1858ec1f8");
         lines.add("parent c74f084d8f9bc9e52f0b3fe9175ad27c39947a73");

@@ -28,7 +28,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(getUrl(), "commit/" + changeSet.getId().toString());
+        return new URL(getUrl(), "commit/" + changeSet.getId());
     }
 
     /**
@@ -36,23 +36,23 @@ public class GitoriousWeb extends GitRepositoryBrowser {
      * 
      * {@code https://[Gitorious URL]/commit/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/diffs?diffmode=sidebyside&fragment=1#[path to file]}
      * 
-     * @param path
+     * @param path file path used in diff link
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(getUrl(), "commit/" + changeSet.getId().toString() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
+        return new URL(getUrl(), "commit/" + changeSet.getId() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
     }
 
     /**
      * Creates a link to the file.
      * {@code https://[Gitorious URL]/blobs/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/pom.xml}
      * 
-     * @param path
+     * @param path file path used in diff link
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

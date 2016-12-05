@@ -31,7 +31,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, "diff?rev=" + changeSet.getId().toString());
+        return new URL(url, "diff?rev=" + changeSet.getId());
     }
 
     /**
@@ -46,13 +46,13 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * @param path
      *            affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        final URL changeSetLink = new URL(url, "revisions/" + changeSet.getId().toString());
+        final URL changeSetLink = new URL(url, "revisions/" + changeSet.getId());
         final URL difflink;
         if (path.getEditType().equals(EditType.ADD)) {
             difflink = getFileLink(path);
@@ -67,10 +67,9 @@ public class RedmineWeb extends GitRepositoryBrowser {
      * https://SERVER/PATH/projects/PROJECT/repository/revisions/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/entry/pom.xml
      * For deleted files just returns a diff link, which will have /dev/null as target file.
      * 
-     * @param path
-     *            file
+     * @param path affected file path
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

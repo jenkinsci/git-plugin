@@ -39,11 +39,11 @@ public class Phabricator extends GitRepositoryBrowser {
      * https://[Phabricator URL]/r$repo$sha
      *
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId().toString()));
+        return new URL(getUrl(), String.format("/r%s%s", this.getRepo(), changeSet.getId()));
     }
 
     /**
@@ -52,14 +52,14 @@ public class Phabricator extends GitRepositoryBrowser {
      * https://[Phabricator URL]/commits/a9182a07750c9a0dfd89a8461adf72ef5ef0885b#[path to file]
      *
      *
-     * @param path
+     * @param path file path used in diff link
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final String sha = changeSet.getId().toString();
+        final String sha = changeSet.getId();
         final String spec = String.format("/diffusion/%s/change/master/%s;%s", this.getRepo(), path.getPath(), sha);
         return new URL(getUrl(), spec);
     }
@@ -68,14 +68,14 @@ public class Phabricator extends GitRepositoryBrowser {
      * Creates a link to the file.
      * https://[Phabricator URL]/a9182a07750c9a0dfd89a8461adf72ef5ef0885b/tree/pom.xml
      *
-     * @param path
+     * @param path file path used in diff link
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        final String sha = changeSet.getId().toString();
+        final String sha = changeSet.getId();
         final String spec = String.format("/diffusion/%s/history/master/%s;%s", this.getRepo(), path.getPath(), sha);
         return new URL(getUrl(), spec);
     }

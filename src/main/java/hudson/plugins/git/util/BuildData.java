@@ -33,7 +33,7 @@ public class BuildData implements Action, Serializable, Cloneable {
      * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
      * is attached to)
      */
-    public Map<String, Build> buildsByBranchName = new HashMap<String, Build>();
+    public Map<String, Build> buildsByBranchName = new HashMap<>();
 
     /**
      * The last build that we did (among the values in {@link #buildsByBranchName}.)
@@ -48,7 +48,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * The URLs that have been referenced.
      */
-    public Set<String> remoteUrls = new HashSet<String>();
+    public Set<String> remoteUrls = new HashSet<>();
 
     public BuildData() {
     }
@@ -88,7 +88,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<String,Build>();
+        Map<String,Build> newBuildsByBranchName = new HashMap<>();
 
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = fixNull(buildByBranchName.getKey());
@@ -99,7 +99,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         this.buildsByBranchName = newBuildsByBranchName;
 
         if(this.remoteUrls == null)
-            this.remoteUrls = new HashSet<String>();
+            this.remoteUrls = new HashSet<>();
 
         return this;
     }
@@ -107,7 +107,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * Return true if the history shows this SHA1 has been built.
      * False otherwise.
-     * @param sha1
+     * @param sha1 SHA1 hash of commit
      * @return true if sha1 has been built
      */
     public boolean hasBeenBuilt(ObjectId sha1) {
@@ -195,10 +195,10 @@ public class BuildData implements Action, Serializable, Cloneable {
             throw new RuntimeException("Error cloning BuildData", e);
         }
 
-        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<Build, Build>();
+        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<>();
 
-        clone.buildsByBranchName = new HashMap<String, Build>();
-        clone.remoteUrls = new HashSet<String>();
+        clone.buildsByBranchName = new HashMap<>();
+        clone.remoteUrls = new HashSet<>();
 
         for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
             String branchName = buildByBranchName.getKey();

@@ -8,7 +8,6 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -56,11 +55,12 @@ public class GitUtils implements Serializable {
      * Return a list of "Revisions" - where a revision knows about all the branch names that refer to
      * a SHA1.
      * @return list of revisions
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
-        Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
+        Map<ObjectId, Revision> revisions = new HashMap<>();
         for (Branch b : git.getRemoteBranches()) {
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
@@ -74,10 +74,11 @@ public class GitUtils implements Serializable {
 
     /**
      * Return the revision containing the branch name.
-     * @param branchName
+     * @param branchName name of branch to be searched
      * @return revision containing branchName
-     * @throws IOException
-     * @throws GitException
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
         for(Revision revision : getAllBranchRevisions()) {
@@ -104,8 +105,8 @@ public class GitUtils implements Serializable {
     }
 
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder, EnvVars env) {
-        ArrayList<Branch> orderedBranches = new ArrayList<Branch>(revision.getBranches().size());
-        ArrayList<Branch> revisionBranches = new ArrayList<Branch>(revision.getBranches());
+        ArrayList<Branch> orderedBranches = new ArrayList<>(revision.getBranches().size());
+        ArrayList<Branch> revisionBranches = new ArrayList<>(revision.getBranches());
 
         for(BranchSpec branchSpec : branchOrder) {
             for (Iterator<Branch> i = revisionBranches.iterator(); i.hasNext();) {
@@ -124,8 +125,9 @@ public class GitUtils implements Serializable {
     /**
      * Return a list of 'tip' branches (I.E. branches that aren't included entirely within another branch).
      *
-     * @param revisions
+     * @param revisions branches to be included in the search for tip branches
      * @return filtered tip branches
+     * @throws InterruptedException when interrupted
      */
     @WithBridgeMethods(Collection.class)
     public List<Revision> filterTipBranches(final Collection<Revision> revisions) throws InterruptedException {
@@ -134,7 +136,7 @@ public class GitUtils implements Serializable {
         //        \-----C
 
         // we only want (B) and (C), as (A) is an ancestor (old).
-        final List<Revision> l = new ArrayList<Revision>(revisions);
+        final List<Revision> l = new ArrayList<>(revisions);
 
         // Bypass any rev walks if only one branch or less
         if (l.size() <= 1)
@@ -145,15 +147,13 @@ public class GitUtils implements Serializable {
                 public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
 
                     // Commit nodes that we have already reached
-                    Set<RevCommit> visited = new HashSet<RevCommit>();
+                    Set<RevCommit> visited = new HashSet<>();
                     // Commits nodes that are tips if we don't reach them walking back from
                     // another node
-                    Map<RevCommit, Revision> tipCandidates = new HashMap<RevCommit, Revision>();
+                    Map<RevCommit, Revision> tipCandidates = new HashMap<>();
 
                     long calls = 0;
                     final long start = System.currentTimeMillis();
-
-                    RevWalk walk = new RevWalk(repo);
 
                     final boolean log = LOGGER.isLoggable(Level.FINE);
 
@@ -161,7 +161,7 @@ public class GitUtils implements Serializable {
                         LOGGER.fine(MessageFormat.format(
                                 "Computing merge base of {0}  branches", l.size()));
 
-                    try {
+                    try (RevWalk walk = new RevWalk(repo)) {
                         walk.setRetainBody(false);
 
                         // Each commit passed in starts as a potential tip.
@@ -188,9 +188,6 @@ public class GitUtils implements Serializable {
                                 visited.add(commit);
                             }
                         }
-
-                    } finally {
-                        walk.release();
                     }
 
                     if (log)
@@ -198,7 +195,7 @@ public class GitUtils implements Serializable {
                                 "Computed merge bases in {0} commit steps and {1} ms", calls,
                                 (System.currentTimeMillis() - start)));
 
-                    return new ArrayList<Revision>(tipCandidates.values());
+                    return new ArrayList<>(tipCandidates.values());
                 }
             });
         } catch (IOException e) {
@@ -215,6 +212,14 @@ public class GitUtils implements Serializable {
     /**
      * An attempt to generate at least semi-useful EnvVars for polling calls, based on previous build.
      * Cribbed from various places.
+     * @param p abstract project to be considered
+     * @param ws workspace to be considered
+     * @param launcher launcher to use for calls to nodes
+     * @param listener build log
+     * @param reuseLastBuildEnv true if last build environment should be considered
+     * @return environment variables from previous build to be used for polling
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
      */
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
@@ -308,7 +313,7 @@ public class GitUtils implements Serializable {
 
     public static String[] fixupNames(String[] names, String[] urls) {
         String[] returnNames = new String[urls.length];
-        Set<String> usedNames = new HashSet<String>();
+        Set<String> usedNames = new HashSet<>();
 
         for(int i=0; i<urls.length; i++) {
             String name = names[i];

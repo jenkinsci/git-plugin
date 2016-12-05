@@ -58,27 +58,19 @@ public abstract class AbstractGitRepository {
      * Commit fileName to this git repository
      *
      * @param fileName name of file to create
-     * @throws GitException
-     * @throws InterruptedException
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
      */
     protected void commitNewFile(final String fileName) throws GitException, InterruptedException {
         File newFile = new File(testGitDir, fileName);
         assert !newFile.exists(); // Not expected to use commitNewFile to update existing file
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(newFile, "UTF-8");
+        try (PrintWriter writer = new PrintWriter(newFile, "UTF-8")) {
             writer.println("A file named " + fileName);
             writer.close();
             testGitClient.add(fileName);
             testGitClient.commit("Added a file named " + fileName);
-        } catch (FileNotFoundException notFound) {
+        } catch (FileNotFoundException | UnsupportedEncodingException notFound) {
             throw new GitException(notFound);
-        } catch (UnsupportedEncodingException unsupported) {
-            throw new GitException(unsupported);
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
         }
     }
 
@@ -86,10 +78,10 @@ public abstract class AbstractGitRepository {
      * Returns list of UserRemoteConfig for this repository.
      *
      * @return list of UserRemoteConfig for this repository
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     protected List<UserRemoteConfig> remoteConfigs() throws IOException {
-        List<UserRemoteConfig> list = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> list = new ArrayList<>();
         list.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), "origin", "", null));
         return list;
     }

@@ -65,7 +65,7 @@ public class GitLab extends GitRepositoryBrowser {
      * else:       [GitLab URL]/commit/[Hash]
      *
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -79,16 +79,16 @@ public class GitLab extends GitRepositoryBrowser {
      * v &lt; 8.0: [GitLab URL]/commit/[Hash]#[File path]
      * else:       [GitLab URL]/commit/[Hash]#diff-[index]
      *
-     * @param path
+     * @param path file path used in diff link
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink = null;
         if(getVersion() < 8.0) {
-        	filelink = "#" + path.getPath().toString();
+                filelink = "#" + path.getPath();
         } else
         {
         	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
@@ -102,9 +102,9 @@ public class GitLab extends GitRepositoryBrowser {
      * v &lt; 5.1: [GitLab URL][Hash]/tree/[File path]
      * else:       [GitLab URL]blob/[Hash]/[File path]
      *
-     * @param path
+     * @param path file path used in diff link
      * @return file link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
@@ -137,8 +137,8 @@ public class GitLab extends GitRepositoryBrowser {
          *
          * @param version gitlab version value entered by the user
          * @return validation result, either ok() or error(msg)
-         * @throws IOException
-         * @throws ServletException
+         * @throws IOException on input or output error
+         * @throws ServletException on servlet error
          */
         public FormValidation doCheckVersion(@QueryParameter(fixEmpty = true) final String version)
                 throws IOException, ServletException {

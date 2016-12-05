@@ -77,7 +77,7 @@ public class BuildDataTest {
         String branchName = "origin/master";
         assertEquals(null, data.getLastBuildOfBranch(branchName));
 
-        Collection<Branch> branches = new ArrayList<Branch>();
+        Collection<Branch> branches = new ArrayList<>();
         Branch branch = new Branch(branchName, sha1);
         branches.add(branch);
         Revision revision = new Revision(sha1, branches);
@@ -190,7 +190,7 @@ public class BuildDataTest {
 
         // Another saved build still keeps objects equal
         String branchName = "origin/master";
-        Collection<Branch> branches = new ArrayList<Branch>();
+        Collection<Branch> branches = new ArrayList<>();
         Branch branch = new Branch(branchName, sha1);
         branches.add(branch);
         Revision revision2 = new Revision(sha1, branches);

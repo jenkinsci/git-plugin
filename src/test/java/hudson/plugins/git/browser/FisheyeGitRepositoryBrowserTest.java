@@ -30,7 +30,7 @@ public class FisheyeGitRepositoryBrowserTest {
 
     @Parameterized.Parameters(name = "{0}-{1}")
     public static Collection permuteAuthorNameAndRepoUrl() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String fisheyeUrl = "http://fisheye.example.com/site/browse/" + projectName;
         String[] allowedUrls = {fisheyeUrl, fisheyeUrl + "/"};
         String[] allowed = {"true", "false"};

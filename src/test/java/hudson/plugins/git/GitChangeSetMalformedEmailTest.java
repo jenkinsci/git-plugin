@@ -18,7 +18,7 @@ public class GitChangeSetMalformedEmailTest {
     private final String badEmail = "@";
 
     private GitChangeSet genChangeSetWithBadEmail(boolean authorOrCommitter) {
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
         lines.add("commit 1567861636cd854f4dd6fa40bf94c0c657681dd5");
         lines.add("tree 66236cf9a1ac0c589172b450ed01f019a5697c49");
         lines.add("parent e74a24e995305bd67a180f0ebc57927e2b8783ce");

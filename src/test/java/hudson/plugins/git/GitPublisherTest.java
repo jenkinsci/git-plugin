@@ -627,7 +627,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         String envReference = "${" + envName + "}";
 
-        List<GitSCMExtension> scmExtensions = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> scmExtensions = new ArrayList<>();
         scmExtensions.add(new PreBuildMerge(new UserMergeOptions("origin", envReference, null, null)));
         scmExtensions.add(new LocalBranch(envReference));
         GitSCM scm = new GitSCM(

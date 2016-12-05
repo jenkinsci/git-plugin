@@ -33,17 +33,13 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         super(repoUrl);
     }
 
-    private QueryBuilder param(URL url) {
-        return new QueryBuilder(url.getQuery());
-    }
-
     /**
      * Creates a link to the change set
      * http://[AssemblaWeb URL]/commits/[commit]
      *
      * @param changeSet commit hash
      * @return change set link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -58,7 +54,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -72,7 +68,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {

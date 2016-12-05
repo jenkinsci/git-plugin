@@ -33,8 +33,8 @@ public class CommitTimeComparatorTest extends AbstractGitRepository {
             testGitClient.branch("branch" + i);
         }
 
-        Map<Revision,Branch> branches = new HashMap<Revision,Branch>();
-        List<Revision> revs = new ArrayList<Revision>();
+        Map<Revision,Branch> branches = new HashMap<>();
+        List<Revision> revs = new ArrayList<>();
         for (Branch b : testGitClient.getBranches()) {
             if (!b.getName().startsWith("branch"))  continue;
             Revision r = new Revision(b.getSHA1());

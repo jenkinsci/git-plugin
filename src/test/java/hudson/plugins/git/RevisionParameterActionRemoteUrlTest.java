@@ -51,7 +51,7 @@ public class RevisionParameterActionRemoteUrlTest {
     }
 
     private List<RemoteConfig> remotes(URIish... remoteURLs) {
-        List<RemoteConfig> result = new ArrayList<RemoteConfig>();
+        List<RemoteConfig> result = new ArrayList<>();
         for (URIish remoteURL : remoteURLs) {
             result.add(remote(remoteURL));
         }

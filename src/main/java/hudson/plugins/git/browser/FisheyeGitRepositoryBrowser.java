@@ -78,6 +78,10 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
 		/**
 		 * Performs on-the-fly validation of the URL.
+                 * @param value URL value to be checked
+                 * @return form validation result
+                 * @throws IOException on input or output error
+                 * @throws ServletException on servlet error
 		 */
 		public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) String value) throws IOException,
 				ServletException {

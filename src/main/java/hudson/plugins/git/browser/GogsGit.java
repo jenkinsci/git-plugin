@@ -32,12 +32,12 @@ public class GogsGit extends GitRepositoryBrowser {
      *
      * @param changeSet commit hash
      * @return change set link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + changeSet.getId().toString());
+        return new URL(url, url.getPath() + "commit/" + changeSet.getId());
     }
 
     /**
@@ -46,7 +46,7 @@ public class GogsGit extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getDiffLink(Path path) throws IOException {
@@ -60,9 +60,9 @@ public class GogsGit extends GitRepositoryBrowser {
     /**
      * Return a diff link regardless of the edit type by appending the index of the pathname in the changeset.
      *
-     * @param path
+     * @param path file path used in diff link
      * @return url for differences
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
         // Gogs diff indices begin at 1.
@@ -76,7 +76,7 @@ public class GogsGit extends GitRepositoryBrowser {
      *
      * @param path affected file path
      * @return diff link
-     * @throws IOException
+     * @throws IOException on input or output error
      */
     @Override
     public URL getFileLink(Path path) throws IOException {
@@ -84,7 +84,7 @@ public class GogsGit extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             URL url = getUrl();
-            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId().toString() + "/" + path.getPath());
+            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath());
         }
     }
 
