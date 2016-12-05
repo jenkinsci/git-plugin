@@ -315,7 +315,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }, listener, false);
     }
 
-    @CheckForNull
+    @NonNull
     @Override
     protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
         return doRetrieve(new Retriever<Set<String>>() {
