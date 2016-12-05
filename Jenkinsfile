@@ -50,7 +50,7 @@ void runParallelTests() {
     /* the previous successfully completed job. One addtional record will exclude */
     /* all known tests to run any tests not seen during the previous run.  */
     testGroups["split${i}"] = {  // example, "split3"
-      node /*('highmem')*/{
+      node {
         checkout scm
 
         /* Clean each test node to start. */
