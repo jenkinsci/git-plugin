@@ -335,15 +335,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                      
             if (isPushNotes()) {
                 for (final NoteToPush b : notesToPush) {
-                    if (b.getnoteMsg() == null)
+                    if (b.getNoteMsg() == null)
                         throw new AbortException("No note to push defined");
 
                     b.setEmptyTargetRepoToOrigin();
-                    String noteMsgTmp = environment.expand(b.getnoteMsg());
+                    String noteMsgTmp = environment.expand(b.getNoteMsg());
                     final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
-                    final String noteNamespace = environment.expand(b.getnoteNamespace());
+                    final String noteNamespace = environment.expand(b.getNoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
-                    final boolean noteReplace = b.getnoteReplace();
+                    final boolean noteReplace = b.getNoteReplace();
                     
                     try {
                     	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
@@ -573,15 +573,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         private String noteNamespace;
         private boolean noteReplace;
 
-        public String getnoteMsg() {
+        public String getNoteMsg() {
             return noteMsg;
         }
         
-        public String getnoteNamespace() {
+        public String getNoteNamespace() {
         	return noteNamespace;
         }
         
-        public boolean getnoteReplace() {
+        public boolean getNoteReplace() {
         	return noteReplace;
         }
 
