@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2014 Jesse Glick.
+ * Copyright 2016.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -281,15 +281,15 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
     if (isPushNotes()) {
       for (final GitPublisher.NoteToPush b : notesToPush) {
-        if (b.getNoteMsg() == null)
+        if (b.getnoteMsg() == null)
           throw new AbortException("No note to push defined");
 
         b.setEmptyTargetRepoToOrigin();
-        String noteMsgTmp = environment.expand(b.getNoteMsg());
+        String noteMsgTmp = environment.expand(b.getnoteMsg());
         final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, run);
-        final String noteNamespace = environment.expand(b.getNoteNamespace());
+        final String noteNamespace = environment.expand(b.getnoteNamespace());
         final String targetRepo = environment.expand(b.getTargetRepoName());
-        final boolean noteReplace = b.getNoteReplace();
+        final boolean noteReplace = b.getnoteReplace();
 
         try {
           // Lookup repository with unexpanded name as GitSCM stores them unexpanded
@@ -361,7 +361,7 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
     @Override
     public String getDisplayName() {
-      return Messages.GitPublisherStep();
+      return Messages.GitPublisherStep_DisplayName();
     }
   }
 }

@@ -335,15 +335,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                      
             if (isPushNotes()) {
                 for (final NoteToPush b : notesToPush) {
-                    if (b.getNoteMsg() == null)
+                    if (b.getnoteMsg() == null)
                         throw new AbortException("No note to push defined");
 
                     b.setEmptyTargetRepoToOrigin();
-                    String noteMsgTmp = environment.expand(b.getNoteMsg());
+                    String noteMsgTmp = environment.expand(b.getnoteMsg());
                     final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, build);
-                    final String noteNamespace = environment.expand(b.getNoteNamespace());
+                    final String noteNamespace = environment.expand(b.getnoteNamespace());
                     final String targetRepo = environment.expand(b.getTargetRepoName());
-                    final boolean noteReplace = b.getNoteReplace();
+                    final boolean noteReplace = b.getnoteReplace();
                     
                     try {
                     	// Lookup repository with unexpanded name as GitSCM stores them unexpanded
@@ -573,16 +573,32 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         private String noteNamespace;
         private boolean noteReplace;
 
-        public String getNoteMsg() {
+        public String getnoteMsg() {
             return noteMsg;
         }
         
-        public String getNoteNamespace() {
+        public String getnoteNamespace() {
         	return noteNamespace;
         }
         
-        public boolean getNoteReplace() {
+        public boolean getnoteReplace() {
         	return noteReplace;
+        }
+
+
+        // Provided to allow gitPublisherStep config to access as it fails with getnoteMsg()
+        public String getNoteMsg(){
+            return noteMsg;
+        }
+
+        // Provided to allow gitPublisherStep config to access as it fails with getnoteNamespace()
+        public String getNoteNamespace(){
+            return noteNamespace;
+        }
+
+        // Provided to allow gitPublisherStep config to access as it fails with getnoteReplace()
+        public boolean getNoteReplace(){
+            return noteReplace;
         }
 
         @DataBoundConstructor
