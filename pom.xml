@@ -30,8 +30,6 @@
     <no-test-jar>false</no-test-jar>
     <!-- Use the same configuration than before. -->
     <concurrency>2</concurrency>
-    <permgen.size>160m</permgen.size>
-    <argLine>-XX:MaxPermSize=${permgen.size}</argLine>
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
