@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import jenkins.scm.api.SCMFile;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.FileMode;
@@ -146,35 +145,8 @@ public class GitSCMFile extends SCMFile {
 
     @Override
     public long lastModified() throws IOException, InterruptedException {
-        return fs.invoke(new GitSCMFileSystem.FSFunction<Long>() {
-            @Override
-            public Long invoke(Repository repository) throws IOException, InterruptedException {
-                RevWalk walk = new RevWalk(repository);
-                try {
-                    RevCommit commit = walk.parseCommit(fs.getCommitId());
-                    RevTree tree = commit.getTree();
-                    TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree);
-                    try {
-                        if (tw == null) {
-                            throw new FileNotFoundException();
-                        }
-                        FileMode fileMode = tw.getFileMode(0);
-                        if (fileMode == FileMode.MISSING) {
-                            throw new FileNotFoundException();
-                        }
-                        if (fileMode == FileMode.TREE) {
-                            return 0L;
-                        }
-                        RevCommit fileCommit = walk.parseCommit(tw.getObjectId(0));
-                        return TimeUnit.SECONDS.toMillis(fileCommit.getCommitTime());
-                    } finally {
-                        AbstractGitSCMSource._release(tw);
-                    }
-                } finally {
-                    AbstractGitSCMSource._release(walk);
-                }
-            }
-        });
+        // TODO a more correct implementation
+        return fs.lastModified();
     }
 
     @NonNull

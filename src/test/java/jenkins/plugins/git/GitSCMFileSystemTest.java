@@ -42,14 +42,18 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -60,8 +64,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class GitSCMFileSystemTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule r = new JenkinsRule();
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
@@ -102,6 +106,21 @@ public class GitSCMFileSystemTest {
         assertThat(iterator.hasNext(), is(false));
         assertThat(file.getName(), is("file"));
         assertThat(file.contentAsString(), is(""));
+    }
+
+    @Test
+    public void lastModified_Smokes() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        SCMRevision revision = source.fetch(new SCMHead("dev"), null);
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
+        assertThat(fs.lastModified(), allOf(greaterThanOrEqualTo(System.currentTimeMillis() - 2000), lessThanOrEqualTo(System.currentTimeMillis() + 2000)));
+        SCMFile file = fs.getRoot().child("file");
+        assertThat(file.lastModified(), allOf(greaterThanOrEqualTo(System.currentTimeMillis() - 2000),
+                lessThanOrEqualTo(System.currentTimeMillis() + 2000)));
     }
 
     @Test
