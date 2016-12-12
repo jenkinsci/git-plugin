@@ -63,30 +63,8 @@ public class GitSCMFile extends SCMFile {
 
     @NonNull
     @Override
-    public SCMFile child(String path) {
-        int index = path.indexOf('/');
-        if (index == -1) {
-            if (".".equals(path)) {
-                return this;
-            }
-            if ("..".equals(path)) {
-                SCMFile parent = parent();
-                return parent == null ? this : parent;
-            }
-            return new GitSCMFile(fs, this, path);
-        }
-        String name = path.substring(0, index);
-        SCMFile next;
-        if (".".equals(name)) {
-            next = this;
-        } else if ("..".equals(name)) {
-            SCMFile parent = parent();
-            next = parent == null ? this : parent;
-        } else {
-            next = new GitSCMFile(fs, this, name);
-        }
-        String restOfPath = path.substring(index + 1);
-        return StringUtils.isBlank(restOfPath) ? next : next.child(restOfPath);
+    protected SCMFile newChild(String name, boolean assumeIsDirectory) {
+        return new GitSCMFile(fs, this, name);
     }
 
     @NonNull
