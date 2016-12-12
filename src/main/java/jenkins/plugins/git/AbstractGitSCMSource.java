@@ -55,13 +55,17 @@ import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMProbe;
+import jenkins.scm.api.SCMProbeStat;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -225,9 +229,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }, listener, /* we don't prune remotes here, as we just want one head's revision */false);
     }
 
-    @NonNull
     @Override
-    protected void retrieve(@NonNull final SCMHeadObserver observer,
+    protected void retrieve(@CheckForNull final SCMSourceCriteria criteria,
+                            @NonNull final SCMHeadObserver observer,
                             @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
         doRetrieve(new Retriever<Void>() {
@@ -235,23 +239,28 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
                 final Repository repository = client.getRepository();
                 listener.getLogger().println("Getting remote branches...");
-                SCMSourceCriteria branchCriteria = getCriteria();
                 try (RevWalk walk = new RevWalk(repository)) {
                     walk.setRetainBody(false);
                     for (Branch b : client.getRemoteBranches()) {
+                        checkInterrupt();
                         if (!b.getName().startsWith(remoteName + "/")) {
                             continue;
                         }
                         final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                         listener.getLogger().println("Checking branch " + branchName);
-                        if (isExcluded(branchName)) {
+                        if (isExcluded(branchName)){
                             continue;
                         }
-                        if (branchCriteria != null) {
+                        if (criteria != null) {
                             RevCommit commit = walk.parseCommit(b.getSHA1());
                             final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                             final RevTree tree = commit.getTree();
-                            SCMSourceCriteria.Probe probe = new SCMSourceCriteria.Probe() {
+                            SCMSourceCriteria.Probe probe = new SCMProbe() {
+                                @Override
+                                public void close() throws IOException {
+                                    // no-op
+                                }
+
                                 @Override
                                 public String name() {
                                     return branchName;
@@ -263,13 +272,33 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 }
 
                                 @Override
-                                public boolean exists(@NonNull String path) throws IOException {
+                                @NonNull
+                                public SCMProbeStat stat(@NonNull String path) throws IOException {
                                     try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
-                                        return tw != null;
+                                        if (tw == null) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                                        }
+                                        FileMode fileMode = tw.getFileMode(0);
+                                        if (fileMode == FileMode.MISSING) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                                        }
+                                        if (fileMode == FileMode.EXECUTABLE_FILE) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                                        }
+                                        if (fileMode == FileMode.REGULAR_FILE) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                                        }
+                                        if (fileMode == FileMode.SYMLINK) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.LINK);
+                                        }
+                                        if (fileMode == FileMode.TREE) {
+                                            return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
+                                        }
+                                        return SCMProbeStat.fromType(SCMFile.Type.OTHER);
                                     }
                                 }
                             };
-                            if (branchCriteria.isHead(probe, listener)) {
+                            if (criteria.isHead(probe, listener)) {
                                 listener.getLogger().println("Met criteria");
                             } else {
                                 listener.getLogger().println("Does not meet criteria");
