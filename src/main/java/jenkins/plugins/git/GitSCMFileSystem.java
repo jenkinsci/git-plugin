@@ -125,12 +125,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
         return invoke(new FSFunction<Long>() {
             @Override
             public Long invoke(Repository repository) throws IOException {
-                RevWalk walk = new RevWalk(repository);
-                try {
+                try (RevWalk walk = new RevWalk(repository)) {
                     RevCommit commit = walk.parseCommit(commitId);
                     return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
-                } finally {
-                    AbstractGitSCMSource._release(walk);
                 }
             }
         });

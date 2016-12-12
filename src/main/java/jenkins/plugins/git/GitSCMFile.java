@@ -95,30 +95,24 @@ public class GitSCMFile extends SCMFile {
         return fs.invoke(new GitSCMFileSystem.FSFunction<List<SCMFile>>() {
             @Override
             public List<SCMFile> invoke(Repository repository) throws IOException, InterruptedException {
-                RevWalk walk = new RevWalk(repository);
-                try {
+                try (RevWalk walk = new RevWalk(repository)) {
                     RevCommit commit = walk.parseCommit(fs.getCommitId());
                     RevTree tree = commit.getTree();
-                    TreeWalk tw;
                     if (isRoot()) {
-                        tw = new TreeWalk(repository);
-                        tw.addTree(tree);
-                        tw.setRecursive(false);
-                        try {
+                        try (TreeWalk tw = new TreeWalk(repository)) {
+                            tw.addTree(tree);
+                            tw.setRecursive(false);
                             List<SCMFile> result = new ArrayList<SCMFile>();
                             while (tw.next()) {
                                 result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
                             }
                             return result;
-                        } finally {
-                            AbstractGitSCMSource._release(tw);
                         }
                     } else {
-                        tw = TreeWalk.forPath(repository, getPath(), tree);
-                        if (tw == null) {
-                            throw new FileNotFoundException();
-                        }
-                        try {
+                        try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
+                            if (tw == null) {
+                                throw new FileNotFoundException();
+                            }
                             FileMode fileMode = tw.getFileMode(0);
                             if (fileMode == FileMode.MISSING) {
                                 throw new FileNotFoundException();
@@ -132,12 +126,8 @@ public class GitSCMFile extends SCMFile {
                                 result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
                             }
                             return result;
-                        } finally {
-                            AbstractGitSCMSource._release(tw);
                         }
                     }
-                } finally {
-                    AbstractGitSCMSource._release(walk);
                 }
             }
         });
@@ -155,12 +145,10 @@ public class GitSCMFile extends SCMFile {
         return fs.invoke(new GitSCMFileSystem.FSFunction<Type>() {
             @Override
             public Type invoke(Repository repository) throws IOException, InterruptedException {
-                RevWalk walk = new RevWalk(repository);
-                try {
+                try (RevWalk walk = new RevWalk(repository)) {
                     RevCommit commit = walk.parseCommit(fs.getCommitId());
                     RevTree tree = commit.getTree();
-                    TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree);
-                    try {
+                    try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
                         if (tw == null) {
                             return SCMFile.Type.NONEXISTENT;
                         }
@@ -181,11 +169,7 @@ public class GitSCMFile extends SCMFile {
                             return SCMFile.Type.DIRECTORY;
                         }
                         return SCMFile.Type.OTHER;
-                    } finally {
-                        AbstractGitSCMSource._release(tw);
                     }
-                } finally {
-                    AbstractGitSCMSource._release(walk);
                 }
             }
         });
@@ -197,12 +181,10 @@ public class GitSCMFile extends SCMFile {
         return fs.invoke(new GitSCMFileSystem.FSFunction<InputStream>() {
             @Override
             public InputStream invoke(Repository repository) throws IOException, InterruptedException {
-                RevWalk walk = new RevWalk(repository);
-                try {
+                try (RevWalk walk = new RevWalk(repository)) {
                     RevCommit commit = walk.parseCommit(fs.getCommitId());
                     RevTree tree = commit.getTree();
-                    TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree);
-                    try {
+                    try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
                         if (tw == null) {
                             throw new FileNotFoundException();
                         }
@@ -216,11 +198,7 @@ public class GitSCMFile extends SCMFile {
                         ObjectId objectId = tw.getObjectId(0);
                         ObjectLoader loader = repository.open(objectId);
                         return new ByteArrayInputStream(loader.getBytes());
-                    } finally {
-                        AbstractGitSCMSource._release(tw);
                     }
-                } finally {
-                    AbstractGitSCMSource._release(walk);
                 }
             }
         });
