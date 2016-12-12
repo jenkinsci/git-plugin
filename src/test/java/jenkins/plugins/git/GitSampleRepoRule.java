@@ -26,6 +26,8 @@ package jenkins.plugins.git;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import java.io.File;
+import java.io.IOException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.jenkinsci.plugins.workflow.steps.scm.AbstractSampleDVCSRepoRule;
@@ -47,6 +49,10 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         write("file", "");
         git("add", "file");
         git("commit", "--message=init");
+    }
+
+    public final boolean mkdirs(String rel) throws IOException {
+        return new File(this.sampleRepo, rel).mkdirs();
     }
 
     public void notifyCommit(JenkinsRule r) throws Exception {

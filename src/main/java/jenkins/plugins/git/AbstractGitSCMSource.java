@@ -58,6 +58,7 @@ import hudson.security.ACL;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
@@ -259,7 +260,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
-    private static void _release(TreeWalk walk) throws IOException {
+    /*package*/ static void _release(TreeWalk walk) throws IOException {
         if (walk == null) {
             return;
         }
@@ -277,7 +278,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * This method should be removed once the code depends on git client 2.0.0.
      * @param walk object whose close or release method will be called
      */
-    private void _release(RevWalk walk) {
+    /*package*/ static void _release(RevWalk walk) {
         if (walk == null) {
             return;
         }
@@ -291,6 +292,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Override
     protected void retrieve(@CheckForNull final SCMSourceCriteria criteria,
                             @NonNull final SCMHeadObserver observer,
+                            @CheckForNull final SCMHeadEvent<?> event,
                             @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
         doRetrieve(new Retriever<Void>() {
@@ -426,7 +428,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected String getCacheEntry() {
-        return "git-" + Util.getDigestOf(getRemote());
+        return getCacheEntry(getRemote());
     }
 
     protected static File getCacheDir(String cacheEntry) {
@@ -507,7 +509,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns the pattern corresponding to the branches containing wildcards. 
      * 
-     * @param branchName
+     * @param branches branches
      * @return pattern corresponding to the branches containing wildcards
      */
     private String getPattern(String branches){
@@ -527,6 +529,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         quotedBranches.append(quotedBranch);
       }
       return quotedBranches.toString();
+    }
+
+    /*package*/ static String getCacheEntry(String remote) {
+        return "git-" + Util.getDigestOf(remote);
     }
 
     /**
