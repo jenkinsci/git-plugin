@@ -552,11 +552,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // substitute build parameters if available
         branch = getParameterString(branch, env);
 
-        // Check for empty string - replace with "**" when seen.
-        if (branch.equals("")) {
-            branch = "**";
-        }
-
         return branch;
     }
 
