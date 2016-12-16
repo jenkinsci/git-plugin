@@ -207,7 +207,6 @@ public class GitSCMFileSystemTest {
         GitSCMFileSystem headFileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
         assertThat(head, notNullValue());
         assertEquals(head.getName(), headFileSystem.getRevision().getHash());
-        assertEquals(1481860390000L, headFileSystem.lastModified());
         assertEquals(head, headFileSystem.getCommitId());
 
         ObjectId gitPlugin300 = client.revParse("git-3.0.0");
