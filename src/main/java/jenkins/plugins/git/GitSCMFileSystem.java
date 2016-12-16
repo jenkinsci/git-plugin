@@ -194,7 +194,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
                 changelog.to(out).max(GitSCM.MAX_CHANGELOG).execute();
                 executed = true;
-                return commitId.equals(fromCommitId);
+                return !commitId.equals(fromCommitId);
             } catch (GitException ge) {
                 throw new IOException("Unable to retrieve changes", ge);
             } finally {
