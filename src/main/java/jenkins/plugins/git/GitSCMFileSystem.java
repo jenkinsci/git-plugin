@@ -60,6 +60,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -183,9 +184,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (cacheDir == null || !cacheDir.isDirectory()) {
                 throw new IOException("Closed");
             }
-            Writer out = new OutputStreamWriter(changeLogStream, "UTF-8");
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
+            Writer out = new OutputStreamWriter(changeLogStream, "UTF-8");
             try {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
@@ -204,7 +205,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 if (!executed) {
                     changelog.abort();
                 }
-                out.flush();
+                IOUtils.closeQuietly(out);
+                changeLogStream.close();
             }
         } finally {
             cacheLock.unlock();
