@@ -69,6 +69,17 @@ public class GitSCMFileSystemTest {
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
+    private final Random random = new Random();
+    private final String[] implementations = {"git", "jgit", "jgitapache"};
+    String gitImplName = null;
+
+    @Before
+    public void setUp() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        gitImplName = implementations[random.nextInt(implementations.length)];
+    }
+
     @Test
     public void ofSource_Smokes() throws Exception {
         sampleRepo.init();
@@ -106,6 +117,20 @@ public class GitSCMFileSystemTest {
         assertThat(iterator.hasNext(), is(false));
         assertThat(file.getName(), is("file"));
         assertThat(file.contentAsString(), is(""));
+    }
+
+    @Test
+    public void testGetRoot() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using(gitImplName).getClient();
+        ObjectId head = client.revParse("HEAD");
+        AbstractGitSCMSource.SCMRevisionImpl rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), head.getName());
+        GitSCMFileSystem fileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
+        SCMFile root = fileSystem.getRoot();
+        // assertFalse(root.isFile()); // IllegalArgumentException
+        // assertTrue(root.isDirectory()); // IllegalArgumentException
+        assertTrue(root.isRoot());
+        // assertTrue(root.exists());  // IllegalArgumentException
     }
 
     @Test
