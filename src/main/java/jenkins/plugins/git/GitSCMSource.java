@@ -307,7 +307,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             @NonNull
                             @Override
                             public String getSourceName() {
-                                return null;
+                                // we will never be called here as do not match any navigator
+                                return u.getHumanishName();
                             }
 
                             @Override
