@@ -25,7 +25,12 @@
 
 package jenkins.plugins.git;
 
+import hudson.EnvVars;
+import hudson.model.TaskListener;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import jenkins.scm.api.SCMFile;
@@ -33,6 +38,10 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,11 +49,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
@@ -56,10 +69,19 @@ public class GitSCMFileSystemTest {
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    @Test
-    public void ofSource_Smokes() throws Exception {
+    private final Random random = new Random();
+    private final String[] implementations = {"git", "jgit", "jgitapache"};
+    private String gitImplName = null;
+
+    @Before
+    public void setUp() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
+        gitImplName = implementations[random.nextInt(implementations.length)];
+    }
+
+    @Test
+    public void ofSource_Smokes() throws Exception {
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
@@ -77,8 +99,6 @@ public class GitSCMFileSystemTest {
 
     @Test
     public void ofSourceRevision() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         SCMRevision revision = source.fetch(new SCMHead("dev"), null);
         sampleRepo.write("file", "modified");
@@ -97,8 +117,6 @@ public class GitSCMFileSystemTest {
 
     @Test
     public void lastModified_Smokes() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         SCMRevision revision = source.fetch(new SCMHead("dev"), null);
         sampleRepo.write("file", "modified");
@@ -112,8 +130,6 @@ public class GitSCMFileSystemTest {
 
     @Test
     public void directoryTraversal() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.mkdirs("dir/subdir");
         sampleRepo.git("mv", "file", "dir/subdir/file");
         sampleRepo.write("dir/subdir/file", "modified");
@@ -147,8 +163,6 @@ public class GitSCMFileSystemTest {
 
     @Test
     public void mixedContent() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
         // sampleRepo.mkdirs("dir/subdir");
         sampleRepo.write("file", "modified");
         sampleRepo.write("file2", "new");
@@ -183,4 +197,45 @@ public class GitSCMFileSystemTest {
         assertThat(file2.contentAsString(), is("new"));
     }
 
+    @Test
+    public void testGetRevision() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using(gitImplName).getClient();
+
+        ObjectId head = client.revParse("HEAD");
+        AbstractGitSCMSource.SCMRevisionImpl rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), head.getName());
+        GitSCMFileSystem headFileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
+        assertThat(head, notNullValue());
+        assertEquals(head.getName(), headFileSystem.getRevision().getHash());
+        assertEquals(1481860390000L, headFileSystem.lastModified());
+        assertEquals(head, headFileSystem.getCommitId());
+
+        ObjectId gitPlugin300 = client.revParse("git-3.0.0");
+        AbstractGitSCMSource.SCMRevisionImpl revGitPlugin300 = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), gitPlugin300.getName());
+        GitSCMFileSystem gitPlugin300FS = new GitSCMFileSystem(client, "origin", gitPlugin300.getName(), revGitPlugin300);
+        assertEquals(gitPlugin300.getName(), gitPlugin300FS.getRevision().getHash());
+
+        assertThat(head, is(not(equalTo(gitPlugin300))));
+        assertEquals(gitPlugin300.getName(), "858dee578b79ac6683419faa57a281ccb9d347aa");
+        assertEquals(1473566783000L, gitPlugin300FS.lastModified());
+        assertEquals(gitPlugin300, gitPlugin300FS.getCommitId());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream(32 * 1024);
+        // assertTrue(gitPlugin300FS.changesSince(revGitPlugin300, out)); // IOException: Stream closed
+        // assertThat(out.toString(), containsString("xyzzy")); // Not reached due to preceding IOException
+    }
+
+    @Test
+    public void testGetRoot() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using(gitImplName).getClient();
+        ObjectId head = client.revParse("HEAD");
+        AbstractGitSCMSource.SCMRevisionImpl rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), head.getName());
+        GitSCMFileSystem fileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
+        SCMFile root = fileSystem.getRoot();
+        assertTrue(root.isRoot());
+        // assertFalse(root.isFile()); // IllegalArgumentException
+        // assertTrue(root.isDirectory()); // IllegalArgumentException
+        // assertTrue(root.exists());  // IllegalArgumentException
+    }
 }
