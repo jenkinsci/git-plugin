@@ -69,6 +69,17 @@ public class GitSCMFileSystemTest {
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
+    private final Random random = new Random();
+    private final String[] implementations = {"git", "jgit", "jgitapache"};
+    String gitImplName = null;
+
+    @Before
+    public void setUp() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        gitImplName = implementations[random.nextInt(implementations.length)];
+    }
+
     @Test
     public void ofSource_Smokes() throws Exception {
         sampleRepo.init();
