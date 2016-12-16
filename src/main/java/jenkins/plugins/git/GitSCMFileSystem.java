@@ -169,6 +169,13 @@ public class GitSCMFileSystem extends SCMFileSystem {
     @Override
     public boolean changesSince(@CheckForNull SCMRevision revision, @NonNull OutputStream changeLogStream)
             throws UnsupportedOperationException, IOException, InterruptedException {
+        AbstractGitSCMSource.SCMRevisionImpl rev = getRevision();
+        if (rev == null ? revision == null : rev.equals(revision)) {
+            // special case where somebody is asking one of two stupid questions:
+            // 1. what has changed between the latest and the latest
+            // 2. what has changed between the current revision and the current revision
+            return false;
+        }
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
         cacheLock.lock();
         try {
