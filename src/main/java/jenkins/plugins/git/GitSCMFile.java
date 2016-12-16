@@ -130,6 +130,10 @@ public class GitSCMFile extends SCMFile {
     @NonNull
     @Override
     protected Type type() throws IOException, InterruptedException {
+        if (isRoot()) {
+            // special-case
+            return Type.DIRECTORY;
+        }
         return fs.invoke(new GitSCMFileSystem.FSFunction<Type>() {
             @Override
             public Type invoke(Repository repository) throws IOException, InterruptedException {
