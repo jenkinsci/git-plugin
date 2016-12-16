@@ -25,18 +25,9 @@
 
 package jenkins.plugins.git;
 
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.util.StreamTaskListener;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -45,19 +36,15 @@ import jenkins.scm.api.SCMSource;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
@@ -162,7 +149,7 @@ public class GitSCMFileSystemTest {
     public void mixedContent() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
-        sampleRepo.mkdirs("dir/subdir");
+        // sampleRepo.mkdirs("dir/subdir");
         sampleRepo.write("file", "modified");
         sampleRepo.write("file2", "new");
         sampleRepo.git("add", "file2");
