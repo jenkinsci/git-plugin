@@ -172,7 +172,6 @@ public class GitSCMFileSystemTest {
     public void mixedContent() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
-        sampleRepo.mkdirs("dir/subdir");
         sampleRepo.write("file", "modified");
         sampleRepo.write("file2", "new");
         sampleRepo.git("add", "file2");
