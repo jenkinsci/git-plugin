@@ -69,6 +69,17 @@ public class GitSCMFileSystemTest {
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
+    private final Random random = new Random();
+    private final String[] implementations = {"git", "jgit", "jgitapache"};
+    private String gitImplName = null;
+
+    @Before
+    public void setUp() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        gitImplName = implementations[random.nextInt(implementations.length)];
+    }
+
     @Test
     public void ofSource_Smokes() throws Exception {
         sampleRepo.init();
@@ -196,4 +207,31 @@ public class GitSCMFileSystemTest {
         assertThat(file2.contentAsString(), is("new"));
     }
 
+    @Test
+    public void testGetRevision() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using(gitImplName).getClient();
+
+        ObjectId head = client.revParse("HEAD");
+        AbstractGitSCMSource.SCMRevisionImpl rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), head.getName());
+        GitSCMFileSystem headFileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
+        assertThat(head, notNullValue());
+        assertEquals(head.getName(), headFileSystem.getRevision().getHash());
+        assertEquals(1481860390000L, headFileSystem.lastModified());
+        assertEquals(head, headFileSystem.getCommitId());
+
+        ObjectId gitPlugin300 = client.revParse("git-3.0.0");
+        AbstractGitSCMSource.SCMRevisionImpl revGitPlugin300 = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), gitPlugin300.getName());
+        GitSCMFileSystem gitPlugin300FS = new GitSCMFileSystem(client, "origin", gitPlugin300.getName(), revGitPlugin300);
+        assertEquals(gitPlugin300.getName(), gitPlugin300FS.getRevision().getHash());
+
+        assertThat(head, is(not(equalTo(gitPlugin300))));
+        assertEquals(gitPlugin300.getName(), "858dee578b79ac6683419faa57a281ccb9d347aa");
+        assertEquals(1473566783000L, gitPlugin300FS.lastModified());
+        assertEquals(gitPlugin300, gitPlugin300FS.getCommitId());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream(32 * 1024);
+        assertTrue(gitPlugin300FS.changesSince(revGitPlugin300, out)); // IOException: Stream closed
+        assertThat(out.toString(), containsString("xyzzy")); // Not reached due to preceding IOException
+    }
 }
