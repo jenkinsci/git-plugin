@@ -109,6 +109,20 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    public void testGetRoot() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using(gitImplName).getClient();
+        ObjectId head = client.revParse("HEAD");
+        AbstractGitSCMSource.SCMRevisionImpl rev = new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), head.getName());
+        GitSCMFileSystem fileSystem = new GitSCMFileSystem(client, "origin", head.getName(), rev);
+        SCMFile root = fileSystem.getRoot();
+        // assertFalse(root.isFile()); // IllegalArgumentException
+        // assertTrue(root.isDirectory()); // IllegalArgumentException
+        assertTrue(root.isRoot());
+        // assertTrue(root.exists());  // IllegalArgumentException
+    }
+
+    @Test
     public void lastModified_Smokes() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
