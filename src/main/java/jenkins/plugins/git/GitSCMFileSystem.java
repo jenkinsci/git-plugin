@@ -180,10 +180,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (cacheDir == null || !cacheDir.isDirectory()) {
                 throw new IOException("Closed");
             }
-            Writer out = new OutputStreamWriter(changeLogStream, "UTF-8");
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
-            try {
+            try (Writer out = new OutputStreamWriter(changeLogStream, "UTF-8")) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
                 if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
@@ -201,7 +200,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 if (!executed) {
                     changelog.abort();
                 }
-                out.flush();
+                changeLogStream.close();
             }
         } finally {
             cacheLock.unlock();
