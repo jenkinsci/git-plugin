@@ -71,7 +71,7 @@ public class GitSCMFileSystemTest {
 
     private final Random random = new Random();
     private final String[] implementations = {"git", "jgit", "jgitapache"};
-    String gitImplName = null;
+    private String gitImplName = null;
 
     @Before
     public void setUp() throws Exception {
