@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -275,6 +276,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
                                 @Override
                                 @NonNull
+                                @SuppressFBWarnings(value="NP_LOAD_OF_KNOWN_NULL_VALUE",
+                                                    justification="TreeWalk.forPath can return null, compiler generated code for try with resources handles it")
                                 public SCMProbeStat stat(@NonNull String path) throws IOException {
                                     try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
                                         if (tw == null) {
