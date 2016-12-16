@@ -307,7 +307,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             @NonNull
                             @Override
                             public String getSourceName() {
-                                return null;
+                                return "git-plugin-onNotifyCommit";
                             }
 
                             @Override
