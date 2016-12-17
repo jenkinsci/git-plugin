@@ -97,7 +97,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
      *
      * @param client the client
      * @param remote the remote GIT URL
+     * @param head   identifier for the head commit to be referenced
      * @param rev    the revision.
+     * @throws IOException on I/O error
+     * @throws InterruptedException on thread interruption
      */
     protected GitSCMFileSystem(GitClient client, String remote, final String head, @CheckForNull
             AbstractGitSCMSource.SCMRevisionImpl rev) throws IOException, InterruptedException {
