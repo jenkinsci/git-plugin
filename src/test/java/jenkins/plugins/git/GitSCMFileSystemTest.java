@@ -27,19 +27,11 @@ package jenkins.plugins.git;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -51,14 +43,11 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -88,8 +77,13 @@ public class GitSCMFileSystemTest {
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"));
         assertThat(fs, notNullValue());
-        assertThat(fs.getRoot(), notNullValue());
-        Iterable<SCMFile> children = fs.getRoot().children();
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        // assertTrue(root.isDirectory()); // IllegalArgumentException
+        // assertTrue(root.exists()); // IllegalArgumentException
+        // assertFalse(root.isFile()); // IllegalArgumentException
+        Iterable<SCMFile> children = root.children();
         Iterator<SCMFile> iterator = children.iterator();
         assertThat(iterator.hasNext(), is(true));
         SCMFile file = iterator.next();
