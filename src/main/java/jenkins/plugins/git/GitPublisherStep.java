@@ -25,14 +25,30 @@
 package jenkins.plugins.git;
 
 import com.google.inject.Inject;
-import hudson.*;
-import hudson.model.*;
-import hudson.plugins.git.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.model.Item;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitPublisher;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.SubmoduleConfig;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.scm.SCM;
 import hudson.util.ListBoxModel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -41,6 +57,8 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -81,26 +99,31 @@ public final class GitPublisherStep extends AbstractStepImpl {
   }
 
   @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setBranch(String branch) {
     this.branch = branch;
   }
 
   @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setCredentialsId(String credentialsId) {
-    this.credentialsId = Util.fixEmpty(credentialsId);
+    this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
   }
 
   @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setTagsToPush(List<GitPublisher.TagToPush> tagsToPush) {
     this.tagsToPush = tagsToPush;
   }
 
   @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setBranchesToPush(List<GitPublisher.BranchToPush> branchesToPush) {
     this.branchesToPush = branchesToPush;
   }
 
   @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setNotesToPush(List<GitPublisher.NoteToPush> notesToPush) {
     this.notesToPush = notesToPush;
   }
@@ -137,26 +160,26 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
   public List<GitPublisher.TagToPush> getTagsToPush() {
     if (tagsToPush == null) {
-      tagsToPush = new ArrayList<GitPublisher.TagToPush>();
+      tagsToPush = new ArrayList<>();
     }
 
-    return tagsToPush;
+    return Collections.unmodifiableList(tagsToPush);
   }
 
   public List<GitPublisher.BranchToPush> getBranchesToPush() {
     if (branchesToPush == null) {
-      branchesToPush = new ArrayList<GitPublisher.BranchToPush>();
+      branchesToPush = new ArrayList<>();
     }
 
-    return branchesToPush;
+    return Collections.unmodifiableList(branchesToPush);
   }
 
   public List<GitPublisher.NoteToPush> getNotesToPush() {
     if (notesToPush == null) {
-      notesToPush = new ArrayList<GitPublisher.NoteToPush>();
+      notesToPush = new ArrayList<>();
     }
 
-    return notesToPush;
+    return Collections.unmodifiableList(notesToPush);
   }
 
 
@@ -193,11 +216,13 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
     if (isPushTags()) {
       for (final GitPublisher.TagToPush t : tagsToPush) {
-        if (t.getTagName() == null)
+        if (t.getTagName() == null) {
           throw new AbortException("No tag to push defined");
+        }
 
-        if (t.getTargetRepoName() == null)
+        if (t.getTargetRepoName() == null) {
           throw new AbortException("No target repo to push to defined");
+        }
 
         final String tagName = environment.expand(t.getTagName());
         final String tagMessage = hudson.Util.fixNull(environment.expand(t.getTagMessage()));
@@ -207,8 +232,9 @@ public final class GitPublisherStep extends AbstractStepImpl {
           // Lookup repository with unexpanded name as GitSCM stores them unexpanded
           RemoteConfig remote = gitSCM.getRepositoryByName(t.getTargetRepoName());
 
-          if (remote == null)
+          if (remote == null) {
             throw new AbortException("No repository found for target repo name " + targetRepo);
+          }
 
           // expand environment variables in remote repository
           remote = gitSCM.getParamExpandedRepo(environment, remote);
@@ -219,7 +245,7 @@ public final class GitPublisherStep extends AbstractStepImpl {
               throw new AbortException("Tag " + tagName + " already exists and Create Tag is specified, so failing.");
             }
 
-            if (tagMessage.length() == 0) {
+            if (StringUtils.isBlank(tagMessage)) {
               git.tag(tagName, "Jenkins Git plugin tagging with " + tagName);
             } else {
               git.tag(tagName, tagMessage);

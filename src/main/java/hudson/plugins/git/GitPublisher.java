@@ -579,7 +579,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
          */
         @Deprecated
         public String getnoteMsg() {
-            return noteMsg;
+            return getNoteMsg();
         }
 
         /**
@@ -588,7 +588,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
          */
         @Deprecated
         public String getnoteNamespace() {
-        	return noteNamespace;
+        	return getNoteNamespace();
         }
 
         /**
@@ -597,7 +597,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
          */
         @Deprecated
         public boolean getnoteReplace() {
-        	return noteReplace;
+        	return getNoteReplace();
         }
 
 
