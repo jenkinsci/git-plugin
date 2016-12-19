@@ -1,0 +1,20 @@
+<div>
+    Jenkinsは、変更をポーリングするように設定され、ビルドするかどうか決定する時に、
+    <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">パターン</a>に合致するメッセージでコミットされた、リビジョンを無視します。
+    これは、ビルドサーバが別のメッセージで変更をコミットすると仮定して、
+    ビルド自体が行ったコミットが、別のビルドを引き起こさないように使われます。
+
+    <p/>
+    対象外メッセージは、<a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">パターン</a>
+    <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Matcher.html#matches()">マッチング</a>を使用する。
+    <p/>
+    
+  <pre>.*\[maven-release-plugin\].*</pre>
+    上記に示す例は、コメントの最初の行に"[maven-release-plugin]"メッセージとリビジョンだけが、
+    SCMにコミットされた場合、ビルドは行われません。
+    <p/>
+    埋め込みフラグを使用して、より複雑なパターンを作ることもできます。
+
+    <pre>(?s).*FOO.*</pre>
+     この例は、コメント行すべてから、"FOO"を検索します。
+</div>
