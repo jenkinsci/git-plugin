@@ -66,6 +66,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     private List<ParameterValue> lastBuildParameters = null;
     private static List<ParameterValue> lastStaticBuildParameters = null;
 
+    private static void clearLastStaticBuildParameters() {
+        lastStaticBuildParameters = null;
+    }
+
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
@@ -115,7 +119,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         lastBranches = branches;
         lastSHA1 = sha1;
         lastBuildParameters = null;
-        lastStaticBuildParameters = null;
+        GitStatus.clearLastStaticBuildParameters();
         URIish uri;
         List<ParameterValue> buildParameters = new ArrayList<>();
 
@@ -293,7 +297,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                 LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
 
-            lastStaticBuildParameters = null;
+            GitStatus.clearLastStaticBuildParameters();
             List<ParameterValue> allBuildParameters = new ArrayList<>(buildParameters);
             List<ResponseContributor> result = new ArrayList<>();
             // run in high privilege to see all the projects anonymous users don't see.
