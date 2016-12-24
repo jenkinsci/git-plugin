@@ -76,7 +76,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
     public void correctGitToolIsUsed2() throws Exception {
         try {
             // Should throw exception confirming that Git#using was used correctly
-            gitSCMSource.retrieve(PowerMockito.mock(SCMHeadObserver.class), TaskListener.NULL);
+            gitSCMSource.retrieve(null, PowerMockito.mock(SCMHeadObserver.class), null, TaskListener.NULL);
         } catch (GitToolNotSpecified e) {
             Assert.fail("Git client was constructed with arbitrary git tool");
         }

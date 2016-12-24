@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
@@ -43,11 +44,18 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.util.Map;
 import jenkins.model.Jenkins;
 
+import jenkins.scm.api.SCMEvent;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMNavigator;
+import jenkins.scm.api.SCMRevision;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
@@ -275,9 +283,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
     public static class ListenerImpl extends GitStatus.Listener {
 
         @Override
-        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
-            List<GitStatus.ResponseContributor> result = new ArrayList<>();
-            boolean notified = false;
+        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, final String sha1, List<ParameterValue> buildParameters, String... branches) {
+            List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
+            final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
@@ -288,35 +296,90 @@ public class GitSCMSource extends AbstractGitSCMSource {
             }
             SecurityContext old = jenkins.getACL().impersonate(ACL.SYSTEM);
             try {
-                for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
-                    for (SCMSource source : owner.getSCMSources()) {
-                        if (source instanceof GitSCMSource) {
-                            GitSCMSource git = (GitSCMSource) source;
-                            if (git.ignoreOnPushNotifications) {
-                              continue;
+                if (branches.length > 0) {
+                    final URIish u = uri;
+                    for (final String branch: branches) {
+                        SCMHeadEvent.fireNow(new SCMHeadEvent<String>(SCMEvent.Type.UPDATED, branch){
+                            @Override
+                            public boolean isMatch(@NonNull SCMNavigator navigator) {
+                                return false;
                             }
-                            URIish remote;
-                            try {
-                                remote = new URIish(git.getRemote());
-                            } catch (URISyntaxException e) {
-                                // ignore
-                                continue;
-                            }
-                            if (GitStatus.looselyMatches(uri, remote)) {
-                                LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName());
-                                owner.onSCMSourceUpdated(source);
-                                result.add(new GitStatus.ResponseContributor() {
-                                    @Override
-                                    public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
-                                        rsp.addHeader("Triggered", owner.getAbsoluteUrl());
-                                    }
 
-                                    @Override
-                                    public void writeBody(PrintWriter w) {
-                                        w.println("Scheduled indexing of " + owner.getFullDisplayName());
+                            @NonNull
+                            @Override
+                            public String getSourceName() {
+                                // we will never be called here as do not match any navigator
+                                return u.getHumanishName();
+                            }
+
+                            @Override
+                            public boolean isMatch(SCMSource source) {
+                                if (source instanceof GitSCMSource) {
+                                    GitSCMSource git = (GitSCMSource) source;
+                                    if (git.ignoreOnPushNotifications) {
+                                        return false;
                                     }
-                                });
-                                notified = true;
+                                    URIish remote;
+                                    try {
+                                        remote = new URIish(git.getRemote());
+                                    } catch (URISyntaxException e) {
+                                        // ignore
+                                        return false;
+                                    }
+                                    if (GitStatus.looselyMatches(u, remote)) {
+                                        notified[0] = true;
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                                return false;
+                            }
+
+                            @NonNull
+                            @Override
+                            public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
+                                SCMHead head = new SCMHead(branch);
+                                return Collections.<SCMHead, SCMRevision>singletonMap(head,
+                                        sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                            }
+
+                            @Override
+                            public boolean isMatch(@NonNull SCM scm) {
+                                return false; // TODO rewrite the legacy event system to fire through SCM API
+                            }
+                        });
+                    }
+                } else {
+                    for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
+                        for (SCMSource source : owner.getSCMSources()) {
+                            if (source instanceof GitSCMSource) {
+                                GitSCMSource git = (GitSCMSource) source;
+                                if (git.ignoreOnPushNotifications) {
+                                    continue;
+                                }
+                                URIish remote;
+                                try {
+                                    remote = new URIish(git.getRemote());
+                                } catch (URISyntaxException e) {
+                                    // ignore
+                                    continue;
+                                }
+                                if (GitStatus.looselyMatches(uri, remote)) {
+                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName());
+                                    owner.onSCMSourceUpdated(source);
+                                    result.add(new GitStatus.ResponseContributor() {
+                                        @Override
+                                        public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                                            rsp.addHeader("Triggered", owner.getAbsoluteUrl());
+                                        }
+
+                                        @Override
+                                        public void writeBody(PrintWriter w) {
+                                            w.println("Scheduled indexing of " + owner.getFullDisplayName());
+                                        }
+                                    });
+                                    notified[0] = true;
+                                }
                             }
                         }
                     }
@@ -324,7 +387,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             } finally {
                 SecurityContextHolder.setContext(old);
             }
-            if (!notified) {
+            if (!notified[0]) {
                 result.add(new GitStatus.MessageResponseContributor("No Git consumers using SCM API plugin for: " + uri.toString()));
             }
             return result;

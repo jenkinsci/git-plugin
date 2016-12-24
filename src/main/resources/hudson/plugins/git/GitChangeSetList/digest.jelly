@@ -9,10 +9,10 @@
 
   <j:choose>
     <j:when test="${it.emptySet}">
-      No changes.
+      ${%No changes.}
     </j:when>
     <j:otherwise>
-      Changes
+      ${%Changes}
       <ol>
         <j:forEach var="cs" items="${it.logs}" varStatus="loop">
           <li>

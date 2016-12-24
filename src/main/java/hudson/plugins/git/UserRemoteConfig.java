@@ -168,7 +168,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             String url = Util.fixEmptyAndTrim(value);
             if (url == null)
-                return FormValidation.error("Please enter Git repository.");
+                return FormValidation.error(Messages.UserRemoteConfig_CheckUrl_UrlIsNull());
 
             if (url.indexOf('$') >= 0)
                 // set by variable, can't validate
