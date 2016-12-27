@@ -383,6 +383,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                         }
                                     }
 
+                                    allBuildParameters.clear();
                                     List<ParameterValue> jobParametersValues = getDefaultParametersValues((Job) project);
                                     for (ParameterValue defaultParameterValue : jobParametersValues) {
                                         if (!buildParametersNames.contains(defaultParameterValue.getName())) {
