@@ -345,6 +345,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             boolean branchFound = false,
                                     parametrizedBranchSpec = false;
+                            String branchName = null;
+
                             if (branches.length == 0) {
                                 branchFound = true;
                             } else {
@@ -363,6 +365,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                                     LOGGER.fine("Branch Spec " + branchSpec + " matches modified branch " + branch + " for " + project.getFullDisplayName() + ". ");
                                                 }
                                                 branchFound = true;
+                                                branchName = branch;
                                                 break OUT;
                                             }
                                         }
@@ -398,7 +401,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL, branchName), new ParametersAction(allBuildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     /* Poll the repository for changes

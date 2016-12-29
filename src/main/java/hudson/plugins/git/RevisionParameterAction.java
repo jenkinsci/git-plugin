@@ -55,6 +55,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     public final boolean combineCommits;
     public final Revision revision;
     private final URIish repoURL;
+    private final String branchName;
 
     public RevisionParameterAction(String commit) {
         this(commit, false, null);
@@ -64,15 +65,24 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         this(commit, false, repoURL);
     }
 
+    public RevisionParameterAction(String commit, URIish repoURL, String branchName) {
+        this(commit, false, repoURL, branchName);
+    }
+
     public RevisionParameterAction(String commit, boolean combineCommits) {
         this(commit, combineCommits, null);
     }
 
     public RevisionParameterAction(String commit, boolean combineCommits, URIish repoURL) {
+        this(commit, combineCommits, repoURL, null);
+    }
+
+    public RevisionParameterAction(String commit, boolean combineCommits, URIish repoURL, String branchName) {
         this.commit = commit;
         this.combineCommits = combineCommits;
         this.revision = null;
         this.repoURL = repoURL;
+        this.branchName = branchName;
     }
     
     public RevisionParameterAction(Revision revision) {
@@ -84,6 +94,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     	this.commit = revision.getSha1String();
     	this.combineCommits = combineCommits;
         this.repoURL = null;
+        this.branchName = null;
     }   
 
     @Deprecated
@@ -97,11 +108,19 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     	}
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
-        // Here we do not have any local branches, containing the commit. So...
-        // we are to get all the remote branches, and show them to users, as
-        // they are local
-        final List<Branch> branches = normalizeBranches(git.getBranchesContaining(
-                ObjectId.toString(sha1), true));
+
+        List<Branch> branches = null;
+
+        if (branchName != null) {
+            branches = new ArrayList<Branch>(1);
+            branches.add(new Branch(branchName, sha1));
+        } else {
+            // Here we do not have any local branches, containing the commit. So...
+            // we are to get all the remote branches, and show them to users, as
+            // they are local
+            branches = normalizeBranches(git.getBranchesContaining(
+                    ObjectId.toString(sha1), true));
+        }
         revision.getBranches().addAll(branches);
         return revision;
     }

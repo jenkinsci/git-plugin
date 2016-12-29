@@ -29,10 +29,13 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 
+import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.Collections;
 import static org.junit.Assert.*;
 import org.junit.Test;
+
+import org.eclipse.jgit.transport.URIish;
 
 /**
  * Tests for {@link RevisionParameterAction}
@@ -209,5 +212,29 @@ public class RevisionParameterActionTest extends AbstractGitProject {
 		assertFalse(b3.getAction(BuildData.class)
 				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
 	}
+
+    @Test
+    public void testBranchFetchingIfNoBranchSpecified() throws Exception {
+        commitNewFile("test");
+        testGitClient.branch("aaa");
+        String commit = testGitClient.getBranches().iterator().next().getSHA1String();
+        RevisionParameterAction action = new RevisionParameterAction(commit, new URIish("origin"));
+        Collection<Branch> branches = action.toRevision(testGitClient).getBranches();
+        assertEquals(branches.size(), 2);
+        Branch branchesArray[] = branches.toArray(new Branch[branches.size()]);
+        assertEquals(branchesArray[0].getName(), "aaa");
+        assertEquals(branchesArray[1].getName(), "master");
+    }
+
+    @Test
+    public void testBranchFetchingIfBranchSpecified() throws Exception {
+        commitNewFile("test");
+        testGitClient.branch("aaa");
+        String commit = testGitClient.getBranches().iterator().next().getSHA1String();
+        RevisionParameterAction action = new RevisionParameterAction(commit, new URIish("origin"), "master");
+        Collection<Branch> branches = action.toRevision(testGitClient).getBranches();
+        assertEquals(branches.size(), 1);
+        assertEquals(branches.iterator().next().getName(), "master");
+    }
 }
 
