@@ -1,15 +1,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="Name of repository" field="mergeRemote">
+  <f:entry title="${%Name of repository}" field="mergeRemote">
     <f:textbox id="git.mergeRemote" />
   </f:entry>
   <f:entry title="${%Branch to merge to}" field="mergeTarget">
     <f:textbox id="git.mergeTarget" clazz="required"/>
   </f:entry>
-  <f:entry title="Merge strategy" field="mergeStrategy">
+  <f:entry title="${%Merge strategy}" field="mergeStrategy">
       <f:select />
   </f:entry>
-  <f:entry title="Fast-forward mode" field="fastForwardMode">
+  <f:entry title="${%Fast-forward mode}" field="fastForwardMode">
       <f:enum>
           ${it.toString()}
       </f:enum>
