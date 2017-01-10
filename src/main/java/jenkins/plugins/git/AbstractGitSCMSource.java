@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2014, CloudBees, Inc., Stephen Connolly, Amadeus IT Group.
+ * Copyright (c) 2013-2017, CloudBees, Inc., Stephen Connolly, Amadeus IT Group.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Action;
+import hudson.model.Actionable;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
@@ -54,6 +56,7 @@ import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import java.util.Map;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
@@ -64,11 +67,16 @@ import jenkins.scm.api.SCMProbeStat;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.SymbolicRef;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -370,6 +378,50 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return revisions;
             }
         }, listener, false);
+    }
+
+    @NonNull
+    @Override
+    protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
+            throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<List<Action>>() {
+            @Override
+            public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                final Repository repository = client.getRepository();
+                Ref headRef = repository.getRef(Constants.HEAD);
+                if (headRef instanceof SymbolicRef) {
+                    String target = headRef.getTarget().getName();
+                    if (target.startsWith(Constants.R_HEADS)){
+                        // shorten standard names
+                        target = target.substring(Constants.R_HEADS.length());
+                    }
+                    List<Action> result = new ArrayList<Action>();
+                    if (StringUtils.isNotBlank(target)) {
+                        result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                    }
+                    return result;
+                } else {
+                    return Collections.emptyList();
+                }
+            }
+        }, listener, false);
+    }
+
+    @NonNull
+    @Override
+    protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event,
+                                           @NonNull TaskListener listener) throws IOException, InterruptedException {
+        SCMSourceOwner owner = getOwner();
+        if (owner instanceof Actionable) {
+            for (GitRemoteHeadRefAction a: ((Actionable) owner).getActions(GitRemoteHeadRefAction.class)) {
+                if (getRemote().equals(a.getRemote())) {
+                    if (head.getName().equals(a.getName())) {
+                        return Collections.<Action>singletonList(new PrimaryInstanceMetadataAction());
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 
     protected String getCacheEntry() {

@@ -2,6 +2,8 @@ package jenkins.plugins.git;
 
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.Action;
+import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.UserRemoteConfig;
@@ -12,18 +14,27 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import static org.hamcrest.Matchers.*;
+
+import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
@@ -34,6 +45,7 @@ public class AbstractGitSCMSourceTest {
     public JenkinsRule r = new JenkinsRule();
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    public GitSampleRepoRule sampleRepo2 = new GitSampleRepoRule();
 
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
     @Issue("JENKINS-37482")
@@ -54,6 +66,56 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
         assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
+
+    public static abstract class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {
+
+    }
+
+    @Test
+    public void retrievePrimaryHead() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file.txt", "");
+        sampleRepo.git("status");
+        sampleRepo.git("add", "file.txt");
+        sampleRepo.git("status");
+        sampleRepo.git("commit", "--all", "--message=add-empty-file");
+        sampleRepo.git("status");
+        sampleRepo.git("checkout", "-b", "new-primary");
+        sampleRepo.git("status");
+        sampleRepo.write("file.txt", "content");
+        sampleRepo.git("status");
+        sampleRepo.git("add", "file.txt");
+        sampleRepo.git("status");
+        sampleRepo.git("commit", "--all", "--message=add-file");
+        sampleRepo.git("status");
+        sampleRepo.git("checkout", "-b", "dev", "master");
+        sampleRepo.git("status");
+        sampleRepo.git("checkout", "new-primary");
+        sampleRepo.git("status");
+        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        ActionableSCMSourceOwner owner = Mockito.mock(ActionableSCMSourceOwner.class);
+        when(owner.getSCMSource(source.getId())).thenReturn(source);
+        when(owner.getSCMSources()).thenReturn(Collections.singletonList(source));
+        source.setOwner(owner);
+        TaskListener listener = StreamTaskListener.fromStderr();
+        Map<String, SCMHead> headByName = new TreeMap<String, SCMHead>();
+        for (SCMHead h: source.fetch(listener)) {
+            headByName.put(h.getName(), h);
+        }
+        assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary"));
+        for (Action a : source.fetchActions(null, listener)) {
+            owner.addAction(a);
+        }
+        List<Action> actions = source.fetchActions(headByName.get("new-primary"), null, listener);
+        PrimaryInstanceMetadataAction primary = null;
+        for (Action a: actions) {
+            if (a instanceof PrimaryInstanceMetadataAction) {
+                primary = (PrimaryInstanceMetadataAction) a;
+                break;
+            }
+        }
+        assertThat(primary, notNullValue());
     }
 
     @Issue("JENKINS-31155")
