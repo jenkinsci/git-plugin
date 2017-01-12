@@ -321,6 +321,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return browser;
     }
 
+    public void setBrowser(GitRepositoryBrowser browser) {
+        this.browser = browser;
+    }
+
     private static final Pattern[] URL_PATTERNS = {
         Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
         Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*"),
