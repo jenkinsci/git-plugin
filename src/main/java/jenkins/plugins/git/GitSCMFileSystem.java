@@ -236,6 +236,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
+            if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
+                return null;
+            }
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
@@ -308,6 +311,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
+            if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
+                return null;
+            }
             TaskListener listener = new LogTaskListener(LOGGER, Level.INFO);
             AbstractGitSCMSource gitSCMSource = (AbstractGitSCMSource) source;
             String cacheEntry = gitSCMSource.getCacheEntry();
