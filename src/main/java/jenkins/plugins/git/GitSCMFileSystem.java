@@ -252,19 +252,22 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     git.using(tool.getGitExe());
                 }
                 GitClient client = git.getClient();
-                client.addDefaultCredentials(CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                String credentialsId = config.getCredentialsId();
+                if (credentialsId != null) {
+                    client.addDefaultCredentials(CredentialsMatchers.firstOrNull(
+                            CredentialsProvider.lookupCredentials(
                                 StandardUsernameCredentials.class,
                                 owner,
                                 ACL.SYSTEM,
                                 URIRequirementBuilder.fromUri(remote).build()
-                        ),
-                        CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(config.getCredentialsId()),
+                            ),
+                            CredentialsMatchers.allOf(
+                                CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER
+                            )
                         )
-                        )
-                );
+                    );
+                }
                 if (!client.hasGitRepo()) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
