@@ -436,15 +436,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         }
 
         public FormValidation doCheckTagName(@QueryParameter String value) {
-            return checkFieldNotEmpty(value, "Tag Name");
+            return checkFieldNotEmpty(value, Messages.GitPublisher_Check_TagName());
         }
 
         public FormValidation doCheckBranchName(@QueryParameter String value) {
-            return checkFieldNotEmpty(value, "Branch Name");
+            return checkFieldNotEmpty(value, Messages.GitPublisher_Check_BranchName());
         }
         
         public FormValidation doCheckNoteMsg(@QueryParameter String value) {
-            return checkFieldNotEmpty(value, "Note");
+            return checkFieldNotEmpty(value, Messages.GitPublisher_Check_Note());
         }
         
         public FormValidation doCheckRemote(
@@ -459,7 +459,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                 return FormValidation.ok();
 
             FormValidation validation = checkFieldNotEmpty(remote,
-                    "Remote Name");
+                    Messages.GitPublisher_Check_RemoteName());
             if (validation.kind != FormValidation.Kind.OK)
                 return validation;
 
@@ -484,7 +484,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             value = StringUtils.strip(value);
 
             if (value == null || value.equals("")) {
-                return FormValidation.error(field + " is required.");
+                return FormValidation.error(Messages.GitPublisher_Check_Required(field));
             }
             return FormValidation.ok();
         }

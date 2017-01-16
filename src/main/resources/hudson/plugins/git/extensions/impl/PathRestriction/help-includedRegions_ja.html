@@ -1,0 +1,13 @@
+<div>
+  対象範囲は、<a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Javaの正規表現パターンマッチング</a>を使用し、改行で区切られています。
+  空行は、すべてを含むことを意味します。
+  <p/>
+  <pre>
+    myapp/src/main/web/.*\.html
+    myapp/src/main/web/.*\.jpeg
+    myapp/src/main/web/.*\.gif
+  </pre>
+  上記の例は、html/jpeg/gifファイルがSCMにコミットされた場合のみ、
+  ビルドが行われることを示しています。
+  対象範囲と対象外範囲の間に重複がある場合、対象外範囲が対象範囲よりも優先されます。
+</div>

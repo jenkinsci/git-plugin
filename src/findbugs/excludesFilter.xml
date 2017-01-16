@@ -193,4 +193,10 @@
     <Field name="git"/>
   </Match>
 
+  <!-- Field known to be non-transient -->
+  <Match>
+    <Bug pattern="SE_BAD_FIELD"/>
+    <Class name="jenkins.plugins.git.AbstractGitSCMSource$2$1"/>
+  </Match>
+
 </FindBugsFilter>

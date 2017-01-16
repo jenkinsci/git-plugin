@@ -1,0 +1,77 @@
+<div>
+  <p>リポジトリの特定のブランチを追跡したいなら、ブランチを指定してください。
+  空欄のままにすると、すべてのブランチについて変更があるか確認し、ビルドします。</p>
+
+  <p><tt>refs/heads/&lt;ブランチ名&gt;</tt>の形式を使用するのが最も安全です。この方法は、指定したいブランチが明確です。</p>
+  
+<p>もし、ブランチ名が<tt>/</tt>を含む場合は、必ず上の形式をフルパスで使用してください。フルパスでなければ、プラグインは最後のスラッシュの右側の文字列だけ使用します。
+   つまり、<tt>foo/bar</tt>なら、<tt>bar</tt>がマッチします。
+      
+  <p>ブランチ指定子に、ワイルドカードとスラッシュ(例: release/)と一緒に使用する場合、ブランチ名にoriginのリポジトリを指定する必要があります。
+     そして、ブランチ名にoriginリポジトリを指定して、変更が必ず取得されるようにします。
+     例えば、origin/release/など。</p>
+  
+  <p>オプション:
+    <ul>
+      <li> <b><tt>&lt;ブランチ名&gt;</tt></b><br/>
+           指定したブランチを追跡します。もし、取得した結果があいまいで、必ずしも期待しているものではない場合、
+           <tt>refs/heads/&lt;ブランチ名&gt;</tt>を使ってみてください。<br/>
+           例: <tt>master</tt>, <tt>feature1</tt>,...
+      <li> <b><tt>refs/heads/&lt;ブランチ名&gt;</tt></b><br/>
+           指定したブランチ名を追跡します。<br/>
+           例: <tt>refs/heads/master</tt>, <tt>refs/heads/feature1/master</tt>,...
+      <li> <b><tt>&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</tt></b><br/>
+           指定したブランチを追跡します。もし、取得した結果があいまいで、必ずしも期待しているものではない場合、
+           <tt>refs/heads/&lt;ブランチ名&gt;</tt>を使ってみてください。<br/>
+           例: <tt>origin/master</tt>
+      <li> <b><tt>remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</tt></b><br/>
+           指定したブランチを追跡します。<br/>
+           例: <tt>remotes/origin/master</tt>
+      <li> <b><tt>refs/remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</tt></b><br/>
+           指定したブランチを追跡します。<br/>
+           例: <tt>refs/remotes/origin/master</tt>
+      <li> <b><tt>&lt;タグ名&gt;</tt></b><br/>
+           タグを認識できないため、動作しません。<br/> 
+           代わりに、<tt>refs/tags/&lt;タグ名&gt;</tt>を使用してください。<br/>
+           例: <tt>git-2.3.0</tt>
+      <li> <b><tt>refs/tags/&lt;タグ名&gt;</tt></b><br/>
+           指定したタグを追跡します。<br/>
+           例: <tt>refs/tags/git-2.3.0</tt>
+      <li> <b><tt>&lt;コミットID&gt;</tt></b><br/>
+           指定したコミットIDをチェックアウトします。<br/>
+           例: <tt>5062ac843f2b947733e6a3b105977056821bd352</tt>, <tt>5062ac84</tt>, ...
+      <li> <b><tt>${ENV_VARIABLE}</tt></b><br/>
+           環境変数も使用可能です。この場合、変数は評価され、結果は上記で説明したような値として使用されます。<br/>
+           例: <tt>${TREEISH}</tt>, <tt>refs/tags/${TAGNAME}</tt>,...
+      <li> <b><tt>&lt;ワイルドカード&gt;</tt></b><br/>
+           文法は、<tt>リポジトリ名/ブランチ名</tt>の形式です。
+           加えて、<tt>ブランチ名</tt>は、<tt>*/ブランチ名</tt>の省略と扱われます。ここで、'*'はワイルドカードとして扱われ、
+           '**'はセパレータ'/'を含むワルドカードとして扱われます。それゆえ、<tt>origin/branches*</tt>は、<tt>origin/branches-foo</tt>に合致しますが、
+           <tt>origin/branches/foo</tt>には合致しません。
+           一方、<tt>origin/branches**</tt>は、<tt>origin/branches-foo</tt>と<tt>origin/branches/foo</tt>の両方に一致します。
+      <li> <b><tt>:&lt;正規表現&gt;</tt></b><br/>
+           文法は、<tt>:regexp</tt>の形式です。
+           ここでの正規表現は、ブランチ名がその正規表現に合致するブランチだけをビルドします。<br/>
+           例:<br/>
+            <ul>
+                <li><tt>:^(?!(origin/prefix)).*</tt>
+                <ul>
+                    <li>合致する: <tt>origin</tt> 、 <tt>origin/master</tt> 、 <tt>origin/feature</tt></li>
+                    <li>合致しない: <tt>origin/prefix</tt> 、 <tt>origin/prefix_123</tt> 、 <tt>origin/prefix-abc</tt></li>
+                </ul>
+                </li>
+                <li><tt>:origin/release-\d{8}</tt>
+                <ul>
+                    <li>合致する: <tt>origin/release-20150101</tt></li>
+                    <li>合致しない: <tt>origin/release-2015010</tt> 、 <tt>origin/release-201501011</tt> 、<tt>origin/release-20150101-something</tt></li>
+                </ul>
+                </li>
+                <li><tt>:^(?!origin/master$|origin/develop$).*</tt>
+                <ul>
+                    <li>合致する: <tt>origin/branch1</tt> 、 <tt>origin/branch-2</tt> 、 <tt>origin/master123</tt> 、 <tt>origin/develop-123</tt></li>
+                    <li>合致しない: <tt>origin/master</tt> 、 <tt>origin/develop</tt></li>
+                </ul>
+                </li>
+            </ul>
+    </ul>
+ </div>
