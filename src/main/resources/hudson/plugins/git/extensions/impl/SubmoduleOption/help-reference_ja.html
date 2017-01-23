@@ -1,0 +1,12 @@
+<div>
+  クローン中にリファレンスとしてGitが使用するリポジトリを含むパスを指定してください。<br/>  
+  クローンが行われるマスタかスレーブ上で、そのパスを利用できない場合、このオプションは無視されます。<br/>
+　複数サブプロジェクトを持つリファレンスを用意するには、ベアリポジトリを作成して、
+  リモートのURLを追加して、フェッチします。<br/>
+  <pre>
+  git init --bare
+  git remote add SubProject1 https://gitrepo.com/subproject1
+  git remote add SubProject2 https://gitrepo.com/subproject2
+  git fetch --all
+  </pre>
+</div>

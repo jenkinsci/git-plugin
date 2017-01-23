@@ -1,0 +1,16 @@
+<div>
+    refspecは、リモート参照の取得方法と、ローカル参照へマップする方法を制御します。
+    未設定の場合、<tt>git fetch</tt>の、すべてのブランチのheadを<tt>remotes/REPOSITORYNAME/BRANCHNAME</tt>として取得する動作が、
+    デフォルトの動作になります。このデフォルト動作は多くの場合問題ありません。
+
+    <p>
+    言い換えると、デフォルトのrefspecは、"+refs/heads/*:refs/remotes/REPOSITORYNAME/*"です。 
+    ここで、<tt>REPOSITORYNAME</tt> は、上のテキストボックス"名称"に指定した値です。
+
+    <p>
+    いつこの値を変更しようと思うでしょうか? 1つのブランチだけを取得したい場合がよい例です。
+    例えば、<tt>+refs/heads/master:refs/remotes/origin/master</tt>は、マスタブランチだけを取得します。    
+
+    <p>
+    詳細は、<a href="http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#def_refspec">Gitユーザマニュアルの言葉の定義</a>を参照してください。
+</div>

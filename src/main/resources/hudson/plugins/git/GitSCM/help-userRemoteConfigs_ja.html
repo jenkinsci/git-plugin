@@ -1,0 +1,32 @@
+<div>
+  追跡するリポジトリを指定します。URLかローカルなファイルパスを使用可能です。
+  スーパープロジェクト(サブモジュールを持つリポジトリ)の場合、
+  ローカルなファイルパスか絶対パスが有効です。
+  有効なGitのURLの例を以下に示します。
+  <ul>
+    <li>ssh://git@github.com/github/git.git</li>
+    <li>git@github.com:github/git.git (SSHプロトコルの短縮記法)</li>
+    <li>ssh://user@other.host.com/~/repos/R.git (ホームディレクトリのrepos/R.gitリポジトリへのアクセス)</li>
+    <li>https://github.com/github/git.git</li>
+    <li>git://github.com/github/git.git</li>
+  </ul>
+  <br>
+  リポジトリがスーパープロジェクトの場合、サブモジュールをクローンする場所は、
+  リポジトリがベアかノンベアか(すなわち、ワーキングディレクトリがあるかどうか)によって異なります。
+  <ul>
+    <li>スーパープロジェクトがベアの場合、サブモジュールの位置は、<i>.gitmodules</i>から取得します。</li>
+    <li>スーパープロジェクトがベア<b>でない</b>場合、 リポジトリには、サブモジュールがクローンされ、
+        適切にチェックアウトされているものとします。 
+        したがって、サブモジュールは、<i>.gitmodules</i>の情報ではなく、
+        <code>${SUPER_PROJECT_URL}/${SUBMODULE}</code>のようなパスから直接取得します。</li>
+  </ul>
+
+  スーパープロジェクトへのローカルなURLやパスは、スーパープロジェクトがベアか、そうでないかを判別する
+  <i>git rev-parse --is-bare-repository</i>を使用する際に用います。
+  <br>
+  スーパプロジェクトへのリモートなURLは、そのURLの最後でベアかベアでないかを判別します。
+  <ul>
+      <li>リモートURLが<i>.git</i>で終わる場合、<i>ノン</i>ベアリポジトリではないと想定されます。</li>
+      <li>リモートURLが<i>.git</i>で終わらない場合、ベアリポジトリと想定されます。</li> 
+  </ul>
+</div>
