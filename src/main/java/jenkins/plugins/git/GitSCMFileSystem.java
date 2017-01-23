@@ -271,6 +271,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         )
                     );
                 }
+
                 if (!client.hasGitRepo()) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();

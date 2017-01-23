@@ -86,7 +86,6 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Git SCM.

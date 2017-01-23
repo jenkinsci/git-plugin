@@ -52,7 +52,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
@@ -350,7 +349,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }, listener, false);
     }
 
-    @CheckForNull
+    @NonNull
     @Override
     protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
         return doRetrieve(new Retriever<Set<String>>() {

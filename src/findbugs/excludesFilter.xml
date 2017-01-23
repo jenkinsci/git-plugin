@@ -20,14 +20,6 @@
     <Field name="VERBOSE"/>
   </Match>
 
-  <!-- The difference method must use the keySet iterator because it
-       evaluates the keys before reading the value. -->
-  <Match>
-    <Bug pattern="WMI_WRONG_MAP_ITERATOR"/>
-    <Class name="hudson.plugins.git.SubmoduleCombinator"/>
-    <Method name="difference"/>
-  </Match>
-
   <!-- Jenkins.getInstance() always returns a non-null. -->
   <Match>
     <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
@@ -160,13 +152,6 @@
       <Method name="all"/>
       <Method name="getDescriptor"/>
     </Or>
-  </Match>
-
-  <!-- Clears the static field on entry, used only in toString. -->
-  <Match>
-    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
-    <Class name="hudson.plugins.git.GitStatus"/>
-    <Field name="lastStaticBuildParameters"/>
   </Match>
 
   <!-- Field 'extensions' intentionally non-transient -->
