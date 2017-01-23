@@ -303,7 +303,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         }
 
                         if (gitObject instanceof Tag) {
-                            ObjectId commit = client.revList(gitObject.getName()).get(0);
+                            ObjectId commit = client.revList(gitObject.getName(), 1).get(0);
                             String temp = commit.toString();
                             String sha1 = temp.substring(temp.indexOf("[") + 1, temp.indexOf("]"));
                             /* Recreate the Tag with the commit
