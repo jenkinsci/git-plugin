@@ -11,14 +11,14 @@ node {
 
   stage('Build') {
     /* Call the maven build (with timeout).  No tests. */
-    timeout(5) {
+    timeout(9) {
       mvn "clean install -B -V -U -e -DskipTests"
     }
   }
 
   stage('Test') {
     /* Run tests in parallel on multiple nodes (with timeout). */
-    timeout(20) {
+    timeout(37) {
       runParallelTests()
     }
   }
