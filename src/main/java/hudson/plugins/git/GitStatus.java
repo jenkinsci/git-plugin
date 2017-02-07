@@ -110,7 +110,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return s.toString();
     }
 
-    public HttpResponse doNotifyCommit(StaplerRequest request, @QueryParameter(required=true) String url,
+    public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
         lastURL = url;
@@ -190,7 +190,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     /**
-     * Contributes to a {@link #doNotifyCommit(StaplerRequest, String, String, String)} response.
+     * Contributes to a {@link #doNotifyCommit(HttpServletRequest, String, String, String)} response.
      *
      * @since 1.4.1
      */
@@ -274,7 +274,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         /**
          * Called when there is a change notification on a specific repository url.
          *
-         * @param origin          the origin of the notification (use {@link SCMEvent#originOf(StaplerRequest)} if in
+         * @param origin          the origin of the notification (use {@link SCMEvent#originOf(HttpServletRequest)} if in
          *                        doubt) or {@code null} if the origin is unknown.
          * @param uri             the repository uri.
          * @param sha1            SHA1 hash of commit to build
