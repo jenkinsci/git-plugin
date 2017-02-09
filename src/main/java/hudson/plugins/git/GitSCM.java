@@ -1011,6 +1011,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         Build revToBuild = new Build(marked, rev, build.getNumber(), null);
         buildData.saveBuild(revToBuild);
 
+        if (buildData.getBuildsByBranchName().size() >= 100) {
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
+        }
+
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
             Job<?, ?> job = build.getParent();
