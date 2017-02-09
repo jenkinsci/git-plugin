@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
@@ -153,8 +155,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         if (jenkins == null) {
             return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
         }
+        String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
-            contributors.addAll(listener.onNotifyCommit(uri, sha1, buildParameters, branchesArray));
+            contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
         return new HttpResponse() {
@@ -271,9 +274,34 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * @param branches        the (optional) branch information.
          * @return any response contributors for the response to the push request.
          * @since 2.4.0
+         * @deprecated use {@link #onNotifyCommit(String, URIish, String, List, String...)}
          */
+        @Deprecated
         public List<ResponseContributor> onNotifyCommit(URIish uri, @Nullable String sha1, List<ParameterValue> buildParameters, String... branches) {
             return onNotifyCommit(uri, sha1, branches);
+        }
+
+        /**
+         * Called when there is a change notification on a specific repository url.
+         *
+         * @param origin          the origin of the notification (use {@link SCMEvent#originOf(HttpServletRequest)} if in
+         *                        doubt) or {@code null} if the origin is unknown.
+         * @param uri             the repository uri.
+         * @param sha1            SHA1 hash of commit to build
+         * @param buildParameters parameters to be passed to the build.
+         *                        Ignored unless build parameter flag is set
+         *                        due to security risk of accepting parameters from
+         *                        unauthenticated sources
+         * @param branches        the (optional) branch information.
+         * @return any response contributors for the response to the push request.
+         * @since 2.6.5
+         */
+        public List<ResponseContributor> onNotifyCommit(@CheckForNull String origin,
+                                                        URIish uri,
+                                                        @Nullable String sha1,
+                                                        List<ParameterValue> buildParameters,
+                                                        String... branches) {
+            return onNotifyCommit(uri, sha1, buildParameters, branches);
         }
 
 
@@ -292,9 +320,10 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
-        public List<ResponseContributor> onNotifyCommit(URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Received notification for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
+                LOGGER.fine("Received notification from " + StringUtils.defaultIfBlank(origin, "?")
+                        + " for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
             }
 
             GitStatus.clearLastStaticBuildParameters();
