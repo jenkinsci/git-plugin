@@ -28,6 +28,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -280,9 +281,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Extension
     public static class ListenerImpl extends GitStatus.Listener {
-
         @Override
-        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, final String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<GitStatus.ResponseContributor> onNotifyCommit(String origin,
+                                                                  URIish uri,
+                                                                  @Nullable final String sha1,
+                                                                  List<ParameterValue> buildParameters,
+                                                                  String... branches) {
             List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
             final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
@@ -298,7 +302,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 if (branches.length > 0) {
                     final URIish u = uri;
                     for (final String branch: branches) {
-                        SCMHeadEvent.fireNow(new SCMHeadEvent<String>(SCMEvent.Type.UPDATED, branch){
+                        SCMHeadEvent.fireNow(new SCMHeadEvent<String>(SCMEvent.Type.UPDATED, branch, origin){
                             @Override
                             public boolean isMatch(@NonNull SCMNavigator navigator) {
                                 return false;
@@ -364,7 +368,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     continue;
                                 }
                                 if (GitStatus.looselyMatches(uri, remote)) {
-                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName());
+                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
+                                            + " as a result of event from " + origin);
                                     owner.onSCMSourceUpdated(source);
                                     result.add(new GitStatus.ResponseContributor() {
                                         @Override
