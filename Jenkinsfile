@@ -11,14 +11,14 @@ node {
 
   stage('Build') {
     /* Call the maven build (with timeout).  No tests. */
-    timeout(5) {
+    timeout(9) {
       mvn "clean install -B -V -U -e -DskipTests"
     }
   }
 
   stage('Test') {
     /* Run tests in parallel on multiple nodes (with timeout). */
-    timeout(20) {
+    timeout(37) {
       runParallelTests()
     }
   }
@@ -34,7 +34,7 @@ void runParallelTests() {
   /* Request the test groupings.  Based on previous test exection. */
   /* see https://wiki.jenkins-ci.org/display/JENKINS/Parallel+Test+Executor+Plugin and demo on github
   /* Using arbitrary parallelism of 4 and "generateInclusions" feature added in v1.8. */
-  def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 3], generateInclusions: true
+  def splits = splitTests parallelism: [$class: 'CountDrivenParallelism', size: 4], generateInclusions: true
 
   /* Create dictionary to hold set of parallel test executions. */
   def testGroups = [:]
@@ -81,7 +81,7 @@ void runParallelTests() {
 /* Run maven from tool "mvn" */
 void mvn(def args) {
   /* Get jdk tool. */
-  String jdktool = tool name: "jdk7", type: 'hudson.model.JDK'
+  String jdktool = tool name: "jdk8", type: 'hudson.model.JDK'
 
   /* Get the maven tool. */
   def mvnHome = tool name: 'mvn'

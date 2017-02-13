@@ -236,6 +236,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
+            if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
+                return null;
+            }
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
@@ -252,19 +255,23 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     git.using(tool.getGitExe());
                 }
                 GitClient client = git.getClient();
-                client.addDefaultCredentials(CredentialsMatchers.firstOrNull(
-                        CredentialsProvider.lookupCredentials(
+                String credentialsId = config.getCredentialsId();
+                if (credentialsId != null) {
+                    client.addDefaultCredentials(CredentialsMatchers.firstOrNull(
+                            CredentialsProvider.lookupCredentials(
                                 StandardUsernameCredentials.class,
                                 owner,
                                 ACL.SYSTEM,
                                 URIRequirementBuilder.fromUri(remote).build()
-                        ),
-                        CredentialsMatchers.allOf(
-                                CredentialsMatchers.withId(config.getCredentialsId()),
+                            ),
+                            CredentialsMatchers.allOf(
+                                CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER
+                            )
                         )
-                        )
-                );
+                    );
+                }
+
                 if (!client.hasGitRepo()) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
@@ -305,6 +312,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
+            if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
+                return null;
+            }
             TaskListener listener = new LogTaskListener(LOGGER, Level.INFO);
             AbstractGitSCMSource gitSCMSource = (AbstractGitSCMSource) source;
             String cacheEntry = gitSCMSource.getCacheEntry();
