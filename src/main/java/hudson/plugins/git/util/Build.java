@@ -83,9 +83,13 @@ public class Build implements Serializable, Cloneable {
         return hudsonBuildNumber;
     }
 
-    @Exported
     public Result getBuildResult() {
         return hudsonBuildResult;
+    }
+
+    @Exported(name = "buildResult")
+    public String getBuildResultValue() {
+        return hudsonBuildResult.toExportedObject();
     }
 
     public @Override String toString() {
