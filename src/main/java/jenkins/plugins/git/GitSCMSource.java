@@ -90,15 +90,15 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * @author Stephen Connolly
  */
 public class GitSCMSource extends AbstractGitSCMSource {
-    private static final String DEFAULT_INCLUDES = "*";
-
-    private static final String DEFAULT_EXCLUDES = "";
-
     public static final Logger LOGGER = Logger.getLogger(GitSCMSource.class.getName());
 
     private final String remote;
 
     private final String credentialsId;
+
+    private final String remoteName;
+
+    private final String rawRefSpecs;
 
     private final String includes;
 
@@ -115,13 +115,30 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private List<GitSCMExtension> extensions;
 
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+    public GitSCMSource(String id, String remote, String credentialsId, String remoteName, String rawRefSpecs, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
+
+        if (remoteName == null)
+            // backwards compatibility
+            this.remoteName = "origin";
+        else
+            this.remoteName = remoteName;
+
+        if (rawRefSpecs == null)
+            // backwards compatibility
+            this.rawRefSpecs = String.format("+refs/heads/*:refs/remotes/%s/*", this.remoteName);
+        else
+            this.rawRefSpecs = rawRefSpecs;
+
         this.includes = includes;
         this.excludes = excludes;
         this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+    }
+
+    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+        this(id, remote, credentialsId, null, null, includes, excludes, ignoreOnPushNotifications);
     }
 
     public boolean isIgnoreOnPushNotifications() {
@@ -177,6 +194,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
+    public String getRemoteName() {
+        return remoteName;
+    }
+
+    public String getRawRefSpecs() {
+        return rawRefSpecs;
+    }
+
+    @Override
     public String getIncludes() {
         return includes;
     }
@@ -188,7 +214,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected List<RefSpec> getRefSpecs() {
-        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/" + getRemoteName() + "/*"));
+        List<RefSpec> refSpecs = new ArrayList<>();
+
+        for (String rawRefSpec : rawRefSpecs.split(" ")) {
+            refSpecs.add(new RefSpec(rawRefSpec));
+        }
+
+        return refSpecs;
     }
 
     @Extension

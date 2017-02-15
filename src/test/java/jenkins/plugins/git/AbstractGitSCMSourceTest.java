@@ -4,6 +4,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.scm.SCMRevisionState;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -170,5 +171,40 @@ public class AbstractGitSCMSourceTest {
         assertEquals(extensions.get(0), scmRevision.getExtensions().get(0));
         assertTrue(scmRevision.getExtensions().get(1) instanceof BuildChooserSetting);
         assertEquals(2, scmRevision.getExtensions().size());
+    }
+
+
+    @Test
+    public void testCustomRemoteName() throws Exception {
+        sampleRepo.init();
+
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "upstream", null, "*", "", true);
+        SCMHead head = new SCMHead("master");
+        GitSCM scm = (GitSCM) source.build(head);
+        List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
+        assertEquals(1, configs.size());
+        UserRemoteConfig config = configs.get(0);
+        assertEquals("upstream", config.getName());
+        assertEquals("+refs/heads/*:refs/remotes/upstream/*", config.getRefspec());
+    }
+
+    @Test
+    public void testCustomRefSpecs() throws Exception {
+        sampleRepo.init();
+
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
+        SCMHead head = new SCMHead("master");
+        GitSCM scm = (GitSCM) source.build(head);
+        List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
+
+        assertEquals(2, configs.size());
+
+        UserRemoteConfig config = configs.get(0);
+        assertEquals("origin", config.getName());
+        assertEquals("+refs/heads/*:refs/remotes/origin/*", config.getRefspec());
+
+        config = configs.get(1);
+        assertEquals("origin", config.getName());
+        assertEquals("+refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
     }
 }

@@ -116,6 +116,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @CheckForNull
     public abstract String getCredentialsId();
 
+    /**
+     * @return Git remote URL
+     */
     public abstract String getRemote();
 
     public abstract String getIncludes();
