@@ -1885,6 +1885,9 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         final Action[] actions = {new ParametersAction(real_param), new FakeParametersAction(fake_param)};
 
+        // SECURITY-170 - have to use ParametersDefinitionProperty
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
+
         FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
