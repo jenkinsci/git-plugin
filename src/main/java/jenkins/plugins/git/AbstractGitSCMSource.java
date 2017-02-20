@@ -69,6 +69,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.mixin.TagSCMHead;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -105,6 +106,27 @@ import org.eclipse.jgit.transport.URIish;
  * @author Stephen Connolly
  */
 public abstract class AbstractGitSCMSource extends SCMSource {
+    class TagSCMHeadImpl extends SCMHead implements TagSCMHead {
+        private long timestamp = 0;
+
+        /**
+         * Ensure consistent serialization.
+         */
+        private static final long serialVersionUID = 1L;
+
+        public TagSCMHeadImpl(@NonNull String name, long timestamp) {
+            super(name);
+            this.timestamp = timestamp;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+        }
+    };
 
     /**
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
@@ -302,21 +324,28 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                             continue;
                         }
 
+                        SCMHead head;
+
                         if (gitObject instanceof Tag) {
                             ObjectId commit = client.revList(gitObject.getName(), 1).get(0);
                             String temp = commit.toString();
-                            String sha1 = temp.substring(temp.indexOf("[") + 1, temp.indexOf("]"));
                             /* Recreate the Tag with the commit
                              * We do this here here rather than initially, as fetching the commit info
                              * takes time, and can take a considerable amount of time to sync branches if there
                              * are many tags
                              */
-                            gitObject = new GitObject(gitObject.getName(), commit);
+                            gitObject = new Tag(gitObject.getName(), commit);
+                            RevCommit tag = walk.parseCommit(gitObject.getSHA1());
+                            head = new TagSCMHeadImpl(name, tag.getCommitTime());
+
+                        } else {
+                            head = new SCMHead(name);
                         }
 
                         if (criteria != null) {
                             RevCommit commit = walk.parseCommit(gitObject.getSHA1());
                             final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+
                             final RevTree tree = commit.getTree();
                             SCMSourceCriteria.Probe probe = new SCMProbe() {
                                 @Override
@@ -371,7 +400,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 continue;
                             }
                         }
-                        SCMHead head = new SCMHead(name);
+
                         SCMRevision hash = new SCMRevisionImpl(head, gitObject.getSHA1String());
                         observer.observe(head, hash);
                         if (!observer.isObserving()) {
