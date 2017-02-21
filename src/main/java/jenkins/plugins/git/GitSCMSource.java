@@ -341,9 +341,25 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             @NonNull
                             @Override
                             public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
-                                SCMHead head = new SCMHead(branch);
-                                return Collections.<SCMHead, SCMRevision>singletonMap(head,
-                                        sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                if (source instanceof GitSCMSource) {
+                                    GitSCMSource git = (GitSCMSource) source;
+                                    if (git.ignoreOnPushNotifications) {
+                                        return Collections.emptyMap();
+                                    }
+                                    URIish remote;
+                                    try {
+                                        remote = new URIish(git.getRemote());
+                                    } catch (URISyntaxException e) {
+                                        // ignore
+                                        return Collections.emptyMap();
+                                    }
+                                    if (GitStatus.looselyMatches(u, remote)) {
+                                        SCMHead head = new SCMHead(branch);
+                                        return Collections.<SCMHead, SCMRevision>singletonMap(head,
+                                                sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                    }
+                                }
+                                return Collections.emptyMap();
                             }
 
                             @Override
