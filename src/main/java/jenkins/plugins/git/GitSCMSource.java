@@ -79,7 +79,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -92,6 +91,10 @@ import static org.apache.commons.lang.StringUtils.isBlank;
  * @author Stephen Connolly
  */
 public class GitSCMSource extends AbstractGitSCMSource {
+    private static final String DEFAULT_INCLUDES = "*";
+
+    private static final String DEFAULT_EXCLUDES = "";
+
     public static final Logger LOGGER = Logger.getLogger(GitSCMSource.class.getName());
 
     private final String remote;
