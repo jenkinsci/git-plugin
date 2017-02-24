@@ -79,17 +79,22 @@ import org.kohsuke.stapler.StaplerResponse;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+
 /**
  * @author Stephen Connolly
  */
 public class GitSCMSource extends AbstractGitSCMSource {
+    private static final String DEFAULT_INCLUDES = "*";
+
+    private static final String DEFAULT_EXCLUDES = "";
+
     public static final Logger LOGGER = Logger.getLogger(GitSCMSource.class.getName());
 
     private final String remote;
@@ -119,19 +124,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
-
-        if (remoteName == null)
-            // backwards compatibility
-            this.remoteName = "origin";
-        else
-            this.remoteName = remoteName;
-
-        if (rawRefSpecs == null)
-            // backwards compatibility
-            this.rawRefSpecs = String.format("+refs/heads/*:refs/remotes/%s/*", this.remoteName);
-        else
-            this.rawRefSpecs = rawRefSpecs;
-
+        this.remoteName = remoteName;
+        this.rawRefSpecs = rawRefSpecs;
         this.includes = includes;
         this.excludes = excludes;
         this.ignoreOnPushNotifications = ignoreOnPushNotifications;
@@ -195,6 +189,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     public String getRemoteName() {
+        if (isBlank(remoteName))
+            // backwards compatibility
+            return super.getRemoteName();
+
         return remoteName;
     }
 
@@ -215,8 +213,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<RefSpec> getRefSpecs() {
         List<RefSpec> refSpecs = new ArrayList<>();
+        String refSpecsString = rawRefSpecs;
 
-        for (String rawRefSpec : rawRefSpecs.split(" ")) {
+        if (isBlank(refSpecsString))
+            // backwards compatibility
+            refSpecsString = String.format("+refs/heads/*:refs/remotes/%s/*", getRemoteName());
+
+        for (String rawRefSpec : refSpecsString.split(" ")) {
             refSpecs.add(new RefSpec(rawRefSpec));
         }
 
