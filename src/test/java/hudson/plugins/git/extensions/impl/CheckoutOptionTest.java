@@ -96,6 +96,11 @@ public class CheckoutOptionTest {
         }
 
         @Override
+        public CheckoutCommand lfsRemote(String lfsRemote) {
+            throw new UnsupportedOperationException("Don't call me");
+        }
+
+        @Override
         public void execute() throws GitException, InterruptedException {
             throw new UnsupportedOperationException("Don't call me");
         }
