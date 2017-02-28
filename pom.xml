@@ -32,6 +32,7 @@
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
+    <scm-api-plugin.version>2.0.8-20170228.204551-2</scm-api-plugin.version> <!-- TODO https://github.com/jenkinsci/scm-api-plugin/pull/32 -->
   </properties>
 
   <build>
@@ -161,7 +162,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>2.0.3</version>
+      <version>${scm-api-plugin.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -262,6 +263,13 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
       <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>scm-api</artifactId>
+      <version>${scm-api-plugin.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>

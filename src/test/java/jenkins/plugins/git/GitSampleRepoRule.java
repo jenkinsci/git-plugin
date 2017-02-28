@@ -28,9 +28,9 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import java.io.File;
 import java.io.IOException;
+import jenkins.scm.impl.mock.AbstractSampleDVCSRepoRule;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
-import org.jenkinsci.plugins.workflow.steps.scm.AbstractSampleDVCSRepoRule;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
