@@ -275,9 +275,20 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-aggregator</artifactId>
+      <artifactId>workflow-cps</artifactId>
       <version>${workflow.version}</version>
-      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>${workflow.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-basic-steps</artifactId>
+      <version>${workflow.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
