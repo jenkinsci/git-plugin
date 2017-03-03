@@ -251,21 +251,24 @@ public class DefaultBuildChooser extends BuildChooser {
         verbose(listener, "After non-tip filtering: {0}", revs);
 
         // 4. Finally, remove any revisions that have already been built.
-        verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
+        // ...IFF this is a pollCall, and not a directly requested build.
         Revision lastBuiltRevision = data.getLastBuiltRevision();
-        for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
-            Revision r = i.next();
+        if (isPollCall) {
+            verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
+            for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
+                Revision r = i.next();
 
-            if (data.hasBeenBuilt(r.getSha1())) {
-                i.remove();
-                
-                // keep track of new branches pointing to the last built revision
-                if (lastBuiltRevision != null && lastBuiltRevision.getSha1().equals(r.getSha1())) {
-                	lastBuiltRevision = r;
+                if (data.hasBeenBuilt(r.getSha1())) {
+                    i.remove();
+                    
+                    // keep track of new branches pointing to the last built revision
+                    if (lastBuiltRevision != null && lastBuiltRevision.getSha1().equals(r.getSha1())) {
+                            lastBuiltRevision = r;
+                    }
                 }
             }
+            verbose(listener, "After filtering out what''s already been built: {0}", revs);
         }
-        verbose(listener, "After filtering out what''s already been built: {0}", revs);
 
         // if we're trying to run a build (not an SCM poll) and nothing new
         // was found then just run the last build again but ensure that the branch list
