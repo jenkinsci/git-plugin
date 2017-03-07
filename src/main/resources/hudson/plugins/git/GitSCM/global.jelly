@@ -8,7 +8,7 @@
     <f:entry title="${%Global Config user.email Value}" field="globalConfigEmail">
       <f:textbox />
     </f:entry>
-    <f:entry title="${%Create new accounts base on author/committer's email}" field="createAccountBasedOnEmail">
+    <f:entry title="${%Create new accounts based on author/committer's email}" field="createAccountBasedOnEmail">
            <f:checkbox name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
     <!--
