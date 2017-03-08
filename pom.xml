@@ -32,7 +32,7 @@
     <!-- TODO: Ongoing work on https://github.com/MarkEWaite/git-plugin/tree/master-findbugs-fixes. -->
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
-    <scm-api-plugin.version>2.0.8</scm-api-plugin.version>
+    <scm-api-plugin.version>2.1.0</scm-api-plugin.version>
   </properties>
 
   <build>

@@ -68,6 +68,7 @@ import jenkins.scm.api.SCMSourceOwners;
 
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -226,6 +227,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return refSpecs;
     }
 
+    @Symbol("git")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
 
