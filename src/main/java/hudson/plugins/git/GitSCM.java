@@ -1144,7 +1144,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
         if (!buildDataAlreadyPresent) {
-            build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
+            GitTagAction gitTagAction = new GitTagAction(build, workspace, revToBuild.revision);
+            // Don't bother storing this action if there are no tags
+            if (!gitTagAction.getTags().isEmpty()) {
+                build.addAction(gitTagAction);
+            }
 
             if (changelogFile != null) {
                 computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
