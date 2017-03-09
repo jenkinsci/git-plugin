@@ -1103,7 +1103,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
         // revision info for this build etc. The default assumption is that it's a duplicate.
-        boolean buildDataAlreadyPresent = build.getActions(BuildData.class).contains(buildData);
+        boolean buildDataAlreadyPresent = false;
+        List<BuildData> actions = build.getActions(BuildData.class);
+        for (BuildData d: actions)  {
+            if (d.similarTo(buildData)) {
+                buildDataAlreadyPresent = true;
+                break;
+            }
+        }
+        if (!actions.isEmpty()) {
+            buildData.setIndex(actions.size()+1);
+        }
 
         // If the BuildData is not already attached to this build, add it to the build and mark that
         // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
@@ -1144,7 +1154,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
         if (!buildDataAlreadyPresent) {
-            build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
+            if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
+                // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
+                // so only one of the actions is addressible by users
+                build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
+            }
 
             if (changelogFile != null) {
                 computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
