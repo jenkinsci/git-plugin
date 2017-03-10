@@ -62,6 +62,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     /**
      * Allow disambiguation of the action url when multiple {@link BuildData} actions present.
      */
+    @CheckForNull
     private Integer index;
 
     public BuildData() {
@@ -101,10 +102,21 @@ public class BuildData implements Action, Serializable, Cloneable {
         return index == null ? "git" : "git-"+index;
     }
 
+    /**
+     * Sets an identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}
+     *
+     * @param index the index, indexes less than or equal to {@code 1} will be discarded.
+     */
     public void setIndex(Integer index) {
-        this.index = index;
+        this.index = index == null || index <= 1 ? null : index;
     }
 
+    /**
+     * Gets the identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}.
+     *
+     * @return the index.
+     */
+    @CheckForNull
     public Integer getIndex() {
         return index;
     }
