@@ -317,6 +317,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         // that's similar enough. If you had configured a remote name we would see these as origin/feature/foobar and
         // origin/bugfix/foobar but you have not configured a remote name, and both branches are the same revision
         // anyway... and on the same build
+        // TODO consider revisiting as part of fixing JENKINS-42665
         Set<String> thisUrls = new HashSet<>(thisSize);
         for (String url: this.remoteUrls) {
             int index = url.indexOf('/');
