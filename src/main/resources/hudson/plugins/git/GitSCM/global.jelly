@@ -11,6 +11,12 @@
     <f:entry title="${%Create new accounts based on author/committer's email}" field="createAccountBasedOnEmail">
            <f:checkbox name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
     </f:entry>
+    <f:entry title="Show remote branches in SCMSource" field="showRemoteBranches">
+           <f:checkbox name="showRemoteBranches" checked="${descriptor.showRemoteBranches}"/>
+    </f:entry>
+    <f:entry title="Show tags in SCMSource" field="showTags">
+           <f:checkbox name="showTags" checked="${descriptor.showTags}"/>
+    </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
         <select>

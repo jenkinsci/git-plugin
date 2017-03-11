@@ -34,6 +34,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.Descriptor;
 import hudson.model.ParameterValue;
@@ -41,6 +42,7 @@ import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -82,6 +84,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -222,6 +225,16 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
         for (String rawRefSpec : refSpecsString.split(" ")) {
             refSpecs.add(new RefSpec(rawRefSpec));
+        }
+
+        Hudson hudson = Hudson.getInstance();
+        if (hudson == null) {
+            return refSpecs;
+        }
+
+        hudson.plugins.git.GitSCM.DescriptorImpl descriptor = (hudson.plugins.git.GitSCM.DescriptorImpl) hudson.getDescriptor(GitSCM.class);
+        if (descriptor.isShowRemoteBranches()) {
+            refSpecs.add(new RefSpec("+refs/remotes/*:refs/remotes/*"));
         }
 
         return refSpecs;

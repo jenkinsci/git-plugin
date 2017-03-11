@@ -34,17 +34,21 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.TaskListener;
+import hudson.plugins.git.Tag;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitObject;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.util.Build;
@@ -65,6 +69,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.mixin.TagSCMHead;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -101,6 +106,27 @@ import org.eclipse.jgit.transport.URIish;
  * @author Stephen Connolly
  */
 public abstract class AbstractGitSCMSource extends SCMSource {
+    class TagSCMHeadImpl extends SCMHead implements TagSCMHead {
+        private long timestamp = 0;
+
+        /**
+         * Ensure consistent serialization.
+         */
+        private static final long serialVersionUID = 1L;
+
+        public TagSCMHeadImpl(@NonNull String name, long timestamp) {
+            super(name);
+            this.timestamp = timestamp;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+        }
+    };
 
     /**
      * Keep one lock per cache directory. Lazy populated, but never purge, except on restart.
@@ -215,6 +241,36 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
+    /**
+     * Add the provided list of git tags to the list of git objects
+     * @param tags		the list of tags
+     * @param list		the list of GitObjects to add the tags to
+     * @param listener	the listener we will use for logging
+     */
+    private void addTagsToGitObjects(@NonNull Set<String> tags, @NonNull List<GitObject> list,
+                                     @NonNull TaskListener listener)
+            throws InterruptedException {
+        for (String tagName : tags) {
+            if (tagName.endsWith("^{}")) {
+                continue;
+            }
+
+            Tag tag = new Tag(tagName, null);
+            boolean exists = false;
+
+            for (GitObject item : list) {
+                if (item.getName().equals(tagName)) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                list.add(tag);
+            }
+        }
+    }
+
     @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
@@ -243,22 +299,53 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             @Override
             public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
                 final Repository repository = client.getRepository();
-                listener.getLogger().println("Getting remote branches...");
+                listener.getLogger().println("Getting remote branches/tags...");
                 try (RevWalk walk = new RevWalk(repository)) {
                     walk.setRetainBody(false);
-                    for (Branch b : client.getRemoteBranches()) {
+
+                    List<GitObject> gitObjects = new ArrayList<GitObject>();
+                    gitObjects.addAll(client.getRemoteBranches());
+
+                    Hudson hudson = Hudson.getInstance();
+                    DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
+
+                    if (descriptor.isShowTags()) {
+                        listener.getLogger().println("Adding Tags...");
+                        addTagsToGitObjects(client.getRemoteTagNames(null), gitObjects, listener);
+                        addTagsToGitObjects(client.getTagNames(null), gitObjects, listener);
+                    }
+
+                    for (GitObject gitObject : gitObjects) {
                         checkInterrupt();
-                        if (!b.getName().startsWith(remoteName + "/")) {
+
+                        final String name = StringUtils.removeStart(gitObject.getName(), remoteName + "/");
+                        listener.getLogger().println("Checking branch/tag " + name);
+                        if (isExcluded(name)){
                             continue;
                         }
-                        final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
-                        listener.getLogger().println("Checking branch " + branchName);
-                        if (isExcluded(branchName)){
-                            continue;
+
+                        SCMHead head;
+
+                        if (gitObject instanceof Tag) {
+                            ObjectId commit = client.revList(gitObject.getName(), 1).get(0);
+                            String temp = commit.toString();
+                            /* Recreate the Tag with the commit
+                             * We do this here here rather than initially, as fetching the commit info
+                             * takes time, and can take a considerable amount of time to sync branches if there
+                             * are many tags
+                             */
+                            gitObject = new Tag(gitObject.getName(), commit);
+                            RevCommit tag = walk.parseCommit(gitObject.getSHA1());
+                            head = new TagSCMHeadImpl(name, tag.getCommitTime());
+
+                        } else {
+                            head = new SCMHead(name);
                         }
+
                         if (criteria != null) {
-                            RevCommit commit = walk.parseCommit(b.getSHA1());
+                            RevCommit commit = walk.parseCommit(gitObject.getSHA1());
                             final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+
                             final RevTree tree = commit.getTree();
                             SCMSourceCriteria.Probe probe = new SCMProbe() {
                                 @Override
@@ -268,7 +355,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
                                 @Override
                                 public String name() {
-                                    return branchName;
+                                    return name;
                                 }
 
                                 @Override
@@ -313,8 +400,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 continue;
                             }
                         }
-                        SCMHead head = new SCMHead(branchName);
-                        SCMRevision hash = new SCMRevisionImpl(head, b.getSHA1String());
+
+                        SCMRevision hash = new SCMRevisionImpl(head, gitObject.getSHA1String());
                         observer.observe(head, hash);
                         if (!observer.isObserving()) {
                             return null;
@@ -436,20 +523,20 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         return result;
     }
-    
+
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
-     * 
+     *
      * @param branchName name of branch to be tested
      * @return true if branchName is excluded or is not included
      */
     protected boolean isExcluded (String branchName){
       return !Pattern.matches(getPattern(getIncludes()), branchName) || (Pattern.matches(getPattern(getExcludes()), branchName));
     }
-    
+
     /**
-     * Returns the pattern corresponding to the branches containing wildcards. 
-     * 
+     * Returns the pattern corresponding to the branches containing wildcards.
+     *
      * @param branches branch names to evaluate
      * @return pattern corresponding to the branches containing wildcards
      */
