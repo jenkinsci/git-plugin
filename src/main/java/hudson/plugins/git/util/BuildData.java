@@ -4,15 +4,24 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
+import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import java.io.Serializable;
-import java.util.*;
 
 import static hudson.Util.fixNull;
 /**
@@ -50,6 +59,12 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public Set<String> remoteUrls = new HashSet<>();
 
+    /**
+     * Allow disambiguation of the action url when multiple {@link BuildData} actions present.
+     */
+    @CheckForNull
+    private Integer index;
+
     public BuildData() {
     }
 
@@ -84,7 +99,36 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public String getUrlName() {
-        return "git";
+        return index == null ? "git" : "git-"+index;
+    }
+
+    /**
+     * Sets an identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}
+     *
+     * @param index the index, indexes less than or equal to {@code 1} will be discarded.
+     */
+    public void setIndex(Integer index) {
+        this.index = index == null || index <= 1 ? null : index;
+    }
+
+    /**
+     * Gets the identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}.
+     *
+     * @return the index.
+     */
+    @CheckForNull
+    public Integer getIndex() {
+        return index;
+    }
+
+    @Restricted(NoExternalUse.class) // only used from stapler/jelly
+    @CheckForNull
+    public Run<?,?> getOwningRun() {
+        StaplerRequest req = Stapler.getCurrentRequest();
+        if (req == null) {
+            return null;
+        }
+        return req.findAncestorObject(Run.class);
     }
 
     public Object readResolve() {
@@ -241,6 +285,58 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",remoteUrls="+remoteUrls+
                 ",buildsByBranchName="+buildsByBranchName+
                 ",lastBuild="+lastBuild+"]";
+    }
+
+    /**
+     * Like {@link #equals(Object)} but doesn't check the branch names as strictly  as those can vary depending on the
+     * configured remote name.
+     *
+     * @param that the {@link BuildData} to compare with.
+     * @return {@code true} if the supplied {@link BuildData} is similar to this {@link BuildData}.
+     * @since TODO
+     */
+    public boolean similarTo(BuildData that) {
+        if (this.remoteUrls == null ? that.remoteUrls != null : !this.remoteUrls.equals(that.remoteUrls)) {
+            return false;
+        }
+        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+            return false;
+        }
+        if (this.remoteUrls == null || that.remoteUrls == null) {
+            // if either is null then we do not need the costly comparison
+            return this.remoteUrls == that.remoteUrls;
+        }
+        int thisSize = this.remoteUrls.size();
+        int thatSize = that.remoteUrls.size();
+        if (thisSize != thatSize) {
+            return false;
+        }
+        // assume if there is a prefix/ that the prefix is the origin name and strip it for similarity comparison
+        // now if branch names contain slashes anyway and the user has not configured an origin name
+        // we could have a false positive... but come on, it's the same repo and the same revision on the same build
+        // that's similar enough. If you had configured a remote name we would see these as origin/feature/foobar and
+        // origin/bugfix/foobar but you have not configured a remote name, and both branches are the same revision
+        // anyway... and on the same build
+        // TODO consider revisiting as part of fixing JENKINS-42665
+        Set<String> thisUrls = new HashSet<>(thisSize);
+        for (String url: this.remoteUrls) {
+            int index = url.indexOf('/');
+            if (index == -1 || index + 1 >= url.length()) {
+                thisUrls.add(url);
+            } else {
+                thisUrls.add(url.substring(index + 1));
+            }
+        }
+        Set<String> thatUrls = new HashSet<>(thatSize);
+        for (String url: that.remoteUrls) {
+            int index = url.indexOf('/');
+            if (index == -1 || index + 1 >= url.length()) {
+                thisUrls.add(url);
+            } else {
+                thisUrls.add(url.substring(index + 1));
+            }
+        }
+        return thatUrls.equals(thatUrls);
     }
 
     @Override
