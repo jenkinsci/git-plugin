@@ -1,5 +1,9 @@
 #!groovy
 
-// Test base Jenkins version and latest LTS version for compatibility
+// Don't test plugin compatibility - exceeds 1 hour timeout
 // Allow failing tests to retry execution
-buildPlugin(jenkinsVersions: [null, '2.32.3'], failFast: false)
+buildPlugin(failFast: false)
+
+// Test plugin compatbility to latest Jenkins LTS
+// Allow failing tests to retry execution
+// buildPlugin(jenkinsVersions: [null, '2.32.3'], failFast: false)
