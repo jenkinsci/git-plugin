@@ -82,9 +82,9 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         if (nonNullTag == 0)
             return "No Tags";
         if (nonNullTag == 1)
-            return "There is one tag";
+            return "One tag";
         else
-            return "There are more than one tag";
+            return "Multiple tags";
     }
 
     /**
