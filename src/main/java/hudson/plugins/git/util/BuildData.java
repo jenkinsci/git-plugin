@@ -296,19 +296,11 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @since TODO
      */
     public boolean similarTo(BuildData that) {
+        if (that == null) return false;
         if (this.remoteUrls == null ? that.remoteUrls != null : !this.remoteUrls.equals(that.remoteUrls)) {
             return false;
         }
         if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
-            return false;
-        }
-        if (this.remoteUrls == null || that.remoteUrls == null) {
-            // if either is null then we do not need the costly comparison
-            return this.remoteUrls == that.remoteUrls;
-        }
-        int thisSize = this.remoteUrls.size();
-        int thatSize = that.remoteUrls.size();
-        if (thisSize != thatSize) {
             return false;
         }
         // assume if there is a prefix/ that the prefix is the origin name and strip it for similarity comparison
@@ -318,7 +310,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         // origin/bugfix/foobar but you have not configured a remote name, and both branches are the same revision
         // anyway... and on the same build
         // TODO consider revisiting as part of fixing JENKINS-42665
-        Set<String> thisUrls = new HashSet<>(thisSize);
+        Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
         for (String url: this.remoteUrls) {
             int index = url.indexOf('/');
             if (index == -1 || index + 1 >= url.length()) {
@@ -327,16 +319,16 @@ public class BuildData implements Action, Serializable, Cloneable {
                 thisUrls.add(url.substring(index + 1));
             }
         }
-        Set<String> thatUrls = new HashSet<>(thatSize);
+        Set<String> thatUrls = new HashSet<>(that.remoteUrls.size());
         for (String url: that.remoteUrls) {
             int index = url.indexOf('/');
             if (index == -1 || index + 1 >= url.length()) {
-                thisUrls.add(url);
+                thatUrls.add(url);
             } else {
-                thisUrls.add(url.substring(index + 1));
+                thatUrls.add(url.substring(index + 1));
             }
         }
-        return thatUrls.equals(thatUrls);
+        return thisUrls.equals(thatUrls);
     }
 
     @Override
