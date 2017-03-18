@@ -29,6 +29,8 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
+import hudson.scm.PollingResult.Change;
+import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
@@ -55,6 +57,7 @@ import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -971,9 +974,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
     }
 
-    // Temporarily disabled - unreliable and failures not helpful
+    // Disabled - consistently fails, needs more analysis
     // @Test
-    public void xtestFetchFromMultipleRepositories() throws Exception {
+    public void testFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
@@ -993,7 +996,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        /* Diagnostic help - for later use */
+        SCMRevisionState baseline = project.poll(listener).baseline;
+        Change change = project.poll(listener).change;
+        SCMRevisionState remote = project.poll(listener).remote;
+        String assertionMessage = MessageFormat.format("polling incorrectly detected change after build. Baseline: {0}, Change: {1}, Remote: {2}", baseline, change, remote);
+        assertFalse(assertionMessage, project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         secondTestRepo.commit(commitFile2, janeDoe, "Commit number 2");
