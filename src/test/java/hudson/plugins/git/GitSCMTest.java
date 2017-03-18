@@ -48,6 +48,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 
@@ -63,25 +64,23 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.mockito.Mockito;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import jenkins.plugins.git.GitSampleRepoRule;
 
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
-    
+    @Rule
+    public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
+
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
      * Next test that polling works correctly, make another commit, check that polling finds it,
@@ -844,7 +843,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-10060")
     @Test
     public void testSubmoduleFixup() throws Exception {
-        File repo = tempFolder.newFolder();
+        File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
@@ -979,7 +978,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1016,7 +1015,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     private void branchSpecWithMultipleRepositories(String branchName) throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1051,7 +1050,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testCommitDetectedOnlyOnceInMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());

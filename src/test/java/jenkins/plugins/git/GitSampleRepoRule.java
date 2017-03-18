@@ -74,4 +74,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }
 
+    public File getRoot() {
+        return this.sampleRepo;
+    }
 }

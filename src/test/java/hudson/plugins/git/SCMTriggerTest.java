@@ -30,42 +30,27 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.*;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
 public abstract class SCMTriggerTest extends AbstractGitProject
 {
-    
-    private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
     protected boolean expectChanges = false;
-        
-    @After
-    public void tearDown() throws Exception
-    {
-        try { //Avoid test failures due to failed cleanup tasks
-            singleThreadExecutor.shutdownNow();
-            tempAllocator.dispose();
-        }
-        catch (Exception e) {
-            if (e instanceof IOException && isWindows()) {
-                return;
-            }
-            e.printStackTrace();
-        }
-    }
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
     public void setUp() throws Exception {
         expectChanges = false;
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
-        tempAllocator = new TemporaryDirectoryAllocator();
         singleThreadExecutor = Executors.newSingleThreadExecutor();
     }
     
@@ -284,7 +269,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     }
 
     private String prepareRepo(ZipFile repoZip) throws IOException {
-        File tempRemoteDir = tempAllocator.allocate();
+        File tempRemoteDir = tempFolder.newFolder();
         extract(repoZip, tempRemoteDir);
         return tempRemoteDir.getAbsolutePath();
     }
