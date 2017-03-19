@@ -320,8 +320,8 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     /**
-     * Like {@link #equals(Object)} but doesn't check the branch names as strictly  as those can vary depending on the
-     * configured remote name.
+     * Like {@link #equals(Object)} but doesn't check the URL as strictly, since those can vary
+     * while still representing the same remote repository.
      *
      * @param that the {@link BuildData} to compare with.
      * @return {@code true} if the supplied {@link BuildData} is similar to this {@link BuildData}.
@@ -340,13 +340,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
             return false;
         }
-        // assume if there is a prefix/ that the prefix is the origin name and strip it for similarity comparison
-        // now if branch names contain slashes anyway and the user has not configured an origin name
-        // we could have a false positive... but come on, it's the same repo and the same revision on the same build
-        // that's similar enough. If you had configured a remote name we would see these as origin/feature/foobar and
-        // origin/bugfix/foobar but you have not configured a remote name, and both branches are the same revision
-        // anyway... and on the same build
-        // TODO consider revisiting as part of fixing JENKINS-42665
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
         for (String url: this.remoteUrls) {
             thisUrls.add(normalize(url));
