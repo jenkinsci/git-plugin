@@ -24,6 +24,11 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import static hudson.Util.fixNull;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  * Captures the Git related information for a build.
  *
@@ -288,6 +293,33 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     /**
+     * Returns a normalized form of a source code URL to be used in guessing if
+     * two different URL's are referring to the same source repository. Note
+     * that the comparison is only a guess. Trailing slashes are removed from
+     * the URL, and a trailing ".git" suffix is removed. If the input is a URL
+     * form (like https:// or http:// or ssh://) then URI.normalize() is called
+     * in an attempt to further normalize the URL.
+     *
+     * @param url repository URL to be normalized
+     * @return normalized URL as a string
+     */
+    private String normalize(String url) {
+        /* Remove trailing slashes and .git suffix from URL */
+        String normalized = url.replaceAll("/+$", "").replaceAll("[.]git$", "");
+        if (url.contains("://")) {
+            /* Only URI.normalize https://, http://, and ssh://, not user@hostname:path */
+            try {
+                /* Use URI.normalize() to further normalize the URI */
+                URI uri = new URI(normalized);
+                normalized = uri.normalize().toString();
+            } catch (URISyntaxException ex) {
+                LOGGER.log(Level.INFO, "URI syntax exception on " + url, ex);
+            }
+        }
+        return normalized;
+    }
+
+    /**
      * Like {@link #equals(Object)} but doesn't check the branch names as strictly  as those can vary depending on the
      * configured remote name.
      *
@@ -296,8 +328,13 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @since TODO
      */
     public boolean similarTo(BuildData that) {
-        if (that == null) return false;
-        if (this.remoteUrls == null ? that.remoteUrls != null : !this.remoteUrls.equals(that.remoteUrls)) {
+        if (that == null) {
+            return false;
+        }
+        if (this.remoteUrls == null && that.remoteUrls != null) {
+            return false;
+        }
+        if (this.remoteUrls != null && that.remoteUrls == null) {
             return false;
         }
         if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
@@ -312,21 +349,11 @@ public class BuildData implements Action, Serializable, Cloneable {
         // TODO consider revisiting as part of fixing JENKINS-42665
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
         for (String url: this.remoteUrls) {
-            int index = url.indexOf('/');
-            if (index == -1 || index + 1 >= url.length()) {
-                thisUrls.add(url);
-            } else {
-                thisUrls.add(url.substring(index + 1));
-            }
+            thisUrls.add(normalize(url));
         }
         Set<String> thatUrls = new HashSet<>(that.remoteUrls.size());
         for (String url: that.remoteUrls) {
-            int index = url.indexOf('/');
-            if (index == -1 || index + 1 >= url.length()) {
-                thatUrls.add(url);
-            } else {
-                thatUrls.add(url.substring(index + 1));
-            }
+            thatUrls.add(normalize(url));
         }
         return thisUrls.equals(thatUrls);
     }
@@ -382,4 +409,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
         return result;
     }
+
+    private static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
 }
