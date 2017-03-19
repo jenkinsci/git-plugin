@@ -22,7 +22,7 @@ public class BuildDataTest {
 
     private BuildData data;
     private final ObjectId sha1 = ObjectId.fromString("929e92e3adaff2e6e1d752a8168c1598890fe84c");
-    private final String remoteUrl = "git://github.com/jenkinsci/git-plugin.git";
+    private final String remoteUrl = "https://github.com/jenkinsci/git-plugin";
 
     @Before
     public void setUp() throws Exception {
@@ -178,7 +178,7 @@ public class BuildDataTest {
         assertEquals("Objects with same saved build not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Add remote URL makes objects unequal
-        final String remoteUrl2 = "git://github.com/jenkinsci/git-client-plugin.git";
+        final String remoteUrl2 = "git://github.com/jenkinsci/git-plugin.git";
         data1.addRemoteUrl(remoteUrl2);
         assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
         assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
@@ -230,6 +230,62 @@ public class BuildDataTest {
         assertEquals(13, data.getIndex().intValue());
         data.setIndex(-1);
         assertEquals(null, data.getIndex());
+    }
+
+    @Test
+    public void testSimilarToHttpsRemoteURL() {
+        final String SIMPLE_URL = "https://github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    @Test
+    public void testSimilarToScpRemoteURL() {
+        final String SIMPLE_URL = "git@github.com:jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    @Test
+    public void testSimilarToSshRemoteURL() {
+        final String SIMPLE_URL = "ssh://git@github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    private void permuteBaseURL(String simpleURL, BuildData simple) {
+        final String TRAILING_SLASH_URL = simpleURL + "/";
+        BuildData trailingSlash = new BuildData("git-" + TRAILING_SLASH_URL);
+        trailingSlash.addRemoteUrl(TRAILING_SLASH_URL);
+        assertTrue("Trailing slash not similar to simple URL " + TRAILING_SLASH_URL,
+                trailingSlash.similarTo(simple));
+
+        final String TRAILING_SLASHES_URL = TRAILING_SLASH_URL + "//";
+        BuildData trailingSlashes = new BuildData("git-" + TRAILING_SLASHES_URL);
+        trailingSlashes.addRemoteUrl(TRAILING_SLASHES_URL);
+        assertTrue("Trailing slashes not similar to simple URL " + TRAILING_SLASHES_URL,
+                trailingSlashes.similarTo(simple));
+
+        final String DOT_GIT_URL = simpleURL + ".git";
+        BuildData dotGit = new BuildData("git-" + DOT_GIT_URL);
+        dotGit.addRemoteUrl(DOT_GIT_URL);
+        assertTrue("Dot git not similar to simple URL " + DOT_GIT_URL,
+                dotGit.similarTo(simple));
+
+        final String DOT_GIT_TRAILING_SLASH_URL = DOT_GIT_URL + "/";
+        BuildData dotGitTrailingSlash = new BuildData("git-" + DOT_GIT_TRAILING_SLASH_URL);
+        dotGitTrailingSlash.addRemoteUrl(DOT_GIT_TRAILING_SLASH_URL);
+        assertTrue("Dot git trailing slash not similar to dot git URL " + DOT_GIT_TRAILING_SLASH_URL,
+                dotGitTrailingSlash.similarTo(dotGit));
+
+        final String DOT_GIT_TRAILING_SLASHES_URL = DOT_GIT_TRAILING_SLASH_URL + "///";
+        BuildData dotGitTrailingSlashes = new BuildData("git-" + DOT_GIT_TRAILING_SLASHES_URL);
+        dotGitTrailingSlashes.addRemoteUrl(DOT_GIT_TRAILING_SLASHES_URL);
+        assertTrue("Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
+                dotGitTrailingSlashes.similarTo(dotGit));
     }
 
     @Test
