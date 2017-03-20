@@ -8,9 +8,11 @@ import hudson.plugins.git.UserRemoteConfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 import org.eclipse.jgit.lib.ObjectId;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,32 +29,49 @@ public class BuildDataTest {
     @Before
     public void setUp() throws Exception {
         data = new BuildData();
-        data.addRemoteUrl(remoteUrl);
     }
 
     @Test
     public void testGetDisplayName() throws Exception {
-        assertEquals(data.getDisplayName(), "Git Build Data");
+        assertThat(data.getDisplayName(), is("Git Build Data"));
+    }
+
+    @Test
+    public void testGetDisplayNameEmptyString() throws Exception {
         String scmName = "";
         BuildData dataWithSCM = new BuildData(scmName);
-        assertEquals(data.getDisplayName(), "Git Build Data");
+        assertThat(dataWithSCM.getDisplayName(), is("Git Build Data"));
+    }
+
+    @Test
+    public void testGetDisplayNameNullSCMName() throws Exception {
+        BuildData dataWithNullSCM = new BuildData(null);
+        assertThat(dataWithNullSCM.getDisplayName(), is("Git Build Data"));
     }
 
     @Test
     public void testGetDisplayNameWithSCM() throws Exception {
         final String scmName = "testSCM";
         final BuildData dataWithSCM = new BuildData(scmName);
-        assertEquals("Git Build Data:" + scmName, dataWithSCM.getDisplayName());
+        assertThat("Git Build Data:" + scmName, is(dataWithSCM.getDisplayName()));
     }
 
     @Test
     public void testGetIconFileName() {
-        assertTrue(data.getIconFileName().endsWith("/plugin/git/icons/git-32x32.png"));
+        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-32x32.png"));
     }
 
     @Test
     public void testGetUrlName() {
-        assertEquals("git", data.getUrlName());
+        assertThat(data.getUrlName(), is("git"));
+    }
+
+    @Test
+    public void testGetUrlNameMultipleEntries() {
+        Random random = new Random();
+        int randomIndex = random.nextInt(1234) + 1;
+        data.setIndex(randomIndex);
+        assertThat(data.getUrlName(), is("git-" + randomIndex));
     }
 
     @Test
@@ -114,6 +133,7 @@ public class BuildDataTest {
         BuildData empty = new BuildData();
         assertTrue(empty.getRemoteUrls().isEmpty());
 
+        data.addRemoteUrl(remoteUrl);
         assertEquals(1, data.getRemoteUrls().size());
 
         String remoteUrl2 = "https://github.com/jenkinsci/git-plugin.git/";
@@ -125,8 +145,10 @@ public class BuildDataTest {
 
     @Test
     public void testHasBeenReferenced() {
+        assertFalse(data.hasBeenReferenced(remoteUrl));
+        data.addRemoteUrl(remoteUrl);
         assertTrue(data.hasBeenReferenced(remoteUrl));
-        assertFalse(data.hasBeenReferenced(remoteUrl + "xxx"));
+        assertFalse(data.hasBeenReferenced(remoteUrl + "/"));
     }
 
     @Test
@@ -140,9 +162,24 @@ public class BuildDataTest {
     @Test
     public void testToString() {
         assertEquals(data.toString(), data.clone().toString());
+    }
+
+    @Test
+    public void testToStringEmptyBuildData() {
         BuildData empty = new BuildData();
-        assertTrue("Wrong empty BuildData toString '" + empty.toString() + "'",
-                empty.toString().endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+        assertThat(empty.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+    }
+
+    @Test
+    public void testToStringNullSCMBuildData() {
+        BuildData nullSCM = new BuildData(null);
+        assertThat(nullSCM.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+    }
+
+    @Test
+    public void testToStringNonNullSCMBuildData() {
+        BuildData nonNullSCM = new BuildData("gitless");
+        assertThat(nonNullSCM.toString(), endsWith("[scmName=gitless,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
     }
 
     @Test
@@ -310,6 +347,8 @@ public class BuildDataTest {
 
     @Test
     public void testSimilarTo() {
+        data.addRemoteUrl(remoteUrl);
+
         // Null object not similar to non-null
         BuildData dataNull = null;
         assertFalse("Null object not similar to non-null", data.similarTo(dataNull));
