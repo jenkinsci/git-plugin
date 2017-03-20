@@ -286,6 +286,18 @@ public class BuildDataTest {
         dotGitTrailingSlashes.addRemoteUrl(DOT_GIT_TRAILING_SLASHES_URL);
         assertTrue("Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
                 dotGitTrailingSlashes.similarTo(dotGit));
+
+        final String TRAILING_SPACE_URL = simpleURL + " ";
+        BuildData trailingSpace = new BuildData("git-" + TRAILING_SPACE_URL);
+        trailingSpace.addRemoteUrl(TRAILING_SPACE_URL);
+        assertTrue("Trailing space not similar to simple URL " + TRAILING_SPACE_URL,
+                trailingSpace.similarTo(simple));
+
+        final String LEADING_SPACE_URL = " " + simpleURL;
+        BuildData leadingSpace = new BuildData("git-" + LEADING_SPACE_URL);
+        leadingSpace.addRemoteUrl(LEADING_SPACE_URL);
+        assertTrue("Leading space not similar to simple URL " + LEADING_SPACE_URL,
+                leadingSpace.similarTo(simple));
     }
 
     @Test

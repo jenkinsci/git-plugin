@@ -304,8 +304,8 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @return normalized URL as a string
      */
     private String normalize(String url) {
-        /* Remove trailing slashes and .git suffix from URL */
-        String normalized = url.replaceAll("/+$", "").replaceAll("[.]git$", "");
+        /* Remove leading and trailing spaces, trailing slashes, and .git suffix from URL */
+        String normalized = url.trim().replaceAll("/+$", "").replaceAll("[.]git$", "");
         if (url.contains("://")) {
             /* Only URI.normalize https://, http://, and ssh://, not user@hostname:path */
             try {
