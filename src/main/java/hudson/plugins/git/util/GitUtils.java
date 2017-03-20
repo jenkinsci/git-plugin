@@ -13,6 +13,7 @@ import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
 import jenkins.model.Jenkins;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -70,6 +71,16 @@ public class GitUtils implements Serializable {
                 revisions.put(b.getSHA1(), r);
             }
             r.getBranches().add(b);
+        }
+        for (String tag : git.getTagNames(null)) {
+            String tagRef = Constants.R_TAGS + tag;
+            ObjectId objectId = git.revParse(tagRef);
+            Revision r = revisions.get(objectId);
+            if (r == null) {
+                r = new Revision(objectId);
+                revisions.put(objectId, r);
+            }
+            r.getBranches().add(new Branch(tagRef, objectId));
         }
         return revisions.values();
     }

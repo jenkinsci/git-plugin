@@ -1,14 +1,13 @@
 # Git SCM plugin
 
-Git software configuration management support for Jenkins
+Git software configuration management for Jenkins
 
 * see [Jenkins wiki](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin) for detailed feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
 ## Master Branch
 
-This is the master branch of the git plugin and is the primary
-development branch for the git plugin.
+The master branch is the primary development branch for the git plugin.
 
 ## Contributing to the Plugin
 
@@ -17,7 +16,7 @@ New feature proposals and bug fix proposals should be submitted as
 [GitHub pull requests](https://help.github.com/articles/creating-a-pull-request).
 Fork the repository on GitHub, prepare your change on your forked
 copy, and submit a pull request.  Your pull request will be evaluated
-by the [Cloudbees Jenkins job](https://jenkins.ci.cloudbees.com/job/plugins/job/git-plugin/)
+by the [Cloudbees Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/)
 and you should receive e-mail with the results of the evaluation.
 
 Before submitting your change, please assure that you've added a test
@@ -28,7 +27,7 @@ plugin, and that we've communicated our intent to other developers in
 a way that they can detect when they run tests.
 
 Code coverage reporting is available as a maven target and is actively
-monitored.  Please improve code coverage with tests when you submit.
+monitored.  Please improve code coverage with the tests you submit.
 
 Before submitting your change, please review the findbugs output to
 assure that you haven't introduced new findbugs warnings.

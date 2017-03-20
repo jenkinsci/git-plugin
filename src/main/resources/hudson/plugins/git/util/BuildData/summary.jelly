@@ -5,14 +5,15 @@
 	<t:summary icon="/plugin/git/icons/git-48x48.png">
 
 	<b>${%Revision}</b>: ${it.lastBuiltRevision.sha1.name()}
-	<j:if test="${!empty(it.scmName)}"> from <b>SCM:</b> ${it.scmName}</j:if>
-	<ul>
-	<j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
-	  <j:if test="${branch!=''}">
-	    <li>${branch.name}</li>
-	  </j:if>
-	</j:forEach>
-	</ul>
+        <j:if test="${!empty(it.scmName)}"> from <b>SCM:</b> ${it.scmName}</j:if>
+        <ul>
+        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+          <j:if test="${branch!=''}">
+            <li>${branch.name}</li>
+          </j:if>
+        </j:forEach>
+        </ul>
+
 
 	</t:summary>
 </j:jelly>

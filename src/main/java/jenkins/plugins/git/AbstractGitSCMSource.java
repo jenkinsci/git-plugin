@@ -52,7 +52,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
@@ -117,6 +116,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @CheckForNull
     public abstract String getCredentialsId();
 
+    /**
+     * @return Git remote URL
+     */
     public abstract String getRemote();
 
     public abstract String getIncludes();
@@ -245,6 +247,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
                 final Repository repository = client.getRepository();
                 listener.getLogger().println("Getting remote branches...");
+                Set<SCMHead> includes = observer.getIncludes();
                 try (RevWalk walk = new RevWalk(repository)) {
                     walk.setRetainBody(false);
                     for (Branch b : client.getRemoteBranches()) {
@@ -253,6 +256,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                             continue;
                         }
                         final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                        SCMHead head = new SCMHead(branchName);
+                        if (includes != null && !includes.contains(head)) {
+                            continue;
+                        }
                         listener.getLogger().println("Checking branch " + branchName);
                         if (isExcluded(branchName)){
                             continue;
@@ -314,7 +321,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 continue;
                             }
                         }
-                        SCMHead head = new SCMHead(branchName);
                         SCMRevision hash = new SCMRevisionImpl(head, b.getSHA1String());
                         observer.observe(head, hash);
                         if (!observer.isObserving()) {

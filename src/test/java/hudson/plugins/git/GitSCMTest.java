@@ -29,6 +29,8 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
+import hudson.scm.PollingResult.Change;
+import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
@@ -46,6 +48,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 
@@ -55,30 +58,29 @@ import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.mockito.Mockito;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import jenkins.plugins.git.GitSampleRepoRule;
 
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
-    
+    @Rule
+    public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
+
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
      * Next test that polling works correctly, make another commit, check that polling finds it,
@@ -797,6 +799,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Test
+    public void testMultipleBranchesWithTags() throws Exception {
+        List<BranchSpec> branchSpecs = Arrays.asList(
+                new BranchSpec("refs/tags/v*"),
+                new BranchSpec("refs/remotes/origin/non-existent"));
+        FreeStyleProject project = setupProject(branchSpecs, false, null, null, janeDoe.getName(), null, false, null);
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+
+        // there are no branches to be build
+        FreeStyleBuild freeStyleBuild = build(project, Result.FAILURE);
+
+        final String v1 = "v1";
+
+        git.tag(v1, "version 1");
+        assertTrue("v1 tag exists", git.tagExists(v1));
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+        assertTrue("change set is empty", freeStyleBuild.getChangeSet().isEmptySet());
+
+        commit("file1", johnDoe, "change to file1");
+        git.tag("none", "latest");
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+
+        ObjectId tag = git.revParse(Constants.R_TAGS + v1);
+        GitSCM scm = (GitSCM)project.getScm();
+        BuildData buildData = scm.getBuildData(freeStyleBuild);
+
+        assertEquals("last build matches the v1 tag revision", tag, buildData.lastBuild.getSHA1());
+    }
+
     @Issue("JENKINS-19037")
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     @Test
@@ -807,7 +843,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-10060")
     @Test
     public void testSubmoduleFixup() throws Exception {
-        File repo = tempFolder.newFolder();
+        File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
@@ -937,12 +973,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
     }
 
-    // Temporarily disabled - unreliable and failures not helpful
+    // Disabled - consistently fails, needs more analysis
     // @Test
-    public void xtestFetchFromMultipleRepositories() throws Exception {
+    public void testFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -959,7 +995,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        /* Diagnostic help - for later use */
+        SCMRevisionState baseline = project.poll(listener).baseline;
+        Change change = project.poll(listener).change;
+        SCMRevisionState remote = project.poll(listener).remote;
+        String assertionMessage = MessageFormat.format("polling incorrectly detected change after build. Baseline: {0}, Change: {1}, Remote: {2}", baseline, change, remote);
+        assertFalse(assertionMessage, project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         secondTestRepo.commit(commitFile2, janeDoe, "Commit number 2");
@@ -974,7 +1015,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     private void branchSpecWithMultipleRepositories(String branchName) throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1009,7 +1050,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testCommitDetectedOnlyOnceInMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1884,6 +1925,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         final StringParameterValue fake_param = new StringParameterValue("PATH", brokenPath);
 
         final Action[] actions = {new ParametersAction(real_param), new FakeParametersAction(fake_param)};
+
+        // SECURITY-170 - have to use ParametersDefinitionProperty
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
         FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);

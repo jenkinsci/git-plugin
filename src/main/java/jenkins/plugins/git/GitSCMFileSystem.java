@@ -271,6 +271,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         )
                     );
                 }
+
                 if (!client.hasGitRepo()) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
@@ -314,7 +315,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
             }
-            TaskListener listener = new LogTaskListener(LOGGER, Level.INFO);
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             AbstractGitSCMSource gitSCMSource = (AbstractGitSCMSource) source;
             String cacheEntry = gitSCMSource.getCacheEntry();
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);

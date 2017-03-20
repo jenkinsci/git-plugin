@@ -38,7 +38,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -55,7 +55,7 @@ public abstract class AbstractGitTestCase {
     public JenkinsRule rule = new JenkinsRule();
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     protected TaskListener listener;
 
@@ -72,7 +72,7 @@ public abstract class AbstractGitTestCase {
     public void setUp() throws Exception {
         listener = StreamTaskListener.fromStderr();
 
-        testRepo = new TestGitRepo("unnamed", tempFolder.newFolder(), listener);
+        testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);
         johnDoe = testRepo.johnDoe;
         janeDoe = testRepo.janeDoe;
         workDir = testRepo.gitDir;

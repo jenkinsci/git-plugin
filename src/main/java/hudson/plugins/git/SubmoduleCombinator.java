@@ -169,12 +169,11 @@ public class SubmoduleCombinator {
 
         for (IndexEntry entry : entries) {
             Revision b = null;
-            IndexEntry matchedItem = null;
-            for (IndexEntry e : item.keySet()) {
-                if (e.getFile().equals(entry.getFile())) matchedItem = e;
+            for (Map.Entry<IndexEntry, Revision> entryAndRevision : item.entrySet()) {
+                IndexEntry e = entryAndRevision.getKey();
+                if (e.getFile().equals(entry.getFile())) b = entryAndRevision.getValue();
             }
 
-            if (matchedItem != null) b = item.get(matchedItem);
             if (b == null) return -1;
 
             if (!entry.getObject().equals(b.getSha1().getName())) difference++;

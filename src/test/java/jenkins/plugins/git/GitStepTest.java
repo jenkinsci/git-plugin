@@ -45,10 +45,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import static org.junit.Assert.*;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -57,9 +55,6 @@ import org.jvnet.hudson.test.JenkinsRule;
  */
 public class GitStepTest {
 
-    // Output build log to stderr
-    // @ClassRule
-    // public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule
     public JenkinsRule r = new JenkinsRule();
     @Rule
@@ -144,7 +139,7 @@ public class GitStepTest {
     @Test
     public void multipleSCMs() throws Exception {
         sampleRepo.init();
-        otherRepo.git("init");
+        otherRepo.init();
         otherRepo.write("otherfile", "");
         otherRepo.git("add", "otherfile");
         otherRepo.git("commit", "--message=init");
@@ -207,7 +202,8 @@ public class GitStepTest {
     @Issue("JENKINS-29326")
     @Test
     public void identicalGitSCMs() throws Exception {
-        otherRepo.git("init");
+        sampleRepo.init();
+        otherRepo.init();
         otherRepo.write("firstfile", "");
         otherRepo.git("add", "firstfile");
         otherRepo.git("commit", "--message=init");

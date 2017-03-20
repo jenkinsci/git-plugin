@@ -4,17 +4,31 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
+import hudson.model.Run;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.jgit.lib.ObjectId;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import java.io.Serializable;
-import java.util.*;
-
 import static hudson.Util.fixNull;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  * Captures the Git related information for a build.
  *
@@ -50,6 +64,12 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public Set<String> remoteUrls = new HashSet<>();
 
+    /**
+     * Allow disambiguation of the action url when multiple {@link BuildData} actions present.
+     */
+    @CheckForNull
+    private Integer index;
+
     public BuildData() {
     }
 
@@ -84,7 +104,36 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public String getUrlName() {
-        return "git";
+        return index == null ? "git" : "git-"+index;
+    }
+
+    /**
+     * Sets an identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}
+     *
+     * @param index the index, indexes less than or equal to {@code 1} will be discarded.
+     */
+    public void setIndex(Integer index) {
+        this.index = index == null || index <= 1 ? null : index;
+    }
+
+    /**
+     * Gets the identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}.
+     *
+     * @return the index.
+     */
+    @CheckForNull
+    public Integer getIndex() {
+        return index;
+    }
+
+    @Restricted(NoExternalUse.class) // only used from stapler/jelly
+    @CheckForNull
+    public Run<?,?> getOwningRun() {
+        StaplerRequest req = Stapler.getCurrentRequest();
+        if (req == null) {
+            return null;
+        }
+        return req.findAncestorObject(Run.class);
     }
 
     public Object readResolve() {
@@ -243,6 +292,65 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ",lastBuild="+lastBuild+"]";
     }
 
+    /**
+     * Returns a normalized form of a source code URL to be used in guessing if
+     * two different URL's are referring to the same source repository. Note
+     * that the comparison is only a guess. Trailing slashes are removed from
+     * the URL, and a trailing ".git" suffix is removed. If the input is a URL
+     * form (like https:// or http:// or ssh://) then URI.normalize() is called
+     * in an attempt to further normalize the URL.
+     *
+     * @param url repository URL to be normalized
+     * @return normalized URL as a string
+     */
+    private String normalize(String url) {
+        /* Remove trailing slashes and .git suffix from URL */
+        String normalized = url.replaceAll("/+$", "").replaceAll("[.]git$", "");
+        if (url.contains("://")) {
+            /* Only URI.normalize https://, http://, and ssh://, not user@hostname:path */
+            try {
+                /* Use URI.normalize() to further normalize the URI */
+                URI uri = new URI(normalized);
+                normalized = uri.normalize().toString();
+            } catch (URISyntaxException ex) {
+                LOGGER.log(Level.INFO, "URI syntax exception on " + url, ex);
+            }
+        }
+        return normalized;
+    }
+
+    /**
+     * Like {@link #equals(Object)} but doesn't check the URL as strictly, since those can vary
+     * while still representing the same remote repository.
+     *
+     * @param that the {@link BuildData} to compare with.
+     * @return {@code true} if the supplied {@link BuildData} is similar to this {@link BuildData}.
+     * @since TODO
+     */
+    public boolean similarTo(BuildData that) {
+        if (that == null) {
+            return false;
+        }
+        if (this.remoteUrls == null && that.remoteUrls != null) {
+            return false;
+        }
+        if (this.remoteUrls != null && that.remoteUrls == null) {
+            return false;
+        }
+        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+            return false;
+        }
+        Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
+        for (String url: this.remoteUrls) {
+            thisUrls.add(normalize(url));
+        }
+        Set<String> thatUrls = new HashSet<>(that.remoteUrls.size());
+        for (String url: that.remoteUrls) {
+            thatUrls.add(normalize(url));
+        }
+        return thisUrls.equals(thatUrls);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof BuildData)) {
@@ -294,4 +402,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
         return result;
     }
+
+    private static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
 }

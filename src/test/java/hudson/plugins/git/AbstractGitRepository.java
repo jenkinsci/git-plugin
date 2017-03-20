@@ -8,14 +8,14 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
-import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
+import jenkins.plugins.git.GitSampleRepoRule;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -34,24 +34,15 @@ public abstract class AbstractGitRepository {
     protected File testGitDir;
     protected GitClient testGitClient;
 
-    private TemporaryDirectoryAllocator tempAllocator;
+    @Rule
+    public GitSampleRepoRule repo = new GitSampleRepoRule();
 
     @Before
-    public void createGitRepository() throws IOException, InterruptedException {
-        tempAllocator = new TemporaryDirectoryAllocator();
-        testGitDir = tempAllocator.allocate();
+    public void createGitRepository() throws Exception {
         TaskListener listener = StreamTaskListener.fromStderr();
+        repo.init();
+        testGitDir = repo.getRoot();
         testGitClient = Git.with(listener, new EnvVars()).in(testGitDir).getClient();
-        testGitClient.init();
-    }
-
-    @After
-    public void removeGitRepository() throws IOException, InterruptedException {
-        if (isWindows()) {
-            System.gc(); // Reduce Windows file busy exceptions cleaning up temp dirs
-        }
-
-        tempAllocator.dispose();
     }
 
     /**

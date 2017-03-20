@@ -28,6 +28,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -67,6 +68,7 @@ import jenkins.scm.api.SCMSourceOwners;
 
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -78,12 +80,13 @@ import org.kohsuke.stapler.StaplerResponse;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
  * @author Stephen Connolly
@@ -98,6 +101,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private final String remote;
 
     private final String credentialsId;
+
+    private final String remoteName;
+
+    private final String rawRefSpecs;
 
     private final String includes;
 
@@ -114,13 +121,19 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private List<GitSCMExtension> extensions;
 
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+    public GitSCMSource(String id, String remote, String credentialsId, String remoteName, String rawRefSpecs, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
+        this.remoteName = remoteName;
+        this.rawRefSpecs = rawRefSpecs;
         this.includes = includes;
         this.excludes = excludes;
         this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+    }
+
+    public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
+        this(id, remote, credentialsId, null, null, includes, excludes, ignoreOnPushNotifications);
     }
 
     public boolean isIgnoreOnPushNotifications() {
@@ -176,6 +189,19 @@ public class GitSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
+    public String getRemoteName() {
+        if (isBlank(remoteName))
+            // backwards compatibility
+            return super.getRemoteName();
+
+        return remoteName;
+    }
+
+    public String getRawRefSpecs() {
+        return rawRefSpecs;
+    }
+
+    @Override
     public String getIncludes() {
         return includes;
     }
@@ -187,9 +213,21 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected List<RefSpec> getRefSpecs() {
-        return Arrays.asList(new RefSpec("+refs/heads/*:refs/remotes/" + getRemoteName() + "/*"));
+        List<RefSpec> refSpecs = new ArrayList<>();
+        String refSpecsString = rawRefSpecs;
+
+        if (isBlank(refSpecsString))
+            // backwards compatibility
+            refSpecsString = String.format("+refs/heads/*:refs/remotes/%s/*", getRemoteName());
+
+        for (String rawRefSpec : refSpecsString.split(" ")) {
+            refSpecs.add(new RefSpec(rawRefSpec));
+        }
+
+        return refSpecs;
     }
 
+    @Symbol("git")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor {
 
@@ -281,9 +319,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Extension
     public static class ListenerImpl extends GitStatus.Listener {
-
         @Override
-        public List<GitStatus.ResponseContributor> onNotifyCommit(URIish uri, final String sha1, List<ParameterValue> buildParameters, String... branches) {
+        public List<GitStatus.ResponseContributor> onNotifyCommit(String origin,
+                                                                  URIish uri,
+                                                                  @Nullable final String sha1,
+                                                                  List<ParameterValue> buildParameters,
+                                                                  String... branches) {
             List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
             final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
@@ -299,7 +340,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 if (branches.length > 0) {
                     final URIish u = uri;
                     for (final String branch: branches) {
-                        SCMHeadEvent.fireNow(new SCMHeadEvent<String>(SCMEvent.Type.UPDATED, branch){
+                        SCMHeadEvent.fireNow(new SCMHeadEvent<String>(SCMEvent.Type.UPDATED, branch, origin){
                             @Override
                             public boolean isMatch(@NonNull SCMNavigator navigator) {
                                 return false;
@@ -338,9 +379,25 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             @NonNull
                             @Override
                             public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
-                                SCMHead head = new SCMHead(branch);
-                                return Collections.<SCMHead, SCMRevision>singletonMap(head,
-                                        sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                if (source instanceof GitSCMSource) {
+                                    GitSCMSource git = (GitSCMSource) source;
+                                    if (git.ignoreOnPushNotifications) {
+                                        return Collections.emptyMap();
+                                    }
+                                    URIish remote;
+                                    try {
+                                        remote = new URIish(git.getRemote());
+                                    } catch (URISyntaxException e) {
+                                        // ignore
+                                        return Collections.emptyMap();
+                                    }
+                                    if (GitStatus.looselyMatches(u, remote)) {
+                                        SCMHead head = new SCMHead(branch);
+                                        return Collections.<SCMHead, SCMRevision>singletonMap(head,
+                                                sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                    }
+                                }
+                                return Collections.emptyMap();
                             }
 
                             @Override
@@ -365,7 +422,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     continue;
                                 }
                                 if (GitStatus.looselyMatches(uri, remote)) {
-                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName());
+                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
+                                            + " as a result of event from " + origin);
                                     owner.onSCMSourceUpdated(source);
                                     result.add(new GitStatus.ResponseContributor() {
                                         @Override

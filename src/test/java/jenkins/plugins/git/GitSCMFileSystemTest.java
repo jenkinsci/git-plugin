@@ -199,6 +199,16 @@ public class GitSCMFileSystemTest {
         assertThat(file2.contentAsString(), is("new"));
     }
 
+    /* This test requires the tag git-2.6.1. If you're working from a
+     * forked copy of the repository and your fork was created before the
+     * git-2.6.1 plugin release, you may not have that tag in your fork.
+     * If you do not have that tag, you will need to include that tag in
+     * your fork.  You can do that with the commands:
+     *
+     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
+     * $ git fetch --tags upstream
+     * $ git push --tags origin
+     */
     @Test
     public void given_filesystem_when_askingChangesSinceSameRevision_then_changesAreEmpty() throws Exception {
         File gitDir = new File(".");
@@ -214,6 +224,16 @@ public class GitSCMFileSystemTest {
         assertThat(out.toString(), is(""));
     }
 
+    /* This test requires the tag git-2.6.1. If you're working from a
+     * forked copy of the repository and your fork was created before the
+     * git-2.6.1 plugin release, you may not have that tag in your fork.
+     * If you do not have that tag, you will need to include that tag in
+     * your fork.  You can do that with the commands:
+     *
+     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
+     * $ git fetch --tags upstream
+     * $ git push --tags origin
+     */
     @Test
     public void given_filesystem_when_askingChangesSinceOldRevision_then_changesArePopulated() throws Exception {
         File gitDir = new File(".");
@@ -235,6 +255,16 @@ public class GitSCMFileSystemTest {
         assertThat(out.toString(), containsString("prepare release git-2.6.1"));
     }
 
+    /* This test requires the tag git-2.6.0. If you're working from a
+     * forked copy of the repository and your fork was created before the
+     * git-2.6.0 plugin release, you may not have that tag in your fork.
+     * If you do not have that tag, you will need to include that tag in
+     * your fork.  You can do that with the commands:
+     *
+     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
+     * $ git fetch --tags upstream
+     * $ git push --tags origin
+     */
     @Test
     public void given_filesystem_when_askingChangesSinceNewRevision_then_changesArePopulatedButEmpty() throws Exception {
         File gitDir = new File(".");
