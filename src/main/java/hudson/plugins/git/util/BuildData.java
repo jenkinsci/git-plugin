@@ -26,7 +26,6 @@ import org.kohsuke.stapler.export.ExportedBean;
 import static hudson.Util.fixNull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
@@ -313,7 +312,7 @@ public class BuildData implements Action, Serializable, Cloneable {
                 URI uri = new URI(normalized);
                 normalized = uri.normalize().toString();
             } catch (URISyntaxException ex) {
-                LOGGER.log(Level.INFO, "URI syntax exception on " + url, ex);
+                LOGGER.log(Level.FINEST, "URI syntax exception on " + url, ex);
             }
         }
         return normalized;
@@ -331,10 +330,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         if (that == null) {
             return false;
         }
-        if (this.remoteUrls == null && that.remoteUrls != null) {
-            return false;
-        }
-        if (this.remoteUrls != null && that.remoteUrls == null) {
+        /* Not similar if exactly one of the two remoteUrls is null */
+        if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
         if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
@@ -403,5 +400,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         return result;
     }
 
-    private static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
+    /* Package protected for easier testing */
+    static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
 }
