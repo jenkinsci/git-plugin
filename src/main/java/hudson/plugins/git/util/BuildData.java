@@ -330,10 +330,8 @@ public class BuildData implements Action, Serializable, Cloneable {
         if (that == null) {
             return false;
         }
-        if (this.remoteUrls == null && that.remoteUrls != null) {
-            return false;
-        }
-        if (this.remoteUrls != null && that.remoteUrls == null) {
+        /* Not similar if exactly one of the two remoteUrls is null */
+        if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
         if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {

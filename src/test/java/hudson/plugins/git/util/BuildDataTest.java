@@ -89,7 +89,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1);
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
-        assertEquals(build, data.getLastBuild(sha1));
+        assertThat(data.getLastBuild(sha1), is(build));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1, branches);
         Build build = new Build(revision, 13, Result.FAILURE);
         data.saveBuild(build);
-        assertEquals(build, data.getLastBuildOfBranch(branchName));
+        assertThat(data.getLastBuildOfBranch(branchName), is(build));
     }
 
     @Test
@@ -111,7 +111,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1);
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
-        assertEquals(revision, data.getLastBuiltRevision());
+        assertThat(data.getLastBuiltRevision(), is(revision));
     }
 
     @Test
@@ -120,19 +120,19 @@ public class BuildDataTest {
     }
 
     @Test
-    public void testSetScmName() {
-        assertEquals("", data.getScmName());
+    public void testGetScmName() {
+        assertThat(data.getScmName(), is(""));
+    }
 
+    @Test
+    public void testSetScmName() {
         final String scmName = "Some SCM name";
         data.setScmName(scmName);
-        assertEquals(scmName, data.getScmName());
+        assertThat(data.getScmName(), is(scmName));
     }
 
     @Test
     public void testAddRemoteUrl() {
-        BuildData empty = new BuildData();
-        assertTrue(empty.getRemoteUrls().isEmpty());
-
         data.addRemoteUrl(remoteUrl);
         assertEquals(1, data.getRemoteUrls().size());
 
@@ -253,6 +253,11 @@ public class BuildDataTest {
         data2.setScmName("scm 2");
         assertTrue(data1.equals(data2));
         assertEquals(data1.hashCode(), data2.hashCode());
+
+        BuildData emptyData = new BuildData();
+        emptyData.remoteUrls = null;
+        assertNotEquals("Non-empty object equal empty", data, emptyData);
+        assertNotEquals("Empty object similar to non-empty", emptyData, data);
     }
 
     @Test
@@ -331,13 +336,8 @@ public class BuildDataTest {
     }
 
     @Test
-    public void testGetScmName() {
-        // Tested in testSetScmName
-    }
-
-    @Test
     public void testGetRemoteUrls() {
-        // Tested in testAddRemoteUrl
+        assertTrue(data.getRemoteUrls().isEmpty());
     }
 
     @Test
@@ -351,20 +351,27 @@ public class BuildDataTest {
 
         // Null object not similar to non-null
         BuildData dataNull = null;
-        assertFalse("Null object not similar to non-null", data.similarTo(dataNull));
+        assertFalse("Null object similar to non-null", data.similarTo(dataNull));
+
+        BuildData emptyData = new BuildData();
+        assertFalse("Non-empty object similar to empty", data.similarTo(emptyData));
+        assertFalse("Empty object similar to non-empty", emptyData.similarTo(data));
+        emptyData.remoteUrls = null;
+        assertFalse("Non-empty object similar to empty", data.similarTo(emptyData));
+        assertFalse("Empty object similar to non-empty", emptyData.similarTo(data));
 
         // Object should be similar to itself
         assertTrue("Object not similar to itself", data.similarTo(data));
 
         // Object should not be similar to constructed variants
-        Collection<UserRemoteConfig> empty = new ArrayList<>();
+        Collection<UserRemoteConfig> emptyList = new ArrayList<>();
         assertFalse("Object similar to data with SCM name", data.similarTo(new BuildData("abc")));
-        assertFalse("Object similar to data with SCM name & empty", data.similarTo(new BuildData("abc", empty)));
+        assertFalse("Object similar to data with SCM name & empty", data.similarTo(new BuildData("abc", emptyList)));
 
         BuildData dataSCM = new BuildData("scm");
         assertFalse("Object similar to data with SCM name", dataSCM.similarTo(data));
         assertTrue("Object with SCM name not similar to data with SCM name", dataSCM.similarTo(new BuildData("abc")));
-        assertTrue("Object with SCM name not similar to data with SCM name & empty", dataSCM.similarTo(new BuildData("abc", empty)));
+        assertTrue("Object with SCM name not similar to data with SCM name & empty", dataSCM.similarTo(new BuildData("abc", emptyList)));
 
         // Cloned object equals original object
         BuildData dataClone = data.clone();
@@ -447,7 +454,10 @@ public class BuildDataTest {
     }
 
     @Test
-    public void testHashCode() {
-        // Tested in testEquals
+    public void testHashCodeEmptyData() {
+        BuildData emptyData = new BuildData();
+        assertEquals(emptyData.hashCode(), emptyData.hashCode());
+        emptyData.remoteUrls = null;
+        assertEquals(emptyData.hashCode(), emptyData.hashCode());
     }
 }
