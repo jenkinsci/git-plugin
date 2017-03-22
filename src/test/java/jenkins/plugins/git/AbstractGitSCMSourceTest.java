@@ -45,6 +45,7 @@ public class AbstractGitSCMSourceTest {
     public JenkinsRule r = new JenkinsRule();
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    @Rule
     public GitSampleRepoRule sampleRepo2 = new GitSampleRepoRule();
 
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
@@ -76,23 +77,16 @@ public class AbstractGitSCMSourceTest {
     public void retrievePrimaryHead() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file.txt", "");
-        sampleRepo.git("status");
         sampleRepo.git("add", "file.txt");
-        sampleRepo.git("status");
         sampleRepo.git("commit", "--all", "--message=add-empty-file");
-        sampleRepo.git("status");
         sampleRepo.git("checkout", "-b", "new-primary");
-        sampleRepo.git("status");
         sampleRepo.write("file.txt", "content");
-        sampleRepo.git("status");
         sampleRepo.git("add", "file.txt");
-        sampleRepo.git("status");
         sampleRepo.git("commit", "--all", "--message=add-file");
-        sampleRepo.git("status");
-        sampleRepo.git("checkout", "-b", "dev", "master");
-        sampleRepo.git("status");
-        sampleRepo.git("checkout", "new-primary");
-        sampleRepo.git("status");
+        sampleRepo.git("checkout", "master");
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.git("symbolic-ref", "HEAD", "refs/heads/new-primary");
+
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         ActionableSCMSourceOwner owner = Mockito.mock(ActionableSCMSourceOwner.class);
         when(owner.getSCMSource(source.getId())).thenReturn(source);
@@ -104,10 +98,20 @@ public class AbstractGitSCMSourceTest {
             headByName.put(h.getName(), h);
         }
         assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary"));
-        for (Action a : source.fetchActions(null, listener)) {
-            owner.addAction(a);
+        List<Action> actions = source.fetchActions(null, listener);
+        GitRemoteHeadRefAction refAction = null;
+        for (Action a: actions) {
+            if (a instanceof GitRemoteHeadRefAction) {
+                refAction = (GitRemoteHeadRefAction) a;
+                break;
+            }
         }
-        List<Action> actions = source.fetchActions(headByName.get("new-primary"), null, listener);
+        assertThat(refAction, notNullValue());
+        assertThat(refAction.getName(), is("new-primary"));
+        when(owner.getAction(GitRemoteHeadRefAction.class)).thenReturn(refAction);
+        when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList(refAction));
+        actions = source.fetchActions(headByName.get("new-primary"), null, listener);
+
         PrimaryInstanceMetadataAction primary = null;
         for (Action a: actions) {
             if (a instanceof PrimaryInstanceMetadataAction) {
