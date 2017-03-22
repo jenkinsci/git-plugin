@@ -284,6 +284,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         return new SCMRevisionImpl(head, b.getSHA1String());
                     }
                 }
+                Set<String> tagNames = client.getTagNames(head.getName());
+                tagNames.addAll(client.getRemoteTagNames(head.getName()));
+                for (String tagName : tagNames) {
+                    if (!tagName.equals(head.getName())) {
+                        continue;
+                    }
+
+                    ObjectId commit = client.revList(tagName, 1).get(0);
+                    Tag tag = new Tag(tagName, commit);
+                    return new SCMRevisionImpl(head, tag.getSHA1String());
+                }
                 return null;
             }
         }, listener, /* we don't prune remotes here, as we just want one head's revision */false);
@@ -328,7 +339,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
                         if (gitObject instanceof Tag) {
                             ObjectId commit = client.revList(gitObject.getName(), 1).get(0);
-                            String temp = commit.toString();
                             /* Recreate the Tag with the commit
                              * We do this here here rather than initially, as fetching the commit info
                              * takes time, and can take a considerable amount of time to sync branches if there
