@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.StreamTaskListener;
+import hudson.plugins.git.GitException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -96,14 +97,14 @@ public class CliGitCommand {
     }
 
     private void setConfigIfEmpty(String configName, String value) throws Exception {
-        String[] cmdOutput = runWithoutAssert("config", configName);
+        String[] cmdOutput = runWithoutAssert("config", "--global", configName);
         if (cmdOutput == null || cmdOutput[0].isEmpty() || cmdOutput[0].equals("[]")) {
             /* Set config value globally */
             cmdOutput = run("config", "--global", configName, value);
             /* Read config value */
-            cmdOutput = run("config", configName);
+            cmdOutput = run("config", "--global", configName);
             if (cmdOutput == null || cmdOutput[0].isEmpty() || !cmdOutput[0].equals(value)) {
-                System.out.println("ERROR: git config " + configName + " reported '" + cmdOutput[0] + "' instead of '" + value + "'");
+                throw new GitException("ERROR: git config --global " + configName + " reported '" + cmdOutput[0] + "' instead of '" + value + "'");
             }
         }
     }
