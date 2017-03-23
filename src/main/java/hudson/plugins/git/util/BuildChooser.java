@@ -1,10 +1,11 @@
 package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
-import hudson.model.Hudson;
+import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
@@ -222,16 +223,18 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * Returns build chooser descriptor.
      * @return build chooser descriptor
      */
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Hudson.getInstance().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor)Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     /**
      * All the registered build choosers.
      * @return all registered build choosers
      */
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Hudson.getInstance()
+        return Jenkins.getInstance()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 

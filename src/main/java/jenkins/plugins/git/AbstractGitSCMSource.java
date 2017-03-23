@@ -163,6 +163,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     @CheckForNull
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins instance never null")
     protected GitTool resolveGitTool() {
         GitTool tool = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class)
             .getInstallation(getGitTool());
@@ -176,6 +177,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         T run(GitClient client, String remoteName) throws IOException, InterruptedException;
     }
 
+    @NonNull
     private <T> T doRetrieve(Retriever<T> retriever, @NonNull TaskListener listener, boolean prune)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
@@ -234,6 +236,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     @Override
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable this")
     protected void retrieve(@CheckForNull final SCMSourceCriteria criteria,
                             @NonNull final SCMHeadObserver observer,
                             @CheckForNull final SCMHeadEvent<?> event,

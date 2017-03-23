@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
@@ -52,6 +53,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	}
 
 	@Override
+	@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
 		BuildData data = build.getAction(BuildData.class);
 		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {

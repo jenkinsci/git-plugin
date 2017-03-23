@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -29,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GitUtils implements Serializable {
+    @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
     GitClient git;
     TaskListener listener;
 
@@ -234,7 +236,7 @@ public class GitUtils implements Serializable {
      */
     public static EnvVars getPollEnvironment(AbstractProject p, FilePath ws, Launcher launcher, TaskListener listener, boolean reuseLastBuildEnv)
         throws IOException,InterruptedException {
-        EnvVars env;
+        EnvVars env = null;
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = p.getLastBuild();
 
@@ -250,14 +252,18 @@ public class GitUtils implements Serializable {
             Node lastBuiltOn = b.getBuiltOn();
 
             if (lastBuiltOn != null) {
-                env = lastBuiltOn.toComputer().getEnvironment().overrideAll(b.getCharacteristicEnvVars());
-                for (NodeProperty nodeProperty: lastBuiltOn.getNodeProperties()) {
-                    Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
-                    if (environment != null) {
-                        environment.buildEnvVars(env);
+                Computer lastComputer = lastBuiltOn.toComputer();
+                if (lastComputer != null) {
+                    env = lastComputer.getEnvironment().overrideAll(b.getCharacteristicEnvVars());
+                    for (NodeProperty nodeProperty : lastBuiltOn.getNodeProperties()) {
+                        Environment environment = nodeProperty.setUp(b, launcher, (BuildListener) buildListener);
+                        if (environment != null) {
+                            environment.buildEnvVars(env);
+                        }
                     }
                 }
-            } else {
+            }
+            if (env == null) {
                 env = p.getEnvironment(workspaceToNode(ws), listener);
             }
 
@@ -266,7 +272,11 @@ public class GitUtils implements Serializable {
             env = p.getEnvironment(workspaceToNode(ws), listener);
         }
 
-        String rootUrl = Hudson.getInstance().getRootUrl();
+        Jenkins jenkinsInstance = Jenkins.getInstance();
+        if (jenkinsInstance == null) {
+            throw new IllegalArgumentException("Jenkins instance is null");
+        }
+        String rootUrl = jenkinsInstance.getRootUrl();
         if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
@@ -275,15 +285,15 @@ public class GitUtils implements Serializable {
         }
 
         if(!env.containsKey("HUDSON_HOME")) // Legacy
-            env.put("HUDSON_HOME", Hudson.getInstance().getRootDir().getPath() );
+            env.put("HUDSON_HOME", jenkinsInstance.getRootDir().getPath() );
 
         if(!env.containsKey("JENKINS_HOME"))
-            env.put("JENKINS_HOME", Hudson.getInstance().getRootDir().getPath() );
+            env.put("JENKINS_HOME", jenkinsInstance.getRootDir().getPath() );
 
         if (ws != null)
             env.put("WORKSPACE", ws.getRemote());
 
-        for (NodeProperty nodeProperty: Hudson.getInstance().getGlobalNodeProperties()) {
+        for (NodeProperty nodeProperty: jenkinsInstance.getGlobalNodeProperties()) {
             Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
             if (environment != null) {
                 environment.buildEnvVars(env);

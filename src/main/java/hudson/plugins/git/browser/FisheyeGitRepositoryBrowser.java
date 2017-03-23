@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
@@ -83,6 +84,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
                  * @throws IOException on input or output error
                  * @throws ServletException on servlet error
 		 */
+		@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 		public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) String value) throws IOException,
 				ServletException {
 			if (value == null) // nothing entered yet
