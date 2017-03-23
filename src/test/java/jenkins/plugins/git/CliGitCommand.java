@@ -24,7 +24,7 @@ import org.junit.Assert;
  *
  * @author Mark Waite
  */
-class CliGitCommand {
+public class CliGitCommand {
 
     private final TaskListener listener;
     private final transient Launcher launcher;
@@ -33,7 +33,7 @@ class CliGitCommand {
     private String[] output;
     private ArgumentListBuilder args;
 
-    CliGitCommand(GitClient client, String... arguments) {
+    public CliGitCommand(GitClient client, String... arguments) {
         args = new ArgumentListBuilder("git");
         args.add(arguments);
         listener = StreamTaskListener.NULL;
