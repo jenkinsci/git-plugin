@@ -13,7 +13,7 @@ The master branch is the primary development branch for the git plugin.
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
-[GitHub pull requests](https://help.github.com/articles/creating-a-pull-request).
+[pull requests](https://help.github.com/articles/creating-a-pull-request).
 Fork the repository on GitHub, prepare your change on your forked
 copy, and submit a pull request.  Your pull request will be evaluated
 by the [Cloudbees Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
