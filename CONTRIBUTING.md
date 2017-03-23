@@ -10,8 +10,7 @@ git-plugin repository.
 If you're using a pull request, fork the repository on GitHub, prepare
 your change on your forked copy, and submit a pull request.  Your pull
 request will be evaluated by the
-[Cloudbees Jenkins job](https://jenkins.ci.cloudbees.com/job/plugins/job/git-plugin/)
-and you should receive e-mail with the results of the evaluation.
+[Cloudbees Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
 
 Before submitting your change, please assure that you've added tests
 which verify your change.  There have been many developers involved in
