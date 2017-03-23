@@ -44,7 +44,8 @@ import org.junit.Assert;
 import static org.junit.Assert.assertThat;
 
 /**
- * Run git commands, capture output, and assert contents of output.
+ * Run a command line git command, return output as array of String, optionally
+ * assert on contents of command output.
  *
  * @author Mark Waite
  */
@@ -125,6 +126,7 @@ public class CliGitCommand {
             /* Set config value globally */
             cmdOutput = run("config", "--global", configName, value);
             assertThat(Arrays.asList(cmdOutput), hasItems(""));
+            /* Read config value */
             cmdOutput = run("config", "--global", configName);
             if (cmdOutput == null || cmdOutput[0].isEmpty() || !cmdOutput[0].equals(value)) {
                 throw new GitException("ERROR: git config --global " + configName + " reported '" + cmdOutput[0] + "' instead of '" + value + "'");
