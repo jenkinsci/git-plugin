@@ -72,6 +72,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.plugins.git.CliGitCommand;
+import org.junit.BeforeClass;
 
 /**
  * Tests for {@link GitSCM}.
@@ -80,6 +82,12 @@ import jenkins.plugins.git.GitSampleRepoRule;
 public class GitSCMTest extends AbstractGitTestCase {
     @Rule
     public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
+
+    @BeforeClass
+    public static void initializeCliGitDefaults() throws Exception {
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
 
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
