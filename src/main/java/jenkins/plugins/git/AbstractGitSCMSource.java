@@ -407,7 +407,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
                 // I think we will still need to keep this code path even if JGit implements
                 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
-                // the remote server is Git 1.8.4 or earlier
+                // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is 
+                // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and Ubuntu 16)
                 Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
                 if (remoteReferences.containsKey(Constants.HEAD)) {
                     ObjectId head = remoteReferences.get(Constants.HEAD);
