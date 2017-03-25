@@ -1589,7 +1589,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1610,7 +1610,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutBis() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1631,7 +1631,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1660,7 +1660,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testNormalCheckoutAfterSparseCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1690,7 +1690,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutOverSlave() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1854,24 +1854,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
-    private boolean gitVersionAtLeast(int neededMajor, int neededMinor) throws IOException, InterruptedException {
-        return gitVersionAtLeast(neededMajor, neededMinor, 0);
-    }
-
-    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) throws IOException, InterruptedException {
-        final TaskListener procListener = StreamTaskListener.fromStderr();
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
-        assertEquals("git --version non-zero return code", 0, returnCode);
-        assertFalse("Process listener logged an error", procListener.getLogger().checkError());
-        final String versionOutput = out.toString().trim();
-        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
-        final int gitMajor = Integer.parseInt(fields[0]);
-        final int gitMinor = Integer.parseInt(fields[1]);
-        final int gitPatch = Integer.parseInt(fields[2]);
-        return gitMajor >= neededMajor && gitMinor >= neededMinor && gitPatch >= neededPatch;
-    }
-
     @Test
 	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
 		FreeStyleProject project = createFreeStyleProject();
@@ -1913,7 +1895,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // Inital commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
-        if (!gitVersionAtLeast(1, 8)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 8)) {
             /* Git 1.7.10.4 fails the first build unless the git-upload-pack
              * program is available in its PATH.
              * Later versions of git don't have that problem.
