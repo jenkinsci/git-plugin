@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2014, CloudBees, Inc., Stephen Connolly, Amadeus IT Group.
+ * Copyright (c) 2013-2017, CloudBees, Inc., Stephen Connolly, Amadeus IT Group.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Action;
+import hudson.model.Actionable;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
@@ -52,8 +54,11 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import java.util.Map;
+import java.util.TreeSet;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
@@ -64,11 +69,16 @@ import jenkins.scm.api.SCMProbeStat;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.SymbolicRef;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -96,6 +106,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 /**
  * @author Stephen Connolly
@@ -370,6 +381,84 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return revisions;
             }
         }, listener, false);
+    }
+
+    @NonNull
+    @Override
+    protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
+            throws IOException, InterruptedException {
+        return doRetrieve(new Retriever<List<Action>>() {
+            @Override
+            public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+                if (symrefs.containsKey(Constants.HEAD)) {
+                    // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
+                    String target = symrefs.get(Constants.HEAD);
+                    if (target.startsWith(Constants.R_HEADS)) {
+                        // shorten standard names
+                        target = target.substring(Constants.R_HEADS.length());
+                    }
+                    List<Action> result = new ArrayList<>();
+                    if (StringUtils.isNotBlank(target)) {
+                        result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                    }
+                    return result;
+                }
+                // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
+                // I think we will still need to keep this code path even if JGit implements
+                // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
+                // the remote server is Git 1.8.4 or earlier
+                Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+                if (remoteReferences.containsKey(Constants.HEAD)) {
+                    ObjectId head = remoteReferences.get(Constants.HEAD);
+                    Set<String> names = new TreeSet<>();
+                    for (Map.Entry<String, ObjectId> entry: remoteReferences.entrySet()) {
+                        if (entry.getKey().equals(Constants.HEAD)) continue;
+                        if (head.equals(entry.getValue())) {
+                            names.add(entry.getKey());
+                        }
+                    }
+                    // if there is one and only one match, that's the winner
+                    if (names.size() == 1) {
+                        String target = names.iterator().next();
+                        if (target.startsWith(Constants.R_HEADS)) {
+                            // shorten standard names
+                            target = target.substring(Constants.R_HEADS.length());
+                        }
+                        List<Action> result = new ArrayList<>();
+                        if (StringUtils.isNotBlank(target)) {
+                            result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                        }
+                        return result;
+                    }
+                    // if there are multiple matches, prefer `master`
+                    if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
+                        List<Action> result = new ArrayList<Action>();
+                        result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
+                        return result;
+                    }
+                }
+                // Give up, there's no way to get the primary branch
+                return new ArrayList<>();
+            }
+        }, listener, false);
+    }
+
+    @NonNull
+    @Override
+    protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event,
+                                           @NonNull TaskListener listener) throws IOException, InterruptedException {
+        SCMSourceOwner owner = getOwner();
+        if (owner instanceof Actionable) {
+            for (GitRemoteHeadRefAction a: ((Actionable) owner).getActions(GitRemoteHeadRefAction.class)) {
+                if (getRemote().equals(a.getRemote())) {
+                    if (head.getName().equals(a.getName())) {
+                        return Collections.<Action>singletonList(new PrimaryInstanceMetadataAction());
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 
     protected String getCacheEntry() {
