@@ -50,9 +50,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import jenkins.plugins.git.CliGitCommand;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -66,6 +68,12 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
+
+    @BeforeClass
+    public static void setGitDefaults() throws Exception {
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
 
     @Issue("JENKINS-5005")
     @Test

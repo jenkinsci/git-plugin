@@ -45,6 +45,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -61,6 +62,12 @@ public class GitStepTest {
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule
     public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
+
+    @BeforeClass
+    public static void setGitDefaults() throws Exception {
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
 
     @Test
     public void roundtrip() throws Exception {

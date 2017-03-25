@@ -37,8 +37,6 @@ import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 
-import java.io.ByteArrayOutputStream;
-
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -65,12 +63,14 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 
 import org.mockito.Mockito;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
 
 /**
@@ -80,6 +80,12 @@ import jenkins.plugins.git.GitSampleRepoRule;
 public class GitSCMTest extends AbstractGitTestCase {
     @Rule
     public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
+
+    @BeforeClass
+    public static void setGitDefaults() throws Exception {
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
 
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
