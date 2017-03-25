@@ -74,7 +74,16 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
-    public void retrievePrimaryHead() throws Exception {
+    public void retrievePrimaryHead_NotDuplicated() throws Exception {
+        retrievePrimaryHead(false);
+    }
+
+    @Test
+    public void retrievePrimaryHead_Duplicated() throws Exception {
+        retrievePrimaryHead(true);
+    }
+
+    public void retrievePrimaryHead(boolean duplicatePrimary) throws Exception {
         sampleRepo.init();
         sampleRepo.write("file.txt", "");
         sampleRepo.git("add", "file.txt");
@@ -83,6 +92,13 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file.txt", "content");
         sampleRepo.git("add", "file.txt");
         sampleRepo.git("commit", "--all", "--message=add-file");
+        if (duplicatePrimary) {
+            // If more than one branch points to same sha1 as new-primary and the
+            // command line git implementation is older than 2.8.0, then the guesser
+            // for primary won't be able to choose between the two alternatives.
+            // The next line illustrates that case with older command line git.
+            sampleRepo.git("checkout", "-b", "new-primary-duplicate", "new-primary");
+        }
         sampleRepo.git("checkout", "master");
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.git("symbolic-ref", "HEAD", "refs/heads/new-primary");
@@ -97,7 +113,11 @@ public class AbstractGitSCMSourceTest {
         for (SCMHead h: source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
-        assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary"));
+        if (duplicatePrimary) {
+            assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary", "new-primary-duplicate"));
+        } else {
+            assertThat(headByName.keySet(), containsInAnyOrder("master", "dev", "new-primary"));
+        }
         List<Action> actions = source.fetchActions(null, listener);
         GitRemoteHeadRefAction refAction = null;
         for (Action a: actions) {
@@ -106,11 +126,16 @@ public class AbstractGitSCMSourceTest {
                 break;
             }
         }
-        assertThat(refAction, notNullValue());
-        assertThat(refAction.getName(), is("new-primary"));
-        when(owner.getAction(GitRemoteHeadRefAction.class)).thenReturn(refAction);
-        when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList(refAction));
-        actions = source.fetchActions(headByName.get("new-primary"), null, listener);
+        final boolean CLI_GIT_LESS_THAN_280 = !sampleRepo.gitVersionAtLeast(2, 8);
+        if (duplicatePrimary && CLI_GIT_LESS_THAN_280) {
+            assertThat(refAction, is(nullValue()));
+        } else {
+            assertThat(refAction, notNullValue());
+            assertThat(refAction.getName(), is("new-primary"));
+            when(owner.getAction(GitRemoteHeadRefAction.class)).thenReturn(refAction);
+            when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList(refAction));
+            actions = source.fetchActions(headByName.get("new-primary"), null, listener);
+        }
 
         PrimaryInstanceMetadataAction primary = null;
         for (Action a: actions) {
@@ -119,7 +144,11 @@ public class AbstractGitSCMSourceTest {
                 break;
             }
         }
-        assertThat(primary, notNullValue());
+        if (duplicatePrimary && CLI_GIT_LESS_THAN_280) {
+            assertThat(primary, is(nullValue()));
+        } else {
+            assertThat(primary, notNullValue());
+        }
     }
 
     @Issue("JENKINS-31155")
@@ -203,7 +232,12 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("branch", "-D", "dev");
 
         /* Fetch and confirm dev branch was pruned */
-        assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
+            /* CentOS 6 git version (1.7.1) doesn't prune on fetch */
+            assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        } else {
+            assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        }
     }
 
     @Test
