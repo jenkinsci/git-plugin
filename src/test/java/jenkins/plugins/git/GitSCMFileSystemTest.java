@@ -120,11 +120,17 @@ public class GitSCMFileSystemTest {
         SCMRevision revision = source.fetch(new SCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
+        final long fileSystemAllowedOffset = isWindows() ? 3000 : 1000;
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
-        assertThat(fs.lastModified(), allOf(greaterThanOrEqualTo(System.currentTimeMillis() - 2000), lessThanOrEqualTo(System.currentTimeMillis() + 2000)));
+        long currentTime = System.currentTimeMillis();
+        long lastModified = fs.lastModified();
+        assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
+        assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
         SCMFile file = fs.getRoot().child("file");
-        assertThat(file.lastModified(), allOf(greaterThanOrEqualTo(System.currentTimeMillis() - 2000),
-                lessThanOrEqualTo(System.currentTimeMillis() + 2000)));
+        currentTime = System.currentTimeMillis();
+        lastModified = file.lastModified();
+        assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
+        assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
     }
 
     @Test
@@ -287,5 +293,10 @@ public class GitSCMFileSystemTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertTrue(instance.changesSince(rev260, out));
         assertThat(out.toString(), is(""));
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
     }
 }
