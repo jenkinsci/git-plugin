@@ -122,12 +122,12 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("commit", "--all", "--message=dev");
         final long fileSystemAllowedOffset = isWindows() ? 3000 : 1000;
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
-        long currentTime = System.currentTimeMillis();
+        long currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
         long lastModified = fs.lastModified();
         assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
         assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
         SCMFile file = fs.getRoot().child("file");
-        currentTime = System.currentTimeMillis();
+        currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
         lastModified = file.lastModified();
         assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
         assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
