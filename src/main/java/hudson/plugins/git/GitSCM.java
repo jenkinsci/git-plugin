@@ -1347,7 +1347,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null, getScmName());
     }
 
     @Extension

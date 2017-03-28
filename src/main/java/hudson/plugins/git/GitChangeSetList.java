@@ -17,10 +17,20 @@ import java.util.List;
 public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     private final List<GitChangeSet> changeSets;
 
+    /**
+     * The name of the SCM as given by the user.
+     */
+    public String scmName;
+
     /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs) {
+        this(build, browser, logs, null);
+    }
+
+    /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs, String scmName) {
         super(build, browser);
         Collections.reverse(logs);  // put new things first
         this.changeSets = Collections.unmodifiableList(logs);
+        this.scmName = scmName;
         for (GitChangeSet log : logs)
             log.setParent(this);
     }
@@ -42,4 +52,16 @@ public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
         return "git";
     }
 
+    public void setScmName(String scmName)
+    {
+        this.scmName = scmName;
+    }
+
+    @Exported
+    public String getScmName()
+    {
+        if (scmName == null)
+            scmName = "";
+        return scmName;
+    }
 }

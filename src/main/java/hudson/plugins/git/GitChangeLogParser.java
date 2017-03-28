@@ -28,11 +28,18 @@ public class GitChangeLogParser extends ChangeLogParser {
 
     private boolean authorOrCommitter;
 
+    private String scmName;
+
     public GitChangeLogParser(boolean authorOrCommitter) {
+        this(authorOrCommitter, null);
+    }
+
+    public GitChangeLogParser(boolean authorOrCommitter, String scmName) {
         super();
         this.authorOrCommitter = authorOrCommitter;
+        this.scmName = scmName;
     }
-    
+
     public List<GitChangeSet> parse(@Nonnull InputStream changelog) throws IOException {
         return parse(IOUtils.readLines(changelog, "UTF-8"));
     }
@@ -45,9 +52,10 @@ public class GitChangeLogParser extends ChangeLogParser {
         throws IOException, SAXException {
         // Parse the log file into GitChangeSet items - each one is a commit
         LineIterator lineIterator = null;
+        String scmName = this.scmName;
         try {
         	lineIterator = FileUtils.lineIterator(changelogFile,"UTF-8");
-        	return new GitChangeSetList(build, browser, parse(lineIterator));
+        	return new GitChangeSetList(build, browser, parse(lineIterator), scmName);
         } finally {
         	LineIterator.closeQuietly(lineIterator);
         }

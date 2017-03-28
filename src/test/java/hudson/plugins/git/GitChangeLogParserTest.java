@@ -22,7 +22,7 @@ public class GitChangeLogParserTest {
      */
     @Test
     public void testDuplicatesFiltered() throws Exception {
-        GitChangeLogParser parser = new GitChangeLogParser(true);
+        GitChangeLogParser parser = new GitChangeLogParser(true, null);
         File log = tmpFolder.newFile();
         try (FileWriter writer = new FileWriter(log)) {
             writer.write("commit 123abc456def\n");
@@ -39,5 +39,24 @@ public class GitChangeLogParserTest {
         assertEquals("123abc456def", first.getId());
         assertEquals("first message", first.getMsg());
         assertTrue("Temp file delete failed for " + log, log.delete());
+    }
+
+    /**
+     * Test that ScmName is passed to GitChangeSetList
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testScmNamePassed() throws Exception {
+        GitChangeLogParser parser = new GitChangeLogParser(true, "foo");
+        File log = tmpFolder.newFile();
+        try (FileWriter writer = new FileWriter(log)) {
+            writer.write("commit 123abc456def\n");
+            writer.write("    first message\n");
+            writer.write("commit 123abc456def\n");
+            writer.write("    second message");
+        }
+        GitChangeSetList list = parser.parse(null, null, log);
+        assertEquals("foo", list.scmName);
     }
 }
