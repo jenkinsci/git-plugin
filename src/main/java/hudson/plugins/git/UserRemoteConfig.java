@@ -86,7 +86,6 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     @Extension
     public static class DescriptorImpl extends Descriptor<UserRemoteConfig> {
 
-        @SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
