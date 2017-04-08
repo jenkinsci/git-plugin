@@ -8,7 +8,7 @@
   <h2>${%Summary}</h2>
   <ol>
     <j:forEach var="cs" items="${it.logs}">
-      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">details</a>)</li>
+      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">${%details}</a>)</li>
     </j:forEach>
   </ol>
   <table class="pane" style="border:none">
@@ -43,7 +43,7 @@
             <j:set var="diff" value="${browser.getDiffLink(p)}"/>
             <j:if test="${diff!=null}">
               <st:nbsp/>
-              <a href="${diff}">(diff)</a>
+              <a href="${diff}">(${%diff})</a>
             </j:if>
           </td>
         </tr>
