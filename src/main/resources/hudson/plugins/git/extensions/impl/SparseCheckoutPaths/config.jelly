@@ -1,11 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-
-   <!-- ArrayList: field="testlist" is an array, and 'repeatableProperty' will display all its elements.
-        A default testlist will be returned by the getDefaultTestlist() method in the descriptor class.
-        That method is called here using the name: 'descriptor.defaultTestlist', no 'get', and the first letter in minor. -->
-
    <f:entry>
          <f:repeatableProperty field="sparseCheckoutPaths" minimum="1" noAddButton="false"/>
    </f:entry>
