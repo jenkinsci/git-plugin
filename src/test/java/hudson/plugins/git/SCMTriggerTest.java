@@ -7,7 +7,6 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
-import hudson.util.IOUtils;
 import hudson.util.RunList;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
@@ -17,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -330,11 +330,10 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             if (entry.isDirectory())
                 entryDestination.mkdirs();
             else {
-                InputStream in = zipFile.getInputStream(entry);
-                OutputStream out = new FileOutputStream(entryDestination);
-                IOUtils.copy(in, out);
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(out);
+                try (InputStream in = zipFile.getInputStream(entry);
+                     OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
+                    org.apache.commons.io.IOUtils.copy(in, out);
+                }
             }
         }
     }
