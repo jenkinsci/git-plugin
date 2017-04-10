@@ -59,6 +59,7 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 
@@ -2253,9 +2254,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String notificationPath = rule.getURL().toExternalForm()
                 + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
-        final InputStream is = notifyUrl.openStream();
-        IOUtils.toString(is);
-        IOUtils.closeQuietly(is);
+        String notifyContent = null;
+        try (final InputStream is = notifyUrl.openStream()) {
+            notifyContent = IOUtils.toString(is);
+        }
+        assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 
         if ((project.getLastBuild().getNumber() == initialBuildNumber)
                 && (rule.jenkins.getQueue().isEmpty())) {
