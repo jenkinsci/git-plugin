@@ -80,7 +80,6 @@ import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
-import hudson.util.IOUtils;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -1220,12 +1219,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      or else we won't know where to stop.
      */
     private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
-        Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8");
-
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
-        try {
+        try (Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8")) {
             boolean exclusion = false;
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
@@ -1254,7 +1251,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
             if (!executed) changelog.abort();
-            IOUtils.closeQuietly(out);
         }
     }
 
