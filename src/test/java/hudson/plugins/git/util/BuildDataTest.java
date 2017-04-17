@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Mark Waite
@@ -328,6 +329,25 @@ public class BuildDataTest {
         dotGitTrailingSlashes.addRemoteUrl(DOT_GIT_TRAILING_SLASHES_URL);
         assertTrue("Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
                 dotGitTrailingSlashes.similarTo(dotGit));
+    }
+
+    @Test
+    @Issue("JENKINS-43630")
+    public void testSimilarToContainsNullURL() {
+        final String SIMPLE_URL = "ssh://git@github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        simple.addRemoteUrl(null);
+        simple.addRemoteUrl(SIMPLE_URL);
+
+        BuildData simple2 = simple.clone();
+        assertTrue(simple.similarTo(simple2));
+
+        BuildData simple3 = new BuildData("git-" + SIMPLE_URL);
+        simple3.addRemoteUrl(SIMPLE_URL);
+        simple3.addRemoteUrl(null);
+        simple3.addRemoteUrl(SIMPLE_URL);
+        assertTrue(simple.similarTo(simple3));
     }
 
     @Test
