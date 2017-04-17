@@ -303,6 +303,9 @@ public class BuildData implements Action, Serializable, Cloneable {
      * @return normalized URL as a string
      */
     private String normalize(String url) {
+        if (url == null) {
+            return null;
+        }
         /* Remove trailing slashes and .git suffix from URL */
         String normalized = url.replaceAll("/+$", "").replaceAll("[.]git$", "");
         if (url.contains("://")) {
