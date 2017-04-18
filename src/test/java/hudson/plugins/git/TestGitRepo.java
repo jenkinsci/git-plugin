@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
@@ -128,8 +129,13 @@ public class TestGitRepo {
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {
+        return remoteConfigs(null);
+    }
+
+    List<UserRemoteConfig> remoteConfigs(StandardCredentials credentials) {
+        String credentialsId = credentials == null ? null : credentials.getId();
         List<UserRemoteConfig> list = new ArrayList<>();
-        list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", null));
+        list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", credentialsId));
         return list;
     }
 }
