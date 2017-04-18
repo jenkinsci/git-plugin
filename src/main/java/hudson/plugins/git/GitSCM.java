@@ -764,7 +764,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
-                    CredentialsProvider.track(project, credentials);
+                    CredentialsProvider.track(project.getLastBuild(), credentials);
                 }
             }
         }
