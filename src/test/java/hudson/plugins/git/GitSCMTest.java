@@ -1,5 +1,15 @@
 package hudson.plugins.git;
 
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -62,8 +72,10 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.*;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import org.mockito.Mockito;
@@ -71,6 +83,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
 
@@ -82,10 +95,70 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Rule
     public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
 
+    private CredentialsStore store = null;
+
     @BeforeClass
     public static void setGitDefaults() throws Exception {
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
+    }
+
+    @Before
+    public void enableSystemCredentialsProvider() throws Exception {
+        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
+                Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+            if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
+                store = s;
+                break;
+
+            }
+        }
+        assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    private StandardCredentials getInvalidCredential() {
+        String username = "bad-user";
+        String password = "bad-password";
+        CredentialsScope scope = CredentialsScope.GLOBAL;
+        String id = "username-" + username + "-password-" + password;
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Test
+    public void trackCredentials() throws Exception {
+        StandardCredentials credential = getInvalidCredential();
+        store.addCredentials(Domain.global(), credential);
+
+        Fingerprint fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should not be set before job definition", fingerprint, nullValue());
+
+        JenkinsRule.WebClient wc = rule.createWebClient();
+        HtmlPage page = wc.goTo("credentials/store/system/domain/_/credentials/" + credential.getId());
+        assertThat("Have usage tracking reported", page.getElementById("usage"), notNullValue());
+        assertThat("No fingerprint created until first use", page.getElementById("usage-missing"), notNullValue());
+        assertThat("No fingerprint created until first use", page.getElementById("usage-present"), nullValue());
+
+        FreeStyleProject project = setupProject("master", credential);
+
+        fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should not be set before first build", fingerprint, nullValue());
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should be set after first build", fingerprint, notNullValue());
+        assertThat(fingerprint.getJobs(), hasItem(is(project.getFullName())));
+        Fingerprint.RangeSet rangeSet = fingerprint.getRangeSet(project);
+        assertThat(rangeSet, notNullValue());
+        assertThat(rangeSet.includes(project.getLastBuild().getNumber()), is(true));
+
+        page = wc.goTo("credentials/store/system/domain/_/credentials/" + credential.getId());
+        assertThat(page.getElementById("usage-missing"), nullValue());
+        assertThat(page.getElementById("usage-present"), notNullValue());
+        assertThat(page.getAnchorByText(project.getFullDisplayName()), notNullValue());
     }
 
     /**

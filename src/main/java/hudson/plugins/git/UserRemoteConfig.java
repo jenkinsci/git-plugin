@@ -185,7 +185,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             GitClient git = Git.with(TaskListener.NULL, environment)
                     .using(GitTool.getDefaultInstallation().getGitExe())
                     .getClient();
-            git.addDefaultCredentials(lookupCredentials(item, credentialsId, url));
+            StandardCredentials credential = lookupCredentials(item, credentialsId, url);
+            git.addDefaultCredentials(credential);
+            CredentialsProvider.track(item, credential);
 
             // attempt to connect the provided URL
             try {

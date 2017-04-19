@@ -27,6 +27,7 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -257,7 +258,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 GitClient client = git.getClient();
                 String credentialsId = config.getCredentialsId();
                 if (credentialsId != null) {
-                    client.addDefaultCredentials(CredentialsMatchers.firstOrNull(
+                    StandardCredentials credential = CredentialsMatchers.firstOrNull(
                             CredentialsProvider.lookupCredentials(
                                 StandardUsernameCredentials.class,
                                 owner,
@@ -268,8 +269,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                                 CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER
                             )
-                        )
-                    );
+                        );
+                    client.addDefaultCredentials(credential);
+                    CredentialsProvider.track(owner, credential);
                 }
 
                 if (!client.hasGitRepo()) {
