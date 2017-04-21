@@ -33,6 +33,7 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
 import hudson.scm.*;
 import hudson.security.ACL;
 import hudson.tasks.Builder;
@@ -46,6 +47,9 @@ import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -56,6 +60,7 @@ import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -1148,6 +1153,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
+
+        printCommitMessageToLog(listener, git, revToBuild);
+
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
@@ -1176,6 +1184,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
+        }
+    }
+
+    private void printCommitMessageToLog(TaskListener listener, GitClient git, final Build revToBuild)
+            throws IOException {
+        try {
+            RevCommit commit = git.withRepository(new RepositoryCallback<RevCommit>() {
+                @Override
+                public RevCommit invoke(Repository repository, VirtualChannel virtualChannel)
+                        throws IOException, InterruptedException {
+                    try (RevWalk walk = new RevWalk(repository)) {
+                        return walk.parseCommit(revToBuild.revision.getSha1());
+                    }
+                }
+            });
+            listener.getLogger().println("Message: \"" + commit.getShortMessage() + "\"");
+        } catch (InterruptedException e) {
+            // failed to get the commit message
+            // not mandatory, ignored
         }
     }
 
