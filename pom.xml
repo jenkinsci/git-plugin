@@ -251,6 +251,10 @@
           <groupId>org.sonatype.sisu</groupId>
           <artifactId>sisu-guava</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.jenkins-ci.main</groupId>
+          <artifactId>maven-plugin</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
