@@ -1,5 +1,6 @@
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
@@ -7,8 +8,11 @@ import java.util.List;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
+import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMSourceDescriptor;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.junit.Assert;
@@ -96,9 +100,10 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
             super("AbstractGitSCMSourceImpl-id");
         }
 
+        @NonNull
         @Override
-        public String getGitTool() {
-            return "EXPECTED_GIT_EXE";
+        public List<SCMSourceTrait> getTraits() {
+            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait("EXPECTED_GIT_EXE"));
         }
 
         @Override
@@ -112,18 +117,21 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         }
 
         @Override
-        public String getIncludes() {
-            return "";
-        }
-
-        @Override
-        public String getExcludes() {
-            return "";
-        }
-
-        @Override
         protected List<RefSpec> getRefSpecs() {
             return Collections.emptyList();
+        }
+
+        @Override
+        public SCMSourceDescriptor getDescriptor() {
+            return new DescriptorImpl();
+        }
+
+        public static class DescriptorImpl extends SCMSourceDescriptor {
+
+            @Override
+            public String getDisplayName() {
+                return null;
+            }
         }
     }
 }

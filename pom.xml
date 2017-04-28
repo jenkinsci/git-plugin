@@ -30,7 +30,7 @@
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
-    <scm-api-plugin.version>2.1.0</scm-api-plugin.version>
+    <scm-api-plugin.version>2.2.0-SNAPSHOT</scm-api-plugin.version>
   </properties>
 
   <build>
@@ -131,6 +131,11 @@
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.9.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci</groupId>
+      <artifactId>annotation-indexer</artifactId>
+      <version>1.11</version>
     </dependency>
     <dependency>
       <groupId>com.infradna.tool</groupId>

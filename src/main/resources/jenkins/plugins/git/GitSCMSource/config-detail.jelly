@@ -30,35 +30,9 @@
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select/>
   </f:entry>
-  <f:entry title="${%Ignore on push notifications}" field="ignoreOnPushNotifications">
-    <f:checkbox/>
+  <f:entry title="${%Behaviours}">
+    <f:hetero-list name="traits" items="${instance == null ? descriptor.defaultTraits : instance.traits}"
+                   descriptors="${descriptor[attrs.field+'Descriptors'] ?: descriptor.getPropertyType(instance,'traits').getApplicableItemDescriptors()}"
+                   hasHeader="true" honorOrder="true" oneEach="true"/>
   </f:entry>
-
-  <j:set var="scm" value="${instance}" />
-
-  <j:if test="${descriptor.showGitToolOptions()}">
-    <f:entry title="${%Git executable}" field="gitTool">
-      <f:select />
-    </f:entry>
-  </j:if>
-  <t:listScmBrowsers name="git.browser" />
-  <f:entry title="${%Additional Behaviours}">
-    <f:hetero-list name="extensions" items="${instance.extensions}" descriptors="${descriptor.getExtensionDescriptors()}"
-      hasHeader="true" />
-  </f:entry>
-
-  <f:advanced>
-    <f:entry title="${%Remote Name}" field="remoteName">
-      <f:textbox default="origin"/>
-    </f:entry>
-    <f:entry title="${%RefSpecs}" field="rawRefSpecs">
-      <f:textbox default="+refs/heads/*:refs/remotes/origin/*"/>
-    </f:entry>
-    <f:entry title="${%Include branches}" field="includes">
-      <f:textbox default="*"/>
-    </f:entry>
-    <f:entry title="${%Exclude branches}" field="excludes">
-      <f:textbox/>
-    </f:entry>
-  </f:advanced>
 </j:jelly>
