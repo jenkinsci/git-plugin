@@ -1255,8 +1255,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    public void buildEnvVars(AbstractBuild<?, ?> build, java.util.Map<String, String> env) {
-        super.buildEnvVars(build, env);
+    @Override
+    public void buildEnvVars(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
@@ -1319,7 +1319,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return name;
     }
 
-    private String getLastBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
+    private String getLastBuiltCommitOfBranch(Run<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousBuiltBuild() != null) {
             final Build lastBuildOfBranch = fixNull(getBuildData(build.getPreviousBuiltBuild())).getLastBuildOfBranch(branch.getName());
@@ -1333,7 +1333,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return prevCommit;
     }
 
-    private String getLastSuccessfulBuiltCommitOfBranch(AbstractBuild<?, ?> build, Branch branch) {
+    private String getLastSuccessfulBuiltCommitOfBranch(Run<?, ?> build, Branch branch) {
         String prevCommit = null;
         if (build.getPreviousSuccessfulBuild() != null) {
             final Build lastSuccessfulBuildOfBranch = fixNull(getBuildData(build.getPreviousSuccessfulBuild())).getLastBuildOfBranch(branch.getName());
