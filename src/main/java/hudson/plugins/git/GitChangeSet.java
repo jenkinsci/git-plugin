@@ -8,6 +8,7 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -420,13 +421,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     private boolean isCreateAccountBasedOnEmail() {
-        Hudson hudson = Hudson.getInstance();
-        if (hudson == null) {
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if (jenkins == null) {
             return false;
         }
-        DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
-
-        return descriptor.isCreateAccountBasedOnEmail();
+        DescriptorImpl descriptor = (DescriptorImpl) jenkins.getDescriptor(GitSCM.class);
+        if (descriptor != null) {
+            return descriptor.isCreateAccountBasedOnEmail();
+        } else {
+            return false;
+        }
     }
 
     @Override

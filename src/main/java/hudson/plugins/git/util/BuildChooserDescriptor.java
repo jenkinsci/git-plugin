@@ -23,7 +23,7 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
     }
 
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
             LOGGER.severe("Jenkins instance is null in BuildChooserDescriptor");
             return null;

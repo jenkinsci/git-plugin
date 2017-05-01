@@ -1772,9 +1772,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
+            LOGGER.severe("Jenkins.getInstanceOrNull is null in GitSCM.onLoaded");
             return;
         }
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
