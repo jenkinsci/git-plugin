@@ -170,7 +170,8 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     /**
      * Adds the specified ref specs. If no ref specs were previously defined then the supplied ref specs will replace
      * {@link AbstractGitSCMSource#REF_SPEC_DEFAULT}. The ref spec is expected to be processed for substitution of
-     * {@link AbstractGitSCMSource#REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR} by {@link #remote()} before use.
+     * {@link AbstractGitSCMSource#REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR} by {@link AbstractGitSCMSource#getRemote()}
+     * before use.
      *
      * @param refSpecs the ref spec templates to add.
      * @return {@code this} for method chaining.

@@ -29,6 +29,27 @@ public class PruneStaleBranch extends GitSCMExtension {
         cmd.prune();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return o instanceof PruneStaleBranch;
+    }
+
+    @Override
+    public int hashCode() {
+        return PruneStaleBranch.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "PruneStaleBranch{}";
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override

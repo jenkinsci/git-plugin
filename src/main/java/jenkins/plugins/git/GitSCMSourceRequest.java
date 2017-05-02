@@ -25,20 +25,35 @@
 
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitTool;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import jenkins.scm.api.SCMSource;
-import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import org.eclipse.jgit.transport.RefSpec;
 
+/**
+ * The {@link SCMSourceRequest} base class for {@link AbstractGitSCMSource}.
+ *
+ * @since 3.4.0
+ */
 public class GitSCMSourceRequest extends SCMSourceRequest {
 
+    /**
+     * The {@link RefSpec} instances.
+     */
     private List<RefSpec> refSpecs = new ArrayList<>();
+    /**
+     * The remote name.
+     */
     private final String remoteName;
+    /**
+     * The {@link GitTool#getName()}.
+     */
     private final String gitTool;
 
     /**
@@ -55,15 +70,34 @@ public class GitSCMSourceRequest extends SCMSourceRequest {
         refSpecs = Collections.unmodifiableList(context.asRefSpecs());
     }
 
-    public String remoteName() {
-        return remoteName;
-    }
-
-    public String gitTool() {
+    /**
+     * Returns the name of the {@link GitTool} to use or {@code null} to use the default.
+     *
+     * @return the name of the {@link GitTool} to use or {@code null} to use the default.
+     */
+    @CheckForNull
+    public final String gitTool() {
         return gitTool;
     }
 
-    public List<RefSpec> refSpecs() {
+    /**
+     * Returns the name to give the remote.
+     *
+     * @return the name to give the remote.
+     */
+    @NonNull
+    public final String remoteName() {
+        return remoteName;
+    }
+
+
+    /**
+     * Returns the list of {@link RefSpec} instances to use.
+     *
+     * @return the list of {@link RefSpec} instances to use.
+     */
+    @NonNull
+    public final List<RefSpec> refSpecs() {
         return refSpecs;
     }
 }

@@ -51,6 +51,36 @@ public class UserIdentity extends GitSCMExtension {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        UserIdentity that = (UserIdentity) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        return email != null ? email.equals(that.email) : that.email == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return UserIdentity.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "UserIdentity{" +
+                "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
+
+    @Override
     public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         GitSCM.DescriptorImpl d = scm.getDescriptor();
 

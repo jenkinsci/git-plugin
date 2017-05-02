@@ -43,6 +43,27 @@ public class GitLFSPull extends GitSCMExtension {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return o instanceof GitLFSPull;
+    }
+
+    @Override
+    public int hashCode() {
+        return GitLFSPull.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "GitLFSPull{}";
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override

@@ -23,29 +23,22 @@
  *
  */
 
+/**
+ * The common behaviours that can be used by all {@link jenkins.plugins.git.GitSCMSource} instances and most
+ * {@link jenkins.plugins.git.AbstractGitSCMSource} instances.
+ * A lot of these will be effectively simple wrappers over {@link hudson.plugins.git.extensions.GitSCMExtension}
+ * however we do not want every {@link hudson.plugins.git.extensions.GitSCMExtension} to have a corresponding
+ * {@link jenkins.plugins.git.traits.GitSCMExtensionTrait} as some of the extensions do not make sense in the context
+ * of a {@link jenkins.plugins.git.GitSCMSource}.
+ * <p>
+ * There are some recommendations for {@link hudson.plugins.git.extensions.GitSCMExtension} implementations that are
+ * being exposed as {@link jenkins.plugins.git.traits.GitSCMExtensionTrait} types:
+ * <ul>
+ *     <li>Implement an {@link hudson.plugins.git.extensions.GitSCMExtension#equals(java.lang.Object)}</li>
+ *     <li>Implement a {@link hudson.plugins.git.extensions.GitSCMExtension#hashCode()} returning {@link java.lang.Class#hashCode()}</li>
+ *     <li>Implement {@link hudson.plugins.git.extensions.GitSCMExtension#toString()}</li>
+ * </ul>
+ *
+ * @since 3.4.0
+ */
 package jenkins.plugins.git.traits;
-
-import hudson.Extension;
-import hudson.plugins.git.extensions.impl.UserIdentity;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-public class UserIdentityTrait extends GitSCMExtensionTrait<UserIdentity> {
-    @DataBoundConstructor
-    public UserIdentityTrait(UserIdentity extension) {
-        super(extension);
-    }
-
-    /**
-     * Our {@link hudson.model.Descriptor}
-     */
-    @Extension
-    public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getDisplayName() {
-            return "Custom user name/e-mail address";
-        }
-    }
-}

@@ -141,7 +141,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
      * 
      * @since 3.4.0
      */
-    private List<SCMSourceTrait> traits;
+    private List<SCMSourceTrait> traits = new ArrayList<>();
 
     @DataBoundConstructor
     public GitSCMSource(String id, String remote, String credentialsId) {

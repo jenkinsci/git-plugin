@@ -119,6 +119,52 @@ public class SubmoduleOption extends GitSCMExtension {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        SubmoduleOption that = (SubmoduleOption) o;
+
+        if (disableSubmodules != that.disableSubmodules) {
+            return false;
+        }
+        if (recursiveSubmodules != that.recursiveSubmodules) {
+            return false;
+        }
+        if (trackingSubmodules != that.trackingSubmodules) {
+            return false;
+        }
+        if (parentCredentials != that.parentCredentials) {
+            return false;
+        }
+        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
+            return false;
+        }
+        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return SubmoduleOption.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "SubmoduleOption{" +
+                "disableSubmodules=" + disableSubmodules +
+                ", recursiveSubmodules=" + recursiveSubmodules +
+                ", trackingSubmodules=" + trackingSubmodules +
+                ", reference='" + reference + '\'' +
+                ", parentCredentials=" + parentCredentials +
+                ", timeout=" + timeout +
+                '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override

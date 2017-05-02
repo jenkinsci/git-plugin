@@ -348,7 +348,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         count++;
                         final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                         if (request.process(new SCMHead(branchName),
-                                new SCMSourceRequest.IntermediateFactory<ObjectId>() {
+                                new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                     @Nullable
                                     @Override
                                     public ObjectId create() throws IOException, InterruptedException {
@@ -356,7 +356,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         return b.getSHA1();
                                     }
                                 },
-                                new SCMSourceRequest.ProbeFactory<SCMHead, ObjectId>() {
+                                new SCMSourceRequest.ProbeLambda<SCMHead, ObjectId>() {
                                     @NonNull
                                     @Override
                                     public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
@@ -413,7 +413,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                             }
                                         };
                                     }
-                                }, new SCMSourceRequest.LazyRevisionFactory<SCMHead, SCMRevision, ObjectId>() {
+                                }, new SCMSourceRequest.LazyRevisionLambda<SCMHead, SCMRevision, ObjectId>() {
                                     @NonNull
                                     @Override
                                     public SCMRevision create(@NonNull SCMHead head, @Nullable ObjectId intermediate)

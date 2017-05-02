@@ -46,7 +46,7 @@ public class LocalBranch extends FakeGitSCMExtension {
 
     @Override
     public int hashCode() {
-        return localBranch != null ? localBranch.hashCode() : 0;
+        return LocalBranch.class.hashCode();
     }
 
     @Override

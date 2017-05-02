@@ -162,6 +162,53 @@ public class CloneOption extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CloneOption that = (CloneOption) o;
+
+        if (shallow != that.shallow) {
+            return false;
+        }
+        if (noTags != that.noTags) {
+            return false;
+        }
+        if (depth != that.depth) {
+            return false;
+        }
+        if (honorRefspec != that.honorRefspec) {
+            return false;
+        }
+        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
+            return false;
+        }
+        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return CloneOption.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "CloneOption{" +
+                "shallow=" + shallow +
+                ", noTags=" + noTags +
+                ", reference='" + reference + '\'' +
+                ", timeout=" + timeout +
+                ", depth=" + depth +
+                ", honorRefspec=" + honorRefspec +
+                '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
