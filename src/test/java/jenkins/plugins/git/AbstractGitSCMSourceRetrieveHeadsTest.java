@@ -8,12 +8,13 @@ import java.util.List;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
+import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import org.eclipse.jgit.transport.RefSpec;
+import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,7 +56,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         // Partial mock our AbstractGitSCMSourceImpl
         gitSCMSource = PowerMockito.spy(new AbstractGitSCMSourceImpl());
         // Always resolve to mocked GitTool
-        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool();
+        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE);
     }
 
     /**
@@ -68,7 +69,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
             // Should throw exception confirming that Git#using was used correctly
             gitSCMSource.retrieve(new SCMHead("master"), TaskListener.NULL);
         } catch (GitToolNotSpecified e) {
-            Assert.fail("Git client was constructed wirth arbitrary git tool");
+            Assert.fail("Git client was constructed with arbitrary git tool");
         }
     }
 
@@ -103,7 +104,12 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         @NonNull
         @Override
         public List<SCMSourceTrait> getTraits() {
-            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait("EXPECTED_GIT_EXE"));
+            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait(EXPECTED_GIT_EXE){
+                @Override
+                public SCMSourceTraitDescriptor getDescriptor() {
+                    return new GitBrowserSCMSourceTrait.DescriptorImpl();
+                }
+            });
         }
 
         @Override
@@ -114,11 +120,6 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         @Override
         public String getRemote() {
             return "";
-        }
-
-        @Override
-        protected List<RefSpec> getRefSpecs() {
-            return Collections.emptyList();
         }
 
         @Override
