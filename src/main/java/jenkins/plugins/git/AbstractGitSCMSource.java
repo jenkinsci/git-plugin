@@ -623,15 +623,26 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @NonNull
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        return newBuilder(head, revision)
+        GitSCMBuilder builder = newBuilder(head, revision)
                 .withRemote(getRemote())
-                .withCredentials(getCredentialsId())
-                .withExtensions(getExtensions()) // in case a legacy non-trait aware older sub-class has overridden
-                .withBrowser(getBrowser()) // in case a legacy non-trait aware older sub-class has overridden
-                .withGitTool(getGitTool()) // in case a legacy non-trait aware older sub-class has overridden
-                .withRefSpecs(getRefSpecs()) // in case a legacy non-trait aware older sub-class has overridden
-                .withTraits(getTraits())
-                .build();
+                .withCredentials(getCredentialsId());
+        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getExtensions")) {
+            builder.withExtensions(getExtensions());
+        }
+        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getBrowser")) {
+            builder.withBrowser(getBrowser());
+        }
+        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
+            builder.withGitTool(getGitTool());
+        }
+        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
+            List<String> specs = new ArrayList<>();
+            for (RefSpec spec: getRefSpecs()) {
+                specs.add(spec.toString());
+            }
+            builder.withRefSpecs(specs);
+        }
+        return builder.withTraits(getTraits()).build();
     }
 
     @Deprecated

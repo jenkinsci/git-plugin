@@ -7,6 +7,7 @@ import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCMRevisionState;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -27,6 +28,8 @@ import static org.hamcrest.Matchers.*;
 
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -257,20 +260,36 @@ public class AbstractGitSCMSourceTest {
         extensions.add(localBranchExtension);
         source.setExtensions(extensions);
         assertEquals(source.getExtensions(), extensions);
-        TaskListener listener = StreamTaskListener.fromStderr();
 
         SCMHead head = new SCMHead("master");
         SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
 
+        // because we are ignoring push notifications we also ignore commits
+        extensions.add(new IgnoreNotifyCommit());
+
         /* Check that BuildChooserSetting not added to extensions by build() */
         GitSCM scm = (GitSCM) source.build(head);
-        assertEquals(extensions, scm.getExtensions());
+        List<GitSCMExtension> scmExtensions = scm.getExtensions();
+        assertThat(scmExtensions, Matchers.<List<GitSCMExtension>>allOf(
+                not(Matchers.<GitSCMExtension>hasItem(instanceOf(BuildChooserSetting.class))),
+                containsInAnyOrder(extensions.toArray(new GitSCMExtension[extensions.size()]))
+        ));
+
 
         /* Check that BuildChooserSetting has been added to extensions by build() */
         GitSCM scmRevision = (GitSCM) source.build(head, revision);
-        assertEquals(extensions.get(0), scmRevision.getExtensions().get(0));
-        assertTrue(scmRevision.getExtensions().get(1) instanceof BuildChooserSetting);
-        assertEquals(2, scmRevision.getExtensions().size());
+        scmExtensions = scmRevision.getExtensions();
+        for (GitSCMExtension e: scmExtensions) {
+            if (e instanceof BuildChooserSetting) {
+                extensions.add(e);
+                break;
+            }
+        }
+        assertThat(scmExtensions, Matchers.<List<GitSCMExtension>>allOf(
+                Matchers.<GitSCMExtension>hasSize(3),
+                containsInAnyOrder(extensions.toArray(new GitSCMExtension[extensions.size()])),
+                Matchers.<GitSCMExtension>hasItem(instanceOf(BuildChooserSetting.class))
+        ));
     }
 
 

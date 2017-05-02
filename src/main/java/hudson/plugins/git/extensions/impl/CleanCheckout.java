@@ -32,6 +32,27 @@ public class CleanCheckout extends GitSCMExtension {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return o instanceof CleanCheckout;
+    }
+
+    @Override
+    public int hashCode() {
+        return CleanCheckout.class.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "CleanCheckout{}";
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
