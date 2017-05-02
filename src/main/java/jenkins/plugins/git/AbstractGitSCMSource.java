@@ -617,15 +617,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected GitSCMBuilder newBuilder(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        return new GitSCMBuilder(head, revision);
+        return new GitSCMBuilder(head, revision, getRemote(), getCredentialsId());
     }
 
     @NonNull
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        GitSCMBuilder builder = newBuilder(head, revision)
-                .withRemote(getRemote())
-                .withCredentials(getCredentialsId());
+        GitSCMBuilder builder = newBuilder(head, revision);
         if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getExtensions")) {
             builder.withExtensions(getExtensions());
         }
@@ -640,7 +638,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             for (RefSpec spec: getRefSpecs()) {
                 specs.add(spec.toString());
             }
-            builder.withRefSpecs(specs);
+            builder.withoutRefSpecs().withRefSpecs(specs);
         }
         return builder.withTraits(getTraits()).build();
     }
