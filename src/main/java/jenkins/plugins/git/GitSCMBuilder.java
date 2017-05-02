@@ -53,29 +53,36 @@ import org.eclipse.jgit.transport.RefSpec;
  *
  * @param <B> the concrete type of {@link GitSCMBuilder} so that subclasses can chain correctly in their
  * {@link #withHead(SCMHead)} etc methods.
+ * @since 3.4.0
  */
 public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, GitSCM> {
 
-    /**
-     * The {@link GitSCMExtension} instances to apply to the {@link GitSCM}.
-     */
-    @NonNull
-    private final List<GitSCMExtension> extensions = new ArrayList<>();
-    /**
-     * The ref specs to apply to the {@link GitSCM}.
-     */
-    @NonNull
-    private List<String> refSpecs = new ArrayList<>();
     /**
      * The {@link GitRepositoryBrowser} or {@code null} to use the "auto" browser.
      */
     @CheckForNull
     private GitRepositoryBrowser browser;
     /**
+     * The {@link GitSCMExtension} instances to apply to the {@link GitSCM}.
+     */
+    @NonNull
+    private final List<GitSCMExtension> extensions = new ArrayList<>();
+    /**
+     * The {@link IdCredentials#getId()} of the {@link Credentials} to use when connecting to the {@link #remote} or
+     * {@code null} to let the git client choose between providing its own credentials or connecting anonymously.
+     */
+    @CheckForNull
+    private String credentialsId;
+    /**
      * The name of the {@link GitTool} to use or {@code null} to use the default.
      */
     @CheckForNull
     private String gitTool;
+    /**
+     * The ref specs to apply to the {@link GitSCM}.
+     */
+    @NonNull
+    private List<String> refSpecs = new ArrayList<>();
     /**
      * The name of the remote, defaults to {@link AbstractGitSCMSource#DEFAULT_REMOTE_NAME}.
      */
@@ -86,12 +93,6 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      */
     @NonNull
     private String remote;
-    /**
-     * The {@link IdCredentials#getId()} of the {@link Credentials} to use when connecting to the {@link #remote} or
-     * {@code null} to let the git client choose between providing its own credentials or connecting anonymously.
-     */
-    @CheckForNull
-    private String credentialsId;
 
     /**
      * Constructor.
@@ -361,7 +362,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     @NonNull
     public final List<RefSpec> asRefSpecs() {
         List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
-        for (String template: refSpecs()){
+        for (String template : refSpecs()) {
             result.add(new RefSpec(
                     template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())
             ));
