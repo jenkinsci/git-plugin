@@ -188,6 +188,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         return credentialsId;
     }
 
+    @NonNull
     @Override
     public GitSCM build() {
         List<GitSCMExtension> extensions = extensions();
