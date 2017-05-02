@@ -1256,7 +1256,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
-    public void buildEnvVars(Run<?, ?> build, java.util.Map<String, String> env) {
+    public void buildEnvironment(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
             Branch branch = Iterables.getFirst(rev.getBranches(), null);
