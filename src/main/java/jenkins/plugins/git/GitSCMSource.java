@@ -168,7 +168,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
         }
-        if (!"origin".equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+        if (!DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
             traits.add(new RemoteNameSCMSourceTrait(remoteName));
         }
         if (ignoreOnPushNotifications) {
@@ -218,7 +218,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
             }
-            if (remoteName != null && !"origin".equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+            if (remoteName != null && !DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
                 traits.add(new RemoteNameSCMSourceTrait(remoteName));
             }
             if (StringUtils.isNotBlank(gitTool)) {
