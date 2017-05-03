@@ -516,6 +516,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull final String revision, @NonNull final TaskListener listener) throws IOException, InterruptedException {
+
+        final GitSCMSourceContext context =
+                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -523,9 +526,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   try {
                                       hash = client.revParse(revision).name();
                                   } catch (GitException x) {
-                                      // Try prepending origin/ in case it was a branch.
+                                      // Try prepending remote name in case it was a branch.
                                       try {
-                                          hash = client.revParse("origin/" + revision).name();
+                                          hash = client.revParse(context.remoteName() + "/" + revision).name();
                                       } catch (GitException x2) {
                                           listener.getLogger().println(x.getMessage());
                                           listener.getLogger().println(x2.getMessage());
@@ -535,7 +538,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   return new SCMRevisionImpl(new SCMHead(revision), hash);
                               }
                           },
-                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
+                context,
                 listener, false);
     }
 
@@ -545,18 +548,24 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @NonNull
     @Override
     protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
+
+        final GitSCMSourceContext context =
+                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         return doRetrieve(new Retriever<Set<String>>() {
                               @Override
                               public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
                                   Set<String> revisions = new HashSet<String>();
                                   for (Branch branch : client.getRemoteBranches()) {
-                                      revisions.add(branch.getName().replaceFirst("^origin/", ""));
+                                      revisions.add(branch.getName().replaceFirst(
+                                              "^" + Pattern.quote(context.remoteName()) + "/",
+                                              ""
+                                      ));
                                   }
                                   revisions.addAll(client.getTagNames("*"));
                                   return revisions;
                               }
                           },
-                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
+                context,
                 listener, false);
     }
 
