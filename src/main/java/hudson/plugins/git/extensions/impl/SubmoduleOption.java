@@ -9,10 +9,9 @@ import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -78,6 +77,9 @@ public class SubmoduleOption extends GitSCMExtension {
         return timeout;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onClean(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         if (!disableSubmodules && git.hasGitModules()) {
@@ -85,6 +87,9 @@ public class SubmoduleOption extends GitSCMExtension {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         BuildData revToBuild = scm.getBuildData(build);
@@ -94,12 +99,12 @@ public class SubmoduleOption extends GitSCMExtension {
             // seamless use of bare and non-bare superproject repositories.
             git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
             git.submoduleUpdate()
-                .recursive(recursiveSubmodules)
-                .remoteTracking(trackingSubmodules)
-                .parentCredentials(parentCredentials)
-                .ref(build.getEnvironment(listener).expand(reference))
-                .timeout(timeout)
-                .execute();
+                    .recursive(recursiveSubmodules)
+                    .remoteTracking(trackingSubmodules)
+                    .parentCredentials(parentCredentials)
+                    .ref(build.getEnvironment(listener).expand(reference))
+                    .timeout(timeout)
+                    .execute();
         }
 
         if (scm.isDoGenerateSubmoduleConfigurations()) {
@@ -119,6 +124,9 @@ public class SubmoduleOption extends GitSCMExtension {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -148,11 +156,17 @@ public class SubmoduleOption extends GitSCMExtension {
         return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return SubmoduleOption.class.hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "SubmoduleOption{" +
@@ -167,6 +181,9 @@ public class SubmoduleOption extends GitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Advanced sub-modules behaviours";

@@ -30,6 +30,9 @@ public class LocalBranch extends FakeGitSCMExtension {
         return localBranch;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -44,11 +47,17 @@ public class LocalBranch extends FakeGitSCMExtension {
         return localBranch != null ? localBranch.equals(that.localBranch) : that.localBranch == null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return LocalBranch.class.hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "LocalBranch{" +
@@ -56,9 +65,11 @@ public class LocalBranch extends FakeGitSCMExtension {
                 + '}';
     }
 
-
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Check out to specific local branch";

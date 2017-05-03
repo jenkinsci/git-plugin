@@ -180,7 +180,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
         /**
          * Gets the template value.
          *
-         * @return
+         * @return the template value.
          */
         @NonNull
         public String getValue() {

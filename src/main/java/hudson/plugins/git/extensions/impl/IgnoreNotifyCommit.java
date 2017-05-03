@@ -15,6 +15,9 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
     public IgnoreNotifyCommit() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -26,11 +29,17 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
         return o instanceof IgnoreNotifyCommit;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return IgnoreNotifyCommit.class.hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "IgnoreNotifyCommit{}";
@@ -38,6 +47,9 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Don't trigger a build on commit notifications";

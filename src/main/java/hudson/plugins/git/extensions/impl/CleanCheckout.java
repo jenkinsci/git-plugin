@@ -7,10 +7,9 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
 
 /**
  * git-clean after the checkout.
@@ -22,6 +21,9 @@ public class CleanCheckout extends GitSCMExtension {
     public CleanCheckout() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Cleaning workspace");
@@ -32,6 +34,9 @@ public class CleanCheckout extends GitSCMExtension {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -43,11 +48,17 @@ public class CleanCheckout extends GitSCMExtension {
         return o instanceof CleanCheckout;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return CleanCheckout.class.hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "CleanCheckout{}";
@@ -55,6 +66,9 @@ public class CleanCheckout extends GitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Clean after checkout";
