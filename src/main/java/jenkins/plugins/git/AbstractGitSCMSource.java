@@ -41,6 +41,7 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
@@ -76,6 +77,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
 import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
+import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
@@ -92,6 +94,7 @@ import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
@@ -111,13 +114,40 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * @author Stephen Connolly
+ * Base class for {@link SCMSource} implementations that produce {@link GitSCM} implementations.
+ *
+ * @since 2.0
  */
 public abstract class AbstractGitSCMSource extends SCMSource {
 
+    /**
+     * The default remote name to use when configuring the ref specs to use with fetch operations.
+     *
+     * @since 3.4.0
+     */
     public static final String DEFAULT_REMOTE_NAME = "origin";
+    /**
+     * The placeholder to use in ref spec templates in order to correctly ensure that the ref spec remote name
+     * matches the remote name.
+     * <p>
+     * The template uses {@code @{...}} as that is an illegal sequence in a remote name
+     *
+     * @see <a href="https://github.com/git/git/blob/027a3b943b444a3e3a76f9a89803fc10245b858f/refs.c#L61-L68>git
+     * source code rules on ref spec names</a>
+     * @since 3.4.0
+     */
     public static final String REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR = "@{remote}";
+    /**
+     * The regex for {@link #REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR}.
+     *
+     * @since 3.4.0
+     */
     public static final String REF_SPEC_REMOTE_NAME_PLACEHOLDER = "(?i)"+Pattern.quote(REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR);
+    /**
+     * The default ref spec template.
+     *
+     * @since 3.4.0
+     */
     public static final String REF_SPEC_DEFAULT =
             "+refs/heads/*:refs/remotes/" + REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR + "/*";
 
@@ -140,6 +170,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     public abstract String getRemote();
 
+    /**
+     * @deprecated use {@link WildcardSCMSourceFilterTrait}
+     * @return the includes.
+     */
     @Deprecated
     @Restricted(DoNotUse.class)
     @RestrictedSince("3.4.0")
@@ -152,6 +186,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return "*";
     }
 
+    /**
+     * @return the excludes.
+     * @deprecated use {@link WildcardSCMSourceFilterTrait}
+     */
     @Deprecated
     @Restricted(DoNotUse.class)
     @RestrictedSince("3.4.0")
@@ -168,6 +206,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * Gets {@link GitRepositoryBrowser} to be used with this SCMSource.
      * @return Repository browser or {@code null} if the default tool should be used.
      * @since 2.5.1
+     * @deprecated use {@link GitBrowserSCMSourceTrait}
      */
     @CheckForNull
     @Deprecated
@@ -187,6 +226,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * Gets Git tool to be used for this SCM Source.
      * @return Git Tool or {@code null} if the default tool should be used.
      * @since 2.5.1
+     * @deprecated use {@link GitToolSCMSourceTrait}
      */
     @CheckForNull
     @Deprecated
@@ -206,6 +246,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * Gets list of extensions, which should be used with this branch source.
      * @return List of Extensions to be used. May be empty
      * @since 2.5.1
+     * @deprecated use corresponding {@link GitSCMExtensionTrait} (and if there isn't one then likely the
+     * {@link GitSCMExtension} is not appropriate to use in the context of a {@link SCMSource})
      */
     @NonNull
     @Deprecated
@@ -221,12 +263,21 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return Collections.unmodifiableList(extensions);
     }
 
+    /**
+     * Returns the {@link SCMSourceTrait} instances for this {@link AbstractGitSCMSource}.
+     * @return the {@link SCMSourceTrait} instances
+     * @sinec 3.4.0
+     */
     @NonNull
     public List<SCMSourceTrait> getTraits() {
-        // Always return empty list
+        // Always return empty list (we expect subclasses to override)
         return Collections.emptyList();
     }
 
+    /**
+     * @deprecated use {@link RemoteNameSCMSourceTrait}
+     * @return the remote name.
+     */
     @Deprecated
     @Restricted(DoNotUse.class)
     @RestrictedSince("3.4.0")
@@ -239,6 +290,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return DEFAULT_REMOTE_NAME;
     }
 
+    /**
+     * Resolves the {@link GitTool}.
+     * @return the {@link GitTool}.
+     * @deprecated use {@link #resolveGitTool(String)}.
+     */
     @CheckForNull
     @Deprecated
     @Restricted(DoNotUse.class)
@@ -247,6 +303,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return resolveGitTool(getGitTool());
     }
 
+    /**
+     * Resolves the {@link GitTool}.
+     * @param gitTool the {@link GitTool#getName()} to resolve.
+     * @return the {@link GitTool}
+     * @since 3.4.0
+     */
     @CheckForNull
     protected GitTool resolveGitTool(String gitTool) {
         return StringUtils.isBlank(gitTool)
@@ -303,26 +365,32 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         return doRetrieve(new Retriever<SCMRevision>() {
-            @Override
-            public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                for (Branch b : client.getRemoteBranches()) {
-                    String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
-                    if (branchName.equals(head.getName())) {
-                        return new SCMRevisionImpl(head, b.getSHA1String());
-                    }
-                }
-                return null;
-            }
-        },
+                              @Override
+                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  for (Branch b : client.getRemoteBranches()) {
+                                      String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                                      if (branchName.equals(head.getName())) {
+                                          return new SCMRevisionImpl(head, b.getSHA1String());
+                                      }
+                                  }
+                                  return null;
+                              }
+                          },
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
-        listener, /* we don't prune remotes here, as we just want one head's revision */false);
+                listener, /* we don't prune remotes here, as we just want one head's revision */false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable this")
     protected void retrieve(@CheckForNull SCMSourceCriteria criteria,
@@ -442,114 +510,127 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }, context, listener, true);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @CheckForNull
     @Override
     protected SCMRevision retrieve(@NonNull final String revision, @NonNull final TaskListener listener) throws IOException, InterruptedException {
         return doRetrieve(new Retriever<SCMRevision>() {
-            @Override
-            public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                String hash;
-                try {
-                    hash = client.revParse(revision).name();
-                } catch (GitException x) {
-                    // Try prepending origin/ in case it was a branch.
-                    try {
-                        hash = client.revParse("origin/" + revision).name();
-                    } catch (GitException x2) {
-                        listener.getLogger().println(x.getMessage());
-                        listener.getLogger().println(x2.getMessage());
-                        return null;
-                    }
-                }
-                return new SCMRevisionImpl(new SCMHead(revision), hash);
-            }
-        },
+                              @Override
+                              public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  String hash;
+                                  try {
+                                      hash = client.revParse(revision).name();
+                                  } catch (GitException x) {
+                                      // Try prepending origin/ in case it was a branch.
+                                      try {
+                                          hash = client.revParse("origin/" + revision).name();
+                                      } catch (GitException x2) {
+                                          listener.getLogger().println(x.getMessage());
+                                          listener.getLogger().println(x2.getMessage());
+                                          return null;
+                                      }
+                                  }
+                                  return new SCMRevisionImpl(new SCMHead(revision), hash);
+                              }
+                          },
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
                 listener, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
         return doRetrieve(new Retriever<Set<String>>() {
-            @Override
-            public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                Set<String> revisions = new HashSet<String>();
-                for (Branch branch : client.getRemoteBranches()) {
-                    revisions.add(branch.getName().replaceFirst("^origin/", ""));
-                }
-                revisions.addAll(client.getTagNames("*"));
-                return revisions;
-            }
-        },
+                              @Override
+                              public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  Set<String> revisions = new HashSet<String>();
+                                  for (Branch branch : client.getRemoteBranches()) {
+                                      revisions.add(branch.getName().replaceFirst("^origin/", ""));
+                                  }
+                                  revisions.addAll(client.getTagNames("*"));
+                                  return revisions;
+                              }
+                          },
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
                 listener, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         return doRetrieve(new Retriever<List<Action>>() {
-            @Override
-            public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
-                if (symrefs.containsKey(Constants.HEAD)) {
-                    // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
-                    String target = symrefs.get(Constants.HEAD);
-                    if (target.startsWith(Constants.R_HEADS)) {
-                        // shorten standard names
-                        target = target.substring(Constants.R_HEADS.length());
-                    }
-                    List<Action> result = new ArrayList<>();
-                    if (StringUtils.isNotBlank(target)) {
-                        result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                    }
-                    return result;
-                }
-                // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
-                // I think we will still need to keep this code path even if JGit implements
-                // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
-                // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is 
-                // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and Ubuntu 16)
-                Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
-                if (remoteReferences.containsKey(Constants.HEAD)) {
-                    ObjectId head = remoteReferences.get(Constants.HEAD);
-                    Set<String> names = new TreeSet<>();
-                    for (Map.Entry<String, ObjectId> entry: remoteReferences.entrySet()) {
-                        if (entry.getKey().equals(Constants.HEAD)) continue;
-                        if (head.equals(entry.getValue())) {
-                            names.add(entry.getKey());
-                        }
-                    }
-                    // if there is one and only one match, that's the winner
-                    if (names.size() == 1) {
-                        String target = names.iterator().next();
-                        if (target.startsWith(Constants.R_HEADS)) {
-                            // shorten standard names
-                            target = target.substring(Constants.R_HEADS.length());
-                        }
-                        List<Action> result = new ArrayList<>();
-                        if (StringUtils.isNotBlank(target)) {
-                            result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                        }
-                        return result;
-                    }
-                    // if there are multiple matches, prefer `master`
-                    if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
-                        List<Action> result = new ArrayList<Action>();
-                        result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
-                        return result;
-                    }
-                }
-                // Give up, there's no way to get the primary branch
-                return new ArrayList<>();
-            }
-        },
+                              @Override
+                              public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+                                  if (symrefs.containsKey(Constants.HEAD)) {
+                                      // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
+                                      String target = symrefs.get(Constants.HEAD);
+                                      if (target.startsWith(Constants.R_HEADS)) {
+                                          // shorten standard names
+                                          target = target.substring(Constants.R_HEADS.length());
+                                      }
+                                      List<Action> result = new ArrayList<>();
+                                      if (StringUtils.isNotBlank(target)) {
+                                          result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                                      }
+                                      return result;
+                                  }
+                                  // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
+                                  // I think we will still need to keep this code path even if JGit implements
+                                  // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
+                                  // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
+                                  // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
+                                  // Ubuntu 16)
+                                  Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+                                  if (remoteReferences.containsKey(Constants.HEAD)) {
+                                      ObjectId head = remoteReferences.get(Constants.HEAD);
+                                      Set<String> names = new TreeSet<>();
+                                      for (Map.Entry<String, ObjectId> entry: remoteReferences.entrySet()) {
+                                          if (entry.getKey().equals(Constants.HEAD)) continue;
+                                          if (head.equals(entry.getValue())) {
+                                              names.add(entry.getKey());
+                                          }
+                                      }
+                                      // if there is one and only one match, that's the winner
+                                      if (names.size() == 1) {
+                                          String target = names.iterator().next();
+                                          if (target.startsWith(Constants.R_HEADS)) {
+                                              // shorten standard names
+                                              target = target.substring(Constants.R_HEADS.length());
+                                          }
+                                          List<Action> result = new ArrayList<>();
+                                          if (StringUtils.isNotBlank(target)) {
+                                              result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                                          }
+                                          return result;
+                                      }
+                                      // if there are multiple matches, prefer `master`
+                                      if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
+                                          List<Action> result = new ArrayList<Action>();
+                                          result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
+                                          return result;
+                                      }
+                                  }
+                                  // Give up, there's no way to get the primary branch
+                                  return new ArrayList<>();
+                              }
+                          },
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
                 listener, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event,
@@ -609,6 +690,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 GitClient.CREDENTIALS_MATCHER));
     }
 
+    /**
+     * @return the ref specs.
+     * @deprecated use {@link RefSpecsSCMSourceTrait}
+     */
     @Deprecated
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
@@ -616,14 +701,37 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return Collections.emptyList();
     }
 
-    protected GitSCMBuilder newBuilder(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        return new GitSCMBuilder(head, revision, getRemote(), getCredentialsId());
+    /**
+     * Instantiates a new {@link GitSCMBuilder}.
+     * Subclasses should override this method if they want to use a custom {@link GitSCMBuilder} or if they need
+     * to pre-decorare the builder.
+     *
+     * @param head     the {@link SCMHead}.
+     * @param revision the {@link SCMRevision}.
+     * @return the {@link GitSCMBuilder}
+     * @see #decorate(GitSCMBuilder) for post-decoration.
+     */
+    protected GitSCMBuilder<?> newBuilder(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
+        return new GitSCMBuilder<>(head, revision, getRemote(), getCredentialsId());
     }
 
+    /**
+     * Performs final decoration of the {@link GitSCMBuilder}. This method is called by
+     * {@link #build(SCMHead, SCMRevision)} immediately prior to returning {@link GitSCMBuilder#build()}.
+     * Subclasses should override this method if they need to overrule builder behaviours defined by traits.
+     *
+     * @param builder
+     */
+    protected void decorate(GitSCMBuilder<?> builder) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-        GitSCMBuilder builder = newBuilder(head, revision);
+        GitSCMBuilder<?> builder = newBuilder(head, revision);
         if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getExtensions")) {
             builder.withExtensions(getExtensions());
         }
@@ -633,16 +741,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
             builder.withGitTool(getGitTool());
         }
-        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
+        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getRefSpecs")) {
             List<String> specs = new ArrayList<>();
             for (RefSpec spec: getRefSpecs()) {
                 specs.add(spec.toString());
             }
             builder.withoutRefSpecs().withRefSpecs(specs);
         }
-        return builder.withTraits(getTraits()).build();
+        builder.withTraits(getTraits());
+        decorate(builder);
+        return builder.build();
     }
 
+    /**
+     * @return the {@link UserRemoteConfig} instances.
+     * @deprecated use {@link GitSCMBuilder#asRemoteConfigs()}
+     */
     @Deprecated
     @Restricted(DoNotUse.class)
     @RestrictedSince("3.4.0")
@@ -661,6 +775,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * 
      * @param branchName name of branch to be tested
      * @return true if branchName is excluded or is not included
+     * @deprecated use {@link WildcardSCMSourceFilterTrait}
      */
     @Deprecated
     @Restricted(DoNotUse.class)
@@ -717,6 +832,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return hash;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -732,11 +850,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public int hashCode() {
             return hash != null ? hash.hashCode() : 0;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String toString() {
             return hash;
@@ -754,6 +878,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             this.revision = new Revision(sha1, Collections.singleton(new Branch(name, sha1)));
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch, GitClient git,
                                                           TaskListener listener, BuildData buildData,
@@ -762,6 +889,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return Collections.singleton(revision);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git,
                                            BuildChooserContext context) throws IOException, InterruptedException {
@@ -772,11 +902,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         @Extension
         public static class DescriptorImpl extends BuildChooserDescriptor {
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public String getDisplayName() {
                 return "Specific revision";
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
             public boolean isApplicable(java.lang.Class<? extends Item> job) {
                 return SCMSourceOwner.class.isAssignableFrom(job);
             }
