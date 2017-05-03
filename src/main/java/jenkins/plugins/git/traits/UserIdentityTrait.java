@@ -27,9 +27,20 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.UserIdentity;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link UserIdentity} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class UserIdentityTrait extends GitSCMExtensionTrait<UserIdentity> {
+    /**
+     * Stapler constructor.
+     *
+     * @param extension the {@link UserIdentity}.
+     */
     @DataBoundConstructor
     public UserIdentityTrait(UserIdentity extension) {
         super(extension);

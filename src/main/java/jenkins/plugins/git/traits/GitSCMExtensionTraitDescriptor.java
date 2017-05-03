@@ -27,6 +27,7 @@ package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -45,13 +46,42 @@ import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.api.trait.SCMTrait;
 import org.jvnet.tiger_types.Types;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Base class for the {@link Descriptor} of a {@link GitSCMExtension}.
+ *
+ * @since 3.4.0
+ */
 public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescriptor {
 
+    /**
+     * The type of {@link GitSCMExtension}.
+     */
+    @NonNull
     private final Class<? extends GitSCMExtension> extension;
+    /**
+     * The constructor to use in {@link #convertToTrait(GitSCMExtension)} or {@code null} if the implementation
+     * class is handling convertion.
+     */
+    @CheckForNull
     private final Constructor<? extends SCMSourceTrait> constructor;
+    /**
+     * {@code true} if {@link #constructor} does not take any parameters, {@code false} if it takes a single parameter
+     * of type {@link GitSCMExtension}.
+     */
+    private final boolean noArgConstructor;
 
+    /**
+     * Constructor to use when type inferrence using {@link #GitSCMExtensionTraitDescriptor()} does not work.
+     *
+     * @param clazz     Pass in the type of {@link SCMTrait}
+     * @param extension Pass in the type of {@link GitSCMExtension}.
+     */
     protected GitSCMExtensionTraitDescriptor(Class<? extends SCMSourceTrait> clazz,
                                              Class<? extends GitSCMExtension> extension) {
         super(clazz);
@@ -62,6 +92,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
             // 'extension' so that our default convertToTrait method implementation can be used
             try {
                 constructor = clazz.getConstructor(extension);
+                noArgConstructor = constructor.getParameterTypes().length == 0;
             } catch (NoSuchMethodException e) {
                 throw new AssertionError("Could not infer how to convert a " + extension + " to a "
                         + clazz + " as there is no obvious constructor. Either provide a simple constructor or "
@@ -69,9 +100,15 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
             }
         } else {
             constructor = null;
+            noArgConstructor = false;
         }
     }
 
+    /**
+     * Infers the type of the corresponding {@link GitSCMExtensionTrait} from the outer class.
+     * This version works when you follow the common convention, where a descriptor
+     * is written as the static nested class of the describable class.
+     */
     protected GitSCMExtensionTraitDescriptor() {
         super();
         Type bt = Types.getBaseClass(clazz, GitSCMExtensionTrait.class);
@@ -92,15 +129,34 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
                 GitSCMExtension.class)) {
             // check that the GitSCMExtensionTrait has a constructor that takes a single argument of the type
             // 'extension' so that our default convertToTrait method implementation can be used
-            try {
-                constructor = clazz.getConstructor(extension);
-            } catch (NoSuchMethodException e) {
+            Constructor<? extends SCMSourceTrait> constructor = null;
+            for (Constructor<?> c : clazz.getConstructors()) {
+                if (c.getAnnotation(DataBoundConstructor.class) != null) {
+                    constructor = (Constructor<? extends SCMSourceTrait>) c;
+                    break;
+                }
+            }
+            if (constructor != null) {
+                Class<?>[] parameterTypes = constructor.getParameterTypes();
+                if (parameterTypes.length == 0) {
+                    this.constructor = constructor;
+                    this.noArgConstructor = true;
+                } else if (parameterTypes.length == 1 && extension.equals(parameterTypes[0])) {
+                    this.constructor = constructor;
+                    this.noArgConstructor = false;
+                } else {
+                    throw new AssertionError("Could not infer how to convert a " + extension + " to a "
+                            + clazz + " as the @DataBoundConstructor is neither zero arg nor single arg of type "
+                            + extension + ". Either provide a simple constructor or override "
+                            + "convertToTrait(GitSCMExtension)");
+                }
+            } else {
                 throw new AssertionError("Could not infer how to convert a " + extension + " to a "
-                        + clazz + " as there is no obvious constructor. Either provide a simple constructor or "
-                        + "override convertToTrait(GitSCMExtension)", e);
+                        + clazz + " as there is no @DataBoundConstructor (which is going to cause other problems)");
             }
         } else {
             constructor = null;
+            this.noArgConstructor = false;
         }
     }
 
@@ -136,10 +192,21 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
         return super.isApplicableTo(source) && source instanceof AbstractGitSCMSource;
     }
 
+    /**
+     * Returns the {@link GitSCMExtensionDescriptor} for this {@link #getExtensionClass()}.
+     *
+     * @return the {@link GitSCMExtensionDescriptor} for this {@link #getExtensionClass()}.
+     */
+    @Restricted(NoExternalUse.class) // intended for use from stapler / jelly only
     public GitSCMExtensionDescriptor getExtensionDescriptor() {
         return (GitSCMExtensionDescriptor) Jenkins.getActiveInstance().getDescriptor(extension);
     }
 
+    /**
+     * Returns the type of {@link GitSCMExtension} that the {@link GitSCMExtensionTrait} wraps.
+     *
+     * @return the type of {@link GitSCMExtension} that the {@link GitSCMExtensionTrait} wraps.
+     */
     public Class<? extends GitSCMExtension> getExtensionClass() {
         return extension;
     }
@@ -148,11 +215,12 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      * Converts the supplied {@link GitSCMExtension} (which must be of type {@link #getExtensionClass()}) into
      * its corresponding {@link GitSCMExtensionTrait}.
      *
-     * The default implementation assumes that the {@link #getT()} has a public constructor taking a single argument
-     * of type {@link #getExtensionClass()} and will just call that. Override this method if you need more complex
-     * convertion logic, for example {@link LocalBranch} only makes sense for a {@link LocalBranch#getLocalBranch()}
-     * value of {@code **} so {@link LocalBranchTrait.DescriptorImpl#convertToTrait(GitSCMExtension)} returns
-     * {@code null} for all other {@link LocalBranch} configurations.
+     * The default implementation assumes that the {@link #getT()} has a public constructor taking either no arguments
+     * or a single argument of type {@link #getExtensionClass()} and will just call that. Override this method if you
+     * need more complex convertion logic, for example {@link LocalBranch} only makes sense for a
+     * {@link LocalBranch#getLocalBranch()} value of {@code **} so
+     * {@link LocalBranchTrait.DescriptorImpl#convertToTrait(GitSCMExtension)} returns {@code null} for all other
+     * {@link LocalBranch} configurations.
      *
      * @param extension the {@link GitSCMExtension} (must be of type {@link #getExtensionClass()})
      * @return the {@link GitSCMExtensionTrait} or {@code null} if the supplied {@link GitSCMExtension} is not
@@ -160,9 +228,26 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      * @throws UnsupportedOperationException if the conversion failed because of a implementation bug.
      */
     @CheckForNull
-    public SCMSourceTrait convertToTrait(GitSCMExtension extension) {
+    public SCMSourceTrait convertToTrait(@NonNull GitSCMExtension extension) {
+        if (!this.extension.isInstance(extension)) {
+            throw new IllegalArgumentException(
+                    "Expected a " + this.extension.getName() + " but got a " + extension.getClass().getName()
+            );
+        }
+        if (constructor == null) {
+            if (!Util.isOverridden(GitSCMExtensionTraitDescriptor.class, getClass(), "convertToTrait",
+                    GitSCMExtension.class)) {
+                throw new IllegalStateException("Should not be able to instantiate a " + getClass().getName()
+                        + " without an inferred constructor for " + this.extension.getName());
+            }
+            throw new UnsupportedOperationException(
+                    getClass().getName() + " should not delegate convertToTrait() to " + GitSCMExtension.class
+                            .getName());
+        }
         try {
-            return constructor.newInstance(this.extension.cast(extension));
+            return noArgConstructor
+                    ? constructor.newInstance()
+                    : constructor.newInstance(this.extension.cast(extension));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | ClassCastException e) {
             throw new UnsupportedOperationException(e);
         }
@@ -173,6 +258,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      */
     @Override
     public String getHelpFile() {
-        return getExtensionDescriptor().getHelpFile();
+        String primary = super.getHelpFile();
+        return primary == null ? getExtensionDescriptor().getHelpFile() : primary;
     }
 }

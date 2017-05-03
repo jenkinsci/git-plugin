@@ -32,14 +32,33 @@ import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceTrait;
 
+/**
+ * Base class for exposing a {@link GitSCMExtension} as a {@link SCMSourceTrait}.
+ *
+ * @param <E> the {@link GitSCMExtension} that is being exposed
+ * @sinec 3.4.0
+ */
 public abstract class GitSCMExtensionTrait<E extends GitSCMExtension> extends SCMSourceTrait {
+    /**
+     * The extension.
+     */
     @NonNull
     private final E extension;
 
+    /**
+     * Constructor.
+     *
+     * @param extension the extension.
+     */
     public GitSCMExtensionTrait(@NonNull E extension) {
         this.extension = extension;
     }
 
+    /**
+     * Gets the extension.
+     *
+     * @return the extension.
+     */
     @NonNull
     public E getExtension() {
         return extension;

@@ -27,6 +27,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
@@ -59,6 +60,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
@@ -198,7 +200,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
                         if (d instanceof GitSCMExtensionTraitDescriptor) {
                             GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
-                            if (descriptor.getExtensionDescriptor() == extension.getDescriptor()) {
+                            if (descriptor.getExtensionClass().isInstance(extension)) {
                                 try {
                                     SCMSourceTrait trait = descriptor.convertToTrait(extension);
                                     if (trait != null) {
@@ -241,16 +243,16 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 defaults.add("+refs/heads/*:refs/remotes/"+remoteName+"/*");
             }
             if (!defaults.contains(rawRefSpecs.trim())) {
-                List<RefSpecsSCMSourceTrait.RefSpecTemplate> templates = new ArrayList<>();
+                List<String> templates = new ArrayList<>();
                 for (String rawRefSpec : rawRefSpecs.split(" ")) {
                     if (defaults.contains(rawRefSpec)) {
-                        templates.add(new RefSpecsSCMSourceTrait.RefSpecTemplate(AbstractGitSCMSource.REF_SPEC_DEFAULT));
+                        templates.add(AbstractGitSCMSource.REF_SPEC_DEFAULT);
                     } else {
-                        templates.add(new RefSpecsSCMSourceTrait.RefSpecTemplate(rawRefSpec));
+                        templates.add(rawRefSpec);
                     }
                 }
                 if (!templates.isEmpty()) {
-                    return new RefSpecsSCMSourceTrait(templates);
+                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[templates.size()]));
                 }
             }
         }
@@ -303,7 +305,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Restricted(DoNotUse.class)
     @DataBoundSetter
     @Deprecated
-    public void setExtensions(List<GitSCMExtension> extensions) {
+    public void setExtensions(@CheckForNull List<GitSCMExtension> extensions) {
         for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
             if (iterator.next() instanceof GitSCMExtensionTrait) {
                 iterator.remove();
@@ -314,7 +316,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
                 if (d instanceof GitSCMExtensionTraitDescriptor) {
                     GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
-                    if (descriptor.getExtensionDescriptor() == extension.getDescriptor()) {
+                    if (descriptor.getExtensionClass().isInstance(extension)) {
                         try {
                             SCMSourceTrait trait = descriptor.convertToTrait(extension);
                             if (trait != null) {
@@ -367,14 +369,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
         StringBuilder result = new StringBuilder();
         boolean first = true;
-        for (RefSpecsSCMSourceTrait.RefSpecTemplate template: refSpecs.getTemplates()) {
+        Pattern placeholder = Pattern.compile(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER);
+        for (String template : refSpecs.asStrings()) {
             if (first) {
                 first = false;
             } else {
                 result.append(' ');
             }
-            result.append(template.getValue().replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER,
-                    remoteName));
+            result.append(placeholder.matcher(template).replaceAll(remoteName));
         }
         return result.toString();
     }
@@ -500,7 +502,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public List<SCMSourceTrait> getDefaultTraits() {
-            return Collections.<SCMSourceTrait>emptyList();
+            return Collections.emptyList();
         }
     }
 

@@ -27,12 +27,21 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link AuthorInChangelog} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class AuthorInChangelogTrait extends GitSCMExtensionTrait<AuthorInChangelog> {
+    /**
+     * Stapler constructor.
+     */
     @DataBoundConstructor
-    public AuthorInChangelogTrait(AuthorInChangelog extension) {
-        super(extension);
+    public AuthorInChangelogTrait() {
+        super(new AuthorInChangelog());
     }
 
     /**

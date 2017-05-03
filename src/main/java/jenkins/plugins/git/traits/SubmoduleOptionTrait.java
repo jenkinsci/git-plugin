@@ -27,9 +27,20 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link SubmoduleOption} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class SubmoduleOptionTrait extends GitSCMExtensionTrait<SubmoduleOption> {
+    /**
+     * Stapler constructor.
+     *
+     * @param extension the {@link SubmoduleOption}.
+     */
     @DataBoundConstructor
     public SubmoduleOptionTrait(SubmoduleOption extension) {
         super(extension);

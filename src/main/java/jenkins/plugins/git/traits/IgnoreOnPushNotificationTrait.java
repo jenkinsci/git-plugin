@@ -42,6 +42,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
 
+    /**
+     * Stapler constructor.
+     */
     @DataBoundConstructor
     public IgnoreOnPushNotificationTrait() {
     }

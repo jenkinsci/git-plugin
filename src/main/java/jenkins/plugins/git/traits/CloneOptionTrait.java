@@ -27,9 +27,20 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link CloneOption} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
+    /**
+     * Stapler constructor.
+     *
+     * @param extension the {@link CloneOption}
+     */
     @DataBoundConstructor
     public CloneOptionTrait(CloneOption extension) {
         super(extension);

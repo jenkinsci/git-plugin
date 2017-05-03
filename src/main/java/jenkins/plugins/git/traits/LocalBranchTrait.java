@@ -25,14 +25,25 @@
 
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes the subset of {@link LocalBranch} that is appropriate in the context of a {@link SCMSource} as a
+ * {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
+    /**
+     * Stapler constructor.
+     */
     @DataBoundConstructor
     public LocalBranchTrait() {
         super(new LocalBranch("**"));
@@ -55,7 +66,7 @@ public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
          * {@inheritDoc}
          */
         @Override
-        public SCMSourceTrait convertToTrait(GitSCMExtension extension) {
+        public SCMSourceTrait convertToTrait(@NonNull GitSCMExtension extension) {
             LocalBranch ext = (LocalBranch) extension;
             if ("**".equals(StringUtils.defaultIfBlank(ext.getLocalBranch(), "**"))) {
                 return new LocalBranchTrait();

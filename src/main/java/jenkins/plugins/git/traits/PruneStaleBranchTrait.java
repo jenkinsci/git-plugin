@@ -27,9 +27,18 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link PruneStaleBranch} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class PruneStaleBranchTrait extends GitSCMExtensionTrait<PruneStaleBranch> {
+    /**
+     * Stapler constructor.
+     */
     @DataBoundConstructor
     public PruneStaleBranchTrait() {
         super(new PruneStaleBranch());

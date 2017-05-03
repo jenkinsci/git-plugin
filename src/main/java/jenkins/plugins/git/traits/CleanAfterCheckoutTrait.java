@@ -27,12 +27,21 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link CleanCheckout} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class CleanAfterCheckoutTrait extends GitSCMExtensionTrait<CleanCheckout> {
+    /**
+     * Stapler constructor.
+     */
     @DataBoundConstructor
-    public CleanAfterCheckoutTrait(CleanCheckout extension) {
-        super(extension);
+    public CleanAfterCheckoutTrait() {
+        super(new CleanCheckout());
     }
 
     /**

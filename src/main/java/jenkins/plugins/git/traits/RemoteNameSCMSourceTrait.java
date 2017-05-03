@@ -25,6 +25,7 @@
 
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.scm.SCM;
@@ -35,22 +36,49 @@ import jenkins.plugins.git.GitSCMSourceContext;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
+import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+/**
+ * Exposes the remote name used for the fetch in a {@link AbstractGitSCMSource} as a {@link SCMSourceTrait}.
+ * When not provided in the {@link AbstractGitSCMSource#getTraits()} the remote name should default to
+ * {@link AbstractGitSCMSource#DEFAULT_REMOTE_NAME}
+ *
+ * @since 3.4.0
+ */
 public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
 
+    /**
+     * The remote name.
+     */
+    @NonNull
     private final String remoteName;
 
+    /**
+     * Stapler constructor.
+     *
+     * @param remoteName the remote name.
+     */
     @DataBoundConstructor
-    public RemoteNameSCMSourceTrait(String remoteName) {
-        this.remoteName = StringUtils
-                .defaultIfBlank(StringUtils.trimToEmpty(remoteName), AbstractGitSCMSource.DEFAULT_REMOTE_NAME);
+    public RemoteNameSCMSourceTrait(@CheckForNull String remoteName) {
+        this.remoteName = validate(StringUtils.defaultIfBlank(
+                StringUtils.trimToEmpty(remoteName),
+                AbstractGitSCMSource.DEFAULT_REMOTE_NAME
+        ));
     }
 
+    /**
+     * Gets the remote name.
+     *
+     * @return the remote name.
+     */
+    @NonNull
     public String getRemoteName() {
         return remoteName;
     }
@@ -59,8 +87,90 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
+    protected <B extends SCMSourceContext<B, R>, R extends SCMSourceRequest> void decorateContext(B context) {
+        ((GitSCMSourceContext<?, ?>) context).withRemoteName(remoteName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected <B extends SCMBuilder<B, S>, S extends SCM> void decorateBuilder(B builder) {
         ((GitSCMBuilder<?>) builder).withRemoteName(remoteName);
+    }
+
+    /**
+     * Validate a remote name.
+     *
+     * @param value the name.
+     * @return the name.
+     * @throws IllegalArgumentException if the name is not valid.
+     */
+    @NonNull
+    private static String validate(@NonNull String value) {
+        // see https://github.com/git/git/blob/027a3b943b444a3e3a76f9a89803fc10245b858f/refs.c#L61-L68
+        /*
+         * - any path component of it begins with ".", or
+         * - it has double dots "..", or
+         * - it has ASCII control characters, or
+         * - it has ":", "?", "[", "\", "^", "~", SP, or TAB anywhere, or
+         * - it has "*" anywhere unless REFNAME_REFSPEC_PATTERN is set, or
+         * - it ends with a "/", or
+         * - it ends with ".lock", or
+         * - it contains a "@{" portion
+         */
+        if (value.contains("..")) {
+            throw new IllegalArgumentException("Remote name cannot contain '..'");
+        }
+        if (value.contains("//")) {
+            throw new IllegalArgumentException("Remote name cannot contain empty path segments");
+        }
+        if (value.endsWith("/")) {
+            throw new IllegalArgumentException("Remote name cannot end with '/'");
+        }
+        if (value.startsWith("/")) {
+            throw new IllegalArgumentException("Remote name cannot start with '/'");
+        }
+        if (value.endsWith(".lock")) {
+            throw new IllegalArgumentException("Remote name cannot end with '.lock'");
+        }
+        if (value.contains("@{")) {
+            throw new IllegalArgumentException("Remote name cannot contain '@{'");
+        }
+        for (String component : StringUtils.split(value, '/')) {
+            if (component.startsWith(".")) {
+                throw new IllegalArgumentException("Remote name cannot contain path segments starting with '.'");
+            }
+            if (component.endsWith(".lock")) {
+                throw new IllegalArgumentException("Remote name cannot contain path segments ending with '.lock'");
+            }
+        }
+        for (char c : value.toCharArray()) {
+            if (c < 32) {
+                throw new IllegalArgumentException("Remote name cannot contain ASCII control characters");
+            }
+            switch (c) {
+                case ':':
+                    throw new IllegalArgumentException("Remote name cannot contain ':'");
+                case '?':
+                    throw new IllegalArgumentException("Remote name cannot contain '?'");
+                case '[':
+                    throw new IllegalArgumentException("Remote name cannot contain '['");
+                case '\\':
+                    throw new IllegalArgumentException("Remote name cannot contain '\\'");
+                case '^':
+                    throw new IllegalArgumentException("Remote name cannot contain '^'");
+                case '~':
+                    throw new IllegalArgumentException("Remote name cannot contain '~'");
+                case ' ':
+                    throw new IllegalArgumentException("Remote name cannot contain SPACE");
+                case '\t':
+                    throw new IllegalArgumentException("Remote name cannot contain TAB");
+                case '*':
+                    throw new IllegalArgumentException("Remote name cannot contain '*'");
+            }
+        }
+        return value;
     }
 
     /**
@@ -110,6 +220,13 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
             return super.isApplicableTo(source) && source instanceof AbstractGitSCMSource;
         }
 
+        /**
+         * Performs form validation for a proposed
+         *
+         * @param value the value to check.
+         * @return the validation results.
+         */
+        @Restricted(NoExternalUse.class) // stapler
         public FormValidation doCheckRemoteName(@QueryParameter String value) {
             value = StringUtils.trimToEmpty(value);
             if (StringUtils.isBlank(value)) {
@@ -119,69 +236,12 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
                 return FormValidation.warning("There is no need to configure a remote name of '%s' as "
                         + "this is the default remote name.", AbstractGitSCMSource.DEFAULT_REMOTE_NAME);
             }
-            // see https://github.com/git/git/blob/027a3b943b444a3e3a76f9a89803fc10245b858f/refs.c#L61-L68
-            /*
-             * - any path component of it begins with ".", or
-             * - it has double dots "..", or
-             * - it has ASCII control characters, or
-             * - it has ":", "?", "[", "\", "^", "~", SP, or TAB anywhere, or
-             * - it has "*" anywhere unless REFNAME_REFSPEC_PATTERN is set, or
-             * - it ends with a "/", or
-             * - it ends with ".lock", or
-             * - it contains a "@{" portion
-             */
-            if (value.contains("..")) {
-                return FormValidation.error("Remote name cannot contain '..'");
+            try {
+                validate(value);
+                return FormValidation.ok();
+            } catch (IllegalArgumentException e) {
+                return FormValidation.error(e.getMessage());
             }
-            if (value.contains("//")) {
-                return FormValidation.error("Remote name cannot contain empty path segments");
-            }
-            if (value.endsWith("/")) {
-                return FormValidation.error("Remote name cannot end with '/'");
-            }
-            if (value.startsWith("/")) {
-                return FormValidation.error("Remote name cannot start with '/'");
-            }
-            if (value.endsWith(".lock")) {
-                return FormValidation.error("Remote name cannot end with '.lock'");
-            }
-            if (value.contains("@{")) {
-                return FormValidation.error("Remote name cannot contain '@{'");
-            }
-            for (String component : StringUtils.split(value, '/')) {
-                if (component.startsWith(".")) {
-                    return FormValidation.error("Remote name cannot contain path segments starting with '.'");
-                }
-                if (component.endsWith(".lock")) {
-                    return FormValidation.error("Remote name cannot contain path segments ending with '.lock'");
-                }
-            }
-            for (char c : value.toCharArray()) {
-                if (c < 32) {
-                    return FormValidation.error("Remote name cannot contain ASCII control characters");
-                }
-                switch (c) {
-                    case ':':
-                        return FormValidation.error("Remote name cannot contain ':'");
-                    case '?':
-                        return FormValidation.error("Remote name cannot contain '?'");
-                    case '[':
-                        return FormValidation.error("Remote name cannot contain '['");
-                    case '\\':
-                        return FormValidation.error("Remote name cannot contain '\\'");
-                    case '^':
-                        return FormValidation.error("Remote name cannot contain '^'");
-                    case '~':
-                        return FormValidation.error("Remote name cannot contain '~'");
-                    case ' ':
-                        return FormValidation.error("Remote name cannot contain SPACE");
-                    case '\t':
-                        return FormValidation.error("Remote name cannot contain TAB");
-                    case '*':
-                        return FormValidation.error("Remote name cannot contain '*'");
-                }
-            }
-            return FormValidation.ok();
         }
 
     }

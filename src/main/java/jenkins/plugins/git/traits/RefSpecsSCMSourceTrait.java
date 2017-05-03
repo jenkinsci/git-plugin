@@ -25,12 +25,15 @@
 
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -43,19 +46,69 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+/**
+ * Exposes the ref specs of a {@link AbstractGitSCMSource} as a {@link SCMSourceTrait}.
+ * The ref specs are stored as templates which are intended to be realised by applying
+ * {@link String#replaceAll(String, String)} with the {@link AbstractGitSCMSource#REF_SPEC_REMOTE_NAME_PLACEHOLDER}
+ * pattern to inject the remote name (which should default to {@link AbstractGitSCMSource#DEFAULT_REMOTE_NAME}
+ *
+ * @since 3.4.0
+ */
 public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
+    /**
+     * The ref spec templates.
+     */
+    @NonNull
     private final List<RefSpecTemplate> templates;
 
+    /**
+     * Stapler constructor.
+     *
+     * @param templates the templates.
+     */
     @DataBoundConstructor
-    public RefSpecsSCMSourceTrait(List<RefSpecTemplate> templates) {
-        this.templates = templates;
+    public RefSpecsSCMSourceTrait(@CheckForNull List<RefSpecTemplate> templates) {
+        this.templates = new ArrayList<>(Util.fixNull(templates));
     }
 
+    /**
+     * Utility constructor.
+     *
+     * @param templates the template strings.
+     */
+    public RefSpecsSCMSourceTrait(String... templates) {
+        this.templates = new ArrayList<>(templates.length);
+        for (String t : templates) {
+            this.templates.add(new RefSpecTemplate(t));
+        }
+    }
+
+    /**
+     * Gets the templates.
+     *
+     * @return the templates.
+     */
+    @NonNull
     public List<RefSpecTemplate> getTemplates() {
         return Collections.unmodifiableList(templates);
+    }
+
+    /**
+     * Unwraps the templates.
+     *
+     * @return the templates.
+     */
+    public List<String> asStrings() {
+        List<String> result = new ArrayList<>(templates.size());
+        for (RefSpecTemplate t : templates) {
+            result.add(t.getValue());
+        }
+        return result;
     }
 
     /**
@@ -92,26 +145,63 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
             return "Specify ref specs";
         }
 
+        /**
+         * Returns the default templates.
+         *
+         * @return the default templates.
+         */
         public List<RefSpecTemplate> getDefaultTemplates() {
             return Collections.singletonList(new RefSpecTemplate(AbstractGitSCMSource.REF_SPEC_DEFAULT));
         }
     }
 
+    /**
+     * Represents a single wrapped template for easier form binding.
+     *
+     * @since 3.4.0
+     */
     public static class RefSpecTemplate extends AbstractDescribableImpl<RefSpecTemplate> {
+        /**
+         * The wrapped template value.
+         */
+        @NonNull
         private final String value;
 
+        /**
+         * Stapler constructor.
+         *
+         * @param value the template to wrap.
+         */
         @DataBoundConstructor
-        public RefSpecTemplate(String value) {
+        public RefSpecTemplate(@NonNull String value) {
             this.value = StringUtils.trim(value);
         }
 
+        /**
+         * Gets the template value.
+         *
+         * @return
+         */
+        @NonNull
         public String getValue() {
             return value;
         }
 
+        /**
+         * The {@link Descriptor} for {@link RefSpecTemplate}.
+         *
+         * @since 3.4.0
+         */
         @Extension
         public static class DescriptorImpl extends Descriptor<RefSpecTemplate> {
 
+            /**
+             * Form validation for {@link RefSpecTemplate#getValue()}
+             *
+             * @param value the value to check.
+             * @return the validation result.
+             */
+            @Restricted(NoExternalUse.class) // stapler
             public FormValidation doCheckValue(@QueryParameter String value) {
                 if (StringUtils.isBlank(value)) {
                     return FormValidation.error("No ref spec provided");

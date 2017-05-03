@@ -25,6 +25,7 @@
 
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -46,15 +47,35 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Exposes {@link GitRepositoryBrowser} configuration of a {@link AbstractGitSCMSource} as a {@link SCMSourceTrait}.
+ *
+ * @since 3.4.0
+ */
 public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
 
+    /**
+     * The configured {@link GitRepositoryBrowser} or {@code null} to use the "auto" browser.
+     */
+    @CheckForNull
     private final GitRepositoryBrowser browser;
 
+    /**
+     * Stapler constructor.
+     *
+     * @param browser the {@link GitRepositoryBrowser} or {@code null} to use the "auto" browser.
+     */
     @DataBoundConstructor
-    public GitBrowserSCMSourceTrait(GitRepositoryBrowser browser) {
+    public GitBrowserSCMSourceTrait(@CheckForNull GitRepositoryBrowser browser) {
         this.browser = browser;
     }
 
+    /**
+     * Gets the {@link GitRepositoryBrowser}..
+     *
+     * @return the {@link GitRepositoryBrowser} or {@code null} to use the "auto" browser.
+     */
+    @CheckForNull
     public GitRepositoryBrowser getBrowser() {
         return browser;
     }
@@ -81,9 +102,15 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
             return "Configure Repository Browser";
         }
 
+        /**
+         * Expose the {@link GitRepositoryBrowser} instances to stapler.
+         *
+         * @return the {@link GitRepositoryBrowser} instances
+         */
         @Restricted(NoExternalUse.class) // stapler
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
-            return getSCMDescriptor().getBrowserDescriptors();
+            return ((GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class))
+                    .getBrowserDescriptors();
         }
 
         /**
@@ -91,7 +118,8 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return super.isApplicableToBuilder(builderClass) && GitSCMBuilder.class.isAssignableFrom(builderClass);
+            return super.isApplicableToBuilder(builderClass)
+                    && GitSCMBuilder.class.isAssignableFrom(builderClass);
         }
 
         /**
@@ -99,8 +127,8 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToContext(@NonNull Class<? extends SCMSourceContext> contextClass) {
-            return super.isApplicableToContext(contextClass) && GitSCMSourceContext.class
-                    .isAssignableFrom(contextClass);
+            return super.isApplicableToContext(contextClass)
+                    && GitSCMSourceContext.class.isAssignableFrom(contextClass);
         }
 
         /**
@@ -108,7 +136,8 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToSCM(@NonNull Class<? extends SCM> scmClass) {
-            return super.isApplicableToSCM(scmClass) && AbstractGitSCMSource.class.isAssignableFrom(scmClass);
+            return super.isApplicableToSCM(scmClass)
+                    && AbstractGitSCMSource.class.isAssignableFrom(scmClass);
         }
 
         /**
@@ -116,12 +145,8 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableTo(SCMSource source) {
-            return super.isApplicableTo(source) && source instanceof AbstractGitSCMSource;
+            return super.isApplicableTo(source)
+                    && source instanceof AbstractGitSCMSource;
         }
-
-        private GitSCM.DescriptorImpl getSCMDescriptor() {
-            return (GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
-        }
-
     }
 }
