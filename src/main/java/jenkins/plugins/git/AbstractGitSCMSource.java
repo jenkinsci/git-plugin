@@ -428,9 +428,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                     @NonNull
                                     @Override
                                     public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
-                                                                          @Nullable ObjectId revision)
+                                                                          @Nullable ObjectId revisionInfo)
                                             throws IOException, InterruptedException {
-                                        RevCommit commit = walk.parseCommit(revision);
+                                        RevCommit commit = walk.parseCommit(revisionInfo);
                                         final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                                         final RevTree tree = commit.getTree();
                                         return new SCMProbe() {
