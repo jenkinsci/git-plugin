@@ -109,7 +109,7 @@ public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableTo(SCMSource source) {
+        public boolean isApplicableTo(@NonNull SCMSource source) {
             return super.isApplicableTo(source) && source instanceof GitSCMSource;
         }
 
