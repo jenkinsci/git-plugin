@@ -23,7 +23,7 @@
  ~ THE SOFTWARE.
  -->
 
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials" xmlns:scm="/jenkins/scm/api/form">
   <f:entry title="${%Project Repository}" field="remote">
     <f:textbox/>
   </f:entry>
@@ -31,8 +31,6 @@
     <c:select/>
   </f:entry>
   <f:entry title="${%Behaviours}">
-    <f:hetero-list name="traits" items="${instance == null ? descriptor.defaultTraits : instance.traits}"
-                   descriptors="${descriptor[attrs.field+'Descriptors'] ?: descriptor.getPropertyType(instance,'traits').getApplicableItemDescriptors()}"
-                   hasHeader="true" honorOrder="true" oneEach="true"/>
+    <scm:traits field="traits"/>
   </f:entry>
 </j:jelly>

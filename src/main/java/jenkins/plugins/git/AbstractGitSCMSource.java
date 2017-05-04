@@ -132,7 +132,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * <p>
      * The template uses {@code @{...}} as that is an illegal sequence in a remote name
      *
-     * @see <a href="https://github.com/git/git/blob/027a3b943b444a3e3a76f9a89803fc10245b858f/refs.c#L61-L68>git
+     * @see <a href="https://github.com/git/git/blob/027a3b943b444a3e3a76f9a89803fc10245b858f/refs.c#L61-L68">git
      * source code rules on ref spec names</a>
      * @since 3.4.0
      */
@@ -266,7 +266,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Returns the {@link SCMSourceTrait} instances for this {@link AbstractGitSCMSource}.
      * @return the {@link SCMSourceTrait} instances
-     * @sinec 3.4.0
+     * @since 3.4.0
      */
     @NonNull
     public List<SCMSourceTrait> getTraits() {
@@ -729,7 +729,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * {@link #build(SCMHead, SCMRevision)} immediately prior to returning {@link GitSCMBuilder#build()}.
      * Subclasses should override this method if they need to overrule builder behaviours defined by traits.
      *
-     * @param builder
+     * @param builder the builder to decorate.
      */
     protected void decorate(GitSCMBuilder<?> builder) {
     }

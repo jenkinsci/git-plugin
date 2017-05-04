@@ -501,7 +501,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
         }
 
-        public List<SCMSourceTrait> getDefaultTraits() {
+        public List<SCMSourceTrait> getTraitDefaults() {
             return Collections.emptyList();
         }
     }
