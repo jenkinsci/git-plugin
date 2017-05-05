@@ -43,15 +43,17 @@ public class SubmoduleOption extends GitSCMExtension {
     private String reference;
     private boolean parentCredentials;
     private Integer timeout;
+    private boolean withLFS;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials, boolean withLFS) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
         this.parentCredentials = parentCredentials;
         this.reference = reference;
         this.timeout = timeout;
+        this.withLFS = withLFS;
     }
 
     public boolean isDisableSubmodules() {
@@ -68,6 +70,10 @@ public class SubmoduleOption extends GitSCMExtension {
 
     public boolean isParentCredentials() {
         return parentCredentials;
+    }
+
+    public boolean isWithLFS() {
+        return withLFS;
     }
 
     public String getReference() {
@@ -99,6 +105,7 @@ public class SubmoduleOption extends GitSCMExtension {
                 .parentCredentials(parentCredentials)
                 .ref(build.getEnvironment(listener).expand(reference))
                 .timeout(timeout)
+                .lfsRemote(withLFS ? "origin" : null)
                 .execute();
         }
 
