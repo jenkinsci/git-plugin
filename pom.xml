@@ -24,8 +24,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <jenkins-core.version>2.58-20170502.192524-8</jenkins-core.version> <!-- TODO: Switch to release once https://github.com/jenkinsci/jenkins/pull/2730 is merged and released -->
-    <jenkins-war.version>2.58-20170502.192544-8</jenkins-war.version> <!-- TODO: Switch to release once https://github.com/jenkinsci/jenkins/pull/2730 is merged and released -->
+    <jenkins.version>2.60</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
