@@ -470,7 +470,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected static File getCacheDir(String cacheEntry) {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
             LOGGER.severe("Jenkins instance is null in AbstractGitSCMSource.getCacheDir");
             return null;

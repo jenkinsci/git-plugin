@@ -152,9 +152,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         final List<ResponseContributor> contributors = new ArrayList<>();
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstanceOrNull() null for : " + url));
+            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
         }
         String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
@@ -339,9 +339,9 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                 boolean scmFound = false,
                         urlFound = false;
-                Jenkins jenkins = Jenkins.getInstanceOrNull();
+                Jenkins jenkins = Jenkins.getInstance();
                 if (jenkins == null) {
-                    LOGGER.severe("Jenkins.getInstanceOrNull() is null in GitStatus.onNotifyCommit");
+                    LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
                     return result;
                 }
                 for (final Item project : Jenkins.getInstance().getAllItems()) {

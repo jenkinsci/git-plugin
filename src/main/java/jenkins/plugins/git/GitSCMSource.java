@@ -329,7 +329,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
+            Jenkins jenkins = Jenkins.getInstance();
             if (jenkins == null) {
                 LOGGER.severe("Jenkins instance is null in GitSCMSource.onNotifyCommit");
                 return result;

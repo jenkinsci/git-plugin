@@ -24,8 +24,8 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <jenkins.version>2.60</jenkins.version>
-    <java.level>8</java.level>
+    <jenkins.version>1.625.3</jenkins.version>
+    <java.level>7</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
     <findbugs.failOnError>true</findbugs.failOnError>

@@ -48,9 +48,9 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     private static final Logger LOGGER = Logger.getLogger(GitTagAction.class.getName());
 
     public Descriptor<GitTagAction> getDescriptor() {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstanceOrNull() null in GitTagAction.getDescriptor");
+            LOGGER.severe("Jenkins.getInstance() null in GitTagAction.getDescriptor");
             return null;
         }
         return jenkins.getDescriptorOrDie(getClass());

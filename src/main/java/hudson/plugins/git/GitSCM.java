@@ -1256,6 +1256,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
+    public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+        buildEnvironment(build, env);
+    }
+
     public void buildEnvironment(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
@@ -1772,9 +1776,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstanceOrNull is null in GitSCM.onLoaded");
+            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
             return;
         }
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);

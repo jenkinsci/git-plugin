@@ -421,7 +421,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     private boolean isCreateAccountBasedOnEmail() {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
             return false;
         }
