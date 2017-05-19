@@ -1260,6 +1260,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildEnvironment(build, env);
     }
 
+    // TODO: 2.60+ Switch to @Override, optionally remove buildEnvVars
     public void buildEnvironment(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
