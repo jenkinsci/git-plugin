@@ -111,7 +111,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
         String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
-        assertTrue("Wrong name: '" + name + "'", name.equals("origin/tags/tag/c") || name.equals("origin/tags/tag/b"));
+        assertTrue("Expected .*/tags/b or .*/tags/c, was '" + name + "'", name.matches("(origin|refs)/tags/tag/[bc]"));
     }
 
     /**
