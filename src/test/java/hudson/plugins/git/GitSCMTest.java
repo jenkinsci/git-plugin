@@ -78,8 +78,10 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -2286,7 +2288,29 @@ public class GitSCMTest extends AbstractGitTestCase {
        verify(buildData, times(1)).hasBeenReferenced(anyString());
        verify(build, times(1)).getActions(BuildData.class);
     }
-    
+
+    @Issue("JENKINS-38241")
+    @Test
+    public void testCommitMessageIsPrintedToLogs() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=test commit");
+        FreeStyleProject p = setupSimpleProject("master");
+        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        TaskListener mockListener = Mockito.mock(TaskListener.class);
+        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
+
+        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
+                new FilePath(run.getRootDir()).child("tmp-" + "master"),
+                mockListener, null, SCMRevisionState.NONE);
+
+        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
+        List<String> values = logCaptor.getAllValues();
+        assertTrue("checkout command should print commit message",
+                values.contains("Commit message: \"test commit\""));
+    }
+
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.

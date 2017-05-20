@@ -1199,10 +1199,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     }
                 }
             });
-            listener.getLogger().println("Message: \"" + commit.getShortMessage() + "\"");
+            listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
         } catch (InterruptedException e) {
-            // failed to get the commit message
-            // not mandatory, ignored
+            e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
 
