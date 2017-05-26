@@ -6,4 +6,4 @@
 
 // Test plugin compatbility to latest Jenkins LTS
 // Allow failing tests to retry execution
-buildPlugin(jenkinsVersions: [null, '2.46.1'], failFast: false)
+buildPlugin(jenkinsVersions: [null, '2.46.3'], failFast: false)
