@@ -222,12 +222,6 @@
       <artifactId>parameterized-trigger</artifactId>
       <version>2.4</version>
       <optional>true</optional>
-      <exclusions> <!-- Excluding subversion to make sure we don't inadvertently pick up the Oracle Hudson "2.0" svn plugin and break the build. -->
-        <exclusion>
-          <groupId>org.jvnet.hudson.plugins</groupId>
-          <artifactId>subversion</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
