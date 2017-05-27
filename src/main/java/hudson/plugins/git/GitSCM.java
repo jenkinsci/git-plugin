@@ -973,11 +973,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (build instanceof MatrixRun) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        candidates = Collections.singleton(lastBuild.getMarked());
+                // parent can have more than one build data:
+                // for example ghprb-plugin uses it to generate correct diff
+                // in this case, we should enforce parent revision if it
+                // has been passed explicitly
+                final RevisionParameterAction rpa = parentBuild.getAction(RevisionParameterAction.class);
+                if (rpa != null) {
+                    candidates = Collections.singleton(rpa.toRevision(git));
+                } else {
+                    BuildData parentBuildData = getBuildData(parentBuild);
+                    if (parentBuildData != null) {
+                        Build lastBuild = parentBuildData.lastBuild;
+                        if (lastBuild!=null)
+                            candidates = Collections.singleton(lastBuild.getMarked());
+                    }
                 }
             }
         }
