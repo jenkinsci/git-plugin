@@ -1100,6 +1100,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
+
+        // running a Pipeline job, build.getEnvironment do not include NodeProperties, see JENKINS-36267
+        environment.putAll(workspace.toComputer().buildEnvironment(listener));
+
         GitClient git = createClient(listener, environment, build, workspace);
 
         for (GitSCMExtension ext : extensions) {
