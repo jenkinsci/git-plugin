@@ -19,7 +19,7 @@ public class AuthorInChangelog extends FakeGitSCMExtension {
 
     @Override
     public boolean requiresWorkspaceForPolling() {
-        return true;
+        return false;
     }
 
     @Extension
