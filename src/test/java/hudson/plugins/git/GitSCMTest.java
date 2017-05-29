@@ -2307,8 +2307,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
-        assertTrue("checkout command should print commit message",
-                values.contains("Commit message: \"test commit\""));
+        assertThat(values, hasItem("Commit message: \"test commit\""));
     }
 
     /**
