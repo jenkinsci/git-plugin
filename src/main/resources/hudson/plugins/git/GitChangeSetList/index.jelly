@@ -5,10 +5,10 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <j:set var="browser" value="${it.browser}"/>
 
-  <h2>Summary</h2>
+  <h2>${%Summary}</h2>
   <ol>
     <j:forEach var="cs" items="${it.logs}">
-      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">details</a>)</li>
+      <li><j:out value="${cs.msgAnnotated}"/> (<a href="#${cs.id}">${%details}</a>)</li>
     </j:forEach>
   </ol>
   <table class="pane" style="border:none">
@@ -18,7 +18,7 @@
           <a name="${cs.id}"></a>
           <div class="changeset-message">
             <b>
-              Commit
+              ${%Commit}
               <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
               <j:if test="${cslink!=null}">
                 <a href="${cslink}">${cs.id}</a>
@@ -43,7 +43,7 @@
             <j:set var="diff" value="${browser.getDiffLink(p)}"/>
             <j:if test="${diff!=null}">
               <st:nbsp/>
-              <a href="${diff}">(diff)</a>
+              <a href="${diff}">(${%diff})</a>
             </j:if>
           </td>
         </tr>

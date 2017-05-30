@@ -9,15 +9,15 @@
 
   <j:choose>
     <j:when test="${it.emptySet}">
-      No changes.
+      ${%No changes.}
     </j:when>
     <j:otherwise>
-      Changes
+      ${%Changes}
       <ol>
         <j:forEach var="cs" items="${it.logs}" varStatus="loop">
           <li>
             <j:out value="${cs.msgAnnotated}"/>
-            (<a href="changes#detail${loop.index}">detail</a>
+            (<a href="changes#detail${loop.index}">${%detail}</a>
             <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
             <j:if test="${cslink!=null}">
               <j:text> / </j:text>

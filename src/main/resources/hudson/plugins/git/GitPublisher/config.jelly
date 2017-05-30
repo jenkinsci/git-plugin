@@ -44,7 +44,7 @@
           </f:entry>
         </table>
         <div align="right">
-          <input type="button" value="Delete Tag" class="repeatable-delete" style="margin-left: 1em;" />
+          <input type="button" value="${%Delete Tag}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
       </f:repeatable>
     </f:entry>
@@ -66,7 +66,7 @@
           </f:entry>
         </table>
         <div align="right">
-          <input type="button" value="Delete Branch" class="repeatable-delete" style="margin-left: 1em;" />
+          <input type="button" value="${%Delete Branch}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
       </f:repeatable>
     </f:entry>
@@ -95,7 +95,7 @@
           
         </table>
         <div align="right">
-          <input type="button" value="Delete Note" class="repeatable-delete" style="margin-left: 1em;" />
+          <input type="button" value="${%Delete Note}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
          
       </f:repeatable>

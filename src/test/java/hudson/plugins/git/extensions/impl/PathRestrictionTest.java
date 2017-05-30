@@ -1,7 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.model.FreeStyleProject;
-import hudson.model.Result;
 
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.TestGitRepo;
@@ -13,11 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;

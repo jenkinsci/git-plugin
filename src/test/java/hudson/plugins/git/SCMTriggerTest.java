@@ -7,7 +7,6 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
-import hudson.util.IOUtils;
 import hudson.util.RunList;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
@@ -17,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -30,42 +30,27 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.*;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
 
 public abstract class SCMTriggerTest extends AbstractGitProject
 {
-    
-    private TemporaryDirectoryAllocator tempAllocator;
     private ZipFile namespaceRepoZip;
     private Properties namespaceRepoCommits;
     private ExecutorService singleThreadExecutor;
     protected boolean expectChanges = false;
-        
-    @After
-    public void tearDown() throws Exception
-    {
-        try { //Avoid test failures due to failed cleanup tasks
-            singleThreadExecutor.shutdownNow();
-            tempAllocator.dispose();
-        }
-        catch (Exception e) {
-            if (e instanceof IOException && isWindows()) {
-                return;
-            }
-            e.printStackTrace();
-        }
-    }
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
     public void setUp() throws Exception {
         expectChanges = false;
         namespaceRepoZip = new ZipFile("src/test/resources/namespaceBranchRepo.zip");
         namespaceRepoCommits = parseLsRemote(new File("src/test/resources/namespaceBranchRepo.ls-remote"));
-        tempAllocator = new TemporaryDirectoryAllocator();
         singleThreadExecutor = Executors.newSingleThreadExecutor();
     }
     
@@ -284,7 +269,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     }
 
     private String prepareRepo(ZipFile repoZip) throws IOException {
-        File tempRemoteDir = tempAllocator.allocate();
+        File tempRemoteDir = tempFolder.newFolder();
         extract(repoZip, tempRemoteDir);
         return tempRemoteDir.getAbsolutePath();
     }
@@ -345,11 +330,10 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             if (entry.isDirectory())
                 entryDestination.mkdirs();
             else {
-                InputStream in = zipFile.getInputStream(entry);
-                OutputStream out = new FileOutputStream(entryDestination);
-                IOUtils.copy(in, out);
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(out);
+                try (InputStream in = zipFile.getInputStream(entry);
+                     OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
+                    org.apache.commons.io.IOUtils.copy(in, out);
+                }
             }
         }
     }

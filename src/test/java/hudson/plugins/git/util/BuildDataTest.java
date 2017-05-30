@@ -4,15 +4,19 @@ import hudson.model.Api;
 import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
+import hudson.plugins.git.UserRemoteConfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 import org.eclipse.jgit.lib.ObjectId;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Mark Waite
@@ -21,37 +25,54 @@ public class BuildDataTest {
 
     private BuildData data;
     private final ObjectId sha1 = ObjectId.fromString("929e92e3adaff2e6e1d752a8168c1598890fe84c");
-    private final String remoteUrl = "git://github.com/jenkinsci/git-plugin.git";
+    private final String remoteUrl = "https://github.com/jenkinsci/git-plugin";
 
     @Before
     public void setUp() throws Exception {
         data = new BuildData();
-        data.addRemoteUrl(remoteUrl);
     }
 
     @Test
     public void testGetDisplayName() throws Exception {
-        assertEquals(data.getDisplayName(), "Git Build Data");
+        assertThat(data.getDisplayName(), is("Git Build Data"));
+    }
+
+    @Test
+    public void testGetDisplayNameEmptyString() throws Exception {
         String scmName = "";
         BuildData dataWithSCM = new BuildData(scmName);
-        assertEquals(data.getDisplayName(), "Git Build Data");
+        assertThat(dataWithSCM.getDisplayName(), is("Git Build Data"));
+    }
+
+    @Test
+    public void testGetDisplayNameNullSCMName() throws Exception {
+        BuildData dataWithNullSCM = new BuildData(null);
+        assertThat(dataWithNullSCM.getDisplayName(), is("Git Build Data"));
     }
 
     @Test
     public void testGetDisplayNameWithSCM() throws Exception {
         final String scmName = "testSCM";
         final BuildData dataWithSCM = new BuildData(scmName);
-        assertEquals("Git Build Data:" + scmName, dataWithSCM.getDisplayName());
+        assertThat("Git Build Data:" + scmName, is(dataWithSCM.getDisplayName()));
     }
 
     @Test
     public void testGetIconFileName() {
-        assertTrue(data.getIconFileName().endsWith("/plugin/git/icons/git-32x32.png"));
+        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-32x32.png"));
     }
 
     @Test
     public void testGetUrlName() {
-        assertEquals("git", data.getUrlName());
+        assertThat(data.getUrlName(), is("git"));
+    }
+
+    @Test
+    public void testGetUrlNameMultipleEntries() {
+        Random random = new Random();
+        int randomIndex = random.nextInt(1234) + 1;
+        data.setIndex(randomIndex);
+        assertThat(data.getUrlName(), is("git-" + randomIndex));
     }
 
     @Test
@@ -69,7 +90,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1);
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
-        assertEquals(build, data.getLastBuild(sha1));
+        assertThat(data.getLastBuild(sha1), is(build));
     }
 
     @Test
@@ -83,7 +104,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1, branches);
         Build build = new Build(revision, 13, Result.FAILURE);
         data.saveBuild(build);
-        assertEquals(build, data.getLastBuildOfBranch(branchName));
+        assertThat(data.getLastBuildOfBranch(branchName), is(build));
     }
 
     @Test
@@ -91,7 +112,7 @@ public class BuildDataTest {
         Revision revision = new Revision(sha1);
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
-        assertEquals(revision, data.getLastBuiltRevision());
+        assertThat(data.getLastBuiltRevision(), is(revision));
     }
 
     @Test
@@ -100,19 +121,20 @@ public class BuildDataTest {
     }
 
     @Test
-    public void testSetScmName() {
-        assertEquals("", data.getScmName());
+    public void testGetScmName() {
+        assertThat(data.getScmName(), is(""));
+    }
 
+    @Test
+    public void testSetScmName() {
         final String scmName = "Some SCM name";
         data.setScmName(scmName);
-        assertEquals(scmName, data.getScmName());
+        assertThat(data.getScmName(), is(scmName));
     }
 
     @Test
     public void testAddRemoteUrl() {
-        BuildData empty = new BuildData();
-        assertTrue(empty.getRemoteUrls().isEmpty());
-
+        data.addRemoteUrl(remoteUrl);
         assertEquals(1, data.getRemoteUrls().size());
 
         String remoteUrl2 = "https://github.com/jenkinsci/git-plugin.git/";
@@ -124,8 +146,10 @@ public class BuildDataTest {
 
     @Test
     public void testHasBeenReferenced() {
+        assertFalse(data.hasBeenReferenced(remoteUrl));
+        data.addRemoteUrl(remoteUrl);
         assertTrue(data.hasBeenReferenced(remoteUrl));
-        assertFalse(data.hasBeenReferenced(remoteUrl + "xxx"));
+        assertFalse(data.hasBeenReferenced(remoteUrl + "/"));
     }
 
     @Test
@@ -139,9 +163,24 @@ public class BuildDataTest {
     @Test
     public void testToString() {
         assertEquals(data.toString(), data.clone().toString());
+    }
+
+    @Test
+    public void testToStringEmptyBuildData() {
         BuildData empty = new BuildData();
-        assertTrue("Wrong empty BuildData toString '" + empty.toString() + "'",
-                empty.toString().endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+        assertThat(empty.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+    }
+
+    @Test
+    public void testToStringNullSCMBuildData() {
+        BuildData nullSCM = new BuildData(null);
+        assertThat(nullSCM.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
+    }
+
+    @Test
+    public void testToStringNonNullSCMBuildData() {
+        BuildData nonNullSCM = new BuildData("gitless");
+        assertThat(nonNullSCM.toString(), endsWith("[scmName=gitless,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
     }
 
     @Test
@@ -177,7 +216,7 @@ public class BuildDataTest {
         assertEquals("Objects with same saved build not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Add remote URL makes objects unequal
-        final String remoteUrl2 = "git://github.com/jenkinsci/git-client-plugin.git";
+        final String remoteUrl2 = "git://github.com/jenkinsci/git-plugin.git";
         data1.addRemoteUrl(remoteUrl2);
         assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
         assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
@@ -215,5 +254,230 @@ public class BuildDataTest {
         data2.setScmName("scm 2");
         assertTrue(data1.equals(data2));
         assertEquals(data1.hashCode(), data2.hashCode());
+
+        BuildData emptyData = new BuildData();
+        emptyData.remoteUrls = null;
+        assertNotEquals("Non-empty object equal empty", data, emptyData);
+        assertNotEquals("Empty object similar to non-empty", emptyData, data);
+    }
+
+    @Test
+    public void testSetIndex() {
+        data.setIndex(null);
+        assertEquals(null, data.getIndex());
+        data.setIndex(-1);
+        assertEquals(null, data.getIndex());
+        data.setIndex(0);
+        assertEquals(null, data.getIndex());
+        data.setIndex(13);
+        assertEquals(13, data.getIndex().intValue());
+        data.setIndex(-1);
+        assertEquals(null, data.getIndex());
+    }
+
+    @Test
+    public void testSimilarToHttpsRemoteURL() {
+        final String SIMPLE_URL = "https://github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    @Test
+    public void testSimilarToScpRemoteURL() {
+        final String SIMPLE_URL = "git@github.com:jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    @Test
+    public void testSimilarToSshRemoteURL() {
+        final String SIMPLE_URL = "ssh://git@github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        permuteBaseURL(SIMPLE_URL, simple);
+    }
+
+    private void permuteBaseURL(String simpleURL, BuildData simple) {
+        final String TRAILING_SLASH_URL = simpleURL + "/";
+        BuildData trailingSlash = new BuildData("git-" + TRAILING_SLASH_URL);
+        trailingSlash.addRemoteUrl(TRAILING_SLASH_URL);
+        assertTrue("Trailing slash not similar to simple URL " + TRAILING_SLASH_URL,
+                trailingSlash.similarTo(simple));
+
+        final String TRAILING_SLASHES_URL = TRAILING_SLASH_URL + "//";
+        BuildData trailingSlashes = new BuildData("git-" + TRAILING_SLASHES_URL);
+        trailingSlashes.addRemoteUrl(TRAILING_SLASHES_URL);
+        assertTrue("Trailing slashes not similar to simple URL " + TRAILING_SLASHES_URL,
+                trailingSlashes.similarTo(simple));
+
+        final String DOT_GIT_URL = simpleURL + ".git";
+        BuildData dotGit = new BuildData("git-" + DOT_GIT_URL);
+        dotGit.addRemoteUrl(DOT_GIT_URL);
+        assertTrue("Dot git not similar to simple URL " + DOT_GIT_URL,
+                dotGit.similarTo(simple));
+
+        final String DOT_GIT_TRAILING_SLASH_URL = DOT_GIT_URL + "/";
+        BuildData dotGitTrailingSlash = new BuildData("git-" + DOT_GIT_TRAILING_SLASH_URL);
+        dotGitTrailingSlash.addRemoteUrl(DOT_GIT_TRAILING_SLASH_URL);
+        assertTrue("Dot git trailing slash not similar to dot git URL " + DOT_GIT_TRAILING_SLASH_URL,
+                dotGitTrailingSlash.similarTo(dotGit));
+
+        final String DOT_GIT_TRAILING_SLASHES_URL = DOT_GIT_TRAILING_SLASH_URL + "///";
+        BuildData dotGitTrailingSlashes = new BuildData("git-" + DOT_GIT_TRAILING_SLASHES_URL);
+        dotGitTrailingSlashes.addRemoteUrl(DOT_GIT_TRAILING_SLASHES_URL);
+        assertTrue("Dot git trailing slashes not similar to dot git URL " + DOT_GIT_TRAILING_SLASHES_URL,
+                dotGitTrailingSlashes.similarTo(dotGit));
+    }
+
+    @Test
+    @Issue("JENKINS-43630")
+    public void testSimilarToContainsNullURL() {
+        final String SIMPLE_URL = "ssh://git@github.com/jenkinsci/git-plugin";
+        BuildData simple = new BuildData("git-" + SIMPLE_URL);
+        simple.addRemoteUrl(SIMPLE_URL);
+        simple.addRemoteUrl(null);
+        simple.addRemoteUrl(SIMPLE_URL);
+
+        BuildData simple2 = simple.clone();
+        assertTrue(simple.similarTo(simple2));
+
+        BuildData simple3 = new BuildData("git-" + SIMPLE_URL);
+        simple3.addRemoteUrl(SIMPLE_URL);
+        simple3.addRemoteUrl(null);
+        simple3.addRemoteUrl(SIMPLE_URL);
+        assertTrue(simple.similarTo(simple3));
+    }
+
+    @Test
+    public void testGetIndex() {
+        assertEquals(null, data.getIndex());
+    }
+
+    @Test
+    public void testGetRemoteUrls() {
+        assertTrue(data.getRemoteUrls().isEmpty());
+    }
+
+    @Test
+    public void testClone() {
+        // Tested in testSimilarTo and testEquals
+    }
+
+    @Test
+    public void testSimilarTo() {
+        data.addRemoteUrl(remoteUrl);
+
+        // Null object not similar to non-null
+        BuildData dataNull = null;
+        assertFalse("Null object similar to non-null", data.similarTo(dataNull));
+
+        BuildData emptyData = new BuildData();
+        assertFalse("Non-empty object similar to empty", data.similarTo(emptyData));
+        assertFalse("Empty object similar to non-empty", emptyData.similarTo(data));
+        emptyData.remoteUrls = null;
+        assertFalse("Non-empty object similar to empty", data.similarTo(emptyData));
+        assertFalse("Empty object similar to non-empty", emptyData.similarTo(data));
+
+        // Object should be similar to itself
+        assertTrue("Object not similar to itself", data.similarTo(data));
+
+        // Object should not be similar to constructed variants
+        Collection<UserRemoteConfig> emptyList = new ArrayList<>();
+        assertFalse("Object similar to data with SCM name", data.similarTo(new BuildData("abc")));
+        assertFalse("Object similar to data with SCM name & empty", data.similarTo(new BuildData("abc", emptyList)));
+
+        BuildData dataSCM = new BuildData("scm");
+        assertFalse("Object similar to data with SCM name", dataSCM.similarTo(data));
+        assertTrue("Object with SCM name not similar to data with SCM name", dataSCM.similarTo(new BuildData("abc")));
+        assertTrue("Object with SCM name not similar to data with SCM name & empty", dataSCM.similarTo(new BuildData("abc", emptyList)));
+
+        // Cloned object equals original object
+        BuildData dataClone = data.clone();
+        assertTrue("Clone not similar to origin", dataClone.similarTo(data));
+        assertTrue("Origin not similar to clone", data.similarTo(dataClone));
+
+        // Saved build makes objects dissimilar
+        Revision revision1 = new Revision(sha1);
+        Build build1 = new Build(revision1, 1, Result.SUCCESS);
+        dataClone.saveBuild(build1);
+        assertFalse("Unmodifed origin similar to modified clone", data.similarTo(dataClone));
+        assertFalse("Modifed clone similar to unmodified origin", dataClone.similarTo(data));
+        assertTrue("Modifed clone not similar to itself", dataClone.similarTo(dataClone));
+
+        // Same saved build makes objects similar
+        BuildData data2 = data.clone();
+        data2.saveBuild(build1);
+        assertFalse("Unmodifed origin similar to modified clone", data.similarTo(data2));
+        assertTrue("Objects with same saved build not similar (1)", data2.similarTo(dataClone));
+        assertTrue("Objects with same saved build not similar (2)", dataClone.similarTo(data2));
+
+        // Add remote URL makes objects dissimilar
+        final String remoteUrl = "git://github.com/jenkinsci/git-client-plugin.git";
+        dataClone.addRemoteUrl(remoteUrl);
+        assertFalse("Distinct objects shouldn't be similar (1)", data.similarTo(dataClone));
+        assertFalse("Distinct objects shouldn't be similar (2)", dataClone.similarTo(data));
+
+        // Add same remote URL makes objects similar
+        data2.addRemoteUrl(remoteUrl);
+        assertTrue("Objects with same remote URL dissimilar", data2.similarTo(dataClone));
+        assertTrue("Objects with same remote URL dissimilar", dataClone.similarTo(data2));
+
+        // Add different remote URL objects similar
+        final String trailingSlash = "git-client-plugin.git/"; // Unlikely as remote URL
+        dataClone.addRemoteUrl(trailingSlash);
+        assertFalse("Distinct objects shouldn't be similar", data.similarTo(dataClone));
+        assertFalse("Distinct objects shouldn't be similar", dataClone.similarTo(data));
+
+        data2.addRemoteUrl(trailingSlash);
+        assertTrue("Objects with same remote URL dissimilar", data2.similarTo(dataClone));
+        assertTrue("Objects with same remote URL dissimilar", dataClone.similarTo(data2));
+
+        // Add different remote URL objects
+        final String noSlash = "git-client-plugin"; // Unlikely as remote URL
+        dataClone.addRemoteUrl(noSlash);
+        assertFalse("Distinct objects shouldn't be similar", data.similarTo(dataClone));
+        assertFalse("Distinct objects shouldn't be similar", dataClone.similarTo(data));
+
+        data2.addRemoteUrl(noSlash);
+        assertTrue("Objects with same remote URL dissimilar", data2.similarTo(dataClone));
+        assertTrue("Objects with same remote URL dissimilar", dataClone.similarTo(data2));
+
+        // Another saved build still keeps objects similar
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision2 = new Revision(sha1, branches);
+        Build build2 = new Build(revision2, 1, Result.FAILURE);
+        dataClone.saveBuild(build2);
+        assertTrue("Another saved build, still similar (1)", dataClone.similarTo(data2));
+        assertTrue("Another saved build, still similar (2)", data2.similarTo(dataClone));
+        data2.saveBuild(build2);
+        assertTrue("Another saved build, still similar (3)", dataClone.similarTo(data2));
+        assertTrue("Another saved build, still similar (4)", data2.similarTo(dataClone));
+
+        // Saving different build results still similar BuildData
+        dataClone.saveBuild(build1);
+        assertTrue("Saved build with different results, similar (5)", dataClone.similarTo(data2));
+        assertTrue("Saved build with different results, similar (6)", data2.similarTo(dataClone));
+        data2.saveBuild(build2);
+        assertTrue("Saved build with different results, similar (7)", dataClone.similarTo(data2));
+        assertTrue("Saved build with different results, similar (8)", data2.similarTo(dataClone));
+
+        // Set SCM name doesn't change similarity
+        dataClone.setScmName("scm 1");
+        assertTrue(dataClone.similarTo(data2));
+        data2.setScmName("scm 2");
+        assertTrue(dataClone.similarTo(data2));
+    }
+
+    @Test
+    public void testHashCodeEmptyData() {
+        BuildData emptyData = new BuildData();
+        assertEquals(emptyData.hashCode(), emptyData.hashCode());
+        emptyData.remoteUrls = null;
+        assertEquals(emptyData.hashCode(), emptyData.hashCode());
     }
 }

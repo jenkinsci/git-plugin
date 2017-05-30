@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:entry field="combineQueuedCommits"
-             title="${%Combine Queued git hashes}">
+             title="${%Combine queued git hashes}">
       <f:checkbox />
     </f:entry>
 </j:jelly>

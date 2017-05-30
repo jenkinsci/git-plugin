@@ -48,6 +48,12 @@
   </f:entry>
 
   <f:advanced>
+    <f:entry title="${%Remote Name}" field="remoteName">
+      <f:textbox default="origin"/>
+    </f:entry>
+    <f:entry title="${%RefSpecs}" field="rawRefSpecs">
+      <f:textbox default="+refs/heads/*:refs/remotes/origin/*"/>
+    </f:entry>
     <f:entry title="${%Include branches}" field="includes">
       <f:textbox default="*"/>
     </f:entry>
