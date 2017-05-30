@@ -523,6 +523,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             public String getDisplayName() {
                 return "";
             }
+
+            public String getDeleteBranch() { return Messages.BranchToPush_DeleteBranch(); }
         }
     }
 
@@ -563,6 +565,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             public String getDisplayName() {
                 return "";
             }
+
+            public String getDeleteTag() { return Messages.TagToPush_DeleteTag(); }
         }
     }
     
@@ -635,6 +639,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
             public String getDisplayName() {
                 return "";
             }
+
+            public String getDeleteNote() { return Messages.NoteToPush_DeleteNote(); }
         }
     }
     

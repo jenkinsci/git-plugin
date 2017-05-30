@@ -78,8 +78,6 @@ public final class GitPublisherStep extends AbstractStepImpl {
   private List<GitPublisher.TagToPush> tagsToPush;
   // Pushes HEAD to these locations
   private List<GitPublisher.BranchToPush> branchesToPush;
-  // notes support
-  private List<GitPublisher.NoteToPush> notesToPush;
 
   @DataBoundConstructor
   public GitPublisherStep(String url) {
@@ -112,6 +110,10 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
   @DataBoundSetter
   @Restricted(NoExternalUse.class)
+  public void setForcePush(boolean force) { this.forcePush = force; }
+
+  @DataBoundSetter
+  @Restricted(NoExternalUse.class)
   public void setTagsToPush(List<GitPublisher.TagToPush> tagsToPush) {
     this.tagsToPush = tagsToPush;
   }
@@ -120,12 +122,6 @@ public final class GitPublisherStep extends AbstractStepImpl {
   @Restricted(NoExternalUse.class)
   public void setBranchesToPush(List<GitPublisher.BranchToPush> branchesToPush) {
     this.branchesToPush = branchesToPush;
-  }
-
-  @DataBoundSetter
-  @Restricted(NoExternalUse.class)
-  public void setNotesToPush(List<GitPublisher.NoteToPush> notesToPush) {
-    this.notesToPush = notesToPush;
   }
 
   public SCM createSCM() {
@@ -151,13 +147,6 @@ public final class GitPublisherStep extends AbstractStepImpl {
     return !branchesToPush.isEmpty();
   }
 
-  public boolean isPushNotes() {
-    if (notesToPush == null) {
-      return false;
-    }
-    return !notesToPush.isEmpty();
-  }
-
   public List<GitPublisher.TagToPush> getTagsToPush() {
     if (tagsToPush == null) {
       tagsToPush = new ArrayList<>();
@@ -172,14 +161,6 @@ public final class GitPublisherStep extends AbstractStepImpl {
     }
 
     return Collections.unmodifiableList(branchesToPush);
-  }
-
-  public List<GitPublisher.NoteToPush> getNotesToPush() {
-    if (notesToPush == null) {
-      notesToPush = new ArrayList<>();
-    }
-
-    return Collections.unmodifiableList(notesToPush);
   }
 
 
@@ -304,64 +285,6 @@ public final class GitPublisherStep extends AbstractStepImpl {
         }
       }
     }
-
-    if (isPushNotes()) {
-      for (final GitPublisher.NoteToPush b : notesToPush) {
-        if (b.getnoteMsg() == null)
-          throw new AbortException("No note to push defined");
-
-        b.setEmptyTargetRepoToOrigin();
-        String noteMsgTmp = environment.expand(b.getnoteMsg());
-        final String noteMsg = replaceAdditionalEnvironmentalVariables(noteMsgTmp, run);
-        final String noteNamespace = environment.expand(b.getnoteNamespace());
-        final String targetRepo = environment.expand(b.getTargetRepoName());
-        final boolean noteReplace = b.getnoteReplace();
-
-        try {
-          // Lookup repository with unexpanded name as GitSCM stores them unexpanded
-          RemoteConfig remote = gitSCM.getRepositoryByName(b.getTargetRepoName());
-
-          if (remote == null) {
-            listener.getLogger().println("No repository found for target repo name " + targetRepo);
-          }
-
-          // expand environment variables in remote repository
-          remote = gitSCM.getParamExpandedRepo(environment, remote);
-
-          listener.getLogger().println("Adding note to namespace \""+noteNamespace +"\":\n" + noteMsg + "\n******" );
-
-          if ( noteReplace )
-            git.addNote(    noteMsg, noteNamespace );
-          else
-            git.appendNote( noteMsg, noteNamespace );
-
-          remoteURI = remote.getURIs().get(0);
-          PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
-          if (forcePush) {
-            push.force();
-          }
-          push.execute();
-        } catch (GitException e) {
-          e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
-        }
-      }
-    }
-  }
-
-  private String replaceAdditionalEnvironmentalVariables(String input, Run<?, ?> run){
-    if (run == null){
-      return input;
-    }
-    String buildResult = "";
-    Result result = run.getResult();
-    if (result != null) {
-      buildResult = result.toString();
-    }
-    String buildDuration = run.getDurationString().replaceAll("and counting", "");
-
-    input = input.replaceAll("\\$BUILDRESULT", buildResult);
-    input = input.replaceAll("\\$BUILDDURATION", buildDuration);
-    return input;
   }
 
   @Extension
@@ -382,7 +305,7 @@ public final class GitPublisherStep extends AbstractStepImpl {
 
     @Override
     public String getFunctionName() {
-      return "gitPublisher";
+      return Messages.GitPublisherStep_FunctionName();
     }
 
     @Override
