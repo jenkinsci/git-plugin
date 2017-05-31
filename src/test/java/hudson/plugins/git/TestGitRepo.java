@@ -138,4 +138,9 @@ public class TestGitRepo {
         list.add(new UserRemoteConfig(gitDir.getAbsolutePath(), "origin", "", credentialsId));
         return list;
     }
+
+    public void tag(String tag) {
+        git.launchCommand("tag", tag);
+    }
+
 }
