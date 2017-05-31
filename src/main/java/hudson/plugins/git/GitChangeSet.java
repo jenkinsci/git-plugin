@@ -377,7 +377,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         } else {
-            user = User.get(csAuthor, false);
+            user = getById(csAuthor, false);
 
             if (user == null) {
                 // Ensure that malformed email addresses (in this case, just '@')
