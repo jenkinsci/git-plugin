@@ -44,6 +44,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Runs Git using {@link GitSCM}.
@@ -98,6 +99,7 @@ public final class GitStep extends SCMStep {
             return delegate.doFillCredentialsIdItems(project, url, credentialsId);
         }
 
+        @RequirePOST
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
