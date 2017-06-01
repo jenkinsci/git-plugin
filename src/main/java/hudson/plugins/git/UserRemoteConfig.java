@@ -39,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
 import hudson.model.FreeStyleProject;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
@@ -153,6 +154,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             return FormValidation.warning("Cannot find any credentials with id " + value);
         }
 
+        @RequirePOST
         @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
