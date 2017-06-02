@@ -187,7 +187,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                     .getClient();
             StandardCredentials credential = lookupCredentials(item, credentialsId, url);
             git.addDefaultCredentials(credential);
-            CredentialsProvider.track(item, credential);
+
+            // Should not track credentials use in any checkURL method, rather should track
+            // credentials use at the point where the credential is used to perform an
+            // action (like poll the repository, clone the repository, publish a change
+            // to the repository).
+            //
+            // CredentialsProvider.track(item, credential);
 
             // attempt to connect the provided URL
             try {
