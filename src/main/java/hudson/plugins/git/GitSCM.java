@@ -1313,7 +1313,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private String getBranchName(Branch branch)
     {
+        if (branch == null) {
+            return "";
+        }
         String name = branch.getName();
+        if (name == null) {
+            return "";
+        }
         if(name.startsWith("refs/remotes/")) {
             //Restore expected previous behaviour
             name = name.substring("refs/remotes/".length());
