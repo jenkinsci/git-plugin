@@ -34,6 +34,8 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
 
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -317,6 +319,35 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     @SuppressWarnings("unused") // Jenkins extension
     public static class JenkinsAbstractProjectListener extends Listener {
 
+        private List<ResponseContributor> onMultibranchJob(URIish uri,Jenkins jenkins,List<ResponseContributor> result) {
+
+            for (final Item project : Jenkins.getInstance().getAllItems()) {
+
+                SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
+
+                 if (scmTriggerItem == null) {
+                       String projectName = project.getFullDisplayName();
+                       String [] jobs = projectName.split(" » ");
+                       if(uri.toString().toLowerCase().contains(jobs[jobs.length-1].toLowerCase())) {
+                               String className = project.getClass().getSimpleName();
+                         if(className.equals("WorkflowMultiBranchProject")) {
+                           try {
+                                 WorkflowMultiBranchProject wmp = (WorkflowMultiBranchProject) project;
+                                 wmp.scheduleBuild2(0);
+                                 result.add(new ScheduledResponseContributor(project));
+                               } catch (Exception e) {
+                               e.printStackTrace();
+                            }
+                          }
+
+                       }
+
+                 }
+            }
+
+                return result;
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -344,6 +375,11 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
                     return result;
                 }
+
+                result = onMultibranchJob(uri,jenkins,result);
+                if(result.size() !=0)
+                      return result;
+
                 for (final Item project : Jenkins.getInstance().getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
                     if (scmTriggerItem == null) {
