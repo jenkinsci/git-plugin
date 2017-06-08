@@ -3,7 +3,7 @@ package hudson.plugins.git.extensions.impl.CloneOption;
 def f = namespace(lib.FormTagLib);
 
 f.entry(title:_("Shallow clone"), field:"shallow") {
-    f.checkbox()
+    f.checkbox(default: true)
 }
 f.entry(title:_("Shallow clone depth"), field:"depth") {
     f.number(clazz:"number", min:1, step:1)
