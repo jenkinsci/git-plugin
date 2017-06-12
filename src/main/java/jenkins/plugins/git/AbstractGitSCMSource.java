@@ -175,7 +175,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @return the includes.
      */
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getIncludes() {
         for (SCMSourceTrait trait: getTraits()) {
@@ -191,7 +191,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @deprecated use {@link WildcardSCMSourceFilterTrait}
      */
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getExcludes() {
         for (SCMSourceTrait trait : getTraits()) {
@@ -210,7 +210,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @CheckForNull
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public GitRepositoryBrowser getBrowser() {
         for (SCMSourceTrait trait : getTraits()) {
@@ -230,7 +230,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @CheckForNull
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getGitTool() {
         for (SCMSourceTrait trait : getTraits()) {
@@ -251,7 +251,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @NonNull
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public List<GitSCMExtension> getExtensions() {
         List<GitSCMExtension> extensions = new ArrayList<>();
@@ -279,7 +279,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @return the remote name.
      */
     @Deprecated
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getRemoteName() {
         for (SCMSourceTrait t : getTraits()) {

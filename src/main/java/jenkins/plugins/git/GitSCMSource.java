@@ -471,7 +471,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         @Deprecated
-        @Restricted(DoNotUse.class)
+        @Restricted(NoExternalUse.class)
         @RestrictedSince("3.4.0")
         public GitSCM.DescriptorImpl getSCMDescriptor() {
             return (GitSCM.DescriptorImpl)Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
