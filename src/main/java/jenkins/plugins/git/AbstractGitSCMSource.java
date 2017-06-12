@@ -741,16 +741,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Override
     public SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         GitSCMBuilder<?> builder = newBuilder(head, revision);
-        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getExtensions")) {
+        if (MethodUtils.isOverridden(AbstractGitSCMSource.class, getClass(), "getExtensions")) {
             builder.withExtensions(getExtensions());
         }
-        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getBrowser")) {
+        if (MethodUtils.isOverridden(AbstractGitSCMSource.class, getClass(), "getBrowser")) {
             builder.withBrowser(getBrowser());
         }
-        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
+        if (MethodUtils.isOverridden(AbstractGitSCMSource.class, getClass(), "getGitTool")) {
             builder.withGitTool(getGitTool());
         }
-        if (Util.isOverridden(AbstractGitSCMSource.class, getClass(), "getRefSpecs")) {
+        if (MethodUtils.isOverridden(AbstractGitSCMSource.class, getClass(), "getRefSpecs")) {
             List<String> specs = new ArrayList<>();
             for (RefSpec spec: getRefSpecs()) {
                 specs.add(spec.toString());
