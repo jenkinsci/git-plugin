@@ -82,6 +82,9 @@ import jenkins.scm.api.SCMSourceOwners;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.impl.form.NamedArrayList;
+import jenkins.scm.impl.trait.Discovery;
+import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
@@ -101,7 +104,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 /**
- * @author Stephen Connolly
+ * A {@link SCMSource} that discovers branches in a git repository.
  */
 public class GitSCMSource extends AbstractGitSCMSource {
     private static final String DEFAULT_INCLUDES = "*";
@@ -112,7 +115,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final String remote;
 
-    private final String credentialsId;
+    @CheckForNull
+    private transient String credentialsId;
 
     @Deprecated
     private transient String remoteName;
@@ -146,10 +150,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private List<SCMSourceTrait> traits = new ArrayList<>();
 
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote, String credentialsId) {
+    public GitSCMSource(String id, String remote) {
        super(id);
        this.remote = remote;
-       this.credentialsId = credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(@CheckForNull String credentialsId) {
+        this.credentialsId = credentialsId;
     }
 
     @DataBoundSetter
@@ -497,11 +505,21 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return getSCMDescriptor().doFillGitToolItems();
         }
 
-        public List<SCMSourceTraitDescriptor> getTraitDescriptors() {
-            return SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
+        public List<NamedArrayList<? extends SCMSourceTraitDescriptor>> getTraitsDescriptorLists() {
+            List<NamedArrayList<? extends SCMSourceTraitDescriptor>> result = new ArrayList<>();
+            List<SCMSourceTraitDescriptor> descriptors =
+                    SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
+            NamedArrayList.select(descriptors, "Within Repository",
+                    NamedArrayList.anyOf(
+                            NamedArrayList.withAnnotation(Selection.class),
+                            NamedArrayList.withAnnotation(Discovery.class)
+                    ),
+                    true, result);
+            NamedArrayList.select(descriptors, "Additional", null, true, result);
+            return result;
         }
 
-        public List<SCMSourceTrait> getTraitDefaults() {
+        public List<SCMSourceTrait> getTraitsDefaults() {
             return Collections.emptyList();
         }
     }

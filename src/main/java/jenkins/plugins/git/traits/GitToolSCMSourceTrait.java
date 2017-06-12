@@ -83,7 +83,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMSourceContext<B, R>, R extends SCMSourceRequest> void decorateContext(B context) {
+    protected void decorateContext(SCMSourceContext<?, ?> context) {
         ((GitSCMSourceContext<?,?>)context).withGitTool(gitTool);
     }
 
@@ -91,7 +91,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMBuilder<B, S>, S extends SCM> void decorateBuilder(B builder) {
+    protected void decorateBuilder(SCMBuilder<?, ?> builder) {
         ((GitSCMBuilder<?>) builder).withGitTool(gitTool);
     }
 
@@ -113,9 +113,24 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
+        public Class<? extends SCMBuilder> getBuilderClass() {
+            return GitSCMBuilder.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCMSourceContext> getContextClass() {
+            return GitSCMSourceContext.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return super.isApplicableToBuilder(builderClass) && GitSCMBuilder.class.isAssignableFrom(builderClass)
-                    && getSCMDescriptor().showGitToolOptions();
+            return super.isApplicableToBuilder(builderClass) && getSCMDescriptor().showGitToolOptions();
         }
 
         /**
@@ -123,24 +138,15 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
          */
         @Override
         public boolean isApplicableToContext(@NonNull Class<? extends SCMSourceContext> contextClass) {
-            return super.isApplicableToContext(contextClass) && GitSCMSourceContext.class
-                    .isAssignableFrom(contextClass);
+            return super.isApplicableToContext(contextClass) && getSCMDescriptor().showGitToolOptions();
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToSCM(@NonNull Class<? extends SCM> scmClass) {
-            return super.isApplicableToSCM(scmClass) && AbstractGitSCMSource.class.isAssignableFrom(scmClass);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isApplicableTo(@NonNull SCMSource source) {
-            return super.isApplicableTo(source) && source instanceof AbstractGitSCMSource;
+        public Class<? extends SCM> getScmClass() {
+            return GitSCM.class;
         }
 
         /**

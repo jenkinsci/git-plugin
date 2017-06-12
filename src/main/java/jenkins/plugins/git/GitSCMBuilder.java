@@ -39,9 +39,14 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.scm.SCM;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.trait.SCMBuilder;
@@ -52,7 +57,7 @@ import org.eclipse.jgit.transport.RefSpec;
  * The {@link SCMBuilder} base class for {@link AbstractGitSCMSource}.
  *
  * @param <B> the concrete type of {@link GitSCMBuilder} so that subclasses can chain correctly in their
- * {@link #withHead(SCMHead)} etc methods.
+ *            {@link #withHead(SCMHead)} etc methods.
  * @since 3.4.0
  */
 public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, GitSCM> {
@@ -93,6 +98,11 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      */
     @NonNull
     private String remote;
+    /**
+     * Any additional remotes keyed by their remote name.
+     */
+    @NonNull
+    private final Map<String, AdditionalRemote> additionalRemotes = new TreeMap<>();
 
     /**
      * Constructor.
@@ -190,6 +200,42 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     }
 
     /**
+     * Gets the (possibly empty) additional remote names.
+     *
+     * @return the (possibly empty) additional remote names.
+     */
+    @NonNull
+    public final Set<String> additionalRemoteNames() {
+        return Collections.unmodifiableSet(additionalRemotes.keySet());
+    }
+
+    /**
+     * Gets the remote URL of the git repository for the specified remote name.
+     *
+     * @param remoteName the additional remote name.
+     * @return the remote URL of the named additional remote or {@code null} if the supplied name is not in
+     * {@link #additionalRemoteNames()}
+     */
+    @CheckForNull
+    public final String additionalRemote(String remoteName) {
+        AdditionalRemote additionalRemote = additionalRemotes.get(remoteName);
+        return additionalRemote == null ? null : additionalRemote.remote();
+    }
+
+    /**
+     * Gets the ref specs to use for the git repository of the specified remote name.
+     *
+     * @param remoteName the additional remote name.
+     * @return the ref specs for the named additional remote or {@code null} if the supplied name is not in
+     * {@link #additionalRemoteNames()}
+     */
+    @CheckForNull
+    public final List<String> additionalRemoteRefSpecs(String remoteName) {
+        AdditionalRemote additionalRemote = additionalRemotes.get(remoteName);
+        return additionalRemote == null ? null : additionalRemote.refSpecs();
+    }
+
+    /**
      * Configures the {@link GitRepositoryBrowser} to use.
      *
      * @param browser the {@link GitRepositoryBrowser} or {@code null} to use the default "auto" browser.
@@ -245,13 +291,9 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      * @param extensions the {@link GitSCMExtension}s.
      * @return {@code this} for method chaining.
      */
-    @SuppressWarnings("unchecked")
     @NonNull
     public final B withExtensions(GitSCMExtension... extensions) {
-        for (GitSCMExtension extension : extensions) {
-            withExtension(extension);
-        }
-        return (B) this;
+        return withExtensions(Arrays.asList(extensions));
     }
 
     /**
@@ -335,7 +377,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    public final B withRemote(String remote) {
+    public final B withRemote(@NonNull String remote) {
         this.remote = remote;
         return (B) this;
     }
@@ -355,17 +397,52 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     }
 
     /**
+     * Configures an additional remote. It is the responsibility of the caller to ensure that there are no conflicts
+     * with the eventual {@link #remote()} name.
+     *
+     * @param remoteName the name of the additional remote.
+     * @param remote     the url of the additional remote.
+     * @param refSpecs   the ref specs of the additional remote, if empty will default to
+     *                   {@link AbstractGitSCMSource#REF_SPEC_DEFAULT}
+     * @return {@code this} for method chaining.
+     */
+    @NonNull
+    public final B withAdditionalRemote(@NonNull String remoteName, @NonNull String remote, String... refSpecs) {
+        return withAdditionalRemote(remoteName, remote, Arrays.asList(refSpecs));
+    }
+
+    /**
+     * Configures an additional remote. It is the responsibility of the caller to ensure that there are no conflicts
+     * with the eventual {@link #remote()} name.
+     *
+     * @param remoteName the name of the additional remote.
+     * @param remote     the url of the additional remote.
+     * @param refSpecs   the ref specs of the additional remote, if empty will default to
+     *                   {@link AbstractGitSCMSource#REF_SPEC_DEFAULT}
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public final B withAdditionalRemote(@NonNull String remoteName, @NonNull String remote, List<String> refSpecs) {
+        this.additionalRemotes.put(remoteName, new AdditionalRemote(remoteName, remote, refSpecs));
+        return (B) this;
+    }
+
+    /**
      * Converts the ref spec templates into {@link RefSpec} instances.
      *
      * @return the list of {@link RefSpec} instances.
      */
     @NonNull
     public final List<RefSpec> asRefSpecs() {
-        List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
+        // de-duplicate effective ref-specs after substitution of placeholder
+        Set<String> refSpecs = new LinkedHashSet<>(Math.max(this.refSpecs.size(), 1));
         for (String template : refSpecs()) {
-            result.add(new RefSpec(
-                    template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())
-            ));
+            refSpecs.add(template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName()));
+        }
+        List<RefSpec> result = new ArrayList<>(refSpecs.size());
+        for (String refSpec : refSpecs) {
+            result.add(new RefSpec(refSpec));
         }
         return result;
     }
@@ -378,13 +455,17 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     @NonNull
     public final List<UserRemoteConfig> asRemoteConfigs() {
         List<RefSpec> refSpecs = asRefSpecs();
-        List<UserRemoteConfig> result = new ArrayList<>(refSpecs.size());
+        List<UserRemoteConfig> result = new ArrayList<>(refSpecs.size() + additionalRemotes.size());
         String remote = remote();
         for (RefSpec refSpec : refSpecs) {
             result.add(new UserRemoteConfig(remote, remoteName(), refSpec.toString(), credentialsId()));
         }
+        for (AdditionalRemote r : additionalRemotes.values()) {
+            for (RefSpec refSpec : r.asRefSpecs()) {
+                result.add(new UserRemoteConfig(r.remote(), r.remoteName(), refSpec.toString(), credentialsId()));
+            }
+        }
         return result;
-
     }
 
     /**
@@ -394,7 +475,8 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     @Override
     public GitSCM build() {
         List<GitSCMExtension> extensions = new ArrayList<>(extensions());
-        if (revision() instanceof AbstractGitSCMSource.SCMRevisionImpl) {
+        SCMRevision revision = revision();
+        if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
             // remove any conflicting BuildChooserSetting if present
             for (Iterator<GitSCMExtension> iterator = extensions.iterator(); iterator.hasNext(); ) {
                 if (iterator.next() instanceof BuildChooserSetting) {
@@ -402,7 +484,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
                 }
             }
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
-                    (AbstractGitSCMSource.SCMRevisionImpl) revision())));
+                    (AbstractGitSCMSource.SCMRevisionImpl) revision)));
         }
         return new GitSCM(
                 asRemoteConfigs(),
@@ -410,5 +492,89 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
                 false, Collections.<SubmoduleConfig>emptyList(),
                 browser(), gitTool(),
                 extensions);
+    }
+
+    /**
+     * Internal value class to manage additional remote configuration.
+     */
+    private static final class AdditionalRemote {
+        /**
+         * The name of the remote.
+         */
+        @NonNull
+        private final String name;
+        /**
+         * The url of the remote.
+         */
+        @NonNull
+        private final String url;
+        /**
+         * The ref spec templates of the remote.
+         */
+        @NonNull
+        private final List<String> refSpecs;
+
+        /**
+         * Constructor.
+         *
+         * @param name     the name of the remote.
+         * @param url      the url of the remote.
+         * @param refSpecs the ref specs of the remote.
+         */
+        public AdditionalRemote(@NonNull String name, @NonNull String url, @NonNull List<String> refSpecs) {
+            this.name = name;
+            this.url = url;
+            this.refSpecs = new ArrayList<>(
+                    refSpecs.isEmpty()
+                            ? Collections.singletonList(AbstractGitSCMSource.REF_SPEC_DEFAULT)
+                            : refSpecs
+            );
+        }
+
+        /**
+         * Gets the name of the remote.
+         *
+         * @return the name of the remote.
+         */
+        public String remoteName() {
+            return name;
+        }
+
+        /**
+         * Gets the url of the remote.
+         *
+         * @return the url of the remote.
+         */
+        public String remote() {
+            return url;
+        }
+
+        /**
+         * Gets the ref specs of the remote.
+         *
+         * @return the ref specs of the remote.
+         */
+        public List<String> refSpecs() {
+            return Collections.unmodifiableList(refSpecs);
+        }
+
+        /**
+         * Converts the ref spec templates into {@link RefSpec} instances.
+         *
+         * @return the list of {@link RefSpec} instances.
+         */
+        @NonNull
+        public final List<RefSpec> asRefSpecs() {
+            // de-duplicate effective ref-specs after substitution of placeholder
+            Set<String> refSpecs = new LinkedHashSet<>(Math.max(this.refSpecs.size(), 1));
+            for (String template : refSpecs()) {
+                refSpecs.add(template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName()));
+            }
+            List<RefSpec> result = new ArrayList<>(refSpecs.size());
+            for (String refSpec : refSpecs) {
+                result.add(new RefSpec(refSpec));
+            }
+            return result;
+        }
     }
 }

@@ -37,6 +37,7 @@ import java.util.List;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
+import jenkins.plugins.git.GitSCMSource;
 import jenkins.plugins.git.GitSCMSourceContext;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
@@ -84,7 +85,7 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMBuilder<B, S>, S extends SCM> void decorateBuilder(B builder) {
+    protected void decorateBuilder(SCMBuilder<?, ?> builder) {
         ((GitSCMBuilder<?>) builder).withBrowser(browser);
     }
 
@@ -117,36 +118,32 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToBuilder(@NonNull Class<? extends SCMBuilder> builderClass) {
-            return super.isApplicableToBuilder(builderClass)
-                    && GitSCMBuilder.class.isAssignableFrom(builderClass);
+        public Class<? extends SCMBuilder> getBuilderClass() {
+            return GitSCMBuilder.class;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToContext(@NonNull Class<? extends SCMSourceContext> contextClass) {
-            return super.isApplicableToContext(contextClass)
-                    && GitSCMSourceContext.class.isAssignableFrom(contextClass);
+        public Class<? extends SCMSourceContext> getContextClass() {
+            return GitSCMSourceContext.class;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToSCM(@NonNull Class<? extends SCM> scmClass) {
-            return super.isApplicableToSCM(scmClass)
-                    && AbstractGitSCMSource.class.isAssignableFrom(scmClass);
+        public Class<? extends SCM> getScmClass() {
+            return GitSCM.class;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableTo(@NonNull SCMSource source) {
-            return super.isApplicableTo(source)
-                    && source instanceof AbstractGitSCMSource;
+        public Class<? extends SCMSource> getSourceClass() {
+            return GitSCMSource.class;
         }
     }
 }

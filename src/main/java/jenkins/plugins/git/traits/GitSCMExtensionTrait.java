@@ -68,7 +68,7 @@ public abstract class GitSCMExtensionTrait<E extends GitSCMExtension> extends SC
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMBuilder<B, S>, S extends SCM> void decorateBuilder(B builder) {
+    protected void decorateBuilder(SCMBuilder<?,?> builder) {
         ((GitSCMBuilder<?>) builder).withExtension(extension);
     }
 }

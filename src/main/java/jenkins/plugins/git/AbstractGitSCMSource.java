@@ -214,7 +214,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @RestrictedSince("3.4.0")
     public GitRepositoryBrowser getBrowser() {
         for (SCMSourceTrait trait : getTraits()) {
-            if (trait instanceof GitToolSCMSourceTrait) {
+            if (trait instanceof GitBrowserSCMSourceTrait) {
                 return ((GitBrowserSCMSourceTrait) trait).getBrowser();
             }
         }

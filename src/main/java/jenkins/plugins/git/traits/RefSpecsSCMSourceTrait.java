@@ -31,6 +31,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.List;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.GitSCMSourceContext;
+import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
@@ -115,7 +117,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMSourceContext<B, R>, R extends SCMSourceRequest> void decorateContext(B context) {
+    protected void decorateContext(SCMSourceContext<?, ?> context) {
         for (RefSpecTemplate template : templates) {
             ((GitSCMSourceContext) context).withRefSpec(template.getValue());
         }
@@ -125,7 +127,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
      * {@inheritDoc}
      */
     @Override
-    protected <B extends SCMBuilder<B, S>, S extends SCM> void decorateBuilder(B builder) {
+    protected void decorateBuilder(SCMBuilder<?, ?> builder) {
         for (RefSpecTemplate template : templates) {
             ((GitSCMBuilder) builder).withRefSpec(template.getValue());
         }
@@ -153,6 +155,31 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
         public List<RefSpecTemplate> getDefaultTemplates() {
             return Collections.singletonList(new RefSpecTemplate(AbstractGitSCMSource.REF_SPEC_DEFAULT));
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCMBuilder> getBuilderClass() {
+            return GitSCMBuilder.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCM> getScmClass() {
+            return GitSCM.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCMSourceContext> getContextClass() {
+            return GitSCMSourceContext.class;
+        }
+
     }
 
     /**

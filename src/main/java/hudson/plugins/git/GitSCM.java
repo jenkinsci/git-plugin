@@ -1139,7 +1139,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             LocalBranch lb = getExtensions().get(LocalBranch.class);
             if (lb != null) {
-               if (lb.getLocalBranch() == null || lb.getLocalBranch().equals("**")) {
+                String lbn = lb.getLocalBranch();
+                if (lbn == null || lbn.equals("**")) {
                   // local branch is configured with empty value or "**" so use remote branch name for checkout
                   localBranchName = deriveLocalBranchName(remoteBranchName);
                }
