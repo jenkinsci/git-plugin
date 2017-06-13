@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
@@ -499,7 +500,8 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         }
         if (!foundClone) {
             // assume honour refspecs unless the clone option is added
-            extensions.add(new GitSCMSourceDefaults());
+            // TODO revisit once we have support for TagSCMHead implemented as may need to check refspec handling then
+            extensions.add(new GitSCMSourceDefaults(head() instanceof TagSCMHead));
         }
         SCMRevision revision = revision();
         if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {

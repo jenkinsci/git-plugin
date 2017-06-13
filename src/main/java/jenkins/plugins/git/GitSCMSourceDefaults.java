@@ -32,6 +32,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import java.io.IOException;
 import java.util.List;
+import jenkins.scm.api.mixin.TagSCMHead;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
@@ -43,8 +44,8 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * Does not have a descriptor as we do not expect this extension to be user-visible.
  * With this extension, we anticipate:
  * <ul>
- *     <li>tags will not be cloned or fetched</li>
- *     <li>refspecs will be honoured on clone</li>
+ * <li>tags will not be cloned or fetched</li>
+ * <li>refspecs will be honoured on clone</li>
  * </ul>
  *
  * @since 3.4.0
@@ -52,9 +53,17 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 public class GitSCMSourceDefaults extends GitSCMExtension {
 
     /**
-     * Constructor.
+     * Determines whether tags should be fetched... only relevant if we implement support for {@link TagSCMHead}.
      */
-    public GitSCMSourceDefaults() {
+    private final boolean includeTags;
+
+    /**
+     * Constructor.
+     *
+     * @param includeTags
+     */
+    public GitSCMSourceDefaults(boolean includeTags) {
+        this.includeTags = includeTags;
     }
 
     /**
@@ -65,7 +74,13 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
         if (this == o) {
             return true;
         }
-        return o != null && getClass() == o.getClass();
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GitSCMSourceDefaults that = (GitSCMSourceDefaults) o;
+
+        return includeTags == that.includeTags;
     }
 
     /**
@@ -73,7 +88,7 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return (includeTags ? 1 : 0);
     }
 
     /**
@@ -81,7 +96,9 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "GitSCMSourceDefaults{}";
+        return "GitSCMSourceDefaults{" +
+                "includeTags=" + includeTags +
+                '}';
     }
 
     /**
@@ -90,17 +107,22 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
     @Override
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
                                      CloneCommand cmd) throws IOException, InterruptedException, GitException {
-        listener.getLogger().println("Cloning with configured refspecs honoured and without tags");
+        listener.getLogger()
+                .printf("Cloning with configured refspecs honoured and %s tags%n", includeTags ? "with" : "without");
         RemoteConfig rc = scm.getRepositories().get(0);
         List<RefSpec> refspecs = rc.getFetchRefSpecs();
         cmd.refspecs(refspecs);
-        cmd.tags(false);
+        cmd.tags(includeTags);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
             throws IOException, InterruptedException, GitException {
-        listener.getLogger().println("Fetching without tags");
-        cmd.tags(false);
+        listener.getLogger()
+                .printf("Fetching %s tags%n", includeTags ? "with" : "without");
+        cmd.tags(includeTags);
     }
 }
