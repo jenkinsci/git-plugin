@@ -18,6 +18,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
+import hudson.plugins.git.Cache;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
@@ -27,6 +28,7 @@ import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
+import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
@@ -359,6 +361,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
+    }
+
+    public boolean isUseCaches() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isUseCaches());
     }
 
     public BuildChooser getBuildChooser() {
@@ -1051,11 +1058,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * By the end of this method, remote refs are updated to include all the commits found in the remote servers.
      */
-    private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
+    private void retrieveChanges(Run build, GitClient git, TaskListener listener, Node node) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
+
+        RemoteConfig rc = repos.get(0);
+        String remoteURL = rc.getURIs().get(0).toPrivateString();
+        FilePath cacheDir = Cache.getCacheDir(node, remoteURL);
+
+        GitClient cache = createClient(listener, build.getEnvironment(listener), build.getParent(), node, cacheDir);
 
         if (git.hasGitRepo()) {
             // It's an update
@@ -1066,11 +1079,33 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } else {
             log.println("Cloning the remote Git repository");
 
-            RemoteConfig rc = repos.get(0);
+            if (isUseCaches()) {
+                log.println("Creating cache in " + cacheDir);
+
+                // Create the cache
+                Cache.lock(remoteURL);
+                try {
+                    CloneCommand cmd = cache.clone_().url(remoteURL).repositoryName(rc.getName());
+                    for (GitSCMExtension ext : extensions) {
+                        ext.decorateCloneCommand(this, build, cache, listener, cmd);
+                    }
+                    cmd.execute();
+                } catch (GitException ex) {
+                    ex.printStackTrace(listener.error("Error cloning remote repo cache '" + rc.getName() + "'"));
+                } finally {
+                    Cache.unlock(remoteURL);
+                }
+            }
+
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
+                }
+                if (isUseCaches()) {
+                    // Add cache to the clone command
+                    CloneOption reference = new CloneOption(false, false, cacheDir.toString(), null);
+                    reference.decorateCloneCommand(this, build, git, listener, cmd);
                 }
                 cmd.execute();
             } catch (GitException ex) {
@@ -1080,6 +1115,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
+            if (isUseCaches()) {
+                // Always update cache first
+                Cache.lock(remoteURL);
+                try {
+                    fetchFrom(cache, listener, remoteRepository);
+                } catch (GitException ex) {
+                    ex.printStackTrace(listener.error("Error fetching remote repo cache '" + remoteRepository.getName() + "'"));
+                }
+                finally {
+                    Cache.unlock(remoteURL);
+                }
+            }
+
             try {
                 fetchFrom(git, listener, remoteRepository);
             } catch (GitException ex) {
@@ -1112,7 +1160,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ext.beforeCheckout(this, build, git, listener);
         }
 
-        retrieveChanges(build, git, listener);
+        retrieveChanges(build, git, listener, GitUtils.workspaceToNode(workspace));
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
         // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
@@ -1389,6 +1437,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean useCaches;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
 
         public DescriptorImpl() {
@@ -1480,6 +1529,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
+        }
+
+        public boolean isUseCaches() {
+            return useCaches;
+        }
+
+        public void setUseCaches(boolean useCaches) {
+            this.useCaches = useCaches;
         }
 
         /**

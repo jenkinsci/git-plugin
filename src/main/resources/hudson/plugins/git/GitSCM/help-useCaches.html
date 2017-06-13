@@ -1,0 +1,11 @@
+<div>
+    <p>When checked, Hudson will maintain a clone of the Git repository
+    in use as a reference for each clone of that repository. The clone
+    will be kept on each node and updated before any other checkout of
+    the repository. All jobs pointing to the same repository location
+    will use a single reference repository on each node.</p>
+
+    <p>If you have several jobs using the same repository location,
+    or one job using multiple workspaces, enabling this option should
+    substantially reduce the disk usage on your nodes.</p>
+</div>
