@@ -37,6 +37,7 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
+import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.SCM;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -454,18 +455,32 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
      */
     @NonNull
     public final List<UserRemoteConfig> asRemoteConfigs() {
-        List<RefSpec> refSpecs = asRefSpecs();
-        List<UserRemoteConfig> result = new ArrayList<>(refSpecs.size() + additionalRemotes.size());
-        String remote = remote();
-        for (RefSpec refSpec : refSpecs) {
-            result.add(new UserRemoteConfig(remote, remoteName(), refSpec.toString(), credentialsId()));
-        }
+        List<UserRemoteConfig> result = new ArrayList<>(1 + additionalRemotes.size());
+        result.add(new UserRemoteConfig(remote(), remoteName(), joinRefSpecs(asRefSpecs()), credentialsId()));
         for (AdditionalRemote r : additionalRemotes.values()) {
-            for (RefSpec refSpec : r.asRefSpecs()) {
-                result.add(new UserRemoteConfig(r.remote(), r.remoteName(), refSpec.toString(), credentialsId()));
-            }
+            result.add(new UserRemoteConfig(r.remote(), r.remoteName(), joinRefSpecs(r.asRefSpecs()), credentialsId()));
         }
         return result;
+    }
+
+    private String joinRefSpecs(List<RefSpec> refSpecs) {
+        if (refSpecs.isEmpty()) {
+            return "";
+        }
+        if (refSpecs.size() == 1) {
+            return refSpecs.get(0).toString();
+        }
+        StringBuilder result = new StringBuilder(refSpecs.size() * 50 /*most ref specs are ~50 chars*/);
+        boolean first = true;
+        for (RefSpec r : refSpecs) {
+            if (first) {
+                first = false;
+            } else {
+                result.append(' ');
+            }
+            result.append(r.toString());
+        }
+        return result.toString();
     }
 
     /**
@@ -475,6 +490,17 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     @Override
     public GitSCM build() {
         List<GitSCMExtension> extensions = new ArrayList<>(extensions());
+        boolean foundClone = false;
+        for (GitSCMExtension e: extensions) {
+            if (e instanceof CloneOption) {
+                foundClone = true;
+                break;
+            }
+        }
+        if (!foundClone) {
+            // assume honour refspecs unless the clone option is added
+            extensions.add(new GitSCMSourceDefaults());
+        }
         SCMRevision revision = revision();
         if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
             // remove any conflicting BuildChooserSetting if present
@@ -577,4 +603,5 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             return result;
         }
     }
+
 }

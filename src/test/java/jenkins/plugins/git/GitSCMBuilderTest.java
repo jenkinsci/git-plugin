@@ -3,10 +3,10 @@ package jenkins.plugins.git;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.browser.GithubWeb;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
+import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.util.InverseBuildChooser;
 import java.util.Collections;
@@ -46,7 +46,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -90,7 +92,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -107,7 +111,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is("example-id")))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -124,7 +130,10 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), contains(instanceOf(AuthorInChangelog.class)));
+        assertThat(scm.getExtensions(), containsInAnyOrder(
+                instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // repeated calls build up new extensions
         instance.withExtension(new LocalBranch("**"));
@@ -144,6 +153,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getGitTool(), is(nullValue()));
         assertThat(scm.getExtensions(), containsInAnyOrder(
                 instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class),
                 allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("**")))
         ));
 
@@ -165,6 +175,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getGitTool(), is(nullValue()));
         assertThat(scm.getExtensions(), containsInAnyOrder(
                 instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class),
                 allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("master")))
         ));
     }
@@ -183,7 +194,10 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), contains(instanceOf(AuthorInChangelog.class)));
+        assertThat(scm.getExtensions(), containsInAnyOrder(
+                instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // repeated calls build up extensions
         instance.withExtensions(new CleanCheckout());
@@ -203,6 +217,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getGitTool(), is(nullValue()));
         assertThat(scm.getExtensions(), containsInAnyOrder(
                 instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class),
                 instanceOf(CleanCheckout.class)
         ));
 
@@ -224,6 +239,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getGitTool(), is(nullValue()));
         assertThat(scm.getExtensions(), containsInAnyOrder(
                 instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class),
                 instanceOf(CleanCheckout.class),
                 allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("**")))
         ));
@@ -247,6 +263,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getGitTool(), is(nullValue()));
         assertThat(scm.getExtensions(), containsInAnyOrder(
                 instanceOf(AuthorInChangelog.class),
+                instanceOf(GitSCMSourceDefaults.class),
                 instanceOf(CleanCheckout.class),
                 allOf(instanceOf(LocalBranch.class), hasProperty("localBranch", is("master")))
         ));
@@ -266,7 +283,29 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is("git"));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
+    }
+
+    @Test
+    public void withRefSpecAndCloneOption() throws Exception {
+        instance.withRefSpec("+refs/heads/master:refs/remotes/@{remote}/master");
+        instance.withExtension(new CloneOption(false, false, null, null));
+        assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
+        GitSCM scm = instance.build();
+        assertThat(scm.getBrowser(), is(nullValue()));
+        assertThat(scm.getUserRemoteConfigs(), contains(allOf(
+                instanceOf(UserRemoteConfig.class),
+                hasProperty("url", is("http://git.test/repo.git")),
+                hasProperty("name", is("origin")),
+                hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
+                hasProperty("credentialsId", is(nullValue())))
+        ));
+        assertThat(scm.getGitTool(), is(nullValue()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(CloneOption.class)
+        ));
     }
 
     @Test
@@ -283,7 +322,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // repeated calls build up
         instance.withRefSpec("+refs/heads/feature:refs/remotes/@{remote}/feature");
@@ -298,19 +339,15 @@ public class GitSCMBuilderTest {
                         instanceOf(UserRemoteConfig.class),
                         hasProperty("url", is("http://git.test/repo.git")),
                         hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
-                        hasProperty("credentialsId", is(nullValue()))
-                ),
-                allOf(
-                        instanceOf(UserRemoteConfig.class),
-                        hasProperty("url", is("http://git.test/repo.git")),
-                        hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/feature:refs/remotes/origin/feature")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master "
+                                + "+refs/heads/feature:refs/remotes/origin/feature")),
                         hasProperty("credentialsId", is(nullValue()))
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // repeated calls build up but remote configs de-duplicated
         instance.withRefSpec("+refs/heads/master:refs/remotes/@{remote}/master");
@@ -326,19 +363,15 @@ public class GitSCMBuilderTest {
                         instanceOf(UserRemoteConfig.class),
                         hasProperty("url", is("http://git.test/repo.git")),
                         hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
-                        hasProperty("credentialsId", is(nullValue()))
-                ),
-                allOf(
-                        instanceOf(UserRemoteConfig.class),
-                        hasProperty("url", is("http://git.test/repo.git")),
-                        hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/feature:refs/remotes/origin/feature")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master "
+                                + "+refs/heads/feature:refs/remotes/origin/feature")),
                         hasProperty("credentialsId", is(nullValue()))
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // de-duplication is applied after template substitution
         instance.withRefSpec("+refs/heads/master:refs/remotes/origin/master");
@@ -355,19 +388,15 @@ public class GitSCMBuilderTest {
                         instanceOf(UserRemoteConfig.class),
                         hasProperty("url", is("http://git.test/repo.git")),
                         hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
-                        hasProperty("credentialsId", is(nullValue()))
-                ),
-                allOf(
-                        instanceOf(UserRemoteConfig.class),
-                        hasProperty("url", is("http://git.test/repo.git")),
-                        hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/feature:refs/remotes/origin/feature")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master "
+                                + "+refs/heads/feature:refs/remotes/origin/feature")),
                         hasProperty("credentialsId", is(nullValue()))
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -384,7 +413,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // repeated calls accumulate
         instance.withRefSpecs(Collections.singletonList("+refs/heads/feature:refs/remotes/@{remote}/feature"));
@@ -399,19 +430,15 @@ public class GitSCMBuilderTest {
                         instanceOf(UserRemoteConfig.class),
                         hasProperty("url", is("http://git.test/repo.git")),
                         hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
-                        hasProperty("credentialsId", is(nullValue()))
-                ),
-                allOf(
-                        instanceOf(UserRemoteConfig.class),
-                        hasProperty("url", is("http://git.test/repo.git")),
-                        hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/feature:refs/remotes/origin/feature")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master "
+                                + "+refs/heads/feature:refs/remotes/origin/feature")),
                         hasProperty("credentialsId", is(nullValue()))
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         // empty list is no-op
         instance.withRefSpecs(Collections.<String>emptyList());
@@ -426,19 +453,15 @@ public class GitSCMBuilderTest {
                         instanceOf(UserRemoteConfig.class),
                         hasProperty("url", is("http://git.test/repo.git")),
                         hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master")),
-                        hasProperty("credentialsId", is(nullValue()))
-                ),
-                allOf(
-                        instanceOf(UserRemoteConfig.class),
-                        hasProperty("url", is("http://git.test/repo.git")),
-                        hasProperty("name", is("origin")),
-                        hasProperty("refspec", is("+refs/heads/feature:refs/remotes/origin/feature")),
+                        hasProperty("refspec", is("+refs/heads/master:refs/remotes/origin/master "
+                                + "+refs/heads/feature:refs/remotes/origin/feature")),
                         hasProperty("credentialsId", is(nullValue()))
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -459,7 +482,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -476,7 +501,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -493,7 +520,9 @@ public class GitSCMBuilderTest {
                 hasProperty("credentialsId", is(nullValue())))
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
     @Test
@@ -523,7 +552,9 @@ public class GitSCMBuilderTest {
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         instance.withAdditionalRemote("production", "http://git.test/production.git");
         assertThat(instance.additionalRemoteNames(), containsInAnyOrder("upstream", "production"));
@@ -559,8 +590,9 @@ public class GitSCMBuilderTest {
                 )
         ));
         assertThat(scm.getGitTool(), is(nullValue()));
-        assertThat(scm.getExtensions(), is(Collections.<GitSCMExtension>emptyList()));
-
+        assertThat(scm.getExtensions(), contains(
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
 }
