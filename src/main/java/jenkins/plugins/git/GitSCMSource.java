@@ -258,6 +258,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
             if (!defaults.contains(rawRefSpecs.trim())) {
                 List<String> templates = new ArrayList<>();
                 for (String rawRefSpec : rawRefSpecs.split(" ")) {
+                    if (StringUtils.isBlank(rawRefSpec)) {
+                        continue;
+                    }
                     if (defaults.contains(rawRefSpec)) {
                         templates.add(AbstractGitSCMSource.REF_SPEC_DEFAULT);
                     } else {

@@ -60,7 +60,7 @@ public class GitSCMSourceDefaults extends GitSCMExtension {
     /**
      * Constructor.
      *
-     * @param includeTags
+     * @param includeTags {@code true} to request fetching tags.
      */
     public GitSCMSourceDefaults(boolean includeTags) {
         this.includeTags = includeTags;

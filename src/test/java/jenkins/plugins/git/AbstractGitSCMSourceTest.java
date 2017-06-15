@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
@@ -28,6 +29,7 @@ import static org.hamcrest.Matchers.*;
 
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
+import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -253,13 +255,20 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--message=master-branch-commit-message");
 
         /* Fetch from sampleRepo */
-        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new IgnoreOnPushNotificationTrait()));
         List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>();
         assertThat(source.getExtensions(), is(empty()));
         LocalBranch localBranchExtension = new LocalBranch("**");
         extensions.add(localBranchExtension);
         source.setExtensions(extensions);
-        assertEquals(source.getExtensions(), extensions);
+        assertThat(source.getExtensions(), contains(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                )
+        ));
 
         SCMHead head = new SCMHead("master");
         SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
@@ -269,26 +278,28 @@ public class AbstractGitSCMSourceTest {
 
         /* Check that BuildChooserSetting not added to extensions by build() */
         GitSCM scm = (GitSCM) source.build(head);
-        List<GitSCMExtension> scmExtensions = scm.getExtensions();
-        assertThat(scmExtensions, Matchers.<List<GitSCMExtension>>allOf(
-                not(Matchers.<GitSCMExtension>hasItem(instanceOf(BuildChooserSetting.class))),
-                containsInAnyOrder(extensions.toArray(new GitSCMExtension[extensions.size()]))
+        assertThat(scm.getExtensions(), containsInAnyOrder(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                ),
+                // no BuildChooserSetting
+                instanceOf(IgnoreNotifyCommit.class),
+                instanceOf(GitSCMSourceDefaults.class)
         ));
-
 
         /* Check that BuildChooserSetting has been added to extensions by build() */
         GitSCM scmRevision = (GitSCM) source.build(head, revision);
-        scmExtensions = scmRevision.getExtensions();
-        for (GitSCMExtension e: scmExtensions) {
-            if (e instanceof BuildChooserSetting) {
-                extensions.add(e);
-                break;
-            }
-        }
-        assertThat(scmExtensions, Matchers.<List<GitSCMExtension>>allOf(
-                Matchers.<GitSCMExtension>hasSize(3),
-                containsInAnyOrder(extensions.toArray(new GitSCMExtension[extensions.size()])),
-                Matchers.<GitSCMExtension>hasItem(instanceOf(BuildChooserSetting.class))
+        assertThat(scmRevision.getExtensions(), containsInAnyOrder(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                ),
+                instanceOf(BuildChooserSetting.class),
+                instanceOf(IgnoreNotifyCommit.class),
+                instanceOf(GitSCMSourceDefaults.class)
         ));
     }
 
@@ -311,19 +322,15 @@ public class AbstractGitSCMSourceTest {
     public void testCustomRefSpecs() throws Exception {
         sampleRepo.init();
 
-        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
         SCMHead head = new SCMHead("master");
         GitSCM scm = (GitSCM) source.build(head);
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
 
-        assertEquals(2, configs.size());
+        assertEquals(1, configs.size());
 
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
-        assertEquals("+refs/heads/*:refs/remotes/origin/*", config.getRefspec());
-
-        config = configs.get(1);
-        assertEquals("origin", config.getName());
-        assertEquals("+refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+        assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
     }
 }
