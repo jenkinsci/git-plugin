@@ -158,8 +158,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
+    public AbstractGitSCMSource() {
+    }
+    
+    @Deprecated
     public AbstractGitSCMSource(String id) {
-        super(id);
+        setId(id);
     }
 
     @CheckForNull

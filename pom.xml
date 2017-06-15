@@ -30,7 +30,7 @@
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
-    <scm-api-plugin.version>2.2.0-20170612.200107-11</scm-api-plugin.version>
+    <scm-api-plugin.version>2.2.0-20170615.114844-13</scm-api-plugin.version>
   </properties>
 
   <build>

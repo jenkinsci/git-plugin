@@ -150,9 +150,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private List<SCMSourceTrait> traits = new ArrayList<>();
 
     @DataBoundConstructor
-    public GitSCMSource(String id, String remote) {
-       super(id);
+    public GitSCMSource(String remote) {
        this.remote = remote;
+    }
+
+    @Deprecated
+    public GitSCMSource(String id, String remote) {
+        this(remote);
+        setId(id);
     }
 
     @DataBoundSetter

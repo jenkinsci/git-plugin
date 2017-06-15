@@ -98,7 +98,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
     public static class AbstractGitSCMSourceImpl extends AbstractGitSCMSource {
 
         public AbstractGitSCMSourceImpl() {
-            super("AbstractGitSCMSourceImpl-id");
+            setId("AbstractGitSCMSourceImpl-id");
         }
 
         @NonNull
