@@ -222,11 +222,7 @@
       <artifactId>parameterized-trigger</artifactId>
       <version>2.33</version>
       <optional>true</optional>
-<<<<<<< HEAD
-   </dependency>
-=======
     </dependency>
->>>>>>> origin/master
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
