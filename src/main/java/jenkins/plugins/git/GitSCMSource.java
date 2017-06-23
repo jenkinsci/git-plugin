@@ -439,7 +439,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
-                                                   @QueryParameter String url,
+                                                   @QueryParameter String remote,
                                                    @QueryParameter String value) {
             if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
                 context != null && !context.hasPermission(Item.EXTENDED_READ)) {
@@ -451,8 +451,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 return FormValidation.ok();
             }
 
-            url = Util.fixEmptyAndTrim(url);
-            if (url == null)
+            remote = Util.fixEmptyAndTrim(remote);
+            if (remote == null)
             // not set, can't check
             {
                 return FormValidation.ok();
@@ -464,7 +464,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     context instanceof Queue.Task
                             ? Tasks.getAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
-                    URIRequirementBuilder.fromUri(url).build(),
+                    URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
                 if (StringUtils.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
