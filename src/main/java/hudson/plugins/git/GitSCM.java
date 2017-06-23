@@ -46,6 +46,7 @@ import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -1148,6 +1149,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
+
+        printCommitMessageToLog(listener, git, revToBuild);
+
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
@@ -1176,6 +1180,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
+        }
+    }
+
+    private void printCommitMessageToLog(TaskListener listener, GitClient git, final Build revToBuild)
+            throws IOException {
+        try {
+            RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
+            listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
+        } catch (InterruptedException e) {
+            e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
 
