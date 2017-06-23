@@ -51,7 +51,14 @@ import org.eclipse.jgit.transport.RefSpec;
  */
 public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest>
         extends SCMSourceContext<C, R> {
-
+    /**
+     * {@code true} if the {@link GitSCMSourceRequest} will need information about branches.
+     */
+    private boolean wantBranches;
+    /**
+     * {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
+     */
+    private boolean wantTags;
     /**
      * The name of the {@link GitTool} to use or {@code null} to use the default.
      */
@@ -80,6 +87,24 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     public GitSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} will need information about branches.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} will need information about branches.
+     */
+    public final boolean wantBranches() {
+        return wantBranches;
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
+     */
+    public final boolean wantTags() {
+        return wantTags;
     }
 
     /**
@@ -122,6 +147,34 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final String remoteName() {
         return remoteName;
+    }
+
+    /**
+     * Adds a requirement for branch details to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param include {@code true} to add the requirement or {@code false} to leave the requirement as is (makes
+     *                simpler with method chaining)
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C wantBranches(boolean include) {
+        wantBranches = wantBranches || include;
+        return (C) this;
+    }
+
+    /**
+     * Adds a requirement for tag details to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param include {@code true} to add the requirement or {@code false} to leave the requirement as is (makes
+     *                simpler with method chaining)
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C wantTags(boolean include) {
+        wantTags = wantTags || include;
+        return (C) this;
     }
 
     /**

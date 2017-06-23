@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
@@ -64,6 +65,27 @@ public class AbstractGitSCMSourceTest {
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        // And reuse cache:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        sampleRepo.git("checkout", "-b", "dev2");
+        sampleRepo.write("file", "modified again");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        // After changing data:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
+
+    @Test
+    public void retrieveHeadsRequiresBranchDiscovery() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        TaskListener listener = StreamTaskListener.fromStderr();
+        // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[]", source.fetch(listener).toString());
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
         assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
         // And reuse cache:
         assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());

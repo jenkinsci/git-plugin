@@ -62,6 +62,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTraitDescriptor;
@@ -154,12 +155,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
        this.remote = remote;
     }
 
-    @Deprecated
-    public GitSCMSource(String id, String remote) {
-        this(remote);
-        setId(id);
-    }
-
     @DataBoundSetter
     public void setCredentialsId(@CheckForNull String credentialsId) {
         this.credentialsId = credentialsId;
@@ -178,6 +173,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         this.remote = remote;
         this.credentialsId = credentialsId;
         this.traits = new ArrayList<>();
+        this.traits.add(new BranchDiscoveryTrait());
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
         }
@@ -203,6 +199,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private Object readResolve() throws ObjectStreamException {
         if (traits == null) {
             traits = new ArrayList<>();
+            traits.add(new BranchDiscoveryTrait());
             if ((includes != null && !DEFAULT_INCLUDES.equals(includes))
                     || (excludes != null && !DEFAULT_EXCLUDES.equals(excludes))) {
                 traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
@@ -239,6 +236,9 @@ public class GitSCMSource extends AbstractGitSCMSource {
             }
             if (browser != null) {
                 traits.add(new GitBrowserSCMSourceTrait(browser));
+            }
+            if (ignoreOnPushNotifications) {
+                traits.add(new IgnoreOnPushNotificationTrait());
             }
             RefSpecsSCMSourceTrait trait = asRefSpecsSCMSourceTrait(rawRefSpecs, remoteName);
             if (trait != null) {
@@ -528,7 +528,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public List<SCMSourceTrait> getTraitsDefaults() {
-            return Collections.emptyList();
+            return Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait());
         }
     }
 
