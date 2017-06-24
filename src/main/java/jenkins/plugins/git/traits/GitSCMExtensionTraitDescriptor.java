@@ -173,14 +173,6 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      * {@inheritDoc}
      */
     @Override
-    public Class<? extends SCMSourceContext> getContextClass() {
-        return GitSCMSourceContext.class;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Class<? extends SCM> getScmClass() {
         return GitSCM.class;
     }

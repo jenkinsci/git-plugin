@@ -25,11 +25,15 @@ package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import jenkins.plugins.git.GitSCMBuilder;
+import jenkins.plugins.git.GitSCMSource;
 import jenkins.plugins.git.GitSCMSourceContext;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -89,8 +93,24 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean isApplicableToContext(@NonNull Class<? extends SCMSourceContext> contextClass) {
-            return GitSCMSourceContext.class.isAssignableFrom(contextClass);
+        public Class<? extends SCMBuilder> getBuilderClass() {
+            return GitSCMBuilder.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCMSourceContext> getContextClass() {
+            return GitSCMSourceContext.class;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends SCMSource> getSourceClass() {
+            return GitSCMSource.class;
         }
     }
 
