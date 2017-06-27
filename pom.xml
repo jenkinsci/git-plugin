@@ -230,7 +230,7 @@
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
-      <version>2.9</version>
+      <version>2.33</version>
       <optional>true</optional>
     </dependency>
     <dependency>
