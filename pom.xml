@@ -164,6 +164,11 @@
       <version>${workflow.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-support</artifactId>
+      <version>${workflow.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
       <version>1.7.1</version>

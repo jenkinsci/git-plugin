@@ -10,7 +10,6 @@ import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import hudson.*;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
@@ -57,6 +56,8 @@ import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.workflow.steps.EnvironmentExpander;
+import org.jenkinsci.plugins.workflow.support.actions.EnvironmentAction;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -82,6 +83,7 @@ import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.util.LogTaskListener;
+
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1101,6 +1103,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
+        EnvironmentAction action = build.getAction(EnvironmentAction.class);
+        if (action != null) {
+            environment = EnvironmentExpander.getEffectiveEnvironment(environment, action.getEnvironment(), null);
+            if (VERBOSE)
+                listener.getLogger().println("Environment after merge with env step: " + environment);
+        }
         GitClient git = createClient(listener, environment, build, workspace);
 
         for (GitSCMExtension ext : extensions) {
