@@ -20,6 +20,9 @@ f.entry(title:_("Use credentials from default remote of parent repository"), fie
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
     f.number(clazz:"number", min:1, step:1)
 }
+f.entry(title:_("Run 'git lfs pull' in each submodule after checkout"), field:"withLFS") {
+    f.checkbox()
+}
 
 /*
   This needs more thought
