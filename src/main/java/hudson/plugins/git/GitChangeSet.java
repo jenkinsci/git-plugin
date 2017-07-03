@@ -28,7 +28,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static hudson.Util.fixEmpty;
-import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
@@ -377,7 +376,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         } else {
-            user = getById(csAuthor, false);
+            user = User.get(csAuthor, false);
 
             if (user == null) {
                 // Ensure that malformed email addresses (in this case, just '@')
@@ -399,19 +398,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
         return user;
-    }
-
-    // TODO 1.651.2+ replace by API method
-    @Nullable
-    private static User getById(String id, boolean create) {
-        try {
-            return (User) User.class.getMethod("getById", String.class, boolean.class).invoke(null, id, create);
-        } catch (NoSuchMethodException x) {
-            // fine, 1.651.1 or earlier
-        } catch (Exception x) {
-            LOGGER.log(Level.WARNING, null, x);
-        }
-        return User.get(id, create);
     }
 
     private void setMail(User user, String csAuthorEmail) throws IOException {

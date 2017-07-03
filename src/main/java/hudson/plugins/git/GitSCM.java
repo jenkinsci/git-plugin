@@ -1292,6 +1292,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                String remoteBranchName = getBranchName(branch);
                 env.put(GIT_BRANCH, remoteBranchName);
 
+                // TODO this is unmodular; should rather override LocalBranch.populateEnvironmentVariables
                 LocalBranch lb = getExtensions().get(LocalBranch.class);
                 if (lb != null) {
                    // Set GIT_LOCAL_BRANCH variable from the LocalBranch extension
