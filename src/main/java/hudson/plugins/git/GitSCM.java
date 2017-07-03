@@ -1028,9 +1028,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             disableAutomaticScheduling = ext.disableAutomaticScheduling();
         }
 
-        if (!disableAutomaticScheduling) {
-            if (candidates.size() > 1) {
-                log.println("Multiple candidate revisions");
+        if (candidates.size() > 1) {
+            log.println("Multiple candidate revisions");
+            if (!disableAutomaticScheduling) {
                 Job<?, ?> job = build.getParent();
                 if (job instanceof AbstractProject) {
                     AbstractProject project = (AbstractProject) job;
