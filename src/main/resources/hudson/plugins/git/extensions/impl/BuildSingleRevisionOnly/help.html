@@ -1,0 +1,10 @@
+<div>
+    Disable scheduling for multiple candidate revisions.<br>
+    If we have 3 branches:<br>
+    ----A--.---.--- B<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\-----C<br>
+    jenkins would try to build (B) and (C).<br>
+    This behaviour disables this and only builds one of them.<br>
+    It is helpful to reduce the load of the Jenkins infrastructure when the
+    SCM system like Bitbucket or GitHub should decide what commits to build.
+</div>
