@@ -28,48 +28,76 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
+import hudson.RestrictedSince;
 import hudson.Util;
-import hudson.model.Item;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.ParameterValue;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
-import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.ObjectStreamException;
+import java.io.PrintWriter;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
-
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
+import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
+import jenkins.plugins.git.traits.GitSCMExtensionTrait;
+import jenkins.plugins.git.traits.GitSCMExtensionTraitDescriptor;
+import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
+import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
+import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
+import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.apache.commons.lang.StringUtils;
-
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
-
+import jenkins.scm.api.trait.SCMHeadPrefilter;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.api.trait.SCMTrait;
+import jenkins.scm.impl.form.NamedArrayList;
+import jenkins.scm.impl.trait.Discovery;
+import jenkins.scm.impl.trait.Selection;
+import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -77,19 +105,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import java.io.PrintWriter;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Logger;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 /**
- * @author Stephen Connolly
+ * A {@link SCMSource} that discovers branches in a git repository.
  */
 public class GitSCMSource extends AbstractGitSCMSource {
     private static final String DEFAULT_INCLUDES = "*";
@@ -100,83 +117,242 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private final String remote;
 
-    private final String credentialsId;
-
-    private final String remoteName;
-
-    private final String rawRefSpecs;
-
-    private final String includes;
-
-    private final String excludes;
-
-    private final boolean ignoreOnPushNotifications;
-
     @CheckForNull
-    private GitRepositoryBrowser browser;
+    private transient String credentialsId;
 
-    @CheckForNull
-    private String gitTool;
+    @Deprecated
+    private transient String remoteName;
 
-    private List<GitSCMExtension> extensions;
+    @Deprecated
+    private transient String rawRefSpecs;
+
+    @Deprecated
+    private transient String includes;
+
+    @Deprecated
+    private transient String excludes;
+
+    @Deprecated
+    private transient boolean ignoreOnPushNotifications;
+
+    @Deprecated
+    private transient GitRepositoryBrowser browser;
+
+    @Deprecated
+    private transient String gitTool;
+
+    @Deprecated
+    private transient List<GitSCMExtension> extensions;
+
+    /**
+     * Holds all the behavioural traits of this source.
+     * 
+     * @since 3.4.0
+     */
+    private List<SCMSourceTrait> traits = new ArrayList<>();
 
     @DataBoundConstructor
+    public GitSCMSource(String remote) {
+       this.remote = remote;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(@CheckForNull String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setTraits(List<SCMSourceTrait> traits) {
+        this.traits = SCMTrait.asSetList(traits);
+    }
+
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    @RestrictedSince("3.4.0")
     public GitSCMSource(String id, String remote, String credentialsId, String remoteName, String rawRefSpecs, String includes, String excludes, boolean ignoreOnPushNotifications) {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
-        this.remoteName = remoteName;
-        this.rawRefSpecs = rawRefSpecs;
-        this.includes = includes;
-        this.excludes = excludes;
-        this.ignoreOnPushNotifications = ignoreOnPushNotifications;
+        List<SCMSourceTrait> traits = new ArrayList<>();
+        traits.add(new BranchDiscoveryTrait());
+        if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
+            traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
+        }
+        if (!DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+            traits.add(new RemoteNameSCMSourceTrait(remoteName));
+        }
+        if (ignoreOnPushNotifications) {
+            traits.add(new IgnoreOnPushNotificationTrait());
+        }
+        RefSpecsSCMSourceTrait trait = asRefSpecsSCMSourceTrait(rawRefSpecs, remoteName);
+        if (trait != null) {
+            traits.add(trait);
+        }
+        setTraits(traits);
     }
 
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    @RestrictedSince("3.4.0")
     public GitSCMSource(String id, String remote, String credentialsId, String includes, String excludes, boolean ignoreOnPushNotifications) {
         this(id, remote, credentialsId, null, null, includes, excludes, ignoreOnPushNotifications);
     }
 
-    public boolean isIgnoreOnPushNotifications() {
-      return ignoreOnPushNotifications;
+    private Object readResolve() throws ObjectStreamException {
+        if (traits == null) {
+            List<SCMSourceTrait> traits = new ArrayList<>();
+            traits.add(new BranchDiscoveryTrait());
+            if ((includes != null && !DEFAULT_INCLUDES.equals(includes))
+                    || (excludes != null && !DEFAULT_EXCLUDES.equals(excludes))) {
+                traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
+            }
+            if (extensions != null) {
+                EXTENSIONS:
+                for (GitSCMExtension extension : extensions) {
+                    for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
+                        if (d instanceof GitSCMExtensionTraitDescriptor) {
+                            GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
+                            if (descriptor.getExtensionClass().isInstance(extension)) {
+                                try {
+                                    SCMSourceTrait trait = descriptor.convertToTrait(extension);
+                                    if (trait != null) {
+                                        traits.add(trait);
+                                        continue EXTENSIONS;
+                                    }
+                                } catch (UnsupportedOperationException e) {
+                                    LOGGER.log(Level.WARNING,
+                                            "Could not convert " + extension.getClass().getName() + " to a trait", e);
+                                }
+                            }
+                        }
+                        LOGGER.log(Level.FINE, "Could not convert {0} to a trait (likely because this option does not "
+                                + "make sense for a GitSCMSource)", getClass().getName());
+                    }
+                }
+            }
+            if (remoteName != null && !DEFAULT_REMOTE_NAME.equals(remoteName) && StringUtils.isNotBlank(remoteName)) {
+                traits.add(new RemoteNameSCMSourceTrait(remoteName));
+            }
+            if (StringUtils.isNotBlank(gitTool)) {
+                traits.add(new GitToolSCMSourceTrait(gitTool));
+            }
+            if (browser != null) {
+                traits.add(new GitBrowserSCMSourceTrait(browser));
+            }
+            if (ignoreOnPushNotifications) {
+                traits.add(new IgnoreOnPushNotificationTrait());
+            }
+            RefSpecsSCMSourceTrait trait = asRefSpecsSCMSourceTrait(rawRefSpecs, remoteName);
+            if (trait != null) {
+                traits.add(trait);
+            }
+            setTraits(traits);
+        }
+        return this;
     }
 
-    @Override
-    public GitRepositoryBrowser getBrowser() {
-        return browser;
+    private RefSpecsSCMSourceTrait asRefSpecsSCMSourceTrait(String rawRefSpecs, String remoteName) {
+        if (rawRefSpecs != null) {
+            Set<String> defaults = new HashSet<>();
+            defaults.add("+refs/heads/*:refs/remotes/origin/*");
+            if (remoteName != null) {
+                defaults.add("+refs/heads/*:refs/remotes/"+remoteName+"/*");
+            }
+            if (!defaults.contains(rawRefSpecs.trim())) {
+                List<String> templates = new ArrayList<>();
+                for (String rawRefSpec : rawRefSpecs.split(" ")) {
+                    if (StringUtils.isBlank(rawRefSpec)) {
+                        continue;
+                    }
+                    if (defaults.contains(rawRefSpec)) {
+                        templates.add(AbstractGitSCMSource.REF_SPEC_DEFAULT);
+                    } else {
+                        templates.add(rawRefSpec);
+                    }
+                }
+                if (!templates.isEmpty()) {
+                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[templates.size()]));
+                }
+            }
+        }
+        return null;
     }
+
+    @Deprecated
+    @Restricted(DoNotUse.class)
+    @RestrictedSince("3.4.0")
+    public boolean isIgnoreOnPushNotifications() {
+        return SCMTrait.find(traits, IgnoreOnPushNotificationTrait.class) != null;
+    }
+
 
     // For Stapler only
-    @Restricted(NoExternalUse.class)
+    @Restricted(DoNotUse.class)
     @DataBoundSetter
     public void setBrowser(GitRepositoryBrowser browser) {
-        this.browser = browser;
-    }
-
-    @Override
-    public String getGitTool() {
-        return gitTool;
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
+        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
+            if (iterator.next() instanceof GitBrowserSCMSourceTrait) {
+                iterator.remove();
+            }
+        }
+        if (browser != null) {
+            traits.add(new GitBrowserSCMSourceTrait(browser));
+        }
+        setTraits(traits);
     }
 
     // For Stapler only
-    @Restricted(NoExternalUse.class)
+    @Restricted(DoNotUse.class)
     @DataBoundSetter
     public void setGitTool(String gitTool) {
-        this.gitTool = Util.fixEmptyAndTrim(gitTool);
-    }
-
-    @Override
-    public List<GitSCMExtension> getExtensions() {
-        if (extensions == null) {
-            return Collections.emptyList();
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
+        gitTool = Util.fixEmptyAndTrim(gitTool);
+        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
+            if (iterator.next() instanceof GitToolSCMSourceTrait) {
+                iterator.remove();
+            }
         }
-        return Collections.unmodifiableList(new ArrayList<GitSCMExtension>(extensions));
+        if (gitTool != null) {
+            traits.add(new GitToolSCMSourceTrait(gitTool));
+        }
+        setTraits(traits);
     }
 
     // For Stapler only
-    @Restricted(NoExternalUse.class)
+    @Restricted(DoNotUse.class)
     @DataBoundSetter
-    public void setExtensions(List<GitSCMExtension> extensions) {
-        this.extensions = Util.fixNull(extensions);
+    @Deprecated
+    public void setExtensions(@CheckForNull List<GitSCMExtension> extensions) {
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
+        for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
+            if (iterator.next() instanceof GitSCMExtensionTrait) {
+                iterator.remove();
+            }
+        }
+        EXTENSIONS:
+        for (GitSCMExtension extension : Util.fixNull(extensions)) {
+            for (SCMSourceTraitDescriptor d : SCMSourceTrait.all()) {
+                if (d instanceof GitSCMExtensionTraitDescriptor) {
+                    GitSCMExtensionTraitDescriptor descriptor = (GitSCMExtensionTraitDescriptor) d;
+                    if (descriptor.getExtensionClass().isInstance(extension)) {
+                        try {
+                            SCMSourceTrait trait = descriptor.convertToTrait(extension);
+                            if (trait != null) {
+                                traits.add(trait);
+                                continue EXTENSIONS;
+                            }
+                        } catch (UnsupportedOperationException e) {
+                            LOGGER.log(Level.WARNING,
+                                    "Could not convert " + extension.getClass().getName() + " to a trait", e);
+                        }
+                    }
+                }
+                LOGGER.log(Level.FINE, "Could not convert {0} to a trait (likely because this option does not "
+                        + "make sense for a GitSCMSource)", extension.getClass().getName());
+            }
+        }
+        setTraits(traits);
     }
 
     @Override
@@ -188,43 +364,55 @@ public class GitSCMSource extends AbstractGitSCMSource {
         return remote;
     }
 
-    @Override
-    public String getRemoteName() {
-        if (isBlank(remoteName))
-            // backwards compatibility
-            return super.getRemoteName();
-
-        return remoteName;
-    }
-
+    @Deprecated
+    @Restricted(DoNotUse.class)
+    @RestrictedSince("3.4.0")
     public String getRawRefSpecs() {
-        return rawRefSpecs;
-    }
-
-    @Override
-    public String getIncludes() {
-        return includes;
-    }
-
-    @Override
-    public String getExcludes() {
-        return excludes;
-    }
-
-    @Override
-    protected List<RefSpec> getRefSpecs() {
-        List<RefSpec> refSpecs = new ArrayList<>();
-        String refSpecsString = rawRefSpecs;
-
-        if (isBlank(refSpecsString))
-            // backwards compatibility
-            refSpecsString = String.format("+refs/heads/*:refs/remotes/%s/*", getRemoteName());
-
-        for (String rawRefSpec : refSpecsString.split(" ")) {
-            refSpecs.add(new RefSpec(rawRefSpec));
+        String remoteName = null;
+        RefSpecsSCMSourceTrait refSpecs = null;
+        for (SCMSourceTrait trait : traits) {
+            if (trait instanceof RemoteNameSCMSourceTrait) {
+                remoteName = ((RemoteNameSCMSourceTrait) trait).getRemoteName();
+                if (refSpecs != null) break;
+            }
+            if (trait instanceof RefSpecsSCMSourceTrait) {
+                refSpecs = (RefSpecsSCMSourceTrait) trait;
+                if (remoteName != null) break;
+            }
         }
+        if (remoteName == null) {
+            remoteName = AbstractGitSCMSource.DEFAULT_REMOTE_NAME;
+        }
+        if (refSpecs == null) {
+            return AbstractGitSCMSource.REF_SPEC_DEFAULT
+                    .replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName);
+        }
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        Pattern placeholder = Pattern.compile(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER);
+        for (String template : refSpecs.asStrings()) {
+            if (first) {
+                first = false;
+            } else {
+                result.append(' ');
+            }
+            result.append(placeholder.matcher(template).replaceAll(remoteName));
+        }
+        return result.toString();
+    }
 
-        return refSpecs;
+    @Deprecated
+    @Override
+    @Restricted(DoNotUse.class)
+    @RestrictedSince("3.4.0")
+    protected List<RefSpec> getRefSpecs() {
+        return new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(traits).asRefSpecs();
+    }
+
+    @NonNull
+    @Override
+    public List<SCMSourceTrait> getTraits() {
+        return traits;
     }
 
     @Symbol("git")
@@ -255,7 +443,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
-                                                   @QueryParameter String url,
+                                                   @QueryParameter String remote,
                                                    @QueryParameter String value) {
             if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
                 context != null && !context.hasPermission(Item.EXTENDED_READ)) {
@@ -267,8 +455,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 return FormValidation.ok();
             }
 
-            url = Util.fixEmptyAndTrim(url);
-            if (url == null)
+            remote = Util.fixEmptyAndTrim(remote);
+            if (remote == null)
             // not set, can't check
             {
                 return FormValidation.ok();
@@ -280,7 +468,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     context instanceof Queue.Task
                             ? Tasks.getAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
-                    URIRequirementBuilder.fromUri(url).build(),
+                    URIRequirementBuilder.fromUri(remote).build(),
                     GitClient.CREDENTIALS_MATCHER)) {
                 if (StringUtils.equals(value, o.value)) {
                     // TODO check if this type of credential is acceptable to the Git client or does it merit warning
@@ -294,25 +482,57 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return FormValidation.warning("Cannot find any credentials with id " + value);
         }
 
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins instance never null")
+        @Deprecated
+        @Restricted(NoExternalUse.class)
+        @RestrictedSince("3.4.0")
         public GitSCM.DescriptorImpl getSCMDescriptor() {
-            return (GitSCM.DescriptorImpl)Jenkins.getInstance().getDescriptor(GitSCM.class);
+            return (GitSCM.DescriptorImpl)Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
         }
 
+        @Deprecated
+        @Restricted(DoNotUse.class)
+        @RestrictedSince("3.4.0")
         public List<GitSCMExtensionDescriptor> getExtensionDescriptors() {
             return getSCMDescriptor().getExtensionDescriptors();
         }
 
+        @Deprecated
+        @Restricted(DoNotUse.class)
+        @RestrictedSince("3.4.0")
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
             return getSCMDescriptor().getBrowserDescriptors();
         }
 
+        @Deprecated
+        @Restricted(DoNotUse.class)
+        @RestrictedSince("3.4.0")
         public boolean showGitToolOptions() {
             return getSCMDescriptor().showGitToolOptions();
         }
 
+        @Deprecated
+        @Restricted(DoNotUse.class)
+        @RestrictedSince("3.4.0")
         public ListBoxModel doFillGitToolItems() {
             return getSCMDescriptor().doFillGitToolItems();
+        }
+
+        public List<NamedArrayList<? extends SCMSourceTraitDescriptor>> getTraitsDescriptorLists() {
+            List<NamedArrayList<? extends SCMSourceTraitDescriptor>> result = new ArrayList<>();
+            List<SCMSourceTraitDescriptor> descriptors =
+                    SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
+            NamedArrayList.select(descriptors, "Within Repository",
+                    NamedArrayList.anyOf(
+                            NamedArrayList.withAnnotation(Selection.class),
+                            NamedArrayList.withAnnotation(Discovery.class)
+                    ),
+                    true, result);
+            NamedArrayList.select(descriptors, "Additional", null, true, result);
+            return result;
+        }
+
+        public List<SCMSourceTrait> getTraitsDefaults() {
+            return Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait());
         }
     }
 
@@ -356,7 +576,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             public boolean isMatch(SCMSource source) {
                                 if (source instanceof GitSCMSource) {
                                     GitSCMSource git = (GitSCMSource) source;
-                                    if (git.ignoreOnPushNotifications) {
+                                    GitSCMSourceContext ctx =
+                                            new GitSCMSourceContext<>(null, SCMHeadObserver.none())
+                                                    .withTraits(git.getTraits());
+                                    if (ctx.ignoreOnPushNotifications()) {
                                         return false;
                                     }
                                     URIish remote;
@@ -380,7 +603,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
                                 if (source instanceof GitSCMSource) {
                                     GitSCMSource git = (GitSCMSource) source;
-                                    if (git.ignoreOnPushNotifications) {
+                                    GitSCMSourceContext<?,?> ctx =
+                                            new GitSCMSourceContext<>(null, SCMHeadObserver.none())
+                                                    .withTraits(git.getTraits());
+                                    if (ctx.ignoreOnPushNotifications()) {
                                         return Collections.emptyMap();
                                     }
                                     URIish remote;
@@ -392,6 +618,11 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     }
                                     if (GitStatus.looselyMatches(u, remote)) {
                                         SCMHead head = new SCMHead(branch);
+                                        for (SCMHeadPrefilter filter: ctx.prefilters()) {
+                                            if (filter.isExcluded(git, head)) {
+                                                return Collections.emptyMap();
+                                            }
+                                        }
                                         return Collections.<SCMHead, SCMRevision>singletonMap(head,
                                                 sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
                                     }
@@ -410,7 +641,10 @@ public class GitSCMSource extends AbstractGitSCMSource {
                         for (SCMSource source : owner.getSCMSources()) {
                             if (source instanceof GitSCMSource) {
                                 GitSCMSource git = (GitSCMSource) source;
-                                if (git.ignoreOnPushNotifications) {
+                                GitSCMSourceContext<?, ?> ctx =
+                                        new GitSCMSourceContext<>(null, SCMHeadObserver.none())
+                                                .withTraits(git.getTraits());
+                                if (ctx.ignoreOnPushNotifications()) {
                                     continue;
                                 }
                                 URIish remote;

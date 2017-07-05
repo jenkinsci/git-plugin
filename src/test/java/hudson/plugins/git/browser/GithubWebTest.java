@@ -153,7 +153,6 @@ public class GithubWebTest {
         private final String remote;
         private final String[] refSpecs;
         MockSCMSource(String remote, String[] refSpecs) {
-            super(null);
             this.remote = remote;
             this.refSpecs = refSpecs;
         }

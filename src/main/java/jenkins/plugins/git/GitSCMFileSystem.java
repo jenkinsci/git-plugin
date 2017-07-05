@@ -319,13 +319,14 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             AbstractGitSCMSource gitSCMSource = (AbstractGitSCMSource) source;
+            GitSCMBuilder<?> builder = gitSCMSource.newBuilder(head, rev);
             String cacheEntry = gitSCMSource.getCacheEntry();
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
             try {
                 File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
                 Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-                GitTool tool = gitSCMSource.resolveGitTool();
+                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool());
                 if (tool != null) {
                     git.using(tool.getGitExe());
                 }
@@ -335,7 +336,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                String remoteName = gitSCMSource.getRemoteName();
+                String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());
                 listener.getLogger().println("Fetching & pruning " + remoteName + "...");
@@ -345,7 +346,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_().prune().from(remoteURI, gitSCMSource.getRefSpecs()).execute();
+                client.fetch_().prune().from(remoteURI, builder.asRefSpecs()).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);
