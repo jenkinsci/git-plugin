@@ -96,6 +96,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import org.apache.commons.lang.StringUtils;
@@ -185,12 +186,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getIncludes() {
-        for (SCMSourceTrait trait: getTraits()) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getIncludes();
-            }
-        }
-        return "*";
+        WildcardSCMHeadFilterTrait trait = SCMTrait.find(getTraits(), WildcardSCMHeadFilterTrait.class);
+        return trait != null ? trait.getIncludes() : "*";
     }
 
     /**
@@ -201,12 +198,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getExcludes() {
-        for (SCMSourceTrait trait : getTraits()) {
-            if (trait instanceof WildcardSCMHeadFilterTrait) {
-                return ((WildcardSCMHeadFilterTrait) trait).getExcludes();
-            }
-        }
-        return "";
+        WildcardSCMHeadFilterTrait trait = SCMTrait.find(getTraits(), WildcardSCMHeadFilterTrait.class);
+        return trait != null ? trait.getExcludes() : "";
     }
 
     /**
@@ -220,13 +213,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public GitRepositoryBrowser getBrowser() {
-        for (SCMSourceTrait trait : getTraits()) {
-            if (trait instanceof GitBrowserSCMSourceTrait) {
-                return ((GitBrowserSCMSourceTrait) trait).getBrowser();
-            }
-        }
-        // Always return null by default
-        return null;
+        GitBrowserSCMSourceTrait trait = SCMTrait.find(getTraits(), GitBrowserSCMSourceTrait.class);
+        return trait != null ? trait.getBrowser() : null;
     }
 
     /**
@@ -240,13 +228,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getGitTool() {
-        for (SCMSourceTrait trait : getTraits()) {
-            if (trait instanceof GitToolSCMSourceTrait) {
-                return ((GitToolSCMSourceTrait) trait).getGitTool();
-            }
-        }
-        // Always return null by default
-        return null;
+        GitToolSCMSourceTrait trait = SCMTrait.find(getTraits(), GitToolSCMSourceTrait.class);
+        return trait != null ? trait.getGitTool() : null;
     }
 
     /**
@@ -289,12 +272,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Restricted(NoExternalUse.class)
     @RestrictedSince("3.4.0")
     public String getRemoteName() {
-        for (SCMSourceTrait t : getTraits()) {
-            if (t instanceof RemoteNameSCMSourceTrait) {
-                return ((RemoteNameSCMSourceTrait) t).getRemoteName();
-            }
-        }
-        return DEFAULT_REMOTE_NAME;
+        RemoteNameSCMSourceTrait trait = SCMTrait.find(getTraits(), RemoteNameSCMSourceTrait.class);
+        return trait != null ? trait.getRemoteName() : DEFAULT_REMOTE_NAME;
     }
 
     /**

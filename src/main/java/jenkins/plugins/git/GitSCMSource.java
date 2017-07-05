@@ -83,6 +83,7 @@ import jenkins.scm.api.SCMSourceOwners;
 import jenkins.scm.api.trait.SCMHeadPrefilter;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
@@ -162,7 +163,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @DataBoundSetter
     public void setTraits(List<SCMSourceTrait> traits) {
-        this.traits = traits == null ? new ArrayList<SCMSourceTrait>() : new ArrayList<SCMSourceTrait>(traits);
+        this.traits = SCMTrait.asSetList(traits);
     }
 
     @Deprecated
@@ -172,7 +173,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         super(id);
         this.remote = remote;
         this.credentialsId = credentialsId;
-        this.traits = new ArrayList<>();
+        List<SCMSourceTrait> traits = new ArrayList<>();
         this.traits.add(new BranchDiscoveryTrait());
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
@@ -187,6 +188,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (trait != null) {
             traits.add(trait);
         }
+        setTraits(traits);
     }
 
     @Deprecated
@@ -198,7 +200,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     private Object readResolve() throws ObjectStreamException {
         if (traits == null) {
-            traits = new ArrayList<>();
+            List<SCMSourceTrait> traits = new ArrayList<>();
             traits.add(new BranchDiscoveryTrait());
             if ((includes != null && !DEFAULT_INCLUDES.equals(includes))
                     || (excludes != null && !DEFAULT_EXCLUDES.equals(excludes))) {
@@ -244,6 +246,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             if (trait != null) {
                 traits.add(trait);
             }
+            setTraits(traits);
         }
         return this;
     }
@@ -279,12 +282,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Restricted(DoNotUse.class)
     @RestrictedSince("3.4.0")
     public boolean isIgnoreOnPushNotifications() {
-        for (SCMSourceTrait trait : traits) {
-            if (trait instanceof IgnoreOnPushNotificationTrait) {
-                return true;
-            }
-        }
-        return false;
+        return SCMTrait.find(traits, IgnoreOnPushNotificationTrait.class) != null;
     }
 
 
@@ -292,6 +290,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @Restricted(DoNotUse.class)
     @DataBoundSetter
     public void setBrowser(GitRepositoryBrowser browser) {
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
         for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
             if (iterator.next() instanceof GitBrowserSCMSourceTrait) {
                 iterator.remove();
@@ -300,12 +299,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (browser != null) {
             traits.add(new GitBrowserSCMSourceTrait(browser));
         }
+        setTraits(traits);
     }
 
     // For Stapler only
     @Restricted(DoNotUse.class)
     @DataBoundSetter
     public void setGitTool(String gitTool) {
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
         gitTool = Util.fixEmptyAndTrim(gitTool);
         for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
             if (iterator.next() instanceof GitToolSCMSourceTrait) {
@@ -315,6 +316,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         if (gitTool != null) {
             traits.add(new GitToolSCMSourceTrait(gitTool));
         }
+        setTraits(traits);
     }
 
     // For Stapler only
@@ -322,6 +324,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     @DataBoundSetter
     @Deprecated
     public void setExtensions(@CheckForNull List<GitSCMExtension> extensions) {
+        List<SCMSourceTrait> traits = new ArrayList<>(this.traits);
         for (Iterator<SCMSourceTrait> iterator = traits.iterator(); iterator.hasNext(); ) {
             if (iterator.next() instanceof GitSCMExtensionTrait) {
                 iterator.remove();
@@ -349,6 +352,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                         + "make sense for a GitSCMSource)", extension.getClass().getName());
             }
         }
+        setTraits(traits);
     }
 
     @Override
