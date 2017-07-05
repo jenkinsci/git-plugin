@@ -174,7 +174,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         this.remote = remote;
         this.credentialsId = credentialsId;
         List<SCMSourceTrait> traits = new ArrayList<>();
-        this.traits.add(new BranchDiscoveryTrait());
+        traits.add(new BranchDiscoveryTrait());
         if (!DEFAULT_INCLUDES.equals(includes) || !DEFAULT_EXCLUDES.equals(excludes)) {
             traits.add(new WildcardSCMHeadFilterTrait(includes, excludes));
         }
