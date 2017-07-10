@@ -1023,14 +1023,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (buildData.getBuildsByBranchName().size() >= 100) {
             log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
-        boolean disableAutomaticScheduling = false;
+        boolean checkForMultipleRevisions = false;
         for (GitSCMExtension ext: extensions) {
-            disableAutomaticScheduling = ext.disableAutomaticScheduling();
+            checkForMultipleRevisions = ext.disableMultipleRevisionDetection();
         }
 
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
-            if (!disableAutomaticScheduling) {
+            if (!checkForMultipleRevisions) {
                 Job<?, ?> job = build.getParent();
                 if (job instanceof AbstractProject) {
                     AbstractProject project = (AbstractProject) job;

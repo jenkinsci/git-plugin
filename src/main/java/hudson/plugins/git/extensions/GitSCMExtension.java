@@ -337,8 +337,9 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      *
      * @return <code>true</code> to disable the scheduling of another build to catch up
+     * when multiple revisions are detected
      */
-    public boolean disableAutomaticScheduling() {
+    public boolean disableMultipleRevisionDetection() {
         return false;
     }
 

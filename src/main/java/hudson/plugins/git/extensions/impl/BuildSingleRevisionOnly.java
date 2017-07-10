@@ -10,13 +10,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author Sven Hickstein
  */
-public class DisableAutomaticScheduling extends GitSCMExtension {
+public class BuildSingleRevisionOnly extends GitSCMExtension {
     @DataBoundConstructor
-    public DisableAutomaticScheduling() {
+    public BuildSingleRevisionOnly() {
     }
 
     @Override
-    public boolean disableAutomaticScheduling() {
+    public boolean disableMultipleRevisionDetection() {
         return true;
     }
 
@@ -24,7 +24,7 @@ public class DisableAutomaticScheduling extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Disable \"Triggered by an SCM change\"";
+            return "Build single revision only";
         }
     }
 }
