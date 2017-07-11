@@ -28,13 +28,17 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 public class GitUtils implements Serializable {
+    
     @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
+    @Nonnull
     GitClient git;
+    @Nonnull
     TaskListener listener;
 
-    public GitUtils(TaskListener listener, GitClient git) {
+    public GitUtils(@Nonnull TaskListener listener, @Nonnull GitClient git) {
         this.git = git;
         this.listener = listener;
     }

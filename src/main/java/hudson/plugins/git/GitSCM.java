@@ -506,7 +506,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return gitTool;
     }
 
-    public static String getParameterString(String original, EnvVars env) {
+    @NonNull
+    public static String getParameterString(@CheckForNull String original, @NonNull EnvVars env) {
         return env.expand(original);
     }
 
@@ -522,8 +523,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * If the configuration is such that we are tracking just one branch of one repository
      * return that branch specifier (in the form of something like "origin/master" or a SHA1-hash
      *
-     * Otherwise return null.
+     * Otherwise return [@code null}.
      */
+    @CheckForNull
     private String getSingleBranch(EnvVars env) {
         // if we have multiple branches skip to advanced usecase
         if (getBranches().size() != 1) {
@@ -595,7 +597,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
 
-    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final TaskListener listener) throws IOException, InterruptedException {
+    private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
 
         listener.getLogger().println("Using strategy: " + getBuildChooser().getDisplayName());
@@ -735,6 +737,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
+    @NonNull
     public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
@@ -744,6 +747,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws);
     }
 
+    @NonNull
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
@@ -776,6 +780,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return c;
     }
 
+    @NonNull
     private BuildData fixNull(BuildData bd) {
         return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
@@ -960,10 +965,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * to the predictable clean state by the time this method returns.
      */
     private @NonNull Build determineRevisionToBuild(final Run build,
-                                              final BuildData buildData,
+                                              final @NonNull BuildData buildData,
                                               final EnvVars environment,
-                                              final GitClient git,
-                                              final TaskListener listener) throws IOException, InterruptedException {
+                                              final @NonNull GitClient git,
+                                              final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         Collection<Revision> candidates = Collections.EMPTY_LIST;
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
