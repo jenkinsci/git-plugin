@@ -426,6 +426,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
         DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
 
+        if (descriptor == null) {
+            return false;
+        }
+
         return descriptor.isCreateAccountBasedOnEmail();
     }
 
