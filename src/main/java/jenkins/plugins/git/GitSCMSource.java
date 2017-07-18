@@ -118,7 +118,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
     private final String remote;
 
     @CheckForNull
-    private transient String credentialsId;
+    private String credentialsId;
 
     @Deprecated
     private transient String remoteName;
