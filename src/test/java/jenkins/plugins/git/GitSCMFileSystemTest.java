@@ -223,10 +223,10 @@ public class GitSCMFileSystemTest {
         ObjectId git261 = client.revParse("git-2.6.1");
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
-        GitSCMFileSystem instance = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
+        GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        assertFalse(instance.changesSince(rev261, out));
+        assertFalse(gitPlugin261FS.changesSince(rev261, out));
         assertThat(out.toString(), is(""));
     }
 
@@ -248,7 +248,7 @@ public class GitSCMFileSystemTest {
         ObjectId git261 = client.revParse("git-2.6.1");
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
-        GitSCMFileSystem instance = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
+        GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
 
         ObjectId git260 = client.revParse("git-2.6.0");
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
@@ -257,7 +257,7 @@ public class GitSCMFileSystemTest {
         assertThat(git260, not(is(git261)));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        assertTrue(instance.changesSince(rev260, out));
+        assertTrue(gitPlugin261FS.changesSince(rev260, out));
         assertThat(out.toString(), containsString("prepare release git-2.6.1"));
     }
 
@@ -277,21 +277,21 @@ public class GitSCMFileSystemTest {
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
         ObjectId git260 = client.revParse("git-2.6.0");
-        AbstractGitSCMSource.SCMRevisionImpl rev261 =
+        AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
-        GitSCMFileSystem instance = new GitSCMFileSystem(client, "origin", git260.getName(), rev261);
+        GitSCMFileSystem gitPlugin260FS = new GitSCMFileSystem(client, "origin", git260.getName(), rev260);
 
         ObjectId git261 = client.revParse("git-2.6.1");
-        AbstractGitSCMSource.SCMRevisionImpl rev260 =
+        AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
-        GitSCMFileSystem gitPlugin300FS =
-                new GitSCMFileSystem(client, "origin", git261.getName(), rev260);
-        assertEquals(git261.getName(), gitPlugin300FS.getRevision().getHash());
+        GitSCMFileSystem gitPlugin261FS =
+                new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
+        assertEquals(git261.getName(), gitPlugin261FS.getRevision().getHash());
 
         assertThat(git261, not(is(git260)));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        assertTrue(instance.changesSince(rev260, out));
+        assertTrue(gitPlugin260FS.changesSince(rev261, out));
         assertThat(out.toString(), is(""));
     }
 
