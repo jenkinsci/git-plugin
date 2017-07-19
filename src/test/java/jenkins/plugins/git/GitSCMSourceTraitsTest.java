@@ -1,5 +1,6 @@
 package jenkins.plugins.git;
 
+import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -9,31 +10,18 @@ import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.GitLFSPull;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import java.util.Collections;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.traits.AuthorInChangelogTrait;
-import jenkins.plugins.git.traits.BranchDiscoveryTrait;
-import jenkins.plugins.git.traits.CheckoutOptionTrait;
-import jenkins.plugins.git.traits.CleanAfterCheckoutTrait;
-import jenkins.plugins.git.traits.CleanBeforeCheckoutTrait;
-import jenkins.plugins.git.traits.CloneOptionTrait;
-import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
-import jenkins.plugins.git.traits.GitLFSPullTrait;
-import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.LocalBranchTrait;
-import jenkins.plugins.git.traits.PruneStaleBranchTrait;
-import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
-import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
-import jenkins.plugins.git.traits.SubmoduleOptionTrait;
-import jenkins.plugins.git.traits.UserIdentityTrait;
-import jenkins.plugins.git.traits.WipeWorkspaceTrait;
+import jenkins.plugins.git.traits.*;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import org.hamcrest.Matchers;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -141,6 +129,20 @@ public class GitSCMSourceTraitsTest {
                                 )
                         ),
                         Matchers.<SCMSourceTrait>instanceOf(GitLFSPullTrait.class),
+                        Matchers.<SCMSourceTrait>allOf(
+                                instanceOf(PreBuildMergeTrait.class),
+                                hasProperty("extension",
+                                        hasProperty("options",
+                                                allOf(
+                                                        instanceOf(UserMergeOptions.class),
+                                                        hasProperty("mergeRemote", is("foo")),
+                                                        hasProperty("mergeTarget", is("bar")),
+                                                        hasProperty("mergeStrategy", is(MergeCommand.Strategy.RECURSIVE)),
+                                                        hasProperty("fastForwardMode", is(MergeCommand.GitPluginFastForwardMode.NO_FF))
+                                                )
+                                        )
+                                )
+                        ),
                         Matchers.<SCMSourceTrait>instanceOf(PruneStaleBranchTrait.class),
                         Matchers.<SCMSourceTrait>instanceOf(IgnoreOnPushNotificationTrait.class),
                         Matchers.<SCMSourceTrait>instanceOf(AuthorInChangelogTrait.class),
@@ -196,6 +198,18 @@ public class GitSCMSourceTraitsTest {
                                 hasProperty("email", is("bob@example.com"))
                         ),
                         Matchers.<GitSCMExtension>instanceOf(GitLFSPull.class),
+                        Matchers.<GitSCMExtension>allOf(
+                                instanceOf(PreBuildMerge.class),
+                                hasProperty("options",
+                                        allOf(
+                                                instanceOf(UserMergeOptions.class),
+                                                hasProperty("mergeRemote", is("foo")),
+                                                hasProperty("mergeTarget", is("bar")),
+                                                hasProperty("mergeStrategy", is(MergeCommand.Strategy.RECURSIVE)),
+                                                hasProperty("fastForwardMode", is(MergeCommand.GitPluginFastForwardMode.NO_FF))
+                                        )
+                                )
+                        ),
                         Matchers.<GitSCMExtension>instanceOf(PruneStaleBranch.class),
                         Matchers.<GitSCMExtension>instanceOf(AuthorInChangelog.class),
                         Matchers.<GitSCMExtension>instanceOf(WipeWorkspace.class)
