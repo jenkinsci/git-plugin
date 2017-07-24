@@ -30,12 +30,15 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Label;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTagAction;
+import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
+import hudson.util.StreamTaskListener;
 import java.util.Iterator;
 import java.util.List;
 import jenkins.util.VirtualFile;
@@ -50,6 +53,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.eclipse.jgit.lib.PersonIdent;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -257,4 +261,38 @@ public class GitStepTest {
         r.assertLogContains("+edited by build", b);
     }
 
+    private String checkoutString(WorkflowRun run, String envVar, TaskListener listener) throws Exception {
+        return "checkout -f " + run.getEnvironment(listener).get(envVar);
+    }
+
+    @Test
+    public void testEnvVarsAvailable() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        TestGitRepo testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);
+        PersonIdent johnDoe = testRepo.johnDoe;
+        WorkflowJob project = r.jenkins.createProject(WorkflowJob.class, "p");
+        project.setDefinition(new CpsFlowDefinition(
+            "def rungit(cmd) {def gitcmd = \"git ${cmd}\"; if (isUnix()) {sh gitcmd} else {bat gitcmd}}\n" +
+            "node {\n" +
+            "  git url: $/" + sampleRepo + "/$\n" +
+            "}"));
+        final String commitFile1 = "commitFile1";
+        testRepo.commit(commitFile1, johnDoe, "Commit number 1");
+        WorkflowRun build1 = r.assertBuildStatusSuccess(project.scheduleBuild2(0));
+
+        assertEquals("origin/master", build1.getEnvironment(listener).get(GitSCM.GIT_BRANCH));
+        r.assertLogContains(build1.getEnvironment(listener).get(GitSCM.GIT_BRANCH), build1);
+
+        r.assertLogContains(checkoutString(build1, GitSCM.GIT_COMMIT, listener), build1);
+
+        final String commitFile2 = "commitFile2";
+        testRepo.commit(commitFile2, johnDoe, "Commit number 2");
+        WorkflowRun build2 = r.assertBuildStatusSuccess(project.scheduleBuild2(0));
+
+        r.assertLogNotContains(checkoutString(build2, GitSCM.GIT_PREVIOUS_COMMIT, listener), build2);
+        r.assertLogContains(checkoutString(build2, GitSCM.GIT_PREVIOUS_COMMIT, listener), build1);
+
+        r.assertLogNotContains(checkoutString(build2, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT, listener), build2);
+        r.assertLogContains(checkoutString(build2, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT, listener), build1);
+    }
 }
