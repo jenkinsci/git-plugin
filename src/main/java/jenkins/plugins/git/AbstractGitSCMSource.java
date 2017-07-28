@@ -61,8 +61,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,7 +81,6 @@ import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMProbe;
@@ -392,8 +389,15 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 final Repository repository = client.getRepository();
                 try (RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
+                    Map<String, ObjectId> remoteReferences = null;
+                    if (context.wantBranches() || context.wantTags()) {
+                        listener.getLogger().println("Listing remote references...");
+                        remoteReferences = client.getRemoteReferences(
+                                client.getRemoteUrl(remoteName), null, context.wantBranches(), context.wantTags()
+                        );
+                    }
                     if (context.wantBranches()) {
-                        discoverBranches(client, remoteName, repository, walk, request);
+                        discoverBranches(repository, walk, request, remoteReferences);
                     }
                     if (context.wantTags()) {
                         // TODO
@@ -402,25 +406,26 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return null;
             }
 
-            private void discoverBranches(GitClient client, String remoteName, final Repository repository,
-                                          final RevWalk walk, GitSCMSourceRequest request)
+            private void discoverBranches(final Repository repository,
+                                          final RevWalk walk, GitSCMSourceRequest request,
+                                          Map<String, ObjectId> remoteReferences)
                     throws IOException, InterruptedException {
-                listener.getLogger().println("Getting remote branches...");
+                listener.getLogger().println("Checking branches...");
                 walk.setRetainBody(false);
                 int count = 0;
-                for (final Branch b : client.getRemoteBranches()) {
-                    if (!b.getName().startsWith(remoteName + "/")) {
+                for (final Map.Entry<String, ObjectId> ref : remoteReferences.entrySet()) {
+                    if (!ref.getKey().startsWith(Constants.R_HEADS)) {
                         continue;
                     }
                     count++;
-                    final String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                    final String branchName = StringUtils.removeStart(ref.getKey(), Constants.R_HEADS);
                     if (request.process(new SCMHead(branchName),
                             new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                 @Nullable
                                 @Override
                                 public ObjectId create() throws IOException, InterruptedException {
                                     listener.getLogger().println("  Checking branch " + branchName);
-                                    return b.getSHA1();
+                                    return ref.getValue();
                                 }
                             },
                             new SCMSourceRequest.ProbeLambda<SCMHead, ObjectId>() {
@@ -485,7 +490,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 @Override
                                 public SCMRevision create(@NonNull SCMHead head, @Nullable ObjectId intermediate)
                                         throws IOException, InterruptedException {
-                                    return new SCMRevisionImpl(head, b.getSHA1String());
+                                    return new SCMRevisionImpl(head, ref.getValue().name());
                                 }
                             }, new SCMSourceRequest.Witness() {
                                 @Override
