@@ -17,7 +17,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.accmod.Restricted;
 
+@Restricted(NoExternalUse.class)
 public class Cache {
 
     /**
