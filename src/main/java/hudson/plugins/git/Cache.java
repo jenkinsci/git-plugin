@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class Cache {
 
@@ -44,6 +45,7 @@ public class Cache {
 
     public static File getCacheDir(String remoteURL) {
         Jenkins jenkins = Jenkins.getInstance();
+        // TODO: Remove redundant null check after update to Jenkins 2.60 core
         if (jenkins == null) {
             LOGGER.severe("Jenkins instance is null in Cache.getCacheDir");
             return null;
@@ -82,6 +84,8 @@ public class Cache {
         }
     }
 
+    // TODO: Remove redundant null check after update to Jenkins 2.60 core
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static void unlock(String remoteURL) {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
