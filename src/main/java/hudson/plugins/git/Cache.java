@@ -35,7 +35,7 @@ public class Cache {
     }
 
     private static String getNodeEntry(Node node) {
-        return Util.getDigestOf(node.getNodeName().isEmpty() ? node.getNodeName() : "master");
+        return Util.getDigestOf(node.getNodeName().isEmpty() ? "master" : node.getNodeName());
     }
 
     public static FilePath getCacheDir(Node node, String remoteURL)
