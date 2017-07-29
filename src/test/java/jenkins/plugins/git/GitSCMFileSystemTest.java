@@ -31,12 +31,14 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.GitException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
+import jenkins.plugins.git.CliGitCommand;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -45,6 +47,7 @@ import jenkins.scm.api.SCMSource;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,8 +73,40 @@ public class GitSCMFileSystemTest {
 
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
+
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
+    private final static String GIT_2_6_0_TAG = "git-2.6.0";
+    private final static String GIT_2_6_1_TAG = "git-2.6.1";
+
+    /* This test requires the tag git-2.6.1 and git-2.6.0. If you're working from a
+     * forked copy of the repository and your fork was created before the
+     * git-2.6.1 plugin release, you may not have that tag in your fork.
+     * If you do not have that tag, you will need to include that tag in
+     * your fork.  You can do that with the commands:
+     *
+     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
+     * $ git fetch --tags upstream
+     * $ git push --tags origin
+     */
+    @BeforeClass
+    public static void confirmTagsAvailable() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("jgit").getClient();
+
+        String[] tags = { GIT_2_6_0_TAG, GIT_2_6_1_TAG };
+        for (String tag : tags) {
+            ObjectId tagId;
+            try {
+                tagId = client.revParse(tag);
+            } catch (GitException ge) {
+                CliGitCommand gitCmd = new CliGitCommand(null);
+                gitCmd.run("fetch", "--tags");
+                tagId = client.revParse(tag); /* throws if tag not available */
+            }
+        }
+    }
 
     @Test
     public void ofSource_Smokes() throws Exception {
@@ -231,22 +266,12 @@ public class GitSCMFileSystemTest {
         assertThat(file2.contentAsString(), is("new"));
     }
 
-    /* This test requires the tag git-2.6.1. If you're working from a
-     * forked copy of the repository and your fork was created before the
-     * git-2.6.1 plugin release, you may not have that tag in your fork.
-     * If you do not have that tag, you will need to include that tag in
-     * your fork.  You can do that with the commands:
-     *
-     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
-     * $ git fetch --tags upstream
-     * $ git push --tags origin
-     */
     @Test
     public void given_filesystem_when_askingChangesSinceSameRevision_then_changesAreEmpty() throws Exception {
         File gitDir = new File(".");
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
-        ObjectId git261 = client.revParse("git-2.6.1");
+        ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
@@ -256,27 +281,17 @@ public class GitSCMFileSystemTest {
         assertThat(out.toString(), is(""));
     }
 
-    /* This test requires the tag git-2.6.1. If you're working from a
-     * forked copy of the repository and your fork was created before the
-     * git-2.6.1 plugin release, you may not have that tag in your fork.
-     * If you do not have that tag, you will need to include that tag in
-     * your fork.  You can do that with the commands:
-     *
-     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
-     * $ git fetch --tags upstream
-     * $ git push --tags origin
-     */
     @Test
     public void given_filesystem_when_askingChangesSinceOldRevision_then_changesArePopulated() throws Exception {
         File gitDir = new File(".");
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
-        ObjectId git261 = client.revParse("git-2.6.1");
+        ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
 
-        ObjectId git260 = client.revParse("git-2.6.0");
+        ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
 
@@ -287,27 +302,17 @@ public class GitSCMFileSystemTest {
         assertThat(out.toString(), containsString("prepare release git-2.6.1"));
     }
 
-    /* This test requires the tag git-2.6.0. If you're working from a
-     * forked copy of the repository and your fork was created before the
-     * git-2.6.0 plugin release, you may not have that tag in your fork.
-     * If you do not have that tag, you will need to include that tag in
-     * your fork.  You can do that with the commands:
-     *
-     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
-     * $ git fetch --tags upstream
-     * $ git push --tags origin
-     */
     @Test
     public void given_filesystem_when_askingChangesSinceNewRevision_then_changesArePopulatedButEmpty() throws Exception {
         File gitDir = new File(".");
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
-        ObjectId git260 = client.revParse("git-2.6.0");
+        ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev260 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
         GitSCMFileSystem gitPlugin260FS = new GitSCMFileSystem(client, "origin", git260.getName(), rev260);
 
-        ObjectId git261 = client.revParse("git-2.6.1");
+        ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
                 new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS =
