@@ -20,6 +20,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.accmod.Restricted;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+
 @Restricted(NoExternalUse.class)
 public class Cache {
 
@@ -38,14 +40,21 @@ public class Cache {
         return Util.getDigestOf(node.getNodeName().isEmpty() ? "master" : node.getNodeName());
     }
 
+    @CheckForNull
     public static FilePath getCacheDir(Node node, String remoteURL)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry(remoteURL);
         FilePath cacheDir = new FilePath(new FilePath(node.getRootPath(), "caches"), cacheEntry);
-        cacheDir.mkdirs(); // ensure it exists
+        try {
+            cacheDir.mkdirs(); // ensure it exists
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Failed mkdirs of " + cacheDir.getRemote(), e);
+            return null;
+        }
         return cacheDir;
     }
 
+    @CheckForNull
     public static File getCacheDir(String remoteURL) {
         Jenkins jenkins = Jenkins.getInstance();
         // TODO: Remove redundant null check after update to Jenkins 2.60 core

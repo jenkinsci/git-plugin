@@ -1067,7 +1067,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         RemoteConfig rc = repos.get(0);
         String remoteURL = rc.getURIs().get(0).toPrivateString();
         FilePath cacheDir = Cache.getCacheDir(node, remoteURL);
-
+        boolean useCache = isUseCaches() && (cacheDir != null);
         GitClient cache = createClient(listener, build.getEnvironment(listener), build.getParent(), node, cacheDir);
 
         if (git.hasGitRepo()) {
@@ -1079,8 +1079,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } else {
             log.println("Cloning the remote Git repository");
 
-            if (isUseCaches()) {
-                log.println("Creating cache in " + cacheDir);
+            if (useCache) {
+                log.println("Creating cache in " + cacheDir.getRemote());
 
                 // Create the cache
                 Cache.lock(remoteURL);
@@ -1102,9 +1102,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
                 }
-                if (isUseCaches()) {
+                if (useCache) {
                     // Add cache to the clone command
-                    CloneOption reference = new CloneOption(false, false, cacheDir.toString(), null);
+                    CloneOption reference = new CloneOption(false, false, cacheDir.getRemote(), null);
                     reference.decorateCloneCommand(this, build, git, listener, cmd);
                 }
                 cmd.execute();
@@ -1115,7 +1115,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            if (isUseCaches()) {
+            if (useCache) {
                 // Always update cache first
                 Cache.lock(remoteURL);
                 try {
