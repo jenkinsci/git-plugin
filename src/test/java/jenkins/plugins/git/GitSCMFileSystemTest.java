@@ -27,8 +27,13 @@ package jenkins.plugins.git;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.SubmoduleConfig;
+import hudson.plugins.git.extensions.GitSCMExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -43,9 +48,9 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -110,6 +115,27 @@ public class GitSCMFileSystemTest {
         assertThat(iterator.hasNext(), is(false));
         assertThat(file.getName(), is("file"));
         assertThat(file.contentAsString(), is(""));
+    }
+
+    @Issue("JENKINS-42817")
+    @Test
+    public void slashyBranches() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "bug/JENKINS-42817");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
     }
 
     @Test
