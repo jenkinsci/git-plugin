@@ -147,7 +147,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         return commitId;
     }
 
-    /*package*/ <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
+    public <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
         cacheLock.lock();
         try {
@@ -211,7 +211,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
     }
 
-    /*package*/ interface FSFunction<V> {
+    public interface FSFunction<V> {
         V invoke(Repository repository) throws IOException, InterruptedException;
     }
 
