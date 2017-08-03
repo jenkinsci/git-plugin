@@ -780,10 +780,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         return result;
     }
-    
+
     /**
      * Returns true if the branchName isn't matched by includes or is matched by excludes.
-     * 
+     *
      * @param branchName name of branch to be tested
      * @return true if branchName is excluded or is not included
      * @deprecated use {@link WildcardSCMSourceFilterTrait}
@@ -794,24 +794,31 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected boolean isExcluded (String branchName){
       return !Pattern.matches(getPattern(getIncludes()), branchName) || (Pattern.matches(getPattern(getExcludes()), branchName));
     }
-    
+
     /**
-     * Returns the pattern corresponding to the branches containing wildcards. 
-     * 
+     * Returns the pattern corresponding to the branches containing wildcards.
+     *
      * @param branches branch names to evaluate
      * @return pattern corresponding to the branches containing wildcards
      */
     private String getPattern(String branches){
       StringBuilder quotedBranches = new StringBuilder();
-      for (String wildcard : branches.split(" ")){
+      for (String term : branches.split(" ")){
         StringBuilder quotedBranch = new StringBuilder();
-        for(String branch : wildcard.split("(?=[*])|(?<=[*])")){
-          if (branch.equals("*")) {
-            quotedBranch.append(".*");
-          } else if (!branch.isEmpty()) {
-            quotedBranch.append(Pattern.quote(branch));
-          }
+
+        if (term.startsWith(":")) { // Regex mode
+            term = term.substring(1); // Chop off the leading ':'
+            quotedBranch.append("(" + term + ")"); // Parens needed to maintain precedence with our injected ORs
+        } else { // Wildcard mode
+            for(String branch : term.split("(?=[*])|(?<=[*])")){
+                if (branch.equals("*")) {
+                  quotedBranch.append(".*");
+                } else if (!branch.isEmpty()) {
+                  quotedBranch.append(Pattern.quote(branch));
+                }
+            }
         }
+
         if (quotedBranches.length()>0) {
           quotedBranches.append("|");
         }
