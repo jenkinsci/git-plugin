@@ -115,8 +115,50 @@ public class PreBuildMerge extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        if (o instanceof PreBuildMerge) {
+            PreBuildMerge that = (PreBuildMerge) o;
+            return (options != null && options.equals(that.options))
+                    || (options == null && that.options == null);
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return PreBuildMerge.class.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "PreBuildMerge{" +
+                "options=" + options.toString() +
+                '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Merge before build";
