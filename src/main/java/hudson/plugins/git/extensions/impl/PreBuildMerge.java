@@ -59,7 +59,7 @@ public class PreBuildMerge extends GitSCMExtension {
             return rev;
 
         // Only merge if there's a branch to merge that isn't us..
-        listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef + ", " + options);
+        listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef + ", " + GitSCM.getParameterString(options.toString(), build.getEnvironment(listener)));
 
         // checkout origin/blah
         ObjectId target = git.revParse(remoteBranchRef);
