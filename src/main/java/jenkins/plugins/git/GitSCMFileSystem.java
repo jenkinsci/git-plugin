@@ -147,6 +147,40 @@ public class GitSCMFileSystem extends SCMFileSystem {
         return commitId;
     }
 
+    /**
+     * Called with an {@link FSFunction} callback with a singleton repository
+     * cache lock.
+     * 
+     * An example usage might be:
+     * 
+     * <pre>
+     * {@code
+     *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
+     *          @Override
+     *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
+     *              Git activeRepo = getClonedRepository(repository);
+     *              File repoDir = activeRepo.getRepository().getDirectory().getParentFile();
+     *              System.out.println("Repo cloned to: " + repoDir.getCanonicalPath());
+     *              try {
+     *                  File f = new File(repoDir, filePath);
+     *                  if (f.canRead()) {
+     *                      return IOUtils.toByteArray(new FileInputStream(f));
+     *                  }
+     *                  return null;
+     *              } finally {
+     *                  FileUtils.deleteDirectory(repoDir);
+     *              }
+     *          }
+     *      });
+     * }
+     * </pre>
+     * 
+     * @param <V> return type
+     * @param function callback executed with a locked repository
+     * @return something
+     * @throws IOException
+     * @throws InterruptedException 
+     */
     public <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
         cacheLock.lock();
@@ -211,7 +245,16 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
     }
 
+    /**
+     * Simple callback that is used with
+     * {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+     * in order to provide a locked view of the Git repository
+     */
     public interface FSFunction<V> {
+        /**
+         * Called with a lock on the repository in order to perform some
+         * operations that might result in changes and necessary re-indexing
+         */
         V invoke(Repository repository) throws IOException, InterruptedException;
     }
 
