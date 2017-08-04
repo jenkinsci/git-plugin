@@ -269,7 +269,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     && ((GitSCM) source).getUserRemoteConfigs().size() == 1
                     && ((GitSCM) source).getBranches().size() == 1
                     && ((GitSCM) source).getBranches().get(0).getName().matches(
-                    "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+))$"
+                    "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
             );
             // we only support where the branch spec is obvious
         }
