@@ -155,7 +155,6 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * 
      * <blockquote><pre>{@code
      *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
-     *          @Override
      *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
      *              Git activeRepo = getClonedRepository(repository);
      *              File repoDir = activeRepo.getRepository().getDirectory().getParentFile();
