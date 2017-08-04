@@ -153,8 +153,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * 
      * An example usage might be:
      * 
-     * <pre>
-     * {@code
+     * <blockquote><pre>{@code
      *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
      *          @Override
      *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
@@ -172,8 +171,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
      *              }
      *          }
      *      });
-     * }
-     * </pre>
+     * }</pre></blockquote>
      * 
      * @param <V> return type
      * @param function callback executed with a locked repository
@@ -249,11 +247,16 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * Simple callback that is used with
      * {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
      * in order to provide a locked view of the Git repository
+     * @param <V> the return type
      */
     public interface FSFunction<V> {
         /**
          * Called with a lock on the repository in order to perform some
          * operations that might result in changes and necessary re-indexing
+         * @param repository the bare git repository
+         * @return value to return from {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+         * @throws IOException if there is an I/O error
+         * @throws InterruptedException if interrupted
          */
         V invoke(Repository repository) throws IOException, InterruptedException;
     }
