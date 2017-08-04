@@ -259,12 +259,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("branch", "-D", "dev");
 
         /* Fetch and confirm dev branch was pruned */
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* CentOS 6 git version (1.7.1) doesn't prune on fetch */
-            assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
-        } else {
-            assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
-        }
+        assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
     }
 
     @Test
