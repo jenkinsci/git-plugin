@@ -147,7 +147,38 @@ public class GitSCMFileSystem extends SCMFileSystem {
         return commitId;
     }
 
-    /*package*/ <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
+    /**
+     * Called with an {@link FSFunction} callback with a singleton repository
+     * cache lock.
+     * 
+     * An example usage might be:
+     * 
+     * <pre>{@code
+     *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
+     *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
+     *              Git activeRepo = getClonedRepository(repository);
+     *              File repoDir = activeRepo.getRepository().getDirectory().getParentFile();
+     *              System.out.println("Repo cloned to: " + repoDir.getCanonicalPath());
+     *              try {
+     *                  File f = new File(repoDir, filePath);
+     *                  if (f.canRead()) {
+     *                      return IOUtils.toByteArray(new FileInputStream(f));
+     *                  }
+     *                  return null;
+     *              } finally {
+     *                  FileUtils.deleteDirectory(repoDir);
+     *              }
+     *          }
+     *      });
+     * }</pre>
+     * 
+     * @param <V> return type
+     * @param function callback executed with a locked repository
+     * @return whatever you return from the provided function
+     * @throws IOException if there is an I/O error
+     * @throws InterruptedException if interrupted
+     */
+    public <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
         cacheLock.lock();
         try {
@@ -211,7 +242,21 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
     }
 
-    /*package*/ interface FSFunction<V> {
+    /**
+     * Simple callback that is used with
+     * {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+     * in order to provide a locked view of the Git repository
+     * @param <V> the return type
+     */
+    public interface FSFunction<V> {
+        /**
+         * Called with a lock on the repository in order to perform some
+         * operations that might result in changes and necessary re-indexing
+         * @param repository the bare git repository
+         * @return value to return from {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+         * @throws IOException if there is an I/O error
+         * @throws InterruptedException if interrupted
+         */
         V invoke(Repository repository) throws IOException, InterruptedException;
     }
 
