@@ -177,9 +177,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * 
      * @param <V> return type
      * @param function callback executed with a locked repository
-     * @return something
-     * @throws IOException
-     * @throws InterruptedException 
+     * @return whatever you return from the provided function
+     * @throws IOException if there is an I/O error
+     * @throws InterruptedException if interrupted
      */
     public <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
