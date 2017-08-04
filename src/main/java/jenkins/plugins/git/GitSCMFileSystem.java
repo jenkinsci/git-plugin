@@ -153,7 +153,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
      * 
      * An example usage might be:
      * 
-     * <blockquote><pre>{@code
+     * <pre>{@code
      *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
      *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
      *              Git activeRepo = getClonedRepository(repository);
@@ -170,7 +170,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
      *              }
      *          }
      *      });
-     * }</pre></blockquote>
+     * }</pre>
      * 
      * @param <V> return type
      * @param function callback executed with a locked repository
