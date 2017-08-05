@@ -150,9 +150,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
     /**
      * Called with an {@link FSFunction} callback with a singleton repository
      * cache lock.
-     * 
+     *
      * An example usage might be:
-     * 
+     *
      * <pre>{@code
      *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
      *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
@@ -171,7 +171,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
      *          }
      *      });
      * }</pre>
-     * 
+     *
      * @param <V> return type
      * @param function callback executed with a locked repository
      * @return whatever you return from the provided function

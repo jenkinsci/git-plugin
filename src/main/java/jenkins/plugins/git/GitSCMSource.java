@@ -146,7 +146,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     /**
      * Holds all the behavioural traits of this source.
-     * 
+     *
      * @since 3.4.0
      */
     private List<SCMSourceTrait> traits = new ArrayList<>();
@@ -441,7 +441,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                             GitClient.CREDENTIALS_MATCHER)
                     .includeCurrentValue(credentialsId);
         }
-        
+
         public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
