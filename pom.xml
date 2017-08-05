@@ -76,7 +76,7 @@
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
-        <version>1.15</version>
+        <version>1.17</version>
         <executions>
           <execution>
             <goals>
@@ -150,7 +150,7 @@
     <dependency>
       <groupId>com.infradna.tool</groupId>
       <artifactId>bridge-method-annotation</artifactId>
-      <version>1.15</version>
+      <version>1.17</version>
     </dependency>
 
     <dependency>
