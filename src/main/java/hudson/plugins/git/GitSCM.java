@@ -1083,7 +1083,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 log.println("Creating cache in " + cacheDir.getRemote());
 
                 // Create the cache
-                Cache.lock(remoteURL);
+                Cache.lock(node, remoteURL);
                 try {
                     CloneCommand cmd = cache.clone_().url(remoteURL).repositoryName(rc.getName());
                     for (GitSCMExtension ext : extensions) {
@@ -1093,7 +1093,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 } catch (GitException ex) {
                     ex.printStackTrace(listener.error("Error cloning remote repo cache '" + rc.getName() + "'"));
                 } finally {
-                    Cache.unlock(remoteURL);
+                    Cache.unlock(node, remoteURL);
                 }
             }
 
