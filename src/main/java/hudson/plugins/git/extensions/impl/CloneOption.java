@@ -8,17 +8,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-
+import java.io.IOException;
+import java.util.List;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import java.io.IOException;
-import java.util.List;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -111,6 +109,9 @@ public class CloneOption extends GitSCMExtension {
         return depth;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (shallow) {
@@ -142,11 +143,14 @@ public class CloneOption extends GitSCMExtension {
         cmd.reference(build.getEnvironment(listener).expand(reference));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow && depth > 1) {
-	    cmd.depth(depth);
+            cmd.depth(depth);
         }
         cmd.tags(!noTags);
         /* cmd.refspecs() not required.
@@ -157,13 +161,75 @@ public class CloneOption extends GitSCMExtension {
         cmd.timeout(timeout);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GitClientType getRequiredClient() {
         return GitClientType.GITCLI;
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CloneOption that = (CloneOption) o;
+
+        if (shallow != that.shallow) {
+            return false;
+        }
+        if (noTags != that.noTags) {
+            return false;
+        }
+        if (depth != that.depth) {
+            return false;
+        }
+        if (honorRefspec != that.honorRefspec) {
+            return false;
+        }
+        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
+            return false;
+        }
+        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return CloneOption.class.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "CloneOption{" +
+                "shallow=" + shallow +
+                ", noTags=" + noTags +
+                ", reference='" + reference + '\'' +
+                ", timeout=" + timeout +
+                ", depth=" + depth +
+                ", honorRefspec=" + honorRefspec +
+                '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Advanced clone behaviours";

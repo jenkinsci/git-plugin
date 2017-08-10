@@ -4,7 +4,7 @@ f = namespace(lib.FormTagLib)
 c = namespace(lib.CredentialsTagLib)
 
 f.entry(title:_("Repository URL"), field:"url") {
-    f.textbox()
+    f.textbox(checkMethod: "post")
 }
 
 f.entry(title:_("Credentials"), field:"credentialsId") {

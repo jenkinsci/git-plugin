@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.30</version>
+    <version>2.32</version>
     <relativePath />
   </parent>
 
@@ -16,7 +16,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>3.3.2-SNAPSHOT</version>
+  <version>3.5.1</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -30,7 +30,7 @@
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
     <workflow.version>1.14.2</workflow.version>
-    <scm-api-plugin.version>2.1.0</scm-api-plugin.version>
+    <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
   </properties>
 
   <build>
@@ -102,6 +102,18 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <rules>
+            <requireUpperBoundDeps>
+              <excludes combine.children="append">
+                <!-- structs requests 1.9, core requests 1.7 -->
+                <exclude>org.jenkins-ci:annotation-indexer</exclude>
+                <!-- workflow-cps requests 1.1.1, core 2.60.1 requests 1.2.1 -->
+                <exclude>org.jenkins-ci.ui:jquery-detached</exclude>
+              </excludes>
+            </requireUpperBoundDeps>
+          </rules>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -133,6 +145,11 @@
       <version>2.9.5</version>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci</groupId>
+      <artifactId>annotation-indexer</artifactId>
+      <version>1.11</version>
+    </dependency>
+    <dependency>
       <groupId>com.infradna.tool</groupId>
       <artifactId>bridge-method-annotation</artifactId>
       <version>1.15</version>
@@ -140,8 +157,13 @@
 
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>structs</artifactId>
+      <version>1.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>2.4.0</version>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -196,12 +218,22 @@
       <artifactId>mockito-core</artifactId>
       <version>1.10.19</version>
       <scope>test</scope>
+      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
+      <!-- exclude from mockito so that powermock version is used -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.objenesis</groupId>
+          <artifactId>objenesis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
       <version>1.6.6</version>
       <scope>test</scope>
+      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
+      <!-- excluded from mockito so that powermock version is used -->
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
@@ -244,6 +276,13 @@
         <exclusion>
           <groupId>org.sonatype.sisu</groupId>
           <artifactId>sisu-guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <!-- promoted-builds requests 1.9.2, core requests 1.8.4 -->
+          <!-- use core version, rather than promoted builds version -->
+          <!-- trust this optional reference will be harmless -->
+          <groupId>org.apache.ant</groupId>
+          <artifactId>ant</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -297,7 +336,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>HEAD</tag>
+    <tag>git-3.5.1</tag>
   </scm>
 
   <pluginRepositories>

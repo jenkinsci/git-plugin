@@ -7,14 +7,12 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-
+import java.io.IOException;
+import java.util.List;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * git-lfs-pull after the checkout.
@@ -26,6 +24,9 @@ public class GitLFSPull extends GitSCMExtension {
     public GitLFSPull() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Enabling Git LFS pull");
@@ -43,8 +44,41 @@ public class GitLFSPull extends GitSCMExtension {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return o instanceof GitLFSPull;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return GitLFSPull.class.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "GitLFSPull{}";
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Git LFS pull after checkout";

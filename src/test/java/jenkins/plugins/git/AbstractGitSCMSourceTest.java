@@ -7,6 +7,7 @@ import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCMRevisionState;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -20,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
+import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
@@ -27,6 +30,9 @@ import static org.hamcrest.Matchers.*;
 
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -59,6 +65,27 @@ public class AbstractGitSCMSourceTest {
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        // And reuse cache:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        sampleRepo.git("checkout", "-b", "dev2");
+        sampleRepo.write("file", "modified again");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        // After changing data:
+        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+    }
+
+    @Test
+    public void retrieveHeadsRequiresBranchDiscovery() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        TaskListener listener = StreamTaskListener.fromStderr();
+        // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[]", source.fetch(listener).toString());
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
         assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
         // And reuse cache:
         assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
@@ -232,12 +259,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("branch", "-D", "dev");
 
         /* Fetch and confirm dev branch was pruned */
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* CentOS 6 git version (1.7.1) doesn't prune on fetch */
-            assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
-        } else {
-            assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
-        }
+        assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
     }
 
     @Test
@@ -250,27 +272,52 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--message=master-branch-commit-message");
 
         /* Fetch from sampleRepo */
-        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new IgnoreOnPushNotificationTrait()));
         List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>();
         assertThat(source.getExtensions(), is(empty()));
         LocalBranch localBranchExtension = new LocalBranch("**");
         extensions.add(localBranchExtension);
         source.setExtensions(extensions);
-        assertEquals(source.getExtensions(), extensions);
-        TaskListener listener = StreamTaskListener.fromStderr();
+        assertThat(source.getExtensions(), contains(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                )
+        ));
 
         SCMHead head = new SCMHead("master");
         SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
 
+        // because we are ignoring push notifications we also ignore commits
+        extensions.add(new IgnoreNotifyCommit());
+
         /* Check that BuildChooserSetting not added to extensions by build() */
         GitSCM scm = (GitSCM) source.build(head);
-        assertEquals(extensions, scm.getExtensions());
+        assertThat(scm.getExtensions(), containsInAnyOrder(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                ),
+                // no BuildChooserSetting
+                instanceOf(IgnoreNotifyCommit.class),
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
 
         /* Check that BuildChooserSetting has been added to extensions by build() */
         GitSCM scmRevision = (GitSCM) source.build(head, revision);
-        assertEquals(extensions.get(0), scmRevision.getExtensions().get(0));
-        assertTrue(scmRevision.getExtensions().get(1) instanceof BuildChooserSetting);
-        assertEquals(2, scmRevision.getExtensions().size());
+        assertThat(scmRevision.getExtensions(), containsInAnyOrder(
+                allOf(
+                        instanceOf(LocalBranch.class),
+                        hasProperty("localBranch", is("**")
+                        )
+                ),
+                instanceOf(BuildChooserSetting.class),
+                instanceOf(IgnoreNotifyCommit.class),
+                instanceOf(GitSCMSourceDefaults.class)
+        ));
     }
 
 
@@ -292,19 +339,15 @@ public class AbstractGitSCMSourceTest {
     public void testCustomRefSpecs() throws Exception {
         sampleRepo.init();
 
-        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
+        GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
         SCMHead head = new SCMHead("master");
         GitSCM scm = (GitSCM) source.build(head);
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
 
-        assertEquals(2, configs.size());
+        assertEquals(1, configs.size());
 
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
-        assertEquals("+refs/heads/*:refs/remotes/origin/*", config.getRefspec());
-
-        config = configs.get(1);
-        assertEquals("origin", config.getName());
-        assertEquals("+refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+        assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
     }
 }

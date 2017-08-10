@@ -147,7 +147,38 @@ public class GitSCMFileSystem extends SCMFileSystem {
         return commitId;
     }
 
-    /*package*/ <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
+    /**
+     * Called with an {@link FSFunction} callback with a singleton repository
+     * cache lock.
+     *
+     * An example usage might be:
+     *
+     * <pre>{@code
+     *      return fs.invoke(new GitSCMFileSystem.FSFunction<byte[]>() {
+     *          public byte[] invoke(Repository repository) throws IOException, InterruptedException {
+     *              Git activeRepo = getClonedRepository(repository);
+     *              File repoDir = activeRepo.getRepository().getDirectory().getParentFile();
+     *              System.out.println("Repo cloned to: " + repoDir.getCanonicalPath());
+     *              try {
+     *                  File f = new File(repoDir, filePath);
+     *                  if (f.canRead()) {
+     *                      return IOUtils.toByteArray(new FileInputStream(f));
+     *                  }
+     *                  return null;
+     *              } finally {
+     *                  FileUtils.deleteDirectory(repoDir);
+     *              }
+     *          }
+     *      });
+     * }</pre>
+     *
+     * @param <V> return type
+     * @param function callback executed with a locked repository
+     * @return whatever you return from the provided function
+     * @throws IOException if there is an I/O error
+     * @throws InterruptedException if interrupted
+     */
+    public <V> V invoke(final FSFunction<V> function) throws IOException, InterruptedException {
         Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
         cacheLock.lock();
         try {
@@ -211,7 +242,21 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
     }
 
-    /*package*/ interface FSFunction<V> {
+    /**
+     * Simple callback that is used with
+     * {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+     * in order to provide a locked view of the Git repository
+     * @param <V> the return type
+     */
+    public interface FSFunction<V> {
+        /**
+         * Called with a lock on the repository in order to perform some
+         * operations that might result in changes and necessary re-indexing
+         * @param repository the bare git repository
+         * @return value to return from {@link #invoke(jenkins.plugins.git.GitSCMFileSystem.FSFunction)}
+         * @throws IOException if there is an I/O error
+         * @throws InterruptedException if interrupted
+         */
         V invoke(Repository repository) throws IOException, InterruptedException;
     }
 
@@ -224,7 +269,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     && ((GitSCM) source).getUserRemoteConfigs().size() == 1
                     && ((GitSCM) source).getBranches().size() == 1
                     && ((GitSCM) source).getBranches().get(0).getName().matches(
-                    "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+))$"
+                    "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
             );
             // we only support where the branch spec is obvious
         }
@@ -319,13 +364,14 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             AbstractGitSCMSource gitSCMSource = (AbstractGitSCMSource) source;
+            GitSCMBuilder<?> builder = gitSCMSource.newBuilder(head, rev);
             String cacheEntry = gitSCMSource.getCacheEntry();
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
             try {
                 File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
                 Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-                GitTool tool = gitSCMSource.resolveGitTool();
+                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool());
                 if (tool != null) {
                     git.using(tool.getGitExe());
                 }
@@ -335,7 +381,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                String remoteName = gitSCMSource.getRemoteName();
+                String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());
                 listener.getLogger().println("Fetching & pruning " + remoteName + "...");
@@ -345,7 +391,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_().prune().from(remoteURI, gitSCMSource.getRefSpecs()).execute();
+                client.fetch_().prune().from(remoteURI, builder.asRefSpecs()).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);

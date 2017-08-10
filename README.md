@@ -31,6 +31,12 @@ monitored.  Please improve code coverage with the tests you submit.
 Before submitting your change, please review the findbugs output to
 assure that you haven't introduced new findbugs warnings.
 
+## Building the Plugin
+
+  $ java -version # Need Java 1.8, earlier versions are unsupported for build
+  $ mvn -version # Need a modern maven version; maven 3.2.5 and 3.5.0 are known to work
+  $ mvn clean install
+
 ## To Do
 
 * Fix [bugs](https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+"In+Progress"%2C+Reopened%29+AND+component+%3D+git-plugin)

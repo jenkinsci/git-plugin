@@ -1,5 +1,7 @@
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.DescriptorExtensionList;
@@ -79,8 +81,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
-    public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                                                      GitClient git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+    public Collection<Revision> getCandidateRevisions(boolean isPollCall, @CheckForNull String singleBranch,
+                    @NonNull GitClient git, @NonNull TaskListener listener, 
+                    @NonNull BuildData buildData, @NonNull BuildChooserContext context) 
+                    throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
         return getCandidateRevisions(isPollCall, singleBranch, (IGitAPI) git, listener, buildData, context);
     }

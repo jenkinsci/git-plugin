@@ -17,13 +17,49 @@ public class AuthorInChangelog extends FakeGitSCMExtension {
     public AuthorInChangelog() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean requiresWorkspaceForPolling() {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return o instanceof AuthorInChangelog;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return AuthorInChangelog.class.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "AuthorInChangelog{}";
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Use commit author in changelog";
