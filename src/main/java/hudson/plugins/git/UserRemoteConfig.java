@@ -1,10 +1,13 @@
 package hudson.plugins.git;
 
+import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
@@ -98,6 +101,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 /* Construct a fake project */
                 project = new FreeStyleProject(Jenkins.getInstance(), "fake-" + UUID.randomUUID().toString());
             }
+            CredentialsMatcher credentialsMatcher = CredentialsMatchers.anyOf(new CredentialsMatcher[]{
+                    CredentialsMatchers.instanceOf(BaseStandardCredentials.class),
+                    CredentialsMatchers.instanceOf(SSHUserPrivateKey.class),
+
+            });
+
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(
@@ -105,9 +114,9 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                                     ? Tasks.getAuthenticationOf((Queue.Task) project)
                                     : ACL.SYSTEM,
                             project,
-                            StandardUsernameCredentials.class,
+                            StandardCredentials.class,
                             GitURIRequirementsBuilder.fromUri(url).build(),
-                            GitClient.CREDENTIALS_MATCHER)
+                            credentialsMatcher)
                     .includeCurrentValue(credentialsId);
         }
 
