@@ -60,12 +60,13 @@ public class UserRemoteConfigTest {
     @Issue("Jenkins-36863")
     @Test
     public void credentialsDropDownForApiToken() throws IOException {
+
         /**
-         * CertificateCredImpl if someone implements can unignore it
+         * CertificateCredImpl if someone has a usecase can unignore it
          */
         //CertificateCredentialsImpl certificateCredentials = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certcred", "some description", "password", new CertificateCredentialsImpl.FileOnMasterKeyStoreSource("keystore"));
         UsernamePasswordCredentialsImpl usernamePasswordCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "userpasswdcred", null, "jenkins", "s3cr3t");
-        ApiToken apiToken = new ApiToken(CredentialsScope.SYSTEM, "customcred", "some description", "password");
+        ApiToken apiToken = new ApiToken(CredentialsScope.SYSTEM, "customcred", "some description", "someRandomToken");
 
         SystemCredentialsProvider.getInstance().getCredentials().
                 addAll(asList(
@@ -102,10 +103,18 @@ public class UserRemoteConfigTest {
     }
 
     private static class ApiToken extends BaseStandardCredentials {
+        private String token;
+
         @DataBoundConstructor
-        public ApiToken(CredentialsScope global, String certcred, String some_description, String password) {
-            super(certcred, some_description);
+        public ApiToken(CredentialsScope global, String id, String some_description, String token) {
+            super(id, some_description);
+            this.token = token;
         }
+
+        public String getToken() {
+            return token;
+        }
+
 
         public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
             public DescriptorImpl() {
@@ -116,7 +125,7 @@ public class UserRemoteConfigTest {
             }
 
             public String getIconClassName() {
-                return "icon-credentials-certificate";
+                return "TokeClassName";
             }
         }
 
