@@ -34,7 +34,7 @@ import jenkins.scm.api.mixin.TagSCMHead;
  */
 public class GitTagSCMHead extends SCMHead implements TagSCMHead {
     /**
-     * The timestamp of the tag, for lightweigh tags this should be the last commit, for annotated
+     * The timestamp of the tag, for lightweight tags this should be the last commit, for annotated
      * tags this should be the tag date.
      */
     private final long timestamp;
@@ -43,7 +43,7 @@ public class GitTagSCMHead extends SCMHead implements TagSCMHead {
      * Constructor.
      *
      * @param name      the name.
-     * @param timestamp the timestamp of the tag, for lightweigh tags this should be the last commit, for annotated
+     * @param timestamp the timestamp of the tag, for lightweight tags this should be the last commit, for annotated
      *                  tags this should be the tag date.
      */
     public GitTagSCMHead(@NonNull String name, long timestamp) {
