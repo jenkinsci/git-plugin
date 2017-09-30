@@ -105,7 +105,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "lightweight");
         sampleRepo.write("file", "modified2");
         sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "--message=annotated");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
@@ -133,7 +133,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "lightweight");
         sampleRepo.write("file", "modified2");
         sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "--message=annotated");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
@@ -162,7 +162,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "lightweight");
         sampleRepo.write("file", "modified2");
         sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "--message=annotated");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
@@ -186,7 +186,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "lightweight");
         sampleRepo.write("file", "modified2");
         sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "--message=annotated");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
