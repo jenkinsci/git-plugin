@@ -10,7 +10,7 @@ import hudson.plugins.git.GitPublisher;
 
 import java.io.IOException;
 
-@Extension
+@Extension(optional = true)
 public class MatrixGitPublisher implements MatrixAggregatable {
     /**
      * For a matrix project, push should only happen once.
