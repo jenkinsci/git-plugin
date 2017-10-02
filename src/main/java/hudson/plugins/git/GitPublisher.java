@@ -6,10 +6,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.matrix.MatrixAggregatable;
-import hudson.matrix.MatrixAggregator;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
@@ -40,7 +36,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GitPublisher extends Recorder implements Serializable, MatrixAggregatable {
+public class GitPublisher extends Recorder implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -137,18 +133,6 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
         return BuildStepMonitor.BUILD;
     }
 
-    /**
-     * For a matrix project, push should only happen once.
-     */
-    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
-        return new MatrixAggregator(build,launcher,listener) {
-            @Override
-            public boolean endBuild() throws InterruptedException, IOException {
-                return GitPublisher.this.perform(build,launcher,listener);
-            }
-        };
-    }
-    
     private String replaceAdditionalEnvironmentalVariables(String input, AbstractBuild<?, ?> build){
     	if (build == null){
     		return input;
@@ -172,7 +156,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
         // during matrix build, the push back would happen at the very end only once for the whole matrix,
         // not for individual configuration build.
-        if (build instanceof MatrixRun) {
+        if (build.getClass().getName().equals("hudson.matrix.MatrixRun")) {
             return true;
         }
 
