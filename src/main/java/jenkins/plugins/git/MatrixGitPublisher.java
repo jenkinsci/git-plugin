@@ -19,7 +19,11 @@ public class MatrixGitPublisher implements MatrixAggregatable {
         return new MatrixAggregator(build,launcher,listener) {
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
-                return build.getParent().getPublishersList().get(GitPublisher.class).perform(build,launcher,listener);
+                GitPublisher publisher = build.getParent().getPublishersList().get(GitPublisher.class);
+                if (publisher != null) {
+                    return publisher.perform(build, launcher, listener);
+                }
+                return true;
             }
         };
     }

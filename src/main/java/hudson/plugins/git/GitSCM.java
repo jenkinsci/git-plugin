@@ -973,7 +973,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-        candidates = GitSCMMatrixUtil.populateCandidatesFromMatrixBuild(build, this);
+        try {
+            candidates = GitSCMMatrixUtil.populateCandidatesFromMatrixBuild(build, this);
+        } catch (Throwable ex) { // in case there's no matrix-project plugin installed
+            candidates = Collections.emptyList();
+        }
 
         // parameter forcing the commit ID to build
         if (candidates.isEmpty() ) {
