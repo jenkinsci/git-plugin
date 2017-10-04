@@ -37,6 +37,12 @@ public abstract class GitSCMExtensionTest {
 	}
 
 	protected abstract void before() throws Exception;
+
+	/**
+	 * The {@link GitSCMExtension} being tested - this will be added to the
+	 * project built in {@link #setupBasicProject(TestGitRepo)}
+	 * @return
+	 */
 	protected abstract GitSCMExtension getExtension();
 
 	protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult) throws Exception {
@@ -47,6 +53,14 @@ public abstract class GitSCMExtensionTest {
 		return build;
 	}
 
+	/**
+	 * Create a {@link FreeStyleProject} configured with a {@link GitSCM}
+	 * building on the {@code master} branch of the provided {@code repo},
+	 * and with the extension described in {@link #getExtension()} added.
+	 * @param repo
+	 * @return
+	 * @throws Exception
+	 */
 	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
 		GitSCMExtension extension = getExtension();
 		FreeStyleProject project = j.createFreeStyleProject(extension.getClass() + "Project");
