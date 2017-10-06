@@ -1162,8 +1162,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        printCommitMessageToLog(listener, git, revToBuild);
-
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
@@ -1174,6 +1172,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+        }
+
+        // Needs to be after the checkout so that revToBuild is in the workspace
+        try {
+            printCommitMessageToLog(listener, git, revToBuild);
+        } catch (GitException ge) {
+            listener.getLogger().println("Exception logging commit message for " + revToBuild + ": " + ge.getMessage());
         }
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
