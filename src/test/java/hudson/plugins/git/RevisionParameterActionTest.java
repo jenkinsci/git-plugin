@@ -36,178 +36,44 @@ import org.junit.Test;
 
 /**
  * Tests for {@link RevisionParameterAction}
- * 
+ *
  * @author Chris Johnson
  */
 public class RevisionParameterActionTest extends AbstractGitProject {
 
-    /**
-     * Test covering the behaviour after 1.1.26 where passing different revision 
-     * actions to a job in the queue creates separate builds
-     */
     @Test
-    public void testCombiningScheduling() throws Exception {
+    public void testProvidingRevision() throws Exception {
 
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("FREED456")));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        assertNotNull(b2);
-        
-        // Check that two builds occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),2);
-    }
-    /** test when existing revision is already in the queue
-    */
-    @Test
-    public void testCombiningScheduling2() throws Exception {
-
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        /* As of 1.521 this is non-null, although the future yields the same build as b1:
-        assertNull(b2);
-        */
-        
-        // Check that only one build occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),1);
-    }
-    /** test when there is no revision on the item in the queue
-    */
-    @Test
-    public void testCombiningScheduling3() throws Exception {
-
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3);
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF")));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        assertNotNull(b2);
-        
-        // Check that two builds occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),2);
-    }
-
-    /** test when a different revision is already in the queue, and combine requests is required.
-    */
-    @Test
-    public void testCombiningScheduling4() throws Exception {
-
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("FFEEFFEE", true)));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        //assertNull(b2);
-
-        // Check that only one build occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),1);
-
-        //check that the correct commit id is present in build
-        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "FFEEFFEE");
-
-    }
-
-    /** test when a same revision is already in the queue, and combine requests is required.
-    */
-    @Test
-    public void testCombiningScheduling5() throws Exception {
-
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        //assertNull(b2);
-
-        // Check that only one build occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),1);
-
-        //check that the correct commit id is present in build
-        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "DEADBEEF");
-    }
-
-    /** test when a job already in the queue with no revision(manually started), and combine requests is required.
-    */
-    @Test
-    public void testCombiningScheduling6() throws Exception {
-
-        FreeStyleProject fs = jenkins.createFreeStyleProject("freestyle");
-
-        // scheduleBuild2 returns null if request is combined into an existing item. (no new item added to queue)
-        Future b1 = fs.scheduleBuild2(3);
-        Future b2 = fs.scheduleBuild2(3, null, Collections.singletonList(new RevisionParameterAction("DEADBEEF", true)));
-
-        // Check that we have the correct futures.
-        assertNotNull(b1);
-        assertNotNull(b2);
-
-        // Check that two builds occurred
-        jenkins.waitUntilNoActivity();
-        assertEquals(fs.getBuilds().size(),2);
-
-        //check that the correct commit id is present in 2nd build
-        // list is reversed indexed so first item is latest build
-        assertEquals(fs.getBuilds().get(0).getAction(RevisionParameterAction.class).commit, "DEADBEEF");
-    }
-    
-
-        @Test
-	public void testProvidingRevision() throws Exception {
-
-		FreeStyleProject p1 = setupSimpleProject("master");
+        FreeStyleProject p1 = setupSimpleProject("master");
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commitNewFile(commitFile1);
         FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
-        
+
         Revision r1 = b1.getAction(BuildData.class).getLastBuiltRevision();
-        
+
         // create a second commit
         final String commitFile2 = "commitFile2";
         commitNewFile(commitFile2);
 
-		// create second build and set revision parameter using r1
+        // create second build and set revision parameter using r1
         FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserIdCause(),
 				Collections.singletonList(new RevisionParameterAction(r1))).get();
-        
-		// Check revision built for b2 matches the r1 revision
-		assertEquals(b2.getAction(BuildData.class)
-				.getLastBuiltRevision().getSha1String(), r1.getSha1String());
-		assertEquals(b2.getAction(BuildData.class)
-				.getLastBuiltRevision().getBranches().iterator().next()
-				.getName(), r1.getBranches().iterator().next().getName());
-		
-		// create a third build
-		FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
-		
-		// Check revision built for b3 does not match r1 revision
-		assertFalse(b3.getAction(BuildData.class)
-				.getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
-	}
+
+        // Check revision built for b2 matches the r1 revision
+        assertEquals(b2.getAction(BuildData.class)
+                        .getLastBuiltRevision().getSha1String(), r1.getSha1String());
+        assertEquals(b2.getAction(BuildData.class)
+                        .getLastBuiltRevision().getBranches().iterator().next()
+                        .getName(), r1.getBranches().iterator().next().getName());
+
+        // create a third build
+        FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
+
+        // Check revision built for b3 does not match r1 revision
+        assertFalse(b3.getAction(BuildData.class)
+                        .getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
+    }
 }
 
