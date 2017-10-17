@@ -1157,6 +1157,18 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals(1, candidateRevisions.size());
     }
 
+    private final Random random = new Random();
+    private boolean useChangelogToBranch = random.nextBoolean();
+
+    private void addChangelogToBranchExtension(GitSCM scm) {
+        if (useChangelogToBranch) {
+            /* Changelog should be no different with this enabled or disabled */
+            ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions("origin", "master");
+            scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
+        }
+        useChangelogToBranch = !useChangelogToBranch;
+    }
+
     @Test
     public void testMerge() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
@@ -1168,6 +1180,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1208,6 +1221,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1243,6 +1257,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1283,6 +1298,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -1322,6 +1338,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     	project.setScm(scm);
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
     	
     	commit("dummyFile", johnDoe, "Initial Commit");
     	testRepo.git.branch("integration1");
@@ -1352,6 +1369,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1393,6 +1411,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
