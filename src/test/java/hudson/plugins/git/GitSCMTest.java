@@ -28,6 +28,7 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
+import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
@@ -1156,8 +1157,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         for (RemoteConfig remoteConfig : gitSCM.getRepositories()) {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
-        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        BuildChooser buildChooser = gitSCM.getBuildChooser();
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
+        gitSCM.setBuildChooser(buildChooser); // Should be a no-op
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
     private final Random random = new Random();
