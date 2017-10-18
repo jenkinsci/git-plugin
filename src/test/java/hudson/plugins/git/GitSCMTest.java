@@ -1027,8 +1027,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         // setup global config
-        final DescriptorImpl descriptor = (DescriptorImpl) project.getScm().getDescriptor();
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertFalse("Wrong initial value for create account based on e-mail", scm.isCreateAccountBasedOnEmail());
         descriptor.setCreateAccountBasedOnEmail(true);
+        assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
