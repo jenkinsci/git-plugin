@@ -787,10 +787,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @Override
     protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {
-        if (category instanceof TagSCMHeadCategory) {
-            return new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()).wantTags();
+        if (super.isCategoryEnabled(category)) {
+            for (SCMSourceTrait trait : getTraits()) {
+                if (trait.isCategoryEnabled(category)) {
+                    return true;
+                }
+            }
         }
-        return super.isCategoryEnabled(category);
+        return false;
     }
 
     protected String getCacheEntry() {
