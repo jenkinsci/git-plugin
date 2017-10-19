@@ -672,26 +672,32 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
-        return doRetrieve(new Retriever<Set<String>>() {
-                              @Override
-                              public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                                  Set<String> revisions = new HashSet<String>();
-                                  if (context.wantBranches()) {
-                                      for (Branch branch : client.getRemoteBranches()) {
-                                          revisions.add(branch.getName().replaceFirst(
-                                                  "^" + Pattern.quote(context.remoteName()) + "/",
-                                                  ""
-                                          ));
-                                      }
-                                  }
-                                  if (context.wantTags()) {
-                                      revisions.addAll(client.getTagNames("*"));
-                                  }
-                                  return revisions;
-                              }
-                          },
-                context,
-                listener, false);
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        GitClient client = git.getClient();
+        Set<String> revisions = new HashSet<>();
+        if (context.wantBranches() || context.wantTags()) {
+            listener.getLogger().println("Listing remote references...");
+            Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
+                    getRemote(), null, context.wantBranches(), context.wantTags()
+            );
+            for (String name : remoteReferences.keySet()) {
+                if (context.wantBranches()) {
+                    if (name.startsWith(Constants.R_HEADS)) {
+                        revisions.add(StringUtils.removeStart(name, Constants.R_HEADS));
+                    }
+                }
+                if (context.wantTags()) {
+                    if (name.startsWith(Constants.R_TAGS)) {
+                        revisions.add(StringUtils.removeStart(name, Constants.R_TAGS));
+                    }
+                }
+            }
+        }
+        return revisions;
     }
 
     /**
@@ -701,65 +707,66 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Override
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        return doRetrieve(new Retriever<List<Action>>() {
-                              @Override
-                              public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                                  Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
-                                  if (symrefs.containsKey(Constants.HEAD)) {
-                                      // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
-                                      String target = symrefs.get(Constants.HEAD);
-                                      if (target.startsWith(Constants.R_HEADS)) {
-                                          // shorten standard names
-                                          target = target.substring(Constants.R_HEADS.length());
-                                      }
-                                      List<Action> result = new ArrayList<>();
-                                      if (StringUtils.isNotBlank(target)) {
-                                          result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                                      }
-                                      return result;
-                                  }
-                                  // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
-                                  // I think we will still need to keep this code path even if JGit implements
-                                  // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
-                                  // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
-                                  // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
-                                  // Ubuntu 16)
-                                  Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
-                                  if (remoteReferences.containsKey(Constants.HEAD)) {
-                                      ObjectId head = remoteReferences.get(Constants.HEAD);
-                                      Set<String> names = new TreeSet<>();
-                                      for (Map.Entry<String, ObjectId> entry: remoteReferences.entrySet()) {
-                                          if (entry.getKey().equals(Constants.HEAD)) continue;
-                                          if (head.equals(entry.getValue())) {
-                                              names.add(entry.getKey());
-                                          }
-                                      }
-                                      // if there is one and only one match, that's the winner
-                                      if (names.size() == 1) {
-                                          String target = names.iterator().next();
-                                          if (target.startsWith(Constants.R_HEADS)) {
-                                              // shorten standard names
-                                              target = target.substring(Constants.R_HEADS.length());
-                                          }
-                                          List<Action> result = new ArrayList<>();
-                                          if (StringUtils.isNotBlank(target)) {
-                                              result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                                          }
-                                          return result;
-                                      }
-                                      // if there are multiple matches, prefer `master`
-                                      if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
-                                          List<Action> result = new ArrayList<Action>();
-                                          result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
-                                          return result;
-                                      }
-                                  }
-                                  // Give up, there's no way to get the primary branch
-                                  return new ArrayList<>();
-                              }
-                          },
-                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
-                listener, false);
+        final GitSCMSourceContext context =
+                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        GitClient client = git.getClient();
+        Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        if (symrefs.containsKey(Constants.HEAD)) {
+            // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
+            String target = symrefs.get(Constants.HEAD);
+            if (target.startsWith(Constants.R_HEADS)) {
+                // shorten standard names
+                target = target.substring(Constants.R_HEADS.length());
+            }
+            List<Action> result = new ArrayList<>();
+            if (StringUtils.isNotBlank(target)) {
+                result.add(new GitRemoteHeadRefAction(getRemote(), target));
+            }
+            return result;
+        }
+        // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
+        // I think we will still need to keep this code path even if JGit implements
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
+        // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
+        // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
+        // Ubuntu 16)
+        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        if (remoteReferences.containsKey(Constants.HEAD)) {
+            ObjectId head = remoteReferences.get(Constants.HEAD);
+            Set<String> names = new TreeSet<>();
+            for (Map.Entry<String, ObjectId> entry : remoteReferences.entrySet()) {
+                if (entry.getKey().equals(Constants.HEAD)) continue;
+                if (head.equals(entry.getValue())) {
+                    names.add(entry.getKey());
+                }
+            }
+            // if there is one and only one match, that's the winner
+            if (names.size() == 1) {
+                String target = names.iterator().next();
+                if (target.startsWith(Constants.R_HEADS)) {
+                    // shorten standard names
+                    target = target.substring(Constants.R_HEADS.length());
+                }
+                List<Action> result = new ArrayList<>();
+                if (StringUtils.isNotBlank(target)) {
+                    result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                }
+                return result;
+            }
+            // if there are multiple matches, prefer `master`
+            if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
+                List<Action> result = new ArrayList<>();
+                result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
+                return result;
+            }
+        }
+        // Give up, there's no way to get the primary branch
+        return new ArrayList<>();
     }
 
     /**
