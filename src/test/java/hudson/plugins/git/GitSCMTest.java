@@ -28,6 +28,7 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
+import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
@@ -1027,8 +1028,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         // setup global config
-        final DescriptorImpl descriptor = (DescriptorImpl) project.getScm().getDescriptor();
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertFalse("Wrong initial value for create account based on e-mail", scm.isCreateAccountBasedOnEmail());
         descriptor.setCreateAccountBasedOnEmail(true);
+        assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -1153,8 +1157,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         for (RemoteConfig remoteConfig : gitSCM.getRepositories()) {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
-        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        BuildChooser buildChooser = gitSCM.getBuildChooser();
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
+        gitSCM.setBuildChooser(buildChooser); // Should be a no-op
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
     private final Random random = new Random();
