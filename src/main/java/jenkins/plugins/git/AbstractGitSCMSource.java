@@ -450,53 +450,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                     RevCommit commit = walk.parseCommit(revisionInfo);
                                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                                     final RevTree tree = commit.getTree();
-                                    return new SCMProbe() {
-                                        @Override
-                                        public void close() throws IOException {
-                                            // no-op
-                                        }
-
-                                        @Override
-                                        public String name() {
-                                            return branchName;
-                                        }
-
-                                        @Override
-                                        public long lastModified() {
-                                            return lastModified;
-                                        }
-
-                                        @Override
-                                        @NonNull
-                                        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                                                            justification =
-                                                                    "TreeWalk.forPath can return null, compiler "
-                                                                            + "generated code for try with resources handles it")
-                                        public SCMProbeStat stat(@NonNull String path) throws IOException {
-                                            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
-                                                if (tw == null) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                FileMode fileMode = tw.getFileMode(0);
-                                                if (fileMode == FileMode.MISSING) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                if (fileMode == FileMode.EXECUTABLE_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.REGULAR_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.SYMLINK) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
-                                                }
-                                                if (fileMode == FileMode.TREE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
-                                                }
-                                                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
-                                            }
-                                        }
-                                    };
+                                    return new TreeWalkingSCMProbe(branchName, lastModified, repository, tree);
                                 }
                             }, new SCMSourceRequest.LazyRevisionLambda<SCMHead, SCMRevision, ObjectId>() {
                                 @NonNull
@@ -556,53 +510,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                     RevCommit commit = walk.parseCommit(revisionInfo);
                                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                                     final RevTree tree = commit.getTree();
-                                    return new SCMProbe() {
-                                        @Override
-                                        public void close() throws IOException {
-                                            // no-op
-                                        }
-
-                                        @Override
-                                        public String name() {
-                                            return tagName;
-                                        }
-
-                                        @Override
-                                        public long lastModified() {
-                                            return lastModified;
-                                        }
-
-                                        @Override
-                                        @NonNull
-                                        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                                                            justification =
-                                                                    "TreeWalk.forPath can return null, compiler "
-                                                                            + "generated code for try with resources handles it")
-                                        public SCMProbeStat stat(@NonNull String path) throws IOException {
-                                            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
-                                                if (tw == null) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                FileMode fileMode = tw.getFileMode(0);
-                                                if (fileMode == FileMode.MISSING) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                if (fileMode == FileMode.EXECUTABLE_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.REGULAR_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.SYMLINK) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
-                                                }
-                                                if (fileMode == FileMode.TREE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
-                                                }
-                                                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
-                                            }
-                                        }
-                                    };
+                                    return new TreeWalkingSCMProbe(tagName, lastModified, repository, tree);
                                 }
                             }, new SCMSourceRequest.LazyRevisionLambda<GitTagSCMHead, GitTagSCMRevision, ObjectId>() {
                                 @NonNull
@@ -1069,5 +977,65 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         }
 
+    }
+
+    private static class TreeWalkingSCMProbe extends SCMProbe {
+        private final String name;
+        private final long lastModified;
+        private final Repository repository;
+        private final RevTree tree;
+
+        public TreeWalkingSCMProbe(String name, long lastModified, Repository repository, RevTree tree) {
+            this.name = name;
+            this.lastModified = lastModified;
+            this.repository = repository;
+            this.tree = tree;
+        }
+
+        @Override
+        public void close() throws IOException {
+            // no-op
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public long lastModified() {
+            return lastModified;
+        }
+
+        @Override
+        @NonNull
+        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
+                            justification =
+                                    "TreeWalk.forPath can return null, compiler "
+                                            + "generated code for try with resources handles it")
+        public SCMProbeStat stat(@NonNull String path) throws IOException {
+            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
+                if (tw == null) {
+                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                }
+                FileMode fileMode = tw.getFileMode(0);
+                if (fileMode == FileMode.MISSING) {
+                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                }
+                if (fileMode == FileMode.EXECUTABLE_FILE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                }
+                if (fileMode == FileMode.REGULAR_FILE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                }
+                if (fileMode == FileMode.SYMLINK) {
+                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
+                }
+                if (fileMode == FileMode.TREE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
+                }
+                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
+            }
+        }
     }
 }
