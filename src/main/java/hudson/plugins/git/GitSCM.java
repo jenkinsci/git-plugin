@@ -28,6 +28,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.MatrixCommitIdOption;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -974,9 +975,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-
         // every MatrixRun should build the same marked commit ID
-        if (build instanceof MatrixRun) {
+        if (build instanceof MatrixRun && getExtensions().get(MatrixCommitIdOption.class) == null) {
             MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
             if (parentBuild != null) {
                 BuildData parentBuildData = getBuildData(parentBuild);
