@@ -1028,17 +1028,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (buildData.getBuildsByBranchName().size() >= 100) {
             log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
+        boolean disableAutomaticScheduling = false;
+        for (GitSCMExtension ext: extensions) {
+            disableAutomaticScheduling = ext.disableAutomaticScheduling();
+        }
 
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
-            Job<?, ?> job = build.getParent();
-            if (job instanceof AbstractProject) {
-                AbstractProject project = (AbstractProject) job;
-                if (!project.isDisabled()) {
-                    log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
-                    if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
-                            + build.getNumber() + " because more than one build candidate was found."))) {
-                        log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+            if (!disableAutomaticScheduling) {
+                Job<?, ?> job = build.getParent();
+                if (job instanceof AbstractProject) {
+                    AbstractProject project = (AbstractProject) job;
+                    if (!project.isDisabled()) {
+                        log.println("Scheduling another build to catch up with " + project.getFullDisplayName());
+                        if (!project.scheduleBuild(0, new SCMTrigger.SCMTriggerCause("This build was triggered by build "
+                                + build.getNumber() + " because more than one build candidate was found."))) {
+                            log.println("WARNING: multiple candidate revisions, but unable to schedule build of " + project.getFullDisplayName());
+                        }
                     }
                 }
             }
