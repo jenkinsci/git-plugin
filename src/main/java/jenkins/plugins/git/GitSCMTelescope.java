@@ -95,7 +95,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             if (b instanceof GitSCMTelescope && b.supports(source)) {
                 return (GitSCMTelescope) b;
             }
-            if (b instanceof GitSCMFileSystem.BuilderImpl) {
+            if (GitSCMFileSystem.BuilderImpl.class.equals(b.getClass())) {
                 // telescopes must come before the fallback GitSCMFileSystem.BuilderImpl otherwise they would
                 // not prevent a local checkout
                 break;

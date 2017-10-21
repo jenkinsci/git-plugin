@@ -427,7 +427,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                         listener.getLogger().println("Checking branches...");
                         int count = 0;
                         for (final SCMRevision revision : revisions) {
-                            if (!(revision instanceof SCMRevisionImpl)) {
+                            if (!(revision instanceof SCMRevisionImpl) || (revision instanceof GitTagSCMRevision)) {
                                 continue;
                             }
                             count++;
