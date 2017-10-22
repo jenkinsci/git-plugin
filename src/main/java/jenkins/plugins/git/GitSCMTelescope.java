@@ -256,6 +256,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
      * @param refOrHash   the reference or hash. If this is a reference then it will start with {@link Constants#R_REFS}
+     *                    If this is a hash, it may be a full hash or a short hash.
      * @return the timestamp.
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
@@ -269,6 +270,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
      * @param refOrHash   the reference or hash. If this is a reference then it will start with {@link Constants#R_REFS}
+     *                    If this is a hash, it may be a full hash or a short hash.
      * @return the revision or {@code null} if the reference or hash does not exist.
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
@@ -355,7 +357,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
-     * @return the default target of the repository, 
+     * @return the default target of the repository.
      * @throws IOException          if the operation failed due to an IO error.
      * @throws InterruptedException if the operation was interrupted.
      */
