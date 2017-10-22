@@ -251,7 +251,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             throws IOException, InterruptedException;
 
     /**
-     * Retrives the timestamp of the specified reference or object hash.
+     * Retrieves the timestamp of the specified reference or object hash.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
@@ -265,7 +265,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                                       @NonNull String refOrHash) throws IOException, InterruptedException;
 
     /**
-     * Retrives the current revision of the specified reference or object hash.
+     * Retrieves the current revision of the specified reference or object hash.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
@@ -282,7 +282,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             throws IOException, InterruptedException;
 
     /**
-     * Retrives the timestamp of the specified reference or object hash.
+     * Retrieves the timestamp of the specified reference or object hash.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
@@ -301,7 +301,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     }
 
     /**
-     * Retrives the current revision of the specified head.
+     * Retrieves the current revision of the specified head.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
@@ -323,7 +323,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     }
 
     /**
-     * Retrives the current revisions of the specified repository.
+     * Retrieves the current revisions of the specified repository.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
@@ -338,7 +338,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     }
 
     /**
-     * Retrives the current revisions of the specified repository.
+     * Retrieves the current revisions of the specified repository.
      *
      * @param remote         the repository URL.
      * @param credentials    the credentials or {@code null} for an anonymous connection.
@@ -353,7 +353,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             throws IOException, InterruptedException;
 
     /**
-     * Retrives the default target of the specified repository.
+     * Retrieves the default target of the specified repository.
      *
      * @param remote      the repository URL.
      * @param credentials the credentials or {@code null} for an anonymous connection.
