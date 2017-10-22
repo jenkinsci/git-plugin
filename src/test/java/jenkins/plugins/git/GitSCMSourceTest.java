@@ -2,24 +2,24 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.ExtensionList;
 import hudson.model.Action;
-import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitStatus;
+import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMEventListener;
@@ -30,6 +30,7 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -40,7 +41,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Collections;
@@ -187,6 +187,56 @@ public class GitSCMSourceTest {
 
     @Issue("JENKINS-47526")
     @Test
+    public void telescopeFetchWithCriteria() throws Exception {
+
+        GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
+        assertThat(GitSCMTelescope.of(instance), nullValue());
+        instance.setOwner(mock(SCMSourceOwner.class));
+        assertThat(GitSCMTelescope.of(instance), notNullValue());
+
+        instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        Map<SCMHead, SCMRevision> result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"),
+                SCMHeadObserver.collect(), null).result();
+        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                ),
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                ),
+                new GitTagSCMRevision(
+                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
+                )));
+        result = instance.fetch(new MySCMSourceCriteria("README.md"),
+                SCMHeadObserver.collect(), null).result();
+        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                ),
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                )));
+
+        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
+        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                ),
+                new AbstractGitSCMSource.SCMRevisionImpl(
+                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                )));
+
+        instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
+        assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
+                new GitTagSCMRevision(
+                        new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
+                )));
+    }
+
+    @Issue("JENKINS-47526")
+    @Test
     public void telescopeFetchRevisions() throws Exception {
 
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
@@ -270,13 +320,15 @@ public class GitSCMSourceTest {
                         hasProperty("name", is("manchu"))
                 ))
         );
-        when(owner.getActions(GitRemoteHeadRefAction.class)).thenReturn(Collections.singletonList((GitRemoteHeadRefAction) actions.get(0)));
+        when(owner.getActions(GitRemoteHeadRefAction.class))
+                .thenReturn(Collections.singletonList((GitRemoteHeadRefAction) actions.get(0)));
 
         assertThat(instance.fetchActions(new SCMHead("foo"), null, null), is(Collections.<Action>emptyList()));
         assertThat(instance.fetchActions(new SCMHead("bar"), null, null), is(Collections.<Action>emptyList()));
         assertThat(instance.fetchActions(new SCMHead("manchu"), null, null), contains(
                 instanceOf(PrimaryInstanceMetadataAction.class)));
-        assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null), is(Collections.<Action>emptyList()));
+        assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
+                is(Collections.<Action>emptyList()));
     }
 
     @TestExtension
@@ -480,7 +532,35 @@ public class GitSCMSourceTest {
             @NonNull
             @Override
             protected Type type() throws IOException, InterruptedException {
-                return type;
+                switch (hash) {
+                    case "6769413a79793e242c73d7377f0006c6aea95480":
+                        switch (getPath()) {
+                            case "Jenkinsfile":
+                                return Type.REGULAR_FILE;
+                        }
+                        break;
+                    case "3f0b897057d8b43d3b9ff55e3fdefbb021493470":
+                        switch (getPath()) {
+                            case "Jenkinsfile":
+                                return Type.REGULAR_FILE;
+                            case "README.md":
+                                return Type.REGULAR_FILE;
+                        }
+                        break;
+                    case "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc":
+                        switch (getPath()) {
+                            case "README.md":
+                                return Type.REGULAR_FILE;
+                        }
+                        break;
+                    case "315fd8b5cae3363b29050f1aabfc27c985e22f7e":
+                        switch (getPath()) {
+                            case "Jenkinsfile":
+                                return Type.REGULAR_FILE;
+                        }
+                        break;
+                }
+                return type == Type.DIRECTORY ? type : Type.NONEXISTENT;
             }
 
             @NonNull
@@ -488,7 +568,7 @@ public class GitSCMSourceTest {
             public InputStream content() throws IOException, InterruptedException {
                 switch (hash) {
                     case "6769413a79793e242c73d7377f0006c6aea95480":
-                        switch (getPath()){
+                        switch (getPath()) {
                             case "Jenkinsfile":
                                 return new ByteArrayInputStream("pipeline{}".getBytes(StandardCharsets.UTF_8));
                         }
@@ -516,6 +596,20 @@ public class GitSCMSourceTest {
                 }
                 throw new FileNotFoundException(getPath() + " does not exist");
             }
+        }
+    }
+
+    private static class MySCMSourceCriteria implements SCMSourceCriteria {
+
+        private final String path;
+
+        private MySCMSourceCriteria(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+            return SCMFile.Type.REGULAR_FILE.equals(probe.stat(path).getType());
         }
     }
 }
