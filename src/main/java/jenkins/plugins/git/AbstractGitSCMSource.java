@@ -674,7 +674,19 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             final String remote = getRemote();
             final StandardUsernameCredentials credentials = getCredentials();
             telescope.validate(remote, credentials);
-            return telescope.getRevision(remote, credentials, revision);
+            SCMRevision result = telescope.getRevision(remote, credentials, revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_HEADS + revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_TAGS + revision);
+            if (result != null) {
+                return result;
+            }
+            return null;
         }
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
@@ -722,7 +734,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             Set<String> result = new HashSet<>();
             for (SCMRevision r : telescope.getRevisions(remote, credentials, referenceTypes)) {
-                result.add(r.getHead().getName());
+                if (r instanceof GitTagSCMRevision && context.wantTags()) {
+                    result.add(r.getHead().getName());
+                } else if (!(r instanceof GitTagSCMRevision) && context.wantBranches()) {
+                    result.add(r.getHead().getName());
+                }
             }
             return result;
         }
