@@ -97,15 +97,15 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     public void testOf_GitSCM() {
         /* Testing GitSCMTelescope.of() for non null return needs JenkinsRule */
         GitSCM multiBranchSource = new GitSCM(remote);
-        GitSCMTelescope telescope = GitSCMTelescope.of(multiBranchSource);
-        assertThat(telescope, is(nullValue()));
+        GitSCMTelescope telescopeOfMultiBranchSource = GitSCMTelescope.of(multiBranchSource);
+        assertThat(telescopeOfMultiBranchSource, is(nullValue()));
     }
 
     @Test
     public void testOf_AbstractGitSCMSource() {
         AbstractGitSCMSource source = new AbstractGitSCMSourceImpl();
-        GitSCMTelescope telescope = GitSCMTelescope.of(source);
-        assertThat(telescope, is(nullValue()));
+        GitSCMTelescope telescopeOfAbstractGitSCMSource = GitSCMTelescope.of(source);
+        assertThat(telescopeOfAbstractGitSCMSource, is(nullValue()));
     }
 
     @Test
