@@ -368,7 +368,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     /**
      * The potential types of reference supported by a {@link GitSCMTelescope}.
      */
-    enum ReferenceType {
+    public enum ReferenceType {
         /**
          * A regular reference.
          */
