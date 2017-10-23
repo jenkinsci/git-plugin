@@ -24,7 +24,9 @@
 package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -80,6 +82,7 @@ import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMFile;
+import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
@@ -98,6 +101,7 @@ import jenkins.scm.api.trait.SCMTrait;
 import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
+import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
@@ -358,6 +362,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         final GitSCMSourceContext context = new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            String remote = getRemote();
+            StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            return telescope.getRevision(remote, credentials, head);
+        }
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -396,6 +407,116 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             throws IOException, InterruptedException {
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(criteria, observer).withTraits(getTraits());
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
+            if (context.wantBranches()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.HEAD);
+            }
+            if (context.wantTags()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
+            }
+            if (!referenceTypes.isEmpty()) {
+                try (GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
+                    listener.getLogger().println("Listing remote references...");
+                    Iterable<SCMRevision> revisions = telescope.getRevisions(remote, credentials, referenceTypes);
+                    if (context.wantBranches()) {
+                        listener.getLogger().println("Checking branches...");
+                        int count = 0;
+                        for (final SCMRevision revision : revisions) {
+                            if (!(revision instanceof SCMRevisionImpl) || (revision instanceof GitTagSCMRevision)) {
+                                continue;
+                            }
+                            count++;
+                            if (request.process(revision.getHead(),
+                                    new SCMSourceRequest.RevisionLambda<SCMHead, SCMRevisionImpl>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMRevisionImpl create(@NonNull SCMHead head)
+                                                throws IOException, InterruptedException {
+                                            listener.getLogger()
+                                                    .println("  Checking branch " + revision.getHead().getName());
+                                            return (SCMRevisionImpl) revision;
+                                        }
+                                    },
+                                    new SCMSourceRequest.ProbeLambda<SCMHead, SCMRevisionImpl>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
+                                                                              @Nullable SCMRevisionImpl revision)
+                                                throws IOException, InterruptedException {
+                                            return new TelescopingSCMProbe(telescope, remote, credentials, revision);
+                                        }
+                                    }, new SCMSourceRequest.Witness() {
+                                        @Override
+                                        public void record(@NonNull SCMHead head, SCMRevision revision,
+                                                           boolean isMatch) {
+                                            if (isMatch) {
+                                                listener.getLogger().println("    Met criteria");
+                                            } else {
+                                                listener.getLogger().println("    Does not meet criteria");
+                                            }
+                                        }
+                                    }
+                            )) {
+                                listener.getLogger().format("Processed %d branches (query complete)%n", count);
+                                return;
+                            }
+                        }
+                        listener.getLogger().format("Processed %d branches%n", count);
+                    }
+                    if (context.wantTags()) {
+                        listener.getLogger().println("Checking tags...");
+                        int count = 0;
+                        for (final SCMRevision revision : revisions) {
+                            if (!(revision instanceof GitTagSCMRevision)) {
+                                continue;
+                            }
+                            count++;
+                            if (request.process((GitTagSCMHead) revision.getHead(),
+                                    new SCMSourceRequest.RevisionLambda<GitTagSCMHead, GitTagSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public GitTagSCMRevision create(@NonNull GitTagSCMHead head)
+                                                throws IOException, InterruptedException {
+                                            listener.getLogger()
+                                                    .println("  Checking tag " + revision.getHead().getName());
+                                            return (GitTagSCMRevision) revision;
+                                        }
+                                    },
+                                    new SCMSourceRequest.ProbeLambda<GitTagSCMHead, GitTagSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(@NonNull final GitTagSCMHead head,
+                                                                              @Nullable GitTagSCMRevision revision)
+                                                throws IOException, InterruptedException {
+                                            return new TelescopingSCMProbe(telescope, remote, credentials, revision);
+                                        }
+                                    }, new SCMSourceRequest.Witness() {
+                                        @Override
+                                        public void record(@NonNull SCMHead head, SCMRevision revision,
+                                                           boolean isMatch) {
+                                            if (isMatch) {
+                                                listener.getLogger().println("    Met criteria");
+                                            } else {
+                                                listener.getLogger().println("    Does not meet criteria");
+                                            }
+                                        }
+                                    }
+                            )) {
+                                listener.getLogger().format("Processed %d tags (query complete)%n", count);
+                                return;
+                            }
+                        }
+                        listener.getLogger().format("Processed %d tags%n", count);
+                    }
+                }
+                return;
+            }
+        }
         doRetrieve(new Retriever<Void>() {
             @Override
             public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -548,6 +669,25 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            SCMRevision result = telescope.getRevision(remote, credentials, revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_HEADS + revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_TAGS + revision);
+            if (result != null) {
+                return result;
+            }
+            return null;
+        }
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -580,6 +720,28 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
+            if (context.wantBranches()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.HEAD);
+            }
+            if (context.wantTags()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
+            }
+            Set<String> result = new HashSet<>();
+            for (SCMRevision r : telescope.getRevisions(remote, credentials, referenceTypes)) {
+                if (r instanceof GitTagSCMRevision && context.wantTags()) {
+                    result.add(r.getHead().getName());
+                } else if (!(r instanceof GitTagSCMRevision) && context.wantBranches()) {
+                    result.add(r.getHead().getName());
+                }
+            }
+            return result;
+        }
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
         GitTool tool = resolveGitTool(context.gitTool());
         if (tool != null) {
@@ -615,6 +777,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Override
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            String target = telescope.getDefaultTarget(remote, credentials);
+            if (target.startsWith(Constants.R_HEADS)) {
+                // shorten standard names
+                target = target.substring(Constants.R_HEADS.length());
+            }
+            List<Action> result = new ArrayList<>();
+            if (StringUtils.isNotBlank(target)) {
+                result.add(new GitRemoteHeadRefAction(getRemote(), target));
+            }
+            return result;
+        }
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
@@ -986,6 +1164,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     }
 
+    /**
+     * A {@link SCMProbe} that uses a local cache of the repository.
+     *
+     * @since TODO
+     */
     private static class TreeWalkingSCMProbe extends SCMProbe {
         private final String name;
         private final long lastModified;
@@ -999,21 +1182,33 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             this.tree = tree;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void close() throws IOException {
             // no-op
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String name() {
             return name;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public long lastModified() {
             return lastModified;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         @NonNull
         @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
@@ -1043,6 +1238,126 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 }
                 return SCMProbeStat.fromType(SCMFile.Type.OTHER);
             }
+        }
+    }
+
+    /**
+     * A {@link SCMProbe} that uses a {@link GitSCMTelescope}.
+     *
+     * @since TODO
+     */
+    private static class TelescopingSCMProbe extends SCMProbe {
+        /**
+         * Our telescope.
+         */
+        @NonNull
+        private final GitSCMTelescope telescope;
+        /**
+         * The repository URL.
+         */
+        @NonNull
+        private final String remote;
+        /**
+         * The credentials to use.
+         */
+        @CheckForNull
+        private final StandardCredentials credentials;
+        /**
+         * The revision this probe operates on.
+         */
+        @NonNull
+        private final SCMRevision revision;
+        /**
+         * The filesystem (lazy init).
+         */
+        @GuardedBy("this")
+        @CheckForNull
+        private SCMFileSystem fileSystem;
+        /**
+         * The last modified timestamp (lazy init).
+         */
+        @GuardedBy("this")
+        @CheckForNull
+        private Long lastModified;
+
+        /**
+         * Constructor.
+         * @param telescope the telescope.
+         * @param remote the repository URL
+         * @param credentials the credentials to use.
+         * @param revision the revision to probe.
+         */
+        public TelescopingSCMProbe(GitSCMTelescope telescope, String remote, StandardCredentials credentials,
+                                   SCMRevision revision) {
+            this.telescope = telescope;
+            this.remote = remote;
+            this.credentials = credentials;
+            this.revision = revision;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @NonNull
+        @Override
+        public SCMProbeStat stat(@NonNull String path) throws IOException {
+            try {
+                SCMFileSystem fileSystem;
+                synchronized (this) {
+                    if (this.fileSystem == null) {
+                        this.fileSystem = telescope.build(remote, credentials, revision.getHead(), revision);
+                    }
+                    fileSystem = this.fileSystem;
+                }
+                if (fileSystem == null) {
+                    throw new IOException("Cannot connect to " + remote + " as "
+                            + (credentials == null ? "anonymous" : CredentialsNameProvider.name(credentials)));
+                }
+                return SCMProbeStat.fromType(fileSystem.child(path).getType());
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public synchronized void close() throws IOException {
+            if (fileSystem != null) {
+                fileSystem.close();
+            }
+            fileSystem = null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String name() {
+            return revision.getHead().getName();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public long lastModified() {
+            synchronized (this) {
+                if (lastModified != null) {
+                    return lastModified;
+                }
+            }
+            long lastModified;
+            try {
+                lastModified = telescope.getTimestamp(remote, credentials, revision.getHead());
+            } catch (IOException | InterruptedException e) {
+                return -1L;
+            }
+            synchronized (this) {
+                this.lastModified = lastModified;
+            }
+            return lastModified;
         }
     }
 }
