@@ -105,7 +105,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     }
 
     /**
-     * Checks if this {@link SCMFileSystem.Builder} supports the repository at the supplied remote URL.
+     * Checks if this {@link jenkins.scm.api.SCMFileSystem.Builder} supports the repository at the supplied remote URL.
      * <strong>NOTE:</strong> returning {@code true} mandates that {@link #build(Item, SCM, SCMRevision)} and
      * {@link #build(SCMSource, SCMHead, SCMRevision)} must return non-{@code null} when they are configured
      * with the corresponding repository URL.
