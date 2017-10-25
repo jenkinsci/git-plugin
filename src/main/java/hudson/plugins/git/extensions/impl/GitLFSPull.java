@@ -1,18 +1,27 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
+import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.List;
+
+import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * git-lfs-pull after the checkout.
@@ -20,8 +29,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Matt Hauck
  */
 public class GitLFSPull extends GitSCMExtension {
+    private String credentialsId;
+
     @DataBoundConstructor
-    public GitLFSPull() {
+    public GitLFSPull(@CheckForNull String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
     }
 
     /**
@@ -41,6 +57,10 @@ public class GitLFSPull extends GitSCMExtension {
             // Git plugin does not support multiple independent repositories
             // in a single job definition.
             cmd.lfsRemote(repos.get(0).getName());
+            if (!StringUtils.isEmpty(credentialsId)) {
+                cmd.lfsCredentials(GitSCM.resolveCredentials(
+                        build.getParent(), credentialsId, repos.get(0).getURIs().get(0).toString()));
+            }
         }
     }
 
@@ -76,6 +96,13 @@ public class GitLFSPull extends GitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
+                                                     @QueryParameter String url,
+                                                     @QueryParameter String credentialsId) {
+            return new UserRemoteConfig.DescriptorImpl().doFillCredentialsIdItems(
+                    project, url, credentialsId);
+        }
+
         /**
          * {@inheritDoc}
          */
