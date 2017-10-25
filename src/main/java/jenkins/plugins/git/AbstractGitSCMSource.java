@@ -446,7 +446,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         @NonNull
                                         @Override
                                         public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
-                                                                              @Nullable SCMRevisionImpl revision)
+                                                                              @NonNull SCMRevisionImpl revision)
                                                 throws IOException, InterruptedException {
                                             return new TelescopingSCMProbe(telescope, remote, credentials, revision);
                                         }
@@ -491,7 +491,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                         @NonNull
                                         @Override
                                         public SCMSourceCriteria.Probe create(@NonNull final GitTagSCMHead head,
-                                                                              @Nullable GitTagSCMRevision revision)
+                                                                              @NonNull GitTagSCMRevision revision)
                                                 throws IOException, InterruptedException {
                                             return new TelescopingSCMProbe(telescope, remote, credentials, revision);
                                         }
