@@ -748,6 +748,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             git.using(tool.getGitExe());
         }
         GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
         Set<String> revisions = new HashSet<>();
         if (context.wantBranches() || context.wantTags()) {
             listener.getLogger().println("Listing remote references...");
@@ -801,6 +802,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             git.using(tool.getGitExe());
         }
         GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
         Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
         if (symrefs.containsKey(Constants.HEAD)) {
             // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
