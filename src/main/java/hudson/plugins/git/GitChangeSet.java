@@ -358,7 +358,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      */
     public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
         User user;
-        if (csAuthor == null) {
+        if (csAuthor == null || csAuthor.isEmpty()) {
             return User.getUnknown();
         }
         if (createAccountBasedOnEmail) {
