@@ -1,6 +1,10 @@
 Contributing to the Git Plugin
 ==============================
 
+The git plugin implements the [Jenkins SCM API](https://wiki.jenkins.io/display/JENKINS/SCM+API+Plugin).
+Refer to the SCM API documentation for [plugin naming conventions]https://github.com/jenkinsci/scm-api-plugin/blob/master/docs/implementation.adoc#naming-your-plugin(),
+and for the [preferred locations of new functionality](https://github.com/jenkinsci/scm-api-plugin/blob/master/CONTRIBUTING.md#add-to-core-or-create-extension-plugin).
+
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
 [GitHub pull requests](https://help.github.com/articles/creating-a-pull-request)
