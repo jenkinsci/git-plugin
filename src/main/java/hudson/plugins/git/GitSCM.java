@@ -38,6 +38,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
+import hudson.plugins.git.extensions.impl.ChangelogToRev;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -1321,10 +1322,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         changelog.includes(revToBuild.getSha1());
         try (Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8")) {
             boolean exclusion = false;
+            String revision = null;
+
+            ChangelogToRev changelogToRev = getExtensions().get(ChangelogToRev.class);
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
-            if (changelogToBranch != null) {
+            if (changelogToRev != null) {
+                listener.getLogger().println("Using 'Changelog to revision' strategy.");
+                if (changelogToBranch != null) {
+                    listener.getLogger().println("Ignoring 'Changelog to branch' strategy settings.");
+                }
+                revision = changelogToRev.getOptions().getRevision();
+            } else if (changelogToBranch != null) {
                 listener.getLogger().println("Using 'Changelog to branch' strategy.");
-                changelog.excludes(changelogToBranch.getOptions().getRef());
+                revision = changelogToBranch.getOptions().getRevision();
+            }
+
+            if (revision != null) {
+                changelog.excludes(revision);
                 exclusion = true;
             } else {
                 for (Branch b : revToBuild.getBranches()) {

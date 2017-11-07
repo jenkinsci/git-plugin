@@ -1167,6 +1167,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     private final Random random = new Random();
     private boolean useChangelogToBranch = random.nextBoolean();
+    private boolean useChangelogToRev = random.nextBoolean();
 
     private void addChangelogToBranchExtension(GitSCM scm) {
         if (useChangelogToBranch) {
@@ -1175,6 +1176,15 @@ public class GitSCMTest extends AbstractGitTestCase {
             scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
         }
         useChangelogToBranch = !useChangelogToBranch;
+    }
+
+    private void addChangelogToRevExtension(GitSCM scm) {
+        if (useChangelogToRev) {
+            /* Changelog should be no different with this enabled or disabled */
+            ChangelogToRevOptions changelogOptions = new ChangelogToRevOptions("origin/master");
+            scm.getExtensions().add(new ChangelogToRev(changelogOptions));
+        }
+        useChangelogToRev = !useChangelogToRev;
     }
 
     @Test
@@ -1189,6 +1199,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1230,12 +1241,92 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
         // Here the changelog is by default empty (because changelog for first commit is always empty
         commit("commitFileBase", johnDoe, "Initial Commit");
         testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        // Create second commit and run build
+        // Here the changelog should contain exactly this one new commit
+        testRepo.git.checkout("master", "topic2");
+        final String commitFile2 = "commitFile2";
+        String commitMessage = "Commit number 2";
+        commit(commitFile2, johnDoe, commitMessage);
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build2.getChangeSet();
+        assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
+    }
+
+    @Test
+    public void testMergeChangelogToRevParentOfObject() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        // Specify a more exotic revision to compare against
+        ChangelogToRevOptions changelogOptions = new ChangelogToRevOptions("origin/master^");
+        scm.getExtensions().add(new ChangelogToRev(changelogOptions));
+        project.setScm(scm);
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        commit("commitOtherFile", johnDoe, "Second Commit to allow ^ notation");
+        testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        // Create second commit and run build
+        // Here the changelog should contain exactly this one new commit
+        testRepo.git.checkout("master", "topic2");
+        final String commitFile2 = "commitFile2";
+        String commitMessage = "Commit number 2";
+        commit(commitFile2, johnDoe, commitMessage);
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build2.getChangeSet();
+        assertEquals("Changelog should contain one item", 2, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[1];
+        assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
+    }
+
+    @Test
+    public void testMergeChangelogToRevObjectId() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        commit("commitOtherFile", johnDoe, "Second Commit");
+        testRepo.git.branch("integration");
+
+        // Specify exact revision to compare against
+        String object = ObjectId.toString(testRepo.git.revParse("integration"));
+        ChangelogToRevOptions changelogOptions = new ChangelogToRevOptions(object);
+        scm.getExtensions().add(new ChangelogToRev(changelogOptions));
+        project.setScm(scm);
+
         build(project, Result.SUCCESS, "commitFileBase");
 
         // Create second commit and run build
@@ -1266,6 +1357,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1307,6 +1399,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -1347,6 +1440,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
     	
     	commit("dummyFile", johnDoe, "Initial Commit");
     	testRepo.git.branch("integration1");
@@ -1378,6 +1472,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1420,6 +1515,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         addChangelogToBranchExtension(scm);
+        addChangelogToRevExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:

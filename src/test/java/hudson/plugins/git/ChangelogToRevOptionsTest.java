@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Mark Waite.
+ * Copyright 2017 Jacob Keller.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,38 +27,25 @@ import org.junit.Test;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-public class ChangelogToBranchOptionsTest {
+public class ChangelogToRevOptionsTest {
 
-    private final ChangelogToBranchOptions options;
-    private final String compareRemote;
-    private final String compareTarget;
+    private final ChangelogToRevOptions options;
+    private final String compareRevision;
 
-    public ChangelogToBranchOptionsTest() {
-        compareRemote = "origin";
-        compareTarget = "feature/new-thing";
-        options = new ChangelogToBranchOptions(compareRemote, compareTarget);
-    }
-
-    @Test
-    public void testGetCompareRemote() {
-        assertThat(options.getCompareRemote(), is(compareRemote));
-    }
-
-    @Test
-    public void testGetCompareTarget() {
-        assertThat(options.getCompareTarget(), is(compareTarget));
+    public ChangelogToRevOptionsTest() {
+        compareRevision = "origin/feature/new-thing";
+        options = new ChangelogToRevOptions(compareRevision);
     }
 
     @Test
     public void testGetRevision() {
-        assertThat(options.getRevision(), is(compareRemote + "/" + compareTarget));
+        assertThat(options.getRevision(), is(compareRevision));
     }
 
     @Test
     public void testAlternateConstructor() {
-        ChangelogToBranchOptions newOptions = new ChangelogToBranchOptions(options);
-        assertThat(newOptions.getCompareRemote(), is(options.getCompareRemote()));
-        assertThat(newOptions.getCompareTarget(), is(options.getCompareTarget()));
-        assertThat(newOptions, is(not(options))); // Does not implement equals
+        ChangelogToBranchOptions branchOptions = new ChangelogToBranchOptions("origin", "feature/new-thing");
+        ChangelogToRevOptions newOptions = new ChangelogToRevOptions(branchOptions);
+        assertThat(newOptions.getRevision(), is(branchOptions.getRevision()));
     }
 }

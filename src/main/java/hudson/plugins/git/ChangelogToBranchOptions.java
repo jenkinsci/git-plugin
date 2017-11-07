@@ -10,9 +10,13 @@ import hudson.model.Descriptor;
 /**
  * Options for the {@link hudson.plugins.git.extensions.impl.ChangelogToBranch} extension.
  *
+ * @deprecated
+ * Replaced by ChangelogToRev
+ *
  * @author <a href="mailto:dirk.reske@t-systems.com">Dirk Reske (dirk.reske@t-systems.com)</a>
  */
-public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogToBranchOptions> implements Serializable {
+@Deprecated
+public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogToBranchOptions> implements ChangelogOptions, Serializable {
     private String compareRemote;
     private String compareTarget;
 
@@ -36,6 +40,10 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
 
     public String getRef() {
         return compareRemote + "/" + compareTarget;
+    }
+
+    public String getRevision() {
+        return getRef();
     }
 
     @Extension
