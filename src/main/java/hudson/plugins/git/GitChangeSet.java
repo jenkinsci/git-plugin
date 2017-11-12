@@ -1,13 +1,13 @@
 package hudson.plugins.git;
 
 import hudson.MarkupText;
-import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -409,8 +409,24 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * @param csAuthorEmail user email.
      * @param createAccountBasedOnEmail true if create new user based on committer's email.
      * @return {@link User}
+     * @deprecated  Use {@link #findOrCreateUser(String,String,boolean,boolean)}
      */
+    @Deprecated
     public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
+        return findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, false);
+    }
+
+    /**
+     * Returns user of the change set.
+     *
+     * @param csAuthor user name.
+     * @param csAuthorEmail user email.
+     * @param createAccountBasedOnEmail true if create new user based on committer's email.
+     * @param useExistingAccountWithSameEmail true if users should be searched for their email attribute
+     * @return {@link User}
+     */
+    public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail,
+                                 boolean useExistingAccountWithSameEmail) {
         User user;
         if (csAuthor == null) {
             return User.getUnknown();
@@ -424,11 +440,26 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
             if (user == null) {
                 try {
-                    user = User.get(csAuthorEmail, true);
-                    user.setFullName(csAuthor);
-                    if (hasHudsonTasksMailer())
-                        setMail(user, csAuthorEmail);
-                    user.save();
+                    user = User.get(csAuthorEmail, !useExistingAccountWithSameEmail);
+                    boolean setUserDetails = true;
+                    if (user == null && useExistingAccountWithSameEmail && hasHudsonTasksMailer()) {
+                        for(User existingUser : User.getAll()) {
+                            if (csAuthorEmail.equalsIgnoreCase(getMail(existingUser))) {
+                                user = existingUser;
+                                setUserDetails = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (user == null) {
+                        user = User.get(csAuthorEmail, true);
+                    }
+                    if (setUserDetails) {
+                        user.setFullName(csAuthor);
+                        if (hasHudsonTasksMailer())
+                            setMail(user, csAuthorEmail);
+                        user.save();
+                    }
                 } catch (IOException e) {
                     // add logging statement?
                 }
@@ -465,14 +496,25 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
+    private String getMail(User user) {
+        hudson.tasks.Mailer.UserProperty property = user.getProperty(hudson.tasks.Mailer.UserProperty.class);
+        if (property == null) {
+            return null;
+        }
+        if (!property.hasExplicitlyConfiguredAddress()) {
+            return null;
+        }
+        return property.getExplicitlyConfiguredAddress();
+    }
+
     private void setMail(User user, String csAuthorEmail) throws IOException {
         user.addProperty(new hudson.tasks.Mailer.UserProperty(csAuthorEmail));
     }
 
     private boolean hasMail(User user) {
-        hudson.tasks.Mailer.UserProperty property = user.getProperty(hudson.tasks.Mailer.UserProperty.class);
-        return property != null && property.hasExplicitlyConfiguredAddress();
-	}
+        String email = getMail(user);
+        return email != null;
+    }
 
     private boolean hasHudsonTasksMailer() {
         // TODO convert to checking for mailer plugin as plugin migrates to 1.509+
@@ -487,14 +529,25 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     private boolean isCreateAccountBasedOnEmail() {
-        Hudson hudson = Hudson.getInstance();
-        DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
+        DescriptorImpl descriptor = getGitSCMDescriptor();
+
+        return descriptor.isCreateAccountBasedOnEmail();
+    }
+
+    private boolean isUseExistingAccountWithSameEmail() {
+        DescriptorImpl descriptor = getGitSCMDescriptor();
 
         if (descriptor == null) {
             return false;
         }
 
-        return descriptor.isCreateAccountBasedOnEmail();
+        return descriptor.isUseExistingAccountWithSameEmail();
+    }
+
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+        justification="Jenkins.getInstance() is not null")
+    private DescriptorImpl getGitSCMDescriptor() {
+        return (DescriptorImpl) Jenkins.getInstance().getDescriptor(GitSCM.class);
     }
 
     @Override
@@ -513,7 +566,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             csAuthorEmail = this.committerEmail;
         }
 
-        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail());
+        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail(), isUseExistingAccountWithSameEmail());
     }
 
     /**
