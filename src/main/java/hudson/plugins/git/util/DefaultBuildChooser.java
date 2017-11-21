@@ -238,7 +238,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 }
             }
 
-            if (r.getBranches().size() == 0) {
+            if (r.getBranches().isEmpty()) {
                 verbose(listener, "Ignoring {0} because we don''t care about any of the branches that point to it", r);
                 i.remove();
             }
