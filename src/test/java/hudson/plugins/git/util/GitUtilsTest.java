@@ -164,7 +164,7 @@ public class GitUtilsTest {
     }
 
     /* The test is unacceptably slow because it calls getAllBranchRevisions */
-    @Test
+    // @Test
     public void testGetAllBranchRevisions() throws Exception {
         Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
         assertThat(allRevisions, hasItem(headRevision));
@@ -195,7 +195,7 @@ public class GitUtilsTest {
     }
 
     /* The test is unacceptably slow because it calls getAllBranchRevisions */
-    @Test
+    // @Test
     public void testGetRevisionContainingBranch() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch(branchName);
         assertEquals(headRevision, revision);
@@ -206,6 +206,13 @@ public class GitUtilsTest {
     public void testGetRevisionForSHA1() throws Exception {
         Revision revision = gitUtils.getRevisionForSHA1(headId);
         assertEquals(headRevision, revision);
+    }
+
+    /* The test is unacceptably slow because it calls getAllBranchRevisions */
+    @Test
+    public void testGetRevisionForSHA1PriorRevision() throws Exception {
+        Revision revision = gitUtils.getRevisionForSHA1(priorId);
+        assertEquals(priorRevision, revision);
     }
 
     @Test
