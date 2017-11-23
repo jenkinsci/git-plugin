@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -67,8 +68,51 @@ public class GitUtils implements Serializable {
      * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
+        return getMatchingRevisions(null, null);
+    }
+
+    private boolean branchNameMatches(Branch branch, @NonNull List<BranchSpec> branchSpecs, EnvVars env) {
+        boolean matched = false;
+        for (BranchSpec branchSpec : branchSpecs) {
+            if (branchSpec.matches(branch.getName(), env)) {
+                matched = true;
+                break;
+            }
+        }
+        return matched;
+    }
+
+    private boolean tagNameMatches(String tagName, @NonNull List<BranchSpec> branchSpecs, EnvVars env) {
+        boolean matched = false;
+        for (BranchSpec branchSpec : branchSpecs) {
+            if (branchSpec.matches(tagName, env)) {
+                matched = true;
+                break;
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * Return a list of "Revisions" - where a revision knows about all the
+     * branch names and tags that refer to a SHA1.
+     *
+     * @param branchSpecs list of branch specifications used for branch and tag
+     * name matching
+     * @param env environment used to evaluate branchNameFilter
+     * @return list of revisions
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
+     */
+    public Collection<Revision> getMatchingRevisions(List<BranchSpec> branchSpecs, EnvVars env) throws GitException, IOException, InterruptedException {
         Map<ObjectId, Revision> revisions = new HashMap<>();
         for (Branch b : git.getRemoteBranches()) {
+            if (branchSpecs != null) {
+                if (!branchNameMatches(b, branchSpecs, env)) {
+                    continue;
+                }
+            }
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
                 r = new Revision(b.getSHA1());
@@ -78,6 +122,11 @@ public class GitUtils implements Serializable {
         }
         for (String tag : git.getTagNames(null)) {
             String tagRef = Constants.R_TAGS + tag;
+            if (branchSpecs != null) {
+                if (!tagNameMatches(tagRef, branchSpecs, env)) {
+                    continue;
+                }
+            }
             ObjectId objectId = git.revParse(tagRef);
             Revision r = revisions.get(objectId);
             if (r == null) {
