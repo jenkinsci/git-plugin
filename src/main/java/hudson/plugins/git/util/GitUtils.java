@@ -28,6 +28,7 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -187,6 +188,16 @@ public class GitUtils implements Serializable {
         ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
         Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(git.getRepository().getWorkTree());
         int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
+        if (status != 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git for-each-ref --points-at {0} returned: {1}",
+                        sha1.getName(), status);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
         String result = bytesOut.toString("UTF-8");
         if (bytesErr.size() > 0) {
             final boolean log = LOGGER.isLoggable(Level.WARNING);
@@ -507,7 +518,12 @@ public class GitUtils implements Serializable {
                 LOGGER.log(Level.FINE, "Error checking git version", returnCode);
             }
         }
-        final String versionOutput = out.toString().trim();
+        String versionOutput = "git version 1.0.0";
+        try {
+            versionOutput = out.toString("UTF-8").trim();
+        } catch (UnsupportedEncodingException unsupported) {
+            LOGGER.log(Level.SEVERE, "UTF-8 an unsupported encoding reading 'git --version' output", unsupported);
+        }
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
         final int gitMajor = Integer.parseInt(fields[0]);
         final int gitMinor = Integer.parseInt(fields[1]);
