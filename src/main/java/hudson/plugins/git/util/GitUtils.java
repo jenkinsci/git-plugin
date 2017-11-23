@@ -13,6 +13,8 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
+import hudson.util.StreamTaskListener;
+import java.io.ByteArrayOutputStream;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -30,6 +32,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 
 public class GitUtils implements Serializable {
     
@@ -158,9 +161,24 @@ public class GitUtils implements Serializable {
     }
 
     public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
+        if (git instanceof CliGitAPIImpl) {
+            if (gitVersionAtLeast(2, 7)) {
+                return cliGitGetRevisionForSHA1(sha1);
+            }
+        }
         for(Revision revision : getAllBranchRevisions()) {
             if(revision.getSha1().equals(sha1))
                 return revision;
+        }
+        return new Revision(sha1);
+    }
+
+    private Revision cliGitGetRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
+        // Dirty hack to be replaced
+        for (Revision revision : getAllBranchRevisions()) {
+            if (revision.getSha1().equals(sha1)) {
+                return revision;
+            }
         }
         return new Revision(sha1);
     }
@@ -408,6 +426,63 @@ public class GitUtils implements Serializable {
 
 
         return returnNames;
+    }
+
+    /* Ugh - copied from CliGitAPIImpl and GitSampleRepoRule because API not exposed.
+       Package protected for testing. */
+    boolean gitVersionAtLeast(int neededMajor, int neededMinor) {
+        return gitVersionAtLeast(neededMajor, neededMinor, 0);
+    }
+
+    /* Ugh - copied from CliGitAPIImpl and GitSampleRepoRule because API not exposed.
+       Package protected for testing. */
+    boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
+        final boolean log = LOGGER.isLoggable(Level.FINE);
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int returnCode = -1;
+        try {
+            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+        } catch (IOException | InterruptedException ex) {
+            if (log) {
+                LOGGER.log(Level.FINE, "Error checking git version", ex);
+            }
+        }
+        if (returnCode != 0) {
+            if (log) {
+                LOGGER.log(Level.FINE, "Error checking git version", returnCode);
+            }
+        }
+        final String versionOutput = out.toString().trim();
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+        final int gitMajor = Integer.parseInt(fields[0]);
+        final int gitMinor = Integer.parseInt(fields[1]);
+        final int gitPatch = Integer.parseInt(fields[2]);
+        if (gitMajor < 1 || gitMajor > 3) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git major version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitMajor, versionOutput, 0, fields[0]));
+            }
+        }
+        if (gitMinor < 0 || gitMinor > 20) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git minor version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitMinor, versionOutput, 1, fields[1]));
+            }
+        }
+        if (gitPatch < 0 || gitPatch > 20) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git patch version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitPatch, versionOutput, 2, fields[2]));
+            }
+        }
+
+        return gitMajor > neededMajor
+                || (gitMajor == neededMajor && gitMinor > neededMinor)
+                || (gitMajor == neededMajor && gitMinor == neededMinor && gitPatch >= neededPatch);
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
