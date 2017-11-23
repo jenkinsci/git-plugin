@@ -182,7 +182,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             GitSCM git = (GitSCM) scm;
             List<UserRemoteConfig> configs = git.getUserRemoteConfigs();
             List<BranchSpec> branches = git.getBranches();
-            if (!configs.isEmpty() && supports(configs.get(0).getUrl())
+            if (configs.size() == 1 && supports(configs.get(0).getUrl())
                     && branches.size() == 1 && !branches.get(0).getName().contains("*")) {
                 UserRemoteConfig config = configs.get(0);
                 StandardCredentials credentials;
