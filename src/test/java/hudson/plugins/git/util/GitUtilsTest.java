@@ -90,7 +90,7 @@ public class GitUtilsTest {
         this.priorRevision = new Revision(priorId);
 
         /* Tag names and remote branch names */
-        this.tagNames = Collections.unmodifiableSet(oneTimeGitClient.getTagNames(""));
+        this.tagNames = Collections.unmodifiableSet(oneTimeGitClient.getTagNames(null));
         assertFalse("No tags in this repository - reduces test strength", this.tagNames.isEmpty());
         Set<Branch> remoteBranches = oneTimeGitClient.getRemoteBranches();
         this.branches = Collections.unmodifiableSet(remoteBranches);
