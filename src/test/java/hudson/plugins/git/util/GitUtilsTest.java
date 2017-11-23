@@ -84,9 +84,10 @@ public class GitUtilsTest {
 
         /* Assemble information about the repository in this directory */
         GitClient oneTimeGitClient = Git.with(StreamTaskListener.NULL, env).in(gitDir).using("git").getClient();
-        this.remoteHeadId = oneTimeGitClient.revParse("origin/HEAD");
+        String headName = "HEAD";
+        this.remoteHeadId = oneTimeGitClient.revParse(headName);
         this.remoteHeadRevision = new Revision(remoteHeadId);
-        this.remotePriorId = oneTimeGitClient.revParse("origin/HEAD^");
+        this.remotePriorId = oneTimeGitClient.revParse(headName + "^");
         this.remotePriorRevision = new Revision(remotePriorId);
 
         /* Tag names and remote branch names */
