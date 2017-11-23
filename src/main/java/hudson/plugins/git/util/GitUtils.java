@@ -13,6 +13,7 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
+import hudson.util.ArgumentListBuilder;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import jenkins.model.Jenkins;
@@ -29,8 +30,11 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 
@@ -150,7 +154,9 @@ public class GitUtils implements Serializable {
      * @throws InterruptedException when interrupted
      */
     public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
-        for(Revision revision : getAllBranchRevisions()) {
+        List<BranchSpec> branchSpecList = new ArrayList<>();
+        branchSpecList.add(new BranchSpec(branchName));
+        for (Revision revision : getMatchingRevisions(branchSpecList, new EnvVars())) {
             for(Branch b : revision.getBranches()) {
                 if(b.getName().equals(branchName)) {
                     return revision;
@@ -162,7 +168,7 @@ public class GitUtils implements Serializable {
 
     public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
         if (git instanceof CliGitAPIImpl) {
-            if (gitVersionAtLeast(2, 7)) {
+            if (gitVersionAtLeast(2, 7)) { // Use command line git optimized implementation
                 return cliGitGetRevisionForSHA1(sha1);
             }
         }
@@ -174,13 +180,61 @@ public class GitUtils implements Serializable {
     }
 
     private Revision cliGitGetRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
-        // Dirty hack to be replaced
-        for (Revision revision : getAllBranchRevisions()) {
-            if (revision.getSha1().equals(sha1)) {
-                return revision;
+        ArgumentListBuilder args = new ArgumentListBuilder("git", "for-each-ref", "--points-at", sha1.getName());
+        Launcher launcher = new Launcher.LocalLauncher(listener);
+        EnvVars env = new EnvVars();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(git.getRepository().getWorkTree());
+        int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
+        String result = bytesOut.toString("UTF-8");
+        if (bytesErr.size() > 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git for-each-ref --points-at {0} stderr not empty: {1}",
+                        sha1.getName(), result);
+                LOGGER.log(Level.WARNING, message);
             }
         }
-        return new Revision(sha1);
+        /*
+        Output shows SHA1, type, and ref
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/heads/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/bitbucket/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/HEAD
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/upstream/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/tags/xyzzy
+         */
+        String[] output = result.split("[\\n\\r]");
+        Pattern pattern = Pattern.compile(sha1.getName() + "\\s+\\w+\\s+refs/\\w+/(.*)");
+        List<Branch> branches = new ArrayList<>();
+        if (output.length == 0) {
+            return new Revision(sha1);
+        }
+        if (output.length == 1 && output[0].isEmpty()) {
+            return new Revision(sha1);
+        }
+        for (String line : output) {
+            Matcher matcher = pattern.matcher(line);
+            if (!matcher.find()) {
+                // Log the surprise and skip the line
+                final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+                if (log) {
+                    String message = MessageFormat.format(
+                            "git for-each-ref --points-at {0} output not matched in line: {1}",
+                            sha1.getName(), line);
+                    LOGGER.log(Level.WARNING, message);
+                }
+                continue;
+            }
+            String branchName = matcher.group(1);
+            Branch branch = new Branch(branchName, sha1);
+            branches.add(branch);
+        }
+        return new Revision(sha1, branches);
     }
 
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder) {
@@ -243,7 +297,7 @@ public class GitUtils implements Serializable {
 
                     if (log)
                         LOGGER.fine(MessageFormat.format(
-                                "Computing merge base of {0}  branches", l.size()));
+                                "Computing merge base of {0} branches", l.size()));
 
                     try (RevWalk walk = new RevWalk(repo)) {
                         walk.setRetainBody(false);
