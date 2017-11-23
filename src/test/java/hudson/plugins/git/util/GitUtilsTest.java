@@ -55,15 +55,15 @@ public class GitUtilsTest {
 
     private final EnvVars env;
     private final File gitDir;
-    private final ObjectId headId;
-    private final ObjectId priorId;
+    private final ObjectId remoteHeadId;
+    private final ObjectId remotePriorId;
     private final Set<String> tagNames;
     private final Set<Branch> branches;
     private final String branchName;
 
     private final List<BranchSpec> currentBranchSpecList;
-    private final Revision headRevision;
-    private final Revision priorRevision;
+    private final Revision remoteHeadRevision;
+    private final Revision remotePriorRevision;
 
     private LogHandler handler;
     private LogTaskListener listener;
@@ -84,10 +84,10 @@ public class GitUtilsTest {
 
         /* Assemble information about the repository in this directory */
         GitClient oneTimeGitClient = Git.with(StreamTaskListener.NULL, env).in(gitDir).using("git").getClient();
-        this.headId = oneTimeGitClient.revParse("HEAD");
-        this.headRevision = new Revision(headId);
-        this.priorId = oneTimeGitClient.revParse("HEAD^");
-        this.priorRevision = new Revision(priorId);
+        this.remoteHeadId = oneTimeGitClient.revParse("origin/HEAD");
+        this.remoteHeadRevision = new Revision(remoteHeadId);
+        this.remotePriorId = oneTimeGitClient.revParse("origin/HEAD^");
+        this.remotePriorRevision = new Revision(remotePriorId);
 
         /* Tag names and remote branch names */
         this.tagNames = Collections.unmodifiableSet(oneTimeGitClient.getTagNames(null));
@@ -95,10 +95,10 @@ public class GitUtilsTest {
         Set<Branch> remoteBranches = oneTimeGitClient.getRemoteBranches();
         this.branches = Collections.unmodifiableSet(remoteBranches);
         assertFalse("No branches in this repository - reduces test strength", this.branches.isEmpty());
-        String guessedBranchName = "";
+        String guessedBranchName = "HEAD"; // In case local branch matches no remote branch
         for (Branch branch : this.branches) {
             // Choose one of the remote branch names that matches the current checked out version
-            if (branch.getSHA1().equals(this.headRevision.getSha1()) && !branch.getName().endsWith("/HEAD")) {
+            if (branch.getSHA1().equals(this.remoteHeadRevision.getSha1()) && !branch.getName().endsWith("/HEAD")) {
                 guessedBranchName = branch.getName();
             }
         }
@@ -107,7 +107,7 @@ public class GitUtilsTest {
 
         this.currentBranchSpecList = new ArrayList<>();
         // BranchSpec headSpec = new BranchSpec("HEAD");
-        // headBranchSpec.add(headSpec);
+        // currentBranchSpecList.add(headSpec);
         BranchSpec currentBranchSpec = new BranchSpec(guessedBranchName);
         currentBranchSpecList.add(currentBranchSpec);
 
@@ -167,7 +167,7 @@ public class GitUtilsTest {
     // @Test
     public void testGetAllBranchRevisions() throws Exception {
         Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
-        assertThat(allRevisions, hasItem(headRevision));
+        assertThat(allRevisions, hasItem(remoteHeadRevision));
         // These assertions will not detect issues if a branch and tag have the same name
         // Expect every tag to be logged by rev-parse
         for (String tag : tagNames) {
@@ -182,7 +182,7 @@ public class GitUtilsTest {
     @Test
     public void testGetMatchingRevisions() throws Exception {
         Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
-        assertThat(allRevisions, hasItem(headRevision));
+        assertThat(allRevisions, hasItem(remoteHeadRevision));
         // These assertions will fail if a branch and tag have the same name
         // Expect no tag to be logged by rev-parse
         for (String tag : tagNames) {
@@ -198,54 +198,54 @@ public class GitUtilsTest {
     // @Test
     public void testGetRevisionContainingBranch() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch(branchName);
-        assertEquals(headRevision, revision);
+        assertEquals(remoteHeadRevision, revision);
     }
 
     /* The test is unacceptably slow because it calls getAllBranchRevisions */
     @Test
     public void testGetRevisionForSHA1() throws Exception {
-        Revision revision = gitUtils.getRevisionForSHA1(headId);
-        assertEquals(headRevision, revision);
+        Revision revision = gitUtils.getRevisionForSHA1(remoteHeadId);
+        assertEquals(remoteHeadRevision, revision);
     }
 
     /* The test is unacceptably slow because it calls getAllBranchRevisions */
     @Test
     public void testGetRevisionForSHA1PriorRevision() throws Exception {
-        Revision revision = gitUtils.getRevisionForSHA1(priorId);
-        assertEquals(priorRevision, revision);
+        Revision revision = gitUtils.getRevisionForSHA1(remotePriorId);
+        assertEquals(remotePriorRevision, revision);
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List() {
-        Revision result = gitUtils.sortBranchesForRevision(headRevision, currentBranchSpecList);
-        assertEquals(headRevision, result);
+        Revision result = gitUtils.sortBranchesForRevision(remoteHeadRevision, currentBranchSpecList);
+        assertEquals(remoteHeadRevision, result);
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Prior() {
-        Revision result = gitUtils.sortBranchesForRevision(priorRevision, currentBranchSpecList);
-        assertEquals(priorRevision, result);
+        Revision result = gitUtils.sortBranchesForRevision(remotePriorRevision, currentBranchSpecList);
+        assertEquals(remotePriorRevision, result);
     }
 
     @Test
     public void testSortBranchesForRevision_3args() {
-        Revision result = gitUtils.sortBranchesForRevision(headRevision, currentBranchSpecList, env);
-        assertEquals(headRevision, result);
+        Revision result = gitUtils.sortBranchesForRevision(remoteHeadRevision, currentBranchSpecList, env);
+        assertEquals(remoteHeadRevision, result);
     }
 
     @Test
     public void testSortBranchesForRevision_3args_Prior() {
-        Revision result = gitUtils.sortBranchesForRevision(priorRevision, currentBranchSpecList, env);
-        assertEquals(priorRevision, result);
+        Revision result = gitUtils.sortBranchesForRevision(remotePriorRevision, currentBranchSpecList, env);
+        assertEquals(remotePriorRevision, result);
     }
 
     @Test
     public void testFilterTipBranches() throws Exception {
         Collection<Revision> multiRevisionList = new ArrayList<>();
-        multiRevisionList.add(headRevision);
-        multiRevisionList.add(priorRevision);
+        multiRevisionList.add(remoteHeadRevision);
+        multiRevisionList.add(remotePriorRevision);
         Collection<Revision> filteredRevisions = new ArrayList<>();
-        filteredRevisions.add(headRevision);
+        filteredRevisions.add(remoteHeadRevision);
         List<Revision> result = gitUtils.filterTipBranches(multiRevisionList);
         assertThat(result, is(filteredRevisions));
     }
@@ -253,7 +253,7 @@ public class GitUtilsTest {
     @Test
     public void testFilterTipBranchesNoRemovals() throws Exception {
         Collection<Revision> headRevisionList = new ArrayList<>();
-        headRevisionList.add(headRevision);
+        headRevisionList.add(remoteHeadRevision);
         List<Revision> result = gitUtils.filterTipBranches(headRevisionList);
         assertThat(result, is(headRevisionList));
     }
@@ -261,7 +261,7 @@ public class GitUtilsTest {
     @Test
     public void testFilterTipBranchesNoRemovalsNonTip() throws Exception {
         Collection<Revision> priorRevisionList = new ArrayList<>();
-        priorRevisionList.add(priorRevision);
+        priorRevisionList.add(remotePriorRevision);
         List<Revision> result = gitUtils.filterTipBranches(priorRevisionList);
         assertThat(result, is(priorRevisionList));
     }
