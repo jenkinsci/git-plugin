@@ -10,6 +10,7 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitObject;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -128,14 +129,14 @@ public class GitUtils implements Serializable {
             }
             r.getBranches().add(b);
         }
-        for (String tag : git.getTagNames(null)) {
-            String tagRef = Constants.R_TAGS + tag;
+        for (GitObject tag : getTags()) {
+            String tagRef = Constants.R_TAGS + tag.getName();
             if (branchSpecs != null) {
                 if (!tagNameMatches(tagRef, branchSpecs, env)) {
                     continue;
                 }
             }
-            ObjectId objectId = git.revParse(tagRef);
+            ObjectId objectId = tag.getSHA1();
             Revision r = revisions.get(objectId);
             if (r == null) {
                 r = new Revision(objectId);
@@ -558,4 +559,91 @@ public class GitUtils implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 
     private static final long serialVersionUID = 1L;
+
+    private Set<GitObject> getTags() throws GitException, InterruptedException, IOException {
+        if (git instanceof CliGitAPIImpl) {
+            return cliGetTags();
+        }
+        Set<GitObject> tags = new HashSet<>();
+        Set<String> tagNames = git.getTagNames(null);
+        for (String tagName : tagNames) {
+            ObjectId tagId = git.revParse(tagName);
+            tags.add(new GitObject(tagName, tagId));
+        }
+        return tags;
+    }
+
+    private Set<GitObject> cliGetTags() throws IOException, InterruptedException {
+        ArgumentListBuilder args = new ArgumentListBuilder("git", "show-ref", "--tags", "-d");
+        Launcher launcher = new Launcher.LocalLauncher(listener);
+        EnvVars env = new EnvVars();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(git.getRepository().getWorkTree());
+        int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
+        if (status != 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git show-ref --tags -d returned: {0}",
+                        status);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        String result = bytesOut.toString("UTF-8");
+        if (bytesErr.size() > 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git show-ref --tags -d returned: {0}",
+                        result);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        /*
+        Output shows SHA1 and tag with (optional) marker for annotated tags
+        7ac27f7a051e1017da9f7c45ade8f091dbe6f99d refs/tags/git-3.6.4
+        7b5856ef2b4d35530a06d6482d0f4e972769d89b refs/tags/git-3.6.4^{}
+         */
+        String[] output = result.split("[\\n\\r]");
+        Pattern pattern = Pattern.compile("(\\p{XDigit}{40})\\s+refs/tags/([^\\^]*)(\\^\\{\\})?");
+        Set<String> tagNameSeen = new HashSet<>();
+        Set<GitObject> tags = new HashSet<>();
+        if (output.length == 0) {
+            return tags;
+        }
+        if (output.length == 1 && output[0].isEmpty()) {
+            return tags;
+        }
+        for (String line : output) {
+            Matcher matcher = pattern.matcher(line);
+            if (!matcher.find()) {
+                // Log the surprise and skip the line
+                final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+                if (log) {
+                    String message = MessageFormat.format(
+                            "git show-ref --tags -d output not matched in line: {0}",
+                            line);
+                    LOGGER.log(Level.WARNING, message);
+                }
+                continue;
+            }
+            String sha1String = matcher.group(1);
+            String tagName = matcher.group(2);
+            String trailingText = matcher.group(3);
+            boolean isPeeledRef = false;
+            if (trailingText != null && trailingText.equals("^{}")) { // Line ends with '^{}'
+                isPeeledRef = true;
+            }
+            /* Prefer peeled ref if available (for tag commit), otherwise take first tag reference seen */
+            if (isPeeledRef || !tagNameSeen.contains(tagName)) {
+                tags.add(new GitObject(tagName, ObjectId.fromString(sha1String)));
+            }
+            tagNameSeen.add(tagName);
+        }
+        return tags;
+    }
 }
