@@ -103,12 +103,11 @@ public class GitUtils implements Serializable {
     }
 
     /**
-     * Return a list of "Revisions" - where a revision knows about all the
-     * branch names and tags that refer to a SHA1.
+     * Return a list of revisions with names that match the branch names included in the branchspecs list. 
+     * A revision includes the SHA1 and all branches and tags referring to the SHA1.
      *
-     * @param branchSpecs list of branch specifications used for branch and tag
-     * name matching
-     * @param env environment used to evaluate branchNameFilter
+     * @param branchSpecs list of branch names used for branch and tag name matching
+     * @param env environment used to evaluate branchSpecs
      * @return list of revisions
      * @throws IOException on input or output error
      * @throws GitException on git error
