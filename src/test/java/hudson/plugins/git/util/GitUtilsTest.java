@@ -165,7 +165,9 @@ public class GitUtilsTest {
         this.unexpectedLogSubstrings.clear();
     }
 
-    /* The test is unacceptably slow because it calls getAllBranchRevisions */
+    /* The test is unacceptably slow because it calls getAllBranchRevisions.
+     * Since git plugin 3.2.0, getAllBranchRevisions enumerates all tags in repo.
+     */
     @Test
     public void testGetAllBranchRevisions() throws Exception {
         Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
@@ -183,13 +185,13 @@ public class GitUtilsTest {
 
     @Test
     public void testGetMatchingRevisions() throws Exception {
-        // Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
-        Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
+        Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
+        // Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
         assertThat(allRevisions, hasItem(remoteHeadRevision));
         // These assertions will fail if a branch and tag have the same name
         // Expect no tag to be logged by rev-parse
         for (String tag : tagNames) {
-            addExpectedLogSubstring(tag);
+            addUnexpectedLogSubstring(tag);
         }
         // Expect every remote branch name to be logged by rev-parse
         for (Branch branch : branches) {
