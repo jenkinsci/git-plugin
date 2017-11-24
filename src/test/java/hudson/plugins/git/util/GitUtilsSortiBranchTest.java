@@ -31,13 +31,16 @@ import hudson.plugins.git.Revision;
 import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
+import static org.hamcrest.Matchers.is;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,6 +66,11 @@ public class GitUtilsSortiBranchTest {
     private Revision headRevision = null;
     private Revision priorRevision = null;
 
+    private final String priorTagName1 = "prior-tag-1";
+    private final String priorTagName2 = "prior-tag-2-annotated";
+    private final String headTagName1 = "head-tag-1";
+    private final String headTagName2 = "head-tag-2-annotated";
+
     private List<BranchSpec> branchSpecList = null;
     private List<BranchSpec> priorBranchSpecList = null;
     private List<Branch> branchList = null;
@@ -80,6 +88,8 @@ public class GitUtilsSortiBranchTest {
     public void addBranchesToSampleRepo() throws Exception {
         String fileName = "README";
         sampleRepo.init();
+        sampleRepo.git("tag", priorTagName1);
+        sampleRepo.git("tag", "-a", priorTagName2, "-m", "Annotated tag " + priorTagName2);
         priorHeadId = ObjectId.fromString(sampleRepo.head());
 
         sampleRepo.git("checkout", "-b", otherBranchName);
@@ -92,6 +102,8 @@ public class GitUtilsSortiBranchTest {
         sampleRepo.write(fileName, "This is the README file " + random.nextInt());
         sampleRepo.git("add", fileName);
         sampleRepo.git("commit", "-m", "Adding " + fileName, fileName);
+        sampleRepo.git("tag", headTagName1);
+        sampleRepo.git("tag", "-a", headTagName2, "-m", "Annotated tag " + headTagName2);
         headId = ObjectId.fromString(sampleRepo.head());
         branchSpecList = new ArrayList<>();
         branchList = new ArrayList<>();
@@ -105,7 +117,7 @@ public class GitUtilsSortiBranchTest {
             }
         }
         headRevision = new Revision(headId, branchList);
-        File gitDir = new File(sampleRepo.fileUrl());
+        File gitDir = sampleRepo.getRoot();
         this.gitClient = Git.with(listener, env).in(gitDir).using("git").getClient();
         this.gitUtils = new GitUtils(listener, gitClient);
     }
@@ -138,5 +150,16 @@ public class GitUtilsSortiBranchTest {
     public void testSortBranchesForRevision_Revision_List_Prior_3_args() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, env);
         assertEquals(headRevision, result);
+    }
+
+    @Test
+    public void testFilterTipBranches() throws Exception {
+        Collection<Revision> multiRevisionList = new ArrayList<>();
+        multiRevisionList.add(priorRevision);
+        multiRevisionList.add(headRevision);
+        Collection<Revision> filteredRevisions = new ArrayList<>();
+        filteredRevisions.add(headRevision);
+        List<Revision> result = gitUtils.filterTipBranches(multiRevisionList);
+        assertThat(result, is(filteredRevisions));
     }
 }
