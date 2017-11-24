@@ -57,8 +57,8 @@ public class GitUtilsTest {
     private final File gitDir;
     private final ObjectId remoteHeadId;
     private final ObjectId remotePriorId;
-    private final Set<String> tagNames;
     private final Set<Branch> branches;
+    private final Set<String> tagNames;
     private final String branchName;
 
     private final List<BranchSpec> currentBranchSpecList;
