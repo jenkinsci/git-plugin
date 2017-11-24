@@ -87,11 +87,6 @@ public class GitUtilsTest {
 
         /* Assemble information about the repository in this directory */
         GitClient oneTimeGitClient = Git.with(StreamTaskListener.NULL, env).in(gitDir).using("git").getClient();
-        String headName = "origin/HEAD";
-        this.remoteHeadId = oneTimeGitClient.revParse(headName);
-        this.remoteHeadRevision = new Revision(remoteHeadId);
-        this.remotePriorId = oneTimeGitClient.revParse(headName + "^");
-        this.remotePriorRevision = new Revision(remotePriorId);
 
         /* Tag names and remote branch names */
         this.tagNames = Collections.unmodifiableSet(oneTimeGitClient.getTagNames(null));
@@ -100,14 +95,21 @@ public class GitUtilsTest {
         this.branches = Collections.unmodifiableSet(remoteBranches);
         assertFalse("No branches in this repository - reduces test strength", this.branches.isEmpty());
         String guessedBranchName = "HEAD"; // In case local branch matches no remote branch
+        ObjectId headId = oneTimeGitClient.revParse("HEAD");
         for (Branch branch : this.branches) {
             // Choose one of the remote branch names that matches the current checked out version
-            if (branch.getSHA1().equals(this.remoteHeadRevision.getSha1()) && !branch.getName().endsWith("/HEAD")) {
+            if (headId.equals(branch.getSHA1()) && !branch.getName().endsWith("/HEAD")) {
                 guessedBranchName = branch.getName();
             }
         }
         assertThat(guessedBranchName, not(isEmptyString()));
         this.branchName = guessedBranchName;
+
+        /* Assumes the HEAD commit exists on the remote */
+        this.remoteHeadId = oneTimeGitClient.revParse(this.branchName);
+        this.remoteHeadRevision = new Revision(remoteHeadId);
+        this.remotePriorId = oneTimeGitClient.revParse(this.branchName + "^");
+        this.remotePriorRevision = new Revision(remotePriorId);
 
         this.currentBranchSpecList = new ArrayList<>();
         // BranchSpec headSpec = new BranchSpec("HEAD");
@@ -178,7 +180,7 @@ public class GitUtilsTest {
         return names;
     }
 
-    private Set<String> getExpectedNames(List<BranchSpec> branchSpecList) {
+    private Set<String> getExpectedNames(@NonNull List<BranchSpec> branchSpecList) {
         Set<String> names = new HashSet<>(branchSpecList.size());
         for (BranchSpec branchSpec : branchSpecList) {
             names.add(branchSpec.getName());
