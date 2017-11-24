@@ -7,7 +7,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.util.StreamTaskListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
@@ -15,38 +14,30 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.TemporaryDirectoryAllocator;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.mockito.Mockito;
 
 public class CandidateRevisionsTest extends AbstractGitRepository {
 
-    private TemporaryDirectoryAllocator tempAllocator;
     private File testGitDir2;
     private GitClient testGitClient2;
 
+    @Rule
+    public GitSampleRepoRule testGitRepo2 = new GitSampleRepoRule();
+
     @Before
-    public void createSecondGitRepository() throws IOException, InterruptedException {
-        tempAllocator = new TemporaryDirectoryAllocator();
-        testGitDir2 = tempAllocator.allocate();
+    public void createSecondGitRepository() throws Exception {
+        testGitRepo2.init();
+        testGitDir2 = testGitRepo2.getRoot();
         TaskListener listener = StreamTaskListener.fromStderr();
         testGitClient2 = Git.with(listener, new EnvVars())
                 .in(testGitDir2)
                 .using((new Random()).nextBoolean() ? "git" : "jgit")
                 .getClient();
-        testGitClient2.init();
-    }
-
-    @After
-    public void removeSecondGitRepository() throws IOException, InterruptedException {
-        if (isWindows()) {
-            System.gc(); // Reduce Windows file busy exceptions cleaning up temp dirs
-        }
-
-        tempAllocator.dispose();
     }
 
     /**
@@ -120,7 +111,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
         Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "tag/*", testGitClient2, null, buildData, context);
         assertEquals(1, candidateRevisions.size());
         String name = candidateRevisions.iterator().next().getBranches().iterator().next().getName();
-        assertTrue("Wrong name: '" + name + "'", name.equals("origin/tags/tag/c") || name.equals("origin/tags/tag/b"));
+        assertTrue("Expected .*/tags/b or .*/tags/c, was '" + name + "'", name.matches("(origin|refs)/tags/tag/[bc]"));
     }
 
     /**

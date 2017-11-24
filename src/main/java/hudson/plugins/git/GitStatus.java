@@ -3,6 +3,7 @@ package hudson.plugins.git;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
@@ -165,8 +166,13 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     throws IOException, ServletException {
                 rsp.setStatus(SC_OK);
                 rsp.setContentType("text/plain");
-                for (ResponseContributor c : contributors) {
-                    c.addHeaders(req, rsp);
+                for (int i = 0; i < contributors.size(); i++) {
+                    if (i == MAX_REPORTED_CONTRIBUTORS) {
+                        rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
+                        break;
+                    } else {
+                        contributors.get(i).addHeaders(req, rsp);
+                    }
                 }
                 PrintWriter w = rsp.getWriter();
                 for (ResponseContributor c : contributors) {
@@ -320,6 +326,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received notification from " + StringUtils.defaultIfBlank(origin, "?")
@@ -607,6 +614,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
+    private static final int MAX_REPORTED_CONTRIBUTORS = 10;
 
     /** Allow arbitrary notify commit parameters.
      *

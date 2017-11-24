@@ -1,5 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.TaskListener;
@@ -90,6 +92,8 @@ public class PathRestriction extends GitSCMExtension {
     }
 
     @Override
+    @SuppressFBWarnings(value="NP_BOOLEAN_RETURN_NULL", justification="null used to indicate other extensions should decide")
+    @CheckForNull
     public Boolean isRevExcluded(GitSCM scm, GitClient git, GitChangeSet commit, TaskListener listener, BuildData buildData) {
         Collection<String> paths = commit.getAffectedPaths();
         if (paths.isEmpty()) {// nothing modified, so no need to compute any of this

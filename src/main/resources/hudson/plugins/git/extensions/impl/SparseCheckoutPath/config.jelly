@@ -8,7 +8,7 @@
 
     <f:entry>
         <div align="right">
-            <input type="button" value="Delete Path" class="repeatable-delete" style="margin-left: 1em;" />
+            <input type="button" value="${%Delete Path}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
     </f:entry>
 

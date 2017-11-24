@@ -1,5 +1,15 @@
 package hudson.plugins.git;
 
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -18,6 +28,7 @@ import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
+import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
@@ -29,13 +40,13 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
+import hudson.scm.PollingResult.Change;
+import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
-
-import java.io.ByteArrayOutputStream;
 
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
@@ -46,6 +57,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 
@@ -55,30 +67,103 @@ import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import jenkins.model.Jenkins;
+import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSampleRepoRule;
 
 /**
  * Tests for {@link GitSCM}.
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
-    
+    @Rule
+    public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
+
+    private CredentialsStore store = null;
+
+    @BeforeClass
+    public static void setGitDefaults() throws Exception {
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
+
+    @Before
+    public void enableSystemCredentialsProvider() throws Exception {
+        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
+                Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+            if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
+                store = s;
+                break;
+
+            }
+        }
+        assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    private StandardCredentials getInvalidCredential() {
+        String username = "bad-user";
+        String password = "bad-password";
+        CredentialsScope scope = CredentialsScope.GLOBAL;
+        String id = "username-" + username + "-password-" + password;
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Test
+    public void trackCredentials() throws Exception {
+        StandardCredentials credential = getInvalidCredential();
+        store.addCredentials(Domain.global(), credential);
+
+        Fingerprint fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should not be set before job definition", fingerprint, nullValue());
+
+        JenkinsRule.WebClient wc = rule.createWebClient();
+        HtmlPage page = wc.goTo("credentials/store/system/domain/_/credentials/" + credential.getId());
+        assertThat("Have usage tracking reported", page.getElementById("usage"), notNullValue());
+        assertThat("No fingerprint created until first use", page.getElementById("usage-missing"), notNullValue());
+        assertThat("No fingerprint created until first use", page.getElementById("usage-present"), nullValue());
+
+        FreeStyleProject project = setupProject("master", credential);
+
+        fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should not be set before first build", fingerprint, nullValue());
+
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        fingerprint = CredentialsProvider.getFingerprintOf(credential);
+        assertThat("Fingerprint should be set after first build", fingerprint, notNullValue());
+        assertThat(fingerprint.getJobs(), hasItem(is(project.getFullName())));
+        Fingerprint.RangeSet rangeSet = fingerprint.getRangeSet(project);
+        assertThat(rangeSet, notNullValue());
+        assertThat(rangeSet.includes(project.getLastBuild().getNumber()), is(true));
+
+        page = wc.goTo("credentials/store/system/domain/_/credentials/" + credential.getId());
+        assertThat(page.getElementById("usage-missing"), nullValue());
+        assertThat(page.getElementById("usage-present"), notNullValue());
+        assertThat(page.getAnchorByText(project.getFullDisplayName()), notNullValue());
+    }
+
     /**
      * Basic test - create a GitSCM based project, check it out and build for the first time.
      * Next test that polling works correctly, make another commit, check that polling finds it,
@@ -797,6 +882,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
+    @Test
+    public void testMultipleBranchesWithTags() throws Exception {
+        List<BranchSpec> branchSpecs = Arrays.asList(
+                new BranchSpec("refs/tags/v*"),
+                new BranchSpec("refs/remotes/origin/non-existent"));
+        FreeStyleProject project = setupProject(branchSpecs, false, null, null, janeDoe.getName(), null, false, null);
+
+        // create initial commit and then run the build against it:
+        // Here the changelog is by default empty (because changelog for first commit is always empty
+        commit("commitFileBase", johnDoe, "Initial Commit");
+
+        // there are no branches to be build
+        FreeStyleBuild freeStyleBuild = build(project, Result.FAILURE);
+
+        final String v1 = "v1";
+
+        git.tag(v1, "version 1");
+        assertTrue("v1 tag exists", git.tagExists(v1));
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+        assertTrue("change set is empty", freeStyleBuild.getChangeSet().isEmptySet());
+
+        commit("file1", johnDoe, "change to file1");
+        git.tag("none", "latest");
+
+        freeStyleBuild = build(project, Result.SUCCESS);
+
+        ObjectId tag = git.revParse(Constants.R_TAGS + v1);
+        GitSCM scm = (GitSCM)project.getScm();
+        BuildData buildData = scm.getBuildData(freeStyleBuild);
+
+        assertEquals("last build matches the v1 tag revision", tag, buildData.lastBuild.getSHA1());
+    }
+
     @Issue("JENKINS-19037")
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     @Test
@@ -807,7 +926,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-10060")
     @Test
     public void testSubmoduleFixup() throws Exception {
-        File repo = tempFolder.newFolder();
+        File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
 
@@ -909,8 +1028,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         // setup global config
-        final DescriptorImpl descriptor = (DescriptorImpl) project.getScm().getDescriptor();
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertFalse("Wrong initial value for create account based on e-mail", scm.isCreateAccountBasedOnEmail());
         descriptor.setCreateAccountBasedOnEmail(true);
+        assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
@@ -937,12 +1059,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
     }
 
-    // Temporarily disabled - unreliable and failures not helpful
+    // Disabled - consistently fails, needs more analysis
     // @Test
-    public void xtestFetchFromMultipleRepositories() throws Exception {
+    public void testFetchFromMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -959,7 +1081,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        /* Diagnostic help - for later use */
+        SCMRevisionState baseline = project.poll(listener).baseline;
+        Change change = project.poll(listener).change;
+        SCMRevisionState remote = project.poll(listener).remote;
+        String assertionMessage = MessageFormat.format("polling incorrectly detected change after build. Baseline: {0}, Change: {1}, Remote: {2}", baseline, change, remote);
+        assertFalse(assertionMessage, project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
         secondTestRepo.commit(commitFile2, janeDoe, "Commit number 2");
@@ -974,7 +1101,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     private void branchSpecWithMultipleRepositories(String branchName) throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("second", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1009,7 +1136,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void testCommitDetectedOnlyOnceInMultipleRepositories() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
-        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", tempFolder.newFolder(), listener);
+        TestGitRepo secondTestRepo = new TestGitRepo("secondRepo", secondRepo.getRoot(), listener);
         List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
@@ -1030,8 +1157,24 @@ public class GitSCMTest extends AbstractGitTestCase {
         for (RemoteConfig remoteConfig : gitSCM.getRepositories()) {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
-        Collection<Revision> candidateRevisions = ((DefaultBuildChooser) (gitSCM).getBuildChooser()).getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        BuildChooser buildChooser = gitSCM.getBuildChooser();
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
+        gitSCM.setBuildChooser(buildChooser); // Should be a no-op
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        assertThat(candidateRevisions2, is(candidateRevisions));
+    }
+
+    private final Random random = new Random();
+    private boolean useChangelogToBranch = random.nextBoolean();
+
+    private void addChangelogToBranchExtension(GitSCM scm) {
+        if (useChangelogToBranch) {
+            /* Changelog should be no different with this enabled or disabled */
+            ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions("origin", "master");
+            scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
+        }
+        useChangelogToBranch = !useChangelogToBranch;
     }
 
     @Test
@@ -1045,6 +1188,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1085,6 +1229,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1120,6 +1265,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1160,6 +1306,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
 
         // create initial commit and then run the build against it:
         commit("commitFileBase", johnDoe, "Initial Commit");
@@ -1199,6 +1346,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     	project.setScm(scm);
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration1", "", MergeCommand.GitPluginFastForwardMode.FF)));
 	scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration2", "", MergeCommand.GitPluginFastForwardMode.FF)));
+        addChangelogToBranchExtension(scm);
     	
     	commit("dummyFile", johnDoe, "Initial Commit");
     	testRepo.git.branch("integration1");
@@ -1229,6 +1377,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1270,6 +1419,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        addChangelogToBranchExtension(scm);
         project.setScm(scm);
 
         // create initial commit and then run the build against it:
@@ -1548,7 +1698,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1569,7 +1719,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutBis() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1590,7 +1740,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1619,7 +1769,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testNormalCheckoutAfterSparseCheckout() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1649,7 +1799,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testInitSparseCheckoutOverSlave() throws Exception {
-        if (!gitVersionAtLeast(1, 7, 10)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
@@ -1813,24 +1963,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
-    private boolean gitVersionAtLeast(int neededMajor, int neededMinor) throws IOException, InterruptedException {
-        return gitVersionAtLeast(neededMajor, neededMinor, 0);
-    }
-
-    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) throws IOException, InterruptedException {
-        final TaskListener procListener = StreamTaskListener.fromStderr();
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
-        assertEquals("git --version non-zero return code", 0, returnCode);
-        assertFalse("Process listener logged an error", procListener.getLogger().checkError());
-        final String versionOutput = out.toString().trim();
-        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").split("\\.");
-        final int gitMajor = Integer.parseInt(fields[0]);
-        final int gitMinor = Integer.parseInt(fields[1]);
-        final int gitPatch = Integer.parseInt(fields[2]);
-        return gitMajor >= neededMajor && gitMinor >= neededMinor && gitPatch >= neededPatch;
-    }
-
     @Test
 	public void testPolling_CanDoRemotePollingIfOneBranchButMultipleRepositories() throws Exception {
 		FreeStyleProject project = createFreeStyleProject();
@@ -1872,7 +2004,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // Inital commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
-        if (!gitVersionAtLeast(1, 8)) {
+        if (!sampleRepo.gitVersionAtLeast(1, 8)) {
             /* Git 1.7.10.4 fails the first build unless the git-upload-pack
              * program is available in its PATH.
              * Later versions of git don't have that problem.
@@ -2183,7 +2315,28 @@ public class GitSCMTest extends AbstractGitTestCase {
        verify(buildData, times(1)).hasBeenReferenced(anyString());
        verify(build, times(1)).getActions(BuildData.class);
     }
-    
+
+    @Issue("JENKINS-38241")
+    @Test
+    public void testCommitMessageIsPrintedToLogs() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=test commit");
+        FreeStyleProject p = setupSimpleProject("master");
+        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        TaskListener mockListener = Mockito.mock(TaskListener.class);
+        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
+
+        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
+                new FilePath(run.getRootDir()).child("tmp-" + "master"),
+                mockListener, null, SCMRevisionState.NONE);
+
+        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
+        List<String> values = logCaptor.getAllValues();
+        assertThat(values, hasItem("Commit message: \"test commit\""));
+    }
+
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
@@ -2224,9 +2377,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String notificationPath = rule.getURL().toExternalForm()
                 + "git/notifyCommit?url=" + testRepo.gitDir.toString() + "&sha1=" + commit1;
         final URL notifyUrl = new URL(notificationPath);
-        final InputStream is = notifyUrl.openStream();
-        IOUtils.toString(is);
-        IOUtils.closeQuietly(is);
+        String notifyContent = null;
+        try (final InputStream is = notifyUrl.openStream()) {
+            notifyContent = IOUtils.toString(is);
+        }
+        assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 
         if ((project.getLastBuild().getNumber() == initialBuildNumber)
                 && (rule.jenkins.getQueue().isEmpty())) {

@@ -32,4 +32,14 @@ public class GitChangeSetTest {
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, email, false));
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, email, true));
     }
+
+    @Test
+    public void findOrCreateByFullName() throws Exception {
+        GitChangeSet cs = GitChangeSetUtil.genChangeSet(false, false);
+        User user = User.get("john");
+        user.setFullName(GitChangeSetUtil.COMMITTER_NAME);
+        user.addProperty(new Mailer.UserProperty(GitChangeSetUtil.COMMITTER_EMAIL));
+        assertEquals(user, cs.getAuthor());
+    }
+
 }

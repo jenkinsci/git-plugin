@@ -1,0 +1,5 @@
+<jenkins.plugins.git.GitSCMSource>
+  <id>5b061c87-da5c-4d69-b9d5-b041d065c945</id>
+  <remote>git://git.test/example.git</remote>
+  <traits/>
+</jenkins.plugins.git.GitSCMSource>

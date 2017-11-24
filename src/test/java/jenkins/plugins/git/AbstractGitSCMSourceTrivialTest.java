@@ -148,7 +148,7 @@ public class AbstractGitSCMSourceTrivialTest {
     public class AbstractGitSCMSourceImpl extends AbstractGitSCMSource {
 
         public AbstractGitSCMSourceImpl() {
-            super("AbstractGitSCMSourceImpl-id");
+            setId("AbstractGitSCMSourceImpl-id");
         }
 
         public String getCredentialsId() {

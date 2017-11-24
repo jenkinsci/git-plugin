@@ -26,8 +26,14 @@ package jenkins.plugins.git;
 
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import hudson.Launcher;
+import hudson.model.TaskListener;
+import hudson.util.StreamTaskListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.scm.impl.mock.AbstractSampleDVCSRepoRule;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -38,12 +44,22 @@ import org.jvnet.hudson.test.JenkinsRule;
  */
 public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
+    private static boolean initialized = false;
+
     public void git(String... cmds) throws Exception {
         run("git", cmds);
     }
 
+    private static void checkGlobalConfig() throws Exception {
+        if (initialized) return;
+        initialized = true;
+        CliGitCommand gitCmd = new CliGitCommand(null);
+        gitCmd.setDefaults();
+    }
+
     @Override
     public void init() throws Exception {
+        GitSampleRepoRule.checkGlobalConfig();
         run(true, tmp.getRoot(), "git", "version");
         git("init");
         write("file", "");
@@ -74,4 +90,40 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }
 
+    public File getRoot() {
+        return this.sampleRepo;
+    }
+
+    public boolean gitVersionAtLeast(int neededMajor, int neededMinor) {
+        return gitVersionAtLeast(neededMajor, neededMinor, 0);
+    }
+
+    public boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int returnCode = -1;
+        try {
+            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+        } catch (IOException | InterruptedException ex) {
+            System.out.println("Error checking git version " + ex);
+        }
+        final String versionOutput = out.toString().trim();
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+        final int gitMajor = Integer.parseInt(fields[0]);
+        final int gitMinor = Integer.parseInt(fields[1]);
+        final int gitPatch = Integer.parseInt(fields[2]);
+        if (gitMajor < 1 || gitMajor > 3) {
+            System.out.println("WARNING: Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
+        }
+        if (gitMinor < 0 || gitMinor > 20) {
+            System.out.println("WARNING: Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
+        }
+        if (gitPatch < 0 || gitPatch > 20) {
+            System.out.println("WARNING: Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields[2] + "'");
+        }
+
+        return gitMajor >  neededMajor ||
+              (gitMajor == neededMajor && gitMinor >  neededMinor) ||
+              (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
+    }
 }

@@ -120,16 +120,10 @@ public class BranchSpecTest {
     	BranchSpec branchSpec = new BranchSpec("");
     	assertEquals("**",branchSpec.getName());
     }
-    
-    @Test
+
+    @Test(expected = IllegalArgumentException.class)
     public void testNullName() {
-    	boolean correctExceptionThrown = false;
-    	try {
-    		BranchSpec branchSpec = new BranchSpec(null);
-    	} catch (IllegalArgumentException e) {
-    		correctExceptionThrown = true;
-    	}
-    	assertTrue(correctExceptionThrown);
+        BranchSpec branchSpec = new BranchSpec(null);
     }
     
     @Test

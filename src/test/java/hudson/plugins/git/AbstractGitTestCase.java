@@ -1,5 +1,10 @@
 package hudson.plugins.git;
 
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -9,6 +14,8 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -21,6 +28,8 @@ import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.extensions.impl.UserExclusion;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
 
@@ -38,11 +47,13 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Base class for single repository git plugin tests.
@@ -55,7 +66,7 @@ public abstract class AbstractGitTestCase {
     public JenkinsRule rule = new JenkinsRule();
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     protected TaskListener listener;
 
@@ -72,7 +83,7 @@ public abstract class AbstractGitTestCase {
     public void setUp() throws Exception {
         listener = StreamTaskListener.fromStderr();
 
-        testRepo = new TestGitRepo("unnamed", tempFolder.newFolder(), listener);
+        testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);
         johnDoe = testRepo.johnDoe;
         janeDoe = testRepo.janeDoe;
         workDir = testRepo.gitDir;
@@ -98,6 +109,10 @@ public abstract class AbstractGitTestCase {
 
     protected List<UserRemoteConfig> createRemoteRepositories() throws IOException {
         return testRepo.remoteConfigs();
+    }
+
+    protected List<UserRemoteConfig> createRemoteRepositories(StandardCredentials credential) throws IOException {
+        return testRepo.remoteConfigs(credential);
     }
 
     protected FreeStyleProject createFreeStyleProject() throws IOException {
@@ -140,6 +155,13 @@ public abstract class AbstractGitTestCase {
                             includedRegions);
     }
 
+    protected FreeStyleProject setupProject(String branchString, StandardCredentials credential) throws Exception {
+        return setupProject(Collections.singletonList(new BranchSpec(branchString)),
+                false, null, null,
+                null, null, false,
+                null, null, credential);
+    }
+
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
                                             String relativeTargetDir, String excludedRegions,
                                             String excludedUsers, String localBranch, boolean fastRemotePoll,
@@ -147,27 +169,31 @@ public abstract class AbstractGitTestCase {
         return setupProject(branches,
                 authorOrCommitter, relativeTargetDir, excludedRegions,
                 excludedUsers, localBranch, fastRemotePoll,
-                includedRegions, null);
+                includedRegions, null, null);
     }
 
     protected FreeStyleProject setupProject(String branchString, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
         return setupProject(Collections.singletonList(new BranchSpec(branchString)),
                 false, null, null,
                 null, null, false,
-                null, sparseCheckoutPaths);
+                null, sparseCheckoutPaths, null);
     }
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter,
                 String relativeTargetDir, String excludedRegions,
                 String excludedUsers, String localBranch, boolean fastRemotePoll,
-                String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths) throws Exception {
+                String includedRegions, List<SparseCheckoutPath> sparseCheckoutPaths,
+                StandardCredentials credential) throws Exception {
         FreeStyleProject project = createFreeStyleProject();
         GitSCM scm = new GitSCM(
-                createRemoteRepositories(),
+                createRemoteRepositories(credential),
                 branches,
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
+        if (credential != null) {
+            project.getBuildersList().add(new HasCredentialBuilder(credential.getId()));
+        }
         scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
         if (relativeTargetDir!=null)
             scm.getExtensions().add(new RelativeTargetDirectory(relativeTargetDir));
@@ -291,6 +317,48 @@ public abstract class AbstractGitTestCase {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
             System.out.println(out.toString());
+        }
+    }
+
+    public static class HasCredentialBuilder extends Builder {
+
+        private final String id;
+
+        @DataBoundConstructor
+        public HasCredentialBuilder(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                throws InterruptedException, IOException {
+            IdCredentials credentials = CredentialsProvider.findCredentialById(id, IdCredentials.class, build);
+            if (credentials == null) {
+                listener.getLogger().printf("Could not find any credentials with id %s%n", id);
+                build.setResult(Result.FAILURE);
+                return false;
+            } else {
+                listener.getLogger().printf("Found %s credentials with id %s%n", CredentialsNameProvider.name(credentials), id);
+                return true;
+            }
+        }
+
+        @TestExtension
+        public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+            @Override
+            public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+                return true;
+            }
+
+            @Override
+            public String getDisplayName() {
+                return "Check that credentials exist";
+            }
         }
     }
 }

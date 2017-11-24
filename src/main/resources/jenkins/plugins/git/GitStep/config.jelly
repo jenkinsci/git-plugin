@@ -26,7 +26,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:entry field="url" title="${%Repository URL}">
-        <f:textbox/>
+        <f:textbox checkMethod="post"/>
     </f:entry>
     <f:entry field="branch" title="${%Branch}">
         <f:textbox default="master"/>

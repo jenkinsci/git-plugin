@@ -35,7 +35,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         if (req != null) {
             Job job = req.findAncestorObject(Job.class);
             if (job != null) {
-                EnvVars env = null;
+                EnvVars env;
                 try {
                     env = job.getEnvironment(null, TaskListener.NULL);
                 } catch (InterruptedException e) {

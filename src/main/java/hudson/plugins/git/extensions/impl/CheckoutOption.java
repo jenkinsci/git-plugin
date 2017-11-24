@@ -32,25 +32,72 @@ public class CheckoutOption extends FakeGitSCMExtension {
         return timeout;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean requiresWorkspaceForPolling() {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Deprecated
     public void decorateCheckoutCommand(GitSCM scm, AbstractBuild<?, ?> build, GitClient git, BuildListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.timeout(timeout);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CheckoutOption that = (CheckoutOption) o;
+
+        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "CheckoutOption{" +
+                "timeout=" + timeout +
+                '}';
+    }
+
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Advanced checkout behaviours";
