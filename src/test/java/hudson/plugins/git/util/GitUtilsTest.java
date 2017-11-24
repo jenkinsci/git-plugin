@@ -173,7 +173,7 @@ public class GitUtilsTest {
         // These assertions will not detect issues if a branch and tag have the same name
         // Expect every tag to be logged by rev-parse
         for (String tag : tagNames) {
-            addUnexpectedLogSubstring(tag);
+            addExpectedLogSubstring(tag);
         }
         // Expect every remote branch name to be logged by rev-parse
         for (Branch branch : branches) {
@@ -189,7 +189,7 @@ public class GitUtilsTest {
         // These assertions will fail if a branch and tag have the same name
         // Expect no tag to be logged by rev-parse
         for (String tag : tagNames) {
-            addUnexpectedLogSubstring(tag);
+            addExpectedLogSubstring(tag);
         }
         // Expect every remote branch name to be logged by rev-parse
         for (Branch branch : branches) {
