@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -152,11 +154,11 @@ public class GitUtilsTest {
         }
     }
 
-    private void addExpectedLogSubstring(String expectedLogSubstring) {
+    private void addExpectedLogSubstring(@NonNull String expectedLogSubstring) {
         this.expectedLogSubstrings.add(expectedLogSubstring);
     }
 
-    private void addUnexpectedLogSubstring(String unexpectedLogSubstring) {
+    private void addUnexpectedLogSubstring(@NonNull String unexpectedLogSubstring) {
         this.unexpectedLogSubstrings.add(unexpectedLogSubstring);
     }
 
@@ -165,22 +167,42 @@ public class GitUtilsTest {
         this.unexpectedLogSubstrings.clear();
     }
 
-    /* The test is unacceptably slow because it calls getAllBranchRevisions.
-     * Since git plugin 3.2.0, getAllBranchRevisions enumerates all tags in repo.
-     */
+    private Set<String> getExpectedNames(@NonNull Set<Branch> branches, @NonNull Set<String> tagNames) {
+        Set<String> names = new HashSet<>(branches.size() + tagNames.size());
+        for (Branch branch : branches) {
+            names.add(branch.getName());
+        }
+        for (String tagName : tagNames) {
+            names.add("refs/tags/" + tagName);
+        }
+        return names;
+    }
+
+    private Set<String> getExpectedNames(List<BranchSpec> branchSpecList) {
+        Set<String> names = new HashSet<>(branchSpecList.size());
+        for (BranchSpec branchSpec : branchSpecList) {
+            names.add(branchSpec.getName());
+        }
+        return names;
+    }
+
+    private Set<String> getActualNames(@NonNull Collection<Revision> revisions) {
+        Set<String> names = new HashSet<>(revisions.size());
+        for (Revision revision : revisions) {
+            for (Branch branch : revision.getBranches()) {
+                names.add(branch.getName());
+            }
+        }
+        return names;
+    }
+
     @Test
     public void testGetAllBranchRevisions() throws Exception {
         Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
         assertThat(allRevisions, hasItem(remoteHeadRevision));
-        // These assertions will not detect issues if a branch and tag have the same name
-        // Expect every tag to be logged by rev-parse
-        for (String tag : tagNames) {
-            addExpectedLogSubstring(tag);
-        }
-        // Expect every remote branch name to be logged by rev-parse
-        for (Branch branch : branches) {
-            addExpectedLogSubstring(branch.getName());
-        }
+        Set<String> expectedNames = getExpectedNames(branches, tagNames);
+        Set<String> actualNames = getActualNames(allRevisions);
+        assertThat(actualNames, is(expectedNames));
     }
 
     @Test
@@ -188,15 +210,9 @@ public class GitUtilsTest {
         Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
         // Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
         assertThat(allRevisions, hasItem(remoteHeadRevision));
-        // These assertions will fail if a branch and tag have the same name
-        // Expect no tag to be logged by rev-parse
-        for (String tag : tagNames) {
-            addUnexpectedLogSubstring(tag);
-        }
-        // Expect every remote branch name to be logged by rev-parse
-        for (Branch branch : branches) {
-            addExpectedLogSubstring(branch.getName());
-        }
+        Set<String> actualNames = getActualNames(allRevisions);
+        Set<String> expectedNames = getExpectedNames(currentBranchSpecList);
+        assertThat(actualNames, is(expectedNames));
     }
 
     @Test
