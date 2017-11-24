@@ -282,7 +282,7 @@ public class GitUtilsTest {
             "https://github.com/jenkinsci/git-plugin.git",
             "ssh://github.com/jenkinsci/git-plugin.git"
         };
-        String[] expected = {"origin", "origin2", "origin1", "origin3"};
+        String[] expected = {"origin", "origin2", "origin1", "origin3", "origin4"};
         String[] actual = GitUtils.fixupNames(names, urls);
         assertArrayEquals(expected, actual);
     }
