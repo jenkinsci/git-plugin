@@ -29,6 +29,7 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.Revision;
 import hudson.util.LogTaskListener;
 import hudson.util.StreamTaskListener;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,18 +39,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.lang.StringUtils;
+
 import org.eclipse.jgit.lib.ObjectId;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.Matchers.not;
+
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class GitUtilsTest {
 
@@ -84,7 +85,7 @@ public class GitUtilsTest {
 
         /* Assemble information about the repository in this directory */
         GitClient oneTimeGitClient = Git.with(StreamTaskListener.NULL, env).in(gitDir).using("git").getClient();
-        String headName = "HEAD";
+        String headName = "origin/HEAD";
         this.remoteHeadId = oneTimeGitClient.revParse(headName);
         this.remoteHeadRevision = new Revision(remoteHeadId);
         this.remotePriorId = oneTimeGitClient.revParse(headName + "^");
@@ -182,12 +183,13 @@ public class GitUtilsTest {
 
     @Test
     public void testGetMatchingRevisions() throws Exception {
-        Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
+        // Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(currentBranchSpecList, env);
+        Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
         assertThat(allRevisions, hasItem(remoteHeadRevision));
         // These assertions will fail if a branch and tag have the same name
         // Expect no tag to be logged by rev-parse
         for (String tag : tagNames) {
-            addUnexpectedLogSubstring(tag);
+            addExpectedLogSubstring(tag);
         }
         // Expect every remote branch name to be logged by rev-parse
         for (Branch branch : branches) {
@@ -199,6 +201,12 @@ public class GitUtilsTest {
     public void testGetRevisionContainingBranch() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch(branchName);
         assertEquals(remoteHeadRevision, revision);
+    }
+
+    @Test
+    public void testGetRevisionContainingBranchInvalidName() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch(branchName + "-invalid-name");
+        assertThat(revision, is(nullValue()));
     }
 
     @Test
@@ -266,14 +274,15 @@ public class GitUtilsTest {
 
     @Test
     public void testFixupNames() {
-        String[] names = {"origin", "origin2", null, null};
+        String[] names = {"origin", "origin2", null, "", null};
         String[] urls = {
+            "git://github.com/jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin.git",
             "https://github.com/jenkinsci/git-plugin",
             "https://github.com/jenkinsci/git-plugin.git",
-            "git@github.com:jenkinsci/git-plugin.git",
             "ssh://github.com/jenkinsci/git-plugin.git"
         };
-        String[] expected = {"origin", "origin2", "origin1", "origin3"};
+        String[] expected = {"origin", "origin2", "origin1", "origin3", "origin4"};
         String[] actual = GitUtils.fixupNames(names, urls);
         assertArrayEquals(expected, actual);
     }
