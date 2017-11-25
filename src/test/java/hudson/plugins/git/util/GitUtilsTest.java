@@ -54,6 +54,18 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+/**
+ * This test was a useful first draft test because it used the commit volume and
+ * tag volume of the git plugin repository to quickly show the problem.
+ *
+ * This test is NOT a reasonable test to include in the final pull request
+ * because it is brittle. It assumes the HEAD commit exists on the remote
+ * origin. That is a reasonable assumption in many continuous integration
+ * environments. That is not a reasonable assumption in a development
+ * environment. These tests MUST be replaced.
+ *
+ * @author Mark Waite
+ */
 public class GitUtilsTest {
 
     private final EnvVars env;
