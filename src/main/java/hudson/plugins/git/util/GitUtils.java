@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -9,9 +10,13 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitObject;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
+import hudson.util.ArgumentListBuilder;
+import hudson.util.StreamTaskListener;
+import java.io.ByteArrayOutputStream;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -24,11 +29,16 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 
 public class GitUtils implements Serializable {
     
@@ -67,8 +77,50 @@ public class GitUtils implements Serializable {
      * @throws InterruptedException when interrupted
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException, InterruptedException {
+        return getMatchingRevisions(null, null);
+    }
+
+    private boolean branchNameMatches(Branch branch, @NonNull List<BranchSpec> branchSpecs, EnvVars env) {
+        boolean matched = false;
+        for (BranchSpec branchSpec : branchSpecs) {
+            if (branchSpec.matches(branch.getName(), env)) {
+                matched = true;
+                break;
+            }
+        }
+        return matched;
+    }
+
+    private boolean tagNameMatches(String tagName, @NonNull List<BranchSpec> branchSpecs, EnvVars env) {
+        boolean matched = false;
+        for (BranchSpec branchSpec : branchSpecs) {
+            if (branchSpec.matches(tagName, env)) {
+                matched = true;
+                break;
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * Return a list of revisions with names that match the names included in the branchSpecs list. 
+     * A revision includes the SHA1 and all branches and tags referring to the SHA1.
+     *
+     * @param branchSpecs list of branch names used for branch and tag name matching
+     * @param env environment used to evaluate branchSpecs
+     * @return list of revisions
+     * @throws IOException on input or output error
+     * @throws GitException on git error
+     * @throws InterruptedException when interrupted
+     */
+    public Collection<Revision> getMatchingRevisions(List<BranchSpec> branchSpecs, EnvVars env) throws GitException, IOException, InterruptedException {
         Map<ObjectId, Revision> revisions = new HashMap<>();
         for (Branch b : git.getRemoteBranches()) {
+            if (branchSpecs != null) {
+                if (!branchNameMatches(b, branchSpecs, env)) {
+                    continue;
+                }
+            }
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
                 r = new Revision(b.getSHA1());
@@ -76,9 +128,14 @@ public class GitUtils implements Serializable {
             }
             r.getBranches().add(b);
         }
-        for (String tag : git.getTagNames(null)) {
-            String tagRef = Constants.R_TAGS + tag;
-            ObjectId objectId = git.revParse(tagRef);
+        for (GitObject tag : getTags()) {
+            String tagRef = Constants.R_TAGS + tag.getName();
+            if (branchSpecs != null) {
+                if (!tagNameMatches(tagRef, branchSpecs, env)) {
+                    continue;
+                }
+            }
+            ObjectId objectId = tag.getSHA1();
             Revision r = revisions.get(objectId);
             if (r == null) {
                 r = new Revision(objectId);
@@ -98,7 +155,9 @@ public class GitUtils implements Serializable {
      * @throws InterruptedException when interrupted
      */
     public Revision getRevisionContainingBranch(String branchName) throws GitException, IOException, InterruptedException {
-        for(Revision revision : getAllBranchRevisions()) {
+        List<BranchSpec> branchSpecList = new ArrayList<>();
+        branchSpecList.add(new BranchSpec(branchName));
+        for (Revision revision : getMatchingRevisions(branchSpecList, new EnvVars())) {
             for(Branch b : revision.getBranches()) {
                 if(b.getName().equals(branchName)) {
                     return revision;
@@ -109,11 +168,85 @@ public class GitUtils implements Serializable {
     }
 
     public Revision getRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
+        if (git instanceof CliGitAPIImpl) {
+            if (gitVersionAtLeast(2, 7)) { // Use command line git optimized implementation
+                return cliGitGetRevisionForSHA1(sha1);
+            }
+        }
         for(Revision revision : getAllBranchRevisions()) {
             if(revision.getSha1().equals(sha1))
                 return revision;
         }
         return new Revision(sha1);
+    }
+
+    private Revision cliGitGetRevisionForSHA1(ObjectId sha1) throws GitException, IOException, InterruptedException {
+        ArgumentListBuilder args = new ArgumentListBuilder("git", "for-each-ref", "--points-at", sha1.getName());
+        Launcher launcher = new Launcher.LocalLauncher(listener);
+        EnvVars env = new EnvVars();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(git.getRepository().getWorkTree());
+        int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
+        if (status != 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git for-each-ref --points-at {0} returned: {1}",
+                        sha1.getName(), status);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        String result = bytesOut.toString("UTF-8");
+        if (bytesErr.size() > 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git for-each-ref --points-at {0} stderr not empty: {1}",
+                        sha1.getName(), result);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        /*
+        Output shows SHA1, type, and ref
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/heads/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/bitbucket/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/HEAD
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/upstream/master
+        c4029dcfad8d29185d8c114f724f03aaf03687cd tag refs/tags/xyzzy
+         */
+        String[] output = result.split("[\\n\\r]");
+        String patternString = sha1.getName() + "\\s+\\w+\\s+refs/\\w+/(.*)";
+        Pattern pattern = Pattern.compile(patternString);
+        List<Branch> branches = new ArrayList<>();
+        if (output.length == 0) {
+            return new Revision(sha1);
+        }
+        if (output.length == 1 && output[0].isEmpty()) {
+            return new Revision(sha1);
+        }
+        for (String line : output) {
+            Matcher matcher = pattern.matcher(line);
+            if (!matcher.find()) {
+                // Log the surprise and skip the line
+                final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+                if (log) {
+                    String message = MessageFormat.format(
+                            "git for-each-ref --points-at {0} output not matched in line: {1} with pattern string: {2}",
+                            sha1.getName(), line, patternString);
+                    LOGGER.log(Level.WARNING, message);
+                }
+                continue;
+            }
+            String branchName = matcher.group(1);
+            Branch branch = new Branch(branchName, sha1);
+            branches.add(branch);
+        }
+        return new Revision(sha1, branches);
     }
 
     public Revision sortBranchesForRevision(Revision revision, List<BranchSpec> branchOrder) {
@@ -176,7 +309,7 @@ public class GitUtils implements Serializable {
 
                     if (log)
                         LOGGER.fine(MessageFormat.format(
-                                "Computing merge base of {0}  branches", l.size()));
+                                "Computing merge base of {0} branches", l.size()));
 
                     try (RevWalk walk = new RevWalk(repo)) {
                         walk.setRetainBody(false);
@@ -361,7 +494,156 @@ public class GitUtils implements Serializable {
         return returnNames;
     }
 
+    /* Ugh - copied from CliGitAPIImpl and GitSampleRepoRule because API not exposed.
+       Package protected for testing. */
+    boolean gitVersionAtLeast(int neededMajor, int neededMinor) {
+        return gitVersionAtLeast(neededMajor, neededMinor, 0);
+    }
+
+    /* Ugh - copied from CliGitAPIImpl and GitSampleRepoRule because API not exposed.
+       Package protected for testing. */
+    boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
+        final boolean log = LOGGER.isLoggable(Level.FINE);
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int returnCode = -1;
+        try {
+            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+        } catch (IOException | InterruptedException ex) {
+            if (log) {
+                LOGGER.log(Level.FINE, "Error checking git version", ex);
+            }
+        }
+        if (returnCode != 0) {
+            if (log) {
+                LOGGER.log(Level.FINE, "Error checking git version", returnCode);
+            }
+        }
+        String versionOutput = "git version 1.0.0";
+        try {
+            versionOutput = out.toString("UTF-8").trim();
+        } catch (UnsupportedEncodingException unsupported) {
+            LOGGER.log(Level.SEVERE, "UTF-8 an unsupported encoding reading 'git --version' output", unsupported);
+        }
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+        final int gitMajor = Integer.parseInt(fields[0]);
+        final int gitMinor = Integer.parseInt(fields[1]);
+        final int gitPatch = Integer.parseInt(fields[2]);
+        if (gitMajor < 1 || gitMajor > 3) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git major version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitMajor, versionOutput, 0, fields[0]));
+            }
+        }
+        if (gitMinor < 0 || gitMinor > 20) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git minor version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitMinor, versionOutput, 1, fields[1]));
+            }
+        }
+        if (gitPatch < 0 || gitPatch > 20) {
+            if (log) {
+                LOGGER.fine(MessageFormat.format(
+                        "WARNING: Unexpected git patch version {0} parsed from {1}, field[{2}] value: {3}",
+                        gitPatch, versionOutput, 2, fields[2]));
+            }
+        }
+
+        return gitMajor > neededMajor
+                || (gitMajor == neededMajor && gitMinor > neededMinor)
+                || (gitMajor == neededMajor && gitMinor == neededMinor && gitPatch >= neededPatch);
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 
     private static final long serialVersionUID = 1L;
+
+    private Set<GitObject> getTags() throws GitException, InterruptedException, IOException {
+        if (git instanceof CliGitAPIImpl) {
+            return cliGetTags();
+        }
+        Set<GitObject> tags = new HashSet<>();
+        Set<String> tagNames = git.getTagNames(null);
+        for (String tagName : tagNames) {
+            ObjectId tagId = git.revParse(tagName);
+            tags.add(new GitObject(tagName, tagId));
+        }
+        return tags;
+    }
+
+    private Set<GitObject> cliGetTags() throws IOException, InterruptedException {
+        ArgumentListBuilder args = new ArgumentListBuilder("git", "show-ref", "--tags", "-d");
+        Launcher launcher = new Launcher.LocalLauncher(listener);
+        EnvVars env = new EnvVars();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
+        Launcher.ProcStarter p = launcher.launch().cmds(args).envs(env).stdout(bytesOut).stderr(bytesErr).pwd(git.getRepository().getWorkTree());
+        int status = p.start().joinWithTimeout(1, TimeUnit.MINUTES, listener);
+        if (status != 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git show-ref --tags -d returned: {0}",
+                        status);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        String result = bytesOut.toString("UTF-8");
+        if (bytesErr.size() > 0) {
+            final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+            if (log) {
+                String message = MessageFormat.format(
+                        "git show-ref --tags -d returned: {0}",
+                        result);
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        /*
+        Output shows SHA1 and tag with (optional) marker for annotated tags
+        7ac27f7a051e1017da9f7c45ade8f091dbe6f99d refs/tags/git-3.6.4
+        7b5856ef2b4d35530a06d6482d0f4e972769d89b refs/tags/git-3.6.4^{}
+         */
+        String[] output = result.split("[\\n\\r]");
+        Pattern pattern = Pattern.compile("(\\p{XDigit}{40})\\s+refs/tags/([^\\^]*)(\\^\\{\\})?");
+        Set<String> tagNameSeen = new HashSet<>();
+        Set<GitObject> tags = new HashSet<>();
+        if (output.length == 0) {
+            return tags;
+        }
+        if (output.length == 1 && output[0].isEmpty()) {
+            return tags;
+        }
+        for (String line : output) {
+            Matcher matcher = pattern.matcher(line);
+            if (!matcher.find()) {
+                // Log the surprise and skip the line
+                final boolean log = LOGGER.isLoggable(Level.WARNING);
+
+                if (log) {
+                    String message = MessageFormat.format(
+                            "git show-ref --tags -d output not matched in line: {0}",
+                            line);
+                    LOGGER.log(Level.WARNING, message);
+                }
+                continue;
+            }
+            String sha1String = matcher.group(1);
+            String tagName = matcher.group(2);
+            String trailingText = matcher.group(3);
+            boolean isPeeledRef = false;
+            if (trailingText != null && trailingText.equals("^{}")) { // Line ends with '^{}'
+                isPeeledRef = true;
+            }
+            /* Prefer peeled ref if available (for tag commit), otherwise take first tag reference seen */
+            if (isPeeledRef || !tagNameSeen.contains(tagName)) {
+                tags.add(new GitObject(tagName, ObjectId.fromString(sha1String)));
+            }
+            tagNameSeen.add(tagName);
+        }
+        return tags;
+    }
 }

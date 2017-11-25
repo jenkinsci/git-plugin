@@ -202,7 +202,7 @@ public class DefaultBuildChooser extends BuildChooser {
         EnvVars env = context.getEnvironment();
 
         // 1. Get all the (branch) revisions that exist
-        List<Revision> revs = new ArrayList<>(utils.getAllBranchRevisions());
+        List<Revision> revs = new ArrayList<>(utils.getMatchingRevisions(gitSCM.getBranches(), env));
         verbose(listener, "Starting with all the branches: {0}", revs);
 
         // 2. Filter out any revisions that don't contain any branches that we
@@ -210,23 +210,6 @@ public class DefaultBuildChooser extends BuildChooser {
         for (Iterator<Revision> i = revs.iterator(); i.hasNext();) {
             Revision r = i.next();
 
-            // filter out uninteresting branches
-            for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
-                Branch b = j.next();
-                boolean keep = false;
-                for (BranchSpec bspec : gitSCM.getBranches()) {
-                    if (bspec.matches(b.getName(), env)) {
-                        keep = true;
-                        break;
-                    }
-                }
-
-                if (!keep) {
-                    verbose(listener, "Ignoring {0} because it doesn''t match branch specifier", b);
-                    j.remove();
-                }
-            }
-            
             // filter out HEAD ref if it's not the only ref
             if (r.getBranches().size() > 1) {
                 for (Iterator<Branch> j = r.getBranches().iterator(); j.hasNext();) {
