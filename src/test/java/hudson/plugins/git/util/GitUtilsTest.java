@@ -255,4 +255,31 @@ public class GitUtilsTest {
         List<Revision> result = gitUtils.filterTipBranches(multiRevisionList);
         assertThat(result, is(filteredRevisions));
     }
+
+    // @Test
+    public void testGetAllBranchRevisions() throws Exception {
+    }
+
+    // @Test
+    public void testGetMatchingRevisions() throws Exception {
+    }
+
+    // @Test
+    public void testSortBranchesForRevision_3args() {
+    }
+
+    @Test
+    public void testFixupNames() {
+        String[] names = {"origin", "origin2", null, "", null};
+        String[] urls = {
+            "git://github.com/jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin.git",
+            "https://github.com/jenkinsci/git-plugin",
+            "https://github.com/jenkinsci/git-plugin.git",
+            "ssh://github.com/jenkinsci/git-plugin.git"
+        };
+        String[] expected = {"origin", "origin2", "origin1", "origin3", "origin4"};
+        String[] actual = GitUtils.fixupNames(names, urls);
+        assertThat(expected, is(actual));
+    }
 }
