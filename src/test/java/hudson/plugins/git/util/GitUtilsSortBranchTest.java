@@ -234,6 +234,18 @@ public class GitUtilsSortBranchTest {
     }
 
     @Test
+    public void testGetRevisionForSHA1() throws Exception {
+        Revision revision = gitUtils.getRevisionForSHA1(headId);
+        assertThat(revision, is(headRevision));
+    }
+
+    @Test
+    public void testGetRevisionForSHA1PriorRevision() throws Exception {
+        Revision revision = gitUtils.getRevisionForSHA1(priorHeadId);
+        assertThat(revision, is(priorRevision));
+    }
+
+    @Test
     public void testFilterTipBranches() throws Exception {
         Collection<Revision> multiRevisionList = new ArrayList<>();
         multiRevisionList.add(priorRevision);
