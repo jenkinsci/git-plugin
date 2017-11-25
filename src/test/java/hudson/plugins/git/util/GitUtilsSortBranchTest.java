@@ -42,83 +42,105 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class GitUtilsSortBranchTest {
+
+    @ClassRule
+    public static GitSampleRepoRule sampleOriginRepo = new GitSampleRepoRule();
+
+    @Rule
+    public TemporaryFolder repoParentFolder = new TemporaryFolder();
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
-    private final Random random = new Random();
-
-    private final String[] branchNames = {
+    private static final String[] BRANCH_NAMES = {
         "master",
         "sally-2",
         "baker-1",
         "able-4"
     };
-    private final String otherBranchName = "other-branch";
+    private static final String OLDER_BRANCH_NAME = "older-branch";
 
-    private ObjectId headId = null;
-    private ObjectId priorHeadId = null;
+    private static ObjectId headId = null;
+    private static ObjectId priorHeadId = null;
 
-    private Revision headRevision = null;
-    private Revision priorRevision = null;
+    private static Revision headRevision = null;
+    private static Revision priorRevision = null;
 
-    private final String priorTagName1 = "prior-tag-1";
-    private final String priorTagName2 = "prior-tag-2-annotated";
-    private final String headTagName1 = "head-tag-1";
-    private final String headTagName2 = "head-tag-2-annotated";
+    private static final String PRIOR_TAG_NAME_1 = "prior-tag-1";
+    private static final String PRIOR_TAG_NAME_2 = "prior-tag-2-annotated";
+    private static final String HEAD_TAG_NAME_1 = "head-tag-1";
+    private static final String HEAD_TAG_NAME_2 = "head-tag-2-annotated";
 
-    private List<BranchSpec> branchSpecList = null;
-    private List<BranchSpec> priorBranchSpecList = null;
-    private List<Branch> branchList = null;
+    private static List<BranchSpec> branchSpecList = null;
+    private static List<BranchSpec> priorBranchSpecList = null;
+    private static List<Branch> branchList = null;
+
     private final EnvVars env;
     private final TaskListener listener = StreamTaskListener.NULL;
 
     private GitUtils gitUtils;
     private GitClient gitClient;
 
+    private static final Random RANDOM = new Random();
+
     public GitUtilsSortBranchTest() {
         this.env = new EnvVars();
     }
 
-    @Before
-    public void createSampleRepo() throws Exception {
+    @BeforeClass
+    public static void createSampleOriginRepo() throws Exception {
         String fileName = "README";
-        sampleRepo.init();
-        sampleRepo.git("tag", priorTagName1);
-        sampleRepo.git("tag", "-a", priorTagName2, "-m", "Annotated tag " + priorTagName2);
-        priorHeadId = ObjectId.fromString(sampleRepo.head());
+        sampleOriginRepo.init();
+        sampleOriginRepo.git("config", "user.name", "Author User Name");
+        sampleOriginRepo.git("config", "user.email", "author.user.name@mail.example.com");
+        sampleOriginRepo.git("tag", PRIOR_TAG_NAME_1);
+        sampleOriginRepo.git("tag", "-a", PRIOR_TAG_NAME_2, "-m", "Annotated tag " + PRIOR_TAG_NAME_2);
+        priorHeadId = ObjectId.fromString(sampleOriginRepo.head());
 
-        sampleRepo.git("checkout", "-b", otherBranchName);
+        sampleOriginRepo.git("checkout", "-b", OLDER_BRANCH_NAME);
         branchList = new ArrayList<>();
-        branchList.add(new Branch(otherBranchName, priorHeadId));
+        branchList.add(new Branch(OLDER_BRANCH_NAME, priorHeadId));
         priorRevision = new Revision(priorHeadId, branchList);
         priorBranchSpecList = new ArrayList<>();
-        priorBranchSpecList.add(new BranchSpec(otherBranchName));
+        priorBranchSpecList.add(new BranchSpec(OLDER_BRANCH_NAME));
 
-        sampleRepo.write(fileName, "This is the README file " + random.nextInt());
-        sampleRepo.git("add", fileName);
-        sampleRepo.git("commit", "-m", "Adding " + fileName, fileName);
-        sampleRepo.git("tag", headTagName1);
-        sampleRepo.git("tag", "-a", headTagName2, "-m", "Annotated tag " + headTagName2);
-        headId = ObjectId.fromString(sampleRepo.head());
+        sampleOriginRepo.git("checkout", "master");
+        sampleOriginRepo.write(fileName, "This is the README file " + RANDOM.nextInt());
+        sampleOriginRepo.git("add", fileName);
+        sampleOriginRepo.git("commit", "-m", "Adding " + fileName, fileName);
+        sampleOriginRepo.git("tag", HEAD_TAG_NAME_1);
+        sampleOriginRepo.git("tag", "-a", HEAD_TAG_NAME_2, "-m", "Annotated tag " + HEAD_TAG_NAME_2);
+        headId = ObjectId.fromString(sampleOriginRepo.head());
         branchSpecList = new ArrayList<>();
         branchList = new ArrayList<>();
         branchSpecList.add(new BranchSpec("master"));
         branchList.add(new Branch("master", headId));
-        for (String branchName : branchNames) {
+        for (String branchName : BRANCH_NAMES) {
             if (!branchName.equals("master")) {
-                sampleRepo.git("checkout", "-b", branchName);
+                sampleOriginRepo.git("checkout", "-b", branchName);
                 branchSpecList.add(new BranchSpec(branchName));
                 branchList.add(new Branch(branchName, headId));
             }
         }
         headRevision = new Revision(headId, branchList);
-        File gitDir = sampleRepo.getRoot();
+    }
+
+    @Before
+    public void cloneSampleRepo() throws Exception {
+        File gitDir = repoParentFolder.newFolder("test-repo");
         this.gitClient = Git.with(listener, env).in(gitDir).using("git").getClient();
+        this.gitClient.init();
+        this.gitClient.setAuthor("Author User Name", "author.user.name@mail.example.com");
+        this.gitClient.setCommitter("Committer User Name", "committer.user.name@mail.example.com");
+        this.gitClient.clone_().url(sampleOriginRepo.fileUrl()).repositoryName("origin").execute();
+        this.gitClient.checkout("origin/master", "master");
         this.gitUtils = new GitUtils(listener, gitClient);
     }
 
@@ -150,6 +172,42 @@ public class GitUtilsSortBranchTest {
     public void testSortBranchesForRevision_Revision_List_Prior_3_args() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, env);
         assertEquals(headRevision, result);
+    }
+
+    @Test
+    public void testGetRevisionContainingBranch() throws Exception {
+        for (String branchName : BRANCH_NAMES) {
+            Revision revision = gitUtils.getRevisionContainingBranch("origin/" + branchName);
+            assertEquals("Branch name '" + branchName + "' revision not found", headRevision, revision);
+        }
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNamePrior1() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_1);
+        assertEquals("Tag name '" + PRIOR_TAG_NAME_1 + "' revision not found", priorRevision, revision);
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNamePrior2() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_2);
+        assertEquals("Tag name '" + PRIOR_TAG_NAME_2 + "' revision not found", priorRevision, revision);
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNameHead1() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_1);
+        assertEquals("Tag name '" + HEAD_TAG_NAME_1 + "' revision not found", headRevision, revision);
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNameHead2() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_2);
+        assertEquals("Tag name '" + HEAD_TAG_NAME_2 + "' revision not found", headRevision, revision);
     }
 
     @Test
