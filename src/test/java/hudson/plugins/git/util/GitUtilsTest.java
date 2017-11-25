@@ -218,6 +218,19 @@ public class GitUtilsTest {
     }
 
     @Test
+    public void testGetMatchingRevisions_Duplicates() throws Exception {
+        List<BranchSpec> duplicateBranchSpecList = new ArrayList<>();
+        duplicateBranchSpecList.addAll(currentBranchSpecList);
+        duplicateBranchSpecList.addAll(currentBranchSpecList);
+        Collection<Revision> allRevisions = gitUtils.getMatchingRevisions(duplicateBranchSpecList, env);
+        // Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
+        assertThat(allRevisions, hasItem(remoteHeadRevision));
+        Set<String> actualNames = getActualNames(allRevisions);
+        Set<String> expectedNames = getExpectedNames(currentBranchSpecList);
+        assertThat(actualNames, is(expectedNames));
+    }
+
+    @Test
     public void testGetRevisionContainingBranch() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch(branchName);
         assertEquals(remoteHeadRevision, revision);
