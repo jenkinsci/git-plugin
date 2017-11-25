@@ -85,7 +85,7 @@ public class GitUtilsSortBranchTest {
     }
 
     @Before
-    public void addBranchesToSampleRepo() throws Exception {
+    public void createSampleRepo() throws Exception {
         String fileName = "README";
         sampleRepo.init();
         sampleRepo.git("tag", priorTagName1);
