@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
@@ -32,10 +33,13 @@ import hudson.util.StreamTaskListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -77,6 +81,12 @@ public class GitUtilsTest {
     private static final String PRIOR_TAG_NAME_2 = "prior-tag-2-annotated";
     private static final String HEAD_TAG_NAME_1 = "head-tag-1";
     private static final String HEAD_TAG_NAME_2 = "head-tag-2-annotated";
+    private final String[] tagNames = {
+        PRIOR_TAG_NAME_1,
+        PRIOR_TAG_NAME_2,
+        HEAD_TAG_NAME_1,
+        HEAD_TAG_NAME_2
+    };
 
     private static List<BranchSpec> branchSpecList = null;
     private static List<BranchSpec> priorBranchSpecList = null;
@@ -257,10 +267,6 @@ public class GitUtilsTest {
     }
 
     // @Test
-    public void testGetAllBranchRevisions() throws Exception {
-    }
-
-    // @Test
     public void testGetMatchingRevisions() throws Exception {
     }
 
@@ -281,5 +287,36 @@ public class GitUtilsTest {
         String[] expected = {"origin", "origin2", "origin1", "origin3", "origin4"};
         String[] actual = GitUtils.fixupNames(names, urls);
         assertThat(expected, is(actual));
+    }
+
+    private Set<String> getExpectedNames() {
+        Set<String> names = new HashSet<>(BRANCH_NAMES.length + tagNames.length + 1);
+        for (String branchName : BRANCH_NAMES) {
+            names.add("origin/" + branchName);
+        }
+        names.add("origin/" + OLDER_BRANCH_NAME);
+        for (String tagName : tagNames) {
+            names.add("refs/tags/" + tagName);
+        }
+        return names;
+    }
+
+    private Set<String> getActualNames(@NonNull Collection<Revision> revisions) {
+        Set<String> names = new HashSet<>(revisions.size());
+        for (Revision revision : revisions) {
+            for (Branch branch : revision.getBranches()) {
+                names.add(branch.getName());
+            }
+        }
+        return names;
+    }
+
+    @Test
+    public void testGetAllBranchRevisions() throws Exception {
+        Collection<Revision> allRevisions = gitUtils.getAllBranchRevisions();
+        assertThat(allRevisions, hasItem(headRevision));
+        Set<String> expectedNames = getExpectedNames();
+        Set<String> actualNames = getActualNames(allRevisions);
+        assertThat(actualNames, is(expectedNames));
     }
 }
