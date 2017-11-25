@@ -45,7 +45,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class GitUtilsSortiBranchTest {
+public class GitUtilsSortBranchTest {
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -80,7 +80,7 @@ public class GitUtilsSortiBranchTest {
     private GitUtils gitUtils;
     private GitClient gitClient;
 
-    public GitUtilsSortiBranchTest() {
+    public GitUtilsSortBranchTest() {
         this.env = new EnvVars();
     }
 
