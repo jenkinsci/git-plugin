@@ -59,7 +59,7 @@ public class GitUtilsTest {
     @ClassRule
     public static TemporaryFolder repoParentFolder = new TemporaryFolder();
 
-    private static final String[] BRANCH_NAMES = {
+    private static final String[] HEAD_BRANCH_NAMES = {
         "master",
         "sally-2",
         "baker-1",
@@ -130,7 +130,7 @@ public class GitUtilsTest {
         branchList.add(new Branch("master", headId));
         branchList.add(new Branch("refs/tags/" + HEAD_TAG_NAME_1, headId));
         branchList.add(new Branch("refs/tags/" + HEAD_TAG_NAME_2, headId));
-        for (String branchName : BRANCH_NAMES) {
+        for (String branchName : HEAD_BRANCH_NAMES) {
             if (!branchName.equals("master")) {
                 originRepo.git("checkout", "-b", branchName);
                 branchSpecList.add(new BranchSpec(branchName));
@@ -196,7 +196,7 @@ public class GitUtilsTest {
 
     @Test
     public void testGetRevisionContainingBranch() throws Exception {
-        for (String branchName : BRANCH_NAMES) {
+        for (String branchName : HEAD_BRANCH_NAMES) {
             Revision revision = gitUtils.getRevisionContainingBranch("origin/" + branchName);
             assertThat(revision, is(headRevision));
         }
@@ -307,8 +307,8 @@ public class GitUtilsTest {
     }
 
     private Set<String> getExpectedNames() {
-        Set<String> names = new HashSet<>(BRANCH_NAMES.length + tagNames.length + 1);
-        for (String branchName : BRANCH_NAMES) {
+        Set<String> names = new HashSet<>(HEAD_BRANCH_NAMES.length + tagNames.length + 1);
+        for (String branchName : HEAD_BRANCH_NAMES) {
             names.add("origin/" + branchName);
         }
         names.add("origin/" + OLDER_BRANCH_NAME);
