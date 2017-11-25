@@ -42,13 +42,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.StringUtils;
-
 import org.eclipse.jgit.lib.ObjectId;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
@@ -144,41 +141,8 @@ public class GitUtilsTest {
         this.listener = new hudson.util.LogTaskListener(logger, Level.ALL);
         listener.getLogger().println(LOGGING_STARTED);
 
-        clearLogSubstringExpectations();
-
         this.gitClient = Git.with(listener, env).in(gitDir).using("git").getClient();
         this.gitUtils = new GitUtils(listener, gitClient);
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            String messages = StringUtils.join(handler.getMessages(), ";");
-            assertTrue("Logging not started: " + messages, handler.containsMessageSubstring(LOGGING_STARTED));
-            for (String unexpectedLogSubstring : unexpectedLogSubstrings) {
-                assertFalse("Found unexpected '" + unexpectedLogSubstring + "' in " + messages,
-                        handler.containsMessageSubstring(unexpectedLogSubstring));
-            }
-            for (String expectedLogSubstring : expectedLogSubstrings) {
-                assertTrue("No expected '" + expectedLogSubstring + "' in " + messages,
-                        handler.containsMessageSubstring(expectedLogSubstring));
-            }
-        } finally {
-            handler.close();
-        }
-    }
-
-    private void addExpectedLogSubstring(@NonNull String expectedLogSubstring) {
-        this.expectedLogSubstrings.add(expectedLogSubstring);
-    }
-
-    private void addUnexpectedLogSubstring(@NonNull String unexpectedLogSubstring) {
-        this.unexpectedLogSubstrings.add(unexpectedLogSubstring);
-    }
-
-    private void clearLogSubstringExpectations() {
-        this.expectedLogSubstrings.clear();
-        this.unexpectedLogSubstrings.clear();
     }
 
     private Set<String> getExpectedNames(@NonNull Set<Branch> branches, @NonNull Set<String> tagNames) {
