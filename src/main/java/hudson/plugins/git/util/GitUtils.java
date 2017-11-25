@@ -216,7 +216,7 @@ public class GitUtils implements Serializable {
         c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/HEAD
         c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/origin/master
         c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/remotes/upstream/master
-        c4029dcfad8d29185d8c114f724f03aaf03687cd commit refs/tags/xyzzy
+        c4029dcfad8d29185d8c114f724f03aaf03687cd tag refs/tags/xyzzy
          */
         String[] output = result.split("[\\n\\r]");
         Pattern pattern = Pattern.compile(sha1.getName() + "\\s+\\w+\\s+refs/\\w+/(.*)");
