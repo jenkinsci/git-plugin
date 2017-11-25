@@ -135,6 +135,7 @@ public class GitUtilsSortBranchTest {
                 branchList.add(new Branch(branchName, headId));
             }
         }
+        sampleOriginRepo.git("checkout", "master"); // Master branch as current branch in origin repo
         headRevision = new Revision(headId, branchList);
     }
 
@@ -143,8 +144,6 @@ public class GitUtilsSortBranchTest {
         File gitDir = repoParentFolder.newFolder("test-repo");
         this.gitClient = Git.with(listener, env).in(gitDir).using("git").getClient();
         this.gitClient.init();
-        this.gitClient.setAuthor("Author User Name", "author.user.name@mail.example.com");
-        this.gitClient.setCommitter("Committer User Name", "committer.user.name@mail.example.com");
         this.gitClient.clone_().url(sampleOriginRepo.fileUrl()).repositoryName("origin").execute();
         this.gitClient.checkout("origin/master", "master");
         this.gitUtils = new GitUtils(listener, gitClient);
@@ -190,20 +189,6 @@ public class GitUtilsSortBranchTest {
 
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
     @Test
-    public void testGetRevisionContainingBranch_UseTagNamePrior1() throws Exception {
-        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_1);
-        assertThat(revision, is(priorRevision));
-    }
-
-    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
-    @Test
-    public void testGetRevisionContainingBranch_UseTagNamePrior2() throws Exception {
-        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_2);
-        assertThat(revision, is(priorRevision));
-    }
-
-    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
-    @Test
     public void testGetRevisionContainingBranch_UseTagNameHead1() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_1);
         assertThat(revision, is(headRevision));
@@ -214,6 +199,26 @@ public class GitUtilsSortBranchTest {
     public void testGetRevisionContainingBranch_UseTagNameHead2() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_2);
         assertThat(revision, is(headRevision));
+    }
+
+    @Test
+    public void testGetRevisionContainingBranch_OlderName() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("origin/" + OLDER_BRANCH_NAME);
+        assertThat(revision, is(priorRevision));
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNamePrior1() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_1);
+        assertThat(revision, is(priorRevision));
+    }
+
+    /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
+    @Test
+    public void testGetRevisionContainingBranch_UseTagNamePrior2() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_2);
+        assertThat(revision, is(priorRevision));
     }
 
     @Test
