@@ -194,6 +194,12 @@ public class GitUtilsTest {
         }
     }
 
+    @Test
+    public void testGetRevisionContainingBranch_OlderName() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("origin/" + OLDER_BRANCH_NAME);
+        assertThat(revision, is(priorRevision));
+    }
+
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
     @Test
     public void testGetRevisionContainingBranch_UseTagNameHead1() throws Exception {
@@ -206,12 +212,6 @@ public class GitUtilsTest {
     public void testGetRevisionContainingBranch_UseTagNameHead2() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_2);
         assertThat(revision, is(headRevision));
-    }
-
-    @Test
-    public void testGetRevisionContainingBranch_OlderName() throws Exception {
-        Revision revision = gitUtils.getRevisionContainingBranch("origin/" + OLDER_BRANCH_NAME);
-        assertThat(revision, is(priorRevision));
     }
 
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
