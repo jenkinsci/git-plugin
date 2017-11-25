@@ -189,7 +189,7 @@ public class SubmoduleCombinator {
 
     public List<Map<IndexEntry, Revision>> createCombinations(Map<IndexEntry, Collection<Revision>> moduleBranches) {
     
-        if (moduleBranches.keySet().size() == 0) return new ArrayList<>();
+        if (moduleBranches.keySet().isEmpty()) return new ArrayList<>();
 
         // Get an entry:
         List<Map<IndexEntry, Revision>> thisLevel = new ArrayList<>();
@@ -204,7 +204,7 @@ public class SubmoduleCombinator {
         }
 
         List<Map<IndexEntry, Revision>> children = createCombinations(moduleBranches);
-        if (children.size() == 0) return thisLevel;
+        if (children.isEmpty()) return thisLevel;
     
         // Merge the two together
         List<Map<IndexEntry, Revision>> result = new ArrayList<>();
