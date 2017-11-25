@@ -40,7 +40,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -153,31 +152,31 @@ public class GitUtilsSortBranchTest {
     @Test
     public void testSortBranchesForRevision_Revision_List() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList);
-        assertEquals(headRevision, result);
+        assertThat(result, is(headRevision));
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Prior() {
         Revision result = gitUtils.sortBranchesForRevision(priorRevision, priorBranchSpecList);
-        assertEquals(priorRevision, result);
+        assertThat(result, is(priorRevision));
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Mix_1() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, priorBranchSpecList);
-        assertEquals(headRevision, result);
+        assertThat(result, is(headRevision));
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Mix_2() {
         Revision result = gitUtils.sortBranchesForRevision(priorRevision, branchSpecList);
-        assertEquals(priorRevision, result);
+        assertThat(result, is(priorRevision));
     }
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Prior_3_args() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, env);
-        assertEquals(headRevision, result);
+        assertThat(result, is(headRevision));
     }
 
     @Test
