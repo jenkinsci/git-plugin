@@ -57,8 +57,8 @@ public class GitUtilsTest {
     @ClassRule
     public static GitSampleRepoRule sampleOriginRepo = new GitSampleRepoRule();
 
-    @Rule
-    public TemporaryFolder repoParentFolder = new TemporaryFolder();
+    @ClassRule
+    public static TemporaryFolder repoParentFolder = new TemporaryFolder();
 
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -92,17 +92,13 @@ public class GitUtilsTest {
     private static List<BranchSpec> priorBranchSpecList = null;
     private static List<Branch> branchList = null;
 
-    private final EnvVars env;
-    private final TaskListener listener = StreamTaskListener.NULL;
+    private static final EnvVars ENV = new EnvVars();
+    private static final TaskListener NULL_LISTENER = StreamTaskListener.NULL;
 
     private GitUtils gitUtils;
-    private GitClient gitClient;
+    private static GitClient gitClient;
 
     private static final Random RANDOM = new Random();
-
-    public GitUtilsTest() {
-        this.env = new EnvVars();
-    }
 
     @BeforeClass
     public static void createSampleOriginRepo() throws Exception {
@@ -147,16 +143,17 @@ public class GitUtilsTest {
         }
         sampleOriginRepo.git("checkout", "master"); // Master branch as current branch in origin repo
         headRevision = new Revision(headId, branchList);
+
+        File gitDir = repoParentFolder.newFolder("test-repo");
+        gitClient = Git.with(NULL_LISTENER, ENV).in(gitDir).using("git").getClient();
+        gitClient.init();
+        gitClient.clone_().url(sampleOriginRepo.fileUrl()).repositoryName("origin").execute();
+        gitClient.checkout("origin/master", "master");
     }
 
     @Before
-    public void cloneSampleRepo() throws Exception {
-        File gitDir = repoParentFolder.newFolder("test-repo");
-        this.gitClient = Git.with(listener, env).in(gitDir).using("git").getClient();
-        this.gitClient.init();
-        this.gitClient.clone_().url(sampleOriginRepo.fileUrl()).repositoryName("origin").execute();
-        this.gitClient.checkout("origin/master", "master");
-        this.gitUtils = new GitUtils(listener, gitClient);
+    public void createGitUtils() throws Exception {
+        gitUtils = new GitUtils(NULL_LISTENER, gitClient);
     }
 
     @Test
@@ -185,7 +182,7 @@ public class GitUtilsTest {
 
     @Test
     public void testSortBranchesForRevision_Revision_List_Prior_3_args() {
-        Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, env);
+        Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, ENV);
         assertThat(result, is(headRevision));
     }
 
@@ -264,6 +261,22 @@ public class GitUtilsTest {
         filteredRevisions.add(headRevision);
         List<Revision> result = gitUtils.filterTipBranches(multiRevisionList);
         assertThat(result, is(filteredRevisions));
+    }
+
+    @Test
+    public void testFilterTipBranchesNoRemovals() throws Exception {
+        Collection<Revision> headRevisionList = new ArrayList<>();
+        headRevisionList.add(headRevision);
+        List<Revision> result = gitUtils.filterTipBranches(headRevisionList);
+        assertThat(result, is(headRevisionList));
+    }
+
+    @Test
+    public void testFilterTipBranchesNoRemovalsNonTip() throws Exception {
+        Collection<Revision> priorRevisionList = new ArrayList<>();
+        priorRevisionList.add(priorRevision);
+        List<Revision> result = gitUtils.filterTipBranches(priorRevisionList);
+        assertThat(result, is(priorRevisionList));
     }
 
     // @Test
