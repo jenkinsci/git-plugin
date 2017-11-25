@@ -219,7 +219,8 @@ public class GitUtils implements Serializable {
         c4029dcfad8d29185d8c114f724f03aaf03687cd tag refs/tags/xyzzy
          */
         String[] output = result.split("[\\n\\r]");
-        Pattern pattern = Pattern.compile(sha1.getName() + "\\s+\\w+\\s+refs/\\w+/(.*)");
+        String patternString = sha1.getName() + "\\s+\\w+\\s+refs/\\w+/(.*)";
+        Pattern pattern = Pattern.compile(patternString);
         List<Branch> branches = new ArrayList<>();
         if (output.length == 0) {
             return new Revision(sha1);
@@ -235,8 +236,8 @@ public class GitUtils implements Serializable {
 
                 if (log) {
                     String message = MessageFormat.format(
-                            "git for-each-ref --points-at {0} output not matched in line: {1}",
-                            sha1.getName(), line);
+                            "git for-each-ref --points-at {0} output not matched in line: {1} with pattern string: {2}",
+                            sha1.getName(), line, patternString);
                     LOGGER.log(Level.WARNING, message);
                 }
                 continue;
