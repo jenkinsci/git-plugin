@@ -107,6 +107,8 @@ public class GitUtilsSortBranchTest {
         sampleOriginRepo.git("checkout", "-b", OLDER_BRANCH_NAME);
         branchList = new ArrayList<>();
         branchList.add(new Branch(OLDER_BRANCH_NAME, priorHeadId));
+        branchList.add(new Branch("refs/tags/" + PRIOR_TAG_NAME_1, priorHeadId));
+        branchList.add(new Branch("refs/tags/" + PRIOR_TAG_NAME_2, priorHeadId));
         priorRevision = new Revision(priorHeadId, branchList);
         priorBranchSpecList = new ArrayList<>();
         priorBranchSpecList.add(new BranchSpec(OLDER_BRANCH_NAME));
@@ -121,7 +123,11 @@ public class GitUtilsSortBranchTest {
         branchSpecList = new ArrayList<>();
         branchList = new ArrayList<>();
         branchSpecList.add(new BranchSpec("master"));
+        branchSpecList.add(new BranchSpec("refs/tags/" + HEAD_TAG_NAME_1));
+        branchSpecList.add(new BranchSpec("refs/tags/" + HEAD_TAG_NAME_2));
         branchList.add(new Branch("master", headId));
+        branchList.add(new Branch("refs/tags/" + HEAD_TAG_NAME_1, headId));
+        branchList.add(new Branch("refs/tags/" + HEAD_TAG_NAME_2, headId));
         for (String branchName : BRANCH_NAMES) {
             if (!branchName.equals("master")) {
                 sampleOriginRepo.git("checkout", "-b", branchName);
@@ -178,7 +184,7 @@ public class GitUtilsSortBranchTest {
     public void testGetRevisionContainingBranch() throws Exception {
         for (String branchName : BRANCH_NAMES) {
             Revision revision = gitUtils.getRevisionContainingBranch("origin/" + branchName);
-            assertEquals("Branch name '" + branchName + "' revision not found", headRevision, revision);
+            assertThat(revision, is(headRevision));
         }
     }
 
@@ -186,28 +192,28 @@ public class GitUtilsSortBranchTest {
     @Test
     public void testGetRevisionContainingBranch_UseTagNamePrior1() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_1);
-        assertEquals("Tag name '" + PRIOR_TAG_NAME_1 + "' revision not found", priorRevision, revision);
+        assertThat(revision, is(priorRevision));
     }
 
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
     @Test
     public void testGetRevisionContainingBranch_UseTagNamePrior2() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_2);
-        assertEquals("Tag name '" + PRIOR_TAG_NAME_2 + "' revision not found", priorRevision, revision);
+        assertThat(revision, is(priorRevision));
     }
 
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
     @Test
     public void testGetRevisionContainingBranch_UseTagNameHead1() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_1);
-        assertEquals("Tag name '" + HEAD_TAG_NAME_1 + "' revision not found", headRevision, revision);
+        assertThat(revision, is(headRevision));
     }
 
     /* Tags are searched in getRevisionContainingBranch beginning with 3.2.0 */
     @Test
     public void testGetRevisionContainingBranch_UseTagNameHead2() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + HEAD_TAG_NAME_2);
-        assertEquals("Tag name '" + HEAD_TAG_NAME_2 + "' revision not found", headRevision, revision);
+        assertThat(revision, is(headRevision));
     }
 
     @Test
