@@ -37,6 +37,7 @@ import java.util.Random;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jgit.lib.ObjectId;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.assertEquals;
@@ -219,6 +220,18 @@ public class GitUtilsSortBranchTest {
     public void testGetRevisionContainingBranch_UseTagNamePrior2() throws Exception {
         Revision revision = gitUtils.getRevisionContainingBranch("refs/tags/" + PRIOR_TAG_NAME_2);
         assertThat(revision, is(priorRevision));
+    }
+
+    @Test
+    public void testGetRevisionContainingBranch_InvalidBranchName() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("origin/not-a-valid-branch-name");
+        assertThat(revision, is(nullValue(Revision.class)));
+    }
+
+    @Test
+    public void testGetRevisionContainingBranch_InvalidTagName() throws Exception {
+        Revision revision = gitUtils.getRevisionContainingBranch("ref/tags/not-a-valid-tag-name");
+        assertThat(revision, is(nullValue(Revision.class)));
     }
 
     @Test
