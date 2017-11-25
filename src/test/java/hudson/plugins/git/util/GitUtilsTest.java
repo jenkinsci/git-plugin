@@ -48,20 +48,16 @@ import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class GitUtilsTest {
 
     @ClassRule
-    public static GitSampleRepoRule sampleOriginRepo = new GitSampleRepoRule();
+    public static GitSampleRepoRule originRepo = new GitSampleRepoRule();
 
     @ClassRule
     public static TemporaryFolder repoParentFolder = new TemporaryFolder();
-
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     private static final String[] BRANCH_NAMES = {
         "master",
@@ -103,14 +99,14 @@ public class GitUtilsTest {
     @BeforeClass
     public static void createSampleOriginRepo() throws Exception {
         String fileName = "README";
-        sampleOriginRepo.init();
-        sampleOriginRepo.git("config", "user.name", "Author User Name");
-        sampleOriginRepo.git("config", "user.email", "author.user.name@mail.example.com");
-        sampleOriginRepo.git("tag", PRIOR_TAG_NAME_1);
-        sampleOriginRepo.git("tag", "-a", PRIOR_TAG_NAME_2, "-m", "Annotated tag " + PRIOR_TAG_NAME_2);
-        priorHeadId = ObjectId.fromString(sampleOriginRepo.head());
+        originRepo.init();
+        originRepo.git("config", "user.name", "Author User Name");
+        originRepo.git("config", "user.email", "author.user.name@mail.example.com");
+        originRepo.git("tag", PRIOR_TAG_NAME_1);
+        originRepo.git("tag", "-a", PRIOR_TAG_NAME_2, "-m", "Annotated tag " + PRIOR_TAG_NAME_2);
+        priorHeadId = ObjectId.fromString(originRepo.head());
 
-        sampleOriginRepo.git("checkout", "-b", OLDER_BRANCH_NAME);
+        originRepo.git("checkout", "-b", OLDER_BRANCH_NAME);
         branchList = new ArrayList<>();
         branchList.add(new Branch(OLDER_BRANCH_NAME, priorHeadId));
         branchList.add(new Branch("refs/tags/" + PRIOR_TAG_NAME_1, priorHeadId));
@@ -119,13 +115,13 @@ public class GitUtilsTest {
         priorBranchSpecList = new ArrayList<>();
         priorBranchSpecList.add(new BranchSpec(OLDER_BRANCH_NAME));
 
-        sampleOriginRepo.git("checkout", "master");
-        sampleOriginRepo.write(fileName, "This is the README file " + RANDOM.nextInt());
-        sampleOriginRepo.git("add", fileName);
-        sampleOriginRepo.git("commit", "-m", "Adding " + fileName, fileName);
-        sampleOriginRepo.git("tag", HEAD_TAG_NAME_1);
-        sampleOriginRepo.git("tag", "-a", HEAD_TAG_NAME_2, "-m", "Annotated tag " + HEAD_TAG_NAME_2);
-        headId = ObjectId.fromString(sampleOriginRepo.head());
+        originRepo.git("checkout", "master");
+        originRepo.write(fileName, "This is the README file " + RANDOM.nextInt());
+        originRepo.git("add", fileName);
+        originRepo.git("commit", "-m", "Adding " + fileName, fileName);
+        originRepo.git("tag", HEAD_TAG_NAME_1);
+        originRepo.git("tag", "-a", HEAD_TAG_NAME_2, "-m", "Annotated tag " + HEAD_TAG_NAME_2);
+        headId = ObjectId.fromString(originRepo.head());
         branchSpecList = new ArrayList<>();
         branchList = new ArrayList<>();
         branchSpecList.add(new BranchSpec("master"));
@@ -136,18 +132,18 @@ public class GitUtilsTest {
         branchList.add(new Branch("refs/tags/" + HEAD_TAG_NAME_2, headId));
         for (String branchName : BRANCH_NAMES) {
             if (!branchName.equals("master")) {
-                sampleOriginRepo.git("checkout", "-b", branchName);
+                originRepo.git("checkout", "-b", branchName);
                 branchSpecList.add(new BranchSpec(branchName));
                 branchList.add(new Branch(branchName, headId));
             }
         }
-        sampleOriginRepo.git("checkout", "master"); // Master branch as current branch in origin repo
+        originRepo.git("checkout", "master"); // Master branch as current branch in origin repo
         headRevision = new Revision(headId, branchList);
 
         File gitDir = repoParentFolder.newFolder("test-repo");
         gitClient = Git.with(NULL_LISTENER, ENV).in(gitDir).using("git").getClient();
         gitClient.init();
-        gitClient.clone_().url(sampleOriginRepo.fileUrl()).repositoryName("origin").execute();
+        gitClient.clone_().url(originRepo.fileUrl()).repositoryName("origin").execute();
         gitClient.checkout("origin/master", "master");
     }
 
@@ -184,6 +180,18 @@ public class GitUtilsTest {
     public void testSortBranchesForRevision_Revision_List_Prior_3_args() {
         Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, ENV);
         assertThat(result, is(headRevision));
+    }
+
+    @Test
+    public void testSortBranchesForRevision_3args() {
+        Revision result = gitUtils.sortBranchesForRevision(headRevision, branchSpecList, ENV);
+        assertThat(result, is(headRevision));
+    }
+
+    @Test
+    public void testSortBranchesForRevision_3args_Prior() {
+        Revision result = gitUtils.sortBranchesForRevision(priorRevision, branchSpecList, ENV);
+        assertThat(result, is(priorRevision));
     }
 
     @Test
@@ -281,10 +289,6 @@ public class GitUtilsTest {
 
     // @Test
     public void testGetMatchingRevisions() throws Exception {
-    }
-
-    // @Test
-    public void testSortBranchesForRevision_3args() {
     }
 
     @Test
