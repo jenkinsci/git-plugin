@@ -29,7 +29,7 @@ import static org.junit.Assume.assumeThat;
 public class GitSCMBuilderTest {
 
     private GitSCMBuilder<?> instance = new GitSCMBuilder<>(
-            new SCMHead("master"),
+            new GitBranchSCMHead("master"),
             null,
             "http://git.test/repo.git",
             null);
@@ -59,7 +59,7 @@ public class GitSCMBuilderTest {
         assertThat(scm.getExtensions().get(BuildChooserSetting.class).getBuildChooser(),
                 instanceOf(InverseBuildChooser.class));
         instance.withRevision(
-                new AbstractGitSCMSource.SCMRevisionImpl(instance.head(), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"));
+                new GitBranchSCMRevision((GitBranchSCMHead)instance.head(), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"));
         scm = instance.build();
         assertThat(scm.getBrowser(), is(nullValue()));
         assertThat(scm.getUserRemoteConfigs(), contains(allOf(

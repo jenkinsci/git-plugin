@@ -67,7 +67,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
     public void correctGitToolIsUsed() throws Exception {
         try {
             // Should throw exception confirming that Git#using was used correctly
-            gitSCMSource.retrieve(new SCMHead("master"), TaskListener.NULL);
+            gitSCMSource.retrieve(new GitBranchSCMHead("master"), TaskListener.NULL);
         } catch (GitToolNotSpecified e) {
             Assert.fail("Git client was constructed with arbitrary git tool");
         }

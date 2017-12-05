@@ -514,9 +514,10 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
                     (AbstractGitSCMSource.SCMRevisionImpl) revision)));
         }
+        SCMHead head = head();
         return new GitSCM(
                 asRemoteConfigs(),
-                Collections.singletonList(new BranchSpec(head().getName())),
+                Collections.singletonList(new BranchSpec(branchSpecOf(head(), remoteName()))),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 browser(), gitTool(),
                 extensions);
@@ -606,4 +607,16 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         }
     }
 
+    /**
+     * Returns the {@link BranchSpec#getName()} for a specific {@link SCMHead}.
+     *
+     * @param head the {@link SCMHead}
+     * @param remoteName the remote name.
+     * @return the {@link BranchSpec#getName()}
+     * @since 3.7.0
+     */
+    public static String branchSpecOf(SCMHead head, String remoteName) {
+        return head instanceof BranchSpecSCMHead ? ((BranchSpecSCMHead) head).getBranchSpec().replaceAll(
+                AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName) : head.getName();
+    }
 }

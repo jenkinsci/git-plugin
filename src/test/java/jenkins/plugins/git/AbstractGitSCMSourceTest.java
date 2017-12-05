@@ -503,8 +503,8 @@ public class AbstractGitSCMSourceTest {
                 )
         ));
 
-        SCMHead head = new SCMHead("master");
-        SCMRevision revision = new AbstractGitSCMSource.SCMRevisionImpl(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
+        GitBranchSCMHead head = new GitBranchSCMHead("master");
+        SCMRevision revision = new GitBranchSCMRevision(head, "beaded4deed2bed4feed2deaf78933d0f97a5a34");
 
         // because we are ignoring push notifications we also ignore commits
         extensions.add(new IgnoreNotifyCommit());
@@ -542,7 +542,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.init();
 
         GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "upstream", null, "*", "", true);
-        SCMHead head = new SCMHead("master");
+        GitBranchSCMHead head = new GitBranchSCMHead("master");
         GitSCM scm = (GitSCM) source.build(head);
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
         assertEquals(1, configs.size());
@@ -556,7 +556,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.init();
 
         GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", null, "+refs/heads/*:refs/remotes/origin/*          +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", "*", "", true);
-        SCMHead head = new SCMHead("master");
+        GitBranchSCMHead head = new GitBranchSCMHead("master");
         GitSCM scm = (GitSCM) source.build(head);
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
 

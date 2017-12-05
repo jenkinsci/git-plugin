@@ -115,7 +115,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"));
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -137,10 +137,10 @@ public class GitSCMFileSystemTest {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMRevision revision = source.fetch(new SCMHead("dev"), null);
+        SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"), revision);
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
@@ -178,11 +178,11 @@ public class GitSCMFileSystemTest {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMRevision revision = source.fetch(new SCMHead("dev"), null);
+        SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         final long fileSystemAllowedOffset = isWindows() ? 4000 : 1500;
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"), revision);
         long currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
         long lastModified = fs.lastModified();
         assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
@@ -203,7 +203,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("dir/subdir/file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"));
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"));
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
@@ -240,7 +240,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("add", "file", "dir/file3");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"));
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"));
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
@@ -273,7 +273,7 @@ public class GitSCMFileSystemTest {
 
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
         AbstractGitSCMSource.SCMRevisionImpl rev261 =
-                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
+                new GitBranchSCMRevision(new GitBranchSCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -287,13 +287,13 @@ public class GitSCMFileSystemTest {
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
-        AbstractGitSCMSource.SCMRevisionImpl rev261 =
-                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
+        GitBranchSCMRevision rev261 =
+                new GitBranchSCMRevision(new GitBranchSCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS = new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
 
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
-        AbstractGitSCMSource.SCMRevisionImpl rev260 =
-                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
+        GitBranchSCMRevision rev260 =
+                new GitBranchSCMRevision(new GitBranchSCMHead("origin"), git260.getName());
 
         assertThat(git260, not(is(git261)));
 
@@ -308,13 +308,13 @@ public class GitSCMFileSystemTest {
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
 
         ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
-        AbstractGitSCMSource.SCMRevisionImpl rev260 =
-                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
+        GitBranchSCMRevision rev260 =
+                new GitBranchSCMRevision(new GitBranchSCMHead("origin"), git260.getName());
         GitSCMFileSystem gitPlugin260FS = new GitSCMFileSystem(client, "origin", git260.getName(), rev260);
 
         ObjectId git261 = client.revParse(GIT_2_6_1_TAG);
-        AbstractGitSCMSource.SCMRevisionImpl rev261 =
-                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git261.getName());
+        GitBranchSCMRevision rev261 =
+                new GitBranchSCMRevision(new GitBranchSCMHead("origin"), git261.getName());
         GitSCMFileSystem gitPlugin261FS =
                 new GitSCMFileSystem(client, "origin", git261.getName(), rev261);
         assertEquals(git261.getName(), gitPlugin261FS.getRevision().getHash());

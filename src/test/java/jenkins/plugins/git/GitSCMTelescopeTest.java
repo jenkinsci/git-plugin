@@ -215,7 +215,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     @Test
     public void testGetTimestamp_3args_2() throws Exception {
-        SCMHead head = new SCMHead("git-tag-name");
+        SCMHead head = new GitBranchSCMHead("git-tag-name");
         assertThat(telescope.getTimestamp(remote, credentials, head), is(12345L));
     }
 
@@ -229,9 +229,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         SCMSource source = new GitSCMSource(remote);
         SCMSourceOwner sourceOwner = new SCMSourceOwnerImpl();
         source.setOwner(sourceOwner);
-        SCMHead head = new SCMHead("some-name");
+        GitBranchSCMHead head = new GitBranchSCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitBranchSCMRevision(head, SHA1);
         SCMFileSystem fileSystem = telescope.build(source, head, rev);
         assertThat(fileSystem.getRevision(), is(rev));
         assertThat(fileSystem.isFixedRevision(), is(true));
@@ -240,7 +240,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     @Test
     public void testBuild_3args_1NoOwner() throws Exception {
         SCMSource source = new GitSCMSource(remote);
-        SCMHead head = new SCMHead("some-name");
+        GitBranchSCMHead head = new GitBranchSCMHead("some-name");
         SCMRevision rev = null;
         // When source has no owner, build returns null
         assertThat(telescope.build(source, head, rev), is(nullValue()));
@@ -250,9 +250,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     public void testBuild_3args_2() throws Exception {
         Item owner = new ItemImpl();
         SCM scm = getSingleBranchSource(remote);
-        SCMHead head = new SCMHead("some-name");
+        GitBranchSCMHead head = new GitBranchSCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitBranchSCMRevision(head, SHA1);
         SCMFileSystem fileSystem = telescope.build(owner, scm, rev);
         assertThat(fileSystem.getRevision(), is(rev));
         assertThat(fileSystem.isFixedRevision(), is(true));
@@ -260,9 +260,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     @Test
     public void testBuild_4args() throws Exception {
-        SCMHead head = new SCMHead("some-name");
+        GitBranchSCMHead head = new GitBranchSCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitBranchSCMRevision(head, SHA1);
         SCMFileSystem fileSystem = telescope.build(remote, credentials, head, rev);
         assertThat(fileSystem, is(notNullValue()));
         assertThat(fileSystem.getRevision(), is(rev));
@@ -271,9 +271,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     @Test
     public void testGetRevision_3args_1() throws Exception {
-        SCMHead head = new SCMHead("some-name");
+        GitBranchSCMHead head = new GitBranchSCMHead("some-name");
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitBranchSCMRevision(head, SHA1);
         GitSCMTelescope telescopeWithRev = new GitSCMTelescopeImpl(remote, rev);
         String refOrHash = "master";
         assertThat(telescopeWithRev.getRevision(remote, credentials, refOrHash), is(rev));
@@ -281,9 +281,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
 
     @Test
     public void testGetRevision_3args_2() throws Exception {
-        SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
+        GitTagSCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitTagSCMRevision(head, SHA1);
         GitSCMTelescope telescopeWithRev = new GitSCMTelescopeImpl(remote, rev);
         assertThat(telescopeWithRev.getRevision(remote, credentials, head), is(rev));
     }
@@ -299,9 +299,9 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     @Test
     public void testGetRevisions_3argsWithRev() throws Exception {
         Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
-        SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
+        GitTagSCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        SCMRevision rev = new GitTagSCMRevision(head, SHA1);
         GitSCMTelescope telescopeWithRev = new GitSCMTelescopeImpl(remote, rev);
         Iterable<SCMRevision> revisions = telescopeWithRev.getRevisions(remote, credentials, referenceTypes);
         assertThat(revisions, is(notNullValue()));
@@ -313,8 +313,8 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
     @Test
     public void testGetRevisions_String_StandardCredentials() throws Exception {
         String SHA1 = "0123456789abcdef0123456789abcdef01234567";
-        SCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
-        SCMRevision rev = new AbstractGitSCMSource.SCMRevisionImpl(head, SHA1);
+        GitTagSCMHead head = new GitTagSCMHead("git-tag-name", 56789L);
+        SCMRevision rev = new GitTagSCMRevision(head, SHA1);
         GitSCMTelescope telescopeWithRev = new GitSCMTelescopeImpl(remote, rev);
         Iterable<SCMRevision> revisions = telescopeWithRev.getRevisions(remote, credentials);
         assertThat(revisions, is(notNullValue()));

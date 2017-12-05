@@ -25,39 +25,32 @@ package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.mixin.TagSCMHead;
 import org.eclipse.jgit.lib.Constants;
 
 /**
- * Represents a Git Tag.
+ * Represents a git reference outside of either {@link Constants#R_HEADS} or {@link Constants#R_TAGS}.
  *
- * @since TODO
+ * @since 3.7.0
  */
-public class GitTagSCMHead extends SCMHead implements TagSCMHead, BranchSpecSCMHead {
+public class GitRefSCMHead extends SCMHead implements BranchSpecSCMHead {
+
     /**
-     * The timestamp of the tag, for lightweight tags this should be the last commit, for annotated
-     * tags this should be the tag date.
+     * The reference, will have {@link AbstractGitSCMSource#REF_SPEC_REMOTE_NAME_PLACEHOLDER} substitution
+     * applied.
      */
-    private final long timestamp;
+    @NonNull
+    private final String branchSpec;
 
     /**
      * Constructor.
      *
-     * @param name      the name.
-     * @param timestamp the timestamp of the tag, for lightweight tags this should be the last commit, for annotated
-     *                  tags this should be the tag date.
+     * @param name the name.
+     * @param branchSpec  the branchSpec name, will have {@link AbstractGitSCMSource#REF_SPEC_REMOTE_NAME_PLACEHOLDER} substitution
+     *             applied.
      */
-    public GitTagSCMHead(@NonNull String name, long timestamp) {
+    public GitRefSCMHead(@NonNull String name, @NonNull String branchSpec) {
         super(name);
-        this.timestamp = timestamp;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getTimestamp() {
-        return timestamp;
+        this.branchSpec = branchSpec;
     }
 
     /**
@@ -65,6 +58,6 @@ public class GitTagSCMHead extends SCMHead implements TagSCMHead, BranchSpecSCMH
      */
     @Override
     public String getBranchSpec() {
-        return Constants.R_TAGS + getName();
+        return branchSpec;
     }
 }

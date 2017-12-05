@@ -24,47 +24,20 @@
 package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.mixin.TagSCMHead;
-import org.eclipse.jgit.lib.Constants;
 
 /**
- * Represents a Git Tag.
+ * Represents the revision of a {@link GitBranchSCMHead}.
  *
- * @since TODO
+ * @since 3.7.0
  */
-public class GitTagSCMHead extends SCMHead implements TagSCMHead, BranchSpecSCMHead {
-    /**
-     * The timestamp of the tag, for lightweight tags this should be the last commit, for annotated
-     * tags this should be the tag date.
-     */
-    private final long timestamp;
-
+public class GitBranchSCMRevision extends AbstractGitSCMSource.SCMRevisionImpl {
     /**
      * Constructor.
      *
-     * @param name      the name.
-     * @param timestamp the timestamp of the tag, for lightweight tags this should be the last commit, for annotated
-     *                  tags this should be the tag date.
+     * @param head the head.
+     * @param hash the revision hash.
      */
-    public GitTagSCMHead(@NonNull String name, long timestamp) {
-        super(name);
-        this.timestamp = timestamp;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getBranchSpec() {
-        return Constants.R_TAGS + getName();
+    public GitBranchSCMRevision(@NonNull GitBranchSCMHead head, @NonNull String hash) {
+        super(head, hash);
     }
 }

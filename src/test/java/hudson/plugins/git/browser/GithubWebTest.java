@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.plugins.git.GitBranchSCMHead;
 import jenkins.scm.api.SCMHead;
 import org.eclipse.jgit.transport.RefSpec;
 
@@ -145,7 +146,7 @@ public class GithubWebTest {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/", "+refs/heads/*:refs/remotes/origin/*", "+refs/pull/*/merge:refs/remotes/origin/pr/*");
     }
     private void assertGuessURL(String remote, String web, String... refSpecs) {
-        RepositoryBrowser<?> guess = new MockSCMSource(remote, refSpecs).build(new SCMHead("master")).guessBrowser();
+        RepositoryBrowser<?> guess = new MockSCMSource(remote, refSpecs).build(new GitBranchSCMHead("master")).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
         assertEquals(web, actual);
     }

@@ -94,7 +94,7 @@ public class GitSCMSourceTest {
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
                         .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
-        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new SCMHead("master"))));
+        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
         verify(scmSourceOwner, times(0)).onSCMSourceUpdated(gitSCMSource);
 
     }
@@ -151,14 +151,14 @@ public class GitSCMSourceTest {
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         Map<SCMHead, SCMRevision> result = instance.fetch(SCMHeadObserver.collect(), null).result();
         assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                new GitBranchSCMRevision(  // should get migrated to GitBranchSCMRevision
+                        new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                 ),
                 new GitTagSCMRevision(
                         new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
@@ -167,14 +167,14 @@ public class GitSCMSourceTest {
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
         result = instance.fetch(SCMHeadObserver.collect(), null).result();
         assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                 )));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
@@ -198,11 +198,11 @@ public class GitSCMSourceTest {
         Map<SCMHead, SCMRevision> result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"),
                 SCMHeadObserver.collect(), null).result();
         assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 ),
                 new GitTagSCMRevision(
                         new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
@@ -210,21 +210,21 @@ public class GitSCMSourceTest {
         result = instance.fetch(new MySCMSourceCriteria("README.md"),
                 SCMHeadObserver.collect(), null).result();
         assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                 )));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
         result = instance.fetch(new MySCMSourceCriteria("Jenkinsfile"), SCMHeadObserver.collect(), null).result();
         assertThat(result.values(), Matchers.<SCMRevision>containsInAnyOrder(
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                 ),
-                new AbstractGitSCMSource.SCMRevisionImpl(
-                        new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                new GitBranchSCMRevision(
+                        new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                 )));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
@@ -267,11 +267,11 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(instance.fetch(new SCMHead("foo"), null),
+        assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch(new SCMHead("bar"), null),
+        assertThat(instance.fetch(new GitBranchSCMHead("bar"), null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
-        assertThat(instance.fetch(new SCMHead("manchu"), null),
+        assertThat(instance.fetch(new GitBranchSCMHead("manchu"), null),
                 hasProperty("hash", is("a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
         assertThat(instance.fetch(new GitTagSCMHead("v1.0.0", 0L), null),
                 hasProperty("hash", is("315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
@@ -323,9 +323,9 @@ public class GitSCMSourceTest {
         when(owner.getActions(GitRemoteHeadRefAction.class))
                 .thenReturn(Collections.singletonList((GitRemoteHeadRefAction) actions.get(0)));
 
-        assertThat(instance.fetchActions(new SCMHead("foo"), null, null), is(Collections.<Action>emptyList()));
-        assertThat(instance.fetchActions(new SCMHead("bar"), null, null), is(Collections.<Action>emptyList()));
-        assertThat(instance.fetchActions(new SCMHead("manchu"), null, null), contains(
+        assertThat(instance.fetchActions(new GitBranchSCMHead("foo"), null, null), is(Collections.<Action>emptyList()));
+        assertThat(instance.fetchActions(new GitBranchSCMHead("bar"), null, null), is(Collections.<Action>emptyList()));
+        assertThat(instance.fetchActions(new GitBranchSCMHead("manchu"), null, null), contains(
                 instanceOf(PrimaryInstanceMetadataAction.class)));
         assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
                 is(Collections.<Action>emptyList()));
@@ -428,16 +428,16 @@ public class GitSCMSourceTest {
                 throws IOException, InterruptedException {
             switch (refOrHash) {
                 case "refs/heads/foo":
-                    return new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                    return new GitBranchSCMRevision(
+                            new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                     );
                 case "refs/heads/bar":
                     return new AbstractGitSCMSource.SCMRevisionImpl(
                             new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                     );
                 case "refs/heads/manchu":
-                    return new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                    return new GitBranchSCMRevision(
+                            new GitBranchSCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                     );
                 case "refs/tags/v1.0.0":
                     return new GitTagSCMRevision(
@@ -453,14 +453,14 @@ public class GitSCMSourceTest {
                                                   @NonNull Set<ReferenceType> referenceTypes)
                 throws IOException, InterruptedException {
             return Arrays.<SCMRevision>asList(
-                    new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
+                    new GitBranchSCMRevision(
+                            new GitBranchSCMHead("foo"), "6769413a79793e242c73d7377f0006c6aea95480"
                     ),
-                    new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
+                    new GitBranchSCMRevision(
+                            new GitBranchSCMHead("bar"), "3f0b897057d8b43d3b9ff55e3fdefbb021493470"
                     ),
-                    new AbstractGitSCMSource.SCMRevisionImpl(
-                            new SCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
+                    new GitBranchSCMRevision(
+                            new GitBranchSCMHead("manchu"), "a94782d8d90b56b7e0d277c04589bd2e6f70d2cc"
                     ),
                     new GitTagSCMRevision(
                             new GitTagSCMHead("v1.0.0", 15086193840000L), "315fd8b5cae3363b29050f1aabfc27c985e22f7e"
