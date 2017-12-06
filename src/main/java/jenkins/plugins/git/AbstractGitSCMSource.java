@@ -815,13 +815,20 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   try {
                                       objectId = client.revParse(revision);
                                       hash = objectId.name();
-                                      List<Branch> branches = client.getBranchesContaining(hash, false);
-                                      if (branches.isEmpty()) {
+                                      String candidatePrefix = Constants.R_REMOTES.substring(Constants.R_REFS.length())
+                                              + context.remoteName() + "/";
+                                      String name = null;
+                                      for (Branch b: client.getBranchesContaining(hash, true)) {
+                                          if (b.getName().startsWith(candidatePrefix)) {
+                                              name = b.getName().substring(candidatePrefix.length());
+                                              break;
+                                          }
+                                      }
+                                      if (name == null) {
                                           listener.getLogger().printf("Could not find a branch containing commit %s%n",
                                                   hash);
                                           return null;
                                       }
-                                      String name = branches.get(0).getName();
                                       listener.getLogger()
                                               .printf("Selected match: %s revision %s%n", name, hash);
                                       return new SCMRevisionImpl(new SCMHead(name), hash);
