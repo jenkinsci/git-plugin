@@ -819,7 +819,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                       if (branches.isEmpty()) {
                                           listener.getLogger().printf("Could not find a branch containing commit %s%n",
                                                   hash);
-                                          return null;
+                                          return new SCMRevisionImpl(new SCMHead(/* arbitrary */revision), hash);
                                       }
                                       String name = branches.get(0).getName();
                                       listener.getLogger()

@@ -406,6 +406,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
@@ -426,6 +427,11 @@ public class AbstractGitSCMSourceTest {
         assertNull(fileAt("\n", run, source, listener));
         assertThat(source.fetchRevisions(listener), hasItems("master", "dev", "v1"));
         // we do not care to return commit hashes or other references
+        // Commit hashes which are not heads:
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        assertEquals("v3", fileAt(v3, run, source, listener));
+        assertEquals("v3", fileAt(v3.substring(0, 7), run, source, listener));
     }
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener);
