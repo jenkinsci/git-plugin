@@ -23,7 +23,6 @@
  */
 package hudson.plugins.git;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import java.util.ArrayList;
@@ -53,43 +52,28 @@ public class GitSCMBrowserTest {
 
     private static final String GITHUB_EXPECTED = "https://github.com/jenkinsci/git-plugin/";
 
-    private static boolean guessBrowserExpectedToReturnNull(@NonNull String hostname) {
-        return !hostname.equals("github.com");
-    }
-
-    private static boolean guessBrowserExpectedToReturnNull(
-            @NonNull String protocol,
-            @NonNull String hostname,
-            @NonNull String username) {
-        if (guessBrowserExpectedToReturnNull(hostname)) {
+    private static boolean guessBrowserExpectedToReturnNull(String url) {
+        if (!url.contains("github.com")) { // Only github.com currently as autobrowser
             return true;
         }
-        if (protocol.equals("https") && !username.isEmpty()) {
+        if (url.startsWith("git://")) { // No git protocol autobrowser currently
             return true;
         }
-        return protocol.equals("git");
+        if (url.startsWith("ssh://") && url.contains(":22")) { // No ssh with embedded port number currently
+            return true;
+        }
+        return url.startsWith("https://") && url.contains("@");
     }
 
-    private static Class<? extends GitRepositoryBrowser> expectedClass(String hostname) {
-        return GithubWeb.class;
-    }
-
-    private static Class<? extends GitRepositoryBrowser> expectedClass(String protocol, String hostname, String userName) {
-        if (guessBrowserExpectedToReturnNull(protocol, hostname, userName)) {
+    private static Class<? extends GitRepositoryBrowser> expectedClass(String url) {
+        if (guessBrowserExpectedToReturnNull(url)) {
             return null;
         }
         return GithubWeb.class;
     }
 
-    private static String expectedURL(String hostname) {
-        if (guessBrowserExpectedToReturnNull(hostname)) {
-            return null;
-        }
-        return GITHUB_EXPECTED;
-    }
-
-    private static String expectedURL(String protocol, String hostname, String userName) {
-        if (guessBrowserExpectedToReturnNull(protocol, hostname, userName)) {
+    private static String expectedURL(String url) {
+        if (guessBrowserExpectedToReturnNull(url)) {
             return null;
         }
         return GITHUB_EXPECTED;
@@ -109,24 +93,29 @@ public class GitSCMBrowserTest {
             for (String userName : userNames) {
                 for (String hostname : hostnames) {
                     for (String suffix : suffixes) {
-                        Object[] testCase = {
-                            protocol + "://" + userName + hostname + "/" + owner + "/" + repo + suffix,
-                            expectedClass(protocol, hostname, userName),
-                            expectedURL(protocol, hostname, userName)
-                        };
+                        String url = protocol + "://" + userName + hostname + "/" + owner + "/" + repo + suffix;
+                        Object[] testCase = {url, expectedClass(url), expectedURL(url)};
                         values.add(testCase);
                     }
+                }
+            }
+        }
+        /* Secure shell URL with embedded port number */
+        String protocol = "ssh";
+        for (String userName : userNames) {
+            for (String hostname : hostnames) {
+                for (String suffix : suffixes) {
+                    String url = protocol + "://" + userName + hostname + ":22/" + owner + "/" + repo + suffix;
+                    Object[] testCase = {url, expectedClass(url), expectedURL(url)};
+                    values.add(testCase);
                 }
             }
         }
         /* ssh alternate syntax */
         for (String hostname : hostnames) {
             for (String suffix : suffixes) {
-                Object[] testCase = {
-                    "git@" + hostname + ":jenkinsci/git-plugin" + suffix,
-                    expectedClass(hostname),
-                    expectedURL(hostname)
-                };
+                String url = "git@" + hostname + ":jenkinsci/git-plugin" + suffix;
+                Object[] testCase = {url, expectedClass(url), expectedURL(url)};
                 values.add(testCase);
             }
         }
