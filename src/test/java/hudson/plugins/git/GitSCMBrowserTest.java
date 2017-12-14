@@ -23,6 +23,8 @@
  */
 package hudson.plugins.git;
 
+import hudson.plugins.git.browser.BitbucketWeb;
+import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import java.util.ArrayList;
@@ -50,50 +52,49 @@ public class GitSCMBrowserTest {
         this.expectedURI = expectedURI;
     }
 
-    private static final String GITHUB_EXPECTED = "https://github.com/jenkinsci/git-plugin/";
-
-    private static boolean guessBrowserExpectedToReturnNull(String url) {
-        if (!url.contains("github.com")) { // Only github.com currently as autobrowser
-            return true;
-        }
-        if (url.startsWith("git://")) { // No git protocol autobrowser currently
-            return true;
-        }
-        if (url.startsWith("ssh://") && url.contains(":22")) { // No ssh with embedded port number currently
-            return true;
-        }
-        return url.startsWith("https://") && url.contains("@");
-    }
-
     private static Class<? extends GitRepositoryBrowser> expectedClass(String url) {
-        if (guessBrowserExpectedToReturnNull(url)) {
-            return null;
+        if (url.contains("bitbucket.org")) {
+            return BitbucketWeb.class;
         }
-        return GithubWeb.class;
+        if (url.contains("gitlab.com")) {
+            return GitLab.class;
+        }
+        if (url.contains("github.com")) {
+            return GithubWeb.class;
+        }
+        return null;
     }
+
+    private static final String REPO_PATH = "jenkinsci/git-plugin";
 
     private static String expectedURL(String url) {
-        if (guessBrowserExpectedToReturnNull(url)) {
-            return null;
+        if (url.contains("bitbucket.org")) {
+            return "https://bitbucket.org/" + REPO_PATH + "/";
         }
-        return GITHUB_EXPECTED;
+        if (url.contains("gitlab.com")) {
+            return "https://gitlab.com/" + REPO_PATH + "/";
+        }
+        if (url.contains("github.com")) {
+            return "https://github.com/" + REPO_PATH + "/";
+        }
+        return null;
+
     }
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection permuteRepositoryURL() {
         /* Systematically formed test URLs */
         String[] protocols = {"https", "ssh", "git"};
-        String[] userNames = {"git:password@", "git@", ""};
-        String[] hostnames = {"github.com", "bitbucket.org", "gitlab.com"};
+        String[] usernames = {"git:password@", "git@", "bob@", ""};
+        String[] hostnames = {"github.com", "bitbucket.org", "gitlab.com", "example.com"};
         String[] suffixes = {".git/", ".git", "/", ""};
-        String owner = "jenkinsci";
-        String repo = "git-plugin";
+        String[] slashes = {"//", "/", ""};
         List<Object[]> values = new ArrayList<>();
         for (String protocol : protocols) {
-            for (String userName : userNames) {
+            for (String username : usernames) {
                 for (String hostname : hostnames) {
                     for (String suffix : suffixes) {
-                        String url = protocol + "://" + userName + hostname + "/" + owner + "/" + repo + suffix;
+                        String url = protocol + "://" + username + hostname + "/" + REPO_PATH + suffix;
                         Object[] testCase = {url, expectedClass(url), expectedURL(url)};
                         values.add(testCase);
                     }
@@ -102,10 +103,10 @@ public class GitSCMBrowserTest {
         }
         /* Secure shell URL with embedded port number */
         String protocol = "ssh";
-        for (String userName : userNames) {
+        for (String username : usernames) {
             for (String hostname : hostnames) {
                 for (String suffix : suffixes) {
-                    String url = protocol + "://" + userName + hostname + ":22/" + owner + "/" + repo + suffix;
+                    String url = protocol + "://" + username + hostname + ":22/" + REPO_PATH + suffix;
                     Object[] testCase = {url, expectedClass(url), expectedURL(url)};
                     values.add(testCase);
                 }
@@ -114,16 +115,18 @@ public class GitSCMBrowserTest {
         /* ssh alternate syntax */
         for (String hostname : hostnames) {
             for (String suffix : suffixes) {
-                String url = "git@" + hostname + ":jenkinsci/git-plugin" + suffix;
-                Object[] testCase = {url, expectedClass(url), expectedURL(url)};
-                values.add(testCase);
+                for (String slash : slashes) {
+                    String url = "git@" + hostname + ":" + slash + REPO_PATH + suffix;
+                    Object[] testCase = {url, expectedClass(url), expectedURL(url)};
+                    values.add(testCase);
+                }
             }
         }
         return values;
     }
 
     @Test
-    public void autoBrowser() {
+    public void guessedBrowser() {
         GitSCM gitSCM = new GitSCM(gitURI);
         GitRepositoryBrowser browser = (GitRepositoryBrowser) gitSCM.guessBrowser();
         if (expectedClass == null || expectedURI == null) {
