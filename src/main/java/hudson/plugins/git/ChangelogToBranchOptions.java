@@ -43,7 +43,7 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
 
         @Override
         public String getDisplayName() {
-            return "";
+            return "Options for Changelog To Branch strategy";
         }
     }
 }
