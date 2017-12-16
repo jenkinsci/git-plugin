@@ -362,6 +362,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return User.getUnknown();
         }
         if (createAccountBasedOnEmail) {
+            if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
+                // Avoid exception from User.get("", false)
+                return User.getUnknown();
+            }
             user = User.get(csAuthorEmail, false);
 
             if (user == null) {
@@ -376,9 +380,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         } else {
+            if (csAuthor.isEmpty()) {
+                // Avoid exception from User.get("", false)
+                return User.getUnknown();
+            }
             user = User.get(csAuthor, false);
 
             if (user == null) {
+                if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
+                    return User.getUnknown();
+                }
                 // Ensure that malformed email addresses (in this case, just '@')
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");
