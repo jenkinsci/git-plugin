@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -97,6 +98,11 @@ public class CheckoutOptionTest {
 
         @Override
         public CheckoutCommand lfsRemote(String lfsRemote) {
+            throw new UnsupportedOperationException("Don't call me");
+        }
+
+        @Override
+        public CheckoutCommand lfsCredentials(StandardCredentials lfsCredentials) {
             throw new UnsupportedOperationException("Don't call me");
         }
 
