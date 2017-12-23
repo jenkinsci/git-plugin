@@ -146,7 +146,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(url, null, null, credentialsId));
         return repoList;
     }

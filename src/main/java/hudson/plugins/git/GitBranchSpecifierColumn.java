@@ -22,7 +22,7 @@ public class GitBranchSpecifierColumn extends ListViewColumn {
     public GitBranchSpecifierColumn() { }
 
     public List<String> getBranchSpecifier( final Item item ) {
-        List<String> branchSpec = new ArrayList<String>();
+        List<String> branchSpec = new ArrayList<>();
         SCMTriggerItem s = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(item);
         if(s != null) {
             for(SCM scm : s.getSCMs()) {
