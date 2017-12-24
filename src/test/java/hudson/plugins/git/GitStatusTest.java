@@ -540,8 +540,8 @@ public class GitStatusTest extends AbstractGitProject {
         Mockito.verify(sRsp, Mockito.times(11)).addHeader(Mockito.eq("Triggered"), Mockito.anyString());
 
         // All triggers run.
-        for (int i = 0; i < projectTriggers.length; i++) {
-            Mockito.verify(projectTriggers[i]).run();
+        for (SCMTrigger projectTrigger : projectTriggers) {
+            Mockito.verify(projectTrigger).run();
         }
 
         assertEquals("URL: a Branches: master", this.gitStatus.toString());
