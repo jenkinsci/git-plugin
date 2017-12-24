@@ -553,7 +553,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                                                   @Nullable final String sha1,
                                                                   List<ParameterValue> buildParameters,
                                                                   String... branches) {
-            List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
+            List<GitStatus.ResponseContributor> result = new ArrayList<>();
             final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can

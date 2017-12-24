@@ -80,7 +80,7 @@ public class GitSCMFile extends SCMFile {
                         try (TreeWalk tw = new TreeWalk(repository)) {
                             tw.addTree(tree);
                             tw.setRecursive(false);
-                            List<SCMFile> result = new ArrayList<SCMFile>();
+                            List<SCMFile> result = new ArrayList<>();
                             while (tw.next()) {
                                 result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
                             }
@@ -99,7 +99,7 @@ public class GitSCMFile extends SCMFile {
                                 throw new IOException("Not a directory");
                             }
                             tw.enterSubtree();
-                            List<SCMFile> result = new ArrayList<SCMFile>();
+                            List<SCMFile> result = new ArrayList<>();
                             while (tw.next()) {
                                 result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
                             }

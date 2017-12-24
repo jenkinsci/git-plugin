@@ -352,7 +352,7 @@ public class AbstractGitSCMSourceTest {
         when(owner.getSCMSources()).thenReturn(Collections.singletonList(source));
         source.setOwner(owner);
         TaskListener listener = StreamTaskListener.fromStderr();
-        Map<String, SCMHead> headByName = new TreeMap<String, SCMHead>();
+        Map<String, SCMHead> headByName = new TreeMap<>();
         for (SCMHead h: source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
@@ -572,7 +572,7 @@ public class AbstractGitSCMSourceTest {
         /* Fetch from sampleRepo */
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new IgnoreOnPushNotificationTrait()));
-        List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> extensions = new ArrayList<>();
         assertThat(source.getExtensions(), is(empty()));
         LocalBranch localBranchExtension = new LocalBranch("**");
         extensions.add(localBranchExtension);
