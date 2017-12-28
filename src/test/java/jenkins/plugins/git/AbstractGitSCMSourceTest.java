@@ -153,7 +153,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3-commit-message");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
@@ -211,7 +211,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
@@ -235,7 +235,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         assertThat(source.fetchRevisions(listener), hasSize(0));
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
@@ -264,7 +264,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--all", "--message=dev3");
         String devHash = sampleRepo.head();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
 
         TaskListener listener = StreamTaskListener.fromStderr();
 

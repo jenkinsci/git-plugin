@@ -43,7 +43,7 @@ public class GitChangeSetListTest {
     public GitChangeSetListTest() {
         RepositoryBrowser<?> browser = null;
         Run build = null;
-        emptyChangeSetList = new GitChangeSetList(build, browser, new ArrayList<GitChangeSet>());
+        emptyChangeSetList = new GitChangeSetList(build, browser, new ArrayList<>());
     }
 
     @Before

@@ -166,7 +166,7 @@ public class GitChangeSetSimpleTest {
     @Test
     public void testEquals() {
         assertTrue(changeSet.equals(changeSet));
-        assertFalse(changeSet.equals(new GitChangeSet(new ArrayList<String>(), false)));
+        assertFalse(changeSet.equals(new GitChangeSet(new ArrayList<>(), false)));
     }
 
     @Test
