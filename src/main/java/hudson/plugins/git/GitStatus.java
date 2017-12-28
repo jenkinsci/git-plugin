@@ -159,24 +159,20 @@ public class GitStatus implements UnprotectedRootAction {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
-        return new HttpResponse() {
-            @Override
-            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
-                    throws IOException, ServletException {
-                rsp.setStatus(SC_OK);
-                rsp.setContentType("text/plain");
-                for (int i = 0; i < contributors.size(); i++) {
-                    if (i == MAX_REPORTED_CONTRIBUTORS) {
-                        rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
-                        break;
-                    } else {
-                        contributors.get(i).addHeaders(req, rsp);
-                    }
+        return (StaplerRequest req, StaplerResponse rsp, Object node) -> {
+            rsp.setStatus(SC_OK);
+            rsp.setContentType("text/plain");
+            for (int i = 0; i < contributors.size(); i++) {
+                if (i == MAX_REPORTED_CONTRIBUTORS) {
+                    rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
+                    break;
+                } else {
+                    contributors.get(i).addHeaders(req, rsp);
                 }
-                PrintWriter w = rsp.getWriter();
-                for (ResponseContributor c : contributors) {
-                    c.writeBody(req, rsp, w);
-                }
+            }
+            PrintWriter w = rsp.getWriter();
+            for (ResponseContributor c : contributors) {
+                c.writeBody(req, rsp, w);
             }
         };
     }
