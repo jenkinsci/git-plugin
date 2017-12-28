@@ -269,12 +269,18 @@ public class GitSCMFileSystemTest {
         SCMFile dir = null;
         for (SCMFile f: children) {
             names.add(f.getName());
-            if ("file".equals(f.getName())) {
-                file = f;
-            } else if ("file2".equals(f.getName())) {
-                file2 = f;
-            } else if ("dir".equals(f.getName())) {
-                dir = f;
+            switch (f.getName()) {
+                case "file":
+                    file = f;
+                    break;
+                case "file2":
+                    file2 = f;
+                    break;
+                case "dir":
+                    dir = f;
+                    break;
+                default:
+                    break;
             }
         }
         assertThat(names, containsInAnyOrder(is("file"), is("file2"), is("dir")));

@@ -166,14 +166,22 @@ public class AbstractGitSCMSourceTest {
                 // FAT file system time stamps only resolve to 2 second boundary
                 // EXT3 file system time stamps only resolve to 1 second boundary
                 long fileTimeStampFuzz = isWindows() ? 2000L : 1000L;
-                if (scmHead.getName().equals("lightweight")) {
-                    long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
-                    assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
-                } else if (scmHead.getName().equals("annotated")) {
-                    long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
-                    assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
-                } else {
-                    fail("Unexpected tag head '" + scmHead.getName() + "'");
+                switch (scmHead.getName()) {
+                    case "lightweight":
+                        {
+                            long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
+                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
+                            break;
+                        }
+                    case "annotated":
+                        {
+                            long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
+                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
+                            break;
+                        }
+                    default:
+                        fail("Unexpected tag head '" + scmHead.getName() + "'");
+                        break;
                 }
             }
         }
