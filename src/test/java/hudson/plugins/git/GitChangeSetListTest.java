@@ -56,7 +56,7 @@ public class GitChangeSetListTest {
         assertTrue(logs.add(changeSet));
         assertThat(changeSet.getParent(), is(nullValue()));
         changeSetList = new GitChangeSetList(build, browser, logs);
-        // assertThat(changeSet.getParent(), is(changeSetList));
+        assertThat(changeSet.getParent(), is(changeSetList));
     }
 
     @Test
