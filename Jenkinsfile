@@ -1,9 +1,9 @@
 #!groovy
 
-// Test plugin compatibility to latest Jenkins LTS
+// Test plugin compatbility to recent Jenkins LTS
 // Allow failing tests to retry execution
-buildPlugin(jenkinsVersions: [null, '2.60.1'],
-            findbugs: [run: true, archive: true, unstableTotalAll: '0'],
+buildPlugin(jenkinsVersions: [null, '2.107.2'],
+            findbugs: [run:true, archive:true, unstableTotalAll: '0'],
             failFast: false)
 
 def branches = [:]

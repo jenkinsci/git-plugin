@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.37</version>
+    <version>3.9</version>
     <relativePath />
   </parent>
 
@@ -16,7 +16,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>3.9.1-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -24,8 +24,8 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <jenkins.version>1.642.3</jenkins.version>
-    <java.level>7</java.level>
+    <jenkins.version>2.60.3</jenkins.version>
+    <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
@@ -33,27 +33,7 @@
   </properties>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
@@ -68,21 +48,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>display-info</id>
-            <configuration>
-              <rules>
-                <enforceBytecodeVersion>
-                  <excludes combine.children="append">
-                    <!-- Loaded conditionally. -->
-                    <exclude>org.eclipse.jgit:org.eclipse.jgit.java7</exclude>
-                  </excludes>
-                </enforceBytecodeVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
         <configuration>
           <rules>
             <requireUpperBoundDeps>
@@ -130,7 +95,7 @@
     <dependency>
       <groupId>org.jenkins-ci</groupId>
       <artifactId>annotation-indexer</artifactId>
-      <version>1.11</version>
+      <version>1.12</version>
     </dependency>
     <dependency>
       <groupId>com.infradna.tool</groupId>
@@ -146,7 +111,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>2.7.0</version>
+      <version>3.0.0-beta2</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
