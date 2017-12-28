@@ -45,19 +45,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <configuration>
-          <rules>
-            <requireUpperBoundDeps>
-              <excludes combine.children="append">
-                <!-- workflow-cps requests 1.1.1, core 2.60.1 requests 1.2.1 -->
-                <exclude>org.jenkins-ci.ui:jquery-detached</exclude>
-              </excludes>
-            </requireUpperBoundDeps>
-          </rules>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
@@ -136,7 +123,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.10</version>
+      <version>2.11</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -248,7 +235,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.10</version>
+      <version>2.11</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -301,21 +288,19 @@
       <version>2.2.0</version>
       <scope>test</scope>
     </dependency>
-    <dependency> <!-- TODO pending core upgrade or haveged, test against a newer sshd so we do not run into NativePRNG hangs -->
-      <groupId>org.jenkins-ci.modules</groupId>
-      <artifactId>sshd</artifactId>
-      <version>1.11</version>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-api</artifactId>
+      <version>2.18</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>instance-identity</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>ssh-cli-auth</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-support</artifactId>
+      <version>2.14</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
