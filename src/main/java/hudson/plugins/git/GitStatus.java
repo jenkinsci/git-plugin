@@ -154,9 +154,6 @@ public class GitStatus implements UnprotectedRootAction {
 
         final List<ResponseContributor> contributors = new ArrayList<>();
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
-        }
         String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));

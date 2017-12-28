@@ -113,8 +113,11 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
                             justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Restricted(NoExternalUse.class) // stapler
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
-            return ((GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class))
-                    .getBrowserDescriptors();
+            GitSCM.DescriptorImpl descriptor = (GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
+            if (descriptor == null) {
+                return java.util.Collections.emptyList(); // Should be unreachable
+            }
+            return descriptor.getBrowserDescriptors();
         }
 
         /**
