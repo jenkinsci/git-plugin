@@ -204,7 +204,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>1.12.1</version> <!-- Depends on Jenkins 1.609 -->
+      <version>2.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
