@@ -223,13 +223,58 @@ public class GitSCMUnitTest {
     }
 
     @Test
-    public void testRequiresWorkspaceForPollingMultiBranch() {
-        /* Force multi-branch use case, no workspace required */
+    public void testRequiresWorkspaceForPollingSingleBranchWithRemoteName() {
+        /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
-                Collections.singletonList(new BranchSpec("**")),
+                Collections.singletonList(new BranchSpec("origin/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, Collections.<GitSCMExtension>emptyList());
+        assertFalse(bigGitSCM.requiresWorkspaceForPolling());
+    }
+
+    @Test
+    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardRemoteName() {
+        /* Force single-branch use case */
+        GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
+                Collections.singletonList(new BranchSpec("*/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, Collections.<GitSCMExtension>emptyList());
+        assertFalse(bigGitSCM.requiresWorkspaceForPolling());
+    }
+
+    @Test
+    public void testRequiresWorkspaceForPollingSingleBranchWithWildcardSuffix() {
+        /* Force single-branch use case */
+        GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
+                Collections.singletonList(new BranchSpec("master*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertTrue(bigGitSCM.requiresWorkspaceForPolling());
+    }
+
+    @Test
+    public void testRequiresWorkspaceForPollingMultiBranch() {
+        /* Multi-branch use case */
+        List<BranchSpec> branches = new ArrayList<>();
+        branches.add(new BranchSpec("master"));
+        branches.add(new BranchSpec("origin/master"));
+        GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
+                branches,
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, Collections.<GitSCMExtension>emptyList());
+        assertTrue(bigGitSCM.requiresWorkspaceForPolling());
+    }
+
+    @Test
+    public void testRequiresWorkspaceForPollingEmptyBranchName() {
+        /* Multi-branch use case */
+        EnvVars env = new EnvVars();
+        env.put("A", "");
+        GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
+                Collections.singletonList(new BranchSpec("${A}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, Collections.<GitSCMExtension>emptyList());
+        assertFalse(bigGitSCM.requiresWorkspaceForPolling(env));
     }
 
     @Test

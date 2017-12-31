@@ -618,7 +618,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return requiresWorkspaceForPolling(new EnvVars());
     }
 
-    private boolean requiresWorkspaceForPolling(EnvVars environment) {
+    /* Package protected for test access */
+    boolean requiresWorkspaceForPolling(EnvVars environment) {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
