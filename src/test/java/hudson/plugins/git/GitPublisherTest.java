@@ -48,12 +48,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.plugins.git.CliGitCommand;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assume.*;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -621,10 +626,13 @@ public class GitPublisherTest extends AbstractGitProject {
     @Issue("JENKINS-24786")
     @Test
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
-        FreeStyleProject project = setupSimpleProject("master");
-
         String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
+        assumeThat(envValue, notNullValue());
+        assumeThat(envValue, not(isEmptyString()));
+
+        FreeStyleProject project = setupSimpleProject("master");
+
         assertNotNull("Env " + envName + " not set", envValue);
         assertFalse("Env " + envName + " empty", envValue.isEmpty());
 
