@@ -103,7 +103,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
 
-                //Check if exact branch name <branchSpec> existss
+                //Check if exact branch name <branchSpec> exists
                 fqbn = "refs/remotes/" + repository + "/" + branchSpec;
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
