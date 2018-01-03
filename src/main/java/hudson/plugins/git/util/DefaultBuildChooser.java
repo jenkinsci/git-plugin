@@ -34,7 +34,7 @@ public class DefaultBuildChooser extends BuildChooser {
      * just attempt to find the latest revision number for the chosen branch.
      *
      * If multiple branches are selected or the branches include wildcards, then
-     * use the advanced usecase as defined in the getAdvancedCandidateRevisons
+     * use the advanced usecase as defined in the getAdvancedCandidateRevisions
      * method.
      *
      * @throws IOException on input or output error
