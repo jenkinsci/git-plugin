@@ -34,7 +34,7 @@ public class DefaultBuildChooser extends BuildChooser {
      * just attempt to find the latest revision number for the chosen branch.
      *
      * If multiple branches are selected or the branches include wildcards, then
-     * use the advanced usecase as defined in the getAdvancedCandidateRevisons
+     * use the advanced usecase as defined in the getAdvancedCandidateRevisions
      * method.
      *
      * @throws IOException on input or output error
@@ -103,7 +103,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
 
-                //Check if exact branch name <branchSpec> existss
+                //Check if exact branch name <branchSpec> exists
                 fqbn = "refs/remotes/" + repository + "/" + branchSpec;
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);

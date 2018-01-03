@@ -93,10 +93,10 @@ public class SubmoduleConfigTest {
     public void testSetBranches() {
         config.setBranches(branchNames);
         assertThat(config.getBranches(), is(branchNames));
-        String[] newBrancNames = Arrays.copyOf(branchNames, branchNames.length);
-        newBrancNames[0] = "new-master";
-        config.setBranches(newBrancNames);
-        assertThat(config.getBranches(), is(newBrancNames));
+        String[] newBranchNames = Arrays.copyOf(branchNames, branchNames.length);
+        newBranchNames[0] = "new-master";
+        config.setBranches(newBranchNames);
+        assertThat(config.getBranches(), is(newBranchNames));
     }
 
     @Test(expected = NullPointerException.class)

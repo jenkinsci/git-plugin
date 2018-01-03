@@ -693,7 +693,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the committer as the change author with authorOrCommiter==false",
+        assertEquals("Did not get the committer as the change author with authorOrCommitter==false",
                      janeDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
@@ -721,7 +721,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the author as the change author with authorOrCommiter==true",
+        assertEquals("Did not get the author as the change author with authorOrCommitter==true",
                 johnDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 

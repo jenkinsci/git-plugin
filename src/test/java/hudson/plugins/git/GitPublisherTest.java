@@ -382,7 +382,7 @@ public class GitPublisherTest extends AbstractGitProject {
         //     * f4d190c (HEAD, integration, branch1) Commit number 1
         //     * f787536 (master) Initial Commit
         //
-        assertTrue("commitFile1 should exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
+        assertTrue("commitFile1 should exist in the workspace",build2.getWorkspace().child("commitFile1").exists());
         shaIntegration = getHeadRevision(build2, "integration");
         String shaHead = testGitClient.revParse(Constants.HEAD).name();
         assertEquals("integration and branch1 should line up",shaIntegration, shaBranch1);
@@ -409,8 +409,8 @@ public class GitPublisherTest extends AbstractGitProject {
         //     | * 79c49b2 (integration, branch1) Commit number 1
         //     |/
         //     * ebffeb3 (master) Initial Commit
-        assertFalse("commitFile1 should not exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
-        assertTrue("commitFile2 should exist in the worksapce",build2.getWorkspace().child("commitFile2").exists());
+        assertFalse("commitFile1 should not exist in the workspace",build2.getWorkspace().child("commitFile1").exists());
+        assertTrue("commitFile2 should exist in the workspace",build2.getWorkspace().child("commitFile2").exists());
         revList = testGitClient.revList("branch2^1");
         assertEquals("branch2 should have master as a parent",revList.get(0),master);
         try {

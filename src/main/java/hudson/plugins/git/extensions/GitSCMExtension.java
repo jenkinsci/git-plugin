@@ -328,7 +328,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     /**
      * Let extension declare required GitClient implementation. git-plugin will then detect conflicts, and fallback to
      * globally configured default git client
-     * @return git client type required for this extentsion
+     * @return git client type required for this extension
      */
     public GitClientType getRequiredClient() {
         return GitClientType.ANY;

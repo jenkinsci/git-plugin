@@ -1079,7 +1079,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Instantiates a new {@link GitSCMBuilder}.
      * Subclasses should override this method if they want to use a custom {@link GitSCMBuilder} or if they need
-     * to pre-decorare the builder.
+     * to pre-decorate the builder.
      *
      * @param head     the {@link SCMHead}.
      * @param revision the {@link SCMRevision}.

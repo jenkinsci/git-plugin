@@ -1225,7 +1225,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (!buildDataAlreadyPresent) {
             if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
                 // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
-                // so only one of the actions is addressible by users
+                // so only one of the actions is addressable by users
                 build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
             }
 
