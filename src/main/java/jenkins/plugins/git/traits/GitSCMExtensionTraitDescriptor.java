@@ -78,7 +78,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
     private final boolean noArgConstructor;
 
     /**
-     * Constructor to use when type inferrence using {@link #GitSCMExtensionTraitDescriptor()} does not work.
+     * Constructor to use when type inference using {@link #GitSCMExtensionTraitDescriptor()} does not work.
      *
      * @param clazz     Pass in the type of {@link SCMTrait}
      * @param extension Pass in the type of {@link GitSCMExtension}.
