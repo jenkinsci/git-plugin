@@ -86,6 +86,8 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.Arrays;
+
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -745,6 +747,94 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect commit2 change because it is not in the branch we are tracking.", project.poll(listener).hasChanges());
     }
 
+    @Test
+    public void testBuildsByBranchNameOverMultipleBranches() throws Exception {
+        BranchSpec[] branches = new BranchSpec[] { new BranchSpec("master"),
+                                                   new BranchSpec("branch1"),
+                                                   new BranchSpec("branch2") };
+        FreeStyleProject project = setupProject(Arrays.asList(branches),
+                                                false, null, null, null,
+                                                null, false, null);
+        GitSCM scm = (GitSCM) project.getScm();
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        Build firstBuild = build(project, Result.SUCCESS, commitFile1);
+
+        BuildData data = scm.getBuildData(firstBuild);
+        assertEquals(data.buildsByBranchName.size(), 1);
+
+        // now create and checkout a new branch:
+        git.checkout(Constants.HEAD, "branch1");
+
+        // .. and commit to it:
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        Build secondBuild = build(project, Result.SUCCESS, commitFile1);
+
+        data = scm.getBuildData(secondBuild);
+        assertEquals(data.buildsByBranchName.size(), 2);
+
+        // now create and checkout a second branch:
+        git.checkout(Constants.HEAD, "branch2");
+
+        // .. and commit to it:
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+
+        Build thirdBuild = build(project, Result.SUCCESS, commitFile3);
+
+        data = scm.getBuildData(thirdBuild);
+        assertEquals(data.buildsByBranchName.size(), 3);
+    }
+
+    @Test
+    public void testNoBuildsByBranchHistoryExtension() throws Exception {
+        BranchSpec[] branches = new BranchSpec[] { new BranchSpec("master"),
+                                                   new BranchSpec("branch1"),
+                                                   new BranchSpec("branch2") };
+        FreeStyleProject project = setupProject(Arrays.asList(branches),
+                                                false, null, null, null,
+                                                null, false, null);
+        GitSCM scm = (GitSCM) project.getScm();
+
+        // Add extension to prevent buildsByBranchName from maintaining history
+        scm.getExtensions().add(new NoBuildsByBranchHistory());
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        Build firstBuild = build(project, Result.SUCCESS, commitFile1);
+
+        BuildData data = scm.getBuildData(firstBuild);
+        assertEquals(data.buildsByBranchName.size(), 1);
+
+        // now create and checkout a new branch:
+        git.checkout(Constants.HEAD, "branch1");
+
+        // .. and commit to it:
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        Build secondBuild = build(project, Result.SUCCESS, commitFile1);
+
+        data = scm.getBuildData(secondBuild);
+        assertEquals(data.buildsByBranchName.size(), 1);
+
+        // now create and checkout a second branch:
+        git.checkout(Constants.HEAD, "branch2");
+
+        // .. and commit to it:
+        final String commitFile3 = "commitFile3";
+        commit(commitFile3, johnDoe, "Commit number 3");
+
+        Build thirdBuild = build(project, Result.SUCCESS, commitFile3);
+
+        data = scm.getBuildData(thirdBuild);
+        assertEquals(data.buildsByBranchName.size(), 1);
+    }
     private String checkoutString(FreeStyleProject project, String envVar) {
         return "checkout -f " + getEnvVars(project).get(envVar);
     }
