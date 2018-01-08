@@ -414,7 +414,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
-                                    Set<String> buildParametersNames = new HashSet<String>();
+                                    Set<String> buildParametersNames = new HashSet<>();
                                     if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
                                         for (ParameterValue parameterValue: allBuildParameters) {
                                             if (allowNotifyCommitParameters || safeParameters.contains(parameterValue.getName())) {
@@ -646,7 +646,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     private static Set<String> csvToSet(String csvLine) {
         String[] tokens = csvLine.split(",");
-        Set<String> set = new HashSet<String>(Arrays.asList(tokens));
+        Set<String> set = new HashSet<>(Arrays.asList(tokens));
         return set;
     }
 

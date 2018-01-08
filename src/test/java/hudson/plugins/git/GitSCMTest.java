@@ -238,7 +238,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     @Issue("JENKINS-31393")
     public void testSpecificRefspecs() throws Exception {
-        List<UserRemoteConfig> repos = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repos = new ArrayList<>();
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
 
         /* Set CloneOption to honor refspec on initial clone */
@@ -276,7 +276,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     @Issue("JENKINS-36507")
     public void testSpecificRefspecsWithoutCloneOption() throws Exception {
-        List<UserRemoteConfig> repos = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repos = new ArrayList<>();
         repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
         FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleProject projectWithFoo = setupProject(repos, Collections.singletonList(new BranchSpec("foo")), null, false, null);
@@ -693,7 +693,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the committer as the change author with authorOrCommiter==false",
+        assertEquals("Did not get the committer as the change author with authorOrCommitter==false",
                      janeDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
@@ -721,7 +721,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final Set<User> secondCulprits = secondBuild.getCulprits();
 
         assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Did not get the author as the change author with authorOrCommiter==true",
+        assertEquals("Did not get the author as the change author with authorOrCommitter==true",
                 johnDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
@@ -1102,7 +1102,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("master");
 
         TestGitRepo secondTestRepo = new TestGitRepo("second", secondRepo.getRoot(), listener);
-        List<UserRemoteConfig> remotes = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> remotes = new ArrayList<>();
         remotes.addAll(testRepo.remoteConfigs());
         remotes.addAll(secondTestRepo.remoteConfigs());
 

@@ -48,12 +48,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.plugins.git.CliGitCommand;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assume.*;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -377,7 +382,7 @@ public class GitPublisherTest extends AbstractGitProject {
         //     * f4d190c (HEAD, integration, branch1) Commit number 1
         //     * f787536 (master) Initial Commit
         //
-        assertTrue("commitFile1 should exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
+        assertTrue("commitFile1 should exist in the workspace",build2.getWorkspace().child("commitFile1").exists());
         shaIntegration = getHeadRevision(build2, "integration");
         String shaHead = testGitClient.revParse(Constants.HEAD).name();
         assertEquals("integration and branch1 should line up",shaIntegration, shaBranch1);
@@ -404,8 +409,8 @@ public class GitPublisherTest extends AbstractGitProject {
         //     | * 79c49b2 (integration, branch1) Commit number 1
         //     |/
         //     * ebffeb3 (master) Initial Commit
-        assertFalse("commitFile1 should not exist in the worksapce",build2.getWorkspace().child("commitFile1").exists());
-        assertTrue("commitFile2 should exist in the worksapce",build2.getWorkspace().child("commitFile2").exists());
+        assertFalse("commitFile1 should not exist in the workspace",build2.getWorkspace().child("commitFile1").exists());
+        assertTrue("commitFile2 should exist in the workspace",build2.getWorkspace().child("commitFile2").exists());
         revList = testGitClient.revList("branch2^1");
         assertEquals("branch2 should have master as a parent",revList.get(0),master);
         try {
@@ -621,10 +626,13 @@ public class GitPublisherTest extends AbstractGitProject {
     @Issue("JENKINS-24786")
     @Test
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
-        FreeStyleProject project = setupSimpleProject("master");
-
         String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
+        assumeThat(envValue, notNullValue());
+        assumeThat(envValue, not(isEmptyString()));
+
+        FreeStyleProject project = setupSimpleProject("master");
+
         assertNotNull("Env " + envName + " not set", envValue);
         assertFalse("Env " + envName + " empty", envValue.isEmpty());
 

@@ -373,7 +373,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     /**
      * @deprecated
      *      Moved to {@link WipeWorkspace}
-     * @return true if wipe workspace extenstion is enabled
+     * @return true if wipe workspace extension is enabled
      */
     public boolean getWipeOutWorkspace() {
         return getExtensions().get(WipeWorkspace.class)!=null;

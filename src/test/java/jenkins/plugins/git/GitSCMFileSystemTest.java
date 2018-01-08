@@ -244,7 +244,7 @@ public class GitSCMFileSystemTest {
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
-        Set<String> names = new TreeSet<String>();
+        Set<String> names = new TreeSet<>();
         SCMFile file = null;
         SCMFile file2 = null;
         SCMFile dir = null;

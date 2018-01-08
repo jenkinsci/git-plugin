@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.*;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -226,6 +227,91 @@ public class AbstractGitSCMSourceTest {
         assertThat(source.fetchRevisions(listener), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
     }
 
+    @Issue("JENKINS-47824")
+    @Test
+    public void retrieveByName() throws Exception {
+        sampleRepo.init();
+        String masterHash = sampleRepo.head();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "v1");
+        String v1Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        sampleRepo.git("tag", "-a", "v2", "-m", "annotated");
+        String v2Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=dev3");
+        String devHash = sampleRepo.head();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(new ArrayList<SCMSourceTrait>());
+
+        TaskListener listener = StreamTaskListener.fromStderr();
+
+        listener.getLogger().println("\n=== fetch('master') ===\n");
+        SCMRevision rev = source.fetch("master", listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        listener.getLogger().println("\n=== fetch('dev') ===\n");
+        rev = source.fetch("dev", listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
+        listener.getLogger().println("\n=== fetch('v1') ===\n");
+        rev = source.fetch("v1", listener);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
+        listener.getLogger().println("\n=== fetch('v2') ===\n");
+        rev = source.fetch("v2", listener);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
+        rev = source.fetch(masterHash, listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(rev.getHead().getName(), is("master"));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash.substring(0, 10));
+        rev = source.fetch(masterHash.substring(0, 10), listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(rev.getHead().getName(), is("master"));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash);
+        rev = source.fetch(devHash, listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(rev.getHead().getName(), is("dev"));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash.substring(0, 10));
+        rev = source.fetch(devHash.substring(0, 10), listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(rev.getHead().getName(), is("dev"));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash);
+        rev = source.fetch(v1Hash, listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash.substring(0, 10));
+        rev = source.fetch(v1Hash.substring(0, 10), listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash);
+        rev = source.fetch(v2Hash, listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash.substring(0, 10));
+        rev = source.fetch(v2Hash.substring(0, 10), listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+
+    }
+
     public static abstract class ActionableSCMSourceOwner extends Actionable implements SCMSourceOwner {
 
     }
@@ -266,7 +352,7 @@ public class AbstractGitSCMSourceTest {
         when(owner.getSCMSources()).thenReturn(Collections.singletonList(source));
         source.setOwner(owner);
         TaskListener listener = StreamTaskListener.fromStderr();
-        Map<String, SCMHead> headByName = new TreeMap<String, SCMHead>();
+        Map<String, SCMHead> headByName = new TreeMap<>();
         for (SCMHead h: source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
@@ -342,6 +428,87 @@ public class AbstractGitSCMSourceTest {
         assertThat(source.fetchRevisions(listener), hasItems("master", "dev", "v1"));
         // we do not care to return commit hashes or other references
     }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void retrieveRevision_nonHead() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
+    public void retrieveRevision_nonAdvertised() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev, the v3 ref is eligible for GC but still fetchable
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
+    public void retrieveRevision_customRef() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/foo", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener);
         if (rev == null) {
@@ -405,7 +572,7 @@ public class AbstractGitSCMSourceTest {
         /* Fetch from sampleRepo */
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new IgnoreOnPushNotificationTrait()));
-        List<GitSCMExtension> extensions = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> extensions = new ArrayList<>();
         assertThat(source.getExtensions(), is(empty()));
         LocalBranch localBranchExtension = new LocalBranch("**");
         extensions.add(localBranchExtension);

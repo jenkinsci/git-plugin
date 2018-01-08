@@ -64,6 +64,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -688,23 +689,153 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             return null;
         }
+        // first we need to figure out what the revision is. There are six possibilities:
+        // 1. A branch name (if we have that we can return quickly)
+        // 2. A tag name (if we have that we will need to fetch the tag to resolve the tag date)
+        // 3. A short/full revision hash that is the head revision of a branch (if we have that we can return quickly)
+        // 4. A short revision hash that is the head revision of a branch (if we have that we can return quickly)
+        // 5. A short/full revision hash for a tag (we'll need to fetch the tag to resolve the tag date)
+        // 6. A short/full revision hash that is not the head revision of a branch (we'll need to fetch everything to
+        // try and resolve the hash from the history of one of the heads)
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
+        listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
+        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
+                getRemote(), null, true, true
+        );
+        String tagName = null;
+        Set<String> shortNameMatches = new TreeSet<>();
+        String shortHashMatch = null;
+        Set<String> fullTagMatches = new TreeSet<>();
+        for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
+            String name = entry.getKey();
+            String rev = entry.getValue().name();
+            if (name.equals(Constants.R_HEADS + revision)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN!
+                return new SCMRevisionImpl(new SCMHead(revision), rev);
+            }
+            if (name.equals(Constants.R_TAGS+revision)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN but not the good kind
+                tagName = revision;
+                context.wantBranches(false);
+                context.wantTags(true);
+                context.withoutRefSpecs();
+                break;
+            }
+            if (name.startsWith(Constants.R_HEADS) && revision.equalsIgnoreCase(rev)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN!
+                return new SCMRevisionImpl(new SCMHead(StringUtils.removeStart(name, Constants.R_HEADS)), rev);
+            }
+            if (name.startsWith(Constants.R_TAGS) && revision.equalsIgnoreCase(rev)) {
+                listener.getLogger().printf("Candidate match: %s revision %s%n", name, rev);
+                // WIN but let's see if a branch also matches as that would save a fetch
+                fullTagMatches.add(name);
+                continue;
+            }
+            if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
+                shortNameMatches.add(name);
+                if (shortHashMatch == null) {
+                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
+                    shortHashMatch = rev;
+                } else {
+                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
+                    listener.getLogger().printf("Cannot resolve ambiguous short revision %s%n", revision);
+                    return null;
+                }
+            }
+        }
+        if (!fullTagMatches.isEmpty()) {
+            // we just want a tag so we can do a minimal fetch
+            String name = StringUtils.removeStart(fullTagMatches.iterator().next(), Constants.R_TAGS);
+            listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+            tagName = name;
+            context.wantBranches(false);
+            context.wantTags(true);
+            context.withoutRefSpecs();
+        }
+        if (shortHashMatch != null) {
+            // woot this seems unambiguous
+            for (String name: shortNameMatches) {
+                if (name.startsWith(Constants.R_HEADS)) {
+                    listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+                    // WIN it's also a branch
+                    return new SCMRevisionImpl(new SCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
+                            shortHashMatch);
+                }
+            }
+            // ok pick a tag so we can do minimal fetch
+            String name = StringUtils.removeStart(shortNameMatches.iterator().next(), Constants.R_TAGS);
+            listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+            tagName = name;
+            context.wantBranches(false);
+            context.wantTags(true);
+            context.withoutRefSpecs();
+        }
+        if (tagName != null) {
+            listener.getLogger().println(
+                    "Resolving tag commit... (remote references may be a lightweight tag or an annotated tag)");
+            final String tagRef = Constants.R_TAGS+tagName;
+            return doRetrieve(new Retriever<SCMRevision>() {
+                                  @Override
+                                  public SCMRevision run(GitClient client, String remoteName) throws IOException,
+                                          InterruptedException {
+                                      final Repository repository = client.getRepository();
+                                      try (RevWalk walk = new RevWalk(repository)) {
+                                          ObjectId ref = client.revParse(tagRef);
+                                          RevCommit commit = walk.parseCommit(ref);
+                                          long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                          listener.getLogger().printf("Resolved tag %s revision %s%n", revision,
+                                                  ref.getName());
+                                          return new GitTagSCMRevision(new GitTagSCMHead(revision, lastModified),
+                                                  ref.name());
+                                      }
+                                  }
+                              },
+                    context,
+                    listener, false);
+        }
+        // Pokémon!... Got to catch them all
+        listener.getLogger().printf("Could not find %s in remote references. "
+                        + "Pulling heads to local for deep search...%n", revision);
+        context.wantTags(true);
+        context.wantBranches(true);
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  ObjectId objectId;
                                   String hash;
                                   try {
-                                      hash = client.revParse(revision).name();
-                                  } catch (GitException x) {
-                                      // Try prepending remote name in case it was a branch.
-                                      try {
-                                          hash = client.revParse(context.remoteName() + "/" + revision).name();
-                                      } catch (GitException x2) {
-                                          listener.getLogger().println(x.getMessage());
-                                          listener.getLogger().println(x2.getMessage());
+                                      objectId = client.revParse(revision);
+                                      hash = objectId.name();
+                                      String candidatePrefix = Constants.R_REMOTES.substring(Constants.R_REFS.length())
+                                              + context.remoteName() + "/";
+                                      String name = null;
+                                      for (Branch b: client.getBranchesContaining(hash, true)) {
+                                          if (b.getName().startsWith(candidatePrefix)) {
+                                              name = b.getName().substring(candidatePrefix.length());
+                                              break;
+                                          }
+                                      }
+                                      if (name == null) {
+                                          listener.getLogger().printf("Could not find a branch containing commit %s%n",
+                                                  hash);
                                           return null;
                                       }
+                                      listener.getLogger()
+                                              .printf("Selected match: %s revision %s%n", name, hash);
+                                      return new SCMRevisionImpl(new SCMHead(name), hash);
+                                  } catch (GitException x) {
+                                      x.printStackTrace(listener.error("Could not resolve %s", revision));
+                                      return null;
                                   }
-                                  return new SCMRevisionImpl(new SCMHead(revision), hash);
                               }
                           },
                 context,
@@ -948,7 +1079,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Instantiates a new {@link GitSCMBuilder}.
      * Subclasses should override this method if they want to use a custom {@link GitSCMBuilder} or if they need
-     * to pre-decorare the builder.
+     * to pre-decorate the builder.
      *
      * @param head     the {@link SCMHead}.
      * @param revision the {@link SCMRevision}.

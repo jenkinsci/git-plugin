@@ -49,7 +49,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
     /**
      * Shows the difference between the referenced commit and the previous commit.
-     * The changes section also display diffs, so a seperate url is unncessary.
+     * The changes section also display diffs, so a separate url is unnecessary.
      * http://[Assembla URL]/commits/[commit]
      *
      * @param path affected file path
