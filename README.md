@@ -2,7 +2,7 @@
 
 Git software configuration management for Jenkins
 
-* see [Jenkins wiki](https://wiki.jenkins.io/display/JENKINS/Git+Plugin) for detailed feature descriptions
+* see [Jenkins wiki](https://plugins.jenkins.io/git) for detailed feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
 ## Master Branch
