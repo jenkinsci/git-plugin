@@ -1,6 +1,6 @@
 #!groovy
 
-// Test plugin compatbility to recent Jenkins LTS
+// Test plugin compatibility to recent Jenkins LTS
 // Allow failing tests to retry execution
 buildPlugin(jenkinsVersions: [null, '2.107.2'],
             findbugs: [run:true, archive:true, unstableTotalAll: '0'],
