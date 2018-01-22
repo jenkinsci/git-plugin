@@ -969,14 +969,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final @NonNull GitClient git,
                                               final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
-        Collection<Revision> candidates;
+        Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-        try {
-            candidates = GitSCMMatrixUtil.populateCandidatesFromMatrixBuild(build, this);
-        } catch (Throwable ex) { // in case there's no matrix-project plugin installed
-            candidates = Collections.emptyList();
+        if (build.getClass().getName().equals("hudson.matrix.MatrixRun")) {
+            candidates = GitSCMMatrixUtil.populateCandidatesFromRootBuild((AbstractBuild) build, this);
         }
 
         // parameter forcing the commit ID to build
