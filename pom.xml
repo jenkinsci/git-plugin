@@ -115,6 +115,10 @@
             <name>Mark Waite</name>
             <email>mark.earl.waite@gmail.com</email>
         </developer>
+        <developer>
+            <id>stephenconnolly</id>
+            <name>Stephen Connolly</name>
+        </developer>
     </developers>
 
 
