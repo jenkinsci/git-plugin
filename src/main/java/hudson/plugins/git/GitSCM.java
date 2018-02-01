@@ -17,7 +17,6 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Hudson.MasterComputer;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -964,11 +963,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(build,Hudson.MasterComputer.localChannel);
+            return callable.invoke(build, FilePath.localChannel);
         }
 
         public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(project, MasterComputer.localChannel);
+            return callable.invoke(project, FilePath.localChannel);
         }
 
         public Run<?, ?> getBuild() {
