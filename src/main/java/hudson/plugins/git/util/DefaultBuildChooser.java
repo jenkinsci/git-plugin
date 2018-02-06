@@ -23,8 +23,19 @@ public class DefaultBuildChooser extends BuildChooser {
     /* Ignore symbolic default branch ref. */
     private static final BranchSpec HEAD = new BranchSpec("*/HEAD");
 
+    private final boolean filterTipBranches;
+
     @DataBoundConstructor
+    public DefaultBuildChooser(boolean filterTipBranches) {
+        this.filterTipBranches = filterTipBranches;
+    }
+
     public DefaultBuildChooser() {
+        this(true);
+    }
+
+    public boolean isFilterTipBranches() {
+        return filterTipBranches;
     }
 
     /**
@@ -187,7 +198,7 @@ public class DefaultBuildChooser extends BuildChooser {
      *  2. Filter out branches that we don't care about from the revisions.
      *     Any Revisions with no interesting branches are dropped.
      *  3. Get rid of any revisions that are wholly subsumed by another
-     *     revision we're considering.
+     *     revision we're considering (may be disabled).
      *  4. Get rid of any revisions that we've already built.
      *  5. Sort revisions from old to new.
      *
@@ -246,9 +257,13 @@ public class DefaultBuildChooser extends BuildChooser {
 
         verbose(listener, "After branch filtering: {0}", revs);
 
-        // 3. We only want 'tip' revisions
-        revs = utils.filterTipBranches(revs);
-        verbose(listener, "After non-tip filtering: {0}", revs);
+        // 3. We only want 'tip' revisions (if enabled)
+        if (isFilterTipBranches()) {
+            revs = utils.filterTipBranches(revs);
+            verbose(listener, "After non-tip filtering: {0}", revs);
+        } else {
+            verbose(listener, "Non-tip filtering is disabled");
+        }
 
         // 4. Finally, remove any revisions that have already been built.
         verbose(listener, "Removing what''s already been built: {0}", data.getBuildsByBranchName());
