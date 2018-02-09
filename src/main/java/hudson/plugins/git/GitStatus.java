@@ -39,18 +39,12 @@ import org.kohsuke.stapler.*;
  * Information screen for the use of Git in Hudson.
  */
 @Extension
-public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+public class GitStatus implements UnprotectedRootAction {
     @Override
     public String getDisplayName() {
         return "Git";
     }
 
-    @Override
-    public String getSearchUrl() {
-        return getUrlName();
-    }
-
-    @Override
     public String getIconFileName() {
         // TODO
         return null;
