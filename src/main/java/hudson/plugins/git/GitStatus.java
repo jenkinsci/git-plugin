@@ -40,19 +40,23 @@ import org.kohsuke.stapler.*;
  */
 @Extension
 public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+    @Override
     public String getDisplayName() {
         return "Git";
     }
 
+    @Override
     public String getSearchUrl() {
         return getUrlName();
     }
 
+    @Override
     public String getIconFileName() {
         // TODO
         return null;
     }
 
+    @Override
     public String getUrlName() {
         return "git";
     }
@@ -162,6 +166,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         return new HttpResponse() {
+            @Override
             public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
                     throws IOException, ServletException {
                 rsp.setStatus(SC_OK);
