@@ -1261,7 +1261,21 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                           TaskListener listener, BuildData buildData,
                                                           BuildChooserContext context)
                 throws GitException, IOException, InterruptedException {
-            return Collections.singleton(revision);
+            if (!isPollCall) {
+                return Collections.singleton(revision);
+            }
+            // TODO remote name
+            String fqbn = DEFAULT_REMOTE_NAME + "/" + singleBranch;
+            ObjectId sha1 = git.revParse(fqbn);
+            listener.getLogger().println("rev-parse " + fqbn + " -> " + sha1.getName());
+            if (isPollCall && buildData.hasBeenBuilt(sha1)) {
+                listener.getLogger().println(sha1.getName() + " has already been built");
+                return Collections.emptyList();
+            }
+            listener.getLogger().println("Found a new commit " + sha1.getName() + " to be built on " + fqbn);
+            Revision revision = new Revision(sha1);
+            revision.getBranches().add(new Branch(fqbn, sha1));
+            return Collections.singletonList(revision);
         }
 
         /**
