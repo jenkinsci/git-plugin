@@ -28,7 +28,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 /**
  * Represents the revision of a Git Tag.
  *
- * @since TODO
+ * @since 3.6.0
  */
 public class GitTagSCMRevision extends AbstractGitSCMSource.SCMRevisionImpl {
     /**

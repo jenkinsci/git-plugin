@@ -209,7 +209,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * Going forward this is primarily how we'll support esoteric use cases.
      *
-     * @since 1.EXTENSION
+     * @since 2.0
      */
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;

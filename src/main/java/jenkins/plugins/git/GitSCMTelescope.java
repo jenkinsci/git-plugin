@@ -58,7 +58,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * An implementation of this extension point allows {@link AbstractGitSCMSource} to examine a repository from a distance
  * without requiring a local checkout.
  *
- * @since TODO
+ * @since 3.6.1
  */
 public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
 
