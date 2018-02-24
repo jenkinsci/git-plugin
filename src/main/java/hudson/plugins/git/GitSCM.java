@@ -77,13 +77,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+import hudson.Util;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -1365,7 +1365,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            String sha1 = fixEmpty(rev.getSha1String());
+            String sha1 = Util.fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
             }
@@ -1497,7 +1497,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.name value
          */
         public String getGlobalConfigName() {
-            return fixEmptyAndTrim(globalConfigName);
+            return Util.fixEmptyAndTrim(globalConfigName);
         }
 
         /**
@@ -1513,7 +1513,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.email value
          */
         public String getGlobalConfigEmail() {
-            return fixEmptyAndTrim(globalConfigEmail);
+            return Util.fixEmptyAndTrim(globalConfigEmail);
         }
 
         /**
