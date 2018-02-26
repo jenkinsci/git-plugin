@@ -58,7 +58,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assume.*;
+import static org.junit.Assume.assumeThat;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;

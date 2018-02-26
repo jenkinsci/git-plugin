@@ -46,7 +46,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 /**
  * Implementation of {@link SCMFile} for Git.
  *
- * @since FIXME
+ * @since 3.0.2
  */
 public class GitSCMFile extends SCMFile {
 

@@ -30,7 +30,7 @@ import jenkins.scm.api.mixin.TagSCMHead;
 /**
  * Represents a Git Tag.
  *
- * @since TODO
+ * @since 3.6.0
  */
 public class GitTagSCMHead extends SCMHead implements TagSCMHead {
     /**

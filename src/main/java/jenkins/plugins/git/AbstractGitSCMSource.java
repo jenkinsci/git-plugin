@@ -1300,7 +1300,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * A {@link SCMProbe} that uses a local cache of the repository.
      *
-     * @since TODO
+     * @since 3.6.1
      */
     private static class TreeWalkingSCMProbe extends SCMProbe {
         private final String name;
@@ -1377,7 +1377,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * A {@link SCMProbe} that uses a {@link GitSCMTelescope}.
      *
-     * @since TODO
+     * @since 3.6.1
      */
     private static class TelescopingSCMProbe extends SCMProbe {
         /**
