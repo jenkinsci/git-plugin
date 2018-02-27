@@ -67,7 +67,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
     private final Class<? extends GitSCMExtension> extension;
     /**
      * The constructor to use in {@link #convertToTrait(GitSCMExtension)} or {@code null} if the implementation
-     * class is handling convertion.
+     * class is handling conversion.
      */
     @CheckForNull
     private final Constructor<? extends SCMSourceTrait> constructor;
@@ -78,7 +78,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
     private final boolean noArgConstructor;
 
     /**
-     * Constructor to use when type inferrence using {@link #GitSCMExtensionTraitDescriptor()} does not work.
+     * Constructor to use when type inference using {@link #GitSCMExtensionTraitDescriptor()} does not work.
      *
      * @param clazz     Pass in the type of {@link SCMTrait}
      * @param extension Pass in the type of {@link GitSCMExtension}.
@@ -202,14 +202,14 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      *
      * The default implementation assumes that the {@link #clazz} has a public constructor taking either no arguments
      * or a single argument of type {@link #getExtensionClass()} and will just call that. Override this method if you
-     * need more complex convertion logic, for example {@link LocalBranch} only makes sense for a
+     * need more complex conversion logic, for example {@link LocalBranch} only makes sense for a
      * {@link LocalBranch#getLocalBranch()} value of {@code **} so
      * {@link LocalBranchTrait.DescriptorImpl#convertToTrait(GitSCMExtension)} returns {@code null} for all other
      * {@link LocalBranch} configurations.
      *
      * @param extension the {@link GitSCMExtension} (must be of type {@link #getExtensionClass()})
      * @return the {@link GitSCMExtensionTrait} or {@code null} if the supplied {@link GitSCMExtension} is not
-     * appropriate for convertion to a {@link GitSCMExtensionTrait}
+     * appropriate for conversion to a {@link GitSCMExtensionTrait}
      * @throws UnsupportedOperationException if the conversion failed because of a implementation bug.
      */
     @CheckForNull

@@ -28,6 +28,8 @@ import hudson.Extension;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.plugins.git.GitSCMSourceContext;
+import jenkins.plugins.git.GitTagSCMHead;
+import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
@@ -42,20 +44,21 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A {@link Discovery} trait for Git that will discover branches on the repository.
+ * A {@link Discovery} trait for Git that will discover tags on the repository.
  *
- * @since 3.4.0
+ * @since 3.6.0
  */
-public class BranchDiscoveryTrait extends SCMSourceTrait {
+public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public BranchDiscoveryTrait() {
+    public TagDiscoveryTrait() {
     }
 
     /**
@@ -64,8 +67,8 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitSCMSourceContext<?,?> ctx = (GitSCMSourceContext<?, ?>) context;
-        ctx.wantBranches(true);
-        ctx.withAuthority(new BranchSCMHeadAuthority());
+        ctx.wantTags(true);
+        ctx.withAuthority(new TagSCMHeadAuthority());
     }
 
     /**
@@ -73,7 +76,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      */
     @Override
     public boolean includeCategory(@NonNull SCMHeadCategory category) {
-        return category.isUncategorized();
+        return category instanceof TagSCMHeadCategory;
     }
 
     /**
@@ -88,7 +91,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
          */
         @Override
         public String getDisplayName() {
-            return Messages.BranchDiscoveryTrait_displayName();
+            return Messages.TagDiscoveryTrait_displayName();
         }
 
         /**
@@ -119,12 +122,12 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Trusts branches from the repository.
      */
-    public static class BranchSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, SCMHead, SCMRevision> {
+    public static class TagSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, GitTagSCMHead, GitTagSCMRevision> {
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull GitTagSCMHead head) {
             return true;
         }
 
@@ -138,7 +141,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
              */
             @Override
             public String getDisplayName() {
-                return Messages.BranchDiscoveryTrait_authorityDisplayName();
+                return Messages.TagDiscoveryTrait_authorityDisplayName();
             }
 
             /**
@@ -147,14 +150,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             @Override
             public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public boolean isApplicableToHead(@NonNull Class<? extends SCMHeadMixin> headClass) {
-                return super.isApplicableToHead(headClass) && !(TagSCMHead.class.isAssignableFrom(headClass));
             }
         }
     }

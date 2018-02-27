@@ -181,7 +181,7 @@ public class GitSCMFileSystemTest {
         SCMRevision revision = source.fetch(new SCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        final long fileSystemAllowedOffset = isWindows() ? 3000 : 1500;
+        final long fileSystemAllowedOffset = isWindows() ? 4000 : 1500;
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
         long currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
         long lastModified = fs.lastModified();
@@ -244,7 +244,7 @@ public class GitSCMFileSystemTest {
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
-        Set<String> names = new TreeSet<String>();
+        Set<String> names = new TreeSet<>();
         SCMFile file = null;
         SCMFile file2 = null;
         SCMFile dir = null;

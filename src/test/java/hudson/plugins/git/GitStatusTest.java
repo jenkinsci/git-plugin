@@ -11,6 +11,7 @@ import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
 import java.io.File;
+import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
 
@@ -23,9 +24,13 @@ import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 public class GitStatusTest extends AbstractGitProject {
 
@@ -58,12 +63,6 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     public void testGetDisplayName() {
         assertEquals("Git", this.gitStatus.getDisplayName());
-    }
-
-    @WithoutJenkins
-    @Test
-    public void testGetSearchUrl() {
-        assertEquals("git", this.gitStatus.getSearchUrl());
     }
 
     @WithoutJenkins
@@ -515,5 +514,30 @@ public class GitStatusTest extends AbstractGitProject {
      */
     private boolean isWindows() {
         return File.pathSeparatorChar == ';';
+    }
+
+    @Test
+    @Issue("JENKINS-46929")
+    public void testDoNotifyCommitTriggeredHeadersLimited() throws Exception {
+        SCMTrigger[] projectTriggers = new SCMTrigger[50];
+        for (int i = 0; i < projectTriggers.length; i++) {
+            projectTriggers[i] = setupProjectWithTrigger("a", "master", false);
+        }
+
+        HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null);
+
+        // Up to 10 "Triggered" headers + 1 extra warning are returned.
+        StaplerRequest sReq = mock(StaplerRequest.class);
+        StaplerResponse sRsp = mock(StaplerResponse.class);
+        Mockito.when(sRsp.getWriter()).thenReturn(mock(PrintWriter.class));
+        rsp.generateResponse(sReq, sRsp, null);
+        Mockito.verify(sRsp, Mockito.times(11)).addHeader(Mockito.eq("Triggered"), Mockito.anyString());
+
+        // All triggers run.
+        for (SCMTrigger projectTrigger : projectTriggers) {
+            Mockito.verify(projectTrigger).run();
+        }
+
+        assertEquals("URL: a Branches: master", this.gitStatus.toString());
     }
 }

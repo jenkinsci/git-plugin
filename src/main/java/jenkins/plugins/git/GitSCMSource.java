@@ -72,6 +72,7 @@ import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
@@ -84,6 +85,8 @@ import jenkins.scm.api.trait.SCMHeadPrefilter;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.api.trait.SCMTrait;
+import jenkins.scm.impl.TagSCMHeadCategory;
+import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
@@ -534,6 +537,12 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public List<SCMSourceTrait> getTraitsDefaults() {
             return Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait());
         }
+
+        @NonNull
+        @Override
+        protected SCMHeadCategory[] createCategories() {
+            return new SCMHeadCategory[]{UncategorizedSCMHeadCategory.DEFAULT, TagSCMHeadCategory.DEFAULT};
+        }
     }
 
     @Extension
@@ -544,7 +553,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                                                   @Nullable final String sha1,
                                                                   List<ParameterValue> buildParameters,
                                                                   String... branches) {
-            List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
+            List<GitStatus.ResponseContributor> result = new ArrayList<>();
             final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can

@@ -25,7 +25,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
      * @param mergeRemote remote name used for merge
-     * @param mergeTarget remote branch to be merged into currnet branch
+     * @param mergeTarget remote branch to be merged into current branch
      * @param mergeStrategy merge strategy to be used
      */
     @Deprecated

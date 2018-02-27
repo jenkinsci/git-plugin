@@ -11,14 +11,27 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import hudson.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
 import hudson.plugins.git.Cache;
+import hudson.model.Items;
+import hudson.model.Job;
+import hudson.model.Node;
+import hudson.model.Queue;
+import hudson.model.Run;
+import hudson.model.Saveable;
+import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
@@ -35,7 +48,12 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
-import hudson.scm.*;
+import hudson.scm.AbstractScmTagAction;
+import hudson.scm.ChangeLogParser;
+import hudson.scm.PollingResult;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMDescriptor;
+import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
@@ -73,16 +91,26 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
+import hudson.plugins.git.browser.BitbucketWeb;
+import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+import hudson.Util;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -144,7 +172,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(url, null, null, credentialsId));
         return repoList;
     }
@@ -208,7 +236,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * Going forward this is primarily how we'll support esoteric use cases.
      *
-     * @since 1.EXTENSION
+     * @since 2.0
      */
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
@@ -329,10 +357,33 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.browser = browser;
     }
 
+    private static final String HOSTNAME_MATCH
+            = "([\\w\\d[-.]]+)" // hostname
+            ;
+    private static final String REPOSITORY_PATH_MATCH
+            = "/*" // Zero or more slashes as start of repository path
+            + "(.+?)" // repository path without leading slashes
+            + "(?:[.]git)?" // optional '.git' suffix
+            + "/*" // optional trailing '/'
+            ;
+
     private static final Pattern[] URL_PATTERNS = {
-        Pattern.compile("https://github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
-        Pattern.compile("(?:git@)?github[.]com:([^/]+/[^/]+?)([.]git)*/*"),
-        Pattern.compile("ssh://(?:git@)?github[.]com/([^/]+/[^/]+?)([.]git)*/*"),
+        /* URL style - like https://github.com/jenkinsci/git-plugin */
+        Pattern.compile(
+        "(?:\\w+://)" // protocol (scheme)
+        + "(?:.+@)?" // optional username/password
+        + HOSTNAME_MATCH
+        + "(?:[:][\\d]+)?" // optional port number (only honored by git for ssh:// scheme)
+        + "/" // separator between hostname and repository path - '/'
+        + REPOSITORY_PATH_MATCH
+        ),
+        /* Alternate ssh style - like git@github.com:jenkinsci/git-plugin */
+        Pattern.compile(
+        "(?:git@)" // required username (only optional if local username is 'git')
+        + HOSTNAME_MATCH
+        + ":" // separator between hostname and repository path - ':'
+        + REPOSITORY_PATH_MATCH
+        )
     };
 
     @Override public RepositoryBrowser<?> guessBrowser() {
@@ -341,21 +392,33 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             for (RemoteConfig config : remoteRepositories) {
                 for (URIish uriIsh : config.getURIs()) {
                     String uri = uriIsh.toString();
-                    // TODO make extensible by introducing an abstract GitRepositoryBrowserDescriptor
                     for (Pattern p : URL_PATTERNS) {
                         Matcher m = p.matcher(uri);
                         if (m.matches()) {
-                            webUrls.add("https://github.com/" + m.group(1) + "/");
+                            webUrls.add("https://" + m.group(1) + "/" + m.group(2) + "/");
                         }
                     }
                 }
             }
         }
-        if (webUrls.size() == 1) {
-            return new GithubWeb(webUrls.iterator().next());
-        } else {
+        if (webUrls.isEmpty()) {
             return null;
         }
+        if (webUrls.size() == 1) {
+            String url = webUrls.iterator().next();
+            if (url.startsWith("https://bitbucket.org/")) {
+                return new BitbucketWeb(url);
+            }
+            if (url.startsWith("https://gitlab.com/")) {
+                return new GitLab(url, "");
+            }
+            if (url.startsWith("https://github.com/")) {
+                return new GithubWeb(url);
+            }
+            return null;
+        }
+        LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
+        return null;
     }
 
     public boolean isCreateAccountBasedOnEmail() {
@@ -586,7 +649,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return requiresWorkspaceForPolling(new EnvVars());
     }
 
-    private boolean requiresWorkspaceForPolling(EnvVars environment) {
+    /* Package protected for test access */
+    boolean requiresWorkspaceForPolling(EnvVars environment) {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
@@ -769,8 +833,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String ucCredentialsId = uc.getCredentialsId();
             if (ucCredentialsId != null) {
                 String url = getParameterString(uc.getUrl(), environment);
-                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
-                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build());
+                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
+                        StandardUsernameCredentials.class,
+                        project,
+                        project instanceof Queue.Task
+                                ? Tasks.getDefaultAuthenticationOf((Queue.Task)project)
+                                : ACL.SYSTEM,
+                        URIRequirementBuilder.fromUri(url).build()
+                );
                 CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
                 CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
@@ -925,11 +995,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(build,Hudson.MasterComputer.localChannel);
+            return callable.invoke(build, FilePath.localChannel);
         }
 
         public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(project, MasterComputer.localChannel);
+            return callable.invoke(project, FilePath.localChannel);
         }
 
         public Run<?, ?> getBuild() {
@@ -1204,8 +1274,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        printCommitMessageToLog(listener, git, revToBuild);
-
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
@@ -1218,11 +1286,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
         }
 
+        // Needs to be after the checkout so that revToBuild is in the workspace
+        try {
+            printCommitMessageToLog(listener, git, revToBuild);
+        } catch (GitException ge) {
+            listener.getLogger().println("Exception logging commit message for " + revToBuild + ": " + ge.getMessage());
+        }
+
         // Don't add the tag and changelog if we've already processed this BuildData before.
         if (!buildDataAlreadyPresent) {
             if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
                 // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
-                // so only one of the actions is addressible by users
+                // so only one of the actions is addressable by users
                 build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
             }
 
@@ -1363,7 +1438,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            String sha1 = fixEmpty(rev.getSha1String());
+            String sha1 = Util.fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
             }
@@ -1496,7 +1571,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.name value
          */
         public String getGlobalConfigName() {
-            return fixEmptyAndTrim(globalConfigName);
+            return Util.fixEmptyAndTrim(globalConfigName);
         }
 
         /**
@@ -1512,7 +1587,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.email value
          */
         public String getGlobalConfigEmail() {
-            return fixEmptyAndTrim(globalConfigEmail);
+            return Util.fixEmptyAndTrim(globalConfigEmail);
         }
 
         /**
