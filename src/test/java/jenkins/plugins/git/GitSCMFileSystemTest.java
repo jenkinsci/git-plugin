@@ -86,8 +86,7 @@ public class GitSCMFileSystemTest {
      * If you do not have that tag, you will need to include that tag in
      * your fork.  You can do that with the commands:
      *
-     * $ git remote add upstream https://github.com/jenkinsci/git-plugin
-     * $ git fetch --tags upstream
+     * $ git fetch --tags https://github.com/jenkinsci/git-plugin
      * $ git push --tags origin
      */
     @BeforeClass
@@ -102,7 +101,7 @@ public class GitSCMFileSystemTest {
                 tagId = client.revParse(tag);
             } catch (GitException ge) {
                 CliGitCommand gitCmd = new CliGitCommand(null);
-                gitCmd.run("fetch", "--tags");
+                gitCmd.run("fetch", "--tags", "https://github.com/jenkinsci/git-plugin");
                 tagId = client.revParse(tag); /* throws if tag not available */
             }
         }
