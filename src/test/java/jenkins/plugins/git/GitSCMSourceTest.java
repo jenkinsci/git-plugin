@@ -94,7 +94,7 @@ public class GitSCMSourceTest {
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
                         .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
-        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new SCMHead("master"))));
+        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
         verify(scmSourceOwner, times(0)).onSCMSourceUpdated(gitSCMSource);
 
     }

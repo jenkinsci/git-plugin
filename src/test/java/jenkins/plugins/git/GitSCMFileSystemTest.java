@@ -177,7 +177,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMRevision revision = source.fetch(new SCMHead("dev"), null);
+        SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         final long fileSystemAllowedOffset = isWindows() ? 4000 : 1500;
