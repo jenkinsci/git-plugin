@@ -52,6 +52,7 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
     private boolean pushMerge;
     private boolean pushOnlyIfSuccess;
     private boolean forcePush;
+    private boolean ignoreGitErrors;
     
     private List<TagToPush> tagsToPush;
     // Pushes HEAD to these locations
@@ -65,13 +66,15 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         List<NoteToPush> notesToPush,
                         boolean pushOnlyIfSuccess,
                         boolean pushMerge,
-                        boolean forcePush) {
+                        boolean forcePush,
+                        boolean ignoreGitErrors) {
         this.tagsToPush = tagsToPush;
         this.branchesToPush = branchesToPush;
         this.notesToPush = notesToPush;
         this.pushMerge = pushMerge;
         this.pushOnlyIfSuccess = pushOnlyIfSuccess;
         this.forcePush = forcePush;
+        this.ignoreGitErrors = ignoreGitErrors;
         this.configVersion = 2L;
     }
 
@@ -85,6 +88,10 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
 
     public boolean isForcePush() {
         return forcePush;
+    }
+
+    public boolean isIgnoreGitErrors() {
+        return ignoreGitErrors;
     }
 
     public boolean isPushTags() {
@@ -239,7 +246,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                     }
                 } catch (FormException | GitException e) {
                     e.printStackTrace(listener.error("Failed to push merge to origin repository"));
-                    return false;
+                    if (!ignoreGitErrors)
+                        return false;
                 }
             }
 
@@ -292,7 +300,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push tag " + tagName + " to " + targetRepo));
-                        return false;
+                        if (!ignoreGitErrors)
+                            return false;
                     }
                 }
             }
@@ -328,7 +337,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
-                        return false;
+                        if (!ignoreGitErrors)
+                            return false;
                     }
                 }
             }
@@ -372,7 +382,8 @@ public class GitPublisher extends Recorder implements Serializable, MatrixAggreg
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));
-                        return false;
+                        if (!ignoreGitErrors)
+                            return false;
                     }
                 }
             }
