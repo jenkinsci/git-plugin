@@ -20,6 +20,12 @@ f.entry(title:_("Use credentials from default remote of parent repository"), fie
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
     f.number(clazz:"number", min:1, step:1)
 }
+f.entry(title:_("Shallow clone"), field:"shallow") {
+    f.checkbox()
+}
+f.entry(title:_("Shallow clone depth"), field:"depth") {
+    f.number(clazz:"number", min:1, step:1)
+}
 
 /*
   This needs more thought

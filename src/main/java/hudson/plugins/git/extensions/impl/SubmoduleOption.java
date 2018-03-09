@@ -12,6 +12,7 @@ import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -35,6 +36,7 @@ public class SubmoduleOption extends GitSCMExtension {
      * Use --recursive flag on submodule commands - requires git>=1.6.5
      * Use --remote flag on submodule update command - requires git>=1.8.2
      * Use --reference flag on submodule update command - requires git>=1.6.4
+     * Use --depth flag on submodule update command - requires git>=1.8.4
      */
     private boolean disableSubmodules;
     private boolean recursiveSubmodules;
@@ -42,6 +44,8 @@ public class SubmoduleOption extends GitSCMExtension {
     private String reference;
     private boolean parentCredentials;
     private Integer timeout;
+    private boolean shallow;
+    private int depth = 1;
 
     @DataBoundConstructor
     public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
@@ -51,6 +55,8 @@ public class SubmoduleOption extends GitSCMExtension {
         this.parentCredentials = parentCredentials;
         this.reference = reference;
         this.timeout = timeout;
+        this.shallow = shallow;
+        this.depth = depth;
     }
 
     public boolean isDisableSubmodules() {
@@ -75,6 +81,24 @@ public class SubmoduleOption extends GitSCMExtension {
 
     public Integer getTimeout() {
         return timeout;
+    }
+
+    @DataBoundSetter
+    public void setShallow(boolean shallow) {
+        this.shallow = shallow;
+    }
+
+    public boolean getShallow() {
+        return shallow;
+    }
+
+    @DataBoundSetter
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public int getDepth() {
+        return depth;
     }
 
     /**
@@ -105,6 +129,8 @@ public class SubmoduleOption extends GitSCMExtension {
                         .parentCredentials(parentCredentials)
                         .ref(build.getEnvironment(listener).expand(reference))
                         .timeout(timeout)
+                        .shallow(shallow)
+                        .depth(depth)
                         .execute();
             }
         } catch (GitException e) {
@@ -159,7 +185,16 @@ public class SubmoduleOption extends GitSCMExtension {
         if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
             return false;
         }
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        if (timeout != null ? !timeout.equals(that.timeout) : that.timeout != null) {
+            return false;
+        }
+        if (shallow != that.shallow) {
+            return false;
+        }
+        if (depth != that.depth) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -182,6 +217,8 @@ public class SubmoduleOption extends GitSCMExtension {
                 ", reference='" + reference + '\'' +
                 ", parentCredentials=" + parentCredentials +
                 ", timeout=" + timeout +
+                ", shallow=" + shallow +
+                ", depth=" + depth +
                 '}';
     }
 
