@@ -809,11 +809,15 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     context,
                     listener, false);
         }
+        if (revision.matches("[a-f0-9]{40}")) {
+            return new GitRefSCMRevision(new GitRefSCMHead(revision, revision), revision);
+        }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
                         + "Pulling heads to local for deep search...%n", revision);
         context.wantTags(true);
         context.wantBranches(true);
+
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {

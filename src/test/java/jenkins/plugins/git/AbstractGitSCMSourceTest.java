@@ -456,7 +456,7 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-48061")
     @Test
-    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
+    @Ignore("At least file:// protocol doesn't allow fetching unannounced commits")
     public void retrieveRevision_nonAdvertised() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file", "v1");
@@ -483,7 +483,6 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-48061")
     @Test
-    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
     public void retrieveRevision_customRef() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file", "v1");
