@@ -46,7 +46,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetDisplayNameNullSCMName() throws Exception {
-        BuildData dataWithNullSCM = new BuildData(null);
+        BuildData dataWithNullSCM = new BuildData((String)null);
         assertThat(dataWithNullSCM.getDisplayName(), is("Git Build Data"));
     }
 
@@ -173,7 +173,7 @@ public class BuildDataTest {
 
     @Test
     public void testToStringNullSCMBuildData() {
-        BuildData nullSCM = new BuildData(null);
+        BuildData nullSCM = new BuildData((String)null);
         assertThat(nullSCM.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
     }
 

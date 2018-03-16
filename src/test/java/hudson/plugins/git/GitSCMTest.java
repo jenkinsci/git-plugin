@@ -32,6 +32,7 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -1158,10 +1159,10 @@ public class GitSCMTest extends AbstractGitTestCase {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
         BuildChooser buildChooser = gitSCM.getBuildChooser();
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
         assertEquals(1, candidateRevisions.size());
         gitSCM.setBuildChooser(buildChooser); // Should be a no-op
-        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
         assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
@@ -2341,6 +2342,41 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
+    }
+
+    @Issue("JENKINS-19022")
+    @Test
+    public void testGetBuildDataReadsBuildDetails() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+        /* This is the null that causes NPE */
+        Branch branch = new Branch("origin/master", sha1);
+
+        List<Branch> branchList = new ArrayList<>();
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
+        hudson.plugins.git.util.Build buildInfo = new hudson.plugins.git.util.Build(revision, 1, Result.SUCCESS);
+        BuildDetails details = new BuildDetails(buildInfo, scm.getScmName(), scm.getUserRemoteConfigs());
+
+        /* List of build data that will be returned by the mocked BuildDetails */
+        List<BuildDetails> buildDetailsList = new ArrayList<>();
+        buildDetailsList.add(details);
+
+        /* AbstractBuild mock which returns the buildDetailsList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildDetails.class)).thenReturn(buildDetailsList);
+
+        BuildData buildData = scm.getBuildData(build);
+
+        assertEquals("BuildData lastBuild matches details", buildInfo, buildData.lastBuild);
+        assertEquals("BuildData buildsByBranchName was updated", 1, buildData.buildsByBranchName.values().size());
+        assertEquals("BuildData buildsByBranchName branch matches", buildInfo, buildData.getLastBuildOfBranch("origin/master"));
+
+        verify(build, times(1)).getActions(BuildDetails.class);
     }
 
     /**
