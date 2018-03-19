@@ -29,11 +29,10 @@ import hudson.Extension;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadMigration;
 import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.mixin.SCMHeadMixin;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-public class GitBranchSCMHead extends SCMHead implements SCMHeadMixin {
+public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
     /**
      * Constructor.
      *
@@ -41,6 +40,11 @@ public class GitBranchSCMHead extends SCMHead implements SCMHeadMixin {
      */
     public GitBranchSCMHead(@NonNull String name) {
         super(name);
+    }
+
+    @Override
+    public String getRef() {
+        return "refs/heads/" + getName();
     }
 
     @Restricted(NoExternalUse.class)

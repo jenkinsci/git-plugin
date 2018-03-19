@@ -713,12 +713,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         client.addDefaultCredentials(getCredentials());
         listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
         Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                getRemote(), null, true, true
+                getRemote(), null, false, false
         );
         String tagName = null;
         Set<String> shortNameMatches = new TreeSet<>();
         String shortHashMatch = null;
         Set<String> fullTagMatches = new TreeSet<>();
+        Set<String> fullHashMatches = new TreeSet<>();
+        String fullHashMatch = null;
         for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
             String name = entry.getKey();
             String rev = entry.getValue().name();
@@ -747,6 +749,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 fullTagMatches.add(name);
                 continue;
             }
+            if ("HEAD".equals(name)) {
+                //Skip HEAD as it should only appear during testing, not for standard bare repos iirc
+                continue;
+            }
+            if (rev.toLowerCase(Locale.ENGLISH).equals(revision.toLowerCase(Locale.ENGLISH))) {
+                fullHashMatches.add(name);
+                if (fullHashMatch == null) {
+                    fullHashMatch = rev;
+                }
+                //Since it was a full match then the shortMatch below will also match, so just skip it
+                continue;
+            }
             if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
                 shortNameMatches.add(name);
                 if (shortHashMatch == null) {
@@ -768,6 +782,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             context.wantTags(true);
             context.withoutRefSpecs();
         }
+        if (fullHashMatch != null) {
+            //since this would have been skipped if this was a head or a tag we can just return whatever
+            return new GitRefSCMRevision(new GitRefSCMHead(fullHashMatch, fullHashMatches.iterator().next()), fullHashMatch);
+        }
         if (shortHashMatch != null) {
             // woot this seems unambiguous
             for (String name: shortNameMatches) {
@@ -776,15 +794,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     // WIN it's also a branch
                     return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
                             shortHashMatch);
+                } else if (name.startsWith(Constants.R_HEADS)) {
+                    tagName = StringUtils.removeStart(name, Constants.R_TAGS);
+                    context.wantBranches(false);
+                    context.wantTags(true);
+                    context.withoutRefSpecs();
                 }
             }
-            // ok pick a tag so we can do minimal fetch
-            String name = StringUtils.removeStart(shortNameMatches.iterator().next(), Constants.R_TAGS);
-            listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
-            tagName = name;
-            context.wantBranches(false);
-            context.wantTags(true);
-            context.withoutRefSpecs();
+            if (tagName != null) {
+                listener.getLogger().printf("Selected match: %s revision %s%n", tagName, shortHashMatch);
+            } else {
+                return new GitRefSCMRevision(new GitRefSCMHead(shortHashMatch, shortNameMatches.iterator().next()), shortHashMatch);
+            }
         }
         if (tagName != null) {
             listener.getLogger().println(
@@ -808,9 +829,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                               },
                     context,
                     listener, false);
-        }
-        if (revision.matches("[a-f0-9]{40}")) {
-            return new GitRefSCMRevision(new GitRefSCMHead(revision, revision), revision);
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
