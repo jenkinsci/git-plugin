@@ -130,7 +130,10 @@ public class SubmoduleOption extends GitSCMExtension {
             if (!disableSubmodules && git.hasGitModules()) {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
-                git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+                git.setupSubmoduleUrls(
+                        revToBuild.lastBuild.getRevision(),
+                        listener,
+                        recursiveSubmodules);
                 SubmoduleUpdateCommand cmd = git.submoduleUpdate()
                         .recursive(recursiveSubmodules)
                         .remoteTracking(trackingSubmodules)
