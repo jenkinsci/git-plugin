@@ -973,17 +973,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
         for (AbstractBuild b : p.getBuilds()) {
             /* First, try BuildDetails.class */
-            BuildDetails details = b.getAction(BuildDetails.class);
-            if (details != null && details.build != null) {
-                Build lb = details.build;
-                if (lb.isFor(sha1)) return b;
+            List<BuildDetails> buildDetailsActions = b.getActions(BuildDetails.class);
+            for (BuildDetails details : buildDetailsActions) {
+                if (details != null && details.build != null) {
+                    Build lb = details.build;
+                    if (lb.isFor(sha1)) return b;
+                }
             }
 
             /* Next, try the deprecated BuildData.class */
-            BuildData data = b.getAction(BuildData.class);
-            if (data != null && data.lastBuild!=null) {
-                Build lb = data.lastBuild;
-                if (lb.isFor(sha1)) return b;
+            List<BuildData> buildDataActions = b.getActions(BuildData.class);
+            for (BuildData data : buildDataActions) {
+                if (data != null && data.lastBuild!=null) {
+                    Build lb = data.lastBuild;
+                    if (lb.isFor(sha1)) return b;
+                }
             }
         }
         return null;
