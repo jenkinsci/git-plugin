@@ -28,5 +28,9 @@ import jenkins.scm.api.mixin.SCMHeadMixin;
 
 public interface GitSCMHeadMixin extends SCMHeadMixin {
 
+    /**
+     * The ref, e.g. /refs/heads/master
+     * @return the ref
+     */
     String getRef();
 }

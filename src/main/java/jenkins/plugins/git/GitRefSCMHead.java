@@ -17,14 +17,15 @@ public class GitRefSCMHead extends SCMHead implements GitSCMHeadMixin {
     }
 
     /**
-     * Constructor.
+     * Constructor where ref and name is the same.
      *
-     * @param name the name.
+     * @param name the name (and the ref).
      */
     public GitRefSCMHead(@NonNull String name) {
         this(name, name);
     }
 
+    @Override
     public String getRef() {
         return ref;
     }

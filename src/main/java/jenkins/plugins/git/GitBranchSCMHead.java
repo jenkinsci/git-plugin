@@ -29,6 +29,7 @@ import hudson.Extension;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadMigration;
 import jenkins.scm.api.SCMRevision;
+import org.eclipse.jgit.lib.Constants;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -44,7 +45,7 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
 
     @Override
     public String getRef() {
-        return "refs/heads/" + getName();
+        return Constants.R_HEADS + getName();
     }
 
     @Restricted(NoExternalUse.class)
