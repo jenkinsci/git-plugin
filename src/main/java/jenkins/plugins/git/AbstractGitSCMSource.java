@@ -360,15 +360,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @CheckForNull
     @Override
-    protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
+    protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
-        final GitSCMSourceContext context = new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        GitSCMSourceContext context = new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         GitSCMTelescope telescope = GitSCMTelescope.of(this);
         if (telescope != null) {
             String remote = getRemote();
             StandardUsernameCredentials credentials = getCredentials();
             telescope.validate(remote, credentials);
             return telescope.getRevision(remote, credentials, head);
+        }
+        if (head instanceof GitSCMHeadMixin) {
+            context = context.withoutRefSpecs().withRefSpec(((GitSCMHeadMixin) head).getRef());
         }
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
@@ -388,7 +391,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                               return new GitBranchSCMRevision((GitBranchSCMHead)head, b.getSHA1String());
                                           }
                                       }
-                                  } else { //TODO change to something
+                                  } else if (head instanceof GitRefSCMHead) {
+                                      try {
+                                          ObjectId objectId = client.revParse(((GitRefSCMHead) head).getRef());
+                                          return new GitRefSCMRevision((GitRefSCMHead)head, objectId.name());
+                                      } catch (GitException e) {
+                                          // ref could not be found
+                                          return null;
+                                      }
+                                  } else {
+                                      listener.getLogger().println("Entering default git retrieve code path");
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
