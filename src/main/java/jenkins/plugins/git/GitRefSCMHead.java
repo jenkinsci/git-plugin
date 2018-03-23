@@ -9,7 +9,8 @@ public class GitRefSCMHead extends SCMHead implements GitSCMHeadMixin {
     /**
      * Constructor.
      *
-     * @param name the name.
+     * @param name the name of the ref.
+     * @param ref the ref.
      */
     public GitRefSCMHead(@NonNull String name, @NonNull String ref) {
         super(name);
@@ -17,7 +18,7 @@ public class GitRefSCMHead extends SCMHead implements GitSCMHeadMixin {
     }
 
     /**
-     * Constructor where ref and name is the same.
+     * Constructor where ref and name are the same.
      *
      * @param name the name (and the ref).
      */
