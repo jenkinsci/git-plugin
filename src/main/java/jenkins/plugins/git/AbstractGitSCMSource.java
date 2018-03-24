@@ -806,7 +806,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     // WIN it's also a branch
                     return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
                             shortHashMatch);
-                } else if (name.startsWith(Constants.R_HEADS)) {
+                } else if (name.startsWith(Constants.R_TAGS)) {
                     tagName = StringUtils.removeStart(name, Constants.R_TAGS);
                     context.wantBranches(false);
                     context.wantTags(true);
