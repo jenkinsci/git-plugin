@@ -44,7 +44,7 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
     }
 
     @Override
-    public String getRef() {
+    public final String getRef() {
         return Constants.R_HEADS + getName();
     }
 
