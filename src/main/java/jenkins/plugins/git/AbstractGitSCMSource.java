@@ -400,7 +400,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                           return null;
                                       }
                                   } else {
-                                      listener.getLogger().println("Entering default git retrieve code path");
+                                      //listener.getLogger().println("Entering default git retrieve code path");
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
