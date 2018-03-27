@@ -32,5 +32,5 @@ public interface GitSCMHeadMixin extends SCMHeadMixin {
      * The ref, e.g. /refs/heads/master
      * @return the ref
      */
-    String getRef();
+    String getRef(); // TODO provide a default implementation once Java 8 baseline
 }
