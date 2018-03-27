@@ -371,6 +371,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return telescope.getRevision(remote, credentials, head);
         }
         if (head instanceof GitSCMHeadMixin) {
+            //Since it is a specific SCMHead we are after, that we know the refspec of
+            //we can save a bit of time and bandwidth by just fetching that refspec
             context = context.withoutRefSpecs().withRefSpec(((GitSCMHeadMixin) head).getRef());
         }
         return doRetrieve(new Retriever<SCMRevision>() {
