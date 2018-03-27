@@ -384,11 +384,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                           // tag does not exist
                                           return null;
                                       }
-                                  } else if (head instanceof GitBranchSCMHead) {
+                                  } else if (head instanceof GitBranchSCMHead || !(head instanceof GitSCMHeadMixin)) {
+                                      GitBranchSCMHead branchHead = (head instanceof GitBranchSCMHead) ? (GitBranchSCMHead)head : new GitBranchSCMHead(head.getName());
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
-                                              return new GitBranchSCMRevision((GitBranchSCMHead)head, b.getSHA1String());
+                                              return new GitBranchSCMRevision(branchHead, b.getSHA1String());
                                           }
                                       }
                                   } else if (head instanceof GitRefSCMHead) {
