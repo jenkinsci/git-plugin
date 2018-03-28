@@ -6,6 +6,7 @@ import hudson.model.Queue;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -13,9 +14,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeFalse;
 
 public class GitBranchSCMHeadTest {
@@ -40,6 +43,14 @@ public class GitBranchSCMHeadTest {
             super.before();
         }
     };
+
+    @After
+    public void removeRepos() throws IOException {
+        final File path = new File("/tmp/JENKINS-48061");
+        if (path.exists() && path.isDirectory()) {
+            FileUtils.deleteDirectory(path);
+        }
+    }
 
 
     @Issue("JENKINS-48061")
