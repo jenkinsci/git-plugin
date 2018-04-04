@@ -738,6 +738,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
             String name = entry.getKey();
             String rev = entry.getValue().name();
+            if ("HEAD".equals(name)) {
+                //Skip HEAD as it should only appear during testing, not for standard bare repos iirc
+                continue;
+            }
             if (name.equals(Constants.R_HEADS + revision)) {
                 listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
                 // WIN!
@@ -761,10 +765,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 listener.getLogger().printf("Candidate match: %s revision %s%n", name, rev);
                 // WIN but let's see if a branch also matches as that would save a fetch
                 fullTagMatches.add(name);
-                continue;
-            }
-            if ("HEAD".equals(name)) {
-                //Skip HEAD as it should only appear during testing, not for standard bare repos iirc
                 continue;
             }
             if (rev.toLowerCase(Locale.ENGLISH).equals(revision.toLowerCase(Locale.ENGLISH))) {
