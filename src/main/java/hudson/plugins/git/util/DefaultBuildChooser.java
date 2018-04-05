@@ -115,13 +115,33 @@ public class DefaultBuildChooser extends BuildChooser {
 
         if (revisions.isEmpty()) {
             // the 'branch' could actually be a non branch reference (for example a tag or a gerrit change)
+            // only check for this type of reference if branch references did not return anything.
 
             revisions.addAll(getHeadRevision(isPollCall, branchSpec, git, listener, data));
             if (!revisions.isEmpty()) {
                 verbose(listener, "{0} seems to be a non-branch reference (tag?)");
             }
         }
-        
+
+        // after we collect a set of possible candidates, prune any which have
+        // already been built. We don't do this in getHeadRevision, since we want
+        // to know whether branch revisions existed before trying non-branch references.
+        // Otherwise, we could report a local version of a branch as not having been built.
+        // See JENKINS-50556 for more details.
+        if (isPollCall) {
+            for (Iterator<Revision> iter = revisions.iterator(); iter.hasNext();) {
+                Revision rev = iter.next();
+                ObjectId oid = rev.getSha1();
+
+                if (data.hasBeenBuilt(oid)) {
+                    verbose(listener, "{0} has already been built", oid);
+                    iter.remove();
+                } else {
+                    verbose(listener, "Found a new commit {0} to be built on {1}", oid, getRevBranchName(rev));
+                }
+            }
+        }
+
         return revisions;
     }
 
@@ -130,14 +150,6 @@ public class DefaultBuildChooser extends BuildChooser {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
 
-            // if polling for changes don't select something that has
-            // already been built as a build candidate
-            if (isPollCall && data.hasBeenBuilt(sha1)) {
-                verbose(listener, "{0} has already been built", sha1);
-                return emptyList();
-            }
-
-            verbose(listener, "Found a new commit {0} to be built on {1}", sha1, singleBranch);
             return (Collections.singletonList(objectId2Revision(singleBranch, sha1)));
         } catch (GitException e) {
             // branch does not exist, there is nothing to build
@@ -150,6 +162,16 @@ public class DefaultBuildChooser extends BuildChooser {
         Revision revision = new Revision(sha1);
         revision.getBranches().add(new Branch(singleBranch, sha1));
         return revision;
+    }
+
+    private String getRevBranchName(Revision rev) {
+        Collection<Branch> branches = rev.getBranches();
+
+        if (branches.size() == 1) {
+            return branches.iterator().next().getName();
+        } else {
+            return "<unknown branch>";
+        }
     }
 
     /**

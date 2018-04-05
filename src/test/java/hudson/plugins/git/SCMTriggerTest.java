@@ -38,9 +38,9 @@ import org.jvnet.hudson.test.Issue;
 
 public abstract class SCMTriggerTest extends AbstractGitProject
 {
-    private ZipFile namespaceRepoZip;
-    private Properties namespaceRepoCommits;
-    private ExecutorService singleThreadExecutor;
+    protected ZipFile namespaceRepoZip;
+    protected Properties namespaceRepoCommits;
+    protected ExecutorService singleThreadExecutor;
     protected boolean expectChanges = false;
 
     @Rule
@@ -268,13 +268,13 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                     expected_GIT_BRANCH, build1.getEnvironment(null).get("GIT_BRANCH"));
     }
 
-    private String prepareRepo(ZipFile repoZip) throws IOException {
+    protected String prepareRepo(ZipFile repoZip) throws IOException {
         File tempRemoteDir = tempFolder.newFolder();
         extract(repoZip, tempRemoteDir);
         return tempRemoteDir.getAbsolutePath();
     }
 
-    private Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
+    protected Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
     {
         if(trigger == null) return null;
         Callable<Void> callable = new Callable<Void>() {
@@ -287,7 +287,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         return singleThreadExecutor.submit(callable);
     }
 
-    private FreeStyleBuild waitForBuildFinished(FreeStyleProject project, int expectedBuildNumber, long timeout)
+    protected FreeStyleBuild waitForBuildFinished(FreeStyleProject project, int expectedBuildNumber, long timeout)
                 throws Exception
     {
         long endTime = System.currentTimeMillis() + timeout;
@@ -304,7 +304,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         return null;
     }
 
-    private Properties parseLsRemote(File file) throws IOException
+    protected Properties parseLsRemote(File file) throws IOException
     {
         Properties properties = new Properties();
         Pattern pattern = Pattern.compile("([a-f0-9]{40})\\s*(.*)");
@@ -320,7 +320,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         return properties;
     }
     
-    private void extract(ZipFile zipFile, File outputDir) throws IOException
+    protected void extract(ZipFile zipFile, File outputDir) throws IOException
     {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
