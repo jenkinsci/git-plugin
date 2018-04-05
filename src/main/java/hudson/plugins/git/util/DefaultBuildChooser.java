@@ -81,7 +81,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 String repository = config.getName();
                 String fqbn = repository + "/" + branchSpec;
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+                revisions.addAll(getHeadRevision(fqbn, git, listener));
             }
         } else {
             // either the branch is qualified (first part should match a valid remote)
@@ -109,7 +109,7 @@ public class DefaultBuildChooser extends BuildChooser {
                 possibleQualifiedBranches.add(fqbn);
             }
             for (String fqbn : possibleQualifiedBranches) {
-              revisions.addAll(getHeadRevision(isPollCall, fqbn, git, listener, data));
+              revisions.addAll(getHeadRevision(fqbn, git, listener));
             }
         }
 
@@ -117,7 +117,7 @@ public class DefaultBuildChooser extends BuildChooser {
             // the 'branch' could actually be a non branch reference (for example a tag or a gerrit change)
             // only check for this type of reference if branch references did not return anything.
 
-            revisions.addAll(getHeadRevision(isPollCall, branchSpec, git, listener, data));
+            revisions.addAll(getHeadRevision(branchSpec, git, listener));
             if (!revisions.isEmpty()) {
                 verbose(listener, "{0} seems to be a non-branch reference (tag?)");
             }
@@ -145,7 +145,7 @@ public class DefaultBuildChooser extends BuildChooser {
         return revisions;
     }
 
-    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) throws InterruptedException {
+    private Collection<Revision> getHeadRevision(String singleBranch, GitClient git, TaskListener listener) throws InterruptedException {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
