@@ -269,6 +269,8 @@ public class GitSCMSourceTest {
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(instance.fetch(new SCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
+        assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
+                hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
         assertThat(instance.fetch(new SCMHead("bar"), null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
         assertThat(instance.fetch(new SCMHead("manchu"), null),

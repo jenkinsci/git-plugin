@@ -48,6 +48,14 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
         return Constants.R_HEADS + getName();
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("GitBranchSCMHead{");
+        sb.append("name='").append(getName()).append("'");
+        sb.append(", ref='").append(getRef()).append("'}");
+        return sb.toString();
+    }
+
     @Restricted(NoExternalUse.class)
     @Extension
     public static class SCMHeadMigrationImpl extends SCMHeadMigration<GitSCMSource, SCMHead, AbstractGitSCMSource.SCMRevisionImpl> {

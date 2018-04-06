@@ -114,7 +114,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
-        SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"));
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -140,6 +140,26 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
+        assertThat(fs, notNullValue());
+        assertThat(fs.getRoot(), notNullValue());
+        Iterable<SCMFile> children = fs.getRoot().children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is(""));
+    }
+
+    @Test
+    public void ofSourceRevision_GitBranchSCMHead() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
+        SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(source, new GitBranchSCMHead("dev"), revision);
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();
