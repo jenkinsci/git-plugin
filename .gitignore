@@ -19,3 +19,4 @@ pom.xml.releaseBackup
 *.swp
 Session.vim
 /nbproject/
+.flattened-pom.xml
