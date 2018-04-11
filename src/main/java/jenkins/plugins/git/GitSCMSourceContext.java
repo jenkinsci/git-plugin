@@ -31,14 +31,21 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
 
 /**
@@ -59,6 +66,10 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      * {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
      */
     private boolean wantTags;
+    /**
+     * A list of other references to discover and search
+     */
+    private Set<WantedOtherRef> wantedOtherRefs;
     /**
      * The name of the {@link GitTool} to use or {@code null} to use the default.
      */
@@ -105,6 +116,24 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     public final boolean wantTags() {
         return wantTags;
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} will need information about other refs.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} will need information about other refs.
+     */
+    public final boolean wantOtherRefs() {
+        return wantedOtherRefs != null && !wantedOtherRefs.isEmpty();
+    }
+
+    @NonNull
+    public Collection<WantedOtherRef> getOtherWantedRefs() {
+        if (wantedOtherRefs == null) {
+            return Collections.emptySet();
+        } else {
+            return Collections.unmodifiableSet(wantedOtherRefs);
+        }
     }
 
     /**
@@ -174,6 +203,22 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public C wantTags(boolean include) {
         wantTags = wantTags || include;
+        return (C) this;
+    }
+
+    /**
+     * Adds a requirement for details of additional refs to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param other The specification for that other ref
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C wantOtherRef(WantedOtherRef other) {
+        if (wantedOtherRefs == null) {
+            wantedOtherRefs = new TreeSet<>();
+        }
+        wantedOtherRefs.add(other);
         return (C) this;
     }
 
@@ -288,6 +333,71 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @Override
     public R newRequest(@NonNull SCMSource source, TaskListener listener) {
         return (R) new GitSCMSourceRequest(source, this, listener);
+    }
+
+    public static final class WantedOtherRef implements Comparable<WantedOtherRef> {
+        private final String ref;
+        private final String name;
+        private transient Pattern refPattern;
+
+        public WantedOtherRef(@NonNull String ref, @NonNull String name) {
+            this.ref = ref;
+            this.name = name;
+        }
+
+        @NonNull
+        public String getRef() {
+            return ref;
+        }
+
+        @NonNull
+        public String getName() {
+            return name;
+        }
+
+        Pattern refAsPattern() {
+            if (refPattern == null) {
+                refPattern = Pattern.compile(Constants.R_REFS + ref.replace("*", "(.+)"));
+            }
+            return refPattern;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            WantedOtherRef that = (WantedOtherRef) o;
+
+            if (!ref.equals(that.ref)) return false;
+            return name.equals(that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = ref.hashCode();
+            result = 31 * result + name.hashCode();
+            return result;
+        }
+
+        @Override
+        public int compareTo(WantedOtherRef o) {
+            return Integer.compare(this.hashCode(), o != null ? o.hashCode() : 0);
+        }
+
+        public boolean matches(String revision, String remoteName, String remoteRev) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            if (matcher.matches()) {
+                //TODO support multiple capture groups
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
+                    String resolvedName = name.replace("@{1}", matcher.group(1));
+                    return resolvedName.equals(revision);
+                } else {
+                    return name.equals(revision);
+                }
+            }
+            return false;
+        }
     }
 
 }

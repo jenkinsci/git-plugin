@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
+import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
@@ -514,7 +515,10 @@ public class AbstractGitSCMSourceTest {
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/foo")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3, run, source, listener));
@@ -541,7 +545,10 @@ public class AbstractGitSCMSourceTest {
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/foo")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3.substring(0, 7), run, source, listener));
@@ -568,7 +575,7 @@ public class AbstractGitSCMSourceTest {
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("pull-requests/*/from")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt("pull-requests/1/from", run, source, listener));
@@ -595,8 +602,9 @@ public class AbstractGitSCMSourceTest {
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        //new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(),
-                new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")));
+                new DiscoverOtherRefsTrait("/pull-requests/*/from", "pr/@{1}")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt("pr/1", run, source, listener));

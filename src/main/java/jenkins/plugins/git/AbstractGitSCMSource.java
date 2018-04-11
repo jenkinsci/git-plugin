@@ -99,7 +99,6 @@ import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
-import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
 import net.jcip.annotations.GuardedBy;
@@ -548,7 +547,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     Map<String, ObjectId> remoteReferences = null;
                     if (context.wantBranches() || context.wantTags()) {
                         listener.getLogger().println("Listing remote references...");
-                        remoteReferences = client.getRemoteReferences(
+                        remoteReferences = client.getRemoteReferences( //TODO DiscoverOtherRefsTrait
                                 client.getRemoteUrl(remoteName), null, context.wantBranches(), context.wantTags()
                         );
                     }
@@ -728,8 +727,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         final GitClient client = git.getClient();
         client.addDefaultCredentials(getCredentials());
         listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
+        boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+        boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
         Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                getRemote(), null, false, false
+                getRemote(), null, headsOnly, tagsOnly
         );
         String tagName = null;
         Set<String> shortNameMatches = new TreeSet<>();
@@ -737,6 +738,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         Set<String> fullTagMatches = new TreeSet<>();
         Set<String> fullHashMatches = new TreeSet<>();
         String fullHashMatch = null;
+        GitRefSCMRevision candidateOtherRef = null;
         for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
             String name = entry.getKey();
             String rev = entry.getValue().name();
@@ -783,6 +785,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 }
                 //Since it was a full match then the shortMatch below will also match, so just skip it
                 continue;
+            }
+            for (GitSCMSourceContext.WantedOtherRef o : (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs()) {
+                if (o.matches(revision, name, rev)) {
+                    candidateOtherRef = new GitRefSCMRevision(new GitRefSCMHead(revision, name), rev);
+                    break;
+                }
             }
             if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
                 shortNameMatches.add(name);
@@ -852,6 +860,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                               },
                     context,
                     listener, false);
+        }
+        if (candidateOtherRef != null) {
+            return candidateOtherRef;
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
@@ -944,7 +955,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
                     getRemote(), null, context.wantBranches(), context.wantTags()
             );
-            for (String name : remoteReferences.keySet()) {
+            for (String name : remoteReferences.keySet()) { //TODO DiscoverOtherRefsTrait
                 if (context.wantBranches()) {
                     if (name.startsWith(Constants.R_HEADS)) {
                         revisions.add(StringUtils.removeStart(name, Constants.R_HEADS));
