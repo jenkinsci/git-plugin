@@ -317,6 +317,9 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final List<RefSpec> asRefSpecs() {
         List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
+        if (wantOtherRefs() && wantBranches()) {
+            result.add(new RefSpec("+" + Constants.R_HEADS + "*:" + Constants.R_REMOTES + remoteName() + "/*"));
+        }
         for (String template : refSpecs()) {
             result.add(new RefSpec(
                     template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())
@@ -388,7 +391,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
         public boolean matches(String revision, String remoteName, String remoteRev) {
             final Matcher matcher = refAsPattern().matcher(remoteName);
             if (matcher.matches()) {
-                //TODO support multiple capture groups
+                //TODO support multiple capture groups?
                 if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
                     String resolvedName = name.replace("@{1}", matcher.group(1));
                     return resolvedName.equals(revision);
@@ -397,6 +400,23 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
                 }
             }
             return false;
+        }
+
+        public boolean matches(String remoteName) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            return matcher.matches();
+        }
+
+        public String getName(String remoteName) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            if (matcher.matches()) {
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
+                    return name.replace("@{1}", matcher.group(1));
+                } else if (!name.contains("@{1}")) {
+                    return name;
+                }
+            }
+            return null;
         }
     }
 

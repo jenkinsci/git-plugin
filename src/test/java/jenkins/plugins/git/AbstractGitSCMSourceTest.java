@@ -1,5 +1,6 @@
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Action;
@@ -15,6 +16,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,10 +31,12 @@ import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import static org.hamcrest.Matchers.*;
 
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -619,6 +623,46 @@ public class AbstractGitSCMSourceTest {
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void fetchOtherRef() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/1", v3);
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+
+        final SCMHeadObserver.Collector collector =
+        source.fetch(new SCMSourceCriteria() {
+            @Override
+            public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+                return true;
+            }
+        }, new SCMHeadObserver.Collector(), listener);
+
+        final Map<SCMHead, SCMRevision> result = collector.result();
+        assertThat(result.entrySet(), hasSize(4));
+        assertThat(result, hasKey(allOf(
+                instanceOf(GitRefSCMHead.class),
+                hasProperty("name", equalTo("custom-1"))
+        )));
     }
 
     @Issue("JENKINS-37727")

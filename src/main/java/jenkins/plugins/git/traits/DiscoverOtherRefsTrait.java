@@ -23,6 +23,7 @@
  */
 package jenkins.plugins.git.traits;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.GitSCMSource;
@@ -121,6 +122,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
+        @NonNull
         public String getDisplayName() {
             return Messages.DiscoverOtherRefsTrait_displayName();
         }

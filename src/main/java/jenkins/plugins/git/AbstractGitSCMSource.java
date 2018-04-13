@@ -440,6 +440,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             if (context.wantTags()) {
                 referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
             }
+            //TODO DiscoverOtherRefsTrait?
             if (!referenceTypes.isEmpty()) {
                 try (GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
                     listener.getLogger().println("Listing remote references...");
@@ -545,10 +546,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 try (RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
                     Map<String, ObjectId> remoteReferences = null;
-                    if (context.wantBranches() || context.wantTags()) {
+                    if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
                         listener.getLogger().println("Listing remote references...");
-                        remoteReferences = client.getRemoteReferences( //TODO DiscoverOtherRefsTrait
-                                client.getRemoteUrl(remoteName), null, context.wantBranches(), context.wantTags()
+                        boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+                        boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
+                        remoteReferences = client.getRemoteReferences(
+                                client.getRemoteUrl(remoteName), null, headsOnly, tagsOnly
                         );
                     }
                     if (context.wantBranches()) {
@@ -557,8 +560,82 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     if (context.wantTags()) {
                         discoverTags(repository, walk, request, remoteReferences);
                     }
+                    if (context.wantOtherRefs()) {
+                        discoverOtherRefs(repository, walk, request, remoteReferences,
+                                (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs());
+                    }
                 }
                 return null;
+            }
+
+            private void discoverOtherRefs(final Repository repository,
+                                           final RevWalk walk, GitSCMSourceRequest request,
+                                           Map<String, ObjectId> remoteReferences,
+                                           Collection<GitSCMSourceContext.WantedOtherRef> wantedRefs)
+                    throws IOException, InterruptedException {
+                listener.getLogger().println("Checking other refs...");
+                walk.setRetainBody(false);
+                int count = 0;
+                for (final Map.Entry<String, ObjectId> ref : remoteReferences.entrySet()) {
+                    if (ref.getKey().startsWith(Constants.R_HEADS) || ref.getKey().startsWith(Constants.R_TAGS)) {
+                        continue;
+                    }
+                    for (GitSCMSourceContext.WantedOtherRef otherRef : wantedRefs) {
+                        if (!otherRef.matches(ref.getKey())) {
+                            continue;
+                        }
+                        final String refName = otherRef.getName(ref.getKey());
+                        if (refName == null) {
+                            listener.getLogger().println("  Possible badly configured name mapping (" + otherRef.getName() + ") (for " + ref.getKey() + ") ignoring.");
+                            continue;
+                        }
+                        count++;
+                        if (request.process(new GitRefSCMHead(refName, ref.getKey()),
+                                new SCMSourceRequest.IntermediateLambda<ObjectId>() {
+                                    @Nullable
+                                    @Override
+                                    public ObjectId create() throws IOException, InterruptedException {
+                                        listener.getLogger().println("  Checking ref " + refName + " (" + ref.getKey() + ")");
+                                        return ref.getValue();
+                                    }
+                                },
+                                new SCMSourceRequest.ProbeLambda<GitRefSCMHead, ObjectId>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(@NonNull GitRefSCMHead head,
+                                                                          @Nullable ObjectId revisionInfo)
+                                            throws IOException, InterruptedException {
+                                        RevCommit commit = walk.parseCommit(revisionInfo);
+                                        final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                        final RevTree tree = commit.getTree();
+                                        return new TreeWalkingSCMProbe(refName, lastModified, repository, tree);
+                                    }
+                                }, new SCMSourceRequest.LazyRevisionLambda<GitRefSCMHead, SCMRevision, ObjectId>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMRevision create(@NonNull GitRefSCMHead head, @Nullable ObjectId intermediate)
+                                            throws IOException, InterruptedException {
+                                        return new GitRefSCMRevision(head, ref.getValue().name());
+                                    }
+                                }, new SCMSourceRequest.Witness() {
+                                    @Override
+                                    public void record(@NonNull SCMHead head, SCMRevision revision, boolean isMatch) {
+                                        if (isMatch) {
+                                            listener.getLogger().println("    Met criteria");
+                                        } else {
+                                            listener.getLogger().println("    Does not meet criteria");
+                                        }
+                                    }
+                                }
+                        )) {
+                            listener.getLogger().format("Processed %d refs (query complete)%n", count);
+                            return;
+                        }
+                        break;
+                    }
+                }
+                listener.getLogger().format("Processed %d refs%n", count);
+
             }
 
             private void discoverBranches(final Repository repository,
