@@ -1027,12 +1027,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         GitClient client = git.getClient();
         client.addDefaultCredentials(getCredentials());
         Set<String> revisions = new HashSet<>();
-        if (context.wantBranches() || context.wantTags()) {
+        if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
             listener.getLogger().println("Listing remote references...");
+            boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+            boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
             Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
-                    getRemote(), null, context.wantBranches(), context.wantTags()
+                    getRemote(), null, headsOnly, tagsOnly
             );
-            for (String name : remoteReferences.keySet()) { //TODO DiscoverOtherRefsTrait
+            for (String name : remoteReferences.keySet()) {
                 if (context.wantBranches()) {
                     if (name.startsWith(Constants.R_HEADS)) {
                         revisions.add(StringUtils.removeStart(name, Constants.R_HEADS));
@@ -1041,6 +1043,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 if (context.wantTags()) {
                     if (name.startsWith(Constants.R_TAGS)) {
                         revisions.add(StringUtils.removeStart(name, Constants.R_TAGS));
+                    }
+                }
+                if (context.wantOtherRefs() && (!name.startsWith(Constants.R_HEADS) || !name.startsWith(Constants.R_TAGS))) {
+                    for (GitSCMSourceContext.WantedOtherRef o : (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs()) {
+                        if (o.matches(name)) {
+                            final String revName = o.getName(name);
+                            if (revName != null) {
+                                revisions.add(revName);
+                                break;
+                            }
+                        }
                     }
                 }
             }

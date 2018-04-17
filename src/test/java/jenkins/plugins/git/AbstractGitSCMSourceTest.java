@@ -665,6 +665,41 @@ public class AbstractGitSCMSourceTest {
         )));
     }
 
+    @Issue("JENKINS-48061")
+    @Test
+    public void fetchOtherRevisions() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/1", v3);
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+
+        final Set<String> revisions = source.fetchRevisions(listener);
+
+        assertThat(revisions, hasSize(4));
+        assertThat(revisions, containsInAnyOrder(
+                equalTo("custom-1"),
+                equalTo("v1"),
+                equalTo("dev"),
+                equalTo("master")
+        ));
+    }
+
     @Issue("JENKINS-37727")
     @Test
     public void pruneRemovesDeletedBranches() throws Exception {
