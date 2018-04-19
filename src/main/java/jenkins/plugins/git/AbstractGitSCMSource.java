@@ -120,6 +120,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.export.Exported;
 
 /**
  * Base class for {@link SCMSource} implementations that produce {@link GitSCM} implementations.
@@ -1203,6 +1204,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             this.hash = hash;
         }
 
+        @Exported
         public String getHash() {
             return hash;
         }
