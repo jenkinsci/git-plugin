@@ -11,6 +11,7 @@ import hudson.util.FormValidation.URLCheck;
 import java.io.IOException;
 import java.net.URL;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
@@ -54,12 +55,14 @@ public class Gitiles extends GitRepositoryBrowser {
 
     @Extension
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "gitiles";
         }
 
         @Override
-        public Gitiles newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public Gitiles newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(Gitiles.class, jsonObject);
         }
 

@@ -10,6 +10,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -72,12 +73,14 @@ public class BitbucketWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class BitbucketWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "bitbucketweb";
         }
 
         @Override
-        public BitbucketWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public BitbucketWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(BitbucketWeb.class, jsonObject);
         }
     }

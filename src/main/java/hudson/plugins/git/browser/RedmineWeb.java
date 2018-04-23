@@ -10,6 +10,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -84,12 +85,14 @@ public class RedmineWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class RedmineWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "redmineweb";
         }
 
         @Override
-        public RedmineWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public RedmineWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(RedmineWeb.class, jsonObject);
         }
     }
