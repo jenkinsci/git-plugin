@@ -306,6 +306,22 @@
       <version>2.2.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency> <!-- TODO pending core upgrade or haveged, test against a newer sshd so we do not run into NativePRNG hangs -->
+      <groupId>org.jenkins-ci.modules</groupId>
+      <artifactId>sshd</artifactId>
+      <version>1.11</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.modules</groupId>
+          <artifactId>instance-identity</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jenkins-ci.modules</groupId>
+          <artifactId>ssh-cli-auth</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <scm>
