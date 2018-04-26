@@ -49,9 +49,7 @@ branches["PCT"] = {
 
         stage("Run PCT") {
             dir("pct") {
-                runPCT metadataFile: metadataPath,
-                        javaOptions: ["-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"]
-                deleteDir()
+                runPCT metadataFile: metadataPath
             }
         }
     }
