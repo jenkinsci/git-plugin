@@ -42,7 +42,7 @@ branches["PCT"] = {
             dir("git") {
                 checkout scm
             }
-            stash name: "localPluginsPCT"
+            stash name: "localPluginsPCT", useDefaultExcludes: false
 
         }
         def metadataPath = pwd() + "/git/essentials.yml"
