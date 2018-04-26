@@ -7,16 +7,17 @@
 // Test plugin compatibility to latest Jenkins LTS
 // Allow failing tests to retry execution
 buildPlugin(jenkinsVersions: [null, '2.60.1'],
-        findbugs: [run: true, archive: true, unstableTotalAll: '0'],
-        failFast: false)
+            findbugs: [run: true, archive: true, unstableTotalAll: '0'],
+            failFast: false)
 
 def branches = [:]
 
 branches["ATH"] = {
     node("docker && highmem") {
-        deleteDir()
+        def checkoutGit
         stage("ATH: Checkout") {
-            dir("git") {
+            checkoutGit = pwd(tmp:true) + "/athgit"
+            dir(checkoutGit) {
                 checkout scm
                 sh "mvn clean package -DskipTests"
                 dir("target") {
@@ -25,30 +26,32 @@ branches["ATH"] = {
                 sh "mvn clean"
             }
         }
-        def metadataPath = pwd() + "/git/essentials.yml"
+        def metadataPath = checkoutGit + "/essentials.yml"
         stage("Run ATH") {
-            dir("ath") {
+            def athFolder=pwd(tmp:true) + "/ath"
+            dir(athFolder) {
                 runATH metadataFile: metadataPath
-                deleteDir()
             }
         }
     }
 }
 branches["PCT"] = {
     node("docker && highmem") {
-        deleteDir()
+        def metadataPath
         env.RUN_PCT_LOCAL_PLUGIN_SOURCES_STASH_NAME = "localPluginsPCT"
         stage("PCT: Checkout") {
-            dir("git") {
-                checkout scm
+            def checkoutGit = pwd(tmp:true) + "/pctgit"
+            dir(checkoutGit) {
+                dir("git") {
+                    checkout scm
+                }
+                stash name: "localPluginsPCT", useDefaultExcludes: false
             }
-            stash name: "localPluginsPCT", useDefaultExcludes: false
-
+            metadataPath = checkoutGit + "/git/essentials.yml"
         }
-        def metadataPath = pwd() + "/git/essentials.yml"
-
         stage("Run PCT") {
-            dir("pct") {
+            def pctFolder = pwd(tmp:true) + "/pct"
+            dir(pctFolder) {
                 runPCT metadataFile: metadataPath
             }
         }
