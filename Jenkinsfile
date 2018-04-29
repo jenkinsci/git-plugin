@@ -23,7 +23,6 @@ branches["ATH"] = {
                 dir("target") {
                     stash name: "localPlugins", includes: "*.hpi"
                 }
-                sh "mvn clean"
             }
         }
         def metadataPath = checkoutGit + "/essentials.yml"
