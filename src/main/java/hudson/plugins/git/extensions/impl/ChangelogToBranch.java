@@ -29,11 +29,6 @@ public class ChangelogToBranch extends GitSCMExtension {
         return options;
     }
 
-    @Override
-    public boolean requiresWorkspaceForPolling() {
-        return true;
-    }
-
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
