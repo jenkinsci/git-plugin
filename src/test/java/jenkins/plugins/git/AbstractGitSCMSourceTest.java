@@ -530,6 +530,41 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-48061")
     @Test
+    public void retrieveRevision_customRef_descendant() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        String v2 = sampleRepo.head();
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        sampleRepo.git("update-ref", "refs/custom/foo", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD~2"); // dev
+        String dev = sampleRepo.head();
+        assertNotEquals(dev, v3); //Just verifying the reset nav got correct
+        assertEquals(dev, v2);
+        sampleRepo.write("file", "v5");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
     public void retrieveRevision_customRef_abbrev_sha1() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file", "v1");
