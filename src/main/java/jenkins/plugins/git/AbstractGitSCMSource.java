@@ -558,7 +558,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                     if (context.wantOtherRefs()) {
                         discoverOtherRefs(repository, walk, request, remoteReferences,
-                                (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs());
+                                (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings());
                     }
                 }
                 return null;
@@ -567,7 +567,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             private void discoverOtherRefs(final Repository repository,
                                            final RevWalk walk, GitSCMSourceRequest request,
                                            Map<String, ObjectId> remoteReferences,
-                                           Collection<GitSCMSourceContext.WantedOtherRef> wantedRefs)
+                                           Collection<GitSCMSourceContext.RefNameMapping> wantedRefs)
                     throws IOException, InterruptedException {
                 listener.getLogger().println("Checking other refs...");
                 walk.setRetainBody(false);
@@ -576,7 +576,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     if (ref.getKey().startsWith(Constants.R_HEADS) || ref.getKey().startsWith(Constants.R_TAGS)) {
                         continue;
                     }
-                    for (GitSCMSourceContext.WantedOtherRef otherRef : wantedRefs) {
+                    for (GitSCMSourceContext.RefNameMapping otherRef : wantedRefs) {
                         if (!otherRef.matches(ref.getKey())) {
                             continue;
                         }
@@ -859,7 +859,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 //Since it was a full match then the shortMatch below will also match, so just skip it
                 continue;
             }
-            for (GitSCMSourceContext.WantedOtherRef o : (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs()) {
+            for (GitSCMSourceContext.RefNameMapping o : (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings()) {
                 if (o.matches(revision, name, rev)) {
                     candidateOtherRef = new GitRefSCMRevision(new GitRefSCMHead(revision, name), rev);
                     break;
@@ -1042,7 +1042,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                 }
                 if (context.wantOtherRefs() && (!name.startsWith(Constants.R_HEADS) || !name.startsWith(Constants.R_TAGS))) {
-                    for (GitSCMSourceContext.WantedOtherRef o : (Collection<GitSCMSourceContext.WantedOtherRef>)context.getOtherWantedRefs()) {
+                    for (GitSCMSourceContext.RefNameMapping o : (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings()) {
                         if (o.matches(name)) {
                             final String revName = o.getName(name);
                             if (revName != null) {

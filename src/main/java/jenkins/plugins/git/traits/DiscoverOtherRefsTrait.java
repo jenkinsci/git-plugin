@@ -108,7 +108,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitSCMSourceContext c = (GitSCMSourceContext) context;
         c.withRefSpec(getFullRefSpec());
-        c.wantOtherRef(new GitSCMSourceContext.WantedOtherRef(this.ref, this.nameMapping));
+        c.wantOtherRef(new GitSCMSourceContext.RefNameMapping(this.ref, this.nameMapping));
     }
 
     /**

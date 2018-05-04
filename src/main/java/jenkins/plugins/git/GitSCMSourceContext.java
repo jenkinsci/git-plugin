@@ -69,7 +69,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     /**
      * A list of other references to discover and search
      */
-    private Set<WantedOtherRef> wantedOtherRefs;
+    private Set<RefNameMapping> refNameMappings;
     /**
      * The name of the {@link GitTool} to use or {@code null} to use the default.
      */
@@ -124,15 +124,15 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      * @return {@code true} if the {@link GitSCMSourceRequest} will need information about other refs.
      */
     public final boolean wantOtherRefs() {
-        return wantedOtherRefs != null && !wantedOtherRefs.isEmpty();
+        return refNameMappings != null && !refNameMappings.isEmpty();
     }
 
     @NonNull
-    public Collection<WantedOtherRef> getOtherWantedRefs() {
-        if (wantedOtherRefs == null) {
+    public Collection<RefNameMapping> getRefNameMappings() {
+        if (refNameMappings == null) {
             return Collections.emptySet();
         } else {
-            return Collections.unmodifiableSet(wantedOtherRefs);
+            return Collections.unmodifiableSet(refNameMappings);
         }
     }
 
@@ -214,11 +214,11 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    public C wantOtherRef(WantedOtherRef other) {
-        if (wantedOtherRefs == null) {
-            wantedOtherRefs = new TreeSet<>();
+    public C wantOtherRef(RefNameMapping other) {
+        if (refNameMappings == null) {
+            refNameMappings = new TreeSet<>();
         }
-        wantedOtherRefs.add(other);
+        refNameMappings.add(other);
         return (C) this;
     }
 
@@ -340,12 +340,12 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
         return (R) new GitSCMSourceRequest(source, this, listener);
     }
 
-    public static final class WantedOtherRef implements Comparable<WantedOtherRef> {
+    public static final class RefNameMapping implements Comparable<RefNameMapping> {
         private final String ref;
         private final String name;
         private transient Pattern refPattern;
 
-        public WantedOtherRef(@NonNull String ref, @NonNull String name) {
+        public RefNameMapping(@NonNull String ref, @NonNull String name) {
             this.ref = ref;
             this.name = name;
         }
@@ -372,7 +372,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            WantedOtherRef that = (WantedOtherRef) o;
+            RefNameMapping that = (RefNameMapping) o;
 
             if (!ref.equals(that.ref)) return false;
             return name.equals(that.name);
@@ -386,7 +386,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
         }
 
         @Override
-        public int compareTo(WantedOtherRef o) {
+        public int compareTo(RefNameMapping o) {
             return Integer.compare(this.hashCode(), o != null ? o.hashCode() : 0);
         }
 
