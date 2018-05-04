@@ -911,6 +911,9 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 return new GitRefSCMRevision(new GitRefSCMHead(shortHashMatch, shortNameMatches.iterator().next()), shortHashMatch);
             }
         }
+        if (candidateOtherRef != null) {
+            return candidateOtherRef;
+        }
         if (tagName != null) {
             listener.getLogger().println(
                     "Resolving tag commit... (remote references may be a lightweight tag or an annotated tag)");
@@ -933,9 +936,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                               },
                     context,
                     listener, false);
-        }
-        if (candidateOtherRef != null) {
-            return candidateOtherRef;
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
