@@ -15,6 +15,7 @@
         </f:entry>
     </j:if>
 
+    <j:set var="scm" value="${instance}"/>
     <t:listScmBrowsers name="git.browser" />
 
     <f:entry title="${%Additional Behaviours}">
