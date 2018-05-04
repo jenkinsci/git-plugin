@@ -61,6 +61,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * @since 3.6.1
  */
 public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
+    //TODO JENKINS-51134 DiscoverOtherRefsTrait
 
     /**
      * Returns the {@link GitSCMTelescope} to use for the specified {@link GitSCM} or {@code null} if none match.
@@ -212,12 +213,12 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                                 getTimestamp(remote, credentials, name)
                         );
                     } else if (name.startsWith(Constants.R_HEADS)) {
-                        head = new SCMHead(name.substring(Constants.R_HEADS.length()));
+                        head = new GitBranchSCMHead(name.substring(Constants.R_HEADS.length()));
                     } else {
                         if (name.startsWith(config.getName() + "/")) {
-                            head = new SCMHead(name.substring(config.getName().length() + 1));
+                            head = new GitBranchSCMHead(name.substring(config.getName().length() + 1));
                         } else {
-                            head = new SCMHead(name);
+                            head = new GitBranchSCMHead(name);
                         }
                     }
                 } else {

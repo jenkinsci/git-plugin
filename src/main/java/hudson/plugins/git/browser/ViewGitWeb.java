@@ -14,10 +14,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -75,12 +75,14 @@ public class ViewGitWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "viewgit";
         }
 
         @Override
-        public ViewGitWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public ViewGitWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(ViewGitWeb.class, jsonObject);
         }
 

@@ -94,7 +94,7 @@ public class GitSCMSourceTest {
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
                         .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
-        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new SCMHead("master"))));
+        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
         verify(scmSourceOwner, times(0)).onSCMSourceUpdated(gitSCMSource);
 
     }
@@ -268,6 +268,8 @@ public class GitSCMSourceTest {
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(instance.fetch(new SCMHead("foo"), null),
+                hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
+        assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
         assertThat(instance.fetch(new SCMHead("bar"), null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
