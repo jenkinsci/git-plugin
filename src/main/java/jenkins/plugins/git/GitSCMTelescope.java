@@ -61,6 +61,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
  * @since 3.6.1
  */
 public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
+    //TODO JENKINS-51134 DiscoverOtherRefsTrait
 
     /**
      * Returns the {@link GitSCMTelescope} to use for the specified {@link GitSCM} or {@code null} if none match.

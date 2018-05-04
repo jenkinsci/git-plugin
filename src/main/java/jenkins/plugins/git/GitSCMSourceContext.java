@@ -318,6 +318,8 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     public final List<RefSpec> asRefSpecs() {
         List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
         if (wantOtherRefs() && wantBranches()) {
+            //If wantOtherRefs() there will be a refspec in the list not added manually by a user
+            //So if also wantBranches() we need to add the default respec for branches so we actually fetch them
             result.add(new RefSpec("+" + Constants.R_HEADS + "*:" + Constants.R_REMOTES + remoteName() + "/*"));
         }
         for (String template : refSpecs()) {

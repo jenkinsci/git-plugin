@@ -369,11 +369,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             telescope.validate(remote, credentials);
             return telescope.getRevision(remote, credentials, head);
         }
-        /*if (head instanceof GitSCMHeadMixin) {
-            //Since it is a specific SCMHead we are after, that we know the refspec of
-            //we can save a bit of time and bandwidth by just fetching that refspec
-            context = context.withRefSpec(((GitSCMHeadMixin) head).getRef()); //TODO write test using GitRefSCMHead
-        }*/
+        //TODO write test using GitRefSCMHead
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -440,7 +436,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             if (context.wantTags()) {
                 referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
             }
-            //TODO DiscoverOtherRefsTrait?
+            //TODO JENKINS-51134 DiscoverOtherRefsTrait
             if (!referenceTypes.isEmpty()) {
                 try (GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
                     listener.getLogger().println("Listing remote references...");
@@ -790,11 +786,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         // 1.  A branch name (if we have that we can return quickly)
         // 2.  A tag name (if we have that we will need to fetch the tag to resolve the tag date)
         // 3.  A short/full revision hash that is the head revision of a branch (if we have that we can return quickly)
-        // 3.2 A remote refspec for example pull-requests/1/from
-        // 3.3 A short/full revision hash of a non default ref (non branch or tag but somewhere else under refs/)
-        // 4.  A short revision hash that is the head revision of a branch (if we have that we can return quickly)
-        // 5.  A short/full revision hash for a tag (we'll need to fetch the tag to resolve the tag date)
-        // 6.  A short/full revision hash that is not the head revision of a branch (we'll need to fetch everything to
+        // 4.  A remote refspec for example pull-requests/1/from
+        // 5.  A short/full revision hash of a non default ref (non branch or tag but somewhere else under refs/)
+        // 6.  A short revision hash that is the head revision of a branch (if we have that we can return quickly)
+        // 7.  A short/full revision hash for a tag (we'll need to fetch the tag to resolve the tag date)
+        // 8.  A short/full revision hash that is not the head revision of a branch (we'll need to fetch everything to
         // try and resolve the hash from the history of one of the heads)
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
         GitTool tool = resolveGitTool(context.gitTool());
