@@ -8,6 +8,8 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 
+import jenkins.model.Jenkins;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -68,6 +70,10 @@ public class Gitiles extends GitRepositoryBrowser {
 
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url) throws IOException, ServletException {
             if (url == null) // nothing entered yet
+                return FormValidation.ok();
+            // Connect to URL and check content only if we have admin permission
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {

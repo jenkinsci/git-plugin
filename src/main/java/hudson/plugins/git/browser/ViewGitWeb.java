@@ -9,6 +9,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -88,6 +89,10 @@ public class ViewGitWeb extends GitRepositoryBrowser {
 
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url) throws IOException, ServletException {
             if (url == null) // nothing entered yet
+                return FormValidation.ok();
+            // Connect to URL and check content only if we have admin permission
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
