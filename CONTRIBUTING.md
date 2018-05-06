@@ -14,8 +14,8 @@ Before submitting your change, please assure that you've added tests
 which verify your change.  There have been many developers involved in
 the git plugin and there are many, many users who depend on the git
 plugin.  Tests help us assure that we're delivering a reliable plugin,
-and that we've communicated our intent to other developers in a way
-that they can detect when they run tests.
+and that we've communicated our intent to other developers as
+executable descriptions of plugin behavior.
 
 Code coverage reporting is available as a maven target.
 Please try to improve code coverage with tests when you submit.
