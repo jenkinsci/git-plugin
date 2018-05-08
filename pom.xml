@@ -24,14 +24,13 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.8.1</revision>
+    <revision>3.9.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>1.625.3</jenkins.version>
+    <jenkins.version>1.642.3</jenkins.version>
     <java.level>7</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
-    <workflow.version>1.14.2</workflow.version>
     <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
   </properties>
 
@@ -155,11 +154,22 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
       <version>${scm-api-plugin.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins.workflow</groupId>
+          <artifactId>workflow-step-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>2.10</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.4</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -265,7 +275,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.10</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -279,25 +289,37 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.32</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.10</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-durable-task-step</artifactId>
-      <version>${workflow.version}</version>
+      <version>2.8</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-multibranch</artifactId>
+      <version>2.16</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps-global-lib</artifactId>
+      <version>2.8</version>
       <scope>test</scope>
     </dependency>
     <dependency>

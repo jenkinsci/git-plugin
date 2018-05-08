@@ -626,14 +626,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                         return Collections.emptyMap();
                                     }
                                     if (GitStatus.looselyMatches(u, remote)) {
-                                        SCMHead head = new SCMHead(branch);
+                                        GitBranchSCMHead head = new GitBranchSCMHead(branch);
                                         for (SCMHeadPrefilter filter: ctx.prefilters()) {
                                             if (filter.isExcluded(git, head)) {
                                                 return Collections.emptyMap();
                                             }
                                         }
                                         return Collections.<SCMHead, SCMRevision>singletonMap(head,
-                                                sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                                sha1 != null ? new GitBranchSCMRevision(head, sha1) : null);
                                     }
                                 }
                                 return Collections.emptyMap();
