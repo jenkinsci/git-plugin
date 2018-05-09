@@ -1,6 +1,7 @@
-## JENKINS-xxxxx - summarize pull request in one line
+## [JENKINS-xxxxx](https://issues.jenkins-ci.org/browse/JENKINS-xxxxx) - summarize pull request in one line
 
-Describe the big picture of your changes here to explain to the maintainers why we should accept this pull request. If it fixes a bug or resolves a feature request, include a link to the issue.
+Describe the big picture of your changes here to explain to the maintainers why we should accept this pull request.
+If it fixes a bug or resolves a feature request, include a link to the issue.
 
 ## Checklist
 
