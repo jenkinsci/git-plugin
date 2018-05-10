@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -547,6 +548,8 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Extension
     public static class ListenerImpl extends GitStatus.Listener {
+        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Override
         public List<GitStatus.ResponseContributor> onNotifyCommit(String origin,
                                                                   URIish uri,
