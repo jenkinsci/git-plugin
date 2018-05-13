@@ -38,6 +38,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
+import hudson.plugins.git.extensions.impl.CheckoutNOOP;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
@@ -1225,18 +1226,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        listener.getLogger().println("Checking out " + revToBuild.revision);
+        // Don't perform a checkout if the NOOP extension was added.
+        if (!this.getExtensions().contains(new CheckoutNOOP())) {
+	        listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
-        for (GitSCMExtension ext : this.getExtensions()) {
-            ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
+	        CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
+	        for (GitSCMExtension ext : this.getExtensions()) {
+	            ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
+	        }
+
+	        try {
+	          checkoutCommand.execute();
+	        } catch (GitLockFailedException e) {
+	            // Rethrow IOException so the retry will be able to catch it
+	            throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+	        }
         }
-
-        try {
-          checkoutCommand.execute();
-        } catch (GitLockFailedException e) {
-            // Rethrow IOException so the retry will be able to catch it
-            throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+        else {
+            listener.getLogger().println("Skipping check out operation for" + revToBuild.revision);
         }
 
         // Needs to be after the checkout so that revToBuild is in the workspace
