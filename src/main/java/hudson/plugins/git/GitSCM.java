@@ -1243,7 +1243,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 	        }
         }
         else {
-            listener.getLogger().println("Skipping check out operation for" + revToBuild.revision);
+            listener.getLogger().println("Skipping check out operation for " + revToBuild.revision);
         }
 
         // Needs to be after the checkout so that revToBuild is in the workspace
