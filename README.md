@@ -20,7 +20,7 @@ by the [Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
 
 Before submitting your pull request, please add tests which verify your
 change.  There have been many developers involved in the git plugin and
-there are many users who depend on the git-plugin.  Tests help us assure
+there are many users who depend on the git plugin.  Tests help us assure
 that we're delivering a reliable plugin, and that we've communicated
 our intent to other developers in a way that they can detect when they
 run tests.
