@@ -24,7 +24,9 @@
 package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -62,6 +64,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -80,6 +83,7 @@ import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.scm.api.SCMFile;
+import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
@@ -95,9 +99,9 @@ import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMTrait;
-import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMSourceFilterTrait;
+import net.jcip.annotations.GuardedBy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
@@ -115,6 +119,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.export.Exported;
 
 /**
  * Base class for {@link SCMSource} implementations that produce {@link GitSCM} implementations.
@@ -355,9 +360,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @CheckForNull
     @Override
-    protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull TaskListener listener)
+    protected SCMRevision retrieve(@NonNull final SCMHead head, @NonNull final TaskListener listener)
             throws IOException, InterruptedException {
-        final GitSCMSourceContext context = new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        GitSCMSourceContext context = new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            String remote = getRemote();
+            StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            return telescope.getRevision(remote, credentials, head);
+        }
+        //TODO write test using GitRefSCMHead
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -369,7 +382,23 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                           // tag does not exist
                                           return null;
                                       }
+                                  } else if (head instanceof GitBranchSCMHead) {
+                                      for (Branch b : client.getRemoteBranches()) {
+                                          String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
+                                          if (branchName.equals(head.getName())) {
+                                              return new GitBranchSCMRevision((GitBranchSCMHead)head, b.getSHA1String());
+                                          }
+                                      }
+                                  } else if (head instanceof GitRefSCMHead) {
+                                      try {
+                                          ObjectId objectId = client.revParse(((GitRefSCMHead) head).getRef());
+                                          return new GitRefSCMRevision((GitRefSCMHead)head, objectId.name());
+                                      } catch (GitException e) {
+                                          // ref could not be found
+                                          return null;
+                                      }
                                   } else {
+                                      //Entering default/legacy git retrieve code path
                                       for (Branch b : client.getRemoteBranches()) {
                                           String branchName = StringUtils.removeStart(b.getName(), remoteName + "/");
                                           if (branchName.equals(head.getName())) {
@@ -396,6 +425,117 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             throws IOException, InterruptedException {
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(criteria, observer).withTraits(getTraits());
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
+            if (context.wantBranches()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.HEAD);
+            }
+            if (context.wantTags()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
+            }
+            //TODO JENKINS-51134 DiscoverOtherRefsTrait
+            if (!referenceTypes.isEmpty()) {
+                try (GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
+                    listener.getLogger().println("Listing remote references...");
+                    Iterable<SCMRevision> revisions = telescope.getRevisions(remote, credentials, referenceTypes);
+                    if (context.wantBranches()) {
+                        listener.getLogger().println("Checking branches...");
+                        int count = 0;
+                        for (final SCMRevision revision : revisions) {
+                            if (!(revision instanceof SCMRevisionImpl) || (revision instanceof GitTagSCMRevision)) {
+                                continue;
+                            }
+                            count++;
+                            if (request.process(revision.getHead(),
+                                    new SCMSourceRequest.RevisionLambda<SCMHead, SCMRevisionImpl>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMRevisionImpl create(@NonNull SCMHead head)
+                                                throws IOException, InterruptedException {
+                                            listener.getLogger()
+                                                    .println("  Checking branch " + revision.getHead().getName());
+                                            return (SCMRevisionImpl) revision;
+                                        }
+                                    },
+                                    new SCMSourceRequest.ProbeLambda<SCMHead, SCMRevisionImpl>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
+                                                                              @NonNull SCMRevisionImpl revision)
+                                                throws IOException, InterruptedException {
+                                            return new TelescopingSCMProbe(telescope, remote, credentials, revision);
+                                        }
+                                    }, new SCMSourceRequest.Witness() {
+                                        @Override
+                                        public void record(@NonNull SCMHead head, SCMRevision revision,
+                                                           boolean isMatch) {
+                                            if (isMatch) {
+                                                listener.getLogger().println("    Met criteria");
+                                            } else {
+                                                listener.getLogger().println("    Does not meet criteria");
+                                            }
+                                        }
+                                    }
+                            )) {
+                                listener.getLogger().format("Processed %d branches (query complete)%n", count);
+                                return;
+                            }
+                        }
+                        listener.getLogger().format("Processed %d branches%n", count);
+                    }
+                    if (context.wantTags()) {
+                        listener.getLogger().println("Checking tags...");
+                        int count = 0;
+                        for (final SCMRevision revision : revisions) {
+                            if (!(revision instanceof GitTagSCMRevision)) {
+                                continue;
+                            }
+                            count++;
+                            if (request.process((GitTagSCMHead) revision.getHead(),
+                                    new SCMSourceRequest.RevisionLambda<GitTagSCMHead, GitTagSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public GitTagSCMRevision create(@NonNull GitTagSCMHead head)
+                                                throws IOException, InterruptedException {
+                                            listener.getLogger()
+                                                    .println("  Checking tag " + revision.getHead().getName());
+                                            return (GitTagSCMRevision) revision;
+                                        }
+                                    },
+                                    new SCMSourceRequest.ProbeLambda<GitTagSCMHead, GitTagSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(@NonNull final GitTagSCMHead head,
+                                                                              @NonNull GitTagSCMRevision revision)
+                                                throws IOException, InterruptedException {
+                                            return new TelescopingSCMProbe(telescope, remote, credentials, revision);
+                                        }
+                                    }, new SCMSourceRequest.Witness() {
+                                        @Override
+                                        public void record(@NonNull SCMHead head, SCMRevision revision,
+                                                           boolean isMatch) {
+                                            if (isMatch) {
+                                                listener.getLogger().println("    Met criteria");
+                                            } else {
+                                                listener.getLogger().println("    Does not meet criteria");
+                                            }
+                                        }
+                                    }
+                            )) {
+                                listener.getLogger().format("Processed %d tags (query complete)%n", count);
+                                return;
+                            }
+                        }
+                        listener.getLogger().format("Processed %d tags%n", count);
+                    }
+                }
+                return;
+            }
+        }
         doRetrieve(new Retriever<Void>() {
             @Override
             public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
@@ -403,10 +543,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 try (RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
                     Map<String, ObjectId> remoteReferences = null;
-                    if (context.wantBranches() || context.wantTags()) {
+                    if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
                         listener.getLogger().println("Listing remote references...");
+                        boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+                        boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
                         remoteReferences = client.getRemoteReferences(
-                                client.getRemoteUrl(remoteName), null, context.wantBranches(), context.wantTags()
+                                client.getRemoteUrl(remoteName), null, headsOnly, tagsOnly
                         );
                     }
                     if (context.wantBranches()) {
@@ -415,8 +557,82 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     if (context.wantTags()) {
                         discoverTags(repository, walk, request, remoteReferences);
                     }
+                    if (context.wantOtherRefs()) {
+                        discoverOtherRefs(repository, walk, request, remoteReferences,
+                                (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings());
+                    }
                 }
                 return null;
+            }
+
+            private void discoverOtherRefs(final Repository repository,
+                                           final RevWalk walk, GitSCMSourceRequest request,
+                                           Map<String, ObjectId> remoteReferences,
+                                           Collection<GitSCMSourceContext.RefNameMapping> wantedRefs)
+                    throws IOException, InterruptedException {
+                listener.getLogger().println("Checking other refs...");
+                walk.setRetainBody(false);
+                int count = 0;
+                for (final Map.Entry<String, ObjectId> ref : remoteReferences.entrySet()) {
+                    if (ref.getKey().startsWith(Constants.R_HEADS) || ref.getKey().startsWith(Constants.R_TAGS)) {
+                        continue;
+                    }
+                    for (GitSCMSourceContext.RefNameMapping otherRef : wantedRefs) {
+                        if (!otherRef.matches(ref.getKey())) {
+                            continue;
+                        }
+                        final String refName = otherRef.getName(ref.getKey());
+                        if (refName == null) {
+                            listener.getLogger().println("  Possible badly configured name mapping (" + otherRef.getName() + ") (for " + ref.getKey() + ") ignoring.");
+                            continue;
+                        }
+                        count++;
+                        if (request.process(new GitRefSCMHead(refName, ref.getKey()),
+                                new SCMSourceRequest.IntermediateLambda<ObjectId>() {
+                                    @Nullable
+                                    @Override
+                                    public ObjectId create() throws IOException, InterruptedException {
+                                        listener.getLogger().println("  Checking ref " + refName + " (" + ref.getKey() + ")");
+                                        return ref.getValue();
+                                    }
+                                },
+                                new SCMSourceRequest.ProbeLambda<GitRefSCMHead, ObjectId>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(@NonNull GitRefSCMHead head,
+                                                                          @Nullable ObjectId revisionInfo)
+                                            throws IOException, InterruptedException {
+                                        RevCommit commit = walk.parseCommit(revisionInfo);
+                                        final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                        final RevTree tree = commit.getTree();
+                                        return new TreeWalkingSCMProbe(refName, lastModified, repository, tree);
+                                    }
+                                }, new SCMSourceRequest.LazyRevisionLambda<GitRefSCMHead, SCMRevision, ObjectId>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMRevision create(@NonNull GitRefSCMHead head, @Nullable ObjectId intermediate)
+                                            throws IOException, InterruptedException {
+                                        return new GitRefSCMRevision(head, ref.getValue().name());
+                                    }
+                                }, new SCMSourceRequest.Witness() {
+                                    @Override
+                                    public void record(@NonNull SCMHead head, SCMRevision revision, boolean isMatch) {
+                                        if (isMatch) {
+                                            listener.getLogger().println("    Met criteria");
+                                        } else {
+                                            listener.getLogger().println("    Does not meet criteria");
+                                        }
+                                    }
+                                }
+                        )) {
+                            listener.getLogger().format("Processed %d refs (query complete)%n", count);
+                            return;
+                        }
+                        break;
+                    }
+                }
+                listener.getLogger().format("Processed %d refs%n", count);
+
             }
 
             private void discoverBranches(final Repository repository,
@@ -432,7 +648,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     }
                     count++;
                     final String branchName = StringUtils.removeStart(ref.getKey(), Constants.R_HEADS);
-                    if (request.process(new SCMHead(branchName),
+                    if (request.process(new GitBranchSCMHead(branchName),
                             new SCMSourceRequest.IntermediateLambda<ObjectId>() {
                                 @Nullable
                                 @Override
@@ -441,69 +657,23 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                     return ref.getValue();
                                 }
                             },
-                            new SCMSourceRequest.ProbeLambda<SCMHead, ObjectId>() {
+                            new SCMSourceRequest.ProbeLambda<GitBranchSCMHead, ObjectId>() {
                                 @NonNull
                                 @Override
-                                public SCMSourceCriteria.Probe create(@NonNull SCMHead head,
+                                public SCMSourceCriteria.Probe create(@NonNull GitBranchSCMHead head,
                                                                       @Nullable ObjectId revisionInfo)
                                         throws IOException, InterruptedException {
                                     RevCommit commit = walk.parseCommit(revisionInfo);
                                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                                     final RevTree tree = commit.getTree();
-                                    return new SCMProbe() {
-                                        @Override
-                                        public void close() throws IOException {
-                                            // no-op
-                                        }
-
-                                        @Override
-                                        public String name() {
-                                            return branchName;
-                                        }
-
-                                        @Override
-                                        public long lastModified() {
-                                            return lastModified;
-                                        }
-
-                                        @Override
-                                        @NonNull
-                                        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                                                            justification =
-                                                                    "TreeWalk.forPath can return null, compiler "
-                                                                            + "generated code for try with resources handles it")
-                                        public SCMProbeStat stat(@NonNull String path) throws IOException {
-                                            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
-                                                if (tw == null) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                FileMode fileMode = tw.getFileMode(0);
-                                                if (fileMode == FileMode.MISSING) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                if (fileMode == FileMode.EXECUTABLE_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.REGULAR_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.SYMLINK) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
-                                                }
-                                                if (fileMode == FileMode.TREE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
-                                                }
-                                                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
-                                            }
-                                        }
-                                    };
+                                    return new TreeWalkingSCMProbe(branchName, lastModified, repository, tree);
                                 }
-                            }, new SCMSourceRequest.LazyRevisionLambda<SCMHead, SCMRevision, ObjectId>() {
+                            }, new SCMSourceRequest.LazyRevisionLambda<GitBranchSCMHead, SCMRevision, ObjectId>() {
                                 @NonNull
                                 @Override
-                                public SCMRevision create(@NonNull SCMHead head, @Nullable ObjectId intermediate)
+                                public SCMRevision create(@NonNull GitBranchSCMHead head, @Nullable ObjectId intermediate)
                                         throws IOException, InterruptedException {
-                                    return new SCMRevisionImpl(head, ref.getValue().name());
+                                    return new GitBranchSCMRevision(head, ref.getValue().name());
                                 }
                             }, new SCMSourceRequest.Witness() {
                                 @Override
@@ -556,53 +726,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                     RevCommit commit = walk.parseCommit(revisionInfo);
                                     final long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
                                     final RevTree tree = commit.getTree();
-                                    return new SCMProbe() {
-                                        @Override
-                                        public void close() throws IOException {
-                                            // no-op
-                                        }
-
-                                        @Override
-                                        public String name() {
-                                            return tagName;
-                                        }
-
-                                        @Override
-                                        public long lastModified() {
-                                            return lastModified;
-                                        }
-
-                                        @Override
-                                        @NonNull
-                                        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                                                            justification =
-                                                                    "TreeWalk.forPath can return null, compiler "
-                                                                            + "generated code for try with resources handles it")
-                                        public SCMProbeStat stat(@NonNull String path) throws IOException {
-                                            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
-                                                if (tw == null) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                FileMode fileMode = tw.getFileMode(0);
-                                                if (fileMode == FileMode.MISSING) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
-                                                }
-                                                if (fileMode == FileMode.EXECUTABLE_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.REGULAR_FILE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
-                                                }
-                                                if (fileMode == FileMode.SYMLINK) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
-                                                }
-                                                if (fileMode == FileMode.TREE) {
-                                                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
-                                                }
-                                                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
-                                            }
-                                        }
-                                    };
+                                    return new TreeWalkingSCMProbe(tagName, lastModified, repository, tree);
                                 }
                             }, new SCMSourceRequest.LazyRevisionLambda<GitTagSCMHead, GitTagSCMRevision, ObjectId>() {
                                 @NonNull
@@ -640,23 +764,221 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            SCMRevision result = telescope.getRevision(remote, credentials, revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_HEADS + revision);
+            if (result != null) {
+                return result;
+            }
+            result = telescope.getRevision(remote, credentials, Constants.R_TAGS + revision);
+            if (result != null) {
+                return result;
+            }
+            return null;
+        }
+        // first we need to figure out what the revision is. There are six possibilities:
+        // 1.  A branch name (if we have that we can return quickly)
+        // 2.  A tag name (if we have that we will need to fetch the tag to resolve the tag date)
+        // 3.  A short/full revision hash that is the head revision of a branch (if we have that we can return quickly)
+        // 4.  A remote refspec for example pull-requests/1/from
+        // 5.  A short/full revision hash of a non default ref (non branch or tag but somewhere else under refs/)
+        // 6.  A short revision hash that is the head revision of a branch (if we have that we can return quickly)
+        // 7.  A short/full revision hash for a tag (we'll need to fetch the tag to resolve the tag date)
+        // 8.  A short/full revision hash that is not the head revision of a branch (we'll need to fetch everything to
+        // try and resolve the hash from the history of one of the heads)
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        final GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
+        listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
+        boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+        boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
+        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
+                getRemote(), null, headsOnly, tagsOnly
+        );
+        String tagName = null;
+        Set<String> shortNameMatches = new TreeSet<>();
+        String shortHashMatch = null;
+        Set<String> fullTagMatches = new TreeSet<>();
+        Set<String> fullHashMatches = new TreeSet<>();
+        String fullHashMatch = null;
+        GitRefSCMRevision candidateOtherRef = null;
+        for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
+            String name = entry.getKey();
+            String rev = entry.getValue().name();
+            if ("HEAD".equals(name)) {
+                //Skip HEAD as it should only appear during testing, not for standard bare repos iirc
+                continue;
+            }
+            if (name.equals(Constants.R_HEADS + revision)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN!
+                return new GitBranchSCMRevision(new GitBranchSCMHead(revision), rev);
+            }
+            if (name.equals(Constants.R_TAGS+revision)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN but not the good kind
+                tagName = revision;
+                context.wantBranches(false);
+                context.wantTags(true);
+                context.withoutRefSpecs();
+                break;
+            }
+            if (name.startsWith(Constants.R_HEADS) && revision.equalsIgnoreCase(rev)) {
+                listener.getLogger().printf("Found match: %s revision %s%n", name, rev);
+                // WIN!
+                return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)), rev);
+            }
+            if (name.startsWith(Constants.R_TAGS) && revision.equalsIgnoreCase(rev)) {
+                listener.getLogger().printf("Candidate match: %s revision %s%n", name, rev);
+                // WIN but let's see if a branch also matches as that would save a fetch
+                fullTagMatches.add(name);
+                continue;
+            }
+            if((Constants.R_REFS + revision.toLowerCase(Locale.ENGLISH)).equals(name.toLowerCase(Locale.ENGLISH))) {
+                fullHashMatches.add(name);
+                if (fullHashMatch == null) {
+                    fullHashMatch = rev;
+                }
+                continue;
+            }
+            if (rev.toLowerCase(Locale.ENGLISH).equals(revision.toLowerCase(Locale.ENGLISH))) {
+                fullHashMatches.add(name);
+                if (fullHashMatch == null) {
+                    fullHashMatch = rev;
+                }
+                //Since it was a full match then the shortMatch below will also match, so just skip it
+                continue;
+            }
+            for (GitSCMSourceContext.RefNameMapping o : (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings()) {
+                if (o.matches(revision, name, rev)) {
+                    candidateOtherRef = new GitRefSCMRevision(new GitRefSCMHead(revision, name), rev);
+                    break;
+                }
+            }
+            if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
+                shortNameMatches.add(name);
+                if (shortHashMatch == null) {
+                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
+                    shortHashMatch = rev;
+                } else {
+                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
+                    listener.getLogger().printf("Cannot resolve ambiguous short revision %s%n", revision);
+                    return null;
+                }
+            }
+        }
+        if (!fullTagMatches.isEmpty()) {
+            // we just want a tag so we can do a minimal fetch
+            String name = StringUtils.removeStart(fullTagMatches.iterator().next(), Constants.R_TAGS);
+            listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+            tagName = name;
+            context.wantBranches(false);
+            context.wantTags(true);
+            context.withoutRefSpecs();
+        }
+        if (fullHashMatch != null) {
+            //since this would have been skipped if this was a head or a tag we can just return whatever
+            return new GitRefSCMRevision(new GitRefSCMHead(fullHashMatch, fullHashMatches.iterator().next()), fullHashMatch);
+        }
+        if (shortHashMatch != null) {
+            // woot this seems unambiguous
+            for (String name: shortNameMatches) {
+                if (name.startsWith(Constants.R_HEADS)) {
+                    listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+                    // WIN it's also a branch
+                    return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
+                            shortHashMatch);
+                } else if (name.startsWith(Constants.R_TAGS)) {
+                    tagName = StringUtils.removeStart(name, Constants.R_TAGS);
+                    context.wantBranches(false);
+                    context.wantTags(true);
+                    context.withoutRefSpecs();
+                }
+            }
+            if (tagName != null) {
+                listener.getLogger().printf("Selected match: %s revision %s%n", tagName, shortHashMatch);
+            } else {
+                return new GitRefSCMRevision(new GitRefSCMHead(shortHashMatch, shortNameMatches.iterator().next()), shortHashMatch);
+            }
+        }
+        if (candidateOtherRef != null) {
+            return candidateOtherRef;
+        }
+        if (tagName != null) {
+            listener.getLogger().println(
+                    "Resolving tag commit... (remote references may be a lightweight tag or an annotated tag)");
+            final String tagRef = Constants.R_TAGS+tagName;
+            return doRetrieve(new Retriever<SCMRevision>() {
+                                  @Override
+                                  public SCMRevision run(GitClient client, String remoteName) throws IOException,
+                                          InterruptedException {
+                                      final Repository repository = client.getRepository();
+                                      try (RevWalk walk = new RevWalk(repository)) {
+                                          ObjectId ref = client.revParse(tagRef);
+                                          RevCommit commit = walk.parseCommit(ref);
+                                          long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
+                                          listener.getLogger().printf("Resolved tag %s revision %s%n", revision,
+                                                  ref.getName());
+                                          return new GitTagSCMRevision(new GitTagSCMHead(revision, lastModified),
+                                                  ref.name());
+                                      }
+                                  }
+                              },
+                    context,
+                    listener, false);
+        }
+        // Pokémon!... Got to catch them all
+        listener.getLogger().printf("Could not find %s in remote references. "
+                        + "Pulling heads to local for deep search...%n", revision);
+        context.wantTags(true);
+        context.wantBranches(true);
+
         return doRetrieve(new Retriever<SCMRevision>() {
                               @Override
                               public SCMRevision run(GitClient client, String remoteName) throws IOException, InterruptedException {
+                                  ObjectId objectId;
                                   String hash;
                                   try {
-                                      hash = client.revParse(revision).name();
-                                  } catch (GitException x) {
-                                      // Try prepending remote name in case it was a branch.
-                                      try {
-                                          hash = client.revParse(context.remoteName() + "/" + revision).name();
-                                      } catch (GitException x2) {
-                                          listener.getLogger().println(x.getMessage());
-                                          listener.getLogger().println(x2.getMessage());
+                                      objectId = client.revParse(revision);
+                                      if (objectId == null) {
+                                          //just to be safe
+                                          listener.error("Could not resolve %s", revision);
+                                          return null;
+
+                                      }
+                                      hash = objectId.name();
+                                      String candidatePrefix = Constants.R_REMOTES.substring(Constants.R_REFS.length())
+                                              + context.remoteName() + "/";
+                                      String name = null;
+                                      for (Branch b: client.getBranchesContaining(hash, true)) {
+                                          if (b.getName().startsWith(candidatePrefix)) {
+                                              name = b.getName().substring(candidatePrefix.length());
+                                              break;
+                                          }
+                                      }
+                                      if (name == null) {
+                                          listener.getLogger().printf("Could not find a branch containing commit %s%n",
+                                                  hash);
                                           return null;
                                       }
+                                      listener.getLogger()
+                                              .printf("Selected match: %s revision %s%n", name, hash);
+                                      return new GitBranchSCMRevision(new GitBranchSCMHead(name), hash);
+                                  } catch (GitException x) {
+                                      x.printStackTrace(listener.error("Could not resolve %s", revision));
+                                      return null;
                                   }
-                                  return new SCMRevisionImpl(new SCMHead(revision), hash);
                               }
                           },
                 context,
@@ -672,26 +994,68 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
-        return doRetrieve(new Retriever<Set<String>>() {
-                              @Override
-                              public Set<String> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                                  Set<String> revisions = new HashSet<String>();
-                                  if (context.wantBranches()) {
-                                      for (Branch branch : client.getRemoteBranches()) {
-                                          revisions.add(branch.getName().replaceFirst(
-                                                  "^" + Pattern.quote(context.remoteName()) + "/",
-                                                  ""
-                                          ));
-                                      }
-                                  }
-                                  if (context.wantTags()) {
-                                      revisions.addAll(client.getTagNames("*"));
-                                  }
-                                  return revisions;
-                              }
-                          },
-                context,
-                listener, false);
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
+            if (context.wantBranches()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.HEAD);
+            }
+            if (context.wantTags()) {
+                referenceTypes.add(GitSCMTelescope.ReferenceType.TAG);
+            }
+            Set<String> result = new HashSet<>();
+            for (SCMRevision r : telescope.getRevisions(remote, credentials, referenceTypes)) {
+                if (r instanceof GitTagSCMRevision && context.wantTags()) {
+                    result.add(r.getHead().getName());
+                } else if (!(r instanceof GitTagSCMRevision) && context.wantBranches()) {
+                    result.add(r.getHead().getName());
+                }
+            }
+            return result;
+        }
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
+        Set<String> revisions = new HashSet<>();
+        if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
+            listener.getLogger().println("Listing remote references...");
+            boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
+            boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
+            Map<String, ObjectId> remoteReferences = client.getRemoteReferences(
+                    getRemote(), null, headsOnly, tagsOnly
+            );
+            for (String name : remoteReferences.keySet()) {
+                if (context.wantBranches()) {
+                    if (name.startsWith(Constants.R_HEADS)) {
+                        revisions.add(StringUtils.removeStart(name, Constants.R_HEADS));
+                    }
+                }
+                if (context.wantTags()) {
+                    if (name.startsWith(Constants.R_TAGS)) {
+                        revisions.add(StringUtils.removeStart(name, Constants.R_TAGS));
+                    }
+                }
+                if (context.wantOtherRefs() && (!name.startsWith(Constants.R_HEADS) || !name.startsWith(Constants.R_TAGS))) {
+                    for (GitSCMSourceContext.RefNameMapping o : (Collection<GitSCMSourceContext.RefNameMapping>)context.getRefNameMappings()) {
+                        if (o.matches(name)) {
+                            final String revName = o.getName(name);
+                            if (revName != null) {
+                                revisions.add(revName);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return revisions;
     }
 
     /**
@@ -701,65 +1065,83 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     @Override
     protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        return doRetrieve(new Retriever<List<Action>>() {
-                              @Override
-                              public List<Action> run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                                  Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
-                                  if (symrefs.containsKey(Constants.HEAD)) {
-                                      // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
-                                      String target = symrefs.get(Constants.HEAD);
-                                      if (target.startsWith(Constants.R_HEADS)) {
-                                          // shorten standard names
-                                          target = target.substring(Constants.R_HEADS.length());
-                                      }
-                                      List<Action> result = new ArrayList<>();
-                                      if (StringUtils.isNotBlank(target)) {
-                                          result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                                      }
-                                      return result;
-                                  }
-                                  // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
-                                  // I think we will still need to keep this code path even if JGit implements
-                                  // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
-                                  // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
-                                  // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
-                                  // Ubuntu 16)
-                                  Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
-                                  if (remoteReferences.containsKey(Constants.HEAD)) {
-                                      ObjectId head = remoteReferences.get(Constants.HEAD);
-                                      Set<String> names = new TreeSet<>();
-                                      for (Map.Entry<String, ObjectId> entry: remoteReferences.entrySet()) {
-                                          if (entry.getKey().equals(Constants.HEAD)) continue;
-                                          if (head.equals(entry.getValue())) {
-                                              names.add(entry.getKey());
-                                          }
-                                      }
-                                      // if there is one and only one match, that's the winner
-                                      if (names.size() == 1) {
-                                          String target = names.iterator().next();
-                                          if (target.startsWith(Constants.R_HEADS)) {
-                                              // shorten standard names
-                                              target = target.substring(Constants.R_HEADS.length());
-                                          }
-                                          List<Action> result = new ArrayList<>();
-                                          if (StringUtils.isNotBlank(target)) {
-                                              result.add(new GitRemoteHeadRefAction(getRemote(), target));
-                                          }
-                                          return result;
-                                      }
-                                      // if there are multiple matches, prefer `master`
-                                      if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
-                                          List<Action> result = new ArrayList<Action>();
-                                          result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
-                                          return result;
-                                      }
-                                  }
-                                  // Give up, there's no way to get the primary branch
-                                  return new ArrayList<>();
-                              }
-                          },
-                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()),
-                listener, false);
+        final GitSCMTelescope telescope = GitSCMTelescope.of(this);
+        if (telescope != null) {
+            final String remote = getRemote();
+            final StandardUsernameCredentials credentials = getCredentials();
+            telescope.validate(remote, credentials);
+            String target = telescope.getDefaultTarget(remote, credentials);
+            if (target.startsWith(Constants.R_HEADS)) {
+                // shorten standard names
+                target = target.substring(Constants.R_HEADS.length());
+            }
+            List<Action> result = new ArrayList<>();
+            if (StringUtils.isNotBlank(target)) {
+                result.add(new GitRemoteHeadRefAction(getRemote(), target));
+            }
+            return result;
+        }
+        final GitSCMSourceContext context =
+                new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
+        Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
+        GitTool tool = resolveGitTool(context.gitTool());
+        if (tool != null) {
+            git.using(tool.getGitExe());
+        }
+        GitClient client = git.getClient();
+        client.addDefaultCredentials(getCredentials());
+        Map<String, String> symrefs = client.getRemoteSymbolicReferences(getRemote(), null);
+        if (symrefs.containsKey(Constants.HEAD)) {
+            // Hurrah! The Server is Git 1.8.5 or newer and our client has symref reporting
+            String target = symrefs.get(Constants.HEAD);
+            if (target.startsWith(Constants.R_HEADS)) {
+                // shorten standard names
+                target = target.substring(Constants.R_HEADS.length());
+            }
+            List<Action> result = new ArrayList<>();
+            if (StringUtils.isNotBlank(target)) {
+                result.add(new GitRemoteHeadRefAction(getRemote(), target));
+            }
+            return result;
+        }
+        // Ok, now we do it the old-school way... see what ref has the same hash as HEAD
+        // I think we will still need to keep this code path even if JGit implements
+        // https://bugs.eclipse.org/bugs/show_bug.cgi?id=514052 as there is always the potential that
+        // the remote server is Git 1.8.4 or earlier, or that the local CLI git implementation is
+        // older than git 2.8.0 (CentOS 6, CentOS 7, Debian 7, Debian 8, Ubuntu 14, and
+        // Ubuntu 16)
+        Map<String, ObjectId> remoteReferences = client.getRemoteReferences(getRemote(), null, false, false);
+        if (remoteReferences.containsKey(Constants.HEAD)) {
+            ObjectId head = remoteReferences.get(Constants.HEAD);
+            Set<String> names = new TreeSet<>();
+            for (Map.Entry<String, ObjectId> entry : remoteReferences.entrySet()) {
+                if (entry.getKey().equals(Constants.HEAD)) continue;
+                if (head.equals(entry.getValue())) {
+                    names.add(entry.getKey());
+                }
+            }
+            // if there is one and only one match, that's the winner
+            if (names.size() == 1) {
+                String target = names.iterator().next();
+                if (target.startsWith(Constants.R_HEADS)) {
+                    // shorten standard names
+                    target = target.substring(Constants.R_HEADS.length());
+                }
+                List<Action> result = new ArrayList<>();
+                if (StringUtils.isNotBlank(target)) {
+                    result.add(new GitRemoteHeadRefAction(getRemote(), target));
+                }
+                return result;
+            }
+            // if there are multiple matches, prefer `master`
+            if (names.contains(Constants.R_HEADS + Constants.MASTER)) {
+                List<Action> result = new ArrayList<>();
+                result.add(new GitRemoteHeadRefAction(getRemote(), Constants.MASTER));
+                return result;
+            }
+        }
+        // Give up, there's no way to get the primary branch
+        return new ArrayList<>();
     }
 
     /**
@@ -787,16 +1169,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @Override
     protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {
-        if (category instanceof TagSCMHeadCategory) {
-            return new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits()).wantTags();
+        if (super.isCategoryEnabled(category)) {
+            for (SCMSourceTrait trait : getTraits()) {
+                if (trait.isCategoryEnabled(category)) {
+                    return true;
+                }
+            }
         }
-        return super.isCategoryEnabled(category);
+        return false;
     }
 
     protected String getCacheEntry() {
         return getCacheEntry(getRemote());
     }
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     protected static File getCacheDir(String cacheEntry) {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
@@ -849,7 +1237,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     /**
      * Instantiates a new {@link GitSCMBuilder}.
      * Subclasses should override this method if they want to use a custom {@link GitSCMBuilder} or if they need
-     * to pre-decorare the builder.
+     * to pre-decorate the builder.
      *
      * @param head     the {@link SCMHead}.
      * @param revision the {@link SCMRevision}.
@@ -973,6 +1361,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             this.hash = hash;
         }
 
+        @Exported
         public String getHash() {
             return hash;
         }
@@ -1065,5 +1454,202 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
         }
 
+    }
+
+    /**
+     * A {@link SCMProbe} that uses a local cache of the repository.
+     *
+     * @since 3.6.1
+     */
+    private static class TreeWalkingSCMProbe extends SCMProbe {
+        private final String name;
+        private final long lastModified;
+        private final Repository repository;
+        private final RevTree tree;
+
+        public TreeWalkingSCMProbe(String name, long lastModified, Repository repository, RevTree tree) {
+            this.name = name;
+            this.lastModified = lastModified;
+            this.repository = repository;
+            this.tree = tree;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() throws IOException {
+            // no-op
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String name() {
+            return name;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public long lastModified() {
+            return lastModified;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @NonNull
+        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
+                            justification =
+                                    "TreeWalk.forPath can return null, compiler "
+                                            + "generated code for try with resources handles it")
+        public SCMProbeStat stat(@NonNull String path) throws IOException {
+            try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
+                if (tw == null) {
+                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                }
+                FileMode fileMode = tw.getFileMode(0);
+                if (fileMode == FileMode.MISSING) {
+                    return SCMProbeStat.fromType(SCMFile.Type.NONEXISTENT);
+                }
+                if (fileMode == FileMode.EXECUTABLE_FILE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                }
+                if (fileMode == FileMode.REGULAR_FILE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
+                }
+                if (fileMode == FileMode.SYMLINK) {
+                    return SCMProbeStat.fromType(SCMFile.Type.LINK);
+                }
+                if (fileMode == FileMode.TREE) {
+                    return SCMProbeStat.fromType(SCMFile.Type.DIRECTORY);
+                }
+                return SCMProbeStat.fromType(SCMFile.Type.OTHER);
+            }
+        }
+    }
+
+    /**
+     * A {@link SCMProbe} that uses a {@link GitSCMTelescope}.
+     *
+     * @since 3.6.1
+     */
+    private static class TelescopingSCMProbe extends SCMProbe {
+        /**
+         * Our telescope.
+         */
+        @NonNull
+        private final GitSCMTelescope telescope;
+        /**
+         * The repository URL.
+         */
+        @NonNull
+        private final String remote;
+        /**
+         * The credentials to use.
+         */
+        @CheckForNull
+        private final StandardCredentials credentials;
+        /**
+         * The revision this probe operates on.
+         */
+        @NonNull
+        private final SCMRevision revision;
+        /**
+         * The filesystem (lazy init).
+         */
+        @GuardedBy("this")
+        @CheckForNull
+        private SCMFileSystem fileSystem;
+        /**
+         * The last modified timestamp (lazy init).
+         */
+        @GuardedBy("this")
+        @CheckForNull
+        private Long lastModified;
+
+        /**
+         * Constructor.
+         * @param telescope the telescope.
+         * @param remote the repository URL
+         * @param credentials the credentials to use.
+         * @param revision the revision to probe.
+         */
+        public TelescopingSCMProbe(GitSCMTelescope telescope, String remote, StandardCredentials credentials,
+                                   SCMRevision revision) {
+            this.telescope = telescope;
+            this.remote = remote;
+            this.credentials = credentials;
+            this.revision = revision;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @NonNull
+        @Override
+        public SCMProbeStat stat(@NonNull String path) throws IOException {
+            try {
+                SCMFileSystem fileSystem;
+                synchronized (this) {
+                    if (this.fileSystem == null) {
+                        this.fileSystem = telescope.build(remote, credentials, revision.getHead(), revision);
+                    }
+                    fileSystem = this.fileSystem;
+                }
+                if (fileSystem == null) {
+                    throw new IOException("Cannot connect to " + remote + " as "
+                            + (credentials == null ? "anonymous" : CredentialsNameProvider.name(credentials)));
+                }
+                return SCMProbeStat.fromType(fileSystem.child(path).getType());
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public synchronized void close() throws IOException {
+            if (fileSystem != null) {
+                fileSystem.close();
+            }
+            fileSystem = null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String name() {
+            return revision.getHead().getName();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public long lastModified() {
+            synchronized (this) {
+                if (lastModified != null) {
+                    return lastModified;
+                }
+            }
+            long lastModified;
+            try {
+                lastModified = telescope.getTimestamp(remote, credentials, revision.getHead());
+            } catch (IOException | InterruptedException e) {
+                return -1L;
+            }
+            synchronized (this) {
+                this.lastModified = lastModified;
+            }
+            return lastModified;
+        }
     }
 }

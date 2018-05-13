@@ -43,7 +43,7 @@ public class GitRepositoryBrowserTest {
 
     @Parameterized.Parameters(name = "{0},{1},{2}")
     public static Collection permuteAuthorNameAndGitImplementationAndObjectId() {
-        List<Object[]> values = new ArrayList<Object[]>();
+        List<Object[]> values = new ArrayList<>();
         String[] allowed = {"true", "false"};
         String[] implementations = {"git", "jgit"};
         ObjectId[] sha1Array = { // Use commits from git-plugin repo history
@@ -98,7 +98,7 @@ public class GitRepositoryBrowserTest {
 
     @Test
     public void testGetIndexOfPath() throws Exception {
-        Set<Integer> foundLocations = new HashSet<Integer>(paths.size());
+        Set<Integer> foundLocations = new HashSet<>(paths.size());
         for (GitChangeSet.Path path : paths) {
             int location = browser.getIndexOfPath(path);
 

@@ -11,6 +11,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -81,12 +82,14 @@ public class CGit extends GitRepositoryBrowser {
 
     @Extension
     public static class CGITDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "cgit";
         }
 
         @Override
-        public CGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public CGit newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(CGit.class, jsonObject);
         }
     }

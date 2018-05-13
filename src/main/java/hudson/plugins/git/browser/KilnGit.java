@@ -12,6 +12,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -103,12 +104,14 @@ public class KilnGit extends GitRepositoryBrowser {
 
     @Extension
     public static class KilnGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "Kiln";
         }
 
         @Override
-        public KilnGit newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public KilnGit newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(KilnGit.class, jsonObject);
         }
     }

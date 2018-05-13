@@ -14,6 +14,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -49,7 +50,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
     /**
      * Shows the difference between the referenced commit and the previous commit.
-     * The changes section also display diffs, so a seperate url is unncessary.
+     * The changes section also display diffs, so a separate url is unnecessary.
      * http://[Assembla URL]/commits/[commit]
      *
      * @param path affected file path
@@ -83,12 +84,14 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "AssemblaWeb";
         }
 
         @Override
-        public AssemblaWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public AssemblaWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(AssemblaWeb.class, jsonObject);
         }
 

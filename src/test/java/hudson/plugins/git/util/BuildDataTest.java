@@ -402,14 +402,14 @@ public class BuildDataTest {
         Revision revision1 = new Revision(sha1);
         Build build1 = new Build(revision1, 1, Result.SUCCESS);
         dataClone.saveBuild(build1);
-        assertFalse("Unmodifed origin similar to modified clone", data.similarTo(dataClone));
-        assertFalse("Modifed clone similar to unmodified origin", dataClone.similarTo(data));
-        assertTrue("Modifed clone not similar to itself", dataClone.similarTo(dataClone));
+        assertFalse("Unmodified origin similar to modified clone", data.similarTo(dataClone));
+        assertFalse("Modified clone similar to unmodified origin", dataClone.similarTo(data));
+        assertTrue("Modified clone not similar to itself", dataClone.similarTo(dataClone));
 
         // Same saved build makes objects similar
         BuildData data2 = data.clone();
         data2.saveBuild(build1);
-        assertFalse("Unmodifed origin similar to modified clone", data.similarTo(data2));
+        assertFalse("Unmodified origin similar to modified clone", data.similarTo(data2));
         assertTrue("Objects with same saved build not similar (1)", data2.similarTo(dataClone));
         assertTrue("Objects with same saved build not similar (2)", dataClone.similarTo(data2));
 

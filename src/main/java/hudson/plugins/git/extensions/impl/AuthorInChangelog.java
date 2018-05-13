@@ -21,14 +21,6 @@ public class AuthorInChangelog extends FakeGitSCMExtension {
      * {@inheritDoc}
      */
     @Override
-    public boolean requiresWorkspaceForPolling() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

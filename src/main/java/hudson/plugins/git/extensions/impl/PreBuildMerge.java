@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.List;
 
 import static hudson.model.Result.FAILURE;
 import hudson.model.Run;
@@ -59,7 +60,7 @@ public class PreBuildMerge extends GitSCMExtension {
             return rev;
 
         // Only merge if there's a branch to merge that isn't us..
-        listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef + ", " + options);
+        listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef + ", " + GitSCM.getParameterString(options.toString(), build.getEnvironment(listener)));
 
         // checkout origin/blah
         ObjectId target = git.revParse(remoteBranchRef);
@@ -86,12 +87,30 @@ public class PreBuildMerge extends GitSCMExtension {
             // record the fact that we've tried building 'rev' and it failed, or else
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
-            BuildData bd = scm.getBuildData(build);
-            if(bd != null){
-                bd.saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
-            } else {
-                listener.getLogger().println("Was not possible to get build data");
+
+            // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
+            // revision info for this build etc. The default assumption is that it's a duplicate.
+            BuildData buildData = scm.getBuildData(build, true);
+            boolean buildDataAlreadyPresent = false;
+            List<BuildData> actions = build.getActions(BuildData.class);
+            for (BuildData d: actions)  {
+                if (d.similarTo(buildData)) {
+                    buildDataAlreadyPresent = true;
+                    break;
+                }
             }
+            if (!actions.isEmpty()) {
+                buildData.setIndex(actions.size()+1);
+            }
+
+            // If the BuildData is not already attached to this build, add it to the build and mark that
+            // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
+            // finishes.
+            if (!buildDataAlreadyPresent) {
+                build.addAction(buildData);
+            }
+
+            buildData.saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
 

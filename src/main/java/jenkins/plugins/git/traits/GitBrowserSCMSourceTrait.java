@@ -27,6 +27,7 @@ package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitSCM;
@@ -108,6 +109,8 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
          *
          * @return the {@link GitRepositoryBrowser} instances
          */
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Restricted(NoExternalUse.class) // stapler
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
             return ((GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class))

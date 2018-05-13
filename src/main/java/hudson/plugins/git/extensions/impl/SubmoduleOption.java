@@ -94,17 +94,23 @@ public class SubmoduleOption extends GitSCMExtension {
     public void onCheckoutCompleted(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener) throws IOException, InterruptedException, GitException {
         BuildData revToBuild = scm.getBuildData(build);
 
-        if (!disableSubmodules && git.hasGitModules()) {
-            // This ensures we don't miss changes to submodule paths and allows
-            // seamless use of bare and non-bare superproject repositories.
-            git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
-            git.submoduleUpdate()
-                    .recursive(recursiveSubmodules)
-                    .remoteTracking(trackingSubmodules)
-                    .parentCredentials(parentCredentials)
-                    .ref(build.getEnvironment(listener).expand(reference))
-                    .timeout(timeout)
-                    .execute();
+        try {
+            if (!disableSubmodules && git.hasGitModules()) {
+                // This ensures we don't miss changes to submodule paths and allows
+                // seamless use of bare and non-bare superproject repositories.
+                git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
+                git.submoduleUpdate()
+                        .recursive(recursiveSubmodules)
+                        .remoteTracking(trackingSubmodules)
+                        .parentCredentials(parentCredentials)
+                        .ref(build.getEnvironment(listener).expand(reference))
+                        .timeout(timeout)
+                        .execute();
+            }
+        } catch (GitException e) {
+            // Re-throw as an IOException in order to allow generic retry
+            // logic to kick in properly.
+            throw new IOException("Could not perform submodule update", e);
         }
 
         if (scm.isDoGenerateSubmoduleConfigurations()) {

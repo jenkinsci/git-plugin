@@ -327,7 +327,7 @@ public class BuildData implements Action, Serializable, Cloneable {
      *
      * @param that the {@link BuildData} to compare with.
      * @return {@code true} if the supplied {@link BuildData} is similar to this {@link BuildData}.
-     * @since TODO
+     * @since 3.2.0
      */
     public boolean similarTo(BuildData that) {
         if (that == null) {

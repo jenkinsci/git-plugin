@@ -23,7 +23,7 @@ public class BranchSpecTest {
         assertFalse(est.matches("origintestdev"));
         assertTrue(est.matches("origin/test/dev"));
         assertFalse(est.matches("origin/test/release"));
-        assertFalse(est.matches("origin/test/somthing/release"));
+        assertFalse(est.matches("origin/test/something/release"));
         
         BranchSpec s = new BranchSpec("origin/*");
         
@@ -80,7 +80,7 @@ public class BranchSpecTest {
         assertFalse(est.matches("origintestdev", env));
         assertTrue(est.matches("origin/test/dev", env));
         assertFalse(est.matches("origin/test/release", env));
-        assertFalse(est.matches("origin/test/somthing/release", env));
+        assertFalse(est.matches("origin/test/something/release", env));
 
         BranchSpec s = new BranchSpec("${origin}/*");
 

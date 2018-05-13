@@ -9,6 +9,7 @@ import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitObject;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -76,9 +77,9 @@ public class GitUtils implements Serializable {
             }
             r.getBranches().add(b);
         }
-        for (String tag : git.getTagNames(null)) {
-            String tagRef = Constants.R_TAGS + tag;
-            ObjectId objectId = git.revParse(tagRef);
+        for (GitObject tagEntry : git.getTags()) {
+            String tagRef = Constants.R_TAGS + tagEntry.getName();
+            ObjectId objectId = tagEntry.getSHA1();
             Revision r = revisions.get(objectId);
             if (r == null) {
                 r = new Revision(objectId);

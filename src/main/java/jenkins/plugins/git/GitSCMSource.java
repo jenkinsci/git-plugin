@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -547,13 +548,15 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Extension
     public static class ListenerImpl extends GitStatus.Listener {
+        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Override
         public List<GitStatus.ResponseContributor> onNotifyCommit(String origin,
                                                                   URIish uri,
                                                                   @Nullable final String sha1,
                                                                   List<ParameterValue> buildParameters,
                                                                   String... branches) {
-            List<GitStatus.ResponseContributor> result = new ArrayList<GitStatus.ResponseContributor>();
+            List<GitStatus.ResponseContributor> result = new ArrayList<>();
             final boolean notified[] = {false};
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
@@ -626,14 +629,14 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                         return Collections.emptyMap();
                                     }
                                     if (GitStatus.looselyMatches(u, remote)) {
-                                        SCMHead head = new SCMHead(branch);
+                                        GitBranchSCMHead head = new GitBranchSCMHead(branch);
                                         for (SCMHeadPrefilter filter: ctx.prefilters()) {
                                             if (filter.isExcluded(git, head)) {
                                                 return Collections.emptyMap();
                                             }
                                         }
                                         return Collections.<SCMHead, SCMRevision>singletonMap(head,
-                                                sha1 != null ? new SCMRevisionImpl(head, sha1) : null);
+                                                sha1 != null ? new GitBranchSCMRevision(head, sha1) : null);
                                     }
                                 }
                                 return Collections.emptyMap();

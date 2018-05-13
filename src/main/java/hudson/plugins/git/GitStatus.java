@@ -34,18 +34,16 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Information screen for the use of Git in Hudson.
  */
 @Extension
-public class GitStatus extends AbstractModelObject implements UnprotectedRootAction {
+public class GitStatus implements UnprotectedRootAction {
+    @Override
     public String getDisplayName() {
         return "Git";
-    }
-
-    public String getSearchUrl() {
-        return getUrlName();
     }
 
     public String getIconFileName() {
@@ -53,6 +51,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return null;
     }
 
+    @Override
     public String getUrlName() {
         return "git";
     }
@@ -115,6 +114,8 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         return s.toString();
     }
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
@@ -162,6 +163,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
         }
 
         return new HttpResponse() {
+            @Override
             public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
                     throws IOException, ServletException {
                 rsp.setStatus(SC_OK);
@@ -326,11 +328,12 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
          * {@inheritDoc}
          */
         @Override
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Received notification from " + StringUtils.defaultIfBlank(origin, "?")
-                        + " for uri = " + uri + " ; sha1 = " + sha1 + " ; branches = " + Arrays.toString(branches));
+                LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
+                           new Object[]{StringUtils.defaultIfBlank(origin, "?"), uri, sha1, Arrays.toString(branches)});
             }
 
             GitStatus.clearLastStaticBuildParameters();
@@ -349,7 +352,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                     LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
                     return result;
                 }
-                for (final Item project : Jenkins.getInstance().getAllItems()) {
+                for (final Item project : jenkins.getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
                     if (scmTriggerItem == null) {
                         continue;
@@ -379,7 +382,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
                             SCMTrigger trigger = scmTriggerItem.getSCMTrigger();
                             if (trigger == null || trigger.isIgnorePostCommitHooks()) {
-                                LOGGER.info("no trigger, or post-commit hooks disabled, on " + project.getFullDisplayName());
+                                LOGGER.log(Level.INFO, "no trigger, or post-commit hooks disabled, on {0}", project.getFullDisplayName());
                                 continue;
                             }
 
@@ -392,7 +395,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                     if (branchSpec.getName().contains("$")) {
                                         // If the branchspec is parametrized, always run the polling
                                         if (LOGGER.isLoggable(Level.FINE)) {
-                                            LOGGER.fine("Branch Spec is parametrized for " + project.getFullDisplayName() + ". ");
+                                            LOGGER.log(Level.FINE, "Branch Spec is parametrized for {0}", project.getFullDisplayName());
                                         }
                                         branchFound = true;
                                         parametrizedBranchSpec = true;
@@ -400,7 +403,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                         for (String branch : branches) {
                                             if (branchSpec.matches(repository.getName() + "/" + branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
-                                                    LOGGER.fine("Branch Spec " + branchSpec + " matches modified branch " + branch + " for " + project.getFullDisplayName() + ". ");
+                                                    LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
                                                 }
                                                 branchFound = true;
                                                 break OUT;
@@ -414,7 +417,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                             if (!(project instanceof AbstractProject && ((AbstractProject) project).isDisabled())) {
                                 //JENKINS-30178 Add default parameters defined in the job
                                 if (project instanceof Job) {
-                                    Set<String> buildParametersNames = new HashSet<String>();
+                                    Set<String> buildParametersNames = new HashSet<>();
                                     if (allowNotifyCommitParameters || !safeParameters.isEmpty()) {
                                         for (ParameterValue parameterValue: allBuildParameters) {
                                             if (allowNotifyCommitParameters || safeParameters.contains(parameterValue.getName())) {
@@ -435,7 +438,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                      * NOTE: This is SCHEDULING THE BUILD, not triggering polling of the repo.
                                      * If no SHA1 or the branch spec is parameterized, it will only poll.
                                      */
-                                    LOGGER.info("Scheduling " + project.getFullDisplayName() + " to build commit " + sha1);
+                                    LOGGER.log(Level.INFO, "Scheduling {0} to build commit {1}", new Object[]{project.getFullDisplayName(), sha1});
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
                                             new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
@@ -445,7 +448,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
                                      * NOTE: This is not scheduling the build, just polling for changes
                                      * If the polling detects changes, it will schedule the build
                                      */
-                                    LOGGER.info("Triggering the polling of " + project.getFullDisplayName());
+                                    LOGGER.log(Level.INFO, "Triggering the polling of {0}", project.getFullDisplayName());
                                     trigger.run();
                                     result.add(new PollingScheduledResponseContributor(project));
                                     break SCMS; // no need to trigger the same project twice, so do not consider other GitSCMs in it
@@ -646,7 +649,7 @@ public class GitStatus extends AbstractModelObject implements UnprotectedRootAct
 
     private static Set<String> csvToSet(String csvLine) {
         String[] tokens = csvLine.split(",");
-        Set<String> set = new HashSet<String>(Arrays.asList(tokens));
+        Set<String> set = new HashSet<>(Arrays.asList(tokens));
         return set;
     }
 

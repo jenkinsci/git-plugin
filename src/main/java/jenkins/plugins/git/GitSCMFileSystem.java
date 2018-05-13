@@ -77,7 +77,7 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 /**
  * Base implementation of {@link SCMFileSystem}.
  *
- * @since FIXME
+ * @since 3.0.2
  */
 public class GitSCMFileSystem extends SCMFileSystem {
 

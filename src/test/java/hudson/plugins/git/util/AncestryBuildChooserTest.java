@@ -111,9 +111,7 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     // Git Client implementation throws away committer date info so we have to do this manually..
     // Copied from JGitAPIImpl.commit(String message)
     private void commit(String message, PersonIdent author, PersonIdent committer) {
-        Repository repo = null;
-        try {
-            repo = testGitClient.getRepository();
+        try (Repository repo = testGitClient.getRepository()) {
             CommitCommand cmd = Git.wrap(repo).commit().setMessage(message);
             if (author != null)
                 cmd.setAuthor(author);
@@ -123,8 +121,6 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
             cmd.call();
         } catch (GitAPIException e) {
             throw new GitException(e);
-        } finally {
-            if (repo != null) repo.close();
         }
     }
     

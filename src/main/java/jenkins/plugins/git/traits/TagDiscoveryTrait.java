@@ -44,13 +44,14 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A {@link Discovery} trait for Git that will discover tags on the repository.
  *
- * @since TODO
+ * @since 3.6.0
  */
 public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
@@ -75,7 +76,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      */
     @Override
     public boolean includeCategory(@NonNull SCMHeadCategory category) {
-        return category.isUncategorized();
+        return category instanceof TagSCMHeadCategory;
     }
 
     /**

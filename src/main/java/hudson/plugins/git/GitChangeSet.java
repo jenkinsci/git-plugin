@@ -35,6 +35,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.ISODateTimeFormat;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Represents a change set.
  * @author Nigel Magnay
@@ -323,7 +325,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return parentCommit;
     }
 
-
     @Override
     public Collection<String> getAffectedPaths() {
         Collection<String> affectedPaths = new HashSet<>(this.paths.size());
@@ -362,6 +363,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return User.getUnknown();
         }
         if (createAccountBasedOnEmail) {
+            if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
+                // Avoid exception from User.get("", false)
+                return User.getUnknown();
+            }
             user = User.get(csAuthorEmail, false);
 
             if (user == null) {
@@ -376,9 +381,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         } else {
+            if (csAuthor.isEmpty()) {
+                // Avoid exception from User.get("", false)
+                return User.getUnknown();
+            }
             user = User.get(csAuthor, false);
 
             if (user == null) {
+                if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
+                    return User.getUnknown();
+                }
                 // Ensure that malformed email addresses (in this case, just '@')
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");
@@ -419,6 +431,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     private boolean isCreateAccountBasedOnEmail() {
         Hudson hudson = Hudson.getInstance();
         if (hudson == null) {
