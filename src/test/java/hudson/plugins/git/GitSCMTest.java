@@ -2110,6 +2110,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
 
+        hudson.model.Queue queue = new hudson.model.Queue(hudson.model.LoadBalancer.CONSISTENT_HASH);
+        queue.maintain();
         final Build build = project.getLastBuild();
         final BuildData buildData = git.getBuildData(build);
         assertEquals("Expected SHA1 != built SHA1 for commit " + ordinal + " priors:" + priorCommitIDs, commit, buildData
