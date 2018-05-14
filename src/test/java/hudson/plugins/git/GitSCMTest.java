@@ -2355,6 +2355,8 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
             String expectedBranch, int ordinal, GitSCM git) throws Exception {
+        hudson.model.Queue queue = new hudson.model.Queue(hudson.model.LoadBalancer.CONSISTENT_HASH);
+        queue.maintain();
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
         final BuildData buildData = git.getBuildData(project.getLastBuild());
         final Collection<Branch> builtBranches = buildData.lastBuild.getRevision().getBranches();
