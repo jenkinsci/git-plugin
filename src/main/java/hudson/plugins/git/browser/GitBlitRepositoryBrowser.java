@@ -11,6 +11,7 @@ import hudson.util.FormValidation.URLCheck;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -79,6 +80,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
             return req.bindJSON(GitBlitRepositoryBrowser.class, jsonObject);
         }
 
+        @RequirePOST
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)
                 throws IOException, ServletException {
             if (url == null) // nothing entered yet

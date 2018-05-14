@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -108,6 +109,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
          * @throws IOException on input or output error
          * @throws ServletException on servlet error
          */
+        @RequirePOST
         public FormValidation doCheckRepoUrl(@QueryParameter(fixEmpty = true) String value, @AncestorInPath AbstractProject project) throws IOException,
                 ServletException {
 

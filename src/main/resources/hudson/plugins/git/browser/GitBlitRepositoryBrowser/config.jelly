@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <f:entry field="repoUrl" title="${%GitBlit root url}">
-    <f:textbox/>
+    <f:textbox checkMethod="post" />
   </f:entry>
   <f:entry field="projectName" title="${%Project name in GitBlit}">
     <f:textbox/>

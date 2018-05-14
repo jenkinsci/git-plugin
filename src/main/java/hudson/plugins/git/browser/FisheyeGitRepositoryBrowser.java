@@ -12,6 +12,7 @@ import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -87,6 +88,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
                  * @throws IOException on input or output error
                  * @throws ServletException on servlet error
 		 */
+		@RequirePOST
 		@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 		public FormValidation doCheckRepoUrl(@QueryParameter(fixEmpty = true) String value) throws IOException,
 				ServletException {
