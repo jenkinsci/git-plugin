@@ -34,7 +34,7 @@ assure that you haven't introduced new findbugs warnings.
 ## Building the Plugin
 
 ```bash
-  $ java -version # Need Java 1.8, earlier versions are unsupported
+  $ java -version # Need Java 1.8
   $ mvn -version # Need a modern maven version; maven 3.5.0 and later are known to work
   $ mvn clean install
 ```
