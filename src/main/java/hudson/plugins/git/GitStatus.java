@@ -401,7 +401,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         parametrizedBranchSpec = true;
                                     } else {
                                         for (String branch : branches) {
-                                            if (branchSpec.matches(repository.getName() + "/" + branch)) {
+                                            if (branchSpec.matchesRepositoryBranch(repository.getName(), branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
                                                     LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
                                                 }

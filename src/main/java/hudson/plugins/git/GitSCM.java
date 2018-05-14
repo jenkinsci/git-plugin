@@ -59,6 +59,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
@@ -660,7 +661,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
+    public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
@@ -1041,22 +1042,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final @NonNull GitClient git,
                                               final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
-        Collection<Revision> candidates = Collections.EMPTY_LIST;
+        Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-
-        // every MatrixRun should build the same marked commit ID
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        candidates = Collections.singleton(lastBuild.getMarked());
-                }
-            }
+        if (build.getClass().getName().equals("hudson.matrix.MatrixRun")) {
+            candidates = GitSCMMatrixUtil.populateCandidatesFromRootBuild((AbstractBuild) build, this);
         }
 
         // parameter forcing the commit ID to build

@@ -24,7 +24,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.9.0</revision>
+    <revision>3.9.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>1.642.3</jenkins.version>
     <java.level>7</java.level>
@@ -174,7 +174,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.7.1</version>
+      <version>1.12</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
