@@ -1,7 +1,7 @@
 ---
 ath:
   athRevision: "dad333092159cb368efc2f9869572f0a05d255ac"
-  jenkins: "2.121-rc15727.3b61b96119b9"
+  jenkins: "2.121"
   tests:
     - "GitPluginTest"
     - "GitUserContentTest"

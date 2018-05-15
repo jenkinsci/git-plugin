@@ -1088,7 +1088,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {
-            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins.io/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
 
         if (candidates.size() > 1) {
@@ -1871,10 +1871,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
-            return;
-        }
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {

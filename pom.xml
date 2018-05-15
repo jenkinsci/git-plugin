@@ -10,7 +10,7 @@
   <licenses>
     <license>
       <name>The MIT License (MIT)</name>
-      <url>http://opensource.org/licenses/MIT</url>
+      <url>https://opensource.org/licenses/MIT</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -20,42 +20,21 @@
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/Git+Plugin</url>
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.9.1</revision>
+    <revision>4.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>1.642.3</jenkins.version>
-    <java.level>7</java.level>
+    <jenkins.version>2.60.3</jenkins.version>
+    <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
-    <findbugs.failOnError>false</findbugs.failOnError>
     <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
   </properties>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
@@ -67,34 +46,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>display-info</id>
-            <configuration>
-              <rules>
-                <enforceBytecodeVersion>
-                  <excludes combine.children="append">
-                    <!-- Loaded conditionally. -->
-                    <exclude>org.eclipse.jgit:org.eclipse.jgit.java7</exclude>
-                  </excludes>
-                </enforceBytecodeVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <rules>
-            <requireUpperBoundDeps>
-              <excludes combine.children="append">
-                <!-- workflow-cps requests 1.1.1, core 2.60.1 requests 1.2.1 -->
-                <exclude>org.jenkins-ci.ui:jquery-detached</exclude>
-              </excludes>
-            </requireUpperBoundDeps>
-          </rules>
-        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -122,14 +73,12 @@
         </developer>
     </developers>
 
-
   <dependencies>
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.9.5</version>
     </dependency>
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
@@ -138,12 +87,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>2.7.0</version>
+      <version>3.0.0-beta2</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>2.1.14</version>
+      <version>2.1.13</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -164,7 +113,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.10</version>
+      <version>2.11</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -245,7 +194,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>1.12.1</version> <!-- Depends on Jenkins 1.609 -->
+      <version>2.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -276,7 +225,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.10</version>
+      <version>2.11</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -326,31 +275,29 @@
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
-      <version>2.2.0</version>
+      <version>2.5.1</version>
       <scope>test</scope>
     </dependency>
-    <dependency> <!-- TODO pending core upgrade or haveged, test against a newer sshd so we do not run into NativePRNG hangs -->
-      <groupId>org.jenkins-ci.modules</groupId>
-      <artifactId>sshd</artifactId>
-      <version>1.11</version>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-api</artifactId>
+      <version>2.18</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>instance-identity</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>ssh-cli-auth</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-support</artifactId>
+      <version>2.14</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <tag>${scmTag}</tag>
   </scm>
 

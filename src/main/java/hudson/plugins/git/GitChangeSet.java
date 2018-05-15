@@ -435,9 +435,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     private boolean isCreateAccountBasedOnEmail() {
         Hudson hudson = Hudson.getInstance();
-        if (hudson == null) {
-            return false;
-        }
         DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
 
         if (descriptor == null) {

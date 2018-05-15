@@ -161,60 +161,57 @@ public class GitUtils implements Serializable {
             return l;
 
         try {
-            return git.withRepository(new RepositoryCallback<List<Revision>>() {
-                public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            return git.withRepository((Repository repo, VirtualChannel channel) -> {
+                // Commit nodes that we have already reached
+                Set<RevCommit> visited = new HashSet<>();
+                // Commits nodes that are tips if we don't reach them walking back from
+                // another node
+                Map<RevCommit, Revision> tipCandidates = new HashMap<>();
 
-                    // Commit nodes that we have already reached
-                    Set<RevCommit> visited = new HashSet<>();
-                    // Commits nodes that are tips if we don't reach them walking back from
-                    // another node
-                    Map<RevCommit, Revision> tipCandidates = new HashMap<>();
+                long calls = 0;
+                final long start = System.currentTimeMillis();
 
-                    long calls = 0;
-                    final long start = System.currentTimeMillis();
+                final boolean log = LOGGER.isLoggable(Level.FINE);
 
-                    final boolean log = LOGGER.isLoggable(Level.FINE);
+                if (log)
+                    LOGGER.fine(MessageFormat.format(
+                            "Computing merge base of {0}  branches", l.size()));
 
-                    if (log)
-                        LOGGER.fine(MessageFormat.format(
-                                "Computing merge base of {0}  branches", l.size()));
+                try (RevWalk walk = new RevWalk(repo)) {
+                    walk.setRetainBody(false);
 
-                    try (RevWalk walk = new RevWalk(repo)) {
-                        walk.setRetainBody(false);
+                    // Each commit passed in starts as a potential tip.
+                    // We walk backwards in the commit's history, until we reach the
+                    // beginning or a commit that we have already visited. In that case,
+                    // we mark that one as not a potential tip.
+                    for (Revision r : revisions) {
+                        walk.reset();
+                        RevCommit head = walk.parseCommit(r.getSha1());
 
-                        // Each commit passed in starts as a potential tip.
-                        // We walk backwards in the commit's history, until we reach the
-                        // beginning or a commit that we have already visited. In that case,
-                        // we mark that one as not a potential tip.
-                        for (Revision r : revisions) {
-                            walk.reset();
-                            RevCommit head = walk.parseCommit(r.getSha1());
+                        if (visited.contains(head)) {
+                            continue;
+                        }
 
-                            if (visited.contains(head)) {
-                              continue;
+                        tipCandidates.put(head, r);
+
+                        walk.markStart(head);
+                        for (RevCommit commit : walk) {
+                            calls++;
+                            if (visited.contains(commit)) {
+                                tipCandidates.remove(commit);
+                                break;
                             }
-
-                            tipCandidates.put(head, r);
-
-                            walk.markStart(head);
-                            for (RevCommit commit : walk) {
-                                calls++;
-                                if (visited.contains(commit)) {
-                                    tipCandidates.remove(commit);
-                                    break;
-                                }
-                                visited.add(commit);
-                            }
+                            visited.add(commit);
                         }
                     }
-
-                    if (log)
-                        LOGGER.fine(MessageFormat.format(
-                                "Computed merge bases in {0} commit steps and {1} ms", calls,
-                                (System.currentTimeMillis() - start)));
-
-                    return new ArrayList<>(tipCandidates.values());
                 }
+
+                if (log)
+                    LOGGER.fine(MessageFormat.format(
+                            "Computed merge bases in {0} commit steps and {1} ms", calls,
+                            (System.currentTimeMillis() - start)));
+
+                return new ArrayList<>(tipCandidates.values());
             });
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);

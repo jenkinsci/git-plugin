@@ -2,7 +2,7 @@
 
 Git software configuration management for Jenkins
 
-* see [Jenkins wiki](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin) for detailed feature descriptions
+* see [Jenkins wiki](https://plugins.jenkins.io/git) for detailed feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
 ## Master Branch
@@ -28,13 +28,13 @@ run tests.
 Code coverage reporting is available as a maven target and is actively
 monitored.  Please improve code coverage with the tests you submit.
 
-Before submitting your change, please review the findbugs output to
+Before submitting your change, review the findbugs output to
 assure that you haven't introduced new findbugs warnings.
 
 ## Building the Plugin
 
 ```bash
-  $ java -version # Need Java 1.8, earlier versions are unsupported for build
+  $ java -version # Need Java 1.8
   $ mvn -version # Need a modern maven version; maven 3.5.0 and later are known to work
   $ mvn clean install
 ```
