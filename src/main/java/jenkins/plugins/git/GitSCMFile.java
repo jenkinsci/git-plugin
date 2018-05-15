@@ -70,41 +70,38 @@ public class GitSCMFile extends SCMFile {
     @NonNull
     @Override
     public Iterable<SCMFile> children() throws IOException, InterruptedException {
-        return fs.invoke(new GitSCMFileSystem.FSFunction<List<SCMFile>>() {
-            @Override
-            public List<SCMFile> invoke(Repository repository) throws IOException, InterruptedException {
-                try (RevWalk walk = new RevWalk(repository)) {
-                    RevCommit commit = walk.parseCommit(fs.getCommitId());
-                    RevTree tree = commit.getTree();
-                    if (isRoot()) {
-                        try (TreeWalk tw = new TreeWalk(repository)) {
-                            tw.addTree(tree);
-                            tw.setRecursive(false);
-                            List<SCMFile> result = new ArrayList<>();
-                            while (tw.next()) {
-                                result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
-                            }
-                            return result;
+        return fs.invoke((Repository repository) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(fs.getCommitId());
+                RevTree tree = commit.getTree();
+                if (isRoot()) {
+                    try (TreeWalk tw = new TreeWalk(repository)) {
+                        tw.addTree(tree);
+                        tw.setRecursive(false);
+                        List<SCMFile> result = new ArrayList<>();
+                        while (tw.next()) {
+                            result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
                         }
-                    } else {
-                        try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
-                            if (tw == null) {
-                                throw new FileNotFoundException();
-                            }
-                            FileMode fileMode = tw.getFileMode(0);
-                            if (fileMode == FileMode.MISSING) {
-                                throw new FileNotFoundException();
-                            }
-                            if (fileMode != FileMode.TREE) {
-                                throw new IOException("Not a directory");
-                            }
-                            tw.enterSubtree();
-                            List<SCMFile> result = new ArrayList<>();
-                            while (tw.next()) {
-                                result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
-                            }
-                            return result;
+                        return result;
+                    }
+                } else {
+                    try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
+                        if (tw == null) {
+                            throw new FileNotFoundException();
                         }
+                        FileMode fileMode = tw.getFileMode(0);
+                        if (fileMode == FileMode.MISSING) {
+                            throw new FileNotFoundException();
+                        }
+                        if (fileMode != FileMode.TREE) {
+                            throw new IOException("Not a directory");
+                        }
+                        tw.enterSubtree();
+                        List<SCMFile> result = new ArrayList<>();
+                        while (tw.next()) {
+                            result.add(new GitSCMFile(fs, GitSCMFile.this, tw.getNameString()));
+                        }
+                        return result;
                     }
                 }
             }
@@ -120,34 +117,31 @@ public class GitSCMFile extends SCMFile {
     @NonNull
     @Override
     protected Type type() throws IOException, InterruptedException {
-        return fs.invoke(new GitSCMFileSystem.FSFunction<Type>() {
-            @Override
-            public Type invoke(Repository repository) throws IOException, InterruptedException {
-                try (RevWalk walk = new RevWalk(repository)) {
-                    RevCommit commit = walk.parseCommit(fs.getCommitId());
-                    RevTree tree = commit.getTree();
-                    try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
-                        if (tw == null) {
-                            return SCMFile.Type.NONEXISTENT;
-                        }
-                        FileMode fileMode = tw.getFileMode(0);
-                        if (fileMode == FileMode.MISSING) {
-                            return SCMFile.Type.NONEXISTENT;
-                        }
-                        if (fileMode == FileMode.EXECUTABLE_FILE) {
-                            return SCMFile.Type.REGULAR_FILE;
-                        }
-                        if (fileMode == FileMode.REGULAR_FILE) {
-                            return SCMFile.Type.REGULAR_FILE;
-                        }
-                        if (fileMode == FileMode.SYMLINK) {
-                            return SCMFile.Type.LINK;
-                        }
-                        if (fileMode == FileMode.TREE) {
-                            return SCMFile.Type.DIRECTORY;
-                        }
-                        return SCMFile.Type.OTHER;
+        return fs.invoke((Repository repository) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(fs.getCommitId());
+                RevTree tree = commit.getTree();
+                try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
+                    if (tw == null) {
+                        return SCMFile.Type.NONEXISTENT;
                     }
+                    FileMode fileMode = tw.getFileMode(0);
+                    if (fileMode == FileMode.MISSING) {
+                        return SCMFile.Type.NONEXISTENT;
+                    }
+                    if (fileMode == FileMode.EXECUTABLE_FILE) {
+                        return SCMFile.Type.REGULAR_FILE;
+                    }
+                    if (fileMode == FileMode.REGULAR_FILE) {
+                        return SCMFile.Type.REGULAR_FILE;
+                    }
+                    if (fileMode == FileMode.SYMLINK) {
+                        return SCMFile.Type.LINK;
+                    }
+                    if (fileMode == FileMode.TREE) {
+                        return SCMFile.Type.DIRECTORY;
+                    }
+                    return SCMFile.Type.OTHER;
                 }
             }
         });
@@ -156,27 +150,24 @@ public class GitSCMFile extends SCMFile {
     @NonNull
     @Override
     public InputStream content() throws IOException, InterruptedException {
-        return fs.invoke(new GitSCMFileSystem.FSFunction<InputStream>() {
-            @Override
-            public InputStream invoke(Repository repository) throws IOException, InterruptedException {
-                try (RevWalk walk = new RevWalk(repository)) {
-                    RevCommit commit = walk.parseCommit(fs.getCommitId());
-                    RevTree tree = commit.getTree();
-                    try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
-                        if (tw == null) {
-                            throw new FileNotFoundException();
-                        }
-                        FileMode fileMode = tw.getFileMode(0);
-                        if (fileMode == FileMode.MISSING) {
-                            throw new FileNotFoundException();
-                        }
-                        if (fileMode == FileMode.TREE) {
-                            throw new IOException("Directory");
-                        }
-                        ObjectId objectId = tw.getObjectId(0);
-                        ObjectLoader loader = repository.open(objectId);
-                        return new ByteArrayInputStream(loader.getBytes());
+        return fs.invoke((Repository repository) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(fs.getCommitId());
+                RevTree tree = commit.getTree();
+                try (TreeWalk tw = TreeWalk.forPath(repository, getPath(), tree)) {
+                    if (tw == null) {
+                        throw new FileNotFoundException();
                     }
+                    FileMode fileMode = tw.getFileMode(0);
+                    if (fileMode == FileMode.MISSING) {
+                        throw new FileNotFoundException();
+                    }
+                    if (fileMode == FileMode.TREE) {
+                        throw new IOException("Directory");
+                    }
+                    ObjectId objectId = tw.getObjectId(0);
+                    ObjectLoader loader = repository.open(objectId);
+                    return new ByteArrayInputStream(loader.getBytes());
                 }
             }
         });

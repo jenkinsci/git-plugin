@@ -577,7 +577,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, new ArrayList<GitSCMExtension>());
+                null, null, new ArrayList<>());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);

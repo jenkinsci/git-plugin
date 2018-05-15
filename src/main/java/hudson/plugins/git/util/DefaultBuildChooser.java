@@ -280,11 +280,9 @@ public class DefaultBuildChooser extends BuildChooser {
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
         final List<Revision> in = revs;
-        return utils.git.withRepository(new RepositoryCallback<List<Revision>>() {
-            public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                Collections.sort(in,new CommitTimeComparator(repo));
-                return in;
-            }
+        return utils.git.withRepository((Repository repo, VirtualChannel channel) -> {
+            Collections.sort(in,new CommitTimeComparator(repo));
+            return in;
         });
     }
 

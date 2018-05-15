@@ -28,10 +28,6 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins instance is null in BuildChooserDescriptor");
-            return null;
-        }
         return jenkins.getDescriptorList(BuildChooser.class);
     }
 
