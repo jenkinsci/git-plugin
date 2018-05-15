@@ -12,7 +12,7 @@ The master branch is the primary development branch for the git plugin.
 ## Contributing to the Plugin
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
-New feature proposals and bug fix proposals should be submitted as
+New feature proposals and bug fixes should be submitted as
 [pull requests](https://help.github.com/articles/creating-a-pull-request).
 Fork the repository, prepare your change on your forked
 copy, and submit a pull request.  Your pull request will be evaluated
