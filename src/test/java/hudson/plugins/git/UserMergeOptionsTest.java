@@ -103,8 +103,8 @@ public class UserMergeOptionsTest {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
-                + "mergeStrategy='" + expectedMergeStrategy + "', "
-                + "fastForwardMode='" + expectedFastForwardMode + "'"
+                + "mergeStrategy='" + (expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy).name() + "', "
+                + "fastForwardMode='" + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode).name() + "'"
                 + '}';
         assertEquals(expected, options.toString());
     }
