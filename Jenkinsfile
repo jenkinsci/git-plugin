@@ -18,7 +18,7 @@ branches["ATH"] = {
                 infra.runMaven(["clean", "package", "-DskipTests"])
                 // Include experimental git-client in target dir for ATH
                 // This Git plugin requires experimental git-client
-                infra.runMaven(["dependency:copy", "-Dartifact=org.jenkins-ci.plugins:git-client:3.0.0-beta2:hpi", "-DoutputDirectory=target", "-Dmdep.stripVersion=true"])
+                infra.runMaven(["dependency:copy", "-Dartifact=org.jenkins-ci.plugins:git-client:3.0.0-beta3:hpi", "-DoutputDirectory=target", "-Dmdep.stripVersion=true"])
                 dir("target") {
                     stash name: "localPlugins", includes: "*.hpi"
                 }
