@@ -9,7 +9,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 
 /**
  * This extension activates the alternative changelog computation,
- * where the changelog is calculated against a specified branch.
+ * where the changelog is calculated against a specified branch or tag.
  *
  * @author <a href="mailto:dirk.reske@t-systems.com">Dirk Reske (dirk.reske@t-systems.com)</a>
  */
@@ -34,7 +34,7 @@ public class ChangelogToBranch extends GitSCMExtension {
 
         @Override
         public String getDisplayName() {
-            return "Calculate changelog against a specific branch";
+            return "Calculate changelog against a specific branch or tag";
         }
     }
 }
