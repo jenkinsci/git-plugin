@@ -34,10 +34,6 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
         return compareTarget;
     }
 
-    public String getRef() {
-        return compareRemote + "/" + compareTarget;
-    }
-
     @Extension
     public static class DescriptorImpl extends Descriptor<ChangelogToBranchOptions> {
 
