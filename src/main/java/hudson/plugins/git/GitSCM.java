@@ -1317,10 +1317,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
                 listener.getLogger().println("Using 'Changelog to branch' strategy.");
-                // Enhancement to allow to use environment variables in "Changelog to branch" behavior
+                // JENKINS-27080 NFR to allow to use environment variables in "Changelog to branch" behavior
                 String remote = getParameterString(changelogToBranch.getOptions().getCompareRemote(), env);
                 String target = getParameterString(changelogToBranch.getOptions().getCompareTarget(), env);
-                // Enhancement to allow leaving empty remote in order to compare to a local file
+                // JENKINS-51633 Improvement to allow leaving empty remote in order to compare to a local file
                 String ref = remote == null || "".equals(remote) ? target : remote +"/"+target;
                 changelog.excludes(ref);
                 exclusion = true;
