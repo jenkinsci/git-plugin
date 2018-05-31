@@ -50,11 +50,6 @@ public class ChangelogToBranchOptionsTest {
     }
 
     @Test
-    public void testGetRef() {
-        assertThat(options.getRef(), is(compareRemote + "/" + compareTarget));
-    }
-
-    @Test
     public void testAlternateConstructor() {
         ChangelogToBranchOptions newOptions = new ChangelogToBranchOptions(options);
         assertThat(newOptions.getCompareRemote(), is(options.getCompareRemote()));

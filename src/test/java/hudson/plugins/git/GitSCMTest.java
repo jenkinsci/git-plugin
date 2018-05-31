@@ -1166,15 +1166,15 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     private final Random random = new Random();
-    private boolean useChangelogToBranch = random.nextBoolean();
+    private int useChangelogToBranch = random.nextInt(4);
 
     private void addChangelogToBranchExtension(GitSCM scm) {
-        if (useChangelogToBranch) {
+        if (useChangelogToBranch > 0) {
             /* Changelog should be no different with this enabled or disabled */
-            ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions("origin", "master");
+            ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions(useChangelogToBranch == 1 ? "origin" : useChangelogToBranch == 2 ? "" : null, "master");
             scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
         }
-        useChangelogToBranch = !useChangelogToBranch;
+        useChangelogToBranch = (useChangelogToBranch+1)%4;
     }
 
     @Test

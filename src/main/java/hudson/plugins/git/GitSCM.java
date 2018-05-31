@@ -1246,7 +1246,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (changelogFile != null) {
-                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
+                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile), environment,
                         new BuildChooserContextImpl(build.getParent(), build, environment));
             }
         }
@@ -1308,7 +1308,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, EnvVars env, BuildChooserContext context) throws IOException, InterruptedException {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
@@ -1317,7 +1317,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
                 listener.getLogger().println("Using 'Changelog to branch' strategy.");
-                changelog.excludes(changelogToBranch.getOptions().getRef());
+                // JENKINS-27080 NFR to allow to use environment variables in "Changelog to branch" behavior
+                String remote = getParameterString(changelogToBranch.getOptions().getCompareRemote(), env);
+                String target = getParameterString(changelogToBranch.getOptions().getCompareTarget(), env);
+                // JENKINS-51633 Improvement to allow leaving empty remote in order to compare to a local file
+                String ref = remote == null || "".equals(remote) ? target : remote +"/"+target;
+                changelog.excludes(ref);
                 exclusion = true;
             } else {
                 for (Branch b : revToBuild.getBranches()) {
