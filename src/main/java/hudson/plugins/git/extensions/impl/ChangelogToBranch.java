@@ -34,7 +34,7 @@ public class ChangelogToBranch extends GitSCMExtension {
 
         @Override
         public String getDisplayName() {
-            return "Calculate changelog against a specific branch or tag";
+            return "Calculate changelog against a specific branch";
         }
     }
 }
