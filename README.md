@@ -7,7 +7,7 @@ Git software configuration management for Jenkins
 
 ## Master Branch
 
-The master branch is the primary development branch for the git plugin.
+The master branch is the primary development branch.
 
 ## Contributing to the Plugin
 
@@ -35,7 +35,7 @@ assure that you haven't introduced new findbugs warnings.
 
 ```bash
   $ java -version # Need Java 1.8
-  $ mvn -version # Need a modern maven version; maven 3.5.0 and later are known to work
+  $ mvn -version # Need a modern maven version; maven 3.5.0 or later are required
   $ mvn clean install
 ```
 
