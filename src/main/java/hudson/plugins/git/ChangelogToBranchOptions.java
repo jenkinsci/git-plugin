@@ -34,6 +34,10 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
         return compareTarget;
     }
 
+    public boolean isLocalTarget() {
+	return compareRemote == null || "".equals(compareRemote);
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<ChangelogToBranchOptions> {
 

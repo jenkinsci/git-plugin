@@ -1316,15 +1316,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             boolean exclusion = false;
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
-                listener.getLogger().println("Using 'Changelog to branch' strategy.");
                 // JENKINS-27080 NFR to allow to use environment variables in "Changelog to branch" behavior
                 String remote = getParameterString(changelogToBranch.getOptions().getCompareRemote(), env);
                 String target = getParameterString(changelogToBranch.getOptions().getCompareTarget(), env);
-                // JENKINS-51633 Improvement to allow leaving empty remote in order to compare to a local file
-                String ref = remote == null || "".equals(remote) ? target : remote +"/"+target;
-                changelog.excludes(ref);
+                // JENKINS-51633 Improvement to allow leaving empty remote in order to compare to a local reference
+                String ref = changelogToBranch.getOptions().isLocalTarget() ? target : remote +"/"+target;
                 exclusion = true;
-            } else {
+		if ( changelogToBranch.getOptions().isLocalTarget() ) {
+		    String localBranchName = env.get(GIT_LOCAL_BRANCH);
+
+		    if (localBranchName == null) {
+			String remoteBranchName = env.get(GIT_BRANCH);
+			exclusion=false;
+			// treating as if the option had not been specified at all, but warning the user
+			listener.getLogger().println("Ignoring 'Changelog to branch' strategy to exclude: "+ref
+						     +" because there is no local branch name for remote branch "+remoteBranchName
+						     +".  Did you mean to set remote or add Check out to specific local branch option?");
+		    }
+		}
+		if (exclusion) {
+		    changelog.excludes(ref);
+		    listener.getLogger().println("Using 'Changelog to branch' strategy to exclude: "+ref);
+		}
+            }
+            if (!exclusion) {
                 for (Branch b : revToBuild.getBranches()) {
                     Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
                     if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {

@@ -25,6 +25,8 @@ package hudson.plugins.git;
 
 import org.junit.Test;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.Matchers.*;
 
 public class ChangelogToBranchOptionsTest {
@@ -50,10 +52,20 @@ public class ChangelogToBranchOptionsTest {
     }
 
     @Test
-    public void testAlternateConstructor() {
+    public void testisLocaleTarget() {
+        assertFalse(options.isLocalTarget());
+    }
+
+    @Test
+    public void testAlternateConstructors() {
         ChangelogToBranchOptions newOptions = new ChangelogToBranchOptions(options);
         assertThat(newOptions.getCompareRemote(), is(options.getCompareRemote()));
         assertThat(newOptions.getCompareTarget(), is(options.getCompareTarget()));
+        assertFalse(newOptions.isLocalTarget());
         assertThat(newOptions, is(not(options))); // Does not implement equals
+        newOptions = new ChangelogToBranchOptions(null, options.getCompareTarget());
+        assertTrue(newOptions.isLocalTarget());
+        newOptions = new ChangelogToBranchOptions("", options.getCompareTarget());
+        assertTrue(newOptions.isLocalTarget());
     }
 }

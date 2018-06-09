@@ -1173,6 +1173,9 @@ public class GitSCMTest extends AbstractGitTestCase {
             /* Changelog should be no different with this enabled or disabled */
             ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions(useChangelogToBranch == 1 ? "origin" : useChangelogToBranch == 2 ? "" : null, "master");
             scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
+            if ( useChangelogToBranch > 1 && random.nextBoolean() ) {
+		scm.getExtensions().add(new LocalBranch(random.nextBoolean() ? null : "**"));
+            }
         }
         useChangelogToBranch = (useChangelogToBranch+1)%4;
     }
@@ -1886,6 +1889,18 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testPolling_parentHead_DisableRemotePoll() throws Exception {
         baseTestPolling_parentHead(Collections.<GitSCMExtension>singletonList(new DisableRemotePoll()));
+    }
+
+    @Test
+    public void testPolling_parentHead_ChangelogToBranchRemote() throws Exception {
+        ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions( "origin", "master");
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>singletonList(new ChangelogToBranch(changelogOptions)));
+    }
+
+    @Test
+    public void testPolling_parentHead_ChangelogToBranchLocal() throws Exception {
+        ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions( null, "master");
+        baseTestPolling_parentHead(Collections.<GitSCMExtension>singletonList(new ChangelogToBranch(changelogOptions)));
     }
 
     @Test
