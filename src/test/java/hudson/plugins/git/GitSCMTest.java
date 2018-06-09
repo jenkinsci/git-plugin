@@ -1174,7 +1174,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             ChangelogToBranchOptions changelogOptions = new ChangelogToBranchOptions(useChangelogToBranch == 1 ? "origin" : useChangelogToBranch == 2 ? "" : null, "master");
             scm.getExtensions().add(new ChangelogToBranch(changelogOptions));
             if ( useChangelogToBranch > 1 && random.nextBoolean() ) {
-		scm.getExtensions().add(new LocalBranch(random.nextBoolean() ? null : "**"));
+		scm.getExtensions().add(new LocalBranch(""));
             }
         }
         useChangelogToBranch = (useChangelogToBranch+1)%4;
