@@ -27,6 +27,11 @@ run tests.
 
 Code coverage reporting is available as a maven target and is actively
 monitored.  Please improve code coverage with the tests you submit.
+Code coverage reporting is written to `target/site/jacoco/` by the maven command:
+
+```
+  $ mvn -P enable-jacoco clean install jacoco:report
+```
 
 Before submitting your change, review the findbugs output to
 assure that you haven't introduced new findbugs warnings.
