@@ -40,6 +40,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -153,6 +154,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
+    public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1370,6 +1372,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                    }
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
+                
+                RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
+                if (rtd != null) {
+                   
+                   String localRelativeTargetDir = rtd.getRelativeTargetDir();
+                   if ( localRelativeTargetDir == null ){
+                       localRelativeTargetDir = "";
+                   }
+                   env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
+                }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1398,7 +1410,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 count++;
             }
         }
-
+       
         getDescriptor().populateEnvironmentVariables(env);
         for (GitSCMExtension ext : extensions) {
             ext.populateEnvironmentVariables(this, env);
