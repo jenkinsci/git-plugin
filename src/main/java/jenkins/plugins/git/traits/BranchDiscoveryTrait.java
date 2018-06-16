@@ -78,7 +78,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Our descriptor.
+     * BranchDiscoveryTrait descriptor.
      */
     @Symbol("gitBranchDiscovery")
     @Extension
