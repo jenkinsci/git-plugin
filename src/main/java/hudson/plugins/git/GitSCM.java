@@ -1372,10 +1372,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                    }
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
-                
                 RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
                 if (rtd != null) {
-                   
                    String localRelativeTargetDir = rtd.getRelativeTargetDir();
                    if ( localRelativeTargetDir == null ){
                        localRelativeTargetDir = "";
@@ -1399,7 +1397,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 env.put(GIT_COMMIT, sha1);
             }
         }
-
 
         if (userRemoteConfigs.size()==1){
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());

@@ -1655,7 +1655,6 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
        assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
-
     /**
      * Verifies that GIT_LOCAL_BRANCH is not set if LocalBranch extension
      * is not configured.
@@ -1672,7 +1671,6 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
        assertEquals("GIT_LOCAL_BRANCH", null, getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
-    
     /**
      * Verifies that GIT_CHECKOUT_DIR is not set if RelativeTargetDirectory extension
      * is not configured.
@@ -1688,7 +1686,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
        assertEquals("GIT_CHECKOUT_DIR", null, getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
     }
-    
     @Test
     public void testCheckoutFailureIsRetryable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
