@@ -1671,6 +1671,23 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
        assertEquals("GIT_LOCAL_BRANCH", null, getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
+     /**
+     * Verifies that GIT_CHECKOUT_DIR is set to "checkoutDir" if RelativeTargetDirectory extension
+     * is configured.
+     * @throws Exception
+     */
+    @Test
+    public void testCheckoutRelativeTargetDirectoryExtension() throws Exception {
+       FreeStyleProject project = setupProject("master", false, "checkoutDir");
+
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       GitSCM git = (GitSCM)project.getScm();
+       git.getExtensions().add(new RelativeTargetDirectory("checkoutDir"));
+       FreeStyleBuild build1 = build(project, "checkoutDir", Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_CHECKOUT_DIR", "checkoutDir", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
+    }
     /**
      * Verifies that GIT_CHECKOUT_DIR is not set if RelativeTargetDirectory extension
      * is not configured.
