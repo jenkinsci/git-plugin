@@ -1407,7 +1407,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 count++;
             }
         }
-       
+
         getDescriptor().populateEnvironmentVariables(env);
         for (GitSCMExtension ext : extensions) {
             ext.populateEnvironmentVariables(this, env);
