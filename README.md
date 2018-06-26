@@ -2,12 +2,17 @@
 
 Git software configuration management for Jenkins
 
-* see [Jenkins wiki](https://plugins.jenkins.io/git) for detailed feature descriptions
+* see [Jenkins wiki](https://plugins.jenkins.io/git) for feature descriptions
 * use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
 
 ## Master Branch
 
 The master branch is the primary development branch.
+
+Branch names using the pattern 'stable-x.y' are development branches
+for changes from a base release 'x.y'.  For example, stable-3.9 is the
+branch used to release fixes based on git plugin 3.9 while master branch
+development is preparing for the 4.0.0 release.
 
 ## Contributing to the Plugin
 
@@ -15,7 +20,7 @@ Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin
 New feature proposals and bug fix proposals should be submitted as
 [pull requests](https://help.github.com/articles/creating-a-pull-request).
 Fork the repository, prepare your change on your forked
-copy, and submit a pull request.  Your pull request will be evaluated
+copy, and submit a pull request to the master branch.  Your pull request will be evaluated
 by the [Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
 
 Before submitting your pull request, please add tests which verify your
