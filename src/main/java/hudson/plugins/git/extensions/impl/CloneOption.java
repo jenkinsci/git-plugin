@@ -1,6 +1,9 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
@@ -8,6 +11,8 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.util.GitUtils;
+import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.List;
 import org.eclipse.jgit.transport.RefSpec;
@@ -140,7 +145,17 @@ public class CloneOption extends GitSCMExtension {
             cmd.refspecs(refspecs);
         }
         cmd.timeout(timeout);
-        cmd.reference(build.getEnvironment(listener).expand(reference));
+
+        Node node = GitUtils.workspaceToNode(git.getWorkTree());
+        EnvVars env = build.getEnvironment(listener);
+        Computer comp = node.toComputer();
+        if (comp != null) {
+            env.putAll(comp.getEnvironment());
+        }
+        for (NodeProperty nodeProperty: node.getNodeProperties()) {
+            nodeProperty.buildEnvVars(env, listener);
+        }
+        cmd.reference(env.expand(reference));
     }
 
     /**
