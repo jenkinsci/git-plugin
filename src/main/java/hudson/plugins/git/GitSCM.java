@@ -1398,6 +1398,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
+
         if (userRemoteConfigs.size()==1){
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
         } else {
