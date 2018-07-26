@@ -10,6 +10,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitObject;
+import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -29,6 +30,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class GitUtils implements Serializable {
@@ -42,6 +44,56 @@ public class GitUtils implements Serializable {
     public GitUtils(@Nonnull TaskListener listener, @Nonnull GitClient git) {
         this.git = git;
         this.listener = listener;
+    }
+
+    /**
+     * Resolves Git Tool by name.
+     * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
+     * @param builtOn Node for which the tool should be resolved
+     *                Can be {@link Jenkins#getInstance()} when running on master
+     * @param env Additional environment variables
+     * @param listener Event listener
+     * @return Tool installation or {@code null} if it cannot be resolved
+     * @since TODO
+     */
+    @CheckForNull
+    public static GitTool resolveGitTool(@CheckForNull String gitTool,
+                                  @CheckForNull Node builtOn,
+                                  @CheckForNull EnvVars env,
+                                  @Nonnull TaskListener listener) {
+        GitTool git = gitTool == null
+                ? GitTool.getDefaultInstallation()
+                : Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
+        if (git == null) {
+            listener.getLogger().println("Selected Git installation does not exist. Using Default");
+            git = GitTool.getDefaultInstallation();
+        }
+        if (git != null) {
+            if (builtOn != null) {
+                try {
+                    git = git.forNode(builtOn, listener);
+                } catch (IOException | InterruptedException e) {
+                    listener.getLogger().println("Failed to get git executable");
+                }
+            }
+            if (env != null) {
+                git = git.forEnvironment(env);
+            }
+        }
+        return git;
+    }
+
+    /**
+     * Resolves Git Tool by name in a node-agnostic way.
+     * Use {@link #resolveGitTool(String, Node, EnvVars, TaskListener)} when the node is known
+     * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
+     * @param listener Event listener
+     * @return Tool installation or {@code null} if it cannot be resolved
+     * @since TODO
+     */
+    @CheckForNull
+    public static GitTool resolveGitTool(@CheckForNull String gitTool, @Nonnull TaskListener listener) {
+        return resolveGitTool(gitTool, null, null, listener);
     }
 
     public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
