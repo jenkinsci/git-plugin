@@ -16,8 +16,8 @@ public class BuildSingleRevisionOnly extends GitSCMExtension {
     }
 
     @Override
-    public boolean disableMultipleRevisionDetection() {
-        return true;
+    public boolean enableMultipleRevisionDetection() {
+        return false;
     }
 
     @Extension

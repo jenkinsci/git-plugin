@@ -25,12 +25,7 @@ import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.extensions.impl.AuthorInChangelog;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.ChangelogToBranch;
-import hudson.plugins.git.extensions.impl.PathRestriction;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -1074,14 +1069,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (buildData.getBuildsByBranchName().size() >= 100) {
             log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
-        boolean dontCheckForMultipleRevisions = false;
-        for (GitSCMExtension ext: extensions) {
-            dontCheckForMultipleRevisions = ext.disableMultipleRevisionDetection();
+        boolean checkForMultipleRevisions = true;
+        BuildSingleRevisionOnly ext = extensions.get(BuildSingleRevisionOnly.class);
+        if (ext != null) {
+            checkForMultipleRevisions = ext.enableMultipleRevisionDetection();
         }
 
         if (candidates.size() > 1) {
             log.println("Multiple candidate revisions");
-            if (!dontCheckForMultipleRevisions) {
+            if (checkForMultipleRevisions) {
                 Job<?, ?> job = build.getParent();
                 if (job instanceof AbstractProject) {
                     AbstractProject project = (AbstractProject) job;
