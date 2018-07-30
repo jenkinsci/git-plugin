@@ -16,7 +16,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
     @Test
     public void testSingleRevision() throws Exception {
-        // This is the new behaviour
+        // This is the additional behaviour
         List<BranchSpec> branchSpec = new ArrayList<>();
         branchSpec.add(new BranchSpec("master"));
         branchSpec.add(new BranchSpec("foo"));
