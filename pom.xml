@@ -184,6 +184,9 @@
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
       <version>4.5.5-3.0</version>
       <scope>test</scope>
+      <!-- This looks strange but convinces the maven-hpi-plugin to not package
+      any of the htpclient JARs into this plugin -->
+      <optional>true</optional>
     </dependency>
 
 
