@@ -9,11 +9,14 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import hudson.scm.browsers.QueryBuilder;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -83,21 +86,28 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "AssemblaWeb";
         }
 
         @Override
-        public AssemblaWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public AssemblaWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(AssemblaWeb.class, jsonObject);
         }
 
+        @RequirePOST
         public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)
                 throws IOException, ServletException {
             if (url == null) // nothing entered yet
             {
                 return FormValidation.ok();
             }
+            // Connect to URL and check content only if we have admin permission
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
+                return FormValidation.ok();
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
                     String v = url;

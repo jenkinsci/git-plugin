@@ -1,5 +1,6 @@
 package jenkins.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Action;
@@ -15,6 +16,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,13 +26,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
+import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
+import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import static org.hamcrest.Matchers.*;
 
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -48,6 +54,9 @@ import static org.mockito.Mockito.when;
  * Tests for {@link AbstractGitSCMSource}
  */
 public class AbstractGitSCMSourceTest {
+
+    static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+    static final String GitBranchSCMHead_DEV_DEV2_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
@@ -67,14 +76,14 @@ public class AbstractGitSCMSourceTest {
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         sampleRepo.git("checkout", "-b", "dev2");
         sampleRepo.write("file", "modified again");
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_DEV2_MASTER, source.fetch(listener).toString());
     }
 
     @Test
@@ -88,14 +97,14 @@ public class AbstractGitSCMSourceTest {
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         sampleRepo.git("checkout", "-b", "dev2");
         sampleRepo.write("file", "modified again");
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_DEV2_MASTER, source.fetch(listener).toString());
     }
 
     @Issue("JENKINS-46207")
@@ -116,14 +125,14 @@ public class AbstractGitSCMSourceTest {
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         sampleRepo.git("checkout", "-b", "dev2");
         sampleRepo.write("file", "modified again");
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_DEV2_MASTER, source.fetch(listener).toString());
     }
 
     @Issue("JENKINS-46207")
@@ -168,14 +177,16 @@ public class AbstractGitSCMSourceTest {
                 }
             }
         }
-        assertEquals("[SCMHead{'annotated'}, SCMHead{'dev'}, SCMHead{'lightweight'}, SCMHead{'master'}]", scmHeadSet.toString());
+        String expected = "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+        assertEquals(expected, scmHeadSet.toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'annotated'}, SCMHead{'dev'}, SCMHead{'lightweight'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(expected, source.fetch(listener).toString());
         sampleRepo.git("checkout", "-b", "dev2");
         sampleRepo.write("file", "modified again");
         sampleRepo.git("commit", "--all", "--message=dev2");
         // After changing data:
-        assertEquals("[SCMHead{'annotated'}, SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'lightweight'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        expected = "[SCMHead{'annotated'}, GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, SCMHead{'lightweight'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
+        assertEquals(expected, source.fetch(listener).toString());
     }
 
     @Issue("JENKINS-46207")
@@ -307,6 +318,12 @@ public class AbstractGitSCMSourceTest {
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash.substring(0, 10));
         rev = source.fetch(v2Hash.substring(0, 10), listener);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+
+        String v2Tag = "refs/tags/v2";
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
+        rev = source.fetch(v2Tag, listener);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
@@ -456,7 +473,7 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-48061")
     @Test
-    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
+    @Ignore("At least file:// protocol doesn't allow fetching unannounced commits")
     public void retrieveRevision_nonAdvertised() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file", "v1");
@@ -483,7 +500,6 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-48061")
     @Test
-    @Ignore("Cannot fix until JENKINS-48385 merged") // TODO unignore once JENKINS-48385
     public void retrieveRevision_customRef() throws Exception {
         sampleRepo.init();
         sampleRepo.write("file", "v1");
@@ -503,10 +519,134 @@ public class AbstractGitSCMSourceTest {
         // SCM.checkout does not permit a null build argument, unfortunately.
         Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/foo")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
         // Test retrieval of non head revision:
         assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void retrieveRevision_customRef_descendant() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        String v2 = sampleRepo.head();
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        sampleRepo.git("update-ref", "refs/custom/foo", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD~2"); // dev
+        String dev = sampleRepo.head();
+        assertNotEquals(dev, v3); //Just verifying the reset nav got correct
+        assertEquals(dev, v2);
+        sampleRepo.write("file", "v5");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3, run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void retrieveRevision_customRef_abbrev_sha1() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/foo", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(
+                new BranchDiscoveryTrait(),
+                new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("refs/custom/foo")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt(v3.substring(0, 7), run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void retrieveRevision_pr_refspec() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("pull-requests/*/from")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt("pull-requests/1/from", run, source, listener));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void retrieveRevision_pr_local_refspec() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/pull-requests/1/from", v3); // now this is an advertised ref so cannot be GC'd
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        //new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(),
+                new DiscoverOtherRefsTrait("/pull-requests/*/from", "pr/@{1}")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+        // Test retrieval of non head revision:
+        assertEquals("v3", fileAt("pr/1", run, source, listener));
     }
 
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
@@ -518,6 +658,81 @@ public class AbstractGitSCMSourceTest {
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void fetchOtherRef() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/1", v3);
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+
+        final SCMHeadObserver.Collector collector =
+        source.fetch(new SCMSourceCriteria() {
+            @Override
+            public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+                return true;
+            }
+        }, new SCMHeadObserver.Collector(), listener);
+
+        final Map<SCMHead, SCMRevision> result = collector.result();
+        assertThat(result.entrySet(), hasSize(4));
+        assertThat(result, hasKey(allOf(
+                instanceOf(GitRefSCMHead.class),
+                hasProperty("name", equalTo("custom-1"))
+        )));
+    }
+
+    @Issue("JENKINS-48061")
+    @Test
+    public void fetchOtherRevisions() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=v1");
+        sampleRepo.git("tag", "v1");
+        String v1 = sampleRepo.head();
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=v2"); // master
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=v3"); // dev
+        String v3 = sampleRepo.head();
+        sampleRepo.git("update-ref", "refs/custom/1", v3);
+        sampleRepo.git("reset", "--hard", "HEAD^"); // dev
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=v4"); // dev
+        // SCM.checkout does not permit a null build argument, unfortunately.
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
+        StreamTaskListener listener = StreamTaskListener.fromStderr();
+
+        final Set<String> revisions = source.fetchRevisions(listener);
+
+        assertThat(revisions, hasSize(4));
+        assertThat(revisions, containsInAnyOrder(
+                equalTo("custom-1"),
+                equalTo("v1"),
+                equalTo("dev"),
+                equalTo("master")
+        ));
     }
 
     @Issue("JENKINS-37727")
@@ -540,9 +755,9 @@ public class AbstractGitSCMSourceTest {
         GitSCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
-        assertEquals("[SCMHead{'dev'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
 
         /* Create dev2 branch and write a file to it */
         sampleRepo.git("checkout", "-b", "dev2", "master");
@@ -551,13 +766,13 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--message=dev2-branch-commit-message");
 
         // Verify new branch is visible
-        assertEquals("[SCMHead{'dev'}, SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals(GitBranchSCMHead_DEV_DEV2_MASTER, source.fetch(listener).toString());
 
         /* Delete the dev branch */
         sampleRepo.git("branch", "-D", "dev");
 
         /* Fetch and confirm dev branch was pruned */
-        assertEquals("[SCMHead{'dev2'}, SCMHead{'master'}]", source.fetch(listener).toString());
+        assertEquals("[GitBranchSCMHead{name='dev2', ref='refs/heads/dev2'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]", source.fetch(listener).toString());
     }
 
     @Test

@@ -9,14 +9,13 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.Util;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import static hudson.Util.*;
 
 /**
  * {@link GitSCMExtension} that ignores commits that are made by specific users.
@@ -44,7 +43,7 @@ public class UserExclusion extends GitSCMExtension {
     }
 
     public Set<String> getExcludedUsersNormalized() {
-        String s = fixEmptyAndTrim(excludedUsers);
+        String s = Util.fixEmptyAndTrim(excludedUsers);
         if (s == null) {
             return Collections.emptySet();
         }

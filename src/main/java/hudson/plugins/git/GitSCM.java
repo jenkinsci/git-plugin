@@ -11,14 +11,24 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import hudson.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Hudson.MasterComputer;
+import hudson.model.Items;
+import hudson.model.Job;
+import hudson.model.Node;
 import hudson.model.Queue;
+import hudson.model.Run;
+import hudson.model.Saveable;
+import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitClientConflictException;
@@ -30,7 +40,12 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
-import hudson.scm.*;
+import hudson.scm.AbstractScmTagAction;
+import hudson.scm.ChangeLogParser;
+import hudson.scm.PollingResult;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMDescriptor;
+import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
@@ -68,18 +83,26 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static hudson.Util.*;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+import hudson.Util;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -87,6 +110,8 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Git SCM.
@@ -205,7 +230,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * Going forward this is primarily how we'll support esoteric use cases.
      *
-     * @since 1.EXTENSION
+     * @since 2.0
      */
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
@@ -959,11 +984,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(build,Hudson.MasterComputer.localChannel);
+            return callable.invoke(build, FilePath.localChannel);
         }
 
         public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(project, MasterComputer.localChannel);
+            return callable.invoke(project, FilePath.localChannel);
         }
 
         public Run<?, ?> getBuild() {
@@ -1368,7 +1393,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             }
 
-            String sha1 = fixEmpty(rev.getSha1String());
+            String sha1 = Util.fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
             }
@@ -1500,7 +1525,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.name value
          */
         public String getGlobalConfigName() {
-            return fixEmptyAndTrim(globalConfigName);
+            return Util.fixEmptyAndTrim(globalConfigName);
         }
 
         /**
@@ -1516,7 +1541,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * @return user.email value
          */
         public String getGlobalConfigEmail() {
-            return fixEmptyAndTrim(globalConfigEmail);
+            return Util.fixEmptyAndTrim(globalConfigEmail);
         }
 
         /**
@@ -1852,6 +1877,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.getInstance();

@@ -18,6 +18,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -92,12 +93,14 @@ public class GitList extends GitRepositoryBrowser {
 
     @Extension
     public static class GitListDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "gitlist";
         }
 
         @Override
-        public GitList newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public GitList newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             return req.bindJSON(GitList.class, jsonObject);
         }
     }

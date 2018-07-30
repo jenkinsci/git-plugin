@@ -31,14 +31,21 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
 
 /**
@@ -59,6 +66,10 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      * {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
      */
     private boolean wantTags;
+    /**
+     * A list of other references to discover and search
+     */
+    private Set<RefNameMapping> refNameMappings;
     /**
      * The name of the {@link GitTool} to use or {@code null} to use the default.
      */
@@ -105,6 +116,24 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     public final boolean wantTags() {
         return wantTags;
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} will need information about other refs.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} will need information about other refs.
+     */
+    public final boolean wantOtherRefs() {
+        return refNameMappings != null && !refNameMappings.isEmpty();
+    }
+
+    @NonNull
+    public Collection<RefNameMapping> getRefNameMappings() {
+        if (refNameMappings == null) {
+            return Collections.emptySet();
+        } else {
+            return Collections.unmodifiableSet(refNameMappings);
+        }
     }
 
     /**
@@ -174,6 +203,22 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public C wantTags(boolean include) {
         wantTags = wantTags || include;
+        return (C) this;
+    }
+
+    /**
+     * Adds a requirement for details of additional refs to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param other The specification for that other ref
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C wantOtherRef(RefNameMapping other) {
+        if (refNameMappings == null) {
+            refNameMappings = new TreeSet<>();
+        }
+        refNameMappings.add(other);
         return (C) this;
     }
 
@@ -272,6 +317,11 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public final List<RefSpec> asRefSpecs() {
         List<RefSpec> result = new ArrayList<>(Math.max(refSpecs.size(), 1));
+        if (wantOtherRefs() && wantBranches()) {
+            //If wantOtherRefs() there will be a refspec in the list not added manually by a user
+            //So if also wantBranches() we need to add the default respec for branches so we actually fetch them
+            result.add(new RefSpec("+" + Constants.R_HEADS + "*:" + Constants.R_REMOTES + remoteName() + "/*"));
+        }
         for (String template : refSpecs()) {
             result.add(new RefSpec(
                     template.replaceAll(AbstractGitSCMSource.REF_SPEC_REMOTE_NAME_PLACEHOLDER, remoteName())
@@ -288,6 +338,88 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @Override
     public R newRequest(@NonNull SCMSource source, TaskListener listener) {
         return (R) new GitSCMSourceRequest(source, this, listener);
+    }
+
+    public static final class RefNameMapping implements Comparable<RefNameMapping> {
+        private final String ref;
+        private final String name;
+        private transient Pattern refPattern;
+
+        public RefNameMapping(@NonNull String ref, @NonNull String name) {
+            this.ref = ref;
+            this.name = name;
+        }
+
+        @NonNull
+        public String getRef() {
+            return ref;
+        }
+
+        @NonNull
+        public String getName() {
+            return name;
+        }
+
+        Pattern refAsPattern() {
+            if (refPattern == null) {
+                refPattern = Pattern.compile(Constants.R_REFS + ref.replace("*", "(.+)"));
+            }
+            return refPattern;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            RefNameMapping that = (RefNameMapping) o;
+
+            if (!ref.equals(that.ref)) return false;
+            return name.equals(that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = ref.hashCode();
+            result = 31 * result + name.hashCode();
+            return result;
+        }
+
+        @Override
+        public int compareTo(RefNameMapping o) {
+            return Integer.compare(this.hashCode(), o != null ? o.hashCode() : 0);
+        }
+
+        public boolean matches(String revision, String remoteName, String remoteRev) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            if (matcher.matches()) {
+                //TODO support multiple capture groups?
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
+                    String resolvedName = name.replace("@{1}", matcher.group(1));
+                    return resolvedName.equals(revision);
+                } else {
+                    return name.equals(revision);
+                }
+            }
+            return false;
+        }
+
+        public boolean matches(String remoteName) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            return matcher.matches();
+        }
+
+        public String getName(String remoteName) {
+            final Matcher matcher = refAsPattern().matcher(remoteName);
+            if (matcher.matches()) {
+                if (matcher.groupCount() > 0) { //Group 0 apparently not in this count according to javadoc
+                    return name.replace("@{1}", matcher.group(1));
+                } else if (!name.contains("@{1}")) {
+                    return name;
+                }
+            }
+            return null;
+        }
     }
 
 }

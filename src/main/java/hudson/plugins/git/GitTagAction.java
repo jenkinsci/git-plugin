@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * @author Vivek Pandey
  */
@@ -47,6 +49,8 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     private static final Logger LOGGER = Logger.getLogger(GitTagAction.class.getName());
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public Descriptor<GitTagAction> getDescriptor() {
         Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
