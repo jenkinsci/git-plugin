@@ -56,7 +56,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         // Partial mock our AbstractGitSCMSourceImpl
         gitSCMSource = PowerMockito.spy(new AbstractGitSCMSourceImpl());
         // Always resolve to mocked GitTool
-        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE);
+        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE, TaskListener.NULL);
     }
 
     /**

@@ -910,15 +910,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+    @CheckForNull
     public GitTool resolveGitTool(TaskListener listener) {
-        if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
-        if (git == null) {
-            listener.getLogger().println("Selected Git installation does not exist. Using Default");
-            git = GitTool.getDefaultInstallation();
-        }
-        return git;
+        return GitUtils.resolveGitTool(gitTool, listener);
     }
 
     public String getGitExe(Node builtOn, TaskListener listener) {
@@ -944,16 +938,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
 
-        GitTool tool = resolveGitTool(listener);
-        if (builtOn != null) {
-            try {
-                tool = tool.forNode(builtOn, listener);
-            } catch (IOException | InterruptedException e) {
-                listener.getLogger().println("Failed to get git executable");
-            }
-        }
-        if (env != null) {
-            tool = tool.forEnvironment(env);
+        GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
+        if (tool == null) {
+            return null;
         }
 
         return tool.getGitExe();
