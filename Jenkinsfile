@@ -56,4 +56,5 @@ branches["PCT"] = {
     }
 }
 
-parallel branches
+// Intentionally disabled until tests are more reliable
+// parallel branches
