@@ -11,6 +11,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
 
@@ -84,12 +85,14 @@ public class GithubWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class GithubWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
+        @Nonnull
         public String getDisplayName() {
             return "githubweb";
         }
 
         @Override
-		public GithubWeb newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+		public GithubWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
 			return req.bindJSON(GithubWeb.class, jsonObject);
 		}
 	}

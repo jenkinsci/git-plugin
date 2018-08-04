@@ -2,15 +2,25 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.Item;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
 import hudson.plugins.git.GitStatus;
+import hudson.plugins.git.GitTool;
+import hudson.remoting.Launcher;
+import hudson.tools.CommandInstaller;
+import hudson.tools.InstallSourceProperty;
+import hudson.tools.ToolInstallation;
+import hudson.tools.ToolInstaller;
 import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMEventListener;
@@ -35,6 +47,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +63,7 @@ import org.mockito.Mockito;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
@@ -59,6 +73,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -94,7 +109,7 @@ public class GitSCMSourceTest {
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)
                         .waitSCMHeadEvent(1, TimeUnit.SECONDS);
         assertThat(event, notNullValue());
-        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new SCMHead("master"))));
+        assertThat((Iterable<SCMHead>) event.heads(gitSCMSource).keySet(), hasItem(is(new GitBranchSCMHead("master"))));
         verify(scmSourceOwner, times(0)).onSCMSourceUpdated(gitSCMSource);
 
     }
@@ -269,6 +284,8 @@ public class GitSCMSourceTest {
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(instance.fetch(new SCMHead("foo"), null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
+        assertThat(instance.fetch(new GitBranchSCMHead("foo"), null),
+                hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
         assertThat(instance.fetch(new SCMHead("bar"), null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
         assertThat(instance.fetch(new SCMHead("manchu"), null),
@@ -329,6 +346,46 @@ public class GitSCMSourceTest {
                 instanceOf(PrimaryInstanceMetadataAction.class)));
         assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
                 is(Collections.<Action>emptyList()));
+    }
+
+
+    @Issue("JENKINS-52754")
+    @Test
+    public void gitSCMSourceShouldResolveToolsForMaster() throws Exception {
+        Assume.assumeTrue("Runs on Unix only", !Launcher.isWindows());
+        TaskListener log = StreamTaskListener.fromStdout();
+        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "git");
+        GitTool t = new GitTool("myGit", null, Collections.singletonList(
+                new InstallSourceProperty(Collections.singletonList(inst))));
+        t.getDescriptor().setInstallations(t);
+
+        GitTool defaultTool = GitTool.getDefaultInstallation();
+        GitTool resolved = (GitTool) defaultTool.translate(jenkins.jenkins, new EnvVars(), TaskListener.NULL);
+        assertThat(resolved.getGitExe(), org.hamcrest.CoreMatchers.containsString("git"));
+
+        GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
+        instance.retrieveRevisions(log);
+        assertTrue("Installer should be invoked", inst.isInvoked());
+    }
+
+    private static class HelloToolInstaller extends CommandInstaller {
+
+        private boolean invoked;
+
+        public HelloToolInstaller(String label, String command, String toolHome) {
+            super(label, command, toolHome);
+        }
+
+        public boolean isInvoked() {
+            return invoked;
+        }
+
+        @Override
+        public FilePath performInstallation(ToolInstallation toolInstallation, Node node, TaskListener taskListener) throws IOException, InterruptedException {
+            taskListener.error("Hello, world!");
+            invoked = true;
+            return super.performInstallation(toolInstallation, node, taskListener);
+        }
     }
 
     @TestExtension

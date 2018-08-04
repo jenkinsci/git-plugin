@@ -34,6 +34,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -113,6 +114,8 @@ public class GitStatus implements UnprotectedRootAction {
         return s.toString();
     }
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
@@ -151,32 +154,25 @@ public class GitStatus implements UnprotectedRootAction {
 
         final List<ResponseContributor> contributors = new ArrayList<>();
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
-        }
         String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
-        return new HttpResponse() {
-            @Override
-            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
-                    throws IOException, ServletException {
-                rsp.setStatus(SC_OK);
-                rsp.setContentType("text/plain");
-                for (int i = 0; i < contributors.size(); i++) {
-                    if (i == MAX_REPORTED_CONTRIBUTORS) {
-                        rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
-                        break;
-                    } else {
-                        contributors.get(i).addHeaders(req, rsp);
-                    }
+        return (StaplerRequest req, StaplerResponse rsp, Object node) -> {
+            rsp.setStatus(SC_OK);
+            rsp.setContentType("text/plain");
+            for (int i = 0; i < contributors.size(); i++) {
+                if (i == MAX_REPORTED_CONTRIBUTORS) {
+                    rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
+                    break;
+                } else {
+                    contributors.get(i).addHeaders(req, rsp);
                 }
-                PrintWriter w = rsp.getWriter();
-                for (ResponseContributor c : contributors) {
-                    c.writeBody(req, rsp, w);
-                }
+            }
+            PrintWriter w = rsp.getWriter();
+            for (ResponseContributor c : contributors) {
+                c.writeBody(req, rsp, w);
             }
         };
     }
@@ -325,7 +321,8 @@ public class GitStatus implements UnprotectedRootAction {
          * {@inheritDoc}
          */
         @Override
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
@@ -348,7 +345,7 @@ public class GitStatus implements UnprotectedRootAction {
                     LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
                     return result;
                 }
-                for (final Item project : Jenkins.getInstance().getAllItems()) {
+                for (final Item project : jenkins.getAllItems()) {
                     SCMTriggerItem scmTriggerItem = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(project);
                     if (scmTriggerItem == null) {
                         continue;
@@ -397,7 +394,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         parametrizedBranchSpec = true;
                                     } else {
                                         for (String branch : branches) {
-                                            if (branchSpec.matches(repository.getName() + "/" + branch)) {
+                                            if (branchSpec.matchesRepositoryBranch(repository.getName(), branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
                                                     LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
                                                 }

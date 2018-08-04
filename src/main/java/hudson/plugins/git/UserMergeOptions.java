@@ -1,14 +1,15 @@
 package hudson.plugins.git;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * User-provided configuration that dictates which branch in which repository we'll be
@@ -18,7 +19,7 @@ import java.io.Serializable;
 public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions>  implements Serializable {
 
     private String mergeRemote;
-    private String mergeTarget;
+    private final String mergeTarget;
     private String mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
 
@@ -39,13 +40,17 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
      */
-    @DataBoundConstructor
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
         this.mergeStrategy = mergeStrategy;
         this.fastForwardMode = fastForwardMode;
+    }
+
+    @DataBoundConstructor
+    public UserMergeOptions(String mergeTarget) {
+        this.mergeTarget = mergeTarget;
     }
 
     /**
@@ -62,6 +67,11 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      */
     public String getMergeRemote() {
         return mergeRemote;
+    }
+
+    @DataBoundSetter
+    public void setMergeRemote(String mergeRemote) {
+        this.mergeRemote = Util.fixEmptyAndTrim(mergeRemote);
     }
 
     /**
@@ -89,6 +99,11 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return MergeCommand.Strategy.DEFAULT;
     }
 
+    @DataBoundSetter
+    public void setMergeStrategy(MergeCommand.Strategy mergeStrategy) {
+        this.mergeStrategy = mergeStrategy.toString(); // not .name() as you might expect! TODO in Turkey this will be e.g. recursıve
+    }
+
     public MergeCommand.GitPluginFastForwardMode getFastForwardMode() {
         for (MergeCommand.GitPluginFastForwardMode ffMode : MergeCommand.GitPluginFastForwardMode.values())
             if (ffMode.equals(fastForwardMode))
@@ -96,13 +111,18 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return MergeCommand.GitPluginFastForwardMode.FF;
     }
 
+    @DataBoundSetter
+    public void setFastForwardMode(MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+        this.fastForwardMode = fastForwardMode;
+    }
+
     @Override
     public String toString() {
         return "UserMergeOptions{" +
                 "mergeRemote='" + mergeRemote + '\'' +
                 ", mergeTarget='" + mergeTarget + '\'' +
-                ", mergeStrategy='" + mergeStrategy + '\'' +
-                ", fastForwardMode='" + fastForwardMode + '\'' +
+                ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
+                ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
                 '}';
     }
 
@@ -148,11 +168,5 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
             return "";
         }
 
-        public ListBoxModel doFillMergeStrategyItems() {
-            ListBoxModel m = new ListBoxModel();
-            for (MergeCommand.Strategy strategy: MergeCommand.Strategy.values())
-                m.add(strategy.toString(), strategy.toString());
-            return m;
-        }
     }
 }

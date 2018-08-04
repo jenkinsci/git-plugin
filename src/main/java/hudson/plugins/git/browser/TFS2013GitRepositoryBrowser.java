@@ -14,9 +14,11 @@ import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -83,12 +85,14 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
+        @Nonnull
         public String getDisplayName() {
             return REPOSITORY_BROWSER_LABEL;
         }
 
         @Override
-        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+            assert req != null; //see inherited javadoc
             try {
                 req.getSubmittedForm();
             } catch (ServletException e) {
@@ -105,13 +109,19 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
          * @throws IOException on input or output error
          * @throws ServletException on servlet error
          */
+        @RequirePOST
         public FormValidation doCheckRepoUrl(@QueryParameter(fixEmpty = true) String value, @AncestorInPath AbstractProject project) throws IOException,
                 ServletException {
-            
+
+            // Connect to URL and check content only if we have admin permission
+            Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null || !jenkins.hasPermission(Hudson.ADMINISTER))
+                return FormValidation.ok();
+
             if (value == null) // nothing entered yet
                 value = "origin";
 
-            if (!value.contains("/")) {
+            if (!value.contains("/") && project != null) {
                 GitSCM scm = (GitSCM) project.getScm();
                 RemoteConfig remote = scm.getRepositoryByName(value);
                 if (remote == null)
@@ -124,11 +134,6 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 value += '/';
             if (!URL_PATTERN.matcher(value).matches())
                 return FormValidation.errorWithMarkup("The URL should end like <tt>.../_git/foobar/</tt>");
-
-            // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null && jenkins.hasPermission(Hudson.ADMINISTER))
-                return FormValidation.ok();
 
             final String finalValue = value;
             return new FormValidation.URLCheck() {

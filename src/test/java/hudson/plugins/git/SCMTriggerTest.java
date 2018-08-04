@@ -277,12 +277,9 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     private Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
     {
         if(trigger == null) return null;
-        Callable<Void> callable = new Callable<Void>() {
-            public Void call() throws Exception
-            {
-                trigger.run();
-                return null;
-            }
+        Callable<Void> callable = () -> {
+            trigger.run();
+            return null;
         };
         return singleThreadExecutor.submit(callable);
     }
