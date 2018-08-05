@@ -15,11 +15,7 @@ public class GitChangeLogParserTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
-    /**
-     * Test duplicate changes filtered from parsed change set list.
-     *
-     * @throws Exception
-     */
+    /* Test duplicate changes filtered from parsed change set list. */
     @Test
     public void testDuplicatesFiltered() throws Exception {
         GitChangeLogParser parser = new GitChangeLogParser(true);

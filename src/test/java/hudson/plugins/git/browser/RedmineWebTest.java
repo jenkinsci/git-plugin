@@ -25,40 +25,22 @@ public class RedmineWebTest {
     private static final String REDMINE_URL = "https://SERVER/PATH/projects/PROJECT/repository";
     private final RedmineWeb redmineWeb = new RedmineWeb(REDMINE_URL);
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(redmineWeb.getUrl()), REDMINE_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new RedmineWeb(REDMINE_URL + "/").getUrl()), REDMINE_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = redmineWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(REDMINE_URL + "/diff?rev=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.RedmineWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -71,11 +53,6 @@ public class RedmineWebTest {
         assertEquals(REDMINE_URL + "/revisions/396fc230a3db05c427737aa5c2eb7856ba72b05d/entry/src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file", redmineWeb.getDiffLink(added).toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -84,11 +61,6 @@ public class RedmineWebTest {
         assertEquals(REDMINE_URL  + "/revisions/396fc230a3db05c427737aa5c2eb7856ba72b05d/entry/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -103,12 +75,6 @@ public class RedmineWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -117,6 +83,4 @@ public class RedmineWebTest {
         }
         return pathMap;
     }
-
-
 }

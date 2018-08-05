@@ -27,48 +27,22 @@ public class ViewGitWebTest {
     private static final String PROJECT_NAME = "PROJECT";
     private final ViewGitWeb viewGitWeb = new ViewGitWeb(VIEWGIT_URL, PROJECT_NAME);
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.ViewGitWeb#getUrl()}.
-     * 
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(viewGitWeb.getUrl()), VIEWGIT_URL + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.ViewGitWeb#getUrl()}.
-     * 
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new ViewGitWeb(VIEWGIT_URL + "/", PROJECT_NAME).getUrl()), VIEWGIT_URL + "/");
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = viewGitWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals("http://SERVER/viewgit/?p=PROJECT&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -80,14 +54,6 @@ public class ViewGitWebTest {
         assertNull("Do not return a diff link for added files.", viewGitWeb.getDiffLink(path3));
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -105,14 +71,6 @@ public class ViewGitWebTest {
 
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -127,12 +85,6 @@ public class ViewGitWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -141,5 +93,4 @@ public class ViewGitWebTest {
         }
         return pathMap;
     }
-
 }
