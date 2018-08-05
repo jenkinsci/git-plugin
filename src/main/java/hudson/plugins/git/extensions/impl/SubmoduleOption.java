@@ -45,9 +45,10 @@ public class SubmoduleOption extends GitSCMExtension {
     /** Use --depth flag on submodule update command - requires git>=1.8.4 */
     private boolean shallow;
     private Integer depth;
+    private Integer threads;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout, boolean parentCredentials) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
@@ -98,6 +99,15 @@ public class SubmoduleOption extends GitSCMExtension {
         return depth;
     }
 
+    public Integer getThreads() {
+        return threads;
+    }
+
+    @DataBoundSetter
+    public void setThreads(Integer threads) {
+        this.threads = threads;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -132,6 +142,8 @@ public class SubmoduleOption extends GitSCMExtension {
                     listener.getLogger().println("Using shallow submodule update with depth " + usedDepth);
                     cmd.depth(usedDepth);
                 }
+                int usedThreads = threads == null || threads < 1 ? 1 : threads;
+                cmd.threads(usedThreads);
                 cmd.execute();
             }
         } catch (GitException e) {
@@ -195,6 +207,9 @@ public class SubmoduleOption extends GitSCMExtension {
         if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
             return false;
         }
+        if (threads != null ? !threads.equals(that.threads) : that.threads == null) {
+            return false;
+        }
         return true;
     }
 
@@ -220,6 +235,7 @@ public class SubmoduleOption extends GitSCMExtension {
                 ", timeout=" + timeout +
                 ", shallow=" + shallow +
                 ", depth=" + depth +
+                ", threads=" + threads +
                 '}';
     }
 
