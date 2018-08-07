@@ -31,7 +31,7 @@ public class CloneOption extends GitSCMExtension {
     private final boolean noTags;
     private final String reference;
     private final Integer timeout;
-    private int depth = 1;
+    private Integer depth;
     private boolean honorRefspec = false;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
@@ -106,11 +106,11 @@ public class CloneOption extends GitSCMExtension {
     }
 
     @DataBoundSetter
-    public void setDepth(int depth) {
+    public void setDepth(Integer depth) {
         this.depth = depth;
     }
 
-    public int getDepth() {
+    public Integer getDepth() {
         return depth;
     }
 
@@ -122,7 +122,7 @@ public class CloneOption extends GitSCMExtension {
         if (shallow) {
             listener.getLogger().println("Using shallow clone");
             cmd.shallow();
-            if (depth > 1) {
+            if (depth != null && depth > 1) {
                 listener.getLogger().println("shallow clone depth " + depth);
                 cmd.depth(depth);
             }
@@ -164,8 +164,10 @@ public class CloneOption extends GitSCMExtension {
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
-        if (shallow && depth > 1) {
-            cmd.depth(depth);
+        if (shallow) {
+            if (depth != null && depth > 1) {
+                cmd.depth(depth);
+            }
         }
         cmd.tags(!noTags);
         /* cmd.refspecs() not required.
@@ -205,7 +207,7 @@ public class CloneOption extends GitSCMExtension {
         if (noTags != that.noTags) {
             return false;
         }
-        if (depth != that.depth) {
+        if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
             return false;
         }
         if (honorRefspec != that.honorRefspec) {

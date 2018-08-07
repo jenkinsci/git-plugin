@@ -44,7 +44,7 @@ public class SubmoduleOption extends GitSCMExtension {
     private Integer timeout;
     /** Use --depth flag on submodule update command - requires git>=1.8.4 */
     private boolean shallow;
-    private int depth = 1;
+    private Integer depth;
 
     @DataBoundConstructor
     public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
@@ -90,11 +90,11 @@ public class SubmoduleOption extends GitSCMExtension {
     }
 
     @DataBoundSetter
-    public void setDepth(int depth) {
+    public void setDepth(Integer depth) {
         this.depth = depth;
     }
 
-    public int getDepth() {
+    public Integer getDepth() {
         return depth;
     }
 
@@ -127,8 +127,10 @@ public class SubmoduleOption extends GitSCMExtension {
                         .ref(build.getEnvironment(listener).expand(reference))
                         .timeout(timeout)
                         .shallow(shallow);
-                if (shallow && depth > 1) {
-                    cmd.depth(depth);
+                if (shallow) {
+                    if (depth !=null && depth > 1) {
+                        cmd.depth(depth);
+                    }
                 }
                 cmd.execute();
             }
@@ -190,7 +192,7 @@ public class SubmoduleOption extends GitSCMExtension {
         if (shallow != that.shallow) {
             return false;
         }
-        if (depth != that.depth) {
+        if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
             return false;
         }
         return true;
