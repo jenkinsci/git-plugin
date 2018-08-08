@@ -30,48 +30,28 @@ import org.xml.sax.SAXException;
 
 /**
  * @author mirko
- *
  */
 public class GithubWebTest {
 
     private static final String GITHUB_URL = "http://github.com/USER/REPO";
     private final GithubWeb githubWeb = new GithubWeb(GITHUB_URL);
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(githubWeb.getUrl()), GITHUB_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GithubWeb(GITHUB_URL + "/").getUrl()), GITHUB_URL  + "/");
     }
 
-
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = githubWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -83,11 +63,6 @@ public class GithubWebTest {
         assertNull("Do not return a diff link for added files.", githubWeb.getDiffLink(path3));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -96,11 +71,6 @@ public class GithubWebTest {
         assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -130,6 +100,7 @@ public class GithubWebTest {
             }
         }
     }
+
     private void assertGuessURL(String repo, String web) {
         RepositoryBrowser<?> guess = new GitSCM(repo).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
@@ -144,11 +115,13 @@ public class GithubWebTest {
         // like GitHubSCMSource:
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/", "+refs/heads/*:refs/remotes/origin/*", "+refs/pull/*/merge:refs/remotes/origin/pr/*");
     }
+
     private void assertGuessURL(String remote, String web, String... refSpecs) {
         RepositoryBrowser<?> guess = new MockSCMSource(remote, refSpecs).build(new SCMHead("master")).guessBrowser();
         String actual = guess instanceof GithubWeb ? ((GithubWeb) guess).getRepoUrl() : null;
         assertEquals(web, actual);
     }
+
     private static class MockSCMSource extends AbstractGitSCMSource {
         private final String remote;
         private final String[] refSpecs;
@@ -188,12 +161,6 @@ public class GithubWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -202,6 +169,4 @@ public class GithubWebTest {
         }
         return pathMap;
     }
-
-
 }

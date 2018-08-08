@@ -41,7 +41,7 @@ public abstract class GitSCMExtensionTest {
 	/**
 	 * The {@link GitSCMExtension} being tested - this will be added to the
 	 * project built in {@link #setupBasicProject(TestGitRepo)}
-	 * @return
+	 * @return the extension
 	 */
 	protected abstract GitSCMExtension getExtension();
 
@@ -57,9 +57,9 @@ public abstract class GitSCMExtensionTest {
 	 * Create a {@link FreeStyleProject} configured with a {@link GitSCM}
 	 * building on the {@code master} branch of the provided {@code repo},
 	 * and with the extension described in {@link #getExtension()} added.
-	 * @param repo
-	 * @return
-	 * @throws Exception
+	 * @param repo git repository
+	 * @return the created project
+	 * @throws Exception on error
 	 */
 	protected FreeStyleProject setupBasicProject(TestGitRepo repo) throws Exception {
 		GitSCMExtension extension = getExtension();

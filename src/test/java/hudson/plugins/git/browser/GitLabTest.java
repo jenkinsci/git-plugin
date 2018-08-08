@@ -37,9 +37,6 @@ public class GitLabTest {
     private final String SHA1 = "396fc230a3db05c427737aa5c2eb7856ba72b05d";
     private final String fileName = "src/main/java/hudson/plugins/git/browser/GithubWeb.java";
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitLab#getVersion()}.
-     */
     @Test
     public void testGetVersion() {
         assertEquals(2.9, gitlab29.getVersion(), .001);
@@ -54,12 +51,6 @@ public class GitLabTest {
         assertEquals(9999.0, gitlabGreater.getVersion(), .001);
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.GitLab#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     *
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final GitChangeSet changeSet = createChangeSet("rawchangelog");
@@ -77,12 +68,6 @@ public class GitLabTest {
         assertEquals(expectedURL, gitlabGreater.getChangeSetLink(changeSet).toString());
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.GitLab#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     *
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -106,12 +91,6 @@ public class GitLabTest {
         assertEquals(expectedDefault, gitlabInfinity.getDiffLink(modified1).toString());
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     *
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -132,12 +111,6 @@ public class GitLabTest {
         assertEquals(expectedURL, gitlabGreater.getFileLink(path).toString());
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.GitLab#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     *
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -179,5 +152,4 @@ public class GitLabTest {
         }
         return pathMap;
     }
-
 }

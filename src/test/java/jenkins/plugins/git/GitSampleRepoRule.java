@@ -85,7 +85,6 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         r.waitUntilNoActivity();
     }
 
-    /** Returns the (full) commit hash of the current {@link Constants#HEAD} of the repository. */
     public String head() throws Exception {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }

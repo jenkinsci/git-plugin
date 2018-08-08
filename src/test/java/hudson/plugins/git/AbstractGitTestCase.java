@@ -211,12 +211,13 @@ public abstract class AbstractGitTestCase {
 
     /**
      * Creates a new project and configures the GitSCM according the parameters.
-     * @param repos
-     * @param branchSpecs
-     * @param scmTriggerSpec
-     * @param disableRemotePoll Disable Workspace-less polling via "git ls-remote"
-     * @return
-     * @throws Exception
+     * @param repos git remote repositories
+     * @param branchSpecs branch specs
+     * @param scmTriggerSpec scm trigger spec
+     * @param disableRemotePoll disable workspace-less polling via "git ls-remote"
+     * @param enforceGitClient enforce git client
+     * @return the created project
+     * @throws Exception on error
      */
     protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
                 String scmTriggerSpec, boolean disableRemotePoll, EnforceGitClient enforceGitClient) throws Exception {
@@ -311,7 +312,7 @@ public abstract class AbstractGitTestCase {
             });
     }
 
-    /** A utility method that displays a git repo. Useful to visualise merges. */
+    /* A utility method that displays a git repo. Useful to visualise merges. */
     public void showRepo(TestGitRepo repo, String msg) throws Exception {
         System.out.println("*********** "+msg+" ***********");
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {

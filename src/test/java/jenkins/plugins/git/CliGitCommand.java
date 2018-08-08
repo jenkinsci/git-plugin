@@ -141,7 +141,7 @@ public class CliGitCommand {
      * values assigned for user.name and user.email. This method checks the
      * existing values, and if they are not set, assigns default values. If the
      * values are already set, they are unchanged.
-     * @throws java.lang.Exception
+     * @throws Exception on error
      */
     public void setDefaults() throws Exception {
         setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");

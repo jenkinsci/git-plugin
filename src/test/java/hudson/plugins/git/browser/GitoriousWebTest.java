@@ -24,41 +24,22 @@ public class GitoriousWebTest {
     private static final String GITORIOUS_URL = "https://SERVER/PROJECT";
     private final GitoriousWeb gitoriousWeb = new GitoriousWeb(GITORIOUS_URL);
 
-
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitoriousWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(gitoriousWeb.getUrl()), GITORIOUS_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitoriousWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GitoriousWeb(GITORIOUS_URL + "/").getUrl()), GITORIOUS_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitoriousWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = gitoriousWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitoriousWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -69,11 +50,6 @@ public class GitoriousWebTest {
         assertEquals(GITORIOUS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d/diffs?diffmode=sidebyside&fragment=1#src/test/resources/hudson/plugins/git/browser/rawchangelog-with-deleted-file", gitoriousWeb.getDiffLink(added).toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -82,11 +58,6 @@ public class GitoriousWebTest {
         assertEquals(GITORIOUS_URL  + "/blobs/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -101,12 +72,6 @@ public class GitoriousWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -115,6 +80,4 @@ public class GitoriousWebTest {
         }
         return pathMap;
     }
-
-
 }
