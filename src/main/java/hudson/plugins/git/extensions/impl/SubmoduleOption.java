@@ -128,9 +128,9 @@ public class SubmoduleOption extends GitSCMExtension {
                         .timeout(timeout)
                         .shallow(shallow);
                 if (shallow) {
-                    if (depth !=null && depth > 1) {
-                        cmd.depth(depth);
-                    }
+                    int usedDepth = depth == null || depth < 1 ? 1 : depth;
+                    listener.getLogger().println("Using shallow submodule update with depth " + usedDepth);
+                    cmd.depth(usedDepth);
                 }
                 cmd.execute();
             }
