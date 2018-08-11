@@ -28,7 +28,7 @@ public class GitLabTest {
     private final GitLab gitlab7114ee = new GitLab(GITLAB_URL, "7.11");  /* Which is < 7.2 ! */
     private final GitLab gitlab80 = new GitLab(GITLAB_URL, "8.0");
     private final GitLab gitlab87 = new GitLab(GITLAB_URL, "8.7");
-    private final GitLab gitlabDefault = new GitLab(GITLAB_URL, "");
+    private final GitLab gitlabDefault = new GitLab(GITLAB_URL);
     private final GitLab gitlabNaN = new GitLab(GITLAB_URL, "NaN");
     private final GitLab gitlabInfinity = new GitLab(GITLAB_URL, "Infinity");
     private final GitLab gitlabNegative = new GitLab(GITLAB_URL, "-1");
@@ -39,16 +39,30 @@ public class GitLabTest {
 
     @Test
     public void testGetVersion() {
-        assertEquals(2.9, gitlab29.getVersion(), .001);
-        assertEquals(4.2, gitlab42.getVersion(), .001);
-        assertEquals(5.0, gitlab50.getVersion(), .001);
-        assertEquals(5.1, gitlab51.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlab87.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabDefault.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabNaN.getVersion(), .001);
-        assertEquals(GitLab.DEFAULT_VERSION, gitlabInfinity.getVersion(), .001);
-        assertEquals(-1.0, gitlabNegative.getVersion(), .001);
-        assertEquals(9999.0, gitlabGreater.getVersion(), .001);
+        assertEquals("2.9", gitlab29.getVersion());
+        assertEquals("4.2", gitlab42.getVersion());
+        assertEquals("5.0", gitlab50.getVersion());
+        assertEquals("5.1", gitlab51.getVersion());
+        assertEquals("8.7", gitlab87.getVersion());
+        assertNull(gitlabDefault.getVersion());
+        assertNull(gitlabNaN.getVersion());
+        assertNull(gitlabInfinity.getVersion());
+        assertEquals("-1.0", gitlabNegative.getVersion());
+        assertEquals("9999.0", gitlabGreater.getVersion());
+    }
+
+    @Test
+    public void testGetVersionDouble() {
+        assertEquals(2.9, gitlab29.getVersionDouble(), .001);
+        assertEquals(4.2, gitlab42.getVersionDouble(), .001);
+        assertEquals(5.0, gitlab50.getVersionDouble(), .001);
+        assertEquals(5.1, gitlab51.getVersionDouble(), .001);
+        assertEquals(8.7, gitlab87.getVersionDouble(), .001);
+        assertEquals(Double.POSITIVE_INFINITY, gitlabDefault.getVersionDouble(), .001);
+        assertEquals(Double.POSITIVE_INFINITY, gitlabNaN.getVersionDouble(), .001);
+        assertEquals(Double.POSITIVE_INFINITY, gitlabInfinity.getVersionDouble(), .001);
+        assertEquals(-1.0, gitlabNegative.getVersionDouble(), .001);
+        assertEquals(9999.0, gitlabGreater.getVersionDouble(), .001);
     }
 
     @Test
