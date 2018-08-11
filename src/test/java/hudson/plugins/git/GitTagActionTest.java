@@ -119,7 +119,7 @@ public class GitTagActionTest {
         waitForTagCreation(tagOneAction, "v1");
         waitForTagCreation(tagTwoAction, "v2");
 
-        // assertThat(getMatchingTagNames(), hasItems(getTagValue("v1"), getTagValue("v2")));
+        assertThat(getMatchingTagNames(), hasItems(getTagValue("v1"), getTagValue("v2")));
     }
 
     private static String getTagName(String message) {
@@ -176,7 +176,7 @@ public class GitTagActionTest {
             String tagComment = getTagComment(message);
             Map<String, String> tagMap = new HashMap<>();
             tagMap.put(tagName, tagValue);
-            // tagAction.scheduleTagCreation(tagMap, tagComment);
+            tagAction.scheduleTagCreation(tagMap, tagComment);
         }
         return tagAction;
     }
@@ -193,14 +193,13 @@ public class GitTagActionTest {
     }
 
     private static void waitForTagCreation(GitTagAction tagAction, String message) throws Exception {
-        return;
-        // long backoffDelay = 499L;
-        // while (tagAction.getLastTagName() == null && tagAction.getLastTagException() == null && backoffDelay < 8000L) {
-        //     backoffDelay = backoffDelay * 2;
-        //     Thread.sleep(backoffDelay); // Allow some time for tag creation
-        // }
-        // assertThat(tagAction.getLastTagName(), is(getTagValue(message)));
-        // assertThat(tagAction.getLastTagException(), is(nullValue()));
+        long backoffDelay = 499L;
+        while (tagAction.getLastTagName() == null && tagAction.getLastTagException() == null && backoffDelay < 8000L) {
+            backoffDelay = backoffDelay * 2;
+            Thread.sleep(backoffDelay); // Allow some time for tag creation
+        }
+        assertThat(tagAction.getLastTagName(), is(getTagValue(message)));
+        assertThat(tagAction.getLastTagException(), is(nullValue()));
     }
 
     @Test
