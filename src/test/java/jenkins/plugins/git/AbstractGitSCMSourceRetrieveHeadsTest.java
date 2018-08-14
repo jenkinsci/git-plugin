@@ -56,12 +56,12 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         // Partial mock our AbstractGitSCMSourceImpl
         gitSCMSource = PowerMockito.spy(new AbstractGitSCMSourceImpl());
         // Always resolve to mocked GitTool
-        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE);
+        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE, TaskListener.NULL);
     }
 
-    /**
-     *  Validate that the correct git installation is used when fetching latest heads.
-     *  That means {@link Git#using(String)} is called properly.
+    /*
+     * Validate that the correct git installation is used when fetching latest heads.
+     * That means {@link Git#using(String)} is called properly.
      */
     @Test(expected = GitToolSpecified.class)
     public void correctGitToolIsUsed() throws Exception {
@@ -73,9 +73,9 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         }
     }
 
-    /**
-     *  Validate that the correct git installation is used when fetching latest heads.
-     *  That means {@link Git#using(String)} is called properly.
+    /*
+     * Validate that the correct git installation is used when fetching latest heads.
+     * That means {@link Git#using(String)} is called properly.
      */
     @Test(expected = GitToolSpecified.class)
     public void correctGitToolIsUsed2() throws Exception {

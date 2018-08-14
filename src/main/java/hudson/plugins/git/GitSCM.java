@@ -36,6 +36,7 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.*;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -54,6 +55,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.lib.Config;
@@ -147,6 +149,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
+    public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -655,7 +658,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
+    public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
@@ -904,15 +907,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+    @CheckForNull
     public GitTool resolveGitTool(TaskListener listener) {
-        if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
-        if (git == null) {
-            listener.getLogger().println("Selected Git installation does not exist. Using Default");
-            git = GitTool.getDefaultInstallation();
-        }
-        return git;
+        return GitUtils.resolveGitTool(gitTool, listener);
     }
 
     public String getGitExe(Node builtOn, TaskListener listener) {
@@ -938,16 +935,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
 
-        GitTool tool = resolveGitTool(listener);
-        if (builtOn != null) {
-            try {
-                tool = tool.forNode(builtOn, listener);
-            } catch (IOException | InterruptedException e) {
-                listener.getLogger().println("Failed to get git executable");
-            }
-        }
-        if (env != null) {
-            tool = tool.forEnvironment(env);
+        GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
+        if (tool == null) {
+            return null;
         }
 
         return tool.getGitExe();
@@ -1036,22 +1026,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final @NonNull GitClient git,
                                               final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
-        Collection<Revision> candidates = Collections.EMPTY_LIST;
+        Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-
-        // every MatrixRun should build the same marked commit ID
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        candidates = Collections.singleton(lastBuild.getMarked());
-                }
-            }
+        if (build.getClass().getName().equals("hudson.matrix.MatrixRun")) {
+            candidates = GitSCMMatrixUtil.populateCandidatesFromRootBuild((AbstractBuild) build, this);
         }
 
         // parameter forcing the commit ID to build
@@ -1092,7 +1072,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {
-            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins.io/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
         boolean checkForMultipleRevisions = true;
         BuildSingleRevisionOnly ext = extensions.get(BuildSingleRevisionOnly.class);
@@ -1380,6 +1360,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                       localBranchName = deriveLocalBranchName(remoteBranchName);
                    }
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
+                }
+                RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
+                if (rtd != null) {
+                   String localRelativeTargetDir = rtd.getRelativeTargetDir();
+                   if ( localRelativeTargetDir == null ){
+                       localRelativeTargetDir = "";
+                   }
+                   env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
                 }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
@@ -1882,10 +1870,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
-            return;
-        }
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {

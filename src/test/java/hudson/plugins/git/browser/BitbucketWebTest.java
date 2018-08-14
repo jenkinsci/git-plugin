@@ -21,47 +21,28 @@ import org.junit.Test;
 
 /**
  * @author mattsemar
- *
  */
 public class BitbucketWebTest {
 
     private static final String BITBUCKET_URL = "http://bitbucket.org/USER/REPO";
     private final BitbucketWeb bitbucketWeb = new BitbucketWeb(BITBUCKET_URL);
 
-    /**
-     * Test method for {@link BitbucketWeb#getUrl()}.
-     * @throws java.net.MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(bitbucketWeb.getUrl()), BITBUCKET_URL + "/");
     }
 
-    /**
-     * Test method for {@link BitbucketWeb#getUrl()}.
-     * @throws java.net.MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new BitbucketWeb(BITBUCKET_URL + "/").getUrl()), BITBUCKET_URL + "/");
     }
 
-    /**
-     * Test method for {@link BitbucketWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * throws SAXException on XML serialization error
-     * throws IOException on I/O error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = bitbucketWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(BITBUCKET_URL + "/commits/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link BitbucketWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * throws SAXException on XML serialization error
-     * throws IOException on I/O error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -78,11 +59,6 @@ public class BitbucketWebTest {
         assertNull("Do not return a diff link for added files.", bitbucketWeb.getDiffLink(path3));
     }
 
-    /**
-     * Test method for {@link GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * throws SAXException on XML serialization error
-     * throws IOException on I/O error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -91,11 +67,6 @@ public class BitbucketWebTest {
         assertEquals(BITBUCKET_URL + "/history/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link BitbucketWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * throws SAXException on XML serialization error
-     * throws IOException on I/O error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -110,12 +81,6 @@ public class BitbucketWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * throws IOException on I/O error
-     * throws SAXException on XML serialization error
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -124,6 +89,4 @@ public class BitbucketWebTest {
         }
         return pathMap;
     }
-
-
 }

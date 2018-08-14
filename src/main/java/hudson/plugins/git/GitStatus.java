@@ -154,32 +154,25 @@ public class GitStatus implements UnprotectedRootAction {
 
         final List<ResponseContributor> contributors = new ArrayList<>();
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            return HttpResponses.error(SC_BAD_REQUEST, new Exception("Jenkins.getInstance() null for : " + url));
-        }
         String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
         }
 
-        return new HttpResponse() {
-            @Override
-            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
-                    throws IOException, ServletException {
-                rsp.setStatus(SC_OK);
-                rsp.setContentType("text/plain");
-                for (int i = 0; i < contributors.size(); i++) {
-                    if (i == MAX_REPORTED_CONTRIBUTORS) {
-                        rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
-                        break;
-                    } else {
-                        contributors.get(i).addHeaders(req, rsp);
-                    }
+        return (StaplerRequest req, StaplerResponse rsp, Object node) -> {
+            rsp.setStatus(SC_OK);
+            rsp.setContentType("text/plain");
+            for (int i = 0; i < contributors.size(); i++) {
+                if (i == MAX_REPORTED_CONTRIBUTORS) {
+                    rsp.addHeader("Triggered", "<" + (contributors.size() - i) + " more>");
+                    break;
+                } else {
+                    contributors.get(i).addHeaders(req, rsp);
                 }
-                PrintWriter w = rsp.getWriter();
-                for (ResponseContributor c : contributors) {
-                    c.writeBody(req, rsp, w);
-                }
+            }
+            PrintWriter w = rsp.getWriter();
+            for (ResponseContributor c : contributors) {
+                c.writeBody(req, rsp, w);
             }
         };
     }
@@ -401,7 +394,7 @@ public class GitStatus implements UnprotectedRootAction {
                                         parametrizedBranchSpec = true;
                                     } else {
                                         for (String branch : branches) {
-                                            if (branchSpec.matches(repository.getName() + "/" + branch)) {
+                                            if (branchSpec.matchesRepositoryBranch(repository.getName(), branch)) {
                                                 if (LOGGER.isLoggable(Level.FINE)) {
                                                     LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
                                                 }

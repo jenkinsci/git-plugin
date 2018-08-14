@@ -24,32 +24,17 @@ public class GitWebTest {
     private static final String GITWEB_URL = "https://SERVER/gitweb?repo.git";
     private final GitWeb gitwebWeb = new GitWeb(GITWEB_URL);
 
-
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitWeb#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(gitwebWeb.getUrl()), GITWEB_URL);
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = gitwebWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITWEB_URL + "&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GitWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -57,11 +42,6 @@ public class GitWebTest {
         assertEquals(GITWEB_URL + "&a=blobdiff&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java&fp=src/main/java/hudson/plugins/git/browser/GithubWeb.java&h=3f28ad75f5ecd5e0ea9659362e2eef18951bd451&hp=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d&hpb=f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff", gitwebWeb.getDiffLink(modified1).toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -70,11 +50,6 @@ public class GitWebTest {
         assertEquals(GITWEB_URL  + "&a=blob&f=src/main/java/hudson/plugins/git/browser/GithubWeb.java&h=2e0756cd853dccac638486d6aab0e74bc2ef4041&hb=396fc230a3db05c427737aa5c2eb7856ba72b05d", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GithubWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -89,12 +64,6 @@ public class GitWebTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -103,6 +72,4 @@ public class GitWebTest {
         }
         return pathMap;
     }
-
-
 }

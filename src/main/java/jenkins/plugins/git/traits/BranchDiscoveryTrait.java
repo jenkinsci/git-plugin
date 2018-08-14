@@ -43,6 +43,7 @@ import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -77,8 +78,9 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Our descriptor.
+     * BranchDiscoveryTrait descriptor.
      */
+    @Symbol("gitBranchDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {

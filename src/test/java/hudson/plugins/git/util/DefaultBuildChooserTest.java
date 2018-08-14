@@ -30,10 +30,8 @@ public class DefaultBuildChooserTest extends AbstractGitRepository {
         candidateRevisions = buildChooser.getCandidateRevisions(false, "aaa" + shaHashCommit1.substring(3), testGitClient, null, null, null);
         assertTrue(candidateRevisions.isEmpty());
     }
-    /**
-     * RegExp patterns prefixed with : should pass through to DefaultBuildChooser.getAdvancedCandidateRevisions
-     * @throws Exception
-     */
+
+    /* RegExp patterns prefixed with : should pass through to DefaultBuildChooser.getAdvancedCandidateRevisions */
     @Test
     public void testIsAdvancedSpec() throws Exception {
         DefaultBuildChooser buildChooser = (DefaultBuildChooser) new GitSCM("foo").getBuildChooser();

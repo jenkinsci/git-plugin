@@ -4,16 +4,21 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A specification of branches to build. Rather like a refspec.
@@ -81,6 +86,21 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     }
 
     /**
+     * Compare the configured pattern to a git branch defined by the repository name and branch name.
+     * @param repositoryName git repository name
+     * @param branchName git branch name
+     * @return true if repositoryName/branchName matches this BranchSpec
+     */
+    public boolean matchesRepositoryBranch(String repositoryName, String branchName) {
+        if (branchName == null) {
+            return false;
+        }
+        Pattern pattern = getPattern(new EnvVars(), repositoryName);
+        String branchWithoutRefs = cutRefs(branchName);
+        return pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches();
+    }
+
+    /**
      * @deprecated use {@link #filterMatching(Collection, EnvVars)}
      * @param branches source branch list to be filtered by configured branch specification using a newly constructed EnvVars
      * @return branch names which match
@@ -124,13 +144,25 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         }
         return expandedName;
     }
-    
+
     private Pattern getPattern(EnvVars env) {
+        return getPattern(env, null);
+    }
+
+    private Pattern getPattern(EnvVars env, String repositoryName) {
         String expandedName = getExpandedName(env);
         // use regex syntax directly if name starts with colon
         if (expandedName.startsWith(":") && expandedName.length() > 1) {
             String regexSubstring = expandedName.substring(1, expandedName.length());
             return Pattern.compile(regexSubstring);
+        }
+        if (repositoryName != null) {
+            // remove the "refs/.../" stuff from the branch-spec if necessary
+            String pattern = cutRefs(expandedName)
+                    // remove a leading "remotes/" from the branch spec
+                    .replaceAll("^remotes/", "");
+            pattern = convertWildcardStringToRegex(pattern);
+            return Pattern.compile(pattern);
         }
 
         // build a pattern into this builder
@@ -148,7 +180,13 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
             builder.append("|refs/remotes/|remotes/");
         }
         builder.append(")?");
-        
+        builder.append(convertWildcardStringToRegex(expandedName));
+        return Pattern.compile(builder.toString());
+    }
+
+    private String convertWildcardStringToRegex(String expandedName) {
+        StringBuilder builder = new StringBuilder();
+
         // was the last token a wildcard?
         boolean foundWildcard = false;
         
@@ -188,8 +226,16 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         if (foundWildcard) {
             builder.append("[^/]*");
         }
-        
-        return Pattern.compile(builder.toString());
+        return builder.toString();
+    }
+
+    private String cutRefs(@NonNull String name) {
+        Matcher matcher = GitSCM.GIT_REF.matcher(name);
+        return matcher.matches() ? matcher.group(2) : name;
+    }
+
+    private String join(String repositoryName, String branchWithoutRefs) {
+        return StringUtils.join(Arrays.asList(repositoryName, branchWithoutRefs), "/");
     }
 
     @Extension

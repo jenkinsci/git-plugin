@@ -121,8 +121,8 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return "UserMergeOptions{" +
                 "mergeRemote='" + mergeRemote + '\'' +
                 ", mergeTarget='" + mergeTarget + '\'' +
-                ", mergeStrategy='" + mergeStrategy + '\'' +
-                ", fastForwardMode='" + fastForwardMode + '\'' +
+                ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
+                ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
                 '}';
     }
 

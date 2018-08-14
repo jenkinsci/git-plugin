@@ -10,6 +10,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitObject;
+import hudson.plugins.git.GitTool;
 import hudson.plugins.git.Revision;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeProperty;
@@ -29,6 +30,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class GitUtils implements Serializable {
@@ -42,6 +44,56 @@ public class GitUtils implements Serializable {
     public GitUtils(@Nonnull TaskListener listener, @Nonnull GitClient git) {
         this.git = git;
         this.listener = listener;
+    }
+
+    /**
+     * Resolves Git Tool by name.
+     * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
+     * @param builtOn Node for which the tool should be resolved
+     *                Can be {@link Jenkins#getInstance()} when running on master
+     * @param env Additional environment variables
+     * @param listener Event listener
+     * @return Tool installation or {@code null} if it cannot be resolved
+     * @since TODO
+     */
+    @CheckForNull
+    public static GitTool resolveGitTool(@CheckForNull String gitTool,
+                                  @CheckForNull Node builtOn,
+                                  @CheckForNull EnvVars env,
+                                  @Nonnull TaskListener listener) {
+        GitTool git = gitTool == null
+                ? GitTool.getDefaultInstallation()
+                : Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
+        if (git == null) {
+            listener.getLogger().println("Selected Git installation does not exist. Using Default");
+            git = GitTool.getDefaultInstallation();
+        }
+        if (git != null) {
+            if (builtOn != null) {
+                try {
+                    git = git.forNode(builtOn, listener);
+                } catch (IOException | InterruptedException e) {
+                    listener.getLogger().println("Failed to get git executable");
+                }
+            }
+            if (env != null) {
+                git = git.forEnvironment(env);
+            }
+        }
+        return git;
+    }
+
+    /**
+     * Resolves Git Tool by name in a node-agnostic way.
+     * Use {@link #resolveGitTool(String, Node, EnvVars, TaskListener)} when the node is known
+     * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
+     * @param listener Event listener
+     * @return Tool installation or {@code null} if it cannot be resolved
+     * @since TODO
+     */
+    @CheckForNull
+    public static GitTool resolveGitTool(@CheckForNull String gitTool, @Nonnull TaskListener listener) {
+        return resolveGitTool(gitTool, null, null, listener);
     }
 
     public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
@@ -161,60 +213,57 @@ public class GitUtils implements Serializable {
             return l;
 
         try {
-            return git.withRepository(new RepositoryCallback<List<Revision>>() {
-                public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            return git.withRepository((Repository repo, VirtualChannel channel) -> {
+                // Commit nodes that we have already reached
+                Set<RevCommit> visited = new HashSet<>();
+                // Commits nodes that are tips if we don't reach them walking back from
+                // another node
+                Map<RevCommit, Revision> tipCandidates = new HashMap<>();
 
-                    // Commit nodes that we have already reached
-                    Set<RevCommit> visited = new HashSet<>();
-                    // Commits nodes that are tips if we don't reach them walking back from
-                    // another node
-                    Map<RevCommit, Revision> tipCandidates = new HashMap<>();
+                long calls = 0;
+                final long start = System.currentTimeMillis();
 
-                    long calls = 0;
-                    final long start = System.currentTimeMillis();
+                final boolean log = LOGGER.isLoggable(Level.FINE);
 
-                    final boolean log = LOGGER.isLoggable(Level.FINE);
+                if (log)
+                    LOGGER.fine(MessageFormat.format(
+                            "Computing merge base of {0}  branches", l.size()));
 
-                    if (log)
-                        LOGGER.fine(MessageFormat.format(
-                                "Computing merge base of {0}  branches", l.size()));
+                try (RevWalk walk = new RevWalk(repo)) {
+                    walk.setRetainBody(false);
 
-                    try (RevWalk walk = new RevWalk(repo)) {
-                        walk.setRetainBody(false);
+                    // Each commit passed in starts as a potential tip.
+                    // We walk backwards in the commit's history, until we reach the
+                    // beginning or a commit that we have already visited. In that case,
+                    // we mark that one as not a potential tip.
+                    for (Revision r : revisions) {
+                        walk.reset();
+                        RevCommit head = walk.parseCommit(r.getSha1());
 
-                        // Each commit passed in starts as a potential tip.
-                        // We walk backwards in the commit's history, until we reach the
-                        // beginning or a commit that we have already visited. In that case,
-                        // we mark that one as not a potential tip.
-                        for (Revision r : revisions) {
-                            walk.reset();
-                            RevCommit head = walk.parseCommit(r.getSha1());
+                        if (visited.contains(head)) {
+                            continue;
+                        }
 
-                            if (visited.contains(head)) {
-                              continue;
+                        tipCandidates.put(head, r);
+
+                        walk.markStart(head);
+                        for (RevCommit commit : walk) {
+                            calls++;
+                            if (visited.contains(commit)) {
+                                tipCandidates.remove(commit);
+                                break;
                             }
-
-                            tipCandidates.put(head, r);
-
-                            walk.markStart(head);
-                            for (RevCommit commit : walk) {
-                                calls++;
-                                if (visited.contains(commit)) {
-                                    tipCandidates.remove(commit);
-                                    break;
-                                }
-                                visited.add(commit);
-                            }
+                            visited.add(commit);
                         }
                     }
-
-                    if (log)
-                        LOGGER.fine(MessageFormat.format(
-                                "Computed merge bases in {0} commit steps and {1} ms", calls,
-                                (System.currentTimeMillis() - start)));
-
-                    return new ArrayList<>(tipCandidates.values());
                 }
+
+                if (log)
+                    LOGGER.fine(MessageFormat.format(
+                            "Computed merge bases in {0} commit steps and {1} ms", calls,
+                            (System.currentTimeMillis() - start)));
+
+                return new ArrayList<>(tipCandidates.values());
             });
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);

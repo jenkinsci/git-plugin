@@ -111,12 +111,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null ? invoke(new FSFunction<ObjectId>() {
-            @Override
-            public ObjectId invoke(Repository repository) throws IOException, InterruptedException {
-                return repository.getRef(head).getObjectId();
-            }
-        }) : ObjectId.fromString(rev.getHash());
+        commitId = rev == null ? invoke((Repository repository) -> repository.getRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
     }
 
     @Override
@@ -126,13 +121,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
     @Override
     public long lastModified() throws IOException, InterruptedException {
-        return invoke(new FSFunction<Long>() {
-            @Override
-            public Long invoke(Repository repository) throws IOException {
-                try (RevWalk walk = new RevWalk(repository)) {
-                    RevCommit commit = walk.parseCommit(commitId);
-                    return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
-                }
+        return invoke((Repository repository) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(commitId);
+                return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
             }
         });
     }
@@ -186,13 +178,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (cacheDir == null || !cacheDir.isDirectory()) {
                 throw new IOException("Closed");
             }
-            return client.withRepository(new RepositoryCallback<V>() {
-                @Override
-                public V invoke(Repository repository, VirtualChannel virtualChannel)
-                        throws IOException, InterruptedException {
-                    return function.invoke(repository);
-                }
-            });
+            return client.withRepository((Repository repository, VirtualChannel virtualChannel) -> function.invoke(repository));
         } finally {
             cacheLock.unlock();
         }
@@ -371,7 +357,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             try {
                 File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
                 Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool());
+                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool(), listener);
                 if (tool != null) {
                     git.using(tool.getGitExe());
                 }

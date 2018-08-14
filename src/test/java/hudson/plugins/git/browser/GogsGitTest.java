@@ -26,41 +26,22 @@ public class GogsGitTest {
     private static final String GOGS_URL = "http://USER.kilnhg.com/Code/PROJECT/Group/REPO";
     private final GogsGit GogsGit = new GogsGit(GOGS_URL);
 
-
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(GogsGit.getUrl()), GOGS_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getUrl()}.
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new GogsGit(GOGS_URL + "/").getUrl()), GOGS_URL  + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getChangeSetLink(hudson.plugins.git.GitChangeSet)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
         final URL changeSetLink = GogsGit.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GOGS_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetDiffLinkPath() throws IOException, SAXException {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
@@ -72,11 +53,6 @@ public class GogsGitTest {
         assertNull("Do not return a diff link for added files.", GogsGit.getDiffLink(path3));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPath() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
@@ -85,11 +61,6 @@ public class GogsGitTest {
         assertEquals(GOGS_URL  + "/src/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.GogsGit#getFileLink(hudson.plugins.git.GitChangeSet.Path)}.
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
     public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
@@ -104,12 +75,6 @@ public class GogsGitTest {
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return path map
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
     private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
@@ -118,6 +83,4 @@ public class GogsGitTest {
         }
         return pathMap;
     }
-
-
 }
