@@ -11,7 +11,9 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -31,17 +33,18 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  */
 public class SubmoduleOption extends GitSCMExtension {
-    /**
-     * Use --recursive flag on submodule commands - requires git>=1.6.5
-     * Use --remote flag on submodule update command - requires git>=1.8.2
-     * Use --reference flag on submodule update command - requires git>=1.6.4
-     */
     private boolean disableSubmodules;
+    /** Use --recursive flag on submodule commands - requires git>=1.6.5 */
     private boolean recursiveSubmodules;
+    /** Use --remote flag on submodule update command - requires git>=1.8.2 */
     private boolean trackingSubmodules;
+    /** Use --reference flag on submodule update command - requires git>=1.6.4 */
     private String reference;
     private boolean parentCredentials;
     private Integer timeout;
+    /** Use --depth flag on submodule update command - requires git>=1.8.4 */
+    private boolean shallow;
+    private int depth = 1;
 
     @DataBoundConstructor
     public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
@@ -77,6 +80,24 @@ public class SubmoduleOption extends GitSCMExtension {
         return timeout;
     }
 
+    @DataBoundSetter
+    public void setShallow(boolean shallow) {
+        this.shallow = shallow;
+    }
+
+    public boolean getShallow() {
+        return shallow;
+    }
+
+    @DataBoundSetter
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -99,13 +120,17 @@ public class SubmoduleOption extends GitSCMExtension {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
-                git.submoduleUpdate()
+                SubmoduleUpdateCommand cmd = git.submoduleUpdate()
                         .recursive(recursiveSubmodules)
                         .remoteTracking(trackingSubmodules)
                         .parentCredentials(parentCredentials)
                         .ref(build.getEnvironment(listener).expand(reference))
                         .timeout(timeout)
-                        .execute();
+                        .shallow(shallow);
+                if (shallow && depth > 1) {
+                    cmd.depth(depth);
+                }
+                cmd.execute();
             }
         } catch (GitException e) {
             // Re-throw as an IOException in order to allow generic retry
@@ -159,7 +184,16 @@ public class SubmoduleOption extends GitSCMExtension {
         if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
             return false;
         }
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        if (timeout != null ? !timeout.equals(that.timeout) : that.timeout != null) {
+            return false;
+        }
+        if (shallow != that.shallow) {
+            return false;
+        }
+        if (depth != that.depth) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -182,6 +216,8 @@ public class SubmoduleOption extends GitSCMExtension {
                 ", reference='" + reference + '\'' +
                 ", parentCredentials=" + parentCredentials +
                 ", timeout=" + timeout +
+                ", shallow=" + shallow +
+                ", depth=" + depth +
                 '}';
     }
 

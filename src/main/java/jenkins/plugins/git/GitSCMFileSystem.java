@@ -111,7 +111,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null ? invoke((Repository repository) -> repository.getRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
+        commitId = rev == null ? invoke((Repository repository) -> repository.findRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
     }
 
     @Override

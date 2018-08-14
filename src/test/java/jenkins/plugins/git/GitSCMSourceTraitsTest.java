@@ -119,7 +119,9 @@ public class GitSCMSourceTraitsTest {
                                                 hasProperty("trackingSubmodules", is(true)),
                                                 hasProperty("reference", is("origin/bar")),
                                                 hasProperty("parentCredentials", is(true)),
-                                                hasProperty("timeout", is(4))
+                                                hasProperty("timeout", is(4)),
+                                                hasProperty("shallow", is(true)),
+                                                hasProperty("depth", is(3))
                                         )
                                 )
                         ),

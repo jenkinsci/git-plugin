@@ -1593,7 +1593,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
         gc.withRepository(new RepositoryCallback<Void>() {
             public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                Ref head = repo.getRef("HEAD");
+                Ref head = repo.findRef("HEAD");
                 assertTrue("Detached HEAD",head.isSymbolic());
                 Ref t = head.getTarget();
                 assertEquals(t.getName(),"refs/heads/master");
