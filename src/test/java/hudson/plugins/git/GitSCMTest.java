@@ -22,6 +22,7 @@ import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.*;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.GitSCM.BuildChooserContextImpl;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -57,6 +58,9 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
@@ -1903,11 +1907,11 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // Initial commit to master
         commit("file1", johnDoe, "Initial Commit");
-        
+
         // Create the branches
         git.branch("trackedbranch");
         git.branch("manualbranch");
-        
+
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
@@ -1922,9 +1926,50 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.checkout("trackedbranch");
         commit("file3", johnDoe, "Commit to tracked branch");
         assertTrue("A change should be detected in tracked branch", project.poll(listener).hasChanges());
-        
+
     }
-    
+
+    @Issue("JENKINS-50168")
+    @Test
+    public void testPipelinePollingAfterManualBuildWithParametrizedBranchSpec() throws Exception {
+        // create parameterized pipeline project with environment value in branch specification
+        WorkflowJob project = rule.createProject(WorkflowJob.class);
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+        project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "trackedbranch")));
+
+        // Initial commit to master
+        commit("Jenkinsfile", "node { echo \"Hello word\" }", johnDoe, "Initial Commit");
+
+        // Create the branches
+        git.branch("trackedbranch");
+        git.branch("manualbranch");
+
+        final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
+        final Action[] actions = {new ParametersAction(branchParam)};
+        QueueTaskFuture<WorkflowRun> queueTaskFuture = project.scheduleBuild2(0, actions);
+        assertNotNull(queueTaskFuture);
+
+        WorkflowRun build = queueTaskFuture.get();
+        rule.assertBuildStatusSuccess(build);
+
+        assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
+
+        git.checkout("manualbranch");
+        commit("file2", johnDoe, "Commit to manually build branch");
+        assertFalse("No changes to tracked branch", project.poll(listener).hasChanges());
+
+        git.checkout("trackedbranch");
+        commit("file3", johnDoe, "Commit to tracked branch");
+        assertTrue("A change should be detected in tracked branch", project.poll(listener).hasChanges());
+
+    }
+
     private final class FakeParametersAction implements EnvironmentContributingAction, Serializable {
         // Test class for testPolling_environmentValueAsEnvironmentContributingAction test case
         final ParametersAction m_forwardingAction;
