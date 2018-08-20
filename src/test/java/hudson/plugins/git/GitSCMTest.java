@@ -1907,11 +1907,11 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // Initial commit to master
         commit("file1", johnDoe, "Initial Commit");
-
+        
         // Create the branches
         git.branch("trackedbranch");
         git.branch("manualbranch");
-
+        
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
@@ -1926,7 +1926,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.checkout("trackedbranch");
         commit("file3", johnDoe, "Commit to tracked branch");
         assertTrue("A change should be detected in tracked branch", project.poll(listener).hasChanges());
-
+        
     }
 
     @Issue("JENKINS-50168")
