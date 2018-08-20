@@ -687,6 +687,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
+            GitUtils.addEnvironmentContributingActionsValues(environment, project, lastBuild);
+
             GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
@@ -754,6 +756,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         final Node node = GitUtils.workspaceToNode(workspace);
         final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener) : project.getEnvironment(node, listener);
+
+        GitUtils.addEnvironmentContributingActionsValues(environment, project, lastBuild);
 
         FilePath workingDirectory = workingDirectory(project,workspace,environment,listener);
 

@@ -2026,6 +2026,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         Launcher launcher = workspace.createLauncher(listener);
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
+        GitUtils.addEnvironmentContributingActionsValues(environment, project, first_build);
+
         assertEquals(environment.get("MY_BRANCH"), "master");
         assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
     }
