@@ -59,8 +59,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     @Override
     public void init() throws Exception {
-        GitSampleRepoRule.checkGlobalConfig();
         run(true, tmp.getRoot(), "git", "version");
+        checkGlobalConfig();
         git("init");
         write("file", "");
         git("add", "file");
