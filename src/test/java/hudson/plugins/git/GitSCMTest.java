@@ -81,7 +81,7 @@ import org.junit.BeforeClass;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;

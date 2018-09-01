@@ -21,7 +21,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -48,8 +49,8 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
         Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
         Mockito.doThrow(new GitToolSpecified()).when(git).using(EXPECTED_GIT_EXE);
         Mockito.doThrow(new GitToolNotSpecified()).when(git).getClient();
-        Mockito.doReturn(git).when(git).in(any(File.class));
-        Mockito.doReturn(git).when(git).in(any(FilePath.class));
+        Mockito.doReturn(git).when(git).in(nullable(File.class));
+        Mockito.doReturn(git).when(git).in(nullable(FilePath.class));
 
         // Mock static factory to return our Git mock
         PowerMockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS);
