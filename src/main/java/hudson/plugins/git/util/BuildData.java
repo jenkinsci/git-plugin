@@ -368,12 +368,9 @@ public class BuildData implements Action, Serializable, Cloneable {
                 && Objects.equals(lastBuild, that.lastBuild);
     }
 
+    @Override
     public int hashCode() {
-        int result = 3;
-        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
-        result = result * 17 + ((this.buildsByBranchName == null) ? 7 : this.buildsByBranchName.hashCode());
-        result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
-        return result;
+        return Objects.hash(remoteUrls, buildsByBranchName, lastBuild);
     }
 
     /* Package protected for easier testing */

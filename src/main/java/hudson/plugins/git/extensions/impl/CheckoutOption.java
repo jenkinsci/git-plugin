@@ -80,7 +80,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return 0;
+        return Objects.hashCode(timeout);
     }
 
     /**

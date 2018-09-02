@@ -49,9 +49,7 @@ public class GitRemoteHeadRefAction extends InvisibleAction implements Serializa
 
     @Override
     public int hashCode() {
-        int result = remote.hashCode();
-        result = 31 * result + name.hashCode();
-        return result;
+        return Objects.hash(remote, name);
     }
 
     @Override

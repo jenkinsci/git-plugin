@@ -157,7 +157,7 @@ public class PreBuildMerge extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return PreBuildMerge.class.hashCode();
+        return Objects.hashCode(options);
     }
 
     /**

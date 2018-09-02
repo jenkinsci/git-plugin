@@ -110,15 +110,7 @@ public class Build implements Serializable, Cloneable {
 
     @Override
     public int hashCode() {
-        int result = 17;
-        result = 37 * result + this.hudsonBuildNumber;
-        if (this.revision != null) {
-            result = 37 * result + this.revision.hashCode();
-        }
-        if (this.marked != null) {
-            result = 37 * result + this.marked.hashCode();
-        }
-        return result;
+        return Objects.hash(hudsonBuildNumber, revision, marked);
     }
 
     @Override

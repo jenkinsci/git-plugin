@@ -385,9 +385,7 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
 
         @Override
         public int hashCode() {
-            int result = ref.hashCode();
-            result = 31 * result + name.hashCode();
-            return result;
+            return Objects.hash(ref, name);
         }
 
         @Override

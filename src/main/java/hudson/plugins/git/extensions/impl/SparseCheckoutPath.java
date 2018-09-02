@@ -44,7 +44,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     @Override
     public int hashCode() {
-        return path.hashCode();
+        return Objects.hashCode(path);
     }
 
     @Override

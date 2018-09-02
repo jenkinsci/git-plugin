@@ -76,7 +76,7 @@ public class UserIdentity extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return UserIdentity.class.hashCode();
+        return Objects.hash(name, email);
     }
 
     /**

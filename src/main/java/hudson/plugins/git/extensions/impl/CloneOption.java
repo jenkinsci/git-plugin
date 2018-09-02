@@ -213,7 +213,7 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return CloneOption.class.hashCode();
+        return Objects.hash(shallow, noTags, depth, honorRefspec, reference, timeout);
     }
 
     /**

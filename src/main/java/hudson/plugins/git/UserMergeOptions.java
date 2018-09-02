@@ -146,11 +146,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
 
     @Override
     public int hashCode() {
-        int result = mergeRemote != null ? mergeRemote.hashCode() : 0;
-        result = 31 * result + (mergeTarget != null ? mergeTarget.hashCode() : 0);
-        result = 31 * result + (mergeStrategy != null ? mergeStrategy.hashCode() : 0);
-        result = 31 * result + (fastForwardMode != null ? fastForwardMode.hashCode() : 0);
-        return result;
+        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode);
     }
 
     @Extension

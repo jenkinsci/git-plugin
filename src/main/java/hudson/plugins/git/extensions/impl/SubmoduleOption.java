@@ -187,7 +187,7 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return SubmoduleOption.class.hashCode();
+        return Objects.hash(disableSubmodules, recursiveSubmodules, trackingSubmodules, parentCredentials, reference, timeout, shallow, depth);
     }
 
     /**

@@ -612,10 +612,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    public int hashCode() {
-        return id != null ? id.hashCode() : super.hashCode();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -628,5 +624,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         GitChangeSet that = (GitChangeSet) o;
 
         return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : super.hashCode();
     }
 }

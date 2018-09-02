@@ -1395,7 +1395,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
          */
         @Override
         public int hashCode() {
-            return hash != null ? hash.hashCode() : 0;
+            return Objects.hash(hash, getHead());
         }
 
         /**
