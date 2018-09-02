@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
@@ -20,6 +21,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -39,24 +42,23 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
     @Before
     public void setup() throws Exception {
         // Mock GitTool
-        GitTool mockedTool = PowerMockito.mock(GitTool.class, Mockito.RETURNS_DEFAULTS);
-        PowerMockito.doReturn(EXPECTED_GIT_EXE).when(mockedTool).getGitExe();
+        GitTool gitTool = Mockito.mock(GitTool.class, Mockito.RETURNS_DEFAULTS);
+        Mockito.doReturn(EXPECTED_GIT_EXE).when(gitTool).getGitExe();
 
-        // Mock git implementation
+        // Mock Git
         Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
-        PowerMockito.doThrow(new GitToolSpecified()).when(git).using(EXPECTED_GIT_EXE);
-        PowerMockito.doThrow(new GitToolNotSpecified()).when(git).getClient();
-        PowerMockito.doReturn(git).when(git).in(Mockito.any(File.class));
-        PowerMockito.doReturn(git).when(git).in(Mockito.any(FilePath.class));
+        Mockito.doThrow(new GitToolSpecified()).when(git).using(EXPECTED_GIT_EXE);
+        Mockito.doThrow(new GitToolNotSpecified()).when(git).getClient();
+        Mockito.doReturn(git).when(git).in(nullable(File.class));
+        Mockito.doReturn(git).when(git).in(nullable(FilePath.class));
 
-        // mock static factory to return our git mock
+        // Mock static factory to return our Git mock
         PowerMockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS);
-        PowerMockito.doReturn(git).when(Git.class, "with", Mockito.any(), Mockito.any());
+        PowerMockito.doReturn(git).when(Git.class, "with", any(TaskListener.class), any(EnvVars.class));
 
         // Partial mock our AbstractGitSCMSourceImpl
-        gitSCMSource = PowerMockito.spy(new AbstractGitSCMSourceImpl());
-        // Always resolve to mocked GitTool
-        PowerMockito.doReturn(mockedTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE, TaskListener.NULL);
+        gitSCMSource = Mockito.spy(new AbstractGitSCMSourceImpl());
+        Mockito.doReturn(gitTool).when(gitSCMSource).resolveGitTool(EXPECTED_GIT_EXE, TaskListener.NULL);
     }
 
     /*
@@ -64,7 +66,7 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
      * That means {@link Git#using(String)} is called properly.
      */
     @Test(expected = GitToolSpecified.class)
-    public void correctGitToolIsUsed() throws Exception {
+    public void correctGitToolIsUsed_method1() throws Exception {
         try {
             // Should throw exception confirming that Git#using was used correctly
             gitSCMSource.retrieve(new SCMHead("master"), TaskListener.NULL);
@@ -78,10 +80,10 @@ public class AbstractGitSCMSourceRetrieveHeadsTest {
      * That means {@link Git#using(String)} is called properly.
      */
     @Test(expected = GitToolSpecified.class)
-    public void correctGitToolIsUsed2() throws Exception {
+    public void correctGitToolIsUsed_method2() throws Exception {
         try {
             // Should throw exception confirming that Git#using was used correctly
-            gitSCMSource.retrieve(null, PowerMockito.mock(SCMHeadObserver.class), null, TaskListener.NULL);
+            gitSCMSource.retrieve(null, Mockito.mock(SCMHeadObserver.class), null, TaskListener.NULL);
         } catch (GitToolNotSpecified e) {
             Assert.fail("Git client was constructed with arbitrary git tool");
         }
