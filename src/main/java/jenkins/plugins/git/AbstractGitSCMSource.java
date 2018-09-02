@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1385,8 +1386,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
             SCMRevisionImpl that = (SCMRevisionImpl) o;
 
-            return StringUtils.equals(hash, that.hash) && getHead().equals(that.getHead());
-
+            return Objects.equals(hash, that.hash)
+                    && Objects.equals(getHead(), that.getHead());
         }
 
         /**

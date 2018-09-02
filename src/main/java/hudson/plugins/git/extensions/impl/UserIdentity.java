@@ -7,6 +7,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -66,10 +67,8 @@ public class UserIdentity extends GitSCMExtension {
 
         UserIdentity that = (UserIdentity) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) {
-            return false;
-        }
-        return email != null ? email.equals(that.email) : that.email == null;
+        return Objects.equals(name, that.name)
+                && Objects.equals(email, that.email);
     }
 
     /**

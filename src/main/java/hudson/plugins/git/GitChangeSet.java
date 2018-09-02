@@ -616,11 +616,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return id != null ? id.hashCode() : super.hashCode();
     }
 
-    public boolean equals(Object obj) {
-        if (obj == this)
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
-        if (obj instanceof GitChangeSet)
-            return id != null && id.equals(((GitChangeSet) obj).id);
-        return false;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GitChangeSet that = (GitChangeSet) o;
+
+        return id != null && id.equals(that.id);
     }
 }

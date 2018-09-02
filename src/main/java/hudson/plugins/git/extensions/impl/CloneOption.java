@@ -15,6 +15,7 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
@@ -199,22 +200,12 @@ public class CloneOption extends GitSCMExtension {
 
         CloneOption that = (CloneOption) o;
 
-        if (shallow != that.shallow) {
-            return false;
-        }
-        if (noTags != that.noTags) {
-            return false;
-        }
-        if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
-            return false;
-        }
-        if (honorRefspec != that.honorRefspec) {
-            return false;
-        }
-        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
-            return false;
-        }
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        return shallow == that.shallow
+                && noTags == that.noTags
+                && Objects.equals(depth, that.depth)
+                && honorRefspec == that.honorRefspec
+                && Objects.equals(reference, that.reference)
+                && Objects.equals(timeout, that.timeout);
     }
 
     /**

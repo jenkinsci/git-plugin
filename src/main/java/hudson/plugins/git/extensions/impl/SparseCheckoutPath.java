@@ -9,6 +9,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPath> implements Serializable {
 
@@ -29,13 +30,16 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SparseCheckoutPath)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         SparseCheckoutPath that = (SparseCheckoutPath) o;
 
-        return path.equals(that.path);
-
+        return Objects.equals(path, that.path);
     }
 
     @Override
