@@ -1,0 +1,12 @@
+commit 396fc230a3db05c427737aa5c2eb7856ba72b05d
+tree 196333547f8b9a5fcc8b1fffe4accb01da42c5a6
+parent f28f125f4cc3e5f6a32daee6a26f36f7b788b8ff
+author Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277411790 +0200
+committer Mirko Friedenhagen <mfriedenhagen@dev.java.net> 1277411790 +0200
+
+    Github seems to have no URL for deleted files, so just return a difflink instead.
+
+:100644 100644 3f28ad75f5ecd5e0ea9659362e2eef18951bd451 2e0756cd853dccac638486d6aab0e74bc2ef4041 M	src/main/java/hudson/plugins/git/browser/GithubWeb.java
+:100644 100644 019d377767702b6c572fa4ae97c982e02dcd76ff 7c89764ba7a51c23e809b24376d90d7d06337434 M	src/test/java/hudson/plugins/git/browser/conf%.txt
+:100644 100644 019d377767702b6c572fa4ae97c982e02dcd76fa 7c89764ba7a51c23e809b24376d90d7d06337435 M	src/test/java/hudson/plugins/git/browser/config file.txt
+:000000 100644 0000000000000000000000000000000000000000 885ce99421b3ae3a413a5c7fb0cdf9ec477d3f64 A	src/test/resources/hudson/plugins/git/browser/rawchangelog-with-escape

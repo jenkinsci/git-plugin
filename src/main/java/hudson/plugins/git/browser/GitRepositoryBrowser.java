@@ -11,6 +11,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
@@ -73,7 +74,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      *      null if the browser doesn't have any suitable URL.
      * @throws IOException on input or output error
      */
-    public abstract URL getFileLink(GitChangeSet.Path path) throws IOException;
+    public abstract URL getFileLink(GitChangeSet.Path path) throws IOException, URISyntaxException;
 
     /**
      * Determines whether a URL should be normalized
