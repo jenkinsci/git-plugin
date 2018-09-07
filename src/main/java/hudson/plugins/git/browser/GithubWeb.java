@@ -76,13 +76,19 @@ public class GithubWeb extends GitRepositoryBrowser {
      * @throws IOException on input or output error
      */
     @Override
-    public URL getFileLink(Path path) throws IOException, URISyntaxException {
+    public URL getFileLink(Path path) throws IOException {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
             URL url = buildURL(spec);
-            return new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef()).toURL();
+            URI uri;
+            try {
+                uri = new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+            } catch (URISyntaxException e) {
+                throw new IOException(e);
+            }
+            return uri.toURL();
         }
     }
 

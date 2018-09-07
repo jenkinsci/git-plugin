@@ -9,23 +9,22 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.RepositoryBrowser;
-import jenkins.plugins.git.AbstractGitSCMSource;
-import jenkins.scm.api.SCMHead;
-import org.eclipse.jgit.transport.RefSpec;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.scm.api.SCMHead;
+import org.eclipse.jgit.transport.RefSpec;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+
+import org.xml.sax.SAXException;
 
 /**
  * @author mirko
@@ -63,7 +62,7 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws IOException, SAXException, URISyntaxException {
+    public void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -72,7 +71,7 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithEscape() throws IOException, SAXException, URISyntaxException {
+    public void testGetFileLinkPathWithEscape() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -81,7 +80,7 @@ public class GithubWebTest {
 
     @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathWithSpaceInName() throws IOException, SAXException, URISyntaxException {
+    public void testGetFileLinkPathWithSpaceInName() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
         final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/config file.txt");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -89,7 +88,7 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException, URISyntaxException {
+    public void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = githubWeb.getFileLink(path);
