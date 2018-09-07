@@ -77,6 +77,32 @@ public class GithubWebTest {
         final URL fileLink = githubWeb.getFileLink(path);
         assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25.txt", String.valueOf(fileLink));
     }
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithWindowsUnescapeChar() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf^%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%5E%25.txt", String.valueOf(fileLink));
+    }
+
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithDoubleEscape() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25%25.txt", String.valueOf(fileLink));
+    }
+
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithWindowsEnvironmentalVariable() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%abc%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25abc%25.txt", String.valueOf(fileLink));
+    }
 
     @Issue("JENKINS-42597")
     @Test
