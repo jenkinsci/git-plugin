@@ -17,7 +17,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     public static final transient SparseCheckoutPathToPath SPARSE_CHECKOUT_PATH_TO_PATH = new SparseCheckoutPathToPath();
 
-    private String path;
+    private final String path;
 
     @DataBoundConstructor
     public SparseCheckoutPath(String path) {

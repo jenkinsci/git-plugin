@@ -20,8 +20,8 @@ import static hudson.Util.fixEmptyAndTrim;
  * @author Kohsuke Kawaguchi
  */
 public class UserIdentity extends GitSCMExtension {
-    private String name;
-    private String email;
+    private final String name;
+    private final String email;
 
     @DataBoundConstructor
     public UserIdentity(String name, String email) {

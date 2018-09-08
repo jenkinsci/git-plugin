@@ -1360,7 +1360,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         /**
          * The subversion revision.
          */
-        private String hash;
+        private final String hash;
 
         public SCMRevisionImpl(SCMHead head, String hash) {
             super(head);

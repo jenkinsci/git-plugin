@@ -19,7 +19,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class LocalBranch extends FakeGitSCMExtension {
     @CheckForNull
-    private String localBranch;
+    private final String localBranch;
 
     @DataBoundConstructor
     public LocalBranch(@CheckForNull String localBranch) {

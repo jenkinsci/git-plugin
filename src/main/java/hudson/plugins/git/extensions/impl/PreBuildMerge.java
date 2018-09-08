@@ -39,7 +39,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
  * @author Kohsuke Kawaguchi
  */
 public class PreBuildMerge extends GitSCMExtension {
-    private UserMergeOptions options;
+    private final UserMergeOptions options;
 
     @DataBoundConstructor
     public PreBuildMerge(UserMergeOptions options) {
