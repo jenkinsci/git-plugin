@@ -79,7 +79,7 @@ public class GitWeb extends GitRepositoryBrowser {
         String h = (path.getDst() != null) ? path.getDst() : path.getSrc();
         String spec = param(url).add("a=blob").add("f=" + path.getPath())
             .add("h=" + h).add("hb=" + path.getChangeSet().getId()).toString();
-        return new URL(url, url.getPath()+spec);
+        return encodeURL(new URL(url, url.getPath()+spec));
     }
 
     @Extension

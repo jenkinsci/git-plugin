@@ -68,7 +68,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
         final String pathAsString = path.getPath();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "history/" + pathAsString);
+        return encodeURL(new URL(url, url.getPath() + "history/" + pathAsString));
     }
 
     @Extension

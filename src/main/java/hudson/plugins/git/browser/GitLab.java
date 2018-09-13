@@ -113,11 +113,11 @@ public class GitLab extends GitRepositoryBrowser {
             return getDiffLink(path);
         } else {
             if(getVersion() <= 4.2) {
-                return new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath());
+                return encodeURL(new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath()));
             } else if(getVersion() < 5.1) {
-                return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
+                return encodeURL(new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath()));
             } else {
-                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
+                return encodeURL(new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath()));
             }
         }
     }

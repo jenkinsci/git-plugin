@@ -11,6 +11,8 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.net.IDN;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -104,6 +106,14 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     			i++;
     	}
         return i;
+    }
+
+    public static URL encodeURL(URL url) throws IOException {
+        try {
+            return new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef()).toURL();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     private static final long serialVersionUID = 1L;
