@@ -662,7 +662,7 @@ public class AbstractGitSCMSourceTest {
         if (rev == null) {
             return null;
         } else {
-            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision);
+            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision.substring(0, 7));
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }
