@@ -24,8 +24,8 @@ public abstract class GitSCMExtensionTest {
 
 	protected TaskListener listener;
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+	@ClassRule
+	public static BuildWatcher buildWatcher = new BuildWatcher();
 
 	@Rule
 	public JenkinsRule j = new JenkinsRule();
