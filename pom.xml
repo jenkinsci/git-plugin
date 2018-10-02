@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.24-20181001.145543-2</version> <!-- TODO https://github.com/jenkinsci/plugin-pom/pull/125 -->
+    <version>3.24</version>
     <relativePath />
   </parent>
 
