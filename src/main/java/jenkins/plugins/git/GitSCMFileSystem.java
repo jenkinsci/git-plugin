@@ -283,8 +283,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supportsDescriptor(SCMDescriptor descriptor) {
-            // Assume by default that we don't support GitSCM since we can't tell how it would be configured.
-            return false;
+            return descriptor instanceof GitSCM.DescriptorImpl;
         }
 
         @Override
