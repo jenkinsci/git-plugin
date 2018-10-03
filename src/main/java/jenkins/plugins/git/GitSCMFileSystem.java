@@ -43,6 +43,7 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import java.io.File;
@@ -281,7 +282,13 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        public boolean supports(SCMSourceDescriptor descriptor) {
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            // Assume by default that we don't support GitSCM since we can't tell how it would be configured.
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
             return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }
 
