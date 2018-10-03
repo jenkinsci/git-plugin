@@ -12,6 +12,7 @@ import hudson.model.TopLevelItem;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.Launcher;
+import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
@@ -43,6 +44,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -392,6 +394,16 @@ public class GitSCMSourceTest {
         @Override
         public boolean supports(@NonNull String remote) {
             return "http://git.test/telescope.git".equals(remote);
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return false;
         }
 
         @Override
