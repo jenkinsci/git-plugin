@@ -1253,6 +1253,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (InterruptedException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
+        catch (MissingObjectException e) {
+            e.printStackTrace(listener.error("Unable to retrieve commit message"));
+        }
     }
 
     /**
