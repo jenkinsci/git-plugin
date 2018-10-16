@@ -29,9 +29,13 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 
+import java.util.Collection;
+import java.util.concurrent.Future;
 import java.util.Collections;
 import static org.junit.Assert.*;
 import org.junit.Test;
+
+import org.eclipse.jgit.transport.URIish;
 
 /**
  * Tests for {@link RevisionParameterAction}
@@ -58,7 +62,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
 
         // create second build and set revision parameter using r1
         FreeStyleBuild b2 = p1.scheduleBuild2(0, new Cause.UserIdCause(),
-				Collections.singletonList(new RevisionParameterAction(r1))).get();
+        Collections.singletonList(new RevisionParameterAction(r1))).get();
 
         // Check revision built for b2 matches the r1 revision
         assertEquals(b2.getAction(BuildData.class)
@@ -73,6 +77,30 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         // Check revision built for b3 does not match r1 revision
         assertFalse(b3.getAction(BuildData.class)
                         .getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
+    }
+
+    @Test
+    public void testBranchFetchingIfNoBranchSpecified() throws Exception {
+        commitNewFile("test");
+        testGitClient.branch("aaa");
+        String commit = testGitClient.getBranches().iterator().next().getSHA1String();
+        RevisionParameterAction action = new RevisionParameterAction(commit, new URIish("origin"));
+        Collection<Branch> branches = action.toRevision(testGitClient).getBranches();
+        assertEquals(branches.size(), 2);
+        Branch branchesArray[] = branches.toArray(new Branch[branches.size()]);
+        assertEquals(branchesArray[0].getName(), "aaa");
+        assertEquals(branchesArray[1].getName(), "master");
+    }
+
+    @Test
+    public void testBranchFetchingIfBranchSpecified() throws Exception {
+        commitNewFile("test");
+        testGitClient.branch("aaa");
+        String commit = testGitClient.getBranches().iterator().next().getSHA1String();
+        RevisionParameterAction action = new RevisionParameterAction(commit, new URIish("origin"), "master");
+        Collection<Branch> branches = action.toRevision(testGitClient).getBranches();
+        assertEquals(branches.size(), 1);
+        assertEquals(branches.iterator().next().getName(), "master");
     }
 }
 

@@ -371,6 +371,8 @@ public class GitStatus implements UnprotectedRootAction {
 
                             boolean branchFound = false,
                                     parametrizedBranchSpec = false;
+                            String branchName = null;
+
                             if (branches.length == 0) {
                                 branchFound = true;
                             } else {
@@ -389,6 +391,7 @@ public class GitStatus implements UnprotectedRootAction {
                                                     LOGGER.log(Level.FINE, "Branch Spec {0} matches modified branch {1} for {2}", new Object[]{branchSpec, branch, project.getFullDisplayName()});
                                                 }
                                                 branchFound = true;
+                                                branchName = branch;
                                                 break OUT;
                                             }
                                         }
@@ -424,7 +427,7 @@ public class GitStatus implements UnprotectedRootAction {
                                     LOGGER.log(Level.INFO, "Scheduling {0} to build commit {1}", new Object[]{project.getFullDisplayName(), sha1});
                                     scmTriggerItem.scheduleBuild2(scmTriggerItem.getQuietPeriod(),
                                             new CauseAction(new CommitHookCause(sha1)),
-                                            new RevisionParameterAction(sha1, matchedURL), new ParametersAction(allBuildParameters));
+                                            new RevisionParameterAction(sha1, matchedURL, branchName), new ParametersAction(allBuildParameters));
                                     result.add(new ScheduledResponseContributor(project));
                                 } else {
                                     /* Poll the repository for changes
