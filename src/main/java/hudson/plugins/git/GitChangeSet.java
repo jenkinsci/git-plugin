@@ -57,6 +57,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
+    private static final int TRUNCATE_LIMIT = 65;
 
     private final DateTimeFormatter [] dateFormatters;
 
@@ -225,14 +226,17 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         }
-
         this.comment = message.toString();
 
-        int endOfFirstLine = this.comment.indexOf('\n');
-        if (endOfFirstLine == -1) {
-            this.title = this.comment;
-        } else {
-            this.title = this.comment.substring(0, endOfFirstLine);
+        if(new DescriptorImpl().isTruncateSummary()) {
+            this.title = this.comment.substring(0, TRUNCATE_LIMIT);
+        }else {
+            int endOfFirstLine = this.comment.indexOf('\n');
+            if (endOfFirstLine == -1) {
+                this.title = this.comment;
+            } else {
+                this.title = this.comment.substring(0, endOfFirstLine);
+            }
         }
     }
 
