@@ -16,6 +16,7 @@ import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
+import hudson.util.FormValidation;
 import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -47,10 +48,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -365,6 +363,13 @@ public class GitSCMSourceTest {
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
         instance.retrieveRevisions(log);
         assertTrue("Installer should be invoked", inst.isInvoked());
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationOk () throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci/git-plugin","");
+        Assert.assertEquals(validation,FormValidation.ok());
     }
 
     private static class HelloToolInstaller extends CommandInstaller {
