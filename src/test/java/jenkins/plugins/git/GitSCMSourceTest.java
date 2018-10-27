@@ -69,9 +69,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -372,6 +370,15 @@ public class GitSCMSourceTest {
         Assert.assertEquals(validation,FormValidation.ok());
     }
 
+    @Test
+    public void checkCredentialIdFormValidationFail () throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"git@github.com:jenkinsci-cert/git-plugin.git","");
+        assertEquals(validation.kind,FormValidation.Kind.ERROR);
+
+        FormValidation validation1 = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci-cert/git-plugin.git","");
+        assertEquals(validation1.kind,FormValidation.Kind.ERROR);
+    }
     private static class HelloToolInstaller extends CommandInstaller {
 
         private boolean invoked;
