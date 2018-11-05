@@ -45,7 +45,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
         String spec = String.format("commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
-        return new URL(getRepoUrl(path.getChangeSet()), spec);
+        return encodeURL(new URL(getRepoUrl(path.getChangeSet()), spec));
     }
 
     @Override
