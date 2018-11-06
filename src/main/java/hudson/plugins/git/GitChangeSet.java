@@ -57,7 +57,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
-    private static final int TRUNCATE_LIMIT = 65;
+    static final int TRUNCATE_LIMIT = 72;
 
     private final DateTimeFormatter [] dateFormatters;
 
@@ -94,16 +94,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String parentCommit;
     private Collection<Path> paths = new HashSet<>();
     private boolean authorOrCommitter;
+    private boolean truncateMessageTitle;
 
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
+        this(lines, authorOrCommitter, isTruncateTitle());
+    }
     /**
      * Create Git change set using information in given lines
      *
      * @param lines change set lines read to construct change set
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
-    public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean truncateTitle) {
         this.authorOrCommitter = authorOrCommitter;
+        truncateMessageTitle = truncateTitle;
         if (lines.size() > 0) {
+            LOGGER.info("About to parse the lines");
+            LOGGER.info( String.join(",", lines));
             parseCommit(lines);
         }
 
@@ -151,6 +158,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         dateFormatters[0] = gitDateFormatter; // First priority +%cI format
         dateFormatters[1] = nearlyISOFormatter; // Second priority seen in git-plugin
         dateFormatters[2] = isoDateFormat; // Third priority, ISO 8601 format
+    }
+
+    static boolean isTruncateTitle() {
+        boolean truncateSummary = true;
+        try {
+            truncateSummary = new DescriptorImpl().isTruncateSummary();
+        }catch (Throwable t){
+            LOGGER.log(Level.WARNING, "Possible error getting system info: trucanteSummany", t);
+        }
+        return truncateSummary;
     }
 
     private void parseCommit(List<String> lines) {
@@ -227,17 +244,27 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
         this.comment = message.toString();
-
-        if(new DescriptorImpl().isTruncateSummary()) {
-            this.title = this.comment.substring(0, TRUNCATE_LIMIT);
+        if(truncateMessageTitle) {
+            this.title = splitString(this.comment, TRUNCATE_LIMIT);
         }else {
             int endOfFirstLine = this.comment.indexOf('\n');
             if (endOfFirstLine == -1) {
-                this.title = this.comment;
+                this.title = this.comment.trim();
             } else {
-                this.title = this.comment.substring(0, endOfFirstLine);
+                this.title = this.comment.substring(0, endOfFirstLine).trim();
             }
         }
+    }
+
+    public static String splitString(String msg, int lineSize) {
+        Pattern p = Pattern.compile("\\b.{1," + (lineSize-1) + "}\\b\\W?");
+        Matcher m = p.matcher(msg);
+
+        while(m.find()) {
+            return m.group().trim();
+        }
+        //If there is no words in the commit message, an empty string is returned.
+        return "";
     }
 
     /** Convert to iso date format if required */
