@@ -6,6 +6,7 @@ import java.util.Arrays;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -158,11 +159,13 @@ public class GitChangeSetBasicTest {
 
     @Test
     public void testChangeLogTruncationWithoutNewLine(){
+        String originalCommitMessage = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
         GitChangeSet changeSet = GitChangeSetUtil.genChangeSet(true, false, true,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+                originalCommitMessage,
                 true);
         String msg = changeSet.getMsg();
         assertThat("Title is correct ", msg, containsString("Lorem ipsum dolor sit amet, consectetur adipiscing elit.") );
+        assertThat("Title is correct ", msg, not(containsString(originalCommitMessage)) );
         assertThat("Title length is correct ", msg.length(), lessThanOrEqualTo(GitChangeSet.TRUNCATE_LIMIT));
     }
 
