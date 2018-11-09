@@ -109,8 +109,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         this.authorOrCommitter = authorOrCommitter;
         truncateMessageTitle = truncateTitle;
         if (lines.size() > 0) {
-            LOGGER.info("About to parse the lines");
-            LOGGER.info( String.join(",", lines));
             parseCommit(lines);
         }
 
