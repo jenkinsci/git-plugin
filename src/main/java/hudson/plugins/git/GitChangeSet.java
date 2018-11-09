@@ -161,13 +161,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     static boolean isTruncateTitle() {
-        boolean truncateSummary = true;
-        try {
-            truncateSummary = new DescriptorImpl().isTruncateSummary();
-        } catch (Throwable t) {
-            LOGGER.log(Level.WARNING, "Possible error getting system info: truncateSummary", t);
-        }
-        return truncateSummary;
+        return new DescriptorImpl().isTruncateSummary();
     }
 
     private void parseCommit(List<String> lines) {
