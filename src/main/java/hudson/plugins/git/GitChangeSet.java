@@ -254,10 +254,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         Pattern p = Pattern.compile("\\b.{1," + (lineSize-1) + "}\\b\\W?");
         Matcher m = p.matcher(msg);
 
-        while(m.find()) {
+        if (m.find()) {
             return m.group().trim();
         }
-        //If there is no words in the commit message, an empty string is returned.
+        // If there are no words in the commit message, return an empty string.
         return "";
     }
 
