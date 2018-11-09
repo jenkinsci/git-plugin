@@ -238,9 +238,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
         this.comment = message.toString();
-        if(!truncateMessageTitle) {
+        if (!truncateMessageTitle) {
             this.title = splitString(this.comment, TRUNCATE_LIMIT);
-        }else {
+        } else {
             int endOfFirstLine = this.comment.indexOf('\n');
             if (endOfFirstLine == -1) {
                 this.title = this.comment.trim();
