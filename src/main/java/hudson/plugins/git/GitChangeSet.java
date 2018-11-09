@@ -164,8 +164,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         boolean truncateSummary = true;
         try {
             truncateSummary = new DescriptorImpl().isTruncateSummary();
-        }catch (Throwable t){
-            LOGGER.log(Level.WARNING, "Possible error getting system info: trucanteSummary ", t);
+        } catch (Throwable t) {
+            LOGGER.log(Level.WARNING, "Possible error getting system info: truncateSummary", t);
         }
         return truncateSummary;
     }
