@@ -13,7 +13,10 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URI;
+import java.net.IDN;
 
 /**
  * Git Browser URLs
@@ -78,9 +81,13 @@ public class GithubWeb extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
-            URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(buildURL(spec));
         }
+    }
+
+    private URL buildURL(String spec) throws IOException {
+        URL url = getUrl();
+        return new URL(url, url.getPath() + spec);
     }
 
     @Extension

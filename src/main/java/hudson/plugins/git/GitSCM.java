@@ -63,6 +63,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -1250,7 +1251,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | MissingObjectException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }

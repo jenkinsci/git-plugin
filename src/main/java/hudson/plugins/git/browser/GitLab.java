@@ -123,12 +123,12 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            if(getVersionDouble() <= 4.2) {
-                return new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath());
-            } else if(getVersionDouble() < 5.1) {
-                return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
+            if (getVersionDouble() <= 4.2) {
+                return encodeURL(new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath()));
+            } else if (getVersionDouble() < 5.1) {
+                return encodeURL(new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath()));
             } else {
-                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
+                return encodeURL(new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath()));
             }
         }
     }

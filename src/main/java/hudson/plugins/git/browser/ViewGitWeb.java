@@ -50,10 +50,10 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
             String spec = buildCommitDiffSpec(url, path);
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(new URL(url, url.getPath() + spec));
         }
         String spec = param(url).add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
-        return new URL(url, url.getPath() + spec);
+        return encodeURL(new URL(url, url.getPath() + spec));
     }
 
 	private String buildCommitDiffSpec(URL url, Path path)

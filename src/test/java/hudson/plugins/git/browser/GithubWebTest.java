@@ -8,11 +8,9 @@ import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.RepositoryBrowser;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,15 +62,59 @@ public class GithubWebTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws IOException, SAXException {
+    public void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = githubWeb.getFileLink(path);
         assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/main/java/hudson/plugins/git/browser/GithubWeb.java", String.valueOf(fileLink));
     }
 
+    @Issue("JENKINS-42597")
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
+    public void testGetFileLinkPathWithEscape() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25.txt", String.valueOf(fileLink));
+    }
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithWindowsUnescapeChar() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf^%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%5E%25.txt", String.valueOf(fileLink));
+    }
+
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithDoubleEscape() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25%25.txt", String.valueOf(fileLink));
+    }
+
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithWindowsEnvironmentalVariable() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/conf%abc%.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/conf%25abc%25.txt", String.valueOf(fileLink));
+    }
+
+    @Issue("JENKINS-42597")
+    @Test
+    public void testGetFileLinkPathWithSpaceInName() throws Exception {
+        final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-escape");
+        final Path path = pathMap.get("src/test/java/hudson/plugins/git/browser/config file.txt");
+        final URL fileLink = githubWeb.getFileLink(path);
+        assertEquals(GITHUB_URL  + "/blob/396fc230a3db05c427737aa5c2eb7856ba72b05d/src/test/java/hudson/plugins/git/browser/config%20file.txt", String.valueOf(fileLink));
+    }
+
+    @Test
+    public void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = githubWeb.getFileLink(path);
@@ -169,4 +211,5 @@ public class GithubWebTest {
         }
         return pathMap;
     }
+
 }
