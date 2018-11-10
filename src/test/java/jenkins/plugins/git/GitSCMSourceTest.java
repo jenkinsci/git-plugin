@@ -15,13 +15,10 @@ import hudson.remoting.Launcher;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
-import hudson.tools.ToolInstaller;
 import hudson.util.FormValidation;
-import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -29,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
@@ -48,7 +43,11 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -61,15 +60,15 @@ import org.mockito.Mockito;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -367,7 +366,7 @@ public class GitSCMSourceTest {
     public void checkCredentialIdFormValidationOk () throws Exception{
         GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
         FormValidation validation = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci/git-plugin","");
-        Assert.assertEquals(validation,FormValidation.ok());
+        assertEquals(validation,FormValidation.ok());
     }
 
     @Test

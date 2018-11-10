@@ -37,7 +37,13 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
-import hudson.model.*;
+
+
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.ParameterValue;
+import hudson.model.Queue;
+import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
