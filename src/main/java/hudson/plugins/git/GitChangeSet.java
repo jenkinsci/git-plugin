@@ -94,7 +94,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String parentCommit;
     private Collection<Path> paths = new HashSet<>();
     private boolean authorOrCommitter;
-    private boolean retainFullCommitSummary;
+    private boolean showEntireCommitSummaryInChanges;
 
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
         this(lines, authorOrCommitter, isTruncateTitle());
@@ -108,7 +108,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean retainFullCommitSummary) {
         this.authorOrCommitter = authorOrCommitter;
-        this.retainFullCommitSummary = retainFullCommitSummary;
+        this.showEntireCommitSummaryInChanges = retainFullCommitSummary;
         if (lines.size() > 0) {
             parseCommit(lines);
         }
@@ -237,7 +237,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
         this.comment = message.toString();
-        if (!retainFullCommitSummary) {
+        if (showEntireCommitSummaryInChanges) {
             this.title = splitString(this.comment, TRUNCATE_LIMIT);
         } else {
             int endOfFirstLine = this.comment.indexOf('\n');
