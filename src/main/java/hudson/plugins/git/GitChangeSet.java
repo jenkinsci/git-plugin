@@ -160,7 +160,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     static boolean isTruncateTitle() {
-        return new DescriptorImpl().isTruncateSummary();
+        try {
+            return new DescriptorImpl().isTruncateSummary();
+        }catch (Throwable t){
+            return false;
+        }
     }
 
     private void parseCommit(List<String> lines) {
