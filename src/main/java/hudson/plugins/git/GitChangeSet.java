@@ -104,10 +104,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      *
      * @param lines change set lines read to construct change set
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
+     * @param retainFullCommitSummary if true, do not truncate commit summary in the 'Changes' page
      */
-    public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean truncateTitle) {
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean retainFullCommitSummary) {
         this.authorOrCommitter = authorOrCommitter;
-        retainFullCommitSummary = truncateTitle;
+        this.retainFullCommitSummary = retainFullCommitSummary;
         if (lines.size() > 0) {
             parseCommit(lines);
         }

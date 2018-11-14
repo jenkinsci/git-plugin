@@ -153,7 +153,7 @@ public class GitChangeSetBasicTest {
                 "Lorem ipsum dolor sit amet, "+System.lineSeparator()+"consectetur adipiscing elit.",
                 true);
         String msg = changeSet.getMsg();
-        assertThat("Title is correct ", msg, containsString("Lorem ipsum dolor sit amet,") );
+        assertThat("Title is correct ", msg, is("Lorem ipsum dolor sit amet,") );
         assertThat("Title length is correct ", msg.length(), lessThanOrEqualTo(GitChangeSet.TRUNCATE_LIMIT));
     }
 
@@ -164,9 +164,7 @@ public class GitChangeSetBasicTest {
                 originalCommitMessage,
                 true);
         String msg = changeSet.getMsg();
-        assertThat("Title is correct ", msg, containsString("Lorem ipsum dolor sit amet, consectetur adipiscing elit.") );
-        assertThat("Title is correct ", msg, not(containsString(originalCommitMessage)) );
-        assertThat("Title length is correct ", msg.length(), lessThanOrEqualTo(GitChangeSet.TRUNCATE_LIMIT));
+        assertThat("Title is correct ", msg, is(originalCommitMessage) );
     }
 
     @Test
@@ -176,7 +174,7 @@ public class GitChangeSetBasicTest {
                 msg,
                 false);
         String changelogMessage = changeSet.getMsg();
-        assertThat("Title is correct ", changelogMessage, is(msg) );
+        assertThat("Title is correct ", changelogMessage, is("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus") );
 
     }
 
@@ -187,6 +185,7 @@ public class GitChangeSetBasicTest {
                 false);
         String msg = changeSet.getMsg();
         assertThat("Title is correct ", msg, is("Lorem ipsum dolor sit amet, consectetur") );
+
     }
 
     @Test
