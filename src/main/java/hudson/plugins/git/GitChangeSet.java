@@ -96,11 +96,18 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private boolean authorOrCommitter;
     private boolean showEntireCommitSummaryInChanges;
 
+    /**
+     * Create Git change set using information in given lines.
+     *
+     * @param lines change set lines read to construct change set
+     * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
+     */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
         this(lines, authorOrCommitter, isTruncateTitle());
     }
+
     /**
-     * Create Git change set using information in given lines
+     * Create Git change set using information in given lines.
      *
      * @param lines change set lines read to construct change set
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
