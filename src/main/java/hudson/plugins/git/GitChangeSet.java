@@ -249,14 +249,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
         this.comment = message.toString();
         if (showEntireCommitSummaryInChanges) {
-            this.title = splitString(this.comment, TRUNCATE_LIMIT);
-        } else {
             int endOfFirstLine = this.comment.indexOf('\n');
             if (endOfFirstLine == -1) {
                 this.title = this.comment.trim();
             } else {
                 this.title = this.comment.substring(0, endOfFirstLine).trim();
             }
+        } else {
+            this.title = splitString(this.comment, TRUNCATE_LIMIT);
         }
     }
 
