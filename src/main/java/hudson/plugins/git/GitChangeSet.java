@@ -261,7 +261,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     }
 
     public static String splitString(String msg, int lineSize) {
-        Pattern p = Pattern.compile("\\b.{1," + (lineSize-1) + "}\\b\\W?");
+//        Pattern p = Pattern.compile("\\W.{1," + (lineSize-1) + "}\\b\\W?");
+         Pattern p = Pattern.compile("[\\W|\\w].{1,"+lineSize+"}\\b\\W?");
         Matcher m = p.matcher(msg);
 
         if (m.find()) {

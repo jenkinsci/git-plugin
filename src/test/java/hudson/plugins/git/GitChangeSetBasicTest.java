@@ -190,16 +190,24 @@ public class GitChangeSetBasicTest {
     public void stringSplitter(){
         String msg = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum. Integer metus orci, vulputate id turpis in, pharetra pretium magna. Fusce sollicitudin vehicula lectus. Nam ut eros purus. Mauris aliquam mi et nunc porta, non consectetur mauris pretium. Fusce a venenatis dolor. Sed commodo, dui ac posuere dignissim, dolor tortor semper eros, varius consequat nulla purus a lacus. Vestibulum egestas, orci vitae pellentesque laoreet, dolor lorem molestie tellus, nec luctus lorem ex quis orci. Phasellus interdum elementum luctus. Nam commodo, turpis in sollicitudin auctor, ipsum lectus finibus erat, in iaculis sapien neque ultrices sapien. In congue diam semper tortor laoreet aliquet. Mauris lacinia quis nunc vel accumsan. Nullam sed nisl eget orci porttitor venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit";
         assertThat(GitChangeSet.splitString(msg, 15), is("Lorem ipsum"));
-        assertThat(GitChangeSet.splitString(msg, 16), is("Lorem ipsum"));
-        assertThat(GitChangeSet.splitString(msg, 17), is("Lorem ipsum"));
+        assertThat(GitChangeSet.splitString(msg, 16), is("Lorem ipsum dolor"));
+        assertThat(GitChangeSet.splitString(msg, 17), is("Lorem ipsum dolor"));
         assertThat(GitChangeSet.splitString(msg, 18), is("Lorem ipsum dolor"));
         assertThat(GitChangeSet.splitString(msg, 19), is("Lorem ipsum dolor"));
-        assertThat(GitChangeSet.splitString(msg, 20), is("Lorem ipsum dolor"));
-        assertThat(GitChangeSet.splitString(msg, 21), is("Lorem ipsum dolor"));
+        assertThat(GitChangeSet.splitString(msg, 20), is("Lorem ipsum dolor sit"));
+        assertThat(GitChangeSet.splitString(msg, 21), is("Lorem ipsum dolor sit"));
         assertThat(GitChangeSet.splitString(msg, 22), is("Lorem ipsum dolor sit"));
 
         msg = "Lorem ipsum dolor sit amet, " + System.lineSeparator() + "consectetur adipiscing elit. Phasellus pellentesque ipsum non aliquam interdum.";
         assertThat(GitChangeSet.splitString(msg, GitChangeSet.TRUNCATE_LIMIT), is("Lorem ipsum dolor sit amet,"));
+
+
+    }
+
+    @Test
+    public void splitingWithBrackets(){
+        assertThat(GitChangeSet.splitString("[task] Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 25), is("[task] Lorem ipsum dolor"));
+
     }
 
 }
