@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
+import jenkins.plugins.git.CliGitCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -116,6 +117,8 @@ public class GitChangeSetTruncateTest {
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
+        new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
+        new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@example.com");
     }
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {
