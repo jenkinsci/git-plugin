@@ -139,12 +139,16 @@ public class CliGitCommand {
      * already set. Many tests assume that "git commit" can be called without
      * failure, but a newly installed user account does not necessarily have
      * values assigned for user.name and user.email. This method checks the
-     * existing values, and if they are not set, assigns default values. If the
+     * existing values when run in a Jenkins job, and if they are not set,
+     * assigns default values. If the
      * values are already set, they are unchanged.
      * @throws Exception on error
      */
     public void setDefaults() throws Exception {
-        setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
-        setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
+        if (System.getenv("JENKINS_URL") != null && System.getenv("BUILD_NUMBER") != null) {
+            /* We're in a Jenkins agent environment */
+	    setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
+	    setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
+	}
     }
 }
