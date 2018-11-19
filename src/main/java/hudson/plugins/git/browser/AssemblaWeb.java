@@ -78,9 +78,9 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "nodes/" + changeSet.getParentCommit() + path.getPath());
+            return encodeURL(new URL(url, url.getPath() + "nodes/" + changeSet.getParentCommit() + path.getPath()));
         } else {
-            return new URL(url, url.getPath() + "nodes/" + changeSet.getId() + path.getPath());
+            return encodeURL(new URL(url, url.getPath() + "nodes/" + changeSet.getId() + path.getPath()));
         }
     }
 
