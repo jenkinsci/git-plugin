@@ -227,7 +227,8 @@ public class GitStepTest {
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         assertEquals(1, b.getActions(BuildData.class).size());
         assertEquals(1, b.getActions(GitTagAction.class).size());
-        assertEquals(0, b.getChangeSets().size());
+        assertEquals(1, b.getChangeSets().size());
+        assertFalse(b.getChangeSets().get(0).isEmptySet());
         assertEquals(1, p.getSCMs().size());
 
         otherRepo.write("secondfile", "");

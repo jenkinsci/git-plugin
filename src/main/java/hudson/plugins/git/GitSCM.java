@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -19,6 +20,7 @@ import hudson.Launcher;
 import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Actionable;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Items;
 import hudson.model.Job;
@@ -39,7 +41,6 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
-import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
 import hudson.remoting.Channel;
 import hudson.scm.AbstractScmTagAction;
@@ -86,10 +87,13 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -105,11 +109,13 @@ import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+
 import hudson.Util;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -1184,7 +1190,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        listener.getLogger().println("Checking out " + revToBuild.revision);
+        listener.getLogger().println("Checking out " + revToBuild.revision + " into " + localBranchName);
 
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
@@ -1298,13 +1304,45 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (!exclusion) {
-                // this is the first time we are building this branch, so there's no base line to compare against.
-                // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
-                listener.getLogger().println("First time build. Skipping changelog.");
-            } else {
-                changelog.to(out).max(MAX_CHANGELOG).execute();
-                executed = true;
+                listener.getLogger().println("First build of this branch, computing origin.");
+                // Ok, so here we are naked ... All we have is a detached head, on a SHA1 checkout, with no informations on remote heads/refs
+                // So we first list all known SHA1's from jobs having at least one remote url in common
+                // Then we go down current rev's ancestors until we found one already built, this is our stop
+
+                Set<String> ourUrls = userRemoteConfigs.stream().map(c -> c.getUrl()).collect(Collectors.toSet());
+
+                Instant start = Instant.now();
+                List<ObjectId> knownSHA1 = (List<ObjectId>) Jenkins.get().getItems().stream()
+                    .flatMap(i -> i.getAllJobs().stream())
+                    .flatMap(j -> j.getBuilds().stream())
+                    .filter(j -> j instanceof Actionable)
+                    .flatMap(a -> ((Actionable)a).getAllActions().stream())
+                    .filter(a -> a instanceof BuildData)
+                    .filter(a -> Sets.intersection(((BuildData) a).getRemoteUrls(), ourUrls).size() > 0)
+                    .flatMap(a -> ((BuildData) a).getBuildsByBranchName().values().stream())
+                    .map(v -> ((Build)v).getSHA1())
+                    .collect(Collectors.toList());
+                listener.getLogger().println("Have found " + knownSHA1.size() + " known SHA1s for this remote URL, in " + Duration.between(start, Instant.now()));
+
+                ObjectId ancestor = revToBuild.getSha1();
+                int loop = 0;
+                do {
+                    try {
+                        ancestor = git.revParse(ancestor.getName() + "~");
+                        loop++;
+                        if (VERBOSE) {
+                            listener.getLogger().println("searching for revision: " + ancestor + ", found: " + (knownSHA1.contains(ancestor) ? "yes" : "no"));
+                        }
+                    } catch (GitException ge) {
+                        break;
+                    }
+                } while (!knownSHA1.contains(ancestor) && loop < MAX_CHANGELOG);
+                changelog.excludes(ancestor);
             }
+
+            changelog.to(out).max(MAX_CHANGELOG).execute();
+            executed = true;
+
         } catch (GitException ge) {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
