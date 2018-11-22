@@ -71,6 +71,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.Matchers.*;
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -88,7 +89,9 @@ import static org.mockito.Mockito.verify;
 
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSCMSourceDefaults;
 import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.scm.api.mixin.TagSCMHead;
 
 /**
  * Tests for {@link GitSCM}.
@@ -2341,6 +2344,259 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelog() throws Exception {
+        String commitMessage = "test commit";
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=" + commitMessage);
+
+        final FreeStyleBuild build = build(setupSimpleProject("master"), Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain commit", commitMessage, singleChange.getComment().trim());
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithMultipleCommits() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=second");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=third");
+
+        final FreeStyleBuild build = build(setupSimpleProject("master"), Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog should contain 3 items", 3, changeLog.getItems().length);
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithTwoBranches() throws Exception {
+        String developCommit = "first on develop";
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=second");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=third");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=" + developCommit);
+
+        final FreeStyleBuild build = build(setupSimpleProject("develop"), Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain develop commit", developCommit, singleChange.getComment().trim());
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithTwoBranchesAndMultipleCommits() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=second");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=third");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=first on develop");
+
+        final FreeStyleBuild build = build(setupSimpleProject("master"), Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog should contain 3 items", 3, changeLog.getItems().length);
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithThreeBranches() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=first on develop");
+
+        FreeStyleBuild build = build(setupSimpleProject("feature"), Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog on feature branch should contain one item", 1, changeLog.getItems().length);
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit", "first", singleChange.getComment().trim());
+
+        build = build(setupSimpleProject("master"), Result.SUCCESS);
+
+        changeLog = build.getChangeSet();
+        assertEquals("Changelog on master branch should contain one item", 1, changeLog.getItems().length);
+        singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit", "first", singleChange.getComment().trim());
+
+        build = build(setupSimpleProject("develop"), Result.SUCCESS);
+
+        changeLog = build.getChangeSet();
+        assertEquals("Changelog on develop branch should contain one item", 1, changeLog.getItems().length);
+        singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain develop commit", "first on develop", singleChange.getComment().trim());
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogOnShallowCloneWithTwoBranches() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=second");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=third");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=first on develop");
+
+        FreeStyleProject project = setupSimpleProject("master");
+        TestGitRepo sampleTestRepo = new TestGitRepo("sample", sampleRepo.getRoot(), listener);
+        CloneOption cloneOption = new CloneOption(true, null, null);
+        cloneOption.setDepth(2);
+        GitSCM scm = new GitSCM(
+                sampleTestRepo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(), null, null,
+                Collections.<GitSCMExtension>singletonList(cloneOption));
+        project.setScm(scm);
+
+        FreeStyleBuild build = build(project, Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog on master should contain one item", 1, changeLog.getItems().length);
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit", "third", singleChange.getComment().trim());
+
+        project = setupSimpleProject("develop");
+        scm = new GitSCM(
+                sampleTestRepo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("develop")),
+                false, Collections.<SubmoduleConfig>emptyList(), null, null,
+                Collections.<GitSCMExtension>singletonList(cloneOption));
+        project.setScm(scm);
+
+        build = build(project, Result.SUCCESS);
+
+        changeLog = build.getChangeSet();
+        assertEquals("Changelog on develop should contain one item", 1, changeLog.getItems().length);
+        singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first develop", "first on develop", singleChange.getComment().trim());
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithNarrowRefSpecBranch() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=first on develop");
+
+        FreeStyleProject project = setupSimpleProject("master");
+        TestGitRepo sampleTestRepo = new TestGitRepo("sample", sampleRepo.getRoot(), listener);
+        GitSCM scm = new GitSCM(
+                sampleTestRepo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        FreeStyleBuild build = build(project, Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog on master should contain one item", 1, changeLog.getItems().length);
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit", "first", singleChange.getComment().trim());
+
+        project = setupSimpleProject("feature");
+        scm = new GitSCM(
+                sampleTestRepo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("feature")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        build = build(project, Result.SUCCESS);
+
+        changeLog = build.getChangeSet();
+        assertEquals("Changelog on feature should contain one item", 1, changeLog.getItems().length);
+        singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit", "first", singleChange.getComment().trim());
+
+        project = setupSimpleProject("develop");
+        scm = new GitSCM(
+                sampleTestRepo.remoteConfigs(),
+                Collections.singletonList(new BranchSpec("develop")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        build = build(project, Result.SUCCESS);
+
+        changeLog = build.getChangeSet();
+        assertEquals("Changelog on develop should contain one item", 1, changeLog.getItems().length);
+        singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain develop commit", "first on develop", singleChange.getComment().trim());
+    }
+
+    @Issue("JENKINS-14138")
+    @Test
+    public void testFirstBuildHasChangelogWithDetachedHead() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=first");
+        sampleRepo.write("file", "v2");
+        sampleRepo.git("commit", "--all", "--message=second");
+        sampleRepo.git("checkout", "-b", "develop");
+        sampleRepo.write("file", "v3");
+        sampleRepo.git("commit", "--all", "--message=first on develop");
+        sampleRepo.write("file", "v4");
+        sampleRepo.git("commit", "--all", "--message=second on develop");
+
+        FreeStyleProject project = setupSimpleProject("develop");
+        GitSCM scm = new GitSCM(
+                Collections.singletonList(new UserRemoteConfig(sampleRepo.getRoot().getAbsolutePath(), "origin", sampleRepo.head(), null)),
+                Collections.singletonList(new BranchSpec(sampleRepo.head())),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>singletonList(new GitSCMSourceDefaults(false)));
+        project.setScm(scm);
+
+        FreeStyleBuild build = build(project, Result.SUCCESS);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog on master should contain one item", 2, changeLog.getItems().length);
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain first commit of develop", "first on develop", singleChange.getComment().trim());
+        singleChange = (GitChangeSet) changeLog.getItems()[1];
+        assertEquals("Changelog should contain second commit of develop", "second on develop", singleChange.getComment().trim());
     }
 
     /**

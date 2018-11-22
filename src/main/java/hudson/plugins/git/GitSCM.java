@@ -92,6 +92,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -107,6 +108,7 @@ import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
+
 import hudson.Util;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
@@ -116,8 +118,6 @@ import java.util.regex.Pattern;
 import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Git SCM.
@@ -1231,7 +1231,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
-        listener.getLogger().println("Checking out " + revToBuild.revision);
+        listener.getLogger().println("Checking out " + revToBuild.revision + " into " + localBranchName);
 
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
@@ -1345,13 +1345,38 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (!exclusion) {
-                // this is the first time we are building this branch, so there's no base line to compare against.
-                // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
-                listener.getLogger().println("First time build. Skipping changelog.");
-            } else {
-                changelog.to(out).max(MAX_CHANGELOG).execute();
-                executed = true;
+                listener.getLogger().println("First build of this branch, computing origin.");
+                // Ok, so here we are naked ... All we have is a detached head, on a SHA1 checkout, with no informations on remote heads/refs
+                // So we first get remote refs and inverse the map
+                // Then we found the branch name of the rev being built
+                // Eventually we go down current rev's ancestors until we found one on another branch, this is our stop
+                Map<String, ObjectId> remoteReferences = git.getRemoteReferences(userRemoteConfigs.get(0).getUrl(), null, true, false);
+                Map<ObjectId, List<String>> remoteBranches = new HashMap<>();
+                for (Entry<String,ObjectId> remoteReference : remoteReferences.entrySet()) {
+                    if (remoteBranches.get(remoteReference.getValue()) == null) {
+                        remoteBranches.put(remoteReference.getValue(), new ArrayList<String>());
+                    }
+                    remoteBranches.get(remoteReference.getValue()).add(remoteReference.getKey());
+                }
+                List<String> myBranches = remoteBranches.get(revToBuild.getSha1());
+                ObjectId ancestor = revToBuild.getSha1();
+                List<String> ancestorBranches = null;
+                int loop = 0;
+                do {
+                    try {
+                        ancestor = git.revParse(ancestor.getName() + "~");
+                        ancestorBranches = remoteBranches.get(ancestor);
+                        loop++;
+                    } catch (GitException ge) {
+                        break;
+                    }
+                } while ((ancestorBranches == null || ancestorBranches.equals(myBranches)) && loop < MAX_CHANGELOG);
+                changelog.excludes(ancestor);
             }
+
+            changelog.to(out).max(MAX_CHANGELOG).execute();
+            executed = true;
+
         } catch (GitException ge) {
             ge.printStackTrace(listener.error("Unable to retrieve changeset"));
         } finally {
