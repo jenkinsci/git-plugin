@@ -68,6 +68,7 @@ public class GitChangeSetTruncateTest {
 
     private final static TestData[] TEST_DATA = {
         new TestData(EIGHTY_CHARS,                         EIGHTY_CHARS), // surprising that longer than 72 is returned
+        new TestData(EIGHTY_CHARS + " A B C",              EIGHTY_CHARS), // surprising that longer than 72 is returned
         new TestData(SEVENTY_CHARS,                        SEVENTY_CHARS),
         new TestData(SEVENTY_CHARS + " 2",                 SEVENTY_CHARS + " 2"),
         new TestData(SEVENTY_CHARS + " 2 4",               SEVENTY_CHARS + " 2"),
