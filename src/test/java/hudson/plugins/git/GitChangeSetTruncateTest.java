@@ -79,7 +79,7 @@ public class GitChangeSetTruncateTest {
         new TestData(SEVENTY_CHARS + "1;",                 SEVENTY_CHARS + "1;"),
         new TestData(SEVENTY_CHARS + "1; 4",               SEVENTY_CHARS + "1;"),
         new TestData(SEVENTY_CHARS + " " + SEVENTY_CHARS,  SEVENTY_CHARS),
-        new TestData(SEVENTY_CHARS + "  " + SEVENTY_CHARS, SEVENTY_CHARS + " ") // surprising that trailing space is preserved
+        new TestData(SEVENTY_CHARS + "  " + SEVENTY_CHARS, SEVENTY_CHARS) // surprising that trailing space is preserved (removed)
     };
 
     public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String expectedSummary) throws Exception {
@@ -106,7 +106,7 @@ public class GitChangeSetTruncateTest {
                 arguments.add(item);
             }
         }
-        Collections.shuffle(arguments); // Execute in random order
+//        Collections.shuffle(arguments); // Execute in random order
         return arguments;
     }
 
@@ -148,6 +148,12 @@ public class GitChangeSetTruncateTest {
     @Test
     @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
+        System.out.println(" ---------------- ");
+        System.out.println(String.format(" commit summary '%s' (%d)", commitSummary, commitSummary.length()));
+        System.out.println(String.format(" msg            '%s' (%d)", changeSet.getMsg(), changeSet.getMsg().length()));
+        System.out.println(String.format(" expected       '%s' (%d)", expectedSummary, expectedSummary.length()));
         assertThat(changeSet.getMsg(), is(expectedSummary));
     }
+
+
 }

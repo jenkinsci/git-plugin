@@ -8,6 +8,7 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -28,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static hudson.Util.fixEmpty;
+import static hudson.Util.isAbsoluteUri;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
@@ -248,28 +250,34 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
         }
         this.comment = message.toString();
-        if (showEntireCommitSummaryInChanges) {
-            int endOfFirstLine = this.comment.indexOf('\n');
-            if (endOfFirstLine == -1) {
-                this.title = this.comment.trim();
-            } else {
-                this.title = this.comment.substring(0, endOfFirstLine).trim();
-            }
+        int endOfFirstLine = this.comment.indexOf('\n');
+        if (endOfFirstLine == -1) {
+            this.title = this.comment.trim();
         } else {
-            this.title = splitString(this.comment, TRUNCATE_LIMIT);
+            this.title = this.comment.substring(0, endOfFirstLine).trim();
+        }
+         if(!showEntireCommitSummaryInChanges){
+            this.title = splitString(this.title, TRUNCATE_LIMIT);
         }
     }
 
     public static String splitString(String msg, int lineSize) {
-//        Pattern p = Pattern.compile("\\W.{1," + (lineSize-1) + "}\\b\\W?");
-         Pattern p = Pattern.compile("[\\W|\\w].{1,"+lineSize+"}\\b\\W?");
-        Matcher m = p.matcher(msg);
 
-        if (m.find()) {
-            return m.group().trim();
+        StringBuilder sb = new StringBuilder(lineSize);
+        if( msg != null) {
+            String[] byWord = msg.split(" ");
+            if (byWord != null && byWord.length > 0) {
+                for (String word : byWord) {
+                    if (sb.length() + word.length() > lineSize && sb.length() > 0) {
+                        break;
+                    } else {
+                        sb.append(word);
+                        sb.append(" ");
+                    }
+                }
+            }
         }
-        // If there are no words in the commit message, return an empty string.
-        return "";
+        return sb.toString().trim();
     }
 
     /** Convert to iso date format if required */
