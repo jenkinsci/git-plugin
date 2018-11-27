@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
+import jenkins.plugins.git.CliGitCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -44,7 +45,7 @@ public class GitChangeSetTruncateTest {
     /* Arguments to the constructor */
     private final String gitImpl;
     private final String commitSummary;
-    private final String expectedSummary;
+    private final String truncatedSummary;
 
     /* Computed in the constructor, used in tests */
     private final GitChangeSet changeSet;
@@ -52,11 +53,11 @@ public class GitChangeSetTruncateTest {
     private static class TestData {
 
         final public String testDataCommitSummary;
-        final public String testDataExpectedSummary;
+        final public String testDataTruncatedSummary;
 
-        TestData(String commitSummary, String expectedSummary) {
+        TestData(String commitSummary, String truncatedSummary) {
             this.testDataCommitSummary = commitSummary;
-            this.testDataExpectedSummary = expectedSummary;
+            this.testDataTruncatedSummary = truncatedSummary;
         }
     }
 
@@ -67,6 +68,7 @@ public class GitChangeSetTruncateTest {
 
     private final static TestData[] TEST_DATA = {
         new TestData(EIGHTY_CHARS,                         EIGHTY_CHARS), // surprising that longer than 72 is returned
+        new TestData(EIGHTY_CHARS + " A B C",              EIGHTY_CHARS), // surprising that longer than 72 is returned
         new TestData(SEVENTY_CHARS,                        SEVENTY_CHARS),
         new TestData(SEVENTY_CHARS + " 2",                 SEVENTY_CHARS + " 2"),
         new TestData(SEVENTY_CHARS + " 2 4",               SEVENTY_CHARS + " 2"),
@@ -82,10 +84,10 @@ public class GitChangeSetTruncateTest {
         new TestData(SEVENTY_CHARS + "  " + SEVENTY_CHARS, SEVENTY_CHARS) // surprising that trailing space is preserved (removed)
     };
 
-    public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String expectedSummary) throws Exception {
+    public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String truncatedSummary) throws Exception {
         this.gitImpl = gitImpl;
         this.commitSummary = commitSummary;
-        this.expectedSummary = expectedSummary;
+        this.truncatedSummary = truncatedSummary;
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(gitImpl).getClient();
         final ObjectId head = commitOneFile(gitClient, commitSummary);
         StringWriter changelogStringWriter = new StringWriter();
@@ -100,9 +102,7 @@ public class GitChangeSetTruncateTest {
         List<Object[]> arguments = new ArrayList<>();
         for (String implementation : implementations) {
             for (TestData sample : TEST_DATA) {
-                /* Expect truncated message from git, full message from JGit */
-                String expected = implementation.equals("git") ? sample.testDataExpectedSummary : sample.testDataCommitSummary;
-                Object[] item = {implementation, sample.testDataCommitSummary, expected};
+                Object[] item = {implementation, sample.testDataCommitSummary, sample.testDataTruncatedSummary};
                 arguments.add(item);
             }
         }
@@ -116,6 +116,8 @@ public class GitChangeSetTruncateTest {
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
+        new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
+        new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@example.com");
     }
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {
@@ -146,14 +148,8 @@ public class GitChangeSetTruncateTest {
     }
 
     @Test
-    @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page
+    @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
-        System.out.println(" ---------------- ");
-        System.out.println(String.format(" commit summary '%s' (%d)", commitSummary, commitSummary.length()));
-        System.out.println(String.format(" msg            '%s' (%d)", changeSet.getMsg(), changeSet.getMsg().length()));
-        System.out.println(String.format(" expected       '%s' (%d)", expectedSummary, expectedSummary.length()));
         assertThat(changeSet.getMsg(), is(expectedSummary));
     }
-
-
 }
