@@ -106,7 +106,7 @@ public class GitChangeSetTruncateTest {
                 arguments.add(item);
             }
         }
-//        Collections.shuffle(arguments); // Execute in random order
+        Collections.shuffle(arguments); // Execute in random order
         return arguments;
     }
 
@@ -150,6 +150,6 @@ public class GitChangeSetTruncateTest {
     @Test
     @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
-        assertThat(changeSet.getMsg(), is(expectedSummary));
+        assertThat(changeSet.getMsg(), is(truncatedSummary));
     }
 }
