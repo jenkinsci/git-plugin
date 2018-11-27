@@ -28,6 +28,10 @@ public class CleanCheckout extends GitSCMExtension {
         this(false);
     }
 
+    public boolean isCleanSubmodule() {
+        return cleanSubmodule;
+    }
+
     /**
      * {@inheritDoc}
      */
