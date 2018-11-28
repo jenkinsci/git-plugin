@@ -261,7 +261,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     /* Package protected for testing */
     static String splitString(String msg, int lineSize) {
-        if (msg.contains("\n")) {
+        if(msg ==  null) return "";
+        if (msg.contains(System.lineSeparator())) {
             String [] msgArray = msg.split("[" + System.lineSeparator() +  "]");
             msg = msgArray[0];
         }

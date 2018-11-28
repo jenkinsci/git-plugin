@@ -194,7 +194,7 @@ public class GitChangeSetBasicTest {
                 false);
         String msg = changeSet.getMsg();
         assertThat( msg.length(), lessThanOrEqualTo( TRUNCATE_LIMIT ));
-        assertThat( msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2 4") );
+        assertThat( msg, is("[JENKINS-012345] 8901 34567 90 23456 8901 34567 9012 4567890 2345678 0 2") );
 
     }
 
