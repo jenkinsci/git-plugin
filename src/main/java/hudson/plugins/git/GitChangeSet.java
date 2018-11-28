@@ -8,7 +8,6 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -29,7 +28,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static hudson.Util.fixEmpty;
-import static hudson.Util.isAbsoluteUri;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
@@ -105,7 +103,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
-        this(lines, authorOrCommitter, isTruncateTitle());
+        this(lines, authorOrCommitter, isShowEntireCommitSummaryInChanges());
     }
 
     /**
@@ -168,9 +166,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         dateFormatters[2] = isoDateFormat; // Third priority, ISO 8601 format
     }
 
-    static boolean isTruncateTitle() {
+    static boolean isShowEntireCommitSummaryInChanges() {
         try {
-            return new DescriptorImpl().isTruncateSummary();
+            return new DescriptorImpl().isShowEntireCommitSummaryInChanges();
         }catch (Throwable t){
             return false;
         }
@@ -261,23 +259,21 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    public static String splitString(String msg, int lineSize) {
-
-        StringBuilder sb = new StringBuilder(lineSize);
-        if( msg != null) {
-            String[] byWord = msg.split(" ");
-            if (byWord != null && byWord.length > 0) {
-                for (String word : byWord) {
-                    if (sb.length() + word.length() > lineSize && sb.length() > 0) {
-                        break;
-                    } else {
-                        sb.append(word);
-                        sb.append(" ");
-                    }
-                }
-            }
+    /* Package protected for testing */
+    static String splitString(String msg, int lineSize) {
+        if (msg.contains("\n")) {
+            String [] msgArray = msg.split("[" + System.lineSeparator() +  "]");
+            msg = msgArray[0];
         }
-        return sb.toString().trim();
+        if (msg.length() <= lineSize || !msg.contains(" ")) {
+            return msg;
+        }
+        int lastSpace = msg.lastIndexOf(' ', lineSize);
+        if (lastSpace == -1) {
+            /* String contains a space but space is outside truncation limit, truncate at first space */
+            lastSpace = msg.indexOf(' ');
+        }
+        return (lastSpace == -1) ? msg : msg.substring(0, lastSpace);
     }
 
     /** Convert to iso date format if required */
