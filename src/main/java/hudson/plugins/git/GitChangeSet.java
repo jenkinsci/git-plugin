@@ -166,6 +166,18 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         dateFormatters[2] = isoDateFormat; // Third priority, ISO 8601 format
     }
 
+    /**
+     * The git client plugin command line implementation silently truncated changelog summaries (the first line of the
+     * commit message) that were longer than 72 characters beginning with git client plugin 2.0. Beginning with git
+     * client plugin 3.0 and git plugin 4.0, the git client plugin no longer silently truncates changelog summaries.
+     * Truncation responsibility has moved into the git plugin. The git plugin will default to truncate all changelog
+     * summaries (including JGit summaries) unless title truncation has been globally disabled or the caller called the
+     * GitChangeSet constructor with the argument to retain the full commit summary.
+     *
+     * See JENKINS-29977 for more details
+     *
+     * @return true if first line of commit message should be truncated at word boundary before 73 characters
+     */
     static boolean isShowEntireCommitSummaryInChanges() {
         try {
             return new DescriptorImpl().isShowEntireCommitSummaryInChanges();
