@@ -72,6 +72,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -1846,7 +1847,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             int start=0, idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
-                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null);
+                    boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null, showEntireCommitSummary);
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
