@@ -75,6 +75,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @return
      *      null if the browser doesn't have any suitable URL.
      * @throws IOException on input or output error
+     * @throws URISyntaxException on URI syntax error
      */
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException, URISyntaxException;
 
