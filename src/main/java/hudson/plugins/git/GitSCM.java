@@ -1455,10 +1455,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
+        private boolean showEntireCommitSummaryInChanges;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        public boolean isShowEntireCommitSummaryInChanges() {
+            return showEntireCommitSummaryInChanges;
+        }
+
+        public void setShowEntireCommitSummaryInChanges(boolean showEntireCommitSummaryInChanges) {
+            this.showEntireCommitSummaryInChanges = showEntireCommitSummaryInChanges;
         }
 
         public String getDisplayName() {

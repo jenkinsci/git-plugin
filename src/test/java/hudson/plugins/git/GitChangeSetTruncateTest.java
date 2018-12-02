@@ -49,6 +49,8 @@ public class GitChangeSetTruncateTest {
 
     /* Computed in the constructor, used in tests */
     private final GitChangeSet changeSet;
+    private final GitChangeSet changeSetFullSummary;
+    private final GitChangeSet changeSetTruncatedSummary;
 
     private static class TestData {
 
@@ -94,6 +96,8 @@ public class GitChangeSetTruncateTest {
         gitClient.changelog().includes(head).to(changelogStringWriter).execute();
         List<String> changeLogList = Arrays.asList(changelogStringWriter.toString().split("\n"));
         changeSet = new GitChangeSet(changeLogList, random.nextBoolean());
+        changeSetFullSummary = new GitChangeSet(changeLogList, random.nextBoolean(), true);
+        changeSetTruncatedSummary = new GitChangeSet(changeLogList, random.nextBoolean(), false);
     }
 
     @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
@@ -150,6 +154,23 @@ public class GitChangeSetTruncateTest {
     @Test
     @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
-        assertThat(changeSet.getMsg(), is(gitImpl.equals("git") ? truncatedSummary : commitSummary));
+        /**
+         * Before git plugin 4.0, calls to GitChangeSet(x, y) truncated CLI git, did not truncate JGit.
+         * After git plugin 4.0, calls to GitChangeSet(x, y) truncates CLI git, truncates JGit.
+         * Callers after git plugin 4.0 must use the GitChangeSet(x, y, z) call to specify truncation behavior.
+         */
+        assertThat(changeSet.getMsg(), is(truncatedSummary));
+    }
+
+    @Test
+    @Issue("JENKINS-29977")
+    public void summaryAlwaysTruncatedAtLastWord72CharactersOrLess() throws Exception {
+        assertThat(changeSetTruncatedSummary.getMsg(), is(truncatedSummary));
+    }
+
+    @Test
+    @Issue("JENKINS-29977")
+    public void summaryNotTruncatedAtLastWord72CharactersOrLess() throws Exception {
+        assertThat(changeSetFullSummary.getMsg(), is(commitSummary));
     }
 }
