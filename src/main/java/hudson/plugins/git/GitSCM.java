@@ -950,23 +950,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return tool.getGitExe();
     }
 
-    /**
-     * Web-bound method to let people look up a build by their SHA1 commit.
-     * @param sha1 SHA1 hash of commit
-     * @return most recent build of sha1
-     */
-    public AbstractBuild<?,?> getBySHA1(String sha1) {
-        AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        for (AbstractBuild b : p.getBuilds()) {
-            BuildData d = b.getAction(BuildData.class);
-            if (d!=null && d.lastBuild!=null) {
-                Build lb = d.lastBuild;
-                if (lb.isFor(sha1)) return b;
-            }
-        }
-        return null;
-    }
-
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Job project;
