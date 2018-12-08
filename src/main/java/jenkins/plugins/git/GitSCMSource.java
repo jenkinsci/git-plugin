@@ -700,7 +700,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 }
                 gitClient.getRemoteReferences(uri,null, true,false);
             } catch (IOException | InterruptedException | IllegalStateException | GitException e) {
-                return FormValidation.error(e, "Error running git remote-ls:");
+                return FormValidation.error(e, "Error validating credentials:");
             }
             return FormValidation.ok();
         }
