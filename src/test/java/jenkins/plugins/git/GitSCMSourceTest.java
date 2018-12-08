@@ -425,7 +425,7 @@ public class GitSCMSourceTest {
         GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
         FormValidation validation = scmSource.doCheckCredentialsId(null,"git@github.com:jenkinsci-cert/git-plugin.git","");
         assertEquals(validation.kind,FormValidation.Kind.ERROR);
-        // assertThat(validation.getMessage(), startsWith("Error validating credentials"));
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
     }
 
     @Test
@@ -433,7 +433,7 @@ public class GitSCMSourceTest {
         GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
         FormValidation validation1 = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci-cert/git-plugin.git","");
         assertEquals(validation1.kind,FormValidation.Kind.ERROR);
-        // assertThat(validation1.getMessage(), startsWith("Error validating credentials"));
+        assertThat(validation1.getMessage(), startsWith("Error validating credentials"));
      }
 
     @Test
@@ -442,7 +442,7 @@ public class GitSCMSourceTest {
         StandardCredentials credential = getPrivateKeyCredential();
         FormValidation validation = scmSource.doCheckCredentialsId(null,"git@github.com:jenkinsci-cert/git-plugin.git", credential.getId());
         assertEquals(validation.kind,FormValidation.Kind.ERROR);
-        // assertThat(validation.getMessage(), startsWith("Error validating credentials"));
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
     }
 
     @Test
@@ -452,7 +452,7 @@ public class GitSCMSourceTest {
         store.addCredentials(Domain.global(), credential);
         FormValidation validation = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci-cert/git-plugin.git",credential.getId());
         assertEquals(validation.kind,FormValidation.Kind.ERROR);
-        // assertThat(validation.getMessage(), startsWith("Error validating credentials"));
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
     }
 
     private static class HelloToolInstaller extends CommandInstaller {
