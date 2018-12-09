@@ -612,15 +612,22 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    public int hashCode() {
-        return id != null ? id.hashCode() : super.hashCode();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GitChangeSet that = (GitChangeSet) o;
+
+        return id != null && id.equals(that.id);
     }
 
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj instanceof GitChangeSet)
-            return id != null && id.equals(((GitChangeSet) obj).id);
-        return false;
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : super.hashCode();
     }
 }

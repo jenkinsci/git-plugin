@@ -10,6 +10,7 @@ import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 
@@ -76,6 +77,13 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         assertEquals(firstBuild.getNumber(), gitSCM.getBuildData(firstBuild).lastBuild.getBuildNumber());
         assertEquals(firstMarked, gitSCM.getBuildData(firstBuild).lastBuild.getMarked());
         assertEquals(firstRevision, gitSCM.getBuildData(firstBuild).lastBuild.getRevision());
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(PreBuildMerge.class)
+                .usingGetClass()
+                .verify();
     }
 
     @Override
