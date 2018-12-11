@@ -30,7 +30,7 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
-    <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
+    <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
   </properties>
 
   <build>
