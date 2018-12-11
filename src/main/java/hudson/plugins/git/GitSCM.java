@@ -40,6 +40,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -62,6 +63,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -70,6 +72,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -153,6 +156,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
+    public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -915,15 +919,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+    @CheckForNull
     public GitTool resolveGitTool(TaskListener listener) {
-        if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
-        if (git == null) {
-            listener.getLogger().println("Selected Git installation does not exist. Using Default");
-            git = GitTool.getDefaultInstallation();
-        }
-        return git;
+        return GitUtils.resolveGitTool(gitTool, listener);
     }
 
     public String getGitExe(Node builtOn, TaskListener listener) {
@@ -949,48 +947,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
 
-        GitTool tool = resolveGitTool(listener);
-        if (builtOn != null) {
-            try {
-                tool = tool.forNode(builtOn, listener);
-            } catch (IOException | InterruptedException e) {
-                listener.getLogger().println("Failed to get git executable");
-            }
-        }
-        if (env != null) {
-            tool = tool.forEnvironment(env);
+        GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
+        if (tool == null) {
+            return null;
         }
 
         return tool.getGitExe();
-    }
-
-    /**
-     * Web-bound method to let people look up a build by their SHA1 commit.
-     * @param sha1 SHA1 hash of commit
-     * @return most recent build of sha1
-     */
-    public AbstractBuild<?,?> getBySHA1(String sha1) {
-        AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        for (AbstractBuild b : p.getBuilds()) {
-            /* First, try BuildDetails.class */
-            List<BuildDetails> buildDetailsActions = b.getActions(BuildDetails.class);
-            for (BuildDetails details : buildDetailsActions) {
-                if (details != null && details.build != null) {
-                    Build lb = details.build;
-                    if (lb.isFor(sha1)) return b;
-                }
-            }
-
-            /* Next, try the deprecated BuildData.class */
-            List<BuildData> buildDataActions = b.getActions(BuildData.class);
-            for (BuildData data : buildDataActions) {
-                if (data != null && data.lastBuild!=null) {
-                    Build lb = data.lastBuild;
-                    if (lb.isFor(sha1)) return b;
-                }
-            }
-        }
-        return null;
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
@@ -1281,7 +1243,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | MissingObjectException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
@@ -1390,6 +1352,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                    }
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
+                RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
+                if (rtd != null) {
+                   String localRelativeTargetDir = rtd.getRelativeTargetDir();
+                   if ( localRelativeTargetDir == null ){
+                       localRelativeTargetDir = "";
+                   }
+                   env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
+                }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1466,7 +1436,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+        try {
+            GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(gitTool).getClient();
+            return new GitChangeLogParser(gitClient, getExtensions().get(AuthorInChangelog.class) != null);
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
+        }
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class) != null);
     }
 
     @Extension
@@ -1477,10 +1453,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
+        private boolean showEntireCommitSummaryInChanges;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        public boolean isShowEntireCommitSummaryInChanges() {
+            return showEntireCommitSummaryInChanges;
+        }
+
+        public void setShowEntireCommitSummaryInChanges(boolean showEntireCommitSummaryInChanges) {
+            this.showEntireCommitSummaryInChanges = showEntireCommitSummaryInChanges;
         }
 
         public String getDisplayName() {
@@ -1947,7 +1932,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             int start=0, idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
-                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null);
+                    boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null, showEntireCommitSummary);
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {

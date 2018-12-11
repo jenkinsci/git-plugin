@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
@@ -365,54 +366,23 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof BuildData)) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        BuildData otherBuildData = (BuildData) o;
+        BuildData that = (BuildData) o;
 
-        /* Not equal if exactly one of the two remoteUrls is null */
-        if ((this.remoteUrls == null) ^ (otherBuildData.remoteUrls == null)) {
-            return false;
-        }
-
-        /* Not equal if remoteUrls differ */
-        if ((this.remoteUrls != null) && (otherBuildData.remoteUrls != null)
-                && !this.remoteUrls.equals(otherBuildData.remoteUrls)) {
-            return false;
-        }
-
-        /* Not equal if exactly one of the two buildsByBranchName is null */
-        if ((this.buildsByBranchName == null) ^ (otherBuildData.buildsByBranchName == null)) {
-            return false;
-        }
-
-        /* Not equal if buildsByBranchName differ */
-        if ((this.buildsByBranchName != null) && (otherBuildData.buildsByBranchName != null)
-                && !this.buildsByBranchName.equals(otherBuildData.buildsByBranchName)) {
-            return false;
-        }
-
-        /* Not equal if exactly one of the two lastBuild is null */
-        if ((this.lastBuild == null) ^ (otherBuildData.lastBuild == null)) {
-            return false;
-        }
-
-        /* Not equal if lastBuild differs */
-        if ((this.lastBuild != null) && (otherBuildData.lastBuild != null)
-                && !this.lastBuild.equals(otherBuildData.lastBuild)) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(remoteUrls, that.remoteUrls)
+                && Objects.equals(buildsByBranchName, that.buildsByBranchName)
+                && Objects.equals(lastBuild, that.lastBuild);
     }
 
+    @Override
     public int hashCode() {
-        int result = 3;
-        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
-        result = result * 17 + ((this.buildsByBranchName == null) ? 7 : this.buildsByBranchName.hashCode());
-        result = result * 17 + ((this.lastBuild == null) ? 11 : this.lastBuild.hashCode());
-        return result;
+        return Objects.hash(remoteUrls, buildsByBranchName, lastBuild);
     }
 
     /* Package protected for easier testing */

@@ -39,6 +39,14 @@ public class GitChangeSetUtil {
     }
 
     public static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent) {
+        return genChangeSet(authorOrCommitter, useLegacyFormat, hasParent, COMMIT_TITLE);
+    }
+
+    public static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent, String commitTitle) {
+       return genChangeSet(authorOrCommitter, useLegacyFormat, hasParent, commitTitle, false);
+    }
+
+    public static GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat, boolean hasParent, String commitTitle, boolean truncate) {
         ArrayList<String> lines = new ArrayList<>();
         lines.add("Some header junk we should ignore...");
         lines.add("header line 2");
@@ -52,7 +60,7 @@ public class GitChangeSetUtil {
         lines.add("author " + AUTHOR_NAME + " <" + AUTHOR_EMAIL + "> " + AUTHOR_DATE);
         lines.add("committer " + COMMITTER_NAME + " <" + COMMITTER_EMAIL + "> " + COMMITTER_DATE);
         lines.add("");
-        lines.add("    " + COMMIT_TITLE);
+        lines.add("    " + commitTitle);
         lines.add("    Commit extended description.");
         lines.add("");
         if (useLegacyFormat) {
@@ -65,7 +73,7 @@ public class GitChangeSetUtil {
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 M\tsrc/test/modified.file");
         lines.add(":123456 789012 123abc456def789abc012def345abc678def901a bc234def567abc890def123abc456def789abc01 R012\tsrc/test/renamedFrom.file\tsrc/test/renamedTo.file");
         lines.add(":000000 123456 bc234def567abc890def123abc456def789abc01 123abc456def789abc012def345abc678def901a C100\tsrc/test/original.file\tsrc/test/copyOf.file");
-        return new GitChangeSet(lines, authorOrCommitter);
+        return new GitChangeSet(lines, authorOrCommitter, truncate);
     }
 
     static void assertChangeSet(GitChangeSet changeSet) {

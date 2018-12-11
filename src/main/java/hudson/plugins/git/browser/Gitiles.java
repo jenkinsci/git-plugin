@@ -46,7 +46,7 @@ public class Gitiles extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(Path path) throws IOException {
         URL url = getUrl();
-        return new URL(url + "+blame/" + path.getChangeSet().getId() + "/" + path.getPath());
+        return encodeURL(new URL(url + "+blame/" + path.getChangeSet().getId() + "/" + path.getPath()));
     }
 
     @Override

@@ -59,8 +59,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     @Override
     public void init() throws Exception {
-        GitSampleRepoRule.checkGlobalConfig();
         run(true, tmp.getRoot(), "git", "version");
+        checkGlobalConfig();
         git("init");
         write("file", "");
         git("add", "file");
@@ -85,7 +85,6 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         r.waitUntilNoActivity();
     }
 
-    /** Returns the (full) commit hash of the current {@link Constants#HEAD} of the repository. */
     public String head() throws Exception {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }

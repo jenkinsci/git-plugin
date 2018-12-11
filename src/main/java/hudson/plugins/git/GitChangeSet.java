@@ -57,6 +57,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
+    static final int TRUNCATE_LIMIT = 72;
 
     private final DateTimeFormatter [] dateFormatters;
 
@@ -93,15 +94,28 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String parentCommit;
     private Collection<Path> paths = new HashSet<>();
     private boolean authorOrCommitter;
+    private boolean showEntireCommitSummaryInChanges;
 
     /**
-     * Create Git change set using information in given lines
+     * Create Git change set using information in given lines.
      *
      * @param lines change set lines read to construct change set
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
+        this(lines, authorOrCommitter, isShowEntireCommitSummaryInChanges());
+    }
+
+    /**
+     * Create Git change set using information in given lines.
+     *
+     * @param lines change set lines read to construct change set
+     * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
+     * @param retainFullCommitSummary if true, do not truncate commit summary in the 'Changes' page
+     */
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean retainFullCommitSummary) {
         this.authorOrCommitter = authorOrCommitter;
+        this.showEntireCommitSummaryInChanges = retainFullCommitSummary;
         if (lines.size() > 0) {
             parseCommit(lines);
         }
@@ -150,6 +164,26 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         dateFormatters[0] = gitDateFormatter; // First priority +%cI format
         dateFormatters[1] = nearlyISOFormatter; // Second priority seen in git-plugin
         dateFormatters[2] = isoDateFormat; // Third priority, ISO 8601 format
+    }
+
+    /**
+     * The git client plugin command line implementation silently truncated changelog summaries (the first line of the
+     * commit message) that were longer than 72 characters beginning with git client plugin 2.0. Beginning with git
+     * client plugin 3.0 and git plugin 4.0, the git client plugin no longer silently truncates changelog summaries.
+     * Truncation responsibility has moved into the git plugin. The git plugin will default to truncate all changelog
+     * summaries (including JGit summaries) unless title truncation has been globally disabled or the caller called the
+     * GitChangeSet constructor with the argument to retain the full commit summary.
+     *
+     * See JENKINS-29977 for more details
+     *
+     * @return true if first line of commit message should be truncated at word boundary before 73 characters
+     */
+    static boolean isShowEntireCommitSummaryInChanges() {
+        try {
+            return new DescriptorImpl().isShowEntireCommitSummaryInChanges();
+        }catch (Throwable t){
+            return false;
+        }
     }
 
     private void parseCommit(List<String> lines) {
@@ -225,15 +259,34 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         }
-
         this.comment = message.toString();
-
         int endOfFirstLine = this.comment.indexOf('\n');
         if (endOfFirstLine == -1) {
-            this.title = this.comment;
+            this.title = this.comment.trim();
         } else {
-            this.title = this.comment.substring(0, endOfFirstLine);
+            this.title = this.comment.substring(0, endOfFirstLine).trim();
         }
+         if(!showEntireCommitSummaryInChanges){
+            this.title = splitString(this.title, TRUNCATE_LIMIT);
+        }
+    }
+
+    /* Package protected for testing */
+    static String splitString(String msg, int lineSize) {
+        if (msg ==  null) return "";
+        if (msg.matches(".*[\r\n].*")) {
+            String [] msgArray = msg.split("[\r\n]");
+            msg = msgArray[0];
+        }
+        if (msg.length() <= lineSize || !msg.contains(" ")) {
+            return msg;
+        }
+        int lastSpace = msg.lastIndexOf(' ', lineSize);
+        if (lastSpace == -1) {
+            /* String contains a space but space is outside truncation limit, truncate at first space */
+            lastSpace = msg.indexOf(' ');
+        }
+        return (lastSpace == -1) ? msg : msg.substring(0, lastSpace);
     }
 
     /** Convert to iso date format if required */
@@ -559,15 +612,22 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    public int hashCode() {
-        return id != null ? id.hashCode() : super.hashCode();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GitChangeSet that = (GitChangeSet) o;
+
+        return id != null && id.equals(that.id);
     }
 
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj instanceof GitChangeSet)
-            return id != null && id.equals(((GitChangeSet) obj).id);
-        return false;
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : super.hashCode();
     }
 }

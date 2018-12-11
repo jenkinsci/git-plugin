@@ -2,7 +2,7 @@
 
 // Test plugin compatibility to recent Jenkins LTS
 // Allow failing tests to retry execution
-buildPlugin(jenkinsVersions: [null, '2.121.1'],
+buildPlugin(jenkinsVersions: [null, '2.150.1'],
             findbugs: [run:true, archive:true, unstableTotalAll: '0'],
             failFast: false)
 
@@ -56,4 +56,5 @@ branches["PCT"] = {
     }
 }
 
-parallel branches
+// Intentionally disabled until tests are more reliable
+// parallel branches

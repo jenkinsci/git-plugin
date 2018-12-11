@@ -7,6 +7,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -19,8 +20,8 @@ import static hudson.Util.fixEmptyAndTrim;
  * @author Kohsuke Kawaguchi
  */
 public class UserIdentity extends GitSCMExtension {
-    private String name;
-    private String email;
+    private final String name;
+    private final String email;
 
     @DataBoundConstructor
     public UserIdentity(String name, String email) {
@@ -66,10 +67,8 @@ public class UserIdentity extends GitSCMExtension {
 
         UserIdentity that = (UserIdentity) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) {
-            return false;
-        }
-        return email != null ? email.equals(that.email) : that.email == null;
+        return Objects.equals(name, that.name)
+                && Objects.equals(email, that.email);
     }
 
     /**
@@ -77,7 +76,7 @@ public class UserIdentity extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return UserIdentity.class.hashCode();
+        return Objects.hash(name, email);
     }
 
     /**

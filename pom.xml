@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.12</version>
+    <version>3.29</version>
     <relativePath />
   </parent>
 
@@ -30,7 +30,7 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
-    <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
+    <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
   </properties>
 
   <build>
@@ -38,7 +38,7 @@
       <plugin>
         <groupId>com.infradna.tool</groupId>
         <artifactId>bridge-method-injector</artifactId>
-        <version>1.17</version>
+        <version>1.18</version>
         <executions>
           <execution>
             <goals>
@@ -81,17 +81,6 @@
       <version>2.9.5</version>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci</groupId>
-      <artifactId>annotation-indexer</artifactId>
-      <version>1.12</version>
-    </dependency>
-    <dependency>
-      <groupId>com.infradna.tool</groupId>
-      <artifactId>bridge-method-annotation</artifactId>
-      <version>1.17</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
       <version>1.10</version>
@@ -99,7 +88,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0-beta3</version>
+      <version>3.0.0-beta6-rc1822.65df57d49890</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -157,42 +146,33 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>1.10.19</version>
+      <version>2.8.9</version>
       <scope>test</scope>
-      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
-      <!-- exclude from mockito so that powermock version is used -->
-      <exclusions>
-        <exclusion>
-          <groupId>org.objenesis</groupId>
-          <artifactId>objenesis</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
-      <version>1.6.6</version>
+      <version>1.7.4</version>
       <scope>test</scope>
-      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
-      <!-- excluded from mockito so that powermock version is used -->
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <version>1.6.6</version>
+      <artifactId>powermock-api-mockito2</artifactId>
+      <version>1.7.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nl.jqno.equalsverifier</groupId>
+      <artifactId>equalsverifier</artifactId>
+      <version>3.0.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.5-2.1</version>
+      <version>4.5.5-3.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -218,19 +198,16 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>2.27</version>
+      <version>3.2</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
-          <groupId>org.sonatype.sisu</groupId>
-          <artifactId>sisu-guava</artifactId>
+          <groupId>commons-net</groupId>
+          <artifactId>commons-net</artifactId>
         </exclusion>
         <exclusion>
-          <!-- promoted-builds requests 1.9.2, core requests 1.8.4 -->
-          <!-- use core version, rather than promoted builds version -->
-          <!-- trust this optional reference will be harmless -->
-          <groupId>org.apache.ant</groupId>
-          <artifactId>ant</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -283,11 +260,17 @@
       <artifactId>workflow-cps-global-lib</artifactId>
       <version>2.8</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
-      <version>2.5.1</version>
+      <version>2.6.2</version>
       <scope>test</scope>
     </dependency>
     <!-- Satisfy upper bounds dependency warnings -->

@@ -565,9 +565,7 @@ public class GitPublisherTest extends AbstractGitProject {
         assertFalse("otherCommit2 in otherbranch", testGitClient.revList("otherbranch").contains(otherCommit2));
     }
 
-    /**
-     * Fix push to remote when skipTag is enabled
-     */
+    /* Fix push to remote when skipTag is enabled */
     @Issue("JENKINS-17769")
     @Test
     public void testMergeAndPushWithSkipTagEnabled() throws Exception {

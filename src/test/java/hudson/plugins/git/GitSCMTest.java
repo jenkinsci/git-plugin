@@ -82,7 +82,7 @@ import org.junit.BeforeClass;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -169,7 +169,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Basic test - create a GitSCM based project, check it out and build for the first time.
      * Next test that polling works correctly, make another commit, check that polling finds it,
      * then build it and finally test the build culprits as well as the contents of the workspace.
-     * @throws Exception if an exception gets thrown.
+     * @throws Exception on error
      */
     @Test
     public void testBasic() throws Exception {
@@ -481,7 +481,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue("scm polling did not detect changes in server project", serverProject.poll(listener).hasChanges());
     }
 
-    /**
+    /*
      * With multiple branches specified in the project and having commits from a user
      * excluded should not build the excluded revisions when another branch changes.
      */
@@ -726,9 +726,6 @@ public class GitSCMTest extends AbstractGitTestCase {
                 johnDoe.getName(), secondCulprits.iterator().next().getFullName());
     }
 
-    /**
-     * Method name is self-explanatory.
-     */
     @Test
     public void testNewCommitToUntrackedBranchDoesNotTriggerBuild() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
@@ -788,7 +785,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
     }
 
-    /**
+    /*
      * A previous version of GitSCM would only build against branches, not tags. This test checks that that
      * regression has been fixed.
      */
@@ -846,7 +843,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after last build", project.poll(listener).hasChanges());
     }
 
-    /**
+    /*
      * Not specifying a branch string in the project implies that we should be polling for changes in
      * all branches.
      */
@@ -1485,7 +1482,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         return repoList;
     }
 
-    /**
+    /*
      * Makes sure that git browser URL is preserved across config round trip.
      */
     @Issue("JENKINS-22604")
@@ -1504,7 +1501,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("Wrong key", "git " + url, scm.getKey());
     }
 
-    /**
+    /*
      * Makes sure that git extensions are preserved across config round trip.
      */
     @Issue("JENKINS-33695")
@@ -1542,7 +1539,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals(localBranchExtension.getLocalBranch(), reloadedLocalBranch.getLocalBranch());
     }
 
-    /**
+    /*
      * Makes sure that the configuration form works.
      */
     @Test
@@ -1554,7 +1551,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertEqualDataBoundBeans(scm,p.getScm());
     }
 
-    /**
+    /*
      * Sample configuration that should result in no extensions at all
      */
     @Test
@@ -1597,7 +1594,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
         gc.withRepository(new RepositoryCallback<Void>() {
             public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                Ref head = repo.getRef("HEAD");
+                Ref head = repo.findRef("HEAD");
                 assertTrue("Detached HEAD",head.isSymbolic());
                 Ref t = head.getTarget();
                 assertEquals(t.getName(),"refs/heads/master");
@@ -1612,11 +1609,10 @@ public class GitSCMTest extends AbstractGitTestCase {
      * that the checkout to a local branch using remote branch name sans 'origin'.
      * This feature is necessary to support Maven release builds that push updated
      * pom.xml to remote branch as 
-     * <br/>
      * <pre>
      * git push origin localbranch:localbranch
      * </pre>
-     * @throws Exception
+     * @throws Exception on error
      */
     @Test
     public void testCheckoutToDefaultLocalBranch_StarStar() throws Exception {
@@ -1637,11 +1633,10 @@ public class GitSCMTest extends AbstractGitTestCase {
      * that the checkout to a local branch using remote branch name sans 'origin'.
      * This feature is necessary to support Maven release builds that push updated
      * pom.xml to remote branch as 
-     * <br/>
      * <pre>
      * git push origin localbranch:localbranch
      * </pre>
-     * @throws Exception
+     * @throws Exception on error
      */
     @Test
     public void testCheckoutToDefaultLocalBranch_NULL() throws Exception {
@@ -1657,10 +1652,9 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_LOCAL_BRANCH", "master", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
 
-    /**
+    /*
      * Verifies that GIT_LOCAL_BRANCH is not set if LocalBranch extension
      * is not configured.
-     * @throws Exception
      */
     @Test
     public void testCheckoutSansLocalBranchExtension() throws Exception {
@@ -1673,7 +1667,38 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
        assertEquals("GIT_LOCAL_BRANCH", null, getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
+    
+    /*
+     * Verifies that GIT_CHECKOUT_DIR is set to "checkoutDir" if RelativeTargetDirectory extension
+     * is configured.
+     */
+    @Test
+    public void testCheckoutRelativeTargetDirectoryExtension() throws Exception {
+       FreeStyleProject project = setupProject("master", false, "checkoutDir");
 
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       GitSCM git = (GitSCM)project.getScm();
+       git.getExtensions().add(new RelativeTargetDirectory("checkoutDir"));
+       FreeStyleBuild build1 = build(project, "checkoutDir", Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_CHECKOUT_DIR", "checkoutDir", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
+    }
+
+    /*
+     * Verifies that GIT_CHECKOUT_DIR is not set if RelativeTargetDirectory extension
+     * is not configured.
+     */
+    @Test
+    public void testCheckoutSansRelativeTargetDirectoryExtension() throws Exception {
+       FreeStyleProject project = setupSimpleProject("master");
+
+       final String commitFile1 = "commitFile1";
+       commit(commitFile1, johnDoe, "Commit number 1");
+       FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+       assertEquals("GIT_CHECKOUT_DIR", null, getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
+    }
     @Test
     public void testCheckoutFailureIsRetryable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
@@ -1820,11 +1845,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
-    /**
-     * Test for JENKINS-22009.
-     *
-     * @throws Exception
-     */
+    @Issue("JENKINS-22009")
     @Test
     public void testPolling_environmentValueInBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
@@ -1985,11 +2006,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 		assertFalse(pollingResult.hasChanges());
 	}
 
-    /**
-     * Test for JENKINS-24467.
-     *
-     * @throws Exception
-     */
+    @Issue("JENKINS-24467")
     @Test
     public void testPolling_environmentValueAsEnvironmentContributingAction() throws Exception {
         // create parameterized project with environment value in branch specification
@@ -2032,9 +2049,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
-     * Tests that builds have the correctly specified Custom SCM names, associated with
-     * each build.
-     * @throws Exception on various exceptions
+     * Tests that builds have the correctly specified Custom SCM names, associated with each build.
+     * @throws Exception on error
      */
     // Flaky test distracting from primary goal
     // @Test
@@ -2102,7 +2118,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * @param expectedScmName Expected SCM name for commit.
      * @param ordinal number of commit to log into errors, if any
      * @param git git SCM
-     * @throws Exception on various exceptions occur
+     * @throws Exception on error
      */
     private int notifyAndCheckScmName(FreeStyleProject project, ObjectId commit,
             String expectedScmName, int ordinal, GitSCM git, ObjectId... priorCommits) throws Exception {
@@ -2131,10 +2147,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("Wrong SCM Name", expectedScmName, buildData.getScmName());
     }
 
-    /**
+    /*
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
-     * @throws Exception on various exceptions
      */
     @Issue("JENKINS-24133")
     // Flaky test distracting from primary focus
@@ -2387,7 +2402,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * @param expectedBranch branch, that is expected to be built
      * @param ordinal number of commit to log into errors, if any
      * @param git git SCM
-     * @throws Exception on various exceptions occur
+     * @throws Exception on error
      */
     private void notifyAndCheckBranch(FreeStyleProject project, ObjectId commit,
             String expectedBranch, int ordinal, GitSCM git) throws Exception {
@@ -2410,7 +2425,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * @param project project to trigger
      * @return whether the new build has been triggered (<code>true</code>) or
      *         not (<code>false</code>).
-     * @throws Exception on various exceptions
+     * @throws Exception on error
      */
     private boolean notifyCommit(FreeStyleProject project, ObjectId commitId) throws Exception {
         final int initialBuildNumber = project.getLastBuild().getNumber();

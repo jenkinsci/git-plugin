@@ -40,6 +40,7 @@ import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
@@ -54,6 +55,7 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.GitUtils;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import java.io.File;
@@ -66,6 +68,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -298,14 +301,17 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      * @param gitTool the {@link GitTool#getName()} to resolve.
      * @return the {@link GitTool}
      * @since 3.4.0
+     * @deprecated Use {@link #resolveGitTool(String, TaskListener)} instead
      */
     @CheckForNull
+    @Deprecated
     protected GitTool resolveGitTool(String gitTool) {
-        return StringUtils.isBlank(gitTool)
-                ? GitTool.getDefaultInstallation()
-                : Jenkins.getActiveInstance()
-                        .getDescriptorByType(GitTool.DescriptorImpl.class)
-                        .getInstallation(gitTool);
+        return resolveGitTool(gitTool, TaskListener.NULL);
+    }
+
+    protected GitTool resolveGitTool(String gitTool, TaskListener listener) {
+        final Jenkins jenkins = Jenkins.getInstance();
+        return GitUtils.resolveGitTool(gitTool, jenkins, null, TaskListener.NULL);
     }
 
     private interface Retriever<T> {
@@ -324,7 +330,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         try {
             File cacheDir = getCacheDir(cacheEntry);
             Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-            GitTool tool = resolveGitTool(context.gitTool());
+            GitTool tool = resolveGitTool(context.gitTool(), listener);
             if (tool != null) {
                 git.using(tool.getGitExe());
             }
@@ -794,7 +800,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         // 8.  A short/full revision hash that is not the head revision of a branch (we'll need to fetch everything to
         // try and resolve the hash from the history of one of the heads)
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
-        GitTool tool = resolveGitTool(context.gitTool());
+        GitTool tool = resolveGitTool(context.gitTool(), listener);
         if (tool != null) {
             git.using(tool.getGitExe());
         }
@@ -1017,7 +1023,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             return result;
         }
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
-        GitTool tool = resolveGitTool(context.gitTool());
+        GitTool tool = resolveGitTool(context.gitTool(), listener);
         if (tool != null) {
             git.using(tool.getGitExe());
         }
@@ -1084,7 +1090,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
-        GitTool tool = resolveGitTool(context.gitTool());
+        GitTool tool = resolveGitTool(context.gitTool(), listener);
         if (tool != null) {
             git.using(tool.getGitExe());
         }
@@ -1354,7 +1360,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         /**
          * The subversion revision.
          */
-        private String hash;
+        private final String hash;
 
         public SCMRevisionImpl(SCMHead head, String hash) {
             super(head);
@@ -1380,8 +1386,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
             SCMRevisionImpl that = (SCMRevisionImpl) o;
 
-            return StringUtils.equals(hash, that.hash) && getHead().equals(that.getHead());
-
+            return Objects.equals(hash, that.hash)
+                    && Objects.equals(getHead(), that.getHead());
         }
 
         /**
@@ -1389,7 +1395,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
          */
         @Override
         public int hashCode() {
-            return hash != null ? hash.hashCode() : 0;
+            return Objects.hash(hash, getHead());
         }
 
         /**

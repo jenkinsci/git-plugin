@@ -3,6 +3,7 @@ package jenkins.plugins.git;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.InvisibleAction;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * @author Stephen Connolly
@@ -42,17 +43,13 @@ public class GitRemoteHeadRefAction extends InvisibleAction implements Serializa
 
         GitRemoteHeadRefAction that = (GitRemoteHeadRefAction) o;
 
-        if (!remote.equals(that.remote)) {
-            return false;
-        }
-        return name.equals(that.name);
+        return Objects.equals(remote, that.remote)
+                && Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        int result = remote.hashCode();
-        result = 31 * result + name.hashCode();
-        return result;
+        return Objects.hash(remote, name);
     }
 
     @Override
