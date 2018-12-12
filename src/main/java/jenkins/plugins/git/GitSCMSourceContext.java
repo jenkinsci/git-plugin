@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -369,20 +370,22 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             RefNameMapping that = (RefNameMapping) o;
 
-            if (!ref.equals(that.ref)) return false;
-            return name.equals(that.name);
+            return Objects.equals(ref, that.ref)
+                    && Objects.equals(name, that.name);
         }
 
         @Override
         public int hashCode() {
-            int result = ref.hashCode();
-            result = 31 * result + name.hashCode();
-            return result;
+            return Objects.hash(ref, name);
         }
 
         @Override

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.eclipse.jgit.lib.ObjectId;
 
 import static org.hamcrest.Matchers.*;
@@ -259,6 +261,15 @@ public class BuildDataTest {
         emptyData.remoteUrls = null;
         assertNotEquals("Non-empty object equal empty", data, emptyData);
         assertNotEquals("Empty object similar to non-empty", emptyData, data);
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(BuildData.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .withIgnoredFields("index", "scmName")
+                .verify();
     }
 
     @Test

@@ -44,9 +44,11 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -194,20 +196,21 @@ public class GitSCMFileSystemTest {
 
     @Test
     public void lastModified_Smokes() throws Exception {
+        Assume.assumeTrue("Windows file system last modify dates not trustworthy", !isWindows());
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        final long fileSystemAllowedOffset = isWindows() ? 4000 : 1500;
+        final long fileSystemAllowedOffset = 1500;
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
-        long currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
         long lastModified = fs.lastModified();
         assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
         assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
         SCMFile file = fs.getRoot().child("file");
-        currentTime = isWindows() ? System.currentTimeMillis() / 1000L * 1000L : System.currentTimeMillis();
+        currentTime = System.currentTimeMillis();
         lastModified = file.lastModified();
         assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
         assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
@@ -349,6 +352,13 @@ public class GitSCMFileSystemTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertTrue(gitPlugin260FS.changesSince(rev261, out));
         assertThat(out.toString(), is(""));
+    }
+
+    @Issue("JENKINS-52964")
+    @Test
+    public void filesystem_supports_descriptor() throws Exception {
+        SCMSourceDescriptor descriptor = r.jenkins.getDescriptorByType(GitSCMSource.DescriptorImpl.class);
+        assertTrue(SCMFileSystem.supports(descriptor));
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

@@ -28,7 +28,6 @@ import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -657,12 +656,13 @@ public class AbstractGitSCMSourceTest {
         assertEquals("v3", fileAt("pr/1", run, source, listener));
     }
 
+    private int wsCount;
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener);
         if (rev == null) {
             return null;
         } else {
-            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision);
+            FilePath ws = new FilePath(run.getRootDir()).child("ws" + ++wsCount);
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }

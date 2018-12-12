@@ -10,6 +10,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -183,34 +184,15 @@ public class SubmoduleOption extends GitSCMExtension {
 
         SubmoduleOption that = (SubmoduleOption) o;
 
-        if (disableSubmodules != that.disableSubmodules) {
-            return false;
-        }
-        if (recursiveSubmodules != that.recursiveSubmodules) {
-            return false;
-        }
-        if (trackingSubmodules != that.trackingSubmodules) {
-            return false;
-        }
-        if (parentCredentials != that.parentCredentials) {
-            return false;
-        }
-        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
-            return false;
-        }
-        if (timeout != null ? !timeout.equals(that.timeout) : that.timeout != null) {
-            return false;
-        }
-        if (shallow != that.shallow) {
-            return false;
-        }
-        if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
-            return false;
-        }
-        if (threads != null ? !threads.equals(that.threads) : that.threads == null) {
-            return false;
-        }
-        return true;
+        return disableSubmodules == that.disableSubmodules
+                && recursiveSubmodules == that.recursiveSubmodules
+                && trackingSubmodules == that.trackingSubmodules
+                && parentCredentials == that.parentCredentials
+                && Objects.equals(reference, that.reference)
+                && Objects.equals(timeout, that.timeout)
+                && shallow == that.shallow
+                && Objects.equals(depth, that.depth)
+                && Objects.equals(threads, that.threads);
     }
 
     /**
@@ -218,7 +200,7 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return SubmoduleOption.class.hashCode();
+        return Objects.hash(disableSubmodules, recursiveSubmodules, trackingSubmodules, parentCredentials, reference, timeout, shallow, depth);
     }
 
     /**
