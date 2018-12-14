@@ -2196,6 +2196,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         BuildData buildData = Mockito.mock(BuildData.class);
         Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
         Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+        Mockito.when(buildData.getBuildsByBranchName()).thenReturn(new HashMap() {{
+            put("refs/remotes/origin/master", null);
+        }});
 
         /* List of build data that will be returned by the mocked BuildData */
         List<BuildData> buildDataList = new ArrayList<>();
@@ -2231,6 +2234,9 @@ public class GitSCMTest extends AbstractGitTestCase {
        BuildData buildData = Mockito.mock(BuildData.class);
        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+       Mockito.when(buildData.getBuildsByBranchName()).thenReturn(new HashMap() {{
+           put("refs/remotes/origin/master", null);
+       }});
 
        /* List of build data that will be returned by the mocked BuildData */
        List<BuildData> buildDataList = new ArrayList<>();
@@ -2272,6 +2278,9 @@ public class GitSCMTest extends AbstractGitTestCase {
        BuildData buildData = Mockito.mock(BuildData.class);
        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+       Mockito.when(buildData.getBuildsByBranchName()).thenReturn(new HashMap() {{
+           put("refs/remotes/origin/master", null);
+       }});
 
        /* List of build data that will be returned by the mocked BuildData */
        List<BuildData> buildDataList = new ArrayList<>();
@@ -2313,6 +2322,9 @@ public class GitSCMTest extends AbstractGitTestCase {
        BuildData buildData = Mockito.mock(BuildData.class);
        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+       Mockito.when(buildData.getBuildsByBranchName()).thenReturn(new HashMap() {{
+           put("refs/remotes/origin/master", null);
+       }});
 
        /* List of build data that will be returned by the mocked BuildData */
        List<BuildData> buildDataList = new ArrayList<>();

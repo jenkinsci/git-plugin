@@ -25,6 +25,8 @@ import hudson.model.Descriptor.FormException;
 import hudson.model.Items;
 import hudson.model.Job;
 import hudson.model.Node;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.Saveable;
@@ -588,6 +590,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return refSpecs;
     }
 
+    private String getRepositoryNameByBranch(String branchName) {
+        if (getRepositories().size() != 1) {
+            String branchWithoutRefs = getBranchName(branchName);
+            for (RemoteConfig repo : getRepositories()) {
+                if (branchWithoutRefs.startsWith(repo.getName() + "/")) {
+                    return repo.getName();
+                }
+            }
+        } else {
+            return getRepositories().get(0).getName();
+        }
+        return null;
+    }
+
     /**
      * If the configuration is such that we are tracking just one branch of one repository
      * return that branch specifier (in the form of something like "origin/master" or a SHA1-hash
@@ -601,19 +617,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
         String branch = getBranches().get(0).getName();
-        String repository = null;
-
-        if (getRepositories().size() != 1) {
-        	for (RemoteConfig repo : getRepositories()) {
-        		if (branch.startsWith(repo.getName() + "/")) {
-        			repository = repo.getName();
-        			break;
-        		}
-        	}
-        } else {
-        	repository = getRepositories().get(0).getName();
-        }
-
+        String repository = getRepositoryNameByBranch(branch);
 
         // replace repository wildcard with repository name
         if (branch.startsWith("*/") && repository != null) {
@@ -1389,12 +1393,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private String getBranchName(Branch branch)
     {
-        String name = branch.getName();
-        if(name.startsWith("refs/remotes/")) {
-            //Restore expected previous behaviour
-            name = name.substring("refs/remotes/".length());
-        }
-        return name;
+        return getBranchName(branch.getName());
+    }
+
+    private String getBranchName(String branch) {
+        return BranchSpec.cutRefs(branch);
     }
 
     private String getLastBuiltCommitOfBranch(Run<?, ?> build, Branch branch) {
@@ -1723,10 +1726,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return DescriptorImpl.createMergeOptions(getUserMergeOptions(), remoteRepositories);
     }
 
-    private boolean isRelevantBuildData(BuildData bd) {
+    private boolean isRelevantBuildData(BuildData bd, EnvVars env) {
         for(UserRemoteConfig c : getUserRemoteConfigs()) {
             if(bd.hasBeenReferenced(c.getUrl())) {
-                return true;
+                for (BranchSpec branchSpec : getBranches()) {
+                    String repositoryName = getRepositoryNameByBranch(branchSpec.getExpandedName(env));
+                    for (String remoteBranch : bd.getBuildsByBranchName().keySet()) {
+                        String localBranchName = deriveLocalBranchName(getBranchName(remoteBranch));
+                        if (branchSpec.matchesRepositoryBranch(env, repositoryName, localBranchName)) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
@@ -1767,22 +1778,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return the last recorded build data
      */
     public @CheckForNull BuildData getBuildData(Run build) {
-        BuildData buildData = null;
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
-            for (BuildData bd : buildDataList) {
-                if (bd != null && isRelevantBuildData(bd)) {
-                    buildData = bd;
-                    break;
+            List<ParametersAction> parametersList = build.getActions(ParametersAction.class);
+            EnvVars env = new EnvVars();
+            for (ParametersAction parametersAction : parametersList) {
+                for (ParameterValue parameter : parametersAction.getParameters()) {
+                    parameter.buildEnvironment(build, env);
                 }
             }
-            if (buildData != null) {
-                break;
+            for (BuildData bd : buildDataList) {
+                if (bd != null && isRelevantBuildData(bd, env)) {
+                    return bd;
+                }
             }
             build = build.getPreviousBuild();
         }
 
-        return buildData;
+        return null;
     }
 
     /**

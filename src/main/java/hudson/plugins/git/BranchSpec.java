@@ -92,13 +92,25 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
      * @return true if repositoryName/branchName matches this BranchSpec
      */
     public boolean matchesRepositoryBranch(String repositoryName, String branchName) {
+        return matchesRepositoryBranch(new EnvVars(), repositoryName, branchName);
+    }
+
+    /**
+     * Compare the configured pattern to a git branch defined by the repository name and branch name.
+     * @param environment environment variables to use in comparison
+     * @param repositoryName git repository name
+     * @param branchName git branch name
+     * @return true if repositoryName/branchName matches this BranchSpec
+     */
+    public boolean matchesRepositoryBranch(EnvVars environment, String repositoryName, String branchName) {
         if (branchName == null) {
             return false;
         }
-        Pattern pattern = getPattern(new EnvVars(), repositoryName);
+        Pattern pattern = getPattern(environment, repositoryName);
         String branchWithoutRefs = cutRefs(branchName);
         return pattern.matcher(branchWithoutRefs).matches() || pattern.matcher(join(repositoryName, branchWithoutRefs)).matches();
     }
+
 
     /**
      * @deprecated use {@link #filterMatching(Collection, EnvVars)}
@@ -137,7 +149,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return items;
     }
 
-    private String getExpandedName(EnvVars env) {
+    String getExpandedName(EnvVars env) {
         String expandedName = env.expand(name);
         if (expandedName.length() == 0) {
             return "**";
@@ -229,7 +241,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
         return builder.toString();
     }
 
-    private String cutRefs(@NonNull String name) {
+    static String cutRefs(@NonNull String name) {
         Matcher matcher = GitSCM.GIT_REF.matcher(name);
         return matcher.matches() ? matcher.group(2) : name;
     }
