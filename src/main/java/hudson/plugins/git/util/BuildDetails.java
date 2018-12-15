@@ -6,7 +6,6 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import java.io.Serializable;
 import java.util.Collection;
@@ -14,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
@@ -24,39 +22,27 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 import static hudson.Util.fixNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
- * Historical Git related build data.
+ * Captures the Git related information for a single build.
  *
- * <P>
- * This object stores build data for multiple past builds keyed by branch
- * name. It was historically added to {@link AbstractBuild#getActions()} but
- * is now generated at run time from {@link BuildDetails} data to avoid
- * bloating the build.xml file.
+ * <p>
+ * This object is added to {@link AbstractBuild#getActions()}.
+ * It persists Git related information for a single build, and is used
+ * at run time to build up an {@link BuildData} object.
  */
 @ExportedBean(defaultVisibility = 999)
-public class BuildData implements Action, Serializable, Cloneable {
+public class BuildDetails implements Action, Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Map of branch {@code name -> build} (Branch name to last built SHA1).
-     *
-     * <p>
-     * This map contains all the branches we've built in the past (including the build that this {@link BuildData}
-     * is attached to)
+     * The current build.
      */
-    public Map<String, Build> buildsByBranchName = new HashMap<>();
-
-    /**
-     * The last build that we did (among the values in {@link #buildsByBranchName}.)
-     */
-    public Build lastBuild;
+    public Build build;
 
     /**
      * The name of the SCM as given by the user.
@@ -69,46 +55,41 @@ public class BuildData implements Action, Serializable, Cloneable {
     public Set<String> remoteUrls = new HashSet<>();
 
     /**
-     * Allow disambiguation of the action url when multiple {@link BuildData} actions present.
+     * Allow disambiguation of the action url when multiple {@link BuildDetails} actions present.
      */
     @CheckForNull
     private Integer index;
 
-    public BuildData() {
+    public BuildDetails(Build build) {
+        this.build = build;
     }
 
-    public BuildData(String scmName) {
+    public BuildDetails(Build build, String scmName) {
+        this.build = build;
         this.scmName = scmName;
     }
 
-    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+    public BuildDetails(Build build, String scmName, Collection<UserRemoteConfig> remoteConfigs) {
+        this.build = build;
         this.scmName = scmName;
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
         }
     }
 
-    public BuildData(@NonNull BuildDetails details) {
-        this.scmName = details.scmName;
-        for (String url : details.remoteUrls) {
-            remoteUrls.add(url);
-        }
-        this.saveBuild(details.build);
-    }
-
     /**
-     * Returns the build data display name, optionally with SCM name.
+     * Returns the build details display name, optionally with SCM name.
      * This string needs to be relatively short because it is
      * displayed in a column with other short links.  If it is
      * lengthened, it causes the other data on the page to shift
      * right.  The page is then difficult to read.
      *
-     * @return build data display name
+     * @return build details display name
      */
     public String getDisplayName() {
         if (scmName != null && !scmName.isEmpty())
-            return "Git Build Data:" + scmName;
-        return "Git Build Data";
+            return "Git Build Details:" + scmName;
+        return "Git Build Details";
     }
 
     public String getIconFileName() {
@@ -120,7 +101,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     /**
-     * Sets an identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}
+     * Sets an identifier used to disambiguate multiple {@link BuildDetails} actions attached to a {@link Run}
      *
      * @param index the index, indexes less than or equal to {@code 1} will be discarded.
      */
@@ -129,7 +110,7 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     /**
-     * Gets the identifier used to disambiguate multiple {@link BuildData} actions attached to a {@link Run}.
+     * Gets the identifier used to disambiguate multiple {@link BuildDetails} actions attached to a {@link Run}.
      *
      * @return the index.
      */
@@ -149,75 +130,10 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Object readResolve() {
-        Map<String,Build> newBuildsByBranchName = new HashMap<>();
-
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = fixNull(buildByBranchName.getKey());
-            Build build = buildByBranchName.getValue();
-            newBuildsByBranchName.put(branchName, build);
-        }
-
-        this.buildsByBranchName = newBuildsByBranchName;
-
         if(this.remoteUrls == null)
             this.remoteUrls = new HashSet<>();
 
         return this;
-    }
-
-    /**
-     * Return true if the history shows this SHA1 has been built.
-     * False otherwise.
-     * @param sha1 SHA1 hash of commit
-     * @return true if sha1 has been built
-     */
-    public boolean hasBeenBuilt(ObjectId sha1) {
-    	return getLastBuild(sha1) != null;
-    }
-
-    public Build getLastBuild(ObjectId sha1) {
-        // fast check by first checking most recent build
-        if (lastBuild != null && (lastBuild.revision.getSha1().equals(sha1) || lastBuild.marked.getSha1().equals(sha1))) return lastBuild;
-        try {
-            for(Build b : buildsByBranchName.values()) {
-                if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
-                    return b;
-            }
-
-            return null;
-        }
-        catch(Exception ex) {
-            return null;
-        }
-    }
-
-    public void saveBuild(Build build) {
-    	lastBuild = build;
-    	for(Branch branch : build.marked.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
-    	}
-        for(Branch branch : build.revision.getBranches()) {
-            buildsByBranchName.put(fixNull(branch.getName()), build);
-        }
-    }
-
-    public Build getLastBuildOfBranch(String branch) {
-        return buildsByBranchName.get(branch);
-    }
-
-    /**
-     * Gets revision of the previous build.
-     * @return revision of the last build.
-     *    May be null will be returned if nothing has been checked out (e.g. due to wrong repository or branch)
-     */
-    @Exported
-    public @CheckForNull Revision getLastBuiltRevision() {
-        return lastBuild==null?null:lastBuild.revision;
-    }
-
-    @Exported
-    public Map<String,Build> getBuildsByBranchName() {
-        return buildsByBranchName;
     }
 
     public void setScmName(String scmName)
@@ -247,40 +163,19 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     @Override
-    public BuildData clone() {
-        BuildData clone;
+    public BuildDetails clone() {
+        BuildDetails clone;
         try {
-            clone = (BuildData) super.clone();
+            clone = (BuildDetails) super.clone();
         }
         catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Error cloning BuildData", e);
+            throw new RuntimeException("Error cloning BuildDetails", e);
         }
 
-        IdentityHashMap<Build, Build> clonedBuilds = new IdentityHashMap<>();
-
-        clone.buildsByBranchName = new HashMap<>();
         clone.remoteUrls = new HashSet<>();
 
-        for (Map.Entry<String, Build> buildByBranchName : buildsByBranchName.entrySet()) {
-            String branchName = buildByBranchName.getKey();
-            if (branchName == null) {
-                branchName = "";
-            }
-            Build build = buildByBranchName.getValue();
-            Build clonedBuild = clonedBuilds.get(build);
-            if (clonedBuild == null) {
-                clonedBuild = build.clone();
-                clonedBuilds.put(build, clonedBuild);
-            }
-            clone.buildsByBranchName.put(branchName, clonedBuild);
-        }
-
-        if (lastBuild != null) {
-            clone.lastBuild = clonedBuilds.get(lastBuild);
-            if (clone.lastBuild == null) {
-                clone.lastBuild = lastBuild.clone();
-                clonedBuilds.put(lastBuild, clone.lastBuild);
-            }
+        if (build != null) {
+            clone.build = build;
         }
 
         for(String remoteUrl : getRemoteUrls())
@@ -300,8 +195,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         final String scmNameString = scmName == null ? "<null>" : scmName;
         return super.toString()+"[scmName="+scmNameString+
                 ",remoteUrls="+remoteUrls+
-                ",buildsByBranchName="+buildsByBranchName+
-                ",lastBuild="+lastBuild+"]";
+                ",build="+build+"]";
     }
 
     /**
@@ -338,11 +232,11 @@ public class BuildData implements Action, Serializable, Cloneable {
      * Like {@link #equals(Object)} but doesn't check the URL as strictly, since those can vary
      * while still representing the same remote repository.
      *
-     * @param that the {@link BuildData} to compare with.
-     * @return {@code true} if the supplied {@link BuildData} is similar to this {@link BuildData}.
+     * @param that the {@link BuildDetails} to compare with.
+     * @return {@code true} if the supplied {@link BuildDetails} is similar to this {@link BuildDetails}.
      * @since 3.2.0
      */
-    public boolean similarTo(BuildData that) {
+    public boolean similarTo(BuildDetails that) {
         if (that == null) {
             return false;
         }
@@ -350,7 +244,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
-        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+        if (this.build == null ? that.build != null : !this.build.equals(that.build)) {
             return false;
         }
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());
@@ -366,25 +260,44 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof BuildDetails)) {
             return false;
         }
 
-        BuildData that = (BuildData) o;
+        BuildDetails otherBuildDetails = (BuildDetails) o;
 
-        return Objects.equals(remoteUrls, that.remoteUrls)
-                && Objects.equals(buildsByBranchName, that.buildsByBranchName)
-                && Objects.equals(lastBuild, that.lastBuild);
+        /* Not equal if exactly one of the two remoteUrls is null */
+        if ((this.remoteUrls == null) ^ (otherBuildDetails.remoteUrls == null)) {
+            return false;
+        }
+
+        /* Not equal if remoteUrls differ */
+        if ((this.remoteUrls != null) && (otherBuildDetails.remoteUrls != null)
+                && !this.remoteUrls.equals(otherBuildDetails.remoteUrls)) {
+            return false;
+        }
+
+        /* Not equal if exactly one of the two build is null */
+        if ((this.build == null) ^ (otherBuildDetails.build == null)) {
+            return false;
+        }
+
+        /* Not equal if build differs */
+        if ((this.build != null) && (otherBuildDetails.build != null)
+                && !this.build.equals(otherBuildDetails.build)) {
+            return false;
+        }
+
+        return true;
     }
 
-    @Override
     public int hashCode() {
-        return Objects.hash(remoteUrls, buildsByBranchName, lastBuild);
+        int result = 3;
+        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
+        result = result * 17 + ((this.build == null) ? 11 : this.build.hashCode());
+        return result;
     }
 
     /* Package protected for easier testing */
-    static final Logger LOGGER = Logger.getLogger(BuildData.class.getName());
+    static final Logger LOGGER = Logger.getLogger(BuildDetails.class.getName());
 }

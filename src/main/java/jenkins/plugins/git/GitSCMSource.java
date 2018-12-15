@@ -23,7 +23,9 @@
  */
 package jenkins.plugins.git;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
@@ -31,14 +33,18 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
+
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ParameterValue;
 import hudson.model.Queue;
+import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -49,6 +55,8 @@ import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
@@ -98,6 +106,7 @@ import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -108,6 +117,8 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+import javax.annotation.Nonnull;
 
 /**
  * A {@link SCMSource} that discovers branches in a git repository.
@@ -455,9 +466,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
             }
 
             value = Util.fixEmptyAndTrim(value);
-            if (value == null) {
-                return FormValidation.ok();
-            }
 
             remote = Util.fixEmptyAndTrim(remote);
             if (remote == null)
@@ -465,25 +473,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
             {
                 return FormValidation.ok();
             }
+            StandardCredentials credentials = value == null ? null :
+                    CredentialsMatchers.firstOrNull(CredentialsProvider
+                                    .lookupCredentials(StandardCredentials.class, context, ACL.SYSTEM,
+                                            URIRequirementBuilder.fromUri(remote.toString()).build()),
+                            CredentialsMatchers.withId(value));
 
-            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
-                    StandardUsernameCredentials.class,
-                    context,
-                    context instanceof Queue.Task
-                            ? Tasks.getAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    URIRequirementBuilder.fromUri(remote).build(),
-                    GitClient.CREDENTIALS_MATCHER)) {
-                if (StringUtils.equals(value, o.value)) {
-                    // TODO check if this type of credential is acceptable to the Git client or does it merit warning
-                    // NOTE: we would need to actually lookup the credential to do the check, which may require
-                    // fetching the actual credential instance from a remote credentials store. Perhaps this is
-                    // not required
-                    return FormValidation.ok();
-                }
-            }
-            // no credentials available, can't check
-            return FormValidation.warning("Cannot find any credentials with id " + value);
+            return GitUtils.validateCredentials(remote,credentials);
         }
 
         @Deprecated
@@ -691,5 +687,22 @@ public class GitSCMSource extends AbstractGitSCMSource {
             }
             return result;
         }
+    }
+
+    public static class GitUtils{
+        static  FormValidation validateCredentials(@Nonnull String uri, StandardCredentials credentials) throws GitException {
+            Git git = new Git(TaskListener.NULL, new EnvVars());
+            try {
+                GitClient gitClient = git.getClient();
+                if(credentials != null) {
+                    gitClient.addCredentials(uri, credentials);
+                }
+                gitClient.getRemoteReferences(uri,null, true,false);
+            } catch (IOException | InterruptedException | IllegalStateException | GitException e) {
+                return FormValidation.error(e, "Error validating credentials:");
+            }
+            return FormValidation.ok();
+        }
+
     }
 }

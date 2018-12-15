@@ -1,6 +1,15 @@
 package jenkins.plugins.git;
 
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -16,12 +25,10 @@ import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
-import hudson.tools.ToolInstaller;
-import hudson.util.LogTaskListener;
+import hudson.util.FormValidation;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -29,10 +36,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import hudson.util.StreamTaskListener;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMEventListener;
@@ -62,20 +68,8 @@ import java.util.Collections;
 import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -367,6 +361,100 @@ public class GitSCMSourceTest {
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
         instance.retrieveRevisions(log);
         assertTrue("Installer should be invoked", inst.isInvoked());
+    }
+
+    private CredentialsStore store = null;
+
+    @Before
+    public void enableSystemCredentialsProvider() throws Exception {
+        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
+                Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+            if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
+                store = s;
+                break;
+            }
+        }
+        assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    private StandardCredentials getUsernameCredential() {
+        String username = "bad-user";
+        String password = "bad-password";
+        CredentialsScope scope = CredentialsScope.GLOBAL;
+        String id = "username-" + username + "-password-" + password;
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    private StandardCredentials getPrivateKeyCredential() {
+        String username = "beemarkwaite"; /* bad user - known to not have permissions */
+        String privateKey =
+            "-----BEGIN DSA PRIVATE KEY-----\n" +
+            "MIIBugIBAAKBgQCHcFL812DoE8my2cYiFA/vyrlpgOPNrHrIOsRFD2E1kVpJRrbo\n" +
+            "LFMzClfQ5frVKMhibdoVZGVK4MZc5GkGv/RupZSfwM7G+Z6UAGyjxJiF/Y7N488P\n" +
+            "BB+nRZ++DzqXAQVEjZQJzOI/m9quVxvjBhamle3I4UNc7IXIb2t3VxCTGwIVAO64\n" +
+            "g/PzEAJjv+leHhmG84kJGhtDAoGADYsCgBxES6VqcQZL7DbzRfBRCrAIy4iupYw9\n" +
+            "bANfqYjvJNJlfpd2b/g9hp0dmxRA6ds+G5nbW8hgFXN3gquwkwpwrwzkIXWSz9mL\n" +
+            "ZVE9y6jOrwzbCu23QKrsiv7AfALL1xrir/lT9vbFo3I4ok7RZkjDg8YjvpDeFA3g\n" +
+            "NTtwvC4CgYBPiCnmiOEaX+QeeAsIJWgKwW2CuCfPjAfDwPnXjbMIAtbd8VTwU+0A\n" +
+            "Vc83wa1dkGzYYHf4dbzNRrbvkybM6SuKQLVcH9LapIvdssW9J6SH3x7VKkXXRxDw\n" +
+            "hLyxTverpOR7XHN6dnUXjdThhEIE5Aean7P+kuT/KtNo2OdL4aU7EgIUKwkA9p99\n" +
+            "mMmJUTIhBgdKjE9P30Y=\n" +
+            "-----END DSA PRIVATE KEY-----\n"; /* Valid key with no permissions */
+        BasicSSHUserPrivateKey.DirectEntryPrivateKeySource privateKeySource = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(privateKey);
+        CredentialsScope scope = CredentialsScope.GLOBAL;
+        String id = "username-" + username + "-dsa-private-key";
+        String passphrase = "";
+        return new BasicSSHUserPrivateKey(scope, id, username, privateKeySource, passphrase, "Valid DSA private key with no permissions");
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationOkEmptyRemote() throws Exception {
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation = scmSource.doCheckCredentialsId(null, "", "");
+        assertEquals(validation, FormValidation.ok());
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationOk () throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci/git-plugin","");
+        assertEquals(validation,FormValidation.ok());
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationFail () throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"git@github.com:jenkinsci-cert/git-plugin.git","");
+        assertEquals(validation.kind,FormValidation.Kind.ERROR);
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationFailHTTPSNullCredential() throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        FormValidation validation1 = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci-cert/git-plugin.git","");
+        assertEquals(validation1.kind,FormValidation.Kind.ERROR);
+        assertThat(validation1.getMessage(), startsWith("Error validating credentials"));
+     }
+
+    @Test
+    public void checkCredentialIdFormValidationFailSSHNonNullCredential() throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        StandardCredentials credential = getPrivateKeyCredential();
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"git@github.com:jenkinsci-cert/git-plugin.git", credential.getId());
+        assertEquals(validation.kind,FormValidation.Kind.ERROR);
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
+    }
+
+    @Test
+    public void checkCredentialIdFormValidationFailHTTPSNonNullCredential() throws Exception{
+        GitSCMSource.DescriptorImpl scmSource = new GitSCMSource.DescriptorImpl();
+        StandardCredentials credential = getUsernameCredential();
+        store.addCredentials(Domain.global(), credential);
+        FormValidation validation = scmSource.doCheckCredentialsId(null,"https://github.com/jenkinsci-cert/git-plugin.git",credential.getId());
+        assertEquals(validation.kind,FormValidation.Kind.ERROR);
+        assertThat(validation.getMessage(), startsWith("Error validating credentials"));
     }
 
     private static class HelloToolInstaller extends CommandInstaller {
