@@ -38,7 +38,6 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 
-
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ParameterValue;
