@@ -726,6 +726,35 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    public void testChangelogFirstParentMergeCommit() throws Exception {
+        // Create a few commits, one that is a merge commit and make sure that
+        // the merged committer is not included in the changelog.
+        FreeStyleProject project = setupSimpleProject("featureA");
+        ((GitSCM)project.getScm()).getExtensions().add(new ChangelogFirstParent());
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2, goes to master");
+
+        final String commitFile3 = "commitFile2";
+        commit(commitFile3, janeDoe, janeDoe, "Commit number 3, merge commit from master");
+
+        final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
+
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        final Set<User> secondCulprits = secondBuild.getCulprits();
+
+        assertEquals("The build should have only one culprit", 1, secondCulprits.size());
+        assertEquals("Changelog should only have the culprits from the branch",
+                janeDoe.getName(), secondCulprits.iterator().next().getFullName());
+    }
+
+    @Test
     public void testNewCommitToUntrackedBranchDoesNotTriggerBuild() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 

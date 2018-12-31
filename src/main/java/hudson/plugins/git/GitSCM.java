@@ -42,6 +42,7 @@ import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.ChangelogFirstParent;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -1317,6 +1318,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         exclusion = true;
                     }
                 }
+            }
+            if (getExtensions().get(ChangelogFirstParent.class)!=null) {
+                changelog.firstParent();
+                listener.getLogger().println("Using '--first-parent' argument when determining changelog.");
             }
 
             if (!exclusion) {
