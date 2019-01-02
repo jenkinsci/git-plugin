@@ -1,6 +1,7 @@
 package hudson.plugins.git.util;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.Api;
@@ -52,6 +53,7 @@ public class BuildDetails implements Action, Serializable, Cloneable {
     /**
      * The URLs that have been referenced.
      */
+    @NonNull
     private Set<String> remoteUrls = new HashSet<>();
 
     /**
@@ -123,13 +125,6 @@ public class BuildDetails implements Action, Serializable, Cloneable {
             return null;
         }
         return req.findAncestorObject(Run.class);
-    }
-
-    public Object readResolve() {
-        if(this.remoteUrls == null)
-            this.remoteUrls = new HashSet<>();
-
-        return this;
     }
 
     public void setScmName(String scmName)
