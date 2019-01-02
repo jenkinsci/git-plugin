@@ -93,7 +93,7 @@ public class BuildDetails implements Action, Serializable, Cloneable {
      */
     public String getDisplayName() {
         if (scmName != null && !scmName.isEmpty())
-            return "Git Build Details:" + scmName;
+            return "Git Build Details: " + scmName;
         return "Git Build Details";
     }
 
