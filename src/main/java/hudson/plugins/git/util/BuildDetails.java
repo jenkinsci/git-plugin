@@ -60,15 +60,6 @@ public class BuildDetails implements Action, Serializable, Cloneable {
     @CheckForNull
     private Integer index;
 
-    public BuildDetails(Build build) {
-        this.build = build;
-    }
-
-    public BuildDetails(Build build, String scmName) {
-        this.build = build;
-        this.scmName = scmName;
-    }
-
     public BuildDetails(Build build, String scmName, Collection<UserRemoteConfig> remoteConfigs) {
         this.build = build;
         this.scmName = scmName;
