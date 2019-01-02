@@ -861,11 +861,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
     }
 
-    @NonNull
-    private String fixNull(String name) {
-        return name != null ? name : "";
-    }
-
     /**
      * Fetch information from a particular remote repository.
      *
@@ -1807,14 +1802,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     private void addBuildByBranchNames(Map<String, Build> buildsByBranchName, Build build) {
         for (Branch branch : build.marked.getBranches()) {
-            String name = fixNull(branch.getName());
+            String name = Util.fixNull(branch.getName());
             if (!buildsByBranchName.containsKey(name)) {
                 buildsByBranchName.put(name, build);
             }
         }
 
         for (Branch branch : build.revision.getBranches()) {
-            String name = fixNull(branch.getName());
+            String name = Util.fixNull(branch.getName());
             if (!buildsByBranchName.containsKey(name)) {
                 buildsByBranchName.put(name, build);
             }
