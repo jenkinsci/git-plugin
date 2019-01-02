@@ -162,30 +162,6 @@ public class BuildDetails implements Action, Serializable, Cloneable {
         return remoteUrls.contains(remoteUrl);
     }
 
-    @Override
-    public BuildDetails clone() {
-        BuildDetails clone;
-        try {
-            clone = (BuildDetails) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Error cloning BuildDetails", e);
-        }
-
-        clone.remoteUrls = new HashSet<>();
-
-        if (build != null) {
-            clone.build = build;
-        }
-
-        for(String remoteUrl : getRemoteUrls())
-        {
-            clone.addRemoteUrl(remoteUrl);
-        }
-
-        return clone;
-    }
-
     public Api getApi() {
         return new Api(this);
     }
