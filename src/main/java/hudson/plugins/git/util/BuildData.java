@@ -89,11 +89,11 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public BuildData(@NonNull BuildDetails details) {
-        this.scmName = details.scmName;
-        for (String url : details.remoteUrls) {
+        this.scmName = details.getScmName();
+        for (String url : details.getRemoteUrls()) {
             remoteUrls.add(url);
         }
-        this.saveBuild(details.build);
+        this.saveBuild(details.getBuild());
     }
 
     /**

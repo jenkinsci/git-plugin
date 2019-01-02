@@ -64,7 +64,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		// Check for BuildDetails first
 		BuildDetails details = build.getAction(BuildDetails.class);
 		if (details != null) {
-			return new RevisionParameterAction(details.build.revision, getCombineQueuedCommits());
+			return new RevisionParameterAction(details.getBuild().revision, getCombineQueuedCommits());
 		}
 
 		// If BuildDetails isn't there, check for deprecated BuildData

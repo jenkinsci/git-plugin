@@ -51,7 +51,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         commitNewFile(commitFile1);
         FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
 
-        Revision r1 = b1.getAction(BuildDetails.class).build.revision;
+        Revision r1 = b1.getAction(BuildDetails.class).getBuild().revision;
 
         // create a second commit
         final String commitFile2 = "commitFile2";
@@ -62,9 +62,9 @@ public class RevisionParameterActionTest extends AbstractGitProject {
 				Collections.singletonList(new RevisionParameterAction(r1))).get();
 
         // Check revision built for b2 matches the r1 revision
-        assertEquals(b2.getAction(BuildDetails.class).build.revision
+        assertEquals(b2.getAction(BuildDetails.class).getBuild().revision
                 .getSha1String(), r1.getSha1String());
-        assertEquals(b2.getAction(BuildDetails.class).build.revision
+        assertEquals(b2.getAction(BuildDetails.class).getBuild().revision
                         .getBranches().iterator().next()
                         .getName(), r1.getBranches().iterator().next().getName());
 
@@ -72,7 +72,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
 
         // Check revision built for b3 does not match r1 revision
-        assertFalse(b3.getAction(BuildDetails.class).build.revision
+        assertFalse(b3.getAction(BuildDetails.class).getBuild().revision
                         .getSha1String().equals(r1.getSha1String()));
     }
 }

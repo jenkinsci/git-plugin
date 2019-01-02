@@ -42,17 +42,17 @@ public class BuildDetails implements Action, Serializable, Cloneable {
     /**
      * The current build.
      */
-    public Build build;
+    private final Build build;
 
     /**
      * The name of the SCM as given by the user.
      */
-    public String scmName;
+    private String scmName;
 
     /**
      * The URLs that have been referenced.
      */
-    public Set<String> remoteUrls = new HashSet<>();
+    private Set<String> remoteUrls = new HashSet<>();
 
     /**
      * Allow disambiguation of the action url when multiple {@link BuildDetails} actions present.
@@ -75,6 +75,11 @@ public class BuildDetails implements Action, Serializable, Cloneable {
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
         }
+    }
+
+    @Exported
+    public final Build getBuild() {
+        return build;
     }
 
     /**

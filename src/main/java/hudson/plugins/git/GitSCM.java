@@ -1862,7 +1862,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                      * a top down construction, we will only add branches
                      * that weren't build by "newer" builds already.
                      */
-                    addBuildByBranchNames(buildData.buildsByBranchName, oldBuildDetails.build);
+                    addBuildByBranchNames(buildData.buildsByBranchName, oldBuildDetails.getBuild());
                 }
 
             }
