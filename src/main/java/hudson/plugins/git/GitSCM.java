@@ -117,6 +117,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -830,7 +831,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             String ucCredentialsId = uc.getCredentialsId();
-            if (ucCredentialsId != null) {
+            if (ucCredentialsId == null) {
+                listener.getLogger().println("No credentials specified");
+            } else {
                 String url = getParameterString(uc.getUrl(), environment);
                 List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
                         StandardUsernameCredentials.class,
@@ -845,9 +848,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
+                    listener.getLogger().println(format("using credential %s", credentials.getId()));
                     if (project != null && project.getLastBuild() != null) {
                         CredentialsProvider.track(project.getLastBuild(), credentials);
                     }
+                } else {
+                    listener.getLogger().println(format("Warning: CredentialId \"%s\" could not be found.", ucCredentialsId));
                 }
             }
         }
