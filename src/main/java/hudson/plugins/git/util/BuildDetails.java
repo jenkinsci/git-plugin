@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * at run time to build up an {@link BuildData} object.
  */
 @ExportedBean(defaultVisibility = 999)
-public class BuildDetails implements Action, Serializable, Cloneable {
+public class BuildDetails implements Action, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
