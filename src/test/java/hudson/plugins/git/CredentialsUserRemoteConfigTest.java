@@ -25,6 +25,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
+
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
