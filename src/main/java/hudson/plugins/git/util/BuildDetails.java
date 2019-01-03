@@ -260,7 +260,7 @@ public class BuildDetails implements Action, Serializable {
 
     public int hashCode() {
         int result = 3;
-        result = result * 17 + ((this.remoteUrls == null) ? 5 : this.remoteUrls.hashCode());
+        result = result * 17 + this.remoteUrls.hashCode();
         result = result * 17 + ((this.build == null) ? 11 : this.build.hashCode());
         return result;
     }
