@@ -726,35 +726,6 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testChangelogFirstParentMergeCommit() throws Exception {
-        // Create a few commits, one that is a merge commit and make sure that
-        // the merged committer is not included in the changelog.
-        FreeStyleProject project = setupSimpleProject("featureA");
-        ((GitSCM)project.getScm()).getExtensions().add(new ChangelogFirstParent());
-
-        // create initial commit and then run the build against it:
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
-        final FreeStyleBuild firstBuild = build(project, Result.SUCCESS, commitFile1);
-
-        final String commitFile2 = "commitFile2";
-        commit(commitFile2, johnDoe, janeDoe, "Commit number 2, goes to master");
-
-        final String commitFile3 = "commitFile2";
-        commit(commitFile3, janeDoe, janeDoe, "Commit number 3, merge commit from master");
-
-        final FreeStyleBuild secondBuild = build(project, Result.SUCCESS, commitFile2);
-
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-
-        final Set<User> secondCulprits = secondBuild.getCulprits();
-
-        assertEquals("The build should have only one culprit", 1, secondCulprits.size());
-        assertEquals("Changelog should only have the culprits from the branch",
-                janeDoe.getName(), secondCulprits.iterator().next().getFullName());
-    }
-
-    @Test
     public void testNewCommitToUntrackedBranchDoesNotTriggerBuild() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -1277,6 +1248,60 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
         assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
+    }
+
+    @Test
+    public void testMergeChangelogFirstParent() throws Exception {
+        FreeStyleProject projectMaster = setupSimpleProject("master");
+        FreeStyleProject projectFeatureA = setupSimpleProject("featureA");
+
+        GitSCM scmMaster = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*/master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        projectMaster.setScm(scmMaster);
+
+        GitSCM scmFeatureA = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*/featureA")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scmFeatureA.getExtensions().add(new ChangelogFirstParent());
+        projectFeatureA.setScm(scmFeatureA);
+
+        // create two initial commits on master
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        build(projectMaster, Result.SUCCESS, "commitFileBase");
+        final ObjectId commitBase = testRepo.git.revListAll().get(0);
+
+        commit("commitFile1", johnDoe, "Commit number 1");
+        build(projectMaster, Result.SUCCESS, "commitFile1");
+        final ObjectId commit1 = testRepo.git.revListAll().get(0);
+
+        // Checkout the featureA branch from the first commit on master and
+        // perform an initial build to start the changelog which will be empty
+        // in this first build.
+        testRepo.git.checkout(ObjectId.toString(commitBase), "featureA");
+        build(projectFeatureA, Result.SUCCESS);
+
+        // Commit to featureA branch a normal commit.  This is the commit
+        // which is expected to show up in the changelog of the next build.
+        commit("commitFile2", janeDoe, "Commit number 2");
+
+        // Merge from master. The changelog of the next build should not show
+        // the master commit because --first-parent is specified.
+        testRepo.git.merge(commit1);
+
+        final FreeStyleBuild build2 = build(projectFeatureA, Result.SUCCESS, "commitFile2");
+
+        // Verify that the changelog only shows the commit from janeDoe.
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build2.getChangeSet();
+        assertEquals("Changelog should contain 1 item", 1, changeLog.getItems().length);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
     }
 
     @Test
