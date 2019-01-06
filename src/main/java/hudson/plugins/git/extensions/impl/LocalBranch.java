@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import java.util.Objects;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -18,7 +19,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class LocalBranch extends FakeGitSCMExtension {
     @CheckForNull
-    private String localBranch;
+    private final String localBranch;
 
     @DataBoundConstructor
     public LocalBranch(@CheckForNull String localBranch) {
@@ -44,7 +45,7 @@ public class LocalBranch extends FakeGitSCMExtension {
 
         LocalBranch that = (LocalBranch) o;
 
-        return localBranch != null ? localBranch.equals(that.localBranch) : that.localBranch == null;
+        return Objects.equals(localBranch, that.localBranch);
     }
 
     /**
@@ -52,7 +53,7 @@ public class LocalBranch extends FakeGitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return LocalBranch.class.hashCode();
+        return Objects.hashCode(localBranch);
     }
 
     /**

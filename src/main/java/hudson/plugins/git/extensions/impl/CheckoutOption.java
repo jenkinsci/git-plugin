@@ -10,6 +10,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -71,7 +72,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
 
         CheckoutOption that = (CheckoutOption) o;
 
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        return Objects.equals(timeout, that.timeout);
     }
 
     /**
@@ -79,7 +80,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return 0;
+        return Objects.hashCode(timeout);
     }
 
     /**

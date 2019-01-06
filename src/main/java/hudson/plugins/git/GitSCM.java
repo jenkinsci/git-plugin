@@ -73,6 +73,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -950,23 +951,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return tool.getGitExe();
     }
 
-    /**
-     * Web-bound method to let people look up a build by their SHA1 commit.
-     * @param sha1 SHA1 hash of commit
-     * @return most recent build of sha1
-     */
-    public AbstractBuild<?,?> getBySHA1(String sha1) {
-        AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        for (AbstractBuild b : p.getBuilds()) {
-            BuildData d = b.getAction(BuildData.class);
-            if (d!=null && d.lastBuild!=null) {
-                Build lb = d.lastBuild;
-                if (lb.isFor(sha1)) return b;
-            }
-        }
-        return null;
-    }
-
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Job project;
@@ -1449,7 +1433,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+        try {
+            GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(gitTool).getClient();
+            return new GitChangeLogParser(gitClient, getExtensions().get(AuthorInChangelog.class) != null);
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
+        }
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class) != null);
     }
 
     @Extension
@@ -1460,10 +1450,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
+        private boolean showEntireCommitSummaryInChanges;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        public boolean isShowEntireCommitSummaryInChanges() {
+            return showEntireCommitSummaryInChanges;
+        }
+
+        public void setShowEntireCommitSummaryInChanges(boolean showEntireCommitSummaryInChanges) {
+            this.showEntireCommitSummaryInChanges = showEntireCommitSummaryInChanges;
         }
 
         public String getDisplayName() {
@@ -1842,7 +1841,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             int start=0, idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
-                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null);
+                    boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null, showEntireCommitSummary);
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {

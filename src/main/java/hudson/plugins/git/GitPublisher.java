@@ -130,7 +130,7 @@ public class GitPublisher extends Recorder implements Serializable {
     
     
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     private String replaceAdditionalEnvironmentalVariables(String input, AbstractBuild<?, ?> build){
