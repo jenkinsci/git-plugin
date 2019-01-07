@@ -78,7 +78,7 @@ public class Phabricator extends GitRepositoryBrowser {
         final GitChangeSet changeSet = path.getChangeSet();
         final String sha = changeSet.getId();
         final String spec = String.format("/diffusion/%s/history/master/%s;%s", this.getRepo(), path.getPath(), sha);
-        return new URL(getUrl(), spec);
+        return encodeURL(new URL(getUrl(), spec));
     }
 
     @Extension

@@ -4,23 +4,24 @@
 
 package hudson.plugins.git.browser;
 
-import hudson.model.Run;
+import hudson.EnvVars;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-
-import org.xml.sax.SAXException;
 
 /**
  * @author mirko
@@ -42,13 +43,13 @@ public class GitListTest {
     }
 
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
+    public void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = gitlist.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
     @Test
-    public void testGetDiffLinkPath() throws IOException, SAXException {
+    public void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(GITLIST_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d#1", gitlist.getDiffLink(path1).toString());
@@ -59,7 +60,7 @@ public class GitListTest {
     }
 
     @Test
-    public void testGetFileLinkPath() throws IOException, SAXException {
+    public void testGetFileLinkPath() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = gitlist.getFileLink(path);
@@ -67,20 +68,24 @@ public class GitListTest {
     }
 
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
+    public void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String,Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = gitlist.getFileLink(path);
         assertEquals(GITLIST_URL + "/commit/fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#1", String.valueOf(fileLink));
     }
 
-    private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final GitChangeLogParser logParser = new GitChangeLogParser(false);
+    private final Random random = new Random();
+
+    private GitChangeSet createChangeSet(String rawchangelogpath) throws Exception {
+        /* Use randomly selected git client implementation since the client implementation should not change result */
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(random.nextBoolean() ? null : "jgit").getClient();
+        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, false);
         final List<GitChangeSet> changeSetList = logParser.parse(GitListTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 
-    private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
+    private HashMap<String, Path> createPathMap(final String changelog) throws Exception {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
         for (final Path path : changeSet) {

@@ -1,6 +1,5 @@
 package hudson.plugins.git.util;
 
-import com.google.common.base.Objects;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
@@ -10,6 +9,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Remembers which build built which {@link Revision}.
@@ -94,31 +94,23 @@ public class Build implements Serializable, Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Build)) {
-            return false;
-        } else {
-            Build otherBuild = (Build) o;
-            if (otherBuild.hudsonBuildNumber == this.hudsonBuildNumber
-                    && Objects.equal(otherBuild.revision, this.revision)
-                    && Objects.equal(otherBuild.marked, this.marked)) {
-                return true;
-            } else {
-                return false;
-            }
+        if (this == o) {
+            return true;
         }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Build that = (Build) o;
+
+        return hudsonBuildNumber == that.hudsonBuildNumber
+                && Objects.equals(revision, that.revision)
+                && Objects.equals(marked, that.marked);
     }
 
     @Override
     public int hashCode() {
-        int result = 17;
-        result = 37 * result + this.hudsonBuildNumber;
-        if (this.revision != null) {
-            result = 37 * result + this.revision.hashCode();
-        }
-        if (this.marked != null) {
-            result = 37 * result + this.marked.hashCode();
-        }
-        return result;
+        return Objects.hash(hudsonBuildNumber, revision, marked);
     }
 
     @Override
