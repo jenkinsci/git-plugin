@@ -63,7 +63,6 @@ public class CredentialsUserRemoteConfigTest {
         r.assertLogContains("using credential github", b);
     }
 
-
     @Issue("JENKINS-30515")
     @Test
     public void checkoutWithDifferentCredentials() throws Exception {
