@@ -9,6 +9,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.Objects;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -121,43 +122,31 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return "UserMergeOptions{" +
                 "mergeRemote='" + mergeRemote + '\'' +
                 ", mergeTarget='" + mergeTarget + '\'' +
-                ", mergeStrategy='" + mergeStrategy + '\'' +
-                ", fastForwardMode='" + fastForwardMode + '\'' +
+                ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
+                ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
                 '}';
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (this == other) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (other instanceof UserMergeOptions) {
-            UserMergeOptions that = (UserMergeOptions) other;
-            if ((mergeRemote != null && mergeRemote.equals(that.mergeRemote))
-                    || (mergeRemote == null && that.mergeRemote == null)) {
-                if ((mergeTarget != null && mergeTarget.equals(that.mergeTarget))
-                        || (mergeTarget == null && that.mergeTarget == null)) {
-                    if ((mergeStrategy != null && mergeStrategy.equals(that.mergeStrategy))
-                            || (mergeStrategy == null && that.mergeStrategy == null)) {
-                        if ((fastForwardMode != null && fastForwardMode.equals(that.fastForwardMode))
-                                || (fastForwardMode == null && that.fastForwardMode == null)) {
-                            return true;
-                        }
-                    }
-                }
-            }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
         }
 
-        return false;
+        UserMergeOptions that = (UserMergeOptions) o;
+
+        return Objects.equals(mergeRemote, that.mergeRemote)
+                && Objects.equals(mergeTarget, that.mergeTarget)
+                && Objects.equals(mergeStrategy, that.mergeStrategy)
+                && Objects.equals(fastForwardMode, that.fastForwardMode);
     }
 
     @Override
     public int hashCode() {
-        int result = mergeRemote != null ? mergeRemote.hashCode() : 0;
-        result = 31 * result + (mergeTarget != null ? mergeTarget.hashCode() : 0);
-        result = 31 * result + (mergeStrategy != null ? mergeStrategy.hashCode() : 0);
-        result = 31 * result + (fastForwardMode != null ? fastForwardMode.hashCode() : 0);
-        return result;
+        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode);
     }
 
     @Extension

@@ -38,6 +38,7 @@ import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.NullSCM;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.search.Search;
 import hudson.search.SearchIndex;
 import hudson.security.ACL;
@@ -497,6 +498,16 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
                 return false;
             }
             return allowedRemote.equals(remote);
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return false;
         }
 
         @Override

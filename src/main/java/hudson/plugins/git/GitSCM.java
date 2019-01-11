@@ -40,6 +40,7 @@ import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.PathRestriction;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
@@ -59,8 +60,10 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -69,6 +72,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -153,6 +157,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private Collection<SubmoduleConfig> submoduleCfg;
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
+    public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -661,7 +666,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    public static final Pattern GIT_REF = Pattern.compile("(refs/[^/]+)/.*");
+    public static final Pattern GIT_REF = Pattern.compile("^(refs/[^/]+)/(.+)");
 
     private PollingResult compareRemoteRevisionWithImpl(Job<?, ?> project, Launcher launcher, FilePath workspace, final @NonNull TaskListener listener) throws IOException, InterruptedException {
         // Poll for changes. Are there any unbuilt revisions that Hudson ought to build ?
@@ -951,23 +956,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return tool.getGitExe();
     }
 
-    /**
-     * Web-bound method to let people look up a build by their SHA1 commit.
-     * @param sha1 SHA1 hash of commit
-     * @return most recent build of sha1
-     */
-    public AbstractBuild<?,?> getBySHA1(String sha1) {
-        AbstractProject<?,?> p = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        for (AbstractBuild b : p.getBuilds()) {
-            BuildData d = b.getAction(BuildData.class);
-            if (d!=null && d.lastBuild!=null) {
-                Build lb = d.lastBuild;
-                if (lb.isFor(sha1)) return b;
-            }
-        }
-        return null;
-    }
-
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
         @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
         final Job project;
@@ -1034,22 +1022,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                                               final @NonNull GitClient git,
                                               final @NonNull TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
-        Collection<Revision> candidates = Collections.EMPTY_LIST;
+        Collection<Revision> candidates = Collections.emptyList();
         final BuildChooserContext context = new BuildChooserContextImpl(build.getParent(), build, environment);
         getBuildChooser().prepareWorkingTree(git, listener, context);
 
-
-        // every MatrixRun should build the same marked commit ID
-        if (build instanceof MatrixRun) {
-            MatrixBuild parentBuild = ((MatrixRun) build).getParentBuild();
-            if (parentBuild != null) {
-                BuildData parentBuildData = getBuildData(parentBuild);
-                if (parentBuildData != null) {
-                    Build lastBuild = parentBuildData.lastBuild;
-                    if (lastBuild!=null)
-                        candidates = Collections.singleton(lastBuild.getMarked());
-                }
-            }
+        if (build.getClass().getName().equals("hudson.matrix.MatrixRun")) {
+            candidates = GitSCMMatrixUtil.populateCandidatesFromRootBuild((AbstractBuild) build, this);
         }
 
         // parameter forcing the commit ID to build
@@ -1090,7 +1068,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {
-            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins-ci.org/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
+            log.println("JENKINS-19022: warning: possible memory leak due to Git plugin usage; see: https://wiki.jenkins.io/display/JENKINS/Remove+Git+Plugin+BuildsByBranch+BuildData");
         }
 
         if (candidates.size() > 1) {
@@ -1263,7 +1241,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | MissingObjectException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
@@ -1372,6 +1350,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                    }
                    env.put(GIT_LOCAL_BRANCH, localBranchName);
                 }
+                RelativeTargetDirectory rtd = getExtensions().get(RelativeTargetDirectory.class);
+                if (rtd != null) {
+                   String localRelativeTargetDir = rtd.getRelativeTargetDir();
+                   if ( localRelativeTargetDir == null ){
+                       localRelativeTargetDir = "";
+                   }
+                   env.put(GIT_CHECKOUT_DIR, localRelativeTargetDir);
+                }
 
                 String prevCommit = getLastBuiltCommitOfBranch(build, branch);
                 if (prevCommit != null) {
@@ -1448,7 +1434,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class)!=null);
+        try {
+            GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(gitTool).getClient();
+            return new GitChangeLogParser(gitClient, getExtensions().get(AuthorInChangelog.class) != null);
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
+        }
+        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class) != null);
     }
 
     @Extension
@@ -1459,10 +1451,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
+        private boolean showEntireCommitSummaryInChanges;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        public boolean isShowEntireCommitSummaryInChanges() {
+            return showEntireCommitSummaryInChanges;
+        }
+
+        public void setShowEntireCommitSummaryInChanges(boolean showEntireCommitSummaryInChanges) {
+            this.showEntireCommitSummaryInChanges = showEntireCommitSummaryInChanges;
         }
 
         public String getDisplayName() {
@@ -1841,7 +1842,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             int start=0, idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
-                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null);
+                    boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
+                    GitChangeSet change = new GitChangeSet(revShow.subList(start,idx), getExtensions().get(AuthorInChangelog.class)!=null, showEntireCommitSummary);
 
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
@@ -1873,10 +1875,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance is null in GitSCM.onLoaded");
-            return;
-        }
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {

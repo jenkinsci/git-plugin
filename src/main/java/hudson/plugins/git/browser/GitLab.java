@@ -10,6 +10,7 @@ import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
@@ -27,10 +28,7 @@ public class GitLab extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
 
-    private final double version;
-
-    /* package */
-    static final double DEFAULT_VERSION = 8.7;
+    private Double version;
 
     private static double valueOfVersion(String version) throws NumberFormatException {
         double tmpVersion = Double.valueOf(version);
@@ -44,19 +42,32 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     @DataBoundConstructor
-    public GitLab(String repoUrl, String version) {
+    public GitLab(String repoUrl) {
         super(repoUrl);
-        double tmpVersion;
-        try {
-            tmpVersion = valueOfVersion(version);
-        } catch (NumberFormatException nfe) {
-            tmpVersion = DEFAULT_VERSION;
-        }
-        this.version = tmpVersion;
     }
 
-    public double getVersion() {
-        return version;
+    @Deprecated
+    public GitLab(String repoUrl, String version) {
+        super(repoUrl);
+        setVersion(version);
+    }
+
+    @DataBoundSetter
+    public void setVersion(String version) {
+        try {
+            this.version = valueOfVersion(version);
+        } catch (NumberFormatException nfe) {
+            // ignore
+        }
+    }
+
+    public String getVersion() {
+        return (version != null) ? String.valueOf(version) : null;
+    }
+
+    /* package */
+    double getVersionDouble() {
+        return (version != null) ? version : Double.POSITIVE_INFINITY;
     }
 
     /**
@@ -88,7 +99,7 @@ public class GitLab extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink = null;
-        if(getVersion() < 8.0) {
+        if(getVersionDouble() < 8.0) {
                 filelink = "#" + path.getPath();
         } else
         {
@@ -112,12 +123,12 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            if(getVersion() <= 4.2) {
-                return new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath());
-            } else if(getVersion() < 5.1) {
-                return new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath());
+            if (getVersionDouble() <= 4.2) {
+                return encodeURL(new URL(getUrl(), "tree/" + path.getChangeSet().getId() + "/" + path.getPath()));
+            } else if (getVersionDouble() < 5.1) {
+                return encodeURL(new URL(getUrl(), path.getChangeSet().getId() + "/tree/" + path.getPath()));
             } else {
-                return new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath());
+                return encodeURL(new URL(getUrl(), "blob/" + path.getChangeSet().getId() + "/" + path.getPath()));
             }
         }
     }
@@ -146,7 +157,7 @@ public class GitLab extends GitRepositoryBrowser {
         public FormValidation doCheckVersion(@QueryParameter(fixEmpty = true) final String version)
                 throws IOException, ServletException {
             if (version == null) {
-                return FormValidation.error("Version is required");
+                return FormValidation.ok();
             }
             try {
                 valueOfVersion(version);
@@ -158,11 +169,11 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     private String calculatePrefix() {
-        if(getVersion() < 3) {
+        if(getVersionDouble() < 3) {
             return "commits/";
         } else {
             return "commit/";
         }
-    } 
+    }
 
 }

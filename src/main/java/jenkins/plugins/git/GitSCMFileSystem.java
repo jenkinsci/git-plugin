@@ -43,6 +43,7 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import java.io.File;
@@ -61,6 +62,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -111,12 +113,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null ? invoke(new FSFunction<ObjectId>() {
-            @Override
-            public ObjectId invoke(Repository repository) throws IOException, InterruptedException {
-                return repository.getRef(head).getObjectId();
-            }
-        }) : ObjectId.fromString(rev.getHash());
+        commitId = rev == null ? invoke((Repository repository) -> repository.findRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
     }
 
     @Override
@@ -126,13 +123,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
     @Override
     public long lastModified() throws IOException, InterruptedException {
-        return invoke(new FSFunction<Long>() {
-            @Override
-            public Long invoke(Repository repository) throws IOException {
-                try (RevWalk walk = new RevWalk(repository)) {
-                    RevCommit commit = walk.parseCommit(commitId);
-                    return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
-                }
+        return invoke((Repository repository) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(commitId);
+                return TimeUnit.SECONDS.toMillis(commit.getCommitTime());
             }
         });
     }
@@ -186,13 +180,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (cacheDir == null || !cacheDir.isDirectory()) {
                 throw new IOException("Closed");
             }
-            return client.withRepository(new RepositoryCallback<V>() {
-                @Override
-                public V invoke(Repository repository, VirtualChannel virtualChannel)
-                        throws IOException, InterruptedException {
-                    return function.invoke(repository);
-                }
-            });
+            return client.withRepository((Repository repository, VirtualChannel virtualChannel) -> function.invoke(repository));
         } finally {
             cacheLock.unlock();
         }
@@ -277,6 +265,16 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public boolean supports(SCMSource source) {
             return source instanceof AbstractGitSCMSource;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return descriptor instanceof GitSCM.DescriptorImpl;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }
 
         @Override

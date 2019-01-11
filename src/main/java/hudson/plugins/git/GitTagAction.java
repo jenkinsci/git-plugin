@@ -43,7 +43,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         super(build);
         this.ws = workspace.getRemote();
         for (Branch b : revision.getBranches()) {
-            tags.put(b.getName(), new ArrayList<String>());
+            tags.put(b.getName(), new ArrayList<>());
         }
     }
 
@@ -53,10 +53,6 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public Descriptor<GitTagAction> getDescriptor() {
         Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance() null in GitTagAction.getDescriptor");
-            return null;
-        }
         return jenkins.getDescriptorOrDie(getClass());
     }
 

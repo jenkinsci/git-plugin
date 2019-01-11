@@ -43,7 +43,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 
 	@Override
 	public URL getFileLink(Path path) throws IOException {
-		return new URL(getUrl(), getPath(path));
+		return encodeURL(new URL(getUrl(), getPath(path)));
 	}
 
 	private String getPath(Path path) {

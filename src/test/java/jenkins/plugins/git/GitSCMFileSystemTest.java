@@ -44,6 +44,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -271,12 +272,18 @@ public class GitSCMFileSystemTest {
         SCMFile dir = null;
         for (SCMFile f: children) {
             names.add(f.getName());
-            if ("file".equals(f.getName())) {
-                file = f;
-            } else if ("file2".equals(f.getName())) {
-                file2 = f;
-            } else if ("dir".equals(f.getName())) {
-                dir = f;
+            switch (f.getName()) {
+                case "file":
+                    file = f;
+                    break;
+                case "file2":
+                    file2 = f;
+                    break;
+                case "dir":
+                    dir = f;
+                    break;
+                default:
+                    break;
             }
         }
         assertThat(names, containsInAnyOrder(is("file"), is("file2"), is("dir")));
@@ -345,6 +352,13 @@ public class GitSCMFileSystemTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertTrue(gitPlugin260FS.changesSince(rev261, out));
         assertThat(out.toString(), is(""));
+    }
+
+    @Issue("JENKINS-52964")
+    @Test
+    public void filesystem_supports_descriptor() throws Exception {
+        SCMSourceDescriptor descriptor = r.jenkins.getDescriptorByType(GitSCMSource.DescriptorImpl.class);
+        assertTrue(SCMFileSystem.supports(descriptor));
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

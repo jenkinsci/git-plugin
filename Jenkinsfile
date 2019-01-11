@@ -1,6 +1,6 @@
 #!groovy
 
-// Test plugin compatibility to latest Jenkins LTS
+// Test plugin compatibility to recent Jenkins LTS
 // Allow failing tests to retry execution
 buildPlugin(jenkinsVersions: [null, '2.60.3'],
             findbugs: [run: true, archive: true, unstableTotalAll: '0'],
@@ -16,6 +16,9 @@ branches["ATH"] = {
             dir(checkoutGit) {
                 checkout scm
                 infra.runMaven(["clean", "package", "-DskipTests"])
+                // Include experimental git-client in target dir for ATH
+                // This Git plugin requires experimental git-client
+                infra.runMaven(["dependency:copy", "-Dartifact=org.jenkins-ci.plugins:git-client:3.0.0-beta3:hpi", "-DoutputDirectory=target", "-Dmdep.stripVersion=true"])
                 dir("target") {
                     stash name: "localPlugins", includes: "*.hpi"
                 }

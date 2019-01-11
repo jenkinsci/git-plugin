@@ -28,7 +28,6 @@ import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -153,7 +152,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3-commit-message");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
@@ -166,14 +165,22 @@ public class AbstractGitSCMSourceTest {
                 // FAT file system time stamps only resolve to 2 second boundary
                 // EXT3 file system time stamps only resolve to 1 second boundary
                 long fileTimeStampFuzz = isWindows() ? 2000L : 1000L;
-                if (scmHead.getName().equals("lightweight")) {
-                    long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
-                    assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
-                } else if (scmHead.getName().equals("annotated")) {
-                    long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
-                    assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
-                } else {
-                    fail("Unexpected tag head '" + scmHead.getName() + "'");
+                switch (scmHead.getName()) {
+                    case "lightweight":
+                        {
+                            long timeStampDelta = afterLightweightTag - tagHead.getTimestamp();
+                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterLightweightTag - beforeLightweightTag + fileTimeStampFuzz))));
+                            break;
+                        }
+                    case "annotated":
+                        {
+                            long timeStampDelta = afterAnnotatedTag - tagHead.getTimestamp();
+                            assertThat(timeStampDelta, is(both(greaterThanOrEqualTo(0L)).and(lessThanOrEqualTo(afterAnnotatedTag - beforeAnnotatedTag + fileTimeStampFuzz))));
+                            break;
+                        }
+                    default:
+                        fail("Unexpected tag head '" + scmHead.getName() + "'");
+                        break;
                 }
             }
         }
@@ -203,7 +210,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
@@ -227,7 +234,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         assertThat(source.fetchRevisions(listener), hasSize(0));
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
@@ -256,7 +263,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("commit", "--all", "--message=dev3");
         String devHash = sampleRepo.head();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<SCMSourceTrait>());
+        source.setTraits(new ArrayList<>());
 
         TaskListener listener = StreamTaskListener.fromStderr();
 
@@ -649,12 +656,13 @@ public class AbstractGitSCMSourceTest {
         assertEquals("v3", fileAt("pr/1", run, source, listener));
     }
 
+    private int wsCount;
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener);
         if (rev == null) {
             return null;
         } else {
-            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision);
+            FilePath ws = new FilePath(run.getRootDir()).child("ws" + ++wsCount);
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }

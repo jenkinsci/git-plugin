@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
 
 import hudson.EnvVars;
 import hudson.model.TaskListener;
+import jenkins.plugins.git.CliGitCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -44,19 +45,21 @@ public class GitChangeSetTruncateTest {
     /* Arguments to the constructor */
     private final String gitImpl;
     private final String commitSummary;
-    private final String expectedSummary;
+    private final String truncatedSummary;
 
     /* Computed in the constructor, used in tests */
     private final GitChangeSet changeSet;
+    private final GitChangeSet changeSetFullSummary;
+    private final GitChangeSet changeSetTruncatedSummary;
 
     private static class TestData {
 
         final public String testDataCommitSummary;
-        final public String testDataExpectedSummary;
+        final public String testDataTruncatedSummary;
 
-        TestData(String commitSummary, String expectedSummary) {
+        TestData(String commitSummary, String truncatedSummary) {
             this.testDataCommitSummary = commitSummary;
-            this.testDataExpectedSummary = expectedSummary;
+            this.testDataTruncatedSummary = truncatedSummary;
         }
     }
 
@@ -67,6 +70,7 @@ public class GitChangeSetTruncateTest {
 
     private final static TestData[] TEST_DATA = {
         new TestData(EIGHTY_CHARS,                         EIGHTY_CHARS), // surprising that longer than 72 is returned
+        new TestData(EIGHTY_CHARS + " A B C",              EIGHTY_CHARS), // surprising that longer than 72 is returned
         new TestData(SEVENTY_CHARS,                        SEVENTY_CHARS),
         new TestData(SEVENTY_CHARS + " 2",                 SEVENTY_CHARS + " 2"),
         new TestData(SEVENTY_CHARS + " 2 4",               SEVENTY_CHARS + " 2"),
@@ -82,16 +86,18 @@ public class GitChangeSetTruncateTest {
         new TestData(SEVENTY_CHARS + "  " + SEVENTY_CHARS, SEVENTY_CHARS + " ") // surprising that trailing space is preserved
     };
 
-    public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String expectedSummary) throws Exception {
+    public GitChangeSetTruncateTest(String gitImpl, String commitSummary, String truncatedSummary) throws Exception {
         this.gitImpl = gitImpl;
         this.commitSummary = commitSummary;
-        this.expectedSummary = expectedSummary;
+        this.truncatedSummary = truncatedSummary;
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(gitImpl).getClient();
         final ObjectId head = commitOneFile(gitClient, commitSummary);
         StringWriter changelogStringWriter = new StringWriter();
         gitClient.changelog().includes(head).to(changelogStringWriter).execute();
         List<String> changeLogList = Arrays.asList(changelogStringWriter.toString().split("\n"));
         changeSet = new GitChangeSet(changeLogList, random.nextBoolean());
+        changeSetFullSummary = new GitChangeSet(changeLogList, random.nextBoolean(), true);
+        changeSetTruncatedSummary = new GitChangeSet(changeLogList, random.nextBoolean(), false);
     }
 
     @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
@@ -100,9 +106,7 @@ public class GitChangeSetTruncateTest {
         List<Object[]> arguments = new ArrayList<>();
         for (String implementation : implementations) {
             for (TestData sample : TEST_DATA) {
-                /* Expect truncated message from git, full message from JGit */
-                String expected = implementation.equals("git") ? sample.testDataExpectedSummary : sample.testDataCommitSummary;
-                Object[] item = {implementation, sample.testDataCommitSummary, expected};
+                Object[] item = {implementation, sample.testDataCommitSummary, sample.testDataTruncatedSummary};
                 arguments.add(item);
             }
         }
@@ -116,6 +120,8 @@ public class GitChangeSetTruncateTest {
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
+        new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
+        new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@example.com");
     }
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {
@@ -146,8 +152,25 @@ public class GitChangeSetTruncateTest {
     }
 
     @Test
-    @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page
+    @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
-        assertThat(changeSet.getMsg(), is(expectedSummary));
+        /**
+         * Before git plugin 4.0, calls to GitChangeSet(x, y) truncated CLI git, did not truncate JGit.
+         * After git plugin 4.0, calls to GitChangeSet(x, y) truncates CLI git, truncates JGit.
+         * Callers after git plugin 4.0 must use the GitChangeSet(x, y, z) call to specify truncation behavior.
+         */
+        assertThat(changeSet.getMsg(), is(truncatedSummary));
+    }
+
+    @Test
+    @Issue("JENKINS-29977")
+    public void summaryAlwaysTruncatedAtLastWord72CharactersOrLess() throws Exception {
+        assertThat(changeSetTruncatedSummary.getMsg(), is(truncatedSummary));
+    }
+
+    @Test
+    @Issue("JENKINS-29977")
+    public void summaryNotTruncatedAtLastWord72CharactersOrLess() throws Exception {
+        assertThat(changeSetFullSummary.getMsg(), is(commitSummary));
     }
 }

@@ -562,10 +562,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
             Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins == null) {
-                LOGGER.severe("Jenkins instance is null in GitSCMSource.onNotifyCommit");
-                return result;
-            }
             SecurityContext old = jenkins.getACL().impersonate(ACL.SYSTEM);
             try {
                 if (branches.length > 0) {
