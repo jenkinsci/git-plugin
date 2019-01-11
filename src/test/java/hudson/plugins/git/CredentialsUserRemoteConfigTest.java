@@ -85,7 +85,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithVInvalidCredentials() throws Exception {
+    public void checkoutWithInvalidCredentials() throws Exception {
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.SYSTEM, "github"));
         store.save();
@@ -104,7 +104,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithVNoCredentialsStoredButUsed() throws Exception {
+    public void checkoutWithNoCredentialsStoredButUsed() throws Exception {
         sampleRepo.init();
 
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
@@ -122,7 +122,7 @@ public class CredentialsUserRemoteConfigTest {
 
     @Issue("JENKINS-30515")
     @Test
-    public void checkoutWithVNoCredentialsSpecified() throws Exception {
+    public void checkoutWithNoCredentialsSpecified() throws Exception {
         sampleRepo.init();
 
         WorkflowJob p = r.jenkins.createProject(WorkflowJob.class, "p");
