@@ -26,7 +26,7 @@
   <properties>
     <revision>4.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.60.3</jenkins.version>
+    <jenkins.version>2.107.3</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
