@@ -287,6 +287,18 @@
       <version>2.14</version>
       <scope>test</scope>
     </dependency>
+    <!-- exclude Xalan from the test classpath -->
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>jenkins-test-harness</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <scm>
