@@ -1032,6 +1032,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setCreateAccountBasedOnEmail(true);
         assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
+        assertFalse("Wrong initial value for use existing user if same e-mail already found", scm.isUseExistingAccountWithSameEmail());
+        descriptor.setUseExistingAccountWithSameEmail(true);
+        assertTrue("Use existing user if same e-mail already found is not set", scm.isUseExistingAccountWithSameEmail());
+
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");

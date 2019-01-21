@@ -431,6 +431,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isCreateAccountBasedOnEmail());
     }
 
+    public boolean isUseExistingAccountWithSameEmail() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isUseExistingAccountWithSameEmail());
+    }
+
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
 
@@ -1453,6 +1458,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String globalConfigName;
         private String globalConfigEmail;
         private boolean createAccountBasedOnEmail;
+        private boolean useExistingAccountWithSameEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
 
@@ -1553,6 +1559,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setCreateAccountBasedOnEmail(boolean createAccountBasedOnEmail) {
             this.createAccountBasedOnEmail = createAccountBasedOnEmail;
+        }
+
+        public boolean isUseExistingAccountWithSameEmail() {
+            return useExistingAccountWithSameEmail;
+        }
+
+        public void setUseExistingAccountWithSameEmail(boolean useExistingAccountWithSameEmail) {
+            this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
         }
 
         /**
