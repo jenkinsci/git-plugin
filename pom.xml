@@ -31,6 +31,8 @@
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
+    <!-- force JTH version 2.46, waiting for next version of the parent pom -->
+    <jenkins-test-harness.version>2.46</jenkins-test-harness.version>
   </properties>
 
   <build>
