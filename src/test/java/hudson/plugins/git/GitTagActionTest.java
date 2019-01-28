@@ -112,11 +112,13 @@ public class GitTagActionTest {
         /* Run with first tag action defined */
         tagOneAction = createTagAction("v1");
 
+        /* Wait for tag creation threads to complete, then assert conditions */
+        waitForTagCreation(tagOneAction, "v1");
+
         /* Run with second tag action defined */
         tagTwoAction = createTagAction("v2");
 
         /* Wait for tag creation threads to complete, then assert conditions */
-        waitForTagCreation(tagOneAction, "v1");
         waitForTagCreation(tagTwoAction, "v2");
 
         assertThat(getMatchingTagNames(), hasItems(getTagValue("v1"), getTagValue("v2")));
