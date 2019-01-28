@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * @author Vivek Pandey
+ * @author Nicolas de Loof
  */
 @ExportedBean
 public class GitTagAction extends AbstractScmTagAction implements Describable<GitTagAction> {
@@ -39,6 +39,9 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     private final Map<String, List<String>> tags = new CopyOnWriteMap.Tree<>();
 
     private final String ws;
+
+    private String lastTagName = null;
+    private GitException lastTagException = null;
 
     protected GitTagAction(Run build, FilePath workspace, Revision revision) {
         super(build);
@@ -65,12 +68,14 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         return false;
     }
 
+    @Override
     public String getIconFileName() {
         if (!isTagged() && !getACL().hasPermission(getPermission()))
             return null;
         return "save.gif";
     }
 
+    @Override
     public String getDisplayName() {
         int nonNullTag = 0;
         for (List<String> v : tags.values()) {
@@ -109,7 +114,8 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     @ExportedBean
     public static class TagInfo {
-        private String module, url;
+        private final String module;
+        private final String url;
 
         private TagInfo(String branch, String tag) {
             this.module = branch;
@@ -163,9 +169,21 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             newTags.put(e, parser.get("name" + i));
         }
 
-        new TagWorkerThread(newTags, parser.get("comment")).start();
+        scheduleTagCreation(newTags, parser.get("comment"));
 
         rsp.sendRedirect(".");
+    }
+
+    /**
+     * Schedule creation of a tag. For test purposes only, not to be called outside this package.
+     *
+     * @param newTags tags to be created
+     * @param comment tag comment to be included with created tags
+     * @throws IOException on IO error
+     * @throws ServletException on servlet exception
+     */
+    void scheduleTagCreation(Map<String, String> newTags, String comment) throws IOException, ServletException {
+        new TagWorkerThread(newTags, comment).start();
     }
 
     /**
@@ -199,6 +217,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                                      + getRun().getParent().getName().replace(" ", "_")
                                      + "-" + entry.getValue();
                     git.tag(entry.getValue(), "Jenkins Build #" + buildNum);
+                    lastTagName = entry.getValue();
 
                     for (Map.Entry<String, String> e : tagSet.entrySet())
                         GitTagAction.this.tags.get(e.getKey()).add(e.getValue());
@@ -207,6 +226,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     workerThread = null;
                 }
                 catch (GitException ex) {
+                    lastTagException = ex;
                     ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", entry.getKey(), ex.getMessage()));
                     // Failed. Try the next one
                     listener.getLogger().println("Trying next branch");
@@ -226,8 +246,19 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
      */
     @Extension
     public static class DescriptorImpl extends Descriptor<GitTagAction> {
+        @Override
         public String getDisplayName() {
             return "Tag";
         }
+    }
+
+    /* Package protected for use only by tests */
+    String getLastTagName() {
+        return lastTagName;
+    }
+
+    /* Package protected for use only by tests */
+    GitException getLastTagException() {
+        return lastTagException;
     }
 }
