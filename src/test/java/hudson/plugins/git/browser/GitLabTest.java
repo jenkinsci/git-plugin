@@ -158,7 +158,7 @@ public class GitLabTest {
     private GitChangeSet createChangeSet(String rawchangelogpath) throws Exception {
         /* Use randomly selected git client implementation since the client implementation should not change result */
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(random.nextBoolean() ? "Default" : "jgit").getClient();
-        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, false);
+        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, false, null);
         final List<GitChangeSet> changeSetList = logParser.parse(GitLabTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }

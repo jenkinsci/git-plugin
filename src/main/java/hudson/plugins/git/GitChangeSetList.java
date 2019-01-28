@@ -16,11 +16,17 @@ import java.util.List;
  */
 public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
     private final List<GitChangeSet> changeSets;
+    private final String scmName;
 
-    /*package*/ GitChangeSetList(Run build, RepositoryBrowser<?> browser, List<GitChangeSet> logs) {
+    /*package*/ GitChangeSetList(
+            Run build,
+            RepositoryBrowser<?> browser,
+            List<GitChangeSet> logs,
+            String scmName) {
         super(build, browser);
         Collections.reverse(logs);  // put new things first
         this.changeSets = Collections.unmodifiableList(logs);
+        this.scmName = scmName;
         for (GitChangeSet log : logs)
             log.setParent(this);
     }
@@ -35,6 +41,10 @@ public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
 
     public List<GitChangeSet> getLogs() {
         return changeSets;
+    }
+
+    public String getScmName() {
+        return scmName;
     }
 
     @Exported

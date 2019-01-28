@@ -44,9 +44,11 @@ THE SOFTWARE.
         <j:forEach var="changeSet" items="${b.changeSets}">
           <j:set var="browser" value="${changeSet.browser}"/>
           <j:set var="hadChanges" value="${true}"/>
-          <h2><a href="${b.number}/changes">${b.displayName}
-            (<i:formatDate value="${b.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>)</a></h2>
-
+          <h2><a href="${b.number}/changes">
+            ${b.displayName}
+            (<i:formatDate value="${b.timestamp.time}" type="both" dateStyle="medium" timeStyle="medium"/>)
+            <j:if test="${!empty(changeSet.scmName)}"> for SCM: ${changeSet.scmName}</j:if>
+          </a></h2>
           <ol>
             <j:forEach var="c" items="${changeSet.iterator()}">
               <li>

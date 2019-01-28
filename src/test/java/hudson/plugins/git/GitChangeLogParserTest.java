@@ -45,7 +45,7 @@ public class GitChangeLogParserTest {
     }
 
     private void generateDuplicateChanges(GitClient gitClient, String expectedMessage) throws Exception {
-        GitChangeLogParser parser = new GitChangeLogParser(gitClient, true);
+        GitChangeLogParser parser = new GitChangeLogParser(gitClient, true, null);
         File log = tmpFolder.newFile();
         try (FileWriter writer = new FileWriter(log)) {
             writer.write("commit 123abc456def\n");

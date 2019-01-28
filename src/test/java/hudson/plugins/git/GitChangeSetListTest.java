@@ -43,7 +43,7 @@ public class GitChangeSetListTest {
     public GitChangeSetListTest() {
         RepositoryBrowser<?> browser = null;
         Run build = null;
-        emptyChangeSetList = new GitChangeSetList(build, browser, new ArrayList<>());
+        emptyChangeSetList = new GitChangeSetList(build, browser, new ArrayList<>(), null);
     }
 
     @Before
@@ -55,7 +55,7 @@ public class GitChangeSetListTest {
         changeSet = new GitChangeSet(changeSetText, true);
         assertTrue(logs.add(changeSet));
         assertThat(changeSet.getParent(), is(nullValue()));
-        changeSetList = new GitChangeSetList(build, browser, logs);
+        changeSetList = new GitChangeSetList(build, browser, logs, null);
         assertThat(changeSet.getParent(), is(changeSetList));
     }
 

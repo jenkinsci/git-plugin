@@ -63,7 +63,7 @@ public class GitWebTest {
     private GitChangeSet createChangeSet(String rawchangelogpath) throws Exception {
         /* Use randomly selected git client implementation since the client implementation should not change result */
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(random.nextBoolean() ? null : "jgit").getClient();
-        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, random.nextBoolean());
+        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, random.nextBoolean(), null);
         final List<GitChangeSet> changeSetList = logParser.parse(GitWebTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }

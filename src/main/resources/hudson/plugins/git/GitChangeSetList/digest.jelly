@@ -12,7 +12,7 @@
       ${%No changes.}
     </j:when>
     <j:otherwise>
-      ${%Changes}
+      ${%Changes}<j:if test="${!empty(it.scmName)}"> from <b>SCM:</b> ${it.scmName}</j:if>
       <ol>
         <j:forEach var="cs" items="${it.logs}" varStatus="loop">
           <li>

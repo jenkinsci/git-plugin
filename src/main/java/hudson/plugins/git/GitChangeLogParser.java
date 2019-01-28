@@ -29,6 +29,8 @@ import java.util.Set;
 public class GitChangeLogParser extends ChangeLogParser {
 
     private boolean authorOrCommitter;
+    private final String scmName;
+
     private boolean showEntireCommitSummaryInChanges;
 
     @Deprecated
@@ -59,8 +61,25 @@ public class GitChangeLogParser extends ChangeLogParser {
      * @param authorOrCommitter read author name instead of committer name if true
      */
     public GitChangeLogParser(GitClient git, boolean authorOrCommitter) {
+        this(git, authorOrCommitter, null);
+    }
+
+    /**
+     * Git client plugin 2.x silently truncated the first line of a commit message when showing the changelog summary in
+     * the 'Changes' page using command line git. They did not truncate when using JGit. In order to simplify the git
+     * client plugin implementation, the truncation was removed from git client plugin 3.0. In order to retain backward
+     * compatibility, git plugin 4.0 became responsible to truncate the summary at the correct points.
+     * As a result of that change of responsibility, this class needs to know which implementation is being used so
+     * that it can adapt for compatibility.
+     *
+     * @param git the GitClient implmentation to be used by the change log parser
+     * @param authorOrCommitter read author name instead of committer name if true
+     * @param scmName the ScmName to include in the changelog
+     */
+    public GitChangeLogParser(GitClient git, boolean authorOrCommitter, String scmName) {
         super();
         this.authorOrCommitter = authorOrCommitter;
+        this.scmName = scmName;
         /* Retain full commit summary if globally configured to retain full commit summary or if not using command line git.
          * That keeps change summary truncation compatible with git client plugin 2.x and git plugin 3.x for users of
          * command line git.
@@ -82,7 +101,7 @@ public class GitChangeLogParser extends ChangeLogParser {
         LineIterator lineIterator = null;
         try {
         	lineIterator = FileUtils.lineIterator(changelogFile,"UTF-8");
-        	return new GitChangeSetList(build, browser, parse(lineIterator));
+        	return new GitChangeSetList(build, browser, parse(lineIterator), scmName);
         } finally {
         	LineIterator.closeQuietly(lineIterator);
         }
