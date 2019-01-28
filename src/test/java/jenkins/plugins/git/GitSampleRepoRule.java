@@ -32,8 +32,6 @@ import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.scm.impl.mock.AbstractSampleDVCSRepoRule;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -100,9 +98,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int returnCode = -1;
         try {
-            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            if (returnCode != 0) {
+                System.out.println("Command 'git --version' returned " + returnCode);
+            }
         } catch (IOException | InterruptedException ex) {
             System.out.println("Error checking git version " + ex);
         }

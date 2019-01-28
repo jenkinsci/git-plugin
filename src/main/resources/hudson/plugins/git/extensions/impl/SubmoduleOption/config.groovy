@@ -26,6 +26,9 @@ f.entry(title:_("Path of the reference repo to use during submodule update"), fi
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
     f.number(clazz:"number", min:1, step:1)
 }
+f.entry(title:_("Number of threads to use when updating submodules"), field:"threads") {
+    f.number(clazz:"number", min:1, step:1)
+}
 
 /*
   This needs more thought
