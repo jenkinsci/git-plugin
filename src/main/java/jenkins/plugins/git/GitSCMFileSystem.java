@@ -369,7 +369,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             try {
                 File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
                 Git git = Git.with(listener, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir);
-                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool(), listener);
+                GitTool tool = gitSCMSource.resolveGitTool(builder.gitTool());
                 if (tool != null) {
                     git.using(tool.getGitExe());
                 }
