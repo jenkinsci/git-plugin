@@ -2,14 +2,14 @@ package hudson.plugins.git.extensions.impl.CloneOption;
 
 def f = namespace(lib.FormTagLib);
 
-f.entry(title:_("Fetch tags"), field:"noTags") {
-    f.checkbox(negative:true, checked:(instance==null||!instance.noTags))
+f.entry() {
+    f.checkbox(title:_("Fetch tags"), field:"noTags", negative:true, checked:(instance==null||!instance.noTags))
 }
-f.entry(title:_("Honor refspec on initial clone"), field:"honorRefspec") {
-    f.checkbox()
+f.entry() {
+    f.checkbox(title:_("Honor refspec on initial clone"), field:"honorRefspec")
 }
-f.entry(title:_("Shallow clone"), field:"shallow") {
-    f.checkbox()
+f.entry() {
+    f.checkbox(title:_("Shallow clone"), field:"shallow")
 }
 f.entry(title:_("Shallow clone depth"), field:"depth") {
     f.number(clazz:"number", min:1, step:1)

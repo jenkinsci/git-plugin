@@ -9,12 +9,20 @@
       <f:textbox />
     </f:entry>
     <f:optionalBlock title="${%Create new accounts based on author/committer's email}" field="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}" inline="true">
-      <f:entry title="${%Use existing account with same email if found}" field="useExistingAccountWithSameEmail">
-        <f:checkbox name="useExistingAccountWithSameEmail" checked="${descriptor.useExistingAccountWithSameEmail}" />
+      <f:entry>
+        <f:checkbox name="useExistingAccountWithSameEmail"
+            checked="${descriptor.useExistingAccountWithSameEmail}"
+            field="useExistingAccountWithSameEmail"
+            title="${%Use existing account with same email if found}"
+            />
       </f:entry>
     </f:optionalBlock>
-    <f:entry title="${%Show the entire commit summary in changes}" field="showEntireCommitSummaryInChanges">
-      <f:checkbox name="showEntireCommitSummaryInChanges" checked="${descriptor.showEntireCommitSummaryInChanges}"/>
+    <f:entry>
+      <f:checkbox name="showEntireCommitSummaryInChanges"
+          checked="${descriptor.showEntireCommitSummaryInChanges}"
+          title="${%Show the entire commit summary in changes}"
+          field="showEntireCommitSummaryInChanges"
+          />
     </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
