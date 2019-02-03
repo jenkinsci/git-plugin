@@ -1,19 +1,13 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry field="pushOnlyIfSuccess"
-             title="${%Push Only If Build Succeeds}">
-      <f:checkbox />
-    </f:entry>
-    <f:entry field="pushMerge"
-             title="${%Merge Results}"
-             description="${%If pre-build merging is configured, push the result back to the origin}">
-      <f:checkbox />
-    </f:entry>
-    <f:entry field="forcePush"
-             title="${%Force Push}"
-             description="${%Add force option to git push}">
-      <f:checkbox />
-    </f:entry>
+    <f:optionalBlock field="pushOnlyIfSuccess"
+                     title="${%Push Only If Build Succeeds}" />
+    <f:optionalBlock field="pushMerge"
+                     title="${%Merge Results}"
+                     description="${%If pre-build merging is configured, push the result back to the origin}" />
+    <f:optionalBlock field="forcePush"
+                     title="${%Force Push}"
+                     description="${%Add force option to git push}" />
     <f:entry field="tagsToPush"
              title="${%Tags}"
              description="${%Tags to push to remote repositories}">
@@ -29,14 +23,10 @@
                    title="${%Tag message}">
             <f:textarea/>
           </f:entry>
-          <f:entry field="createTag"
-                   title="${%Create new tag}">
-            <f:checkbox />
-          </f:entry>
-          <f:entry field="updateTag"
-                   title="${%Update new tag}">
-            <f:checkbox />
-          </f:entry>
+          <f:optionalBlock field="createTag"
+                           title="${%Create new tag}" />
+          <f:optionalBlock field="updateTag"
+                           title="${%Update new tag}" />
           <f:entry field="targetRepoName"
                    title="${%Target remote name}">
             <f:textbox
@@ -89,10 +79,7 @@
             <f:textbox/>
           </f:entry>
           
-          <f:entry title="${%Abort if note exists}" field="noteReplace" >
-            <f:checkbox />
-          </f:entry>
-          
+          <f:optionalBlock title="${%Abort if note exists}" field="noteReplace" />
         </table>
         <div align="right">
           <input type="button" value="${%Delete Note}" class="repeatable-delete" style="margin-left: 1em;" />

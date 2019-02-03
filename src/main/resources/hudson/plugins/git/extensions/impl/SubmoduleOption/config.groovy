@@ -2,21 +2,11 @@ package hudson.plugins.git.extensions.impl.SubmoduleOption;
 
 def f = namespace(lib.FormTagLib);
 
-f.entry(title:_("Disable submodules processing"), field:"disableSubmodules") {
-    f.checkbox()
-}
-f.entry(title:_("Recursively update submodules"), field:"recursiveSubmodules") {
-    f.checkbox()
-}
-f.entry(title:_("Update tracking submodules to tip of branch"), field:"trackingSubmodules") {
-    f.checkbox()
-}
-f.entry(title:_("Use credentials from default remote of parent repository"), field:"parentCredentials") {
-    f.checkbox()
-}
-f.entry(title:_("Shallow clone"), field:"shallow") {
-    f.checkbox()
-}
+f.optionalBlock(title:_("Disable submodules processing"), field:"disableSubmodules")
+f.optionalBlock(title:_("Recursively update submodules"), field:"recursiveSubmodules")
+f.optionalBlock(title:_("Update tracking submodules to tip of branch"), field:"trackingSubmodules")
+f.optionalBlock(title:_("Use credentials from default remote of parent repository"), field:"parentCredentials")
+f.optionalBlock(title:_("Shallow clone"), field:"shallow")
 f.entry(title:_("Shallow clone depth"), field:"depth") {
     f.number(clazz:"number", min:1, step:1)
 }
@@ -33,9 +23,7 @@ f.entry(title:_("Number of threads to use when updating submodules"), field:"thr
 /*
   This needs more thought
 
-  <f:entry title="Autogenerate submodule configurations">
-    <f:checkbox name="git.generate" checked="${scm.doGenerate}"/>
-    <label class="attach-previous">Generate submodule configurations</label>
+  <f:optionalBlock title="Autogenerate submodule configurations" name="git.generate" checked="${scm.doGenerate}">
 
     <f:repeatable var="smcfg" name="smcfg" varStatus="cfgStatus" items="${scm.submoduleCfg}" noAddButton="false">
            <table width="100%">
@@ -57,5 +45,5 @@ f.entry(title:_("Number of threads to use when updating submodules"), field:"thr
 
         </f:repeatable>
 
-  </f:entry>
+  </f:optionalBlock>
 */
