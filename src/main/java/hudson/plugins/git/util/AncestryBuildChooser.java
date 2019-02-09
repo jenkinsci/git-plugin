@@ -17,9 +17,9 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.google.common.base.Predicate;
@@ -103,16 +103,17 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
     
     private static class CommitAgeFilter implements Predicate<RevCommit> {
         
-        private DateTime oldestAllowableCommitDate = null;
+        private LocalDateTime oldestAllowableCommitDate = null;
         
         public CommitAgeFilter(Integer oldestAllowableAgeInDays) {
             if (oldestAllowableAgeInDays != null && oldestAllowableAgeInDays >= 0) {
-                this.oldestAllowableCommitDate = new LocalDate().toDateTimeAtStartOfDay().minusDays(oldestAllowableAgeInDays);
+                this.oldestAllowableCommitDate = LocalDate.now().atStartOfDay().minusDays(oldestAllowableAgeInDays);
             }
         }
         
+        @Override
         public boolean apply(RevCommit rev) {
-            return new DateTime(rev.getCommitterIdent().getWhen()).isAfter(this.oldestAllowableCommitDate);
+            return LocalDateTime.ofInstant(rev.getCommitterIdent().getWhen().toInstant(), ZoneId.systemDefault()).isAfter(this.oldestAllowableCommitDate);
         }
         
         public boolean isEnabled() {

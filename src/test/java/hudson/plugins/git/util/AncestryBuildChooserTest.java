@@ -21,8 +21,10 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -42,9 +44,9 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     private String tenDaysAgoCommit = null;
     private String twentyDaysAgoCommit = null;
     
-    private final DateTime fiveDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(5);
-    private final DateTime tenDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(10);
-    private final DateTime twentyDaysAgo = new LocalDate().toDateTimeAtStartOfDay().minusDays(20);
+    private final LocalDateTime fiveDaysAgo = LocalDate.now().atStartOfDay().minusDays(5);
+    private final LocalDateTime tenDaysAgo = LocalDate.now().atStartOfDay().minusDays(10);
+    private final LocalDateTime twentyDaysAgo = LocalDate.now().atStartOfDay().minusDays(20);
     
     private final PersonIdent johnDoe = new PersonIdent("John Doe", "john@example.com");
 
@@ -69,17 +71,23 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         
         testGitClient.branch("20-days-old-branch");
         testGitClient.checkoutBranch("20-days-old-branch", ancestorCommit);
-        this.commit("20 days ago commit message", new PersonIdent(johnDoe, twentyDaysAgo.toDate()), new PersonIdent(johnDoe, twentyDaysAgo.toDate()));
+        Date twentyDaysAgoDate = Date.from(twentyDaysAgo.atZone(ZoneId.systemDefault()).toInstant());
+        PersonIdent johnDoeTwentyDaysAgo = new PersonIdent(johnDoe, twentyDaysAgoDate);
+        this.commit("20 days ago commit message", johnDoeTwentyDaysAgo, johnDoeTwentyDaysAgo);
         twentyDaysAgoCommit = getLastCommitSha1(prevBranches);
         
         testGitClient.checkout().ref(ancestorCommit).execute();
         testGitClient.checkoutBranch("10-days-old-branch", ancestorCommit);
-        this.commit("10 days ago commit message", new PersonIdent(johnDoe, tenDaysAgo.toDate()), new PersonIdent(johnDoe, tenDaysAgo.toDate()));
+        Date tenDaysAgoDate = Date.from(tenDaysAgo.atZone(ZoneId.systemDefault()).toInstant());
+        PersonIdent johnDoeTenDaysAgo = new PersonIdent(johnDoe, tenDaysAgoDate);
+        this.commit("10 days ago commit message", johnDoeTenDaysAgo, johnDoeTenDaysAgo);
         tenDaysAgoCommit = getLastCommitSha1(prevBranches);
         
         testGitClient.checkout().ref(rootCommit).execute();
         testGitClient.checkoutBranch("5-days-old-branch", rootCommit);
-        this.commit("5 days ago commit message", new PersonIdent(johnDoe, fiveDaysAgo.toDate()), new PersonIdent(johnDoe, fiveDaysAgo.toDate()));
+        Date fiveDaysAgoDate = Date.from(fiveDaysAgo.atZone(ZoneId.systemDefault()).toInstant());
+        PersonIdent johnDoeFiveDaysAgo = new PersonIdent(johnDoe, fiveDaysAgoDate);
+        this.commit("5 days ago commit message", johnDoeFiveDaysAgo, johnDoeFiveDaysAgo);
         fiveDaysAgoCommit = getLastCommitSha1(prevBranches);
     }
     

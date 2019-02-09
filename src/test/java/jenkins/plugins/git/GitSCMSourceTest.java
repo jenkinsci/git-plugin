@@ -2,13 +2,13 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
+import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.Launcher;
@@ -16,12 +16,10 @@ import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
-import hudson.tools.ToolInstaller;
 import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +63,6 @@ import org.mockito.Mockito;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
@@ -348,7 +345,6 @@ public class GitSCMSourceTest {
         assertThat(instance.fetchActions(new GitTagSCMHead("v1.0.0", 0L), null, null),
                 is(Collections.<Action>emptyList()));
     }
-
 
     @Issue("JENKINS-52754")
     @Test

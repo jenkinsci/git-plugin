@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.33</version>
+    <version>3.36</version>
     <relativePath />
   </parent>
 
@@ -24,7 +24,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.0.0</revision>
+    <revision>4.0.1-rc</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.107.3</jenkins.version>
     <java.level>8</java.level>
@@ -76,11 +76,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.9.5</version>
-    </dependency>
-    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
       <version>1.10</version>
@@ -88,7 +83,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0-beta6-rc1867.e1faf24eb816</version>
+      <version>3.0.0-rc</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -148,19 +143,16 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.8.9</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
-      <version>1.7.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-mockito2</artifactId>
-      <version>1.7.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -943,22 +943,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return git exe for builtOn node, often "Default" or "jgit"
      */
     public String getGitExe(Node builtOn, EnvVars env, TaskListener listener) {
-
-        GitClientType client = GitClientType.ANY;
-        for (GitSCMExtension ext : extensions) {
-            try {
-                client = client.combine(ext.getRequiredClient());
-            } catch (GitClientConflictException e) {
-                throw new RuntimeException(ext.getDescriptor().getDisplayName() + " extended Git behavior is incompatible with other behaviors");
-            }
-        }
-        if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
-
-        GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
-        if (tool == null) {
+        GitTool tool = GitUtils.resolveGitTool(gitTool, builtOn, env, listener);
+        if(tool == null) {
             return null;
         }
-
         return tool.getGitExe();
     }
 

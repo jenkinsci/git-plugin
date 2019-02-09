@@ -45,6 +45,8 @@ import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import hudson.tools.ToolDescriptor;
+import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
@@ -783,6 +785,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
+    }
+
+    @Test
+    public void testNodeOverrideGit() throws Exception {
+        GitSCM scm = new GitSCM(null);
+
+        DumbSlave s = rule.createSlave();
+        GitTool.DescriptorImpl gitToolDescriptor = rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
+        GitTool installation = new GitTool("Default", "/usr/bin/git", null);
+        gitToolDescriptor.setInstallations(installation);
+
+        String gitExe = scm.getGitExe(s, TaskListener.NULL);
+        assertEquals("/usr/bin/git", gitExe);
+
+        ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
+        s.setNodeProperties(Collections.singletonList(nodeGitLocation));
+
+        gitExe = scm.getGitExe(s, TaskListener.NULL);
+        assertEquals("C:\\Program Files\\Git\\bin\\git.exe", gitExe);
     }
 
     /*
