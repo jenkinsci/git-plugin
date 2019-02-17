@@ -127,7 +127,7 @@ public class SubmoduleOption extends GitSCMExtension {
         BuildData revToBuild = scm.getBuildData(build);
 
         try {
-            if (!disableSubmodules && git.hasGitModules()) {
+            if (!disableSubmodules && git.hasGitModules() && revToBuild != null && revToBuild.lastBuild != null) {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
