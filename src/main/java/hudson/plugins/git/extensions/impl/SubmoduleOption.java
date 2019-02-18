@@ -10,6 +10,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -45,9 +46,10 @@ public class SubmoduleOption extends GitSCMExtension {
     /** Use --depth flag on submodule update command - requires git>=1.8.4 */
     private boolean shallow;
     private Integer depth;
+    private Integer threads;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout, boolean parentCredentials) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
@@ -98,6 +100,15 @@ public class SubmoduleOption extends GitSCMExtension {
         return depth;
     }
 
+    public Integer getThreads() {
+        return threads;
+    }
+
+    @DataBoundSetter
+    public void setThreads(Integer threads) {
+        this.threads = threads;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -132,6 +143,8 @@ public class SubmoduleOption extends GitSCMExtension {
                     listener.getLogger().println("Using shallow submodule update with depth " + usedDepth);
                     cmd.depth(usedDepth);
                 }
+                int usedThreads = threads == null || threads < 1 ? 1 : threads;
+                cmd.threads(usedThreads);
                 cmd.execute();
             }
         } catch (GitException e) {
@@ -171,31 +184,15 @@ public class SubmoduleOption extends GitSCMExtension {
 
         SubmoduleOption that = (SubmoduleOption) o;
 
-        if (disableSubmodules != that.disableSubmodules) {
-            return false;
-        }
-        if (recursiveSubmodules != that.recursiveSubmodules) {
-            return false;
-        }
-        if (trackingSubmodules != that.trackingSubmodules) {
-            return false;
-        }
-        if (parentCredentials != that.parentCredentials) {
-            return false;
-        }
-        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
-            return false;
-        }
-        if (timeout != null ? !timeout.equals(that.timeout) : that.timeout != null) {
-            return false;
-        }
-        if (shallow != that.shallow) {
-            return false;
-        }
-        if (depth != null ? !depth.equals(that.depth) : that.depth != null) {
-            return false;
-        }
-        return true;
+        return disableSubmodules == that.disableSubmodules
+                && recursiveSubmodules == that.recursiveSubmodules
+                && trackingSubmodules == that.trackingSubmodules
+                && parentCredentials == that.parentCredentials
+                && Objects.equals(reference, that.reference)
+                && Objects.equals(timeout, that.timeout)
+                && shallow == that.shallow
+                && Objects.equals(depth, that.depth)
+                && Objects.equals(threads, that.threads);
     }
 
     /**
@@ -203,7 +200,7 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return SubmoduleOption.class.hashCode();
+        return Objects.hash(disableSubmodules, recursiveSubmodules, trackingSubmodules, parentCredentials, reference, timeout, shallow, depth, threads);
     }
 
     /**
@@ -220,6 +217,7 @@ public class SubmoduleOption extends GitSCMExtension {
                 ", timeout=" + timeout +
                 ", shallow=" + shallow +
                 ", depth=" + depth +
+                ", threads=" + threads +
                 '}';
     }
 

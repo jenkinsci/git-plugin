@@ -1,13 +1,13 @@
 package hudson.plugins.git;
 
 import hudson.MarkupText;
-import hudson.model.Hudson;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -29,11 +29,10 @@ import java.util.regex.Pattern;
 
 import static hudson.Util.fixEmpty;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeFieldType;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -57,6 +56,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
+    static final int TRUNCATE_LIMIT = 72;
 
     private final DateTimeFormatter [] dateFormatters;
 
@@ -93,15 +93,36 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private String parentCommit;
     private Collection<Path> paths = new HashSet<>();
     private boolean authorOrCommitter;
+    private boolean showEntireCommitSummaryInChanges;
 
     /**
-     * Create Git change set using information in given lines
+     * Create Git change set using information in given lines.
      *
      * @param lines change set lines read to construct change set
      * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
      */
     public GitChangeSet(List<String> lines, boolean authorOrCommitter) {
+        this(lines, authorOrCommitter, isShowEntireCommitSummaryInChanges());
+    }
+
+    /* Add time zone parsing for +00:00 offset, +0000 offset, and +00 offset */
+    private DateTimeFormatterBuilder addZoneOffset(DateTimeFormatterBuilder builder) {
+        builder.optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd();
+        builder.optionalStart().appendOffset("+HHMM", "+0000").optionalEnd();
+        builder.optionalStart().appendOffset("+HH", "Z").optionalEnd();
+        return builder;
+    }
+
+    /**
+     * Create Git change set using information in given lines.
+     *
+     * @param lines change set lines read to construct change set
+     * @param authorOrCommitter if true, use author information (name, time), otherwise use committer information
+     * @param retainFullCommitSummary if true, do not truncate commit summary in the 'Changes' page
+     */
+    public GitChangeSet(List<String> lines, boolean authorOrCommitter, boolean retainFullCommitSummary) {
         this.authorOrCommitter = authorOrCommitter;
+        this.showEntireCommitSummaryInChanges = retainFullCommitSummary;
         if (lines.size() > 0) {
             parseCommit(lines);
         }
@@ -111,45 +132,45 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         // ISO is    '2015-09-30T08:21:24-06:00'
         // Uses Builder rather than format pattern for more reliable parsing
         DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
-        builder.appendFixedDecimal(DateTimeFieldType.year(), 4);
-        builder.appendLiteral('-');
-        builder.appendFixedDecimal(DateTimeFieldType.monthOfYear(), 2);
-        builder.appendLiteral('-');
-        builder.appendFixedDecimal(DateTimeFieldType.dayOfMonth(), 2);
+        builder.append(DateTimeFormatter.ISO_LOCAL_DATE);
         builder.appendLiteral(' ');
-        builder.appendFixedDecimal(DateTimeFieldType.hourOfDay(), 2);
-        builder.appendLiteral(':');
-        builder.appendFixedDecimal(DateTimeFieldType.minuteOfHour(), 2);
-        builder.appendLiteral(':');
-        builder.appendFixedDecimal(DateTimeFieldType.secondOfMinute(), 2);
-        builder.appendLiteral(' ');
-        builder.appendTimeZoneOffset(null, false, 2, 2);
+        builder.append(DateTimeFormatter.ISO_LOCAL_TIME);
+        builder.optionalStart().appendLiteral(' ').optionalEnd();
+        addZoneOffset(builder);
         DateTimeFormatter gitDateFormatter = builder.toFormatter();
 
         // DateTimeFormat.forPattern("yyyy-MM-DDTHH:mm:ssZ");
         // 2013-03-21T15:16:44+0100
         // Uses Builder rather than format pattern for more reliable parsing
         builder = new DateTimeFormatterBuilder();
-        builder.appendFixedDecimal(DateTimeFieldType.year(), 4);
-        builder.appendLiteral('-');
-        builder.appendFixedDecimal(DateTimeFieldType.monthOfYear(), 2);
-        builder.appendLiteral('-');
-        builder.appendFixedDecimal(DateTimeFieldType.dayOfMonth(), 2);
-        builder.appendLiteral('T');
-        builder.appendFixedDecimal(DateTimeFieldType.hourOfDay(), 2);
-        builder.appendLiteral(':');
-        builder.appendFixedDecimal(DateTimeFieldType.minuteOfHour(), 2);
-        builder.appendLiteral(':');
-        builder.appendFixedDecimal(DateTimeFieldType.secondOfMinute(), 2);
-        builder.appendTimeZoneOffset(null, false, 2, 2);
+        builder.append(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        addZoneOffset(builder);
         DateTimeFormatter nearlyISOFormatter = builder.toFormatter();
-
-        DateTimeFormatter isoDateFormat = ISODateTimeFormat.basicDateTimeNoMillis();
 
         dateFormatters = new DateTimeFormatter[3];
         dateFormatters[0] = gitDateFormatter; // First priority +%cI format
         dateFormatters[1] = nearlyISOFormatter; // Second priority seen in git-plugin
-        dateFormatters[2] = isoDateFormat; // Third priority, ISO 8601 format
+        dateFormatters[2] = DateTimeFormatter.ISO_OFFSET_DATE_TIME; // Third priority, ISO 8601 format
+    }
+
+    /**
+     * The git client plugin command line implementation silently truncated changelog summaries (the first line of the
+     * commit message) that were longer than 72 characters beginning with git client plugin 2.0. Beginning with git
+     * client plugin 3.0 and git plugin 4.0, the git client plugin no longer silently truncates changelog summaries.
+     * Truncation responsibility has moved into the git plugin. The git plugin will default to truncate all changelog
+     * summaries (including JGit summaries) unless title truncation has been globally disabled or the caller called the
+     * GitChangeSet constructor with the argument to retain the full commit summary.
+     *
+     * See JENKINS-29977 for more details
+     *
+     * @return true if first line of commit message should be truncated at word boundary before 73 characters
+     */
+    static boolean isShowEntireCommitSummaryInChanges() {
+        try {
+            return new DescriptorImpl().isShowEntireCommitSummaryInChanges();
+        }catch (Throwable t){
+            return false;
+        }
     }
 
     private void parseCommit(List<String> lines) {
@@ -225,15 +246,34 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 }
             }
         }
-
         this.comment = message.toString();
-
         int endOfFirstLine = this.comment.indexOf('\n');
         if (endOfFirstLine == -1) {
-            this.title = this.comment;
+            this.title = this.comment.trim();
         } else {
-            this.title = this.comment.substring(0, endOfFirstLine);
+            this.title = this.comment.substring(0, endOfFirstLine).trim();
         }
+         if(!showEntireCommitSummaryInChanges){
+            this.title = splitString(this.title, TRUNCATE_LIMIT);
+        }
+    }
+
+    /* Package protected for testing */
+    static String splitString(String msg, int lineSize) {
+        if (msg ==  null) return "";
+        if (msg.matches(".*[\r\n].*")) {
+            String [] msgArray = msg.split("[\r\n]");
+            msg = msgArray[0];
+        }
+        if (msg.length() <= lineSize || !msg.contains(" ")) {
+            return msg;
+        }
+        int lastSpace = msg.lastIndexOf(' ', lineSize);
+        if (lastSpace == -1) {
+            /* String contains a space but space is outside truncation limit, truncate at first space */
+            lastSpace = msg.indexOf(' ');
+        }
+        return (lastSpace == -1) ? msg : msg.substring(0, lastSpace);
     }
 
     /** Convert to iso date format if required */
@@ -285,28 +325,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
         for (DateTimeFormatter dateFormatter : dateFormatters) {
             try {
-                DateTime dateTime = DateTime.parse(date, dateFormatter);
-                return dateTime.getMillis();
-            } catch (IllegalArgumentException ia) {
+                ZonedDateTime dateTime = ZonedDateTime.parse(date, dateFormatter);
+                return dateTime.toEpochSecond()* 1000L;
+            } catch (DateTimeParseException | IllegalArgumentException e) {
             }
         }
         try {
+            LOGGER.log(Level.FINE, "Parsing {0} with SimpleDateFormat because other parsers failed", date);
             return new SimpleDateFormat(ISO_8601_WITH_TZ).parse(date).getTime();
-        } catch (ParseException e) {
+        } catch (IllegalArgumentException | ParseException e) {
             return -1;
-        } catch (IllegalArgumentException ia) {
-            /* Java 6 does not accept "X" as a format string, use "Z"
-             * instead and remove the ':' from the source time zone
-             * string to satisfy that format string.
-             * http://stackoverflow.com/questions/15505658/unparseable-date-using-dateformat-parse
-             */
-            final String java6FormatDef = ISO_8601_WITH_TZ.replace("X", "Z");
-            final String java6Date = getDate().replaceAll(":(\\d\\d)$", "$1");
-            try {
-                return new SimpleDateFormat(java6FormatDef).parse(java6Date).getTime();
-            } catch (ParseException e) {
-                return -1;
-            }
         }
     }
 
@@ -356,8 +384,24 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      * @param csAuthorEmail user email.
      * @param createAccountBasedOnEmail true if create new user based on committer's email.
      * @return {@link User}
+     * @deprecated  Use {@link #findOrCreateUser(String,String,boolean,boolean)}
      */
+    @Deprecated
     public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail) {
+        return findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, false);
+    }
+
+    /**
+     * Returns user of the change set.
+     *
+     * @param csAuthor user name.
+     * @param csAuthorEmail user email.
+     * @param createAccountBasedOnEmail true if create new user based on committer's email.
+     * @param useExistingAccountWithSameEmail true if users should be searched for their email attribute
+     * @return {@link User}
+     */
+    public User findOrCreateUser(String csAuthor, String csAuthorEmail, boolean createAccountBasedOnEmail,
+                                 boolean useExistingAccountWithSameEmail) {
         User user;
         if (csAuthor == null) {
             return User.getUnknown();
@@ -371,11 +415,26 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
             if (user == null) {
                 try {
-                    user = User.get(csAuthorEmail, true);
-                    user.setFullName(csAuthor);
-                    if (hasHudsonTasksMailer())
-                        setMail(user, csAuthorEmail);
-                    user.save();
+                    user = User.get(csAuthorEmail, !useExistingAccountWithSameEmail);
+                    boolean setUserDetails = true;
+                    if (user == null && useExistingAccountWithSameEmail && hasHudsonTasksMailer()) {
+                        for(User existingUser : User.getAll()) {
+                            if (csAuthorEmail.equalsIgnoreCase(getMail(existingUser))) {
+                                user = existingUser;
+                                setUserDetails = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (user == null) {
+                        user = User.get(csAuthorEmail, true);
+                    }
+                    if (setUserDetails) {
+                        user.setFullName(csAuthor);
+                        if (hasHudsonTasksMailer())
+                            setMail(user, csAuthorEmail);
+                        user.save();
+                    }
                 } catch (IOException e) {
                     // add logging statement?
                 }
@@ -412,14 +471,25 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
+    private String getMail(User user) {
+        hudson.tasks.Mailer.UserProperty property = user.getProperty(hudson.tasks.Mailer.UserProperty.class);
+        if (property == null) {
+            return null;
+        }
+        if (!property.hasExplicitlyConfiguredAddress()) {
+            return null;
+        }
+        return property.getExplicitlyConfiguredAddress();
+    }
+
     private void setMail(User user, String csAuthorEmail) throws IOException {
         user.addProperty(new hudson.tasks.Mailer.UserProperty(csAuthorEmail));
     }
 
     private boolean hasMail(User user) {
-        hudson.tasks.Mailer.UserProperty property = user.getProperty(hudson.tasks.Mailer.UserProperty.class);
-        return property != null && property.hasExplicitlyConfiguredAddress();
-	}
+        String email = getMail(user);
+        return email != null;
+    }
 
     private boolean hasHudsonTasksMailer() {
         // TODO convert to checking for mailer plugin as plugin migrates to 1.509+
@@ -434,14 +504,25 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     private boolean isCreateAccountBasedOnEmail() {
-        Hudson hudson = Hudson.getInstance();
-        DescriptorImpl descriptor = (DescriptorImpl) hudson.getDescriptor(GitSCM.class);
+        DescriptorImpl descriptor = getGitSCMDescriptor();
+
+        return descriptor.isCreateAccountBasedOnEmail();
+    }
+
+    private boolean isUseExistingAccountWithSameEmail() {
+        DescriptorImpl descriptor = getGitSCMDescriptor();
 
         if (descriptor == null) {
             return false;
         }
 
-        return descriptor.isCreateAccountBasedOnEmail();
+        return descriptor.isUseExistingAccountWithSameEmail();
+    }
+
+    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+        justification="Jenkins.getInstance() is not null")
+    private DescriptorImpl getGitSCMDescriptor() {
+        return (DescriptorImpl) Jenkins.getInstance().getDescriptor(GitSCM.class);
     }
 
     @Override
@@ -460,7 +541,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             csAuthorEmail = this.committerEmail;
         }
 
-        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail());
+        return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail(), isUseExistingAccountWithSameEmail());
     }
 
     /**
@@ -559,15 +640,22 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    public int hashCode() {
-        return id != null ? id.hashCode() : super.hashCode();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        GitChangeSet that = (GitChangeSet) o;
+
+        return id != null && id.equals(that.id);
     }
 
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj instanceof GitChangeSet)
-            return id != null && id.equals(((GitChangeSet) obj).id);
-        return false;
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : super.hashCode();
     }
 }

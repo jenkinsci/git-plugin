@@ -12,6 +12,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
@@ -22,6 +23,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import static hudson.model.Result.FAILURE;
 import hudson.model.Run;
@@ -38,7 +40,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
  * @author Kohsuke Kawaguchi
  */
 public class PreBuildMerge extends GitSCMExtension {
-    private UserMergeOptions options;
+    private final UserMergeOptions options;
 
     @DataBoundConstructor
     public PreBuildMerge(UserMergeOptions options) {
@@ -88,29 +90,27 @@ public class PreBuildMerge extends GitSCMExtension {
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
 
-            // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
-            // revision info for this build etc. The default assumption is that it's a duplicate.
-            BuildData buildData = scm.getBuildData(build, true);
-            boolean buildDataAlreadyPresent = false;
-            List<BuildData> actions = build.getActions(BuildData.class);
-            for (BuildData d: actions)  {
-                if (d.similarTo(buildData)) {
-                    buildDataAlreadyPresent = true;
+            BuildDetails buildDetails = new BuildDetails(new Build(marked, rev, build.getNumber(), FAILURE),
+                                                         scm.getScmName(), scm.getUserRemoteConfigs());
+
+            // Track whether we're trying to add a duplicate BuildDetails object.
+            boolean buildDetailsAlreadyPresent = false;
+            List<BuildDetails> actions = build.getActions(BuildDetails.class);
+            for (BuildDetails d: actions)  {
+                if (d.similarTo(buildDetails)) {
+                    buildDetailsAlreadyPresent = true;
                     break;
                 }
             }
             if (!actions.isEmpty()) {
-                buildData.setIndex(actions.size()+1);
+                buildDetails.setIndex(actions.size()+1);
             }
 
-            // If the BuildData is not already attached to this build, add it to the build and mark that
-            // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
-            // finishes.
-            if (!buildDataAlreadyPresent) {
-                build.addAction(buildData);
+            // Add the BuildDetails if it wasn't already present.
+            if (!buildDetailsAlreadyPresent) {
+                build.addAction(buildDetails);
             }
 
-            buildData.saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
 
@@ -146,13 +146,9 @@ public class PreBuildMerge extends GitSCMExtension {
             return false;
         }
 
-        if (o instanceof PreBuildMerge) {
-            PreBuildMerge that = (PreBuildMerge) o;
-            return (options != null && options.equals(that.options))
-                    || (options == null && that.options == null);
-        }
+        PreBuildMerge that = (PreBuildMerge) o;
 
-        return false;
+        return Objects.equals(options, that.options);
     }
 
     /**
@@ -160,7 +156,7 @@ public class PreBuildMerge extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return PreBuildMerge.class.hashCode();
+        return Objects.hashCode(options);
     }
 
     /**

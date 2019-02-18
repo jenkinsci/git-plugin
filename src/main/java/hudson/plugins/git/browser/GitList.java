@@ -69,7 +69,7 @@ public class GitList extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
-        return new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1)));
     }
 
     /**
@@ -87,7 +87,7 @@ public class GitList extends GitRepositoryBrowser {
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
             URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(new URL(url, url.getPath() + spec));
         }
     }
 

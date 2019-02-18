@@ -121,7 +121,8 @@ public class GitSCMSourceTraitsTest {
                                                 hasProperty("parentCredentials", is(true)),
                                                 hasProperty("timeout", is(4)),
                                                 hasProperty("shallow", is(true)),
-                                                hasProperty("depth", is(3))
+                                                hasProperty("depth", is(3)),
+                                                hasProperty("threads", is(4))
                                         )
                                 )
                         ),

@@ -40,7 +40,6 @@ import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Item;
-import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
@@ -68,6 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1359,7 +1359,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         /**
          * The subversion revision.
          */
-        private String hash;
+        private final String hash;
 
         public SCMRevisionImpl(SCMHead head, String hash) {
             super(head);
@@ -1385,8 +1385,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
             SCMRevisionImpl that = (SCMRevisionImpl) o;
 
-            return StringUtils.equals(hash, that.hash) && getHead().equals(that.getHead());
-
+            return Objects.equals(hash, that.hash)
+                    && Objects.equals(getHead(), that.getHead());
         }
 
         /**
@@ -1394,7 +1394,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
          */
         @Override
         public int hashCode() {
-            return hash != null ? hash.hashCode() : 0;
+            return Objects.hash(hash, getHead());
         }
 
         /**

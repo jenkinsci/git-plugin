@@ -33,6 +33,7 @@ import hudson.model.Label;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuildDetails;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
@@ -225,7 +226,7 @@ public class GitStepTest {
             "    }\n" +
             "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        assertEquals(1, b.getActions(BuildData.class).size());
+        assertEquals(1, b.getActions(BuildDetails.class).size());
         assertEquals(1, b.getActions(GitTagAction.class).size());
         assertEquals(0, b.getChangeSets().size());
         assertEquals(1, p.getSCMs().size());
@@ -234,7 +235,7 @@ public class GitStepTest {
         otherRepo.git("add", "secondfile");
         otherRepo.git("commit", "--message=second");
         WorkflowRun b2 = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        assertEquals(1, b2.getActions(BuildData.class).size());
+        assertEquals(1, b2.getActions(BuildDetails.class).size());
         assertEquals(1, b2.getActions(GitTagAction.class).size());
         assertEquals(1, b2.getChangeSets().size());
         assertFalse(b2.getChangeSets().get(0).isEmptySet());

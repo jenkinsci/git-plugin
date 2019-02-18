@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.eclipse.jgit.lib.ObjectId;
 
 import static org.hamcrest.Matchers.*;
@@ -46,7 +48,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetDisplayNameNullSCMName() throws Exception {
-        BuildData dataWithNullSCM = new BuildData(null);
+        BuildData dataWithNullSCM = new BuildData((String)null);
         assertThat(dataWithNullSCM.getDisplayName(), is("Git Build Data"));
     }
 
@@ -173,7 +175,7 @@ public class BuildDataTest {
 
     @Test
     public void testToStringNullSCMBuildData() {
-        BuildData nullSCM = new BuildData(null);
+        BuildData nullSCM = new BuildData((String)null);
         assertThat(nullSCM.toString(), endsWith("[scmName=<null>,remoteUrls=[],buildsByBranchName={},lastBuild=null]"));
     }
 
@@ -259,6 +261,15 @@ public class BuildDataTest {
         emptyData.remoteUrls = null;
         assertNotEquals("Non-empty object equal empty", data, emptyData);
         assertNotEquals("Empty object similar to non-empty", emptyData, data);
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(BuildData.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .withIgnoredFields("index", "scmName")
+                .verify();
     }
 
     @Test

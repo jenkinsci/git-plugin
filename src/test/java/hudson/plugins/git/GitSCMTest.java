@@ -32,6 +32,7 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -44,6 +45,8 @@ import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import hudson.tools.ToolDescriptor;
+import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.StreamTaskListener;
@@ -784,6 +787,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
     }
 
+    @Test
+    public void testNodeOverrideGit() throws Exception {
+        GitSCM scm = new GitSCM(null);
+
+        DumbSlave s = rule.createSlave();
+        GitTool.DescriptorImpl gitToolDescriptor = rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
+        GitTool installation = new GitTool("Default", "/usr/bin/git", null);
+        gitToolDescriptor.setInstallations(installation);
+
+        String gitExe = scm.getGitExe(s, TaskListener.NULL);
+        assertEquals("/usr/bin/git", gitExe);
+
+        ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
+        s.setNodeProperties(Collections.singletonList(nodeGitLocation));
+
+        gitExe = scm.getGitExe(s, TaskListener.NULL);
+        assertEquals("C:\\Program Files\\Git\\bin\\git.exe", gitExe);
+    }
+
     /*
      * A previous version of GitSCM would only build against branches, not tags. This test checks that that
      * regression has been fixed.
@@ -1031,6 +1053,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setCreateAccountBasedOnEmail(true);
         assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
+        assertFalse("Wrong initial value for use existing user if same e-mail already found", scm.isUseExistingAccountWithSameEmail());
+        descriptor.setUseExistingAccountWithSameEmail(true);
+        assertTrue("Use existing user if same e-mail already found is not set", scm.isUseExistingAccountWithSameEmail());
+
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -1155,10 +1181,10 @@ public class GitSCMTest extends AbstractGitTestCase {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
         BuildChooser buildChooser = gitSCM.getBuildChooser();
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
         assertEquals(1, candidateRevisions.size());
         gitSCM.setBuildChooser(buildChooser); // Should be a no-op
-        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
         assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
@@ -2356,6 +2382,41 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
+    }
+
+    @Issue("JENKINS-19022")
+    @Test
+    public void testGetBuildDataReadsBuildDetails() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+        /* This is the null that causes NPE */
+        Branch branch = new Branch("origin/master", sha1);
+
+        List<Branch> branchList = new ArrayList<>();
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        final FreeStyleProject project = setupProject("*/*", false);
+        GitSCM scm = (GitSCM) project.getScm();
+        hudson.plugins.git.util.Build buildInfo = new hudson.plugins.git.util.Build(revision, 1, Result.SUCCESS);
+        BuildDetails details = new BuildDetails(buildInfo, scm.getScmName(), scm.getUserRemoteConfigs());
+
+        /* List of build data that will be returned by the mocked BuildDetails */
+        List<BuildDetails> buildDetailsList = new ArrayList<>();
+        buildDetailsList.add(details);
+
+        /* AbstractBuild mock which returns the buildDetailsList that contains a null branch name */
+        AbstractBuild build = Mockito.mock(AbstractBuild.class);
+        Mockito.when(build.getActions(BuildDetails.class)).thenReturn(buildDetailsList);
+
+        BuildData buildData = scm.getBuildData(build);
+
+        assertEquals("BuildData lastBuild matches details", buildInfo, buildData.lastBuild);
+        assertEquals("BuildData buildsByBranchName was updated", 1, buildData.buildsByBranchName.values().size());
+        assertEquals("BuildData buildsByBranchName branch matches", buildInfo, buildData.getLastBuildOfBranch("origin/master"));
+
+        verify(build, times(1)).getActions(BuildDetails.class);
     }
 
     /**

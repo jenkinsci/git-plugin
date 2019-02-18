@@ -58,9 +58,9 @@ public class GitUtils implements Serializable {
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool,
-                                  @CheckForNull Node builtOn,
-                                  @CheckForNull EnvVars env,
-                                  @Nonnull TaskListener listener) {
+                                         @CheckForNull Node builtOn,
+                                         @CheckForNull EnvVars env,
+                                         @Nonnull TaskListener listener) {
         GitTool git = gitTool == null
                 ? GitTool.getDefaultInstallation()
                 : Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);

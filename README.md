@@ -45,7 +45,7 @@ assure that you haven't introduced new findbugs warnings.
 
 ```bash
   $ java -version # Need Java 1.8
-  $ mvn -version # Need a modern maven version; maven 3.5.0 or later are required
+  $ mvn -version # Need a modern maven version; maven 3.5.4 or later are required
   $ mvn clean install
 ```
 

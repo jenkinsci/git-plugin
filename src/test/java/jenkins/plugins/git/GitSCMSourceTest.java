@@ -11,20 +11,24 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
+import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.Launcher;
+import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
+
 import hudson.util.FormValidation;
+
+
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -49,6 +53,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -66,8 +71,20 @@ import java.util.Collections;
 import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -341,7 +358,6 @@ public class GitSCMSourceTest {
                 is(Collections.<Action>emptyList()));
     }
 
-
     @Issue("JENKINS-52754")
     @Test
     public void gitSCMSourceShouldResolveToolsForMaster() throws Exception {
@@ -480,6 +496,16 @@ public class GitSCMSourceTest {
         @Override
         public boolean supports(@NonNull String remote) {
             return "http://git.test/telescope.git".equals(remote);
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return false;
         }
 
         @Override

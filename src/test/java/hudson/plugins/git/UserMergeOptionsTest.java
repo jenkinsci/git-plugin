@@ -3,6 +3,8 @@ package hudson.plugins.git;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -184,5 +186,13 @@ public class UserMergeOptionsTest {
                 this.expectedFastForwardMode);
         assertEquals(expected, options);
         assertEquals(expected.hashCode(), options.hashCode());
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(UserMergeOptions.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .verify();
     }
 }

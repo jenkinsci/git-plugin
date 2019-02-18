@@ -4,6 +4,8 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.*;
 
 import hudson.plugins.git.GitSCM;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.*;
 
 import jenkins.security.MasterToSlaveCallable;
@@ -78,5 +80,13 @@ public class SubmoduleOptionTest {
         } catch (IOException e) {
             assertThat(e.getMessage(), is("Could not perform submodule update"));
         }
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(SubmoduleOption.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .verify();
     }
 }
