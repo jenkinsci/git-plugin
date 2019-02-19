@@ -10,9 +10,11 @@ import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.GitLFSPull;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.extensions.impl.WipeWorkspace;
+
 import java.util.Collections;
 import jenkins.model.Jenkins;
 
@@ -213,8 +215,8 @@ public class GitSCMSourceTraitsTest {
                         Matchers.<GitSCMExtension>instanceOf(PruneStaleBranch.class),
                         Matchers.<GitSCMExtension>instanceOf(AuthorInChangelog.class),
                         Matchers.<GitSCMExtension>instanceOf(WipeWorkspace.class),
-                        Matchers.<SCMSourceTrait>allOf(
-                                instanceOf(SparseCheckoutPathsTrait.class),
+                        Matchers.<GitSCMExtension>allOf(
+                                instanceOf(SparseCheckoutPaths.class),
                                 hasProperty("sparseCheckoutPaths", hasSize(2))
                         )
                 )
