@@ -15,6 +15,7 @@ import hudson.plugins.git.extensions.impl.UserIdentity;
 import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import java.util.Collections;
 import jenkins.model.Jenkins;
+
 import jenkins.plugins.git.traits.AuthorInChangelogTrait;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.CheckoutOptionTrait;
@@ -28,6 +29,7 @@ import jenkins.plugins.git.traits.LocalBranchTrait;
 import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
+import jenkins.plugins.git.traits.SparseCheckoutPathsTrait;
 import jenkins.plugins.git.traits.SubmoduleOptionTrait;
 import jenkins.plugins.git.traits.UserIdentityTrait;
 import jenkins.plugins.git.traits.WipeWorkspaceTrait;
@@ -45,6 +47,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -156,6 +159,14 @@ public class GitSCMSourceTraitsTest {
                                                 hasProperty("repoUrl", is("foo"))
                                         )
                                 )
+                        ),
+                        Matchers.<SCMSourceTrait>allOf(
+                                instanceOf(SparseCheckoutPathsTrait.class),
+                                hasProperty("extension",
+                                        allOf(
+                                                hasProperty("sparseCheckoutPaths", hasSize(2))
+                                        )
+                                )
                         )
                 )
         );
@@ -201,7 +212,11 @@ public class GitSCMSourceTraitsTest {
                         Matchers.<GitSCMExtension>instanceOf(GitLFSPull.class),
                         Matchers.<GitSCMExtension>instanceOf(PruneStaleBranch.class),
                         Matchers.<GitSCMExtension>instanceOf(AuthorInChangelog.class),
-                        Matchers.<GitSCMExtension>instanceOf(WipeWorkspace.class)
+                        Matchers.<GitSCMExtension>instanceOf(WipeWorkspace.class),
+                        Matchers.<SCMSourceTrait>allOf(
+                                instanceOf(SparseCheckoutPathsTrait.class),
+                                hasProperty("sparseCheckoutPaths", hasSize(2))
+                        )
                 )
         );
         assertThat(instance.getBrowser(), allOf(
