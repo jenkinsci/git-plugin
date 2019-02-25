@@ -19,6 +19,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import hudson.EnvVars;
 import hudson.model.TaskListener;
 import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -37,6 +38,9 @@ public class GitChangeSetTruncateTest {
 
     @ClassRule
     public static TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @ClassRule
+    public static GitSampleRepoRule versionCheckRepo = new GitSampleRepoRule();
 
     private static File repoRoot = null;
 
@@ -102,9 +106,12 @@ public class GitChangeSetTruncateTest {
 
     @Parameterized.Parameters(name = "{0} \"{1}\" --->>> \"{2}\"")
     public static Collection gitObjects() {
-        String[] implementations = {"git", "jgit"};
+        /* If CLI git is older than 1.8.3, don't test CLI git message truncation */
+        /* CLI git 1.7.1 (CentOS 6) does not support the message truncation command line flags */
+        String[] bothGitImplementations = {"git", "jgit"};
+        String[] jgitImplementation = {"jgit"};
         List<Object[]> arguments = new ArrayList<>();
-        for (String implementation : implementations) {
+        for (String implementation : versionCheckRepo.gitVersionAtLeast(1, 8, 3) ? bothGitImplementations : jgitImplementation) {
             for (TestData sample : TEST_DATA) {
                 Object[] item = {implementation, sample.testDataCommitSummary, sample.testDataTruncatedSummary};
                 arguments.add(item);
