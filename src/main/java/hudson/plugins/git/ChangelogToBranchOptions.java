@@ -1,6 +1,8 @@
 package hudson.plugins.git;
 
 import java.io.Serializable;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
@@ -35,6 +37,12 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
     }
 
     public String getRef() {
+        if (StringUtils.isBlank(compareRemote)) {
+            return compareTarget;
+        }
+        if (StringUtils.isBlank(compareTarget)) {
+            return compareRemote;
+        }
         return compareRemote + "/" + compareTarget;
     }
 
