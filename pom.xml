@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.36</version>
+    <version>3.37</version>
     <relativePath />
   </parent>
 
@@ -83,7 +83,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0-rc</version>
+      <version>3.0.0-beta7</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -137,7 +137,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.44</version>
+      <version>1.53</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -158,7 +158,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.4</version>
+      <version>3.1.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
