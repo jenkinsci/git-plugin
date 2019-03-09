@@ -491,4 +491,10 @@ public class BuildDataTest {
         emptyData.remoteUrls = null;
         assertEquals(emptyData.hashCode(), emptyData.hashCode());
     }
+
+    @Test
+    @Issue("JENKINS-55939")
+    public void testBuildDataLastBuiltRevisionAPI() {
+        fail("Last built revision REST API needs to be reviewed, retained if possible");
+    }
 }
