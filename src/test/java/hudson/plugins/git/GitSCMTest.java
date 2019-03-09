@@ -1072,6 +1072,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
+    @Issue("JENKINS-56176")
+    @Test
+    public void buildNameSetterMacroNotDefined() {
+        fail("JENKINS-56176 needs to be fixed before git plugin 4.0.0 is released");
+    }
+
     @Issue("HUDSON-7411")
     @Test
     public void testNodeEnvVarsAvailable() throws Exception {
