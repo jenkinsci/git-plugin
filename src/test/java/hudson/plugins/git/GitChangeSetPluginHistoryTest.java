@@ -25,9 +25,12 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import jenkins.plugins.git.GitSampleRepoRule;
 
 @RunWith(Parameterized.class)
 public class GitChangeSetPluginHistoryTest {
@@ -41,7 +44,8 @@ public class GitChangeSetPluginHistoryTest {
 
     private final GitChangeSet changeSet;
 
-    private static String gitVersion = "Unknown";
+    @ClassRule
+    public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     /* git 1.7.1 on CentOS 6.7 "whatchanged" generates no output for
      * the SHA1 hashes (from this repository) in this list. Rather
@@ -49,11 +53,16 @@ public class GitChangeSetPluginHistoryTest {
      * allows most tests to run. Debian 6 / git 1.7.2.5 also has the issue.
      */
     private static final String[] git171exceptions = {
+        "6e467b23",
         "750b6806",
         "7eeb070b",
         "87988f4d",
+        "94d982c2",
         "a571899e",
-        "bc71cd2d"
+        "b9e497b0",
+        "bc71cd2d",
+        "dcd329f4",
+        "edf066f3",
     };
 
     public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws IOException, InterruptedException {
@@ -64,20 +73,6 @@ public class GitChangeSetPluginHistoryTest {
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();
         List<String> changeLogStrings = new ArrayList<>(Arrays.asList(stringWriter.toString().split("\n")));
         changeSet = new GitChangeSet(changeLogStrings, authorOrCommitter);
-    }
-
-    private static String getGitVersion() throws IOException {
-        Process process = new ProcessBuilder("git", "--version").start();
-        String version;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            version = "unknown";
-            String line;
-            while ((line = reader.readLine()) != null) {
-                version = line.trim();
-            }
-        }
-        process.destroy();
-        return version;
     }
 
     /**
@@ -116,8 +111,6 @@ public class GitChangeSetPluginHistoryTest {
 
     @Parameterized.Parameters(name = "{2}-{1}")
     public static Collection<Object[]> generateData() throws IOException, InterruptedException {
-        gitVersion = getGitVersion();
-
         List<Object[]> args = new ArrayList<>();
         String[] implementations = new String[]{"git", "jgit"};
         boolean[] choices = {true, false};
@@ -126,8 +119,7 @@ public class GitChangeSetPluginHistoryTest {
             EnvVars envVars = new EnvVars();
             TaskListener listener = StreamTaskListener.fromStdout();
             GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(implementation).getClient();
-            boolean honorExclusions = implementation.equals("git")
-                    && (gitVersion.equals("git version 1.7.1") || gitVersion.equals("git version 1.7.2.5"));
+            boolean honorExclusions = implementation.equals("git") && !sampleRepo.gitVersionAtLeast(1, 7, 10);
             List<ObjectId> allNonMergeChanges = getNonMergeChanges(honorExclusions);
             int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
 
