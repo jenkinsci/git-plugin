@@ -64,6 +64,10 @@
             <f:textbox
                 checkUrl="'descriptorByName/GitPublisher/checkRemote?value='+escape(this.value)" />
           </f:entry>
+          <f:entry field="rebaseBeforePush"
+                   title="${%Rebase Before Push}">
+            <f:checkbox />
+          </f:entry>
         </table>
         <div align="right">
           <input type="button" value="${%Delete Branch}" class="repeatable-delete" style="margin-left: 1em;" />

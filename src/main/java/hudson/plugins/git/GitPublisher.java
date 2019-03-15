@@ -301,10 +301,16 @@ public class GitPublisher extends Recorder implements Serializable {
 
                         // expand environment variables in remote repository
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        remoteURI = remote.getURIs().get(0);
+
+                        if (b.isRebaseBeforePush()) {
+                            listener.getLogger().println("Fetch and rebase with " + branchName + " of " + targetRepo);
+                            git.fetch_().from(remoteURI, remote.getFetchRefSpecs()).execute();
+                            git.rebase().setUpstream(targetRepo + "/" + branchName).execute();
+                        }
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
-                        remoteURI = remote.getURIs().get(0);
                         PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
                         if (forcePush) {
                           push.force();
@@ -490,15 +496,20 @@ public class GitPublisher extends Recorder implements Serializable {
 
     public static final class BranchToPush extends PushConfig {
         private String branchName;
+        private boolean rebaseBeforePush;
 
         public String getBranchName() {
             return branchName;
         }
+        public boolean isRebaseBeforePush() {
+            return rebaseBeforePush;
+        }
 
         @DataBoundConstructor
-        public BranchToPush(String targetRepoName, String branchName) {
+        public BranchToPush(String targetRepoName, String branchName, boolean rebaseBeforePush) {
             super(targetRepoName);
             this.branchName = Util.fixEmptyAndTrim(branchName);
+            this.rebaseBeforePush = rebaseBeforePush;
         }
 
         @Extension

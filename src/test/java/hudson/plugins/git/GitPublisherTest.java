@@ -38,20 +38,19 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jvnet.hudson.test.Issue;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.plugins.git.CliGitCommand;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -141,7 +140,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.singletonList(new BranchToPush("origin", "integration", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -178,7 +177,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.singletonList(new BranchToPush("origin", "integration", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -263,7 +262,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.singletonList(new BranchToPush("origin", "integration", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -352,7 +351,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.singletonList(new BranchToPush("origin", "integration", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -455,7 +454,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
-                Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
+                Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH", false)),
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
                 true, false, true));
 
@@ -486,7 +485,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         GitPublisher forcedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, true);
         project.getPublishersList().add(forcedPublisher);
@@ -533,7 +532,7 @@ public class GitPublisherTest extends AbstractGitProject {
         project.getPublishersList().remove(forcedPublisher);
         GitPublisher unforcedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch", false)),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false);
         project.getPublishersList().add(unforcedPublisher);
@@ -583,7 +582,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
       project.getPublishersList().add(new GitPublisher(
           Collections.<TagToPush>emptyList(),
-          Collections.singletonList(new BranchToPush("origin", "integration")),
+          Collections.singletonList(new BranchToPush("origin", "integration", false)),
           Collections.<NoteToPush>emptyList(),
           true, true, false));
 
@@ -600,6 +599,47 @@ public class GitPublisherTest extends AbstractGitProject {
 
       String sha1 = getHeadRevision(build1, "integration");
       assertEquals(sha1, testGitClient.revParse(Constants.HEAD).name());
+    }
+
+    @Test
+    public void testRebaseBeforePush() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                remoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        GitPublisher rebasedPublisher = new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "master", true)),
+                Collections.<NoteToPush>emptyList(),
+                true, true, true);
+        project.getPublishersList().add(rebasedPublisher);
+
+        project.getBuildersList().add(new LongRunningCommit(testGitDir));
+        project.save();
+
+        // Assume during our build someone else pushed changes (commitFile1) to the remote repo.
+        // So our own changes (commitFile2) cannot be pushed back to the remote origin.
+        //
+        // * 0eb2599 (HEAD) Added a file named commitFile2
+        // | * 64e71e7 (origin/master) Added a file named commitFile1
+        // |/
+        // * b2578eb init
+        //
+        // What we can do is to fetch the remote changes and rebase our own changes:
+        //
+        // * 0e7674c (HEAD) Added a file named commitFile2
+        // * 64e71e7 (origin/master) Added a file named commitFile1
+        // * b2578eb init
+
+
+        // as we have set "rebaseBeforePush" to true we expect all files to be present after the build.
+        FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1", "commitFile2");
     }
 
     @Issue("JENKINS-24786")
@@ -658,7 +698,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String noteValue = "note for " + envValue;
         GitPublisher publisher = new GitPublisher(
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
-                Collections.singletonList(new BranchToPush("origin", envReference)),
+                Collections.singletonList(new BranchToPush("origin", envReference, false)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
                 true, true, true);
         assertTrue(publisher.isForcePush());
@@ -737,5 +777,31 @@ public class GitPublisherTest extends AbstractGitProject {
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
         return java.io.File.pathSeparatorChar==';';
+    }
+}
+
+class LongRunningCommit extends Builder {
+
+    private File remoteGitDir;
+
+    LongRunningCommit(File remoteGitDir) {
+        this.remoteGitDir = remoteGitDir;
+    }
+
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+
+        TestGitRepo workspaceGit = new TestGitRepo("workspace", new File(build.getWorkspace().getRemote()), listener);
+        TestGitRepo remoteGit = new TestGitRepo("remote", this.remoteGitDir, listener);
+
+        // simulate an external commit and push to the remote during the build of our project.
+        ObjectId headRev = remoteGit.git.revParse("HEAD");
+        remoteGit.commit("commitFile1", remoteGit.johnDoe, "Added a file commitFile1");
+        remoteGit.git.checkout(headRev.getName()); // allow to push to this repo later
+
+        // checkout initial commit and create another head with our changes.
+        workspaceGit.commit("commitFile2", remoteGit.johnDoe, "Added a file commitFile2");
+
+        return true;
     }
 }
