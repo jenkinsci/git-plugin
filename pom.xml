@@ -125,13 +125,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>junit</artifactId>
-      <version>1.20</version>
+      <version>1.27</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.53</version>
+      <version>1.54</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -142,7 +142,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.5</version>
+      <version>3.1.7</version>
       <scope>test</scope>
     </dependency>
     <dependency>
