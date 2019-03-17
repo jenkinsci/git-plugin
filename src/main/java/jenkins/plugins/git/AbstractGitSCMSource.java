@@ -1466,6 +1466,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      *
      * @since 3.6.1
      */
+    @SuppressFBWarnings(value = { "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
+                                  "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                                  "NP_LOAD_OF_KNOWN_NULL_VALUE"
+                                },
+                        justification = "Java 11 generated code causes redundant nullcheck")
     private static class TreeWalkingSCMProbe extends SCMProbe {
         private final String name;
         private final long lastModified;
@@ -1508,10 +1513,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
          */
         @Override
         @NonNull
-        @SuppressFBWarnings(value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                            justification =
-                                    "TreeWalk.forPath can return null, compiler "
-                                            + "generated code for try with resources handles it")
         public SCMProbeStat stat(@NonNull String path) throws IOException {
             try (TreeWalk tw = TreeWalk.forPath(repository, path, tree)) {
                 if (tw == null) {
