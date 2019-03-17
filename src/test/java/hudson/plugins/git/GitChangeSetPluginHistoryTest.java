@@ -61,6 +61,7 @@ public class GitChangeSetPluginHistoryTest {
         "a571899e",
         "b9e497b0",
         "bc71cd2d",
+        "c73b4ff3",
         "dcd329f4",
         "edf066f3",
     };
