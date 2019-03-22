@@ -799,7 +799,7 @@ class LongRunningCommit extends Builder {
         remoteGit.commit("commitFile1", remoteGit.johnDoe, "Added a file commitFile1");
         remoteGit.git.checkout(headRev.getName()); // allow to push to this repo later
 
-        // checkout initial commit and create another head with our changes.
+        // commit onto the initial commit (creates a head with our changes later).
         workspaceGit.commit("commitFile2", remoteGit.johnDoe, "Added a file commitFile2");
 
         return true;

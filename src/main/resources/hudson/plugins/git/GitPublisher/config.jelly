@@ -65,7 +65,7 @@
                 checkUrl="'descriptorByName/GitPublisher/checkRemote?value='+escape(this.value)" />
           </f:entry>
           <f:entry field="rebaseBeforePush"
-                   title="${%Rebase Before Push}">
+                   title="${%Rebase before push}">
             <f:checkbox />
           </f:entry>
         </table>
