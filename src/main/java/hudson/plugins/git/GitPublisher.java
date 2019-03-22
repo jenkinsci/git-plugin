@@ -306,7 +306,11 @@ public class GitPublisher extends Recorder implements Serializable {
                         if (b.isRebaseBeforePush()) {
                             listener.getLogger().println("Fetch and rebase with " + branchName + " of " + targetRepo);
                             git.fetch_().from(remoteURI, remote.getFetchRefSpecs()).execute();
-                            git.rebase().setUpstream(targetRepo + "/" + branchName).execute();
+                            if (!git.revParse("HEAD").equals(git.revParse(targetRepo + "/" + branchName))) {
+                                git.rebase().setUpstream(targetRepo + "/" + branchName).execute();
+                            } else {
+                                listener.getLogger().println("No rebase required. HEAD equals " + targetRepo + "/" + branchName);
+                            }
                         }
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
