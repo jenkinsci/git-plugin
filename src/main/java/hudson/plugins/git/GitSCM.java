@@ -1150,28 +1150,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         retrieveChanges(build, git, listener);
         Build revToBuild = determineRevisionToBuild(build, buildData, environment, git, listener);
 
-        /* Generate a BuildDetails after determining what revision to build */
-        BuildDetails buildDetails = new BuildDetails(buildData.lastBuild, getScmName(), getUserRemoteConfigs());
-
         // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
         // revision info for this build etc. The default assumption is that it's a duplicate.
-        boolean buildDetailsAlreadyPresent = false;
-        List<BuildDetails> actions = build.getActions(BuildDetails.class);
-        for (BuildDetails d: actions)  {
-            if (d.similarTo(buildDetails)) {
-                buildDetailsAlreadyPresent = true;
+        boolean buildDataAlreadyPresent = false;
+        List<BuildData> actions = build.getActions(BuildData.class);
+        for (BuildData d: actions)  {
+            if (d.similarTo(buildData)) {
+                buildDataAlreadyPresent = true;
                 break;
             }
         }
         if (!actions.isEmpty()) {
-            buildDetails.setIndex(actions.size()+1);
+            buildData.setIndex(actions.size()+1);
         }
 
         // If the BuildData is not already attached to this build, add it to the build and mark that
         // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
         // finishes.
-        if (!buildDetailsAlreadyPresent) {
-            build.addAction(buildDetails);
+        if (!buildDataAlreadyPresent) {
+            build.addAction(buildData);
         }
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
@@ -1214,7 +1211,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
-        if (!buildDetailsAlreadyPresent) {
+        if (!buildDataAlreadyPresent) {
             if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
                 // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
                 // so only one of the actions is addressable by users
@@ -1743,15 +1740,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return false;
     }
 
-    private boolean isRelevantBuildDetails(BuildDetails bd) {
-        for(UserRemoteConfig c : getUserRemoteConfigs()) {
-            if(bd.hasBeenReferenced(c.getUrl())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * @deprecated
      * @param build run whose build data is returned
@@ -1779,105 +1767,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    @CheckForNull
-    private BuildData findRelevantBuildData(@NonNull Run build) {
-        List<BuildData> buildDataList = build.getActions(BuildData.class);
-        for (BuildData bd : buildDataList) {
-            if (bd != null && isRelevantBuildData(bd)) {
-                return bd;
-            }
-        }
-
-        return null;
-    }
-
-    @CheckForNull
-    private BuildDetails findRelevantBuildDetails(@NonNull Run build) {
-        List<BuildDetails> buildDetailsList = build.getActions(BuildDetails.class);
-        for (BuildDetails bd : buildDetailsList) {
-            if (bd != null && isRelevantBuildDetails(bd)) {
-                return bd;
-            }
-        }
-
-        return null;
-    }
-
-    /* If the build references branches not already covered by the
-     * buildsByBranches map, add them in. We don't call saveBuild on the
-     * BuildData directly, because we need to avoid modifying the .lastBuild
-     * member.
-     */
-    private void addBuildByBranchNames(Map<String, Build> buildsByBranchName, Build build) {
-        for (Branch branch : build.marked.getBranches()) {
-            String name = Util.fixNull(branch.getName());
-            if (!buildsByBranchName.containsKey(name)) {
-                buildsByBranchName.put(name, build);
-            }
-        }
-
-        for (Branch branch : build.revision.getBranches()) {
-            String name = Util.fixNull(branch.getName());
-            if (!buildsByBranchName.containsKey(name)) {
-                buildsByBranchName.put(name, build);
-            }
-        }
-    }
-
     /**
-     * Generate the build log (BuildData) from recorded BuildDetails.
+     * Find the build log (BuildData) recorded with the last build that completed. BuildData
+     * may not be recorded if an exception occurs in the plugin logic.
      *
-     * @param build run whose build data should be generated.
-     * @return build data generated from historical build details
+     * @param build run whose build data is returned
+     * @return the last recorded build data
      */
     public @CheckForNull BuildData getBuildData(Run build) {
         BuildData buildData = null;
-
         while (build != null) {
-            BuildData oldBuildData = findRelevantBuildData(build);
-            if (oldBuildData != null) {
-                /* This is an older build which has BuildData saved directly.
-                 * If we haven't even started constructing a BuildData
-                 * structure yet, then the contents of this old BuildData
-                 * should be sufficient, and ensures we maintain compatibility
-                 * with older build history.
-                 */
-                if (buildData == null) {
-                    return oldBuildData;
-                }
-
-                /* Otherwise, we've found newer builds with valid BuildDetails,
-                 * so we'll just fill in any missing branches from this
-                 * BuildData first. We can stop digging further since we only
-                 * need a single BuildData to complete the branch names map.
-                 */
-                for (Build entry : oldBuildData.buildsByBranchName.values()) {
-                    addBuildByBranchNames(buildData.buildsByBranchName, entry);
-                    return buildData;
+            List<BuildData> buildDataList = build.getActions(BuildData.class);
+            for (BuildData bd : buildDataList) {
+                if (bd != null && isRelevantBuildData(bd)) {
+                    buildData = bd;
+                    break;
                 }
             }
-
-            BuildDetails oldBuildDetails = findRelevantBuildDetails(build);
-            if (oldBuildDetails != null) {
-                if (buildData == null) {
-                    /* This is the first relevant BuildDetails we found, so we
-                     * need to create a new BuildData structure
-                     */
-                    buildData = new BuildData(oldBuildDetails);
-                } else {
-                    /* Otherwise, simply add this BuildDetails data into the
-                     * BuildData structure we're generating. Since this is
-                     * a top down construction, we will only add branches
-                     * that weren't build by "newer" builds already.
-                     */
-                    addBuildByBranchNames(buildData.buildsByBranchName, oldBuildDetails.getBuild());
-                }
-
+            if (buildData != null) {
+                break;
             }
-
-            /* Keep digging through build history until we run out or
-             * find a BuildData.
-             */
             build = build.getPreviousBuild();
         }
 

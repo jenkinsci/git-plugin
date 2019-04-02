@@ -24,21 +24,17 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 import static hudson.Util.fixNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
- * Historical Git related build data.
+ * Captures the Git related information for a build.
  *
- * <P>
- * This object stores build data for multiple past builds keyed by branch
- * name. It was historically added to {@link AbstractBuild#getActions()} but
- * is now generated at run time from {@link BuildDetails} data to avoid
- * bloating the build.xml file.
+ * <p>
+ * This object is added to {@link AbstractBuild#getActions()}.
+ * This persists the Git related information of that build.
  */
 @ExportedBean(defaultVisibility = 999)
 public class BuildData implements Action, Serializable, Cloneable {
@@ -86,14 +82,6 @@ public class BuildData implements Action, Serializable, Cloneable {
         for(UserRemoteConfig c : remoteConfigs) {
             remoteUrls.add(c.getUrl());
         }
-    }
-
-    public BuildData(@NonNull BuildDetails details) {
-        this.scmName = details.getScmName();
-        for (String url : details.getRemoteUrls()) {
-            remoteUrls.add(url);
-        }
-        this.saveBuild(details.getBuild());
     }
 
     /**
