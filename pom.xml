@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.40</version>
+    <version>3.42</version>
     <relativePath />
   </parent>
 
@@ -31,21 +31,27 @@
     <no-test-jar>false</no-test-jar>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
+    <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
+    <maven.checkstyle.version>8.19</maven.checkstyle.version>
   </properties>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>com.infradna.tool</groupId>
-        <artifactId>bridge-method-injector</artifactId>
-        <version>1.18</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>process</goal>
-            </goals>
-          </execution>
-        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${maven.checkstyle.plugin.version}</version>
+	<dependencies>
+	  <dependency>
+	    <groupId>com.puppycrawl.tools</groupId>
+	    <artifactId>checkstyle</artifactId>
+	    <version>${maven.checkstyle.version}</version>
+	  </dependency>
+	</dependencies>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <failOnViolation>true</failOnViolation>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -131,7 +137,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.55</version>
+      <version>1.56</version>
       <scope>test</scope>
     </dependency>
     <dependency>
