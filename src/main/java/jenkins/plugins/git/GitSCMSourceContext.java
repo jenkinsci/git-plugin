@@ -68,6 +68,10 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     private boolean wantTags;
     /**
+     * {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     */
+    private boolean pruneRefs;
+    /**
      * A list of other references to discover and search
      */
     private Set<RefNameMapping> refNameMappings;
@@ -117,6 +121,15 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     public final boolean wantTags() {
         return wantTags;
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     */
+    public final boolean pruneRefs() {
+        return pruneRefs;
     }
 
     /**
@@ -204,6 +217,20 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public C wantTags(boolean include) {
         wantTags = wantTags || include;
+        return (C) this;
+    }
+
+    /**
+     * Adds a requirement for git ref pruning to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param include {@code true} to add the requirement or {@code false} to leave the requirement as is (makes
+     *                simpler with method chaining)
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C pruneRefs(boolean include) {
+        pruneRefs = pruneRefs || include;
         return (C) this;
     }
 
