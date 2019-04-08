@@ -7,6 +7,7 @@ import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCMRevisionState;
@@ -28,7 +29,9 @@ import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
+import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
+
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
@@ -870,6 +873,93 @@ public class AbstractGitSCMSourceTest {
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
         assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+    }
+
+    @Test
+    public void refLockEncounteredIfPruneTraitNotPresentOnNotFoundRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Collections.singletonList(new BranchDiscoveryTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        try {
+            source.retrieve("v1.2", listener);
+        } catch (GitException e){
+            assertFalse(e.getMessage().contains("--prune"));
+            return;
+        }
+        //fail if ref lock does not occur
+        fail();
+    }
+
+    @Test
+    public void refLockEncounteredIfPruneTraitNotPresentOnTagRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Collections.singletonList(new TagDiscoveryTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        try {
+            source.retrieve("v1.2", listener);
+        } catch (GitException e){
+            assertFalse(e.getMessage().contains("--prune"));
+            return;
+        }
+        //fail if ref lock does not occur
+        fail();
+    }
+
+    @Test
+    public void refLockAvoidedIfPruneTraitPresentOnNotFoundRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        source.retrieve("v1.2", listener);
+
+        assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
+    }
+
+    @Test
+    public void refLockAvoidedIfPruneTraitPresentOnTagRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        source.retrieve("v1.2", listener);
+
+        assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
+    }
+
+    private void createRefLockEnvironment(TaskListener listener, GitSCMSource source) throws Exception {
+        String branch = "prune";
+        String branchRefLock = "prune/prune";
+        sampleRepo.init();
+
+        //Create branch x
+        sampleRepo.git("checkout", "-b", branch);
+        sampleRepo.git("push", "--set-upstream", source.getRemote(), branch);
+
+        //Ensure source retrieval has fetched branch x
+        source.retrieve("v1.2",listener);
+
+        //Remove branch x
+        sampleRepo.git("checkout", "master");
+        sampleRepo.git("push", source.getRemote(), "-d", branch);
+
+        //Create branch x/x (ref lock engaged)
+        sampleRepo.git("checkout", "-b", branchRefLock);
+        sampleRepo.git("push", "--set-upstream", source.getRemote(), branchRefLock);
+
+        //create tag for retrieval
+        sampleRepo.git("tag", "v1.2");
+        sampleRepo.git("push", source.getRemote(), "v1.2");
     }
 
     private boolean isWindows() {

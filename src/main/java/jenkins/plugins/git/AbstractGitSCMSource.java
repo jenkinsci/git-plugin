@@ -920,6 +920,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (candidateOtherRef != null) {
             return candidateOtherRef;
         }
+        //if PruneStaleBranches it should take affect on the following retrievals
+        boolean pruneRefs = context.pruneRefs();
         if (tagName != null) {
             listener.getLogger().println(
                     "Resolving tag commit... (remote references may be a lightweight tag or an annotated tag)");
@@ -941,7 +943,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   }
                               },
                     context,
-                    listener, false);
+                    listener, pruneRefs);
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
@@ -987,7 +989,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                               }
                           },
                 context,
-                listener, false);
+                listener, pruneRefs);
     }
 
     /**

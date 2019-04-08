@@ -27,6 +27,8 @@ package jenkins.plugins.git.traits;
 
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import jenkins.plugins.git.GitSCMSourceContext;
+import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -42,6 +44,15 @@ public class PruneStaleBranchTrait extends GitSCMExtensionTrait<PruneStaleBranch
     @DataBoundConstructor
     public PruneStaleBranchTrait() {
         super(new PruneStaleBranch());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void decorateContext(SCMSourceContext<?, ?> context) {
+        GitSCMSourceContext<?,?> ctx = (GitSCMSourceContext<?, ?>) context;
+        ctx.pruneRefs(true);
     }
 
     /**
