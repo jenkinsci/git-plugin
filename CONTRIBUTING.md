@@ -21,9 +21,9 @@ Code coverage reporting is available as a maven target.
 Please try to improve code coverage with tests when you submit.
 * `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
 
-Please don't introduce new findbugs output.
-* `mvn findbugs:check` to analyze project using [Findbugs](http://findbugs.sourceforge.net/)
-* `mvn findbugs:gui` to review Findbugs report using GUI
+Please don't introduce new spotbugs output.
+* `mvn spotbugs:check` to analyze project using [Spotbugs](https://spotbugs.github.io/)
+* `mvn spotbugs:gui` to review Findbugs report using GUI
 
 Code formatting in the git plugin varies between files.  Try to
 maintain reasonable consistency with the existing files where

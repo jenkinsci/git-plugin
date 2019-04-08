@@ -38,8 +38,8 @@ Code coverage reporting is written to `target/site/jacoco/` by the maven command
   $ mvn -P enable-jacoco clean install jacoco:report
 ```
 
-Before submitting your change, review the findbugs output to
-assure that you haven't introduced new findbugs warnings.
+Before submitting your change, review the spotbugs output to
+assure that you haven't introduced new spotbugs warnings.
 
 ## Building the Plugin
 
