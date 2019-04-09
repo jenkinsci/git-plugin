@@ -9,7 +9,10 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import org.jenkinsci.plugins.structs.describable.CustomDescribableModel;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -17,6 +20,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  * merging (to the commit being built.)
  *
  */
+@CustomDescribableModel.CustomDescription(UserMergeOptions.Struct.class)
 public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions>  implements Serializable {
 
     private String mergeRemote;
@@ -158,4 +162,23 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         }
 
     }
+
+    public static final class Struct implements CustomDescribableModel<UserMergeOptions> {
+
+        @Override
+        public Class<UserMergeOptions> getType() {
+            return UserMergeOptions.class;
+        }
+
+        @Override
+        public UserMergeOptions instantiate(Map<String, Object> arguments, StandardInstantiator standard) throws Exception {
+            Object mergeStrategy = arguments.get("mergeStrategy");
+            if (mergeStrategy instanceof String) {
+                arguments.put("mergeStrategy", ((String) mergeStrategy).toUpperCase(Locale.ROOT));
+            }
+            return standard.instantiate(getType(), arguments);
+        }
+
+    }
+
 }

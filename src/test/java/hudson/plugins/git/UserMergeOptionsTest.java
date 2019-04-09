@@ -218,13 +218,11 @@ public class UserMergeOptionsTest {
             args.put("fastForwardMode", expectedFastForwardMode.name());
         }
         assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
-        /* TODO JENKINS-51638
         if (expectedMergeStrategy != null) {
             // Historically accepted lowercase strings here:
             args.put("mergeStrategy", expectedMergeStrategy.toString());
             assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
         }
-        */
     }
 
 }

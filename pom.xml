@@ -29,6 +29,7 @@
     <jenkins.version>2.121.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
+    <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
     <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
@@ -84,7 +85,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
-      <version>1.17</version>
+      <version>1.18-SNAPSHOT</version> <!-- TODO https://github.com/jenkinsci/structs-plugin/pull/43 -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
