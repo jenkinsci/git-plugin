@@ -1,12 +1,14 @@
 package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCMRevisionState;
@@ -28,18 +30,28 @@ import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import static org.hamcrest.Matchers.*;
+
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,6 +59,18 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.collection.IsMapContaining.hasKey;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.CombinableMatcher.both;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
@@ -862,6 +886,126 @@ public class AbstractGitSCMSourceTest {
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
         assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+    }
+
+    @Test @Issue("JENKINS-50394")
+    public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        System.setProperty(Git.class.getName() + ".mockClient", MockGitClient.class.getName());
+        sharedSampleRepo = sampleRepo;
+        try {
+            GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+            source.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait()));
+            TaskListener listener = StreamTaskListener.fromStderr();
+            SCMHeadObserver.Collector c = source.fetch(new SCMSourceCriteria() {
+                @Override
+                public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+                    return true;
+                }
+            }, new SCMHeadObserver.Collector(), listener);
+
+            assertThat(c.result().keySet(), containsInAnyOrder(
+                    hasProperty("name", equalTo("master")),
+                    hasProperty("name", equalTo("dev"))
+            ));
+        } catch(MissingObjectException me) {
+            fail("Not supposed to get MissingObjectException");
+        } finally {
+            System.clearProperty(Git.class.getName() + ".mockClient");
+            sharedSampleRepo = null;
+        }
+    }
+    //Ugly but MockGitClient needs to be static and no good way to pass it on
+    static GitSampleRepoRule sharedSampleRepo;
+
+    public static class MockGitClient extends TestJGitAPIImpl {
+        final String exe;
+        final EnvVars env;
+
+        public MockGitClient(String exe, EnvVars env, File workspace, TaskListener listener) {
+            super(workspace, listener);
+            this.exe = exe;
+            this.env = env;
+        }
+
+        @Override
+        public Map<String, ObjectId> getRemoteReferences(String url, String pattern, boolean headsOnly, boolean tagsOnly) throws GitException, InterruptedException {
+            final Map<String, ObjectId> remoteReferences = super.getRemoteReferences(url, pattern, headsOnly, tagsOnly);
+            try {
+                //Now update the repo with new commits
+                sharedSampleRepo.write("file2", "New");
+                sharedSampleRepo.git("add", "file2");
+                sharedSampleRepo.git("commit", "--all", "--message=inbetween");
+            } catch (Exception e) {
+                throw new GitException("Sneaking in something didn't work", e);
+            }
+            return remoteReferences;
+        }
+
+        @Override
+        public FetchCommand fetch_() {
+            final FetchCommand fetchCommand = super.fetch_();
+            //returning something that updates the repo after the fetch is performed
+            return new FetchCommand() {
+                @Override
+                public FetchCommand from(URIish urIish, List<RefSpec> list) {
+                    fetchCommand.from(urIish, list);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand prune() {
+                    fetchCommand.prune();
+                    return this;
+                }
+
+                @Override
+                public FetchCommand prune(boolean b) {
+                    fetchCommand.prune(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand shallow(boolean b) {
+                    fetchCommand.shallow(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand timeout(Integer integer) {
+                    fetchCommand.timeout(integer);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand tags(boolean b) {
+                    fetchCommand.tags(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand depth(Integer integer) {
+                    fetchCommand.depth(integer);
+                    return this;
+                }
+
+                @Override
+                public void execute() throws GitException, InterruptedException {
+                    fetchCommand.execute();
+                    try {
+                        //Now update the repo with new commits
+                        sharedSampleRepo.write("file3", "New");
+                        sharedSampleRepo.git("add", "file3");
+                        sharedSampleRepo.git("commit", "--all", "--message=inbetween");
+                    } catch (Exception e) {
+                        throw new GitException(e);
+                    }
+                }
+            };
+        }
     }
 
     private boolean isWindows() {
