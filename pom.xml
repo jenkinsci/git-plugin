@@ -212,28 +212,6 @@
       <artifactId>mockito-core</artifactId>
       <version>1.10.19</version>
       <scope>test</scope>
-      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
-      <!-- exclude from mockito so that powermock version is used -->
-      <exclusions>
-        <exclusion>
-          <groupId>org.objenesis</groupId>
-          <artifactId>objenesis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>1.6.6</version>
-      <scope>test</scope>
-      <!-- powermock wants objenesis 2.4 and mockito wants objenesis 2.1 -->
-      <!-- excluded from mockito so that powermock version is used -->
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <version>1.6.6</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
