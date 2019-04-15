@@ -951,7 +951,7 @@ public class AbstractGitSCMSourceTest {
 
         //Remove branch x
         sampleRepo.git("checkout", "master");
-        sampleRepo.git("push", source.getRemote(), "-d", branch);
+        sampleRepo.git("push", source.getRemote(), "--delete", branch);
 
         //Create branch x/x (ref lock engaged)
         sampleRepo.git("checkout", "-b", branchRefLock);
