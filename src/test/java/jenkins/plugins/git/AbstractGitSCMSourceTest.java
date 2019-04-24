@@ -884,7 +884,7 @@ public class AbstractGitSCMSourceTest {
         createRefLockEnvironment(listener, source);
 
         try {
-            source.retrieve("v1.2", listener);
+            source.fetch("v1.2", listener, null);
         } catch (GitException e){
             assertFalse(e.getMessage().contains("--prune"));
             return;
@@ -902,7 +902,7 @@ public class AbstractGitSCMSourceTest {
         createRefLockEnvironment(listener, source);
 
         try {
-            source.retrieve("v1.2", listener);
+            source.fetch("v1.2", listener, null);
         } catch (GitException e){
             assertFalse(e.getMessage().contains("--prune"));
             return;
@@ -919,7 +919,7 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        source.retrieve("v1.2", listener);
+        source.fetch("v1.2", listener, null);
 
         assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
     }
@@ -932,7 +932,7 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        source.retrieve("v1.2", listener);
+        source.fetch("v1.2", listener, null);
 
         assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
     }
@@ -947,7 +947,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("push", "--set-upstream", source.getRemote(), branch);
 
         //Ensure source retrieval has fetched branch x
-        source.retrieve("v1.2",listener);
+        source.fetch("v1.2", listener, null);
 
         //Remove branch x
         sampleRepo.git("checkout", "master");

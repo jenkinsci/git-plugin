@@ -765,14 +765,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @CheckForNull
     @Override
-    protected SCMRevision retrieve(@NonNull final String revision, @NonNull final TaskListener listener) throws IOException, InterruptedException {
+    protected SCMRevision retrieve(@NonNull final String revision, @NonNull final TaskListener listener, @CheckForNull Item retrieveContext) throws IOException, InterruptedException {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         final GitSCMTelescope telescope = GitSCMTelescope.of(this);
         if (telescope != null) {
             final String remote = getRemote();
-            final StandardUsernameCredentials credentials = getCredentials();
+            final StandardUsernameCredentials credentials = getCredentials(retrieveContext);
             telescope.validate(remote, credentials);
             SCMRevision result = telescope.getRevision(remote, credentials, revision);
             if (result != null) {
@@ -804,7 +804,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             git.using(tool.getGitExe());
         }
         final GitClient client = git.getClient();
-        client.addDefaultCredentials(getCredentials());
+        client.addDefaultCredentials(getCredentials(retrieveContext));
         listener.getLogger().printf("Attempting to resolve %s from remote references...%n", revision);
         boolean headsOnly = !context.wantOtherRefs() && context.wantBranches();
         boolean tagsOnly = !context.wantOtherRefs() && context.wantTags();
@@ -997,14 +997,14 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      */
     @NonNull
     @Override
-    protected Set<String> retrieveRevisions(@NonNull final TaskListener listener) throws IOException, InterruptedException {
+    protected Set<String> retrieveRevisions(@NonNull final TaskListener listener, @CheckForNull Item retrieveContext) throws IOException, InterruptedException {
 
         final GitSCMSourceContext context =
                 new GitSCMSourceContext<>(null, SCMHeadObserver.none()).withTraits(getTraits());
         final GitSCMTelescope telescope = GitSCMTelescope.of(this);
         if (telescope != null) {
             final String remote = getRemote();
-            final StandardUsernameCredentials credentials = getCredentials();
+            final StandardUsernameCredentials credentials = getCredentials(retrieveContext);
             telescope.validate(remote, credentials);
             Set<GitSCMTelescope.ReferenceType> referenceTypes = new HashSet<>();
             if (context.wantBranches()) {
@@ -1029,7 +1029,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             git.using(tool.getGitExe());
         }
         GitClient client = git.getClient();
-        client.addDefaultCredentials(getCredentials());
+        client.addDefaultCredentials(getCredentials(retrieveContext));
         Set<String> revisions = new HashSet<>();
         if (context.wantBranches() || context.wantTags() || context.wantOtherRefs()) {
             listener.getLogger().println("Listing remote references...");
@@ -1218,13 +1218,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     @CheckForNull
     protected StandardUsernameCredentials getCredentials() {
+        return getCredentials(getOwner());
+    }
+
+    @CheckForNull
+    private StandardUsernameCredentials getCredentials(@CheckForNull Item context) {
         String credentialsId = getCredentialsId();
         if (credentialsId == null) {
             return null;
         }
         return CredentialsMatchers
                 .firstOrNull(
-                        CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, getOwner(),
+                        CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, context,
                                 ACL.SYSTEM, URIRequirementBuilder.fromUri(getRemote()).build()),
                         CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId),
                                 GitClient.CREDENTIALS_MATCHER));
