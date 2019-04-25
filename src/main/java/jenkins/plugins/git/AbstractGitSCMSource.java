@@ -314,10 +314,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     private interface Retriever<T> {
-        T run(GitClient client, String remoteName) throws IOException, InterruptedException;
+        default T run(GitClient client, String remoteName) throws IOException, InterruptedException {
+            throw new AbstractMethodError("Not implemented");
+        }
     }
 
-    private interface Retriever2<T> extends Retriever<T> { //TODO default methods in retriever when Java 8
+    private interface Retriever2<T> extends Retriever<T> {
         T run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException;
     }
 
@@ -559,11 +561,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
         }
         doRetrieve(new Retriever2<Void>() {
-            @Override
-            public Void run(GitClient client, String remoteName) throws IOException, InterruptedException {
-                throw new IllegalStateException("You should call my other method.");
-            }
-
             @Override
             public Void run(GitClient client, String remoteName, FetchCommand fetch) throws IOException, InterruptedException {
                 final Map<String, ObjectId> remoteReferences;
