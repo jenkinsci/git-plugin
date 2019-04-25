@@ -24,7 +24,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.0.0-beta9</revision>
+    <revision>4.0.0-beta10</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.121.1</jenkins.version>
     <java.level>8</java.level>
@@ -89,7 +89,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0-beta8</version>
+      <version>3.0.0-beta9</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
