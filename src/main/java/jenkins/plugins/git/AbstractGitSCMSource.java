@@ -1487,6 +1487,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
      *
      * @since 3.6.1
      */
+    @SuppressFBWarnings(value = { "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
+                                  "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                                  "NP_LOAD_OF_KNOWN_NULL_VALUE"
+                                },
+                        justification = "Java 11 generated code causes redundant nullcheck")
     private static class TreeWalkingSCMProbe extends SCMProbe {
         private final String name;
         private final long lastModified;
