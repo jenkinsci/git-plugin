@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.37</version>
+    <version>3.42</version>
     <relativePath />
   </parent>
 
@@ -31,71 +31,6 @@
     <findbugs.failOnError>false</findbugs.failOnError>
     <scm-api-plugin.version>2.2.0</scm-api-plugin.version>
   </properties>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-site-plugin</artifactId>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>com.infradna.tool</groupId>
-        <artifactId>bridge-method-injector</artifactId>
-        <version>1.17</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>process</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>display-info</id>
-            <configuration>
-              <rules>
-                <enforceBytecodeVersion>
-                  <excludes combine.children="append">
-                    <!-- Loaded conditionally. -->
-                    <exclude>org.eclipse.jgit:org.eclipse.jgit.java7</exclude>
-                  </excludes>
-                </enforceBytecodeVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-        <configuration>
-          <rules>
-            <requireUpperBoundDeps>
-              <excludes combine.children="append">
-                <!-- workflow-cps requests 1.1.1, core 2.60.1 requests 1.2.1 -->
-                <exclude>org.jenkins-ci.ui:jquery-detached</exclude>
-              </excludes>
-            </requireUpperBoundDeps>
-          </rules>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
   <repositories>
     <repository>
@@ -126,16 +61,6 @@
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.9.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci</groupId>
-      <artifactId>annotation-indexer</artifactId>
-      <version>1.12</version>
-    </dependency>
-    <dependency>
-      <groupId>com.infradna.tool</groupId>
-      <artifactId>bridge-method-annotation</artifactId>
-      <version>1.17</version>
     </dependency>
 
     <dependency>
@@ -219,7 +144,6 @@
       <version>4.5.3-2.0</version>
       <scope>test</scope>
     </dependency>
-
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -307,28 +231,18 @@
       <artifactId>workflow-cps-global-lib</artifactId>
       <version>2.8</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
       <version>2.2.0</version>
       <scope>test</scope>
-    </dependency>
-    <dependency> <!-- TODO pending core upgrade or haveged, test against a newer sshd so we do not run into NativePRNG hangs -->
-      <groupId>org.jenkins-ci.modules</groupId>
-      <artifactId>sshd</artifactId>
-      <version>2.6</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>instance-identity</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jenkins-ci.modules</groupId>
-          <artifactId>ssh-cli-auth</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
   </dependencies>
 
