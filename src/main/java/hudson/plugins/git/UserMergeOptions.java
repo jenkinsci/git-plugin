@@ -9,7 +9,11 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import org.jenkinsci.plugins.structs.describable.CustomDescribableModel;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -150,12 +154,23 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     @Extension
-    public static class DescriptorImpl extends Descriptor<UserMergeOptions> {
+    public static class DescriptorImpl extends Descriptor<UserMergeOptions> implements CustomDescribableModel {
 
         @Override
         public String getDisplayName() {
             return "";
         }
 
+        @Override
+        public Map<String, Object> customInstantiate(Map<String, Object> arguments) {
+            Map<String, Object> r = new HashMap<>(arguments);
+            Object mergeStrategy = r.get("mergeStrategy");
+            if (mergeStrategy instanceof String) {
+                r.put("mergeStrategy", ((String) mergeStrategy).toUpperCase(Locale.ROOT));
+            }
+            return r;
+        }
+
     }
+
 }

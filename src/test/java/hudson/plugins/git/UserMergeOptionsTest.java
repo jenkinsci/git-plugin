@@ -11,12 +11,16 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 @RunWith(Parameterized.class)
 public class UserMergeOptionsTest {
+
+    public static @ClassRule JenkinsRule r = new JenkinsRule();
 
     private final UserMergeOptions options;
     private final UserMergeOptions deprecatedOptions;
@@ -218,13 +222,11 @@ public class UserMergeOptionsTest {
             args.put("fastForwardMode", expectedFastForwardMode.name());
         }
         assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
-        /* TODO JENKINS-51638
         if (expectedMergeStrategy != null) {
             // Historically accepted lowercase strings here:
             args.put("mergeStrategy", expectedMergeStrategy.toString());
             assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
         }
-        */
     }
 
 }
