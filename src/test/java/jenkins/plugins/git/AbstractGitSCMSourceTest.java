@@ -74,6 +74,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.when;
 
 /**
@@ -937,6 +938,8 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnNotFoundRetrieval() throws Exception {
+        /* Older git versions have unexpected behaviors with prune */
+        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
@@ -950,6 +953,8 @@ public class AbstractGitSCMSourceTest {
 
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnTagRetrieval() throws Exception {
+        /* Older git versions have unexpected behaviors with prune */
+        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
