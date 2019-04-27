@@ -28,7 +28,7 @@ run tests.
 Code coverage reporting is available as a maven target and is actively
 monitored.  Please improve code coverage with the tests you submit.
 
-New findbugs warnings will fail the continuous integration build.
+New spotbugs warnings will fail the continuous integration build.
 Don't add new warnings.
 
 ## Building the Plugin

@@ -13,7 +13,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] Unit tests pass locally with my changes
 - [ ] I have added documentation as necessary
 - [ ] No Javadoc warnings were introduced with my changes
-- [ ] No findbugs warnings were introduced with my changes
+- [ ] No spotbugs warnings were introduced with my changes
 - [ ] I have interactively tested my changes
 - [ ] Any dependent changes have been merged and published in upstream modules (like git-client-plugin)
 
