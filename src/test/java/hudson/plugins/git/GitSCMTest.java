@@ -57,6 +57,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
@@ -2041,6 +2042,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * each build.
      * @throws Exception on various exceptions
      */
+    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
     @Test
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
@@ -2136,6 +2138,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * the commit id, passed with "notifyCommit" URL.
      * @throws Exception on various exceptions
      */
+    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
     @Issue("JENKINS-24133")
     @Test
     public void testSha1NotificationBranches() throws Exception {
