@@ -2,15 +2,25 @@ package hudson.plugins.git;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 @RunWith(Parameterized.class)
 public class UserMergeOptionsTest {
+
+    public static @ClassRule JenkinsRule r = new JenkinsRule();
 
     private final UserMergeOptions options;
     private final UserMergeOptions deprecatedOptions;
@@ -103,8 +113,8 @@ public class UserMergeOptionsTest {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
-                + "mergeStrategy='" + expectedMergeStrategy + "', "
-                + "fastForwardMode='" + expectedFastForwardMode + "'"
+                + "mergeStrategy='" + (expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy).name() + "', "
+                + "fastForwardMode='" + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode).name() + "'"
                 + '}';
         assertEquals(expected, options.toString());
     }
@@ -185,4 +195,38 @@ public class UserMergeOptionsTest {
         assertEquals(expected, options);
         assertEquals(expected.hashCode(), options.hashCode());
     }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(UserMergeOptions.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .verify();
+    }
+
+    @Issue("JENKINS-51638")
+    @Test
+    public void mergeStrategyCase() throws Exception {
+        Map<String, Object> args = new HashMap<>();
+        if (expectedMergeTarget != null) {
+            args.put("mergeTarget", expectedMergeTarget);
+        }
+        if (expectedMergeRemote != null) {
+            args.put("mergeRemote", expectedMergeRemote);
+        }
+        if (expectedMergeStrategy != null) {
+            // Recommend syntax as of JENKINS-34070:
+            args.put("mergeStrategy", expectedMergeStrategy.name());
+        }
+        if (expectedFastForwardMode != null) {
+            args.put("fastForwardMode", expectedFastForwardMode.name());
+        }
+        assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
+        if (expectedMergeStrategy != null) {
+            // Historically accepted lowercase strings here:
+            args.put("mergeStrategy", expectedMergeStrategy.toString());
+            assertEquals(options, new DescribableModel<>(UserMergeOptions.class).instantiate(args));
+        }
+    }
+
 }
