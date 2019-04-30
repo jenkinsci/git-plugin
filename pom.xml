@@ -33,6 +33,7 @@
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
     <scm-api-plugin.version>2.2.6</scm-api-plugin.version>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
   </properties>
 
   <repositories>
