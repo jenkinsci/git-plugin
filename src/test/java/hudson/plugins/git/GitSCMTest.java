@@ -60,6 +60,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
@@ -2077,8 +2078,8 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified Custom SCM names, associated with each build.
      * @throws Exception on error
      */
-    // Flaky test distracting from primary goal
-    // @Test
+    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
+    @Test
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
@@ -2176,6 +2177,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
      */
+    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
     @Issue("JENKINS-24133")
     // Flaky test distracting from primary focus
     // @Test
