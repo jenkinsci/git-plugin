@@ -25,10 +25,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.*;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -303,7 +300,7 @@ public class GitPublisher extends Recorder implements Serializable {
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
                         remoteURI = remote.getURIs().get(0);
 
-                        if (b.isRebaseBeforePush()) {
+                        if (b.getRebaseBeforePush()) {
                             listener.getLogger().println("Fetch and rebase with " + branchName + " of " + targetRepo);
                             git.fetch_().from(remoteURI, remote.getFetchRefSpecs()).execute();
                             if (!git.revParse("HEAD").equals(git.revParse(targetRepo + "/" + branchName))) {
@@ -505,15 +502,20 @@ public class GitPublisher extends Recorder implements Serializable {
         public String getBranchName() {
             return branchName;
         }
-        public boolean isRebaseBeforePush() {
-            return rebaseBeforePush;
-        }
 
         @DataBoundConstructor
-        public BranchToPush(String targetRepoName, String branchName, boolean rebaseBeforePush) {
+        public BranchToPush(String targetRepoName, String branchName) {
             super(targetRepoName);
             this.branchName = Util.fixEmptyAndTrim(branchName);
-            this.rebaseBeforePush = rebaseBeforePush;
+        }
+
+        @DataBoundSetter
+        public void setRebaseBeforePush(boolean shouldRebase) {
+            this.rebaseBeforePush = shouldRebase;
+        }
+
+        public boolean getRebaseBeforePush() {
+            return rebaseBeforePush;
         }
 
         @Extension

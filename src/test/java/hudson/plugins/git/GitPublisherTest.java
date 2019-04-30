@@ -140,7 +140,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration", false)),
+                Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -177,7 +177,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration", false)),
+                Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -262,7 +262,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration", false)),
+                Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -351,7 +351,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "integration", false)),
+                Collections.singletonList(new BranchToPush("origin", "integration")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false));
 
@@ -454,7 +454,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         project.getPublishersList().add(new GitPublisher(
         		Collections.singletonList(new TagToPush("$TARGET_NAME", tag_name, "", false, false)),
-                Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH", false)),
+                Collections.singletonList(new BranchToPush("$TARGET_NAME", "$TARGET_BRANCH")),
                 Collections.singletonList(new NoteToPush("$TARGET_NAME", note_content, Constants.R_NOTES_COMMITS, false)),
                 true, false, true));
 
@@ -485,7 +485,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
         GitPublisher forcedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "otherbranch", false)),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, true);
         project.getPublishersList().add(forcedPublisher);
@@ -532,7 +532,7 @@ public class GitPublisherTest extends AbstractGitProject {
         project.getPublishersList().remove(forcedPublisher);
         GitPublisher unforcedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "otherbranch", false)),
+                Collections.singletonList(new BranchToPush("origin", "otherbranch")),
                 Collections.<NoteToPush>emptyList(),
                 true, true, false);
         project.getPublishersList().add(unforcedPublisher);
@@ -582,7 +582,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
       project.getPublishersList().add(new GitPublisher(
           Collections.<TagToPush>emptyList(),
-          Collections.singletonList(new BranchToPush("origin", "integration", false)),
+          Collections.singletonList(new BranchToPush("origin", "integration")),
           Collections.<NoteToPush>emptyList(),
           true, true, false));
 
@@ -613,9 +613,12 @@ public class GitPublisherTest extends AbstractGitProject {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
+        BranchToPush btp = new BranchToPush("origin", "master");
+        btp.setRebaseBeforePush(true);
+
         GitPublisher rebasedPublisher = new GitPublisher(
                 Collections.<TagToPush>emptyList(),
-                Collections.singletonList(new BranchToPush("origin", "master", true)),
+                Collections.singletonList(btp),
                 Collections.<NoteToPush>emptyList(),
                 true, true, true);
         project.getPublishersList().add(rebasedPublisher);
@@ -698,7 +701,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String noteValue = "note for " + envValue;
         GitPublisher publisher = new GitPublisher(
                 Collections.singletonList(new TagToPush("origin", tagNameReference, tagMessageReference, false, true)),
-                Collections.singletonList(new BranchToPush("origin", envReference, false)),
+                Collections.singletonList(new BranchToPush("origin", envReference)),
                 Collections.singletonList(new NoteToPush("origin", noteReference, Constants.R_NOTES_COMMITS, false)),
                 true, true, true);
         assertTrue(publisher.isForcePush());
