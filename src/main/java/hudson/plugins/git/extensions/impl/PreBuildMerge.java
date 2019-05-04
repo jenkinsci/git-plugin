@@ -21,11 +21,15 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import static hudson.model.Result.FAILURE;
+import static java.text.MessageFormat.format;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import static org.apache.commons.lang.StringUtils.contains;
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
@@ -72,7 +76,7 @@ public class PreBuildMerge extends GitSCMExtension {
         checkoutCommand.execute();
 
         try {
-            MergeCommand cmd = git.merge().setRevisionToMerge(rev.getSha1());
+            MergeCommand cmd = git.merge().setRevisionToMerge(rev.getSha1()).setMessage(getMessage(rev, remoteBranchRef));
             for (GitSCMExtension ext : scm.getExtensions())
                 ext.decorateMergeCommand(scm, build, git, listener, cmd);
             cmd.execute();
@@ -119,6 +123,26 @@ public class PreBuildMerge extends GitSCMExtension {
         Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
         mergeRevision.getBranches().add(new Branch(remoteBranchRef, target));
         return mergeRevision;
+    }
+
+    private String getMessage(Revision rev, String remoteBranchRef) {
+        return format("Merge branch {0} into {1}", getShortBranchName(rev), getShortBranchName(remoteBranchRef));
+    }
+
+    private String getShortBranchName(Revision revision) {
+        Iterator<Branch> branchIterator = revision.getBranches().iterator();
+        if (branchIterator.hasNext()) {
+            return getShortBranchName(branchIterator.next().getName());
+        }
+        return null;
+    }
+
+    private String getShortBranchName(String branchName) {
+        String forwardSlash = "/";
+        if (contains(branchName, forwardSlash)) {
+            return substringAfterLast(branchName, forwardSlash);
+        }
+        return branchName;
     }
 
     @Override
