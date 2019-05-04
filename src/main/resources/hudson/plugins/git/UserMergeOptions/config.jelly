@@ -16,4 +16,9 @@
           ${it.toString()}
       </f:enum>
   </f:entry>
+  <f:entry title="${%Commit message style}" field="commitMessageStyle">
+      <f:enum>
+          ${it.toString()}
+      </f:enum>
+  </f:entry>
 </j:jelly>

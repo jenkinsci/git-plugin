@@ -8,6 +8,7 @@ import hudson.plugins.git.opt.PreBuildMergeOptions;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import static java.text.MessageFormat.format;
 import java.io.Serializable;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -22,6 +23,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     private final String mergeTarget;
     private String mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
+    private CommitMessageStyle commitMessageStyle;
 
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
@@ -31,7 +33,20 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      */
     @Deprecated
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
-        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
+        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF, CommitMessageStyle.NONE);
+    }
+
+    /**
+     * @deprecated use the new constructor that allows to set the commit message style.
+     * @param mergeRemote remote name used for merge
+     * @param mergeTarget remote branch to be merged into current branch
+     * @param mergeStrategy merge strategy
+     * @param fastForwardMode fast forward mode
+     */
+    @Deprecated 
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
+            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+        this(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode, CommitMessageStyle.NONE);
     }
 
     /**
@@ -39,18 +54,21 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeTarget remote branch to be merged into current branch
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
+     * @param commitMessageStyle commit message style
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+            MergeCommand.GitPluginFastForwardMode fastForwardMode, CommitMessageStyle commitMessageStyle) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
         this.mergeStrategy = mergeStrategy;
         this.fastForwardMode = fastForwardMode;
+        this.commitMessageStyle = commitMessageStyle;
     }
 
     @DataBoundConstructor
     public UserMergeOptions(String mergeTarget) {
         this.mergeTarget = mergeTarget;
+        this.commitMessageStyle = CommitMessageStyle.NONE;
     }
 
     /**
@@ -58,7 +76,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param pbm pre-build merge options used to construct UserMergeOptions
      */
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
+        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode(), CommitMessageStyle.NONE);
     }
 
     /**
@@ -116,6 +134,52 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         this.fastForwardMode = fastForwardMode;
     }
 
+    public CommitMessageStyle getCommitMessageStyle() {
+        return commitMessageStyle;
+    }
+
+    @DataBoundSetter
+    public void setCommitMessageStyle(CommitMessageStyle commitMessageStyle) {
+        this.commitMessageStyle = commitMessageStyle;
+    }
+
+    public enum CommitMessageStyle {
+        NONE(null),
+        GITLAB("Merge branch ''{0}'' into ''{1}''");
+
+        private String pattern;
+
+        private CommitMessageStyle(String pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
+
+        public String message(Revision fromRev, String toRef) {
+            if (pattern != null) {
+                return format(pattern, getShortBranchName(fromRev), getShortBranchName(toRef));
+            }
+            return null;
+        }
+
+        private String getShortBranchName(Revision revision) {
+            if (revision.getBranches() == null || revision.getBranches().isEmpty()) {
+                return null;
+            }
+            return getShortBranchName(revision.getBranches().iterator().next().getName());
+        }
+
+        private String getShortBranchName(String branchName) {
+            if (branchName != null && branchName.lastIndexOf('/') > -1) {
+                return branchName.substring(branchName.lastIndexOf('/') + 1);
+            }
+            return branchName;
+        }
+    }
+
     @Override
     public String toString() {
         return "UserMergeOptions{" +
@@ -123,6 +187,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                 ", mergeTarget='" + mergeTarget + '\'' +
                 ", mergeStrategy='" + mergeStrategy + '\'' +
                 ", fastForwardMode='" + fastForwardMode + '\'' +
+                ", commitMessageStyle='" + commitMessageStyle + '\'' +
                 '}';
     }
 
@@ -141,7 +206,10 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                             || (mergeStrategy == null && that.mergeStrategy == null)) {
                         if ((fastForwardMode != null && fastForwardMode.equals(that.fastForwardMode))
                                 || (fastForwardMode == null && that.fastForwardMode == null)) {
-                            return true;
+                            if ((commitMessageStyle != null && commitMessageStyle.equals(that.commitMessageStyle))
+                                    || (commitMessageStyle == null && that.commitMessageStyle == null)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -157,6 +225,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         result = 31 * result + (mergeTarget != null ? mergeTarget.hashCode() : 0);
         result = 31 * result + (mergeStrategy != null ? mergeStrategy.hashCode() : 0);
         result = 31 * result + (fastForwardMode != null ? fastForwardMode.hashCode() : 0);
+        result = 31 * result + (commitMessageStyle != null ? commitMessageStyle.hashCode() : 0);
         return result;
     }
 

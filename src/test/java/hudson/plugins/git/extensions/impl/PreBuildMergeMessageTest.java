@@ -27,6 +27,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserMergeOptions;
+import hudson.plugins.git.UserMergeOptions.CommitMessageStyle;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.util.DescribableList;
@@ -75,6 +76,7 @@ public class PreBuildMergeMessageTest {
         Revision rev = new Revision(branch.getSHA1(), Arrays.asList(branch));
 
         UserMergeOptions userMergeOptions = new UserMergeOptions(mergeToBranch);
+        userMergeOptions.setCommitMessageStyle(CommitMessageStyle.GITLAB);
         PreBuildMerge preBuildMerge = new PreBuildMerge(userMergeOptions);
         preBuildMerge.decorateRevisionToBuild(gitSCM, build, git, listener, marked, rev);
     }
@@ -83,21 +85,21 @@ public class PreBuildMergeMessageTest {
     public void branchNameSingleForwardSlash() throws InterruptedException, IOException {
         decorateRevisionToBuild("origin/stable-3.9", "origin/stable-3.10");
 
-        verify(mergeCommand).setMessage("Merge branch stable-3.9 into stable-3.10");
+        verify(mergeCommand).setMessage("Merge branch 'stable-3.9' into 'stable-3.10'");
     }
 
     @Test
     public void branchNameMultipleForwardSlashes() throws InterruptedException, IOException {
         decorateRevisionToBuild("refs/remotes/origin/stable-3.9", "refs/remotes/origin/stable-3.10");
 
-        verify(mergeCommand).setMessage("Merge branch stable-3.9 into stable-3.10");
+        verify(mergeCommand).setMessage("Merge branch 'stable-3.9' into 'stable-3.10'");
     }
 
     @Test
     public void branchNameNoForwardSlashes() throws InterruptedException, IOException {
         decorateRevisionToBuild("stable-3.9", "stable-3.10");
 
-        verify(mergeCommand).setMessage("Merge branch stable-3.9 into stable-3.10");
+        verify(mergeCommand).setMessage("Merge branch 'stable-3.9' into 'stable-3.10'");
     }
 
     @Test
@@ -105,10 +107,22 @@ public class PreBuildMergeMessageTest {
         Revision rev = new Revision(fromString("2cec153f34767f7638378735dc2b907ed251a67d"));
 
         UserMergeOptions userMergeOptions = new UserMergeOptions("123");
+        userMergeOptions.setCommitMessageStyle(CommitMessageStyle.GITLAB);
         PreBuildMerge preBuildMerge = new PreBuildMerge(userMergeOptions);
         preBuildMerge.decorateRevisionToBuild(gitSCM, build, git, listener, marked, rev);
 
-        verify(mergeCommand).setMessage("Merge branch null into 123");
+        verify(mergeCommand).setMessage("Merge branch 'null' into '123'");
+    }
+    
+    @Test
+    public void noneCommitMessageStyle() throws InterruptedException, IOException {
+        Revision rev = new Revision(fromString("2cec153f34767f7638378735dc2b907ed251a67d"));
+
+        UserMergeOptions userMergeOptions = new UserMergeOptions("123");
+        PreBuildMerge preBuildMerge = new PreBuildMerge(userMergeOptions);
+        preBuildMerge.decorateRevisionToBuild(gitSCM, build, git, listener, marked, rev);
+
+        verify(mergeCommand).setMessage(null);
     }
 
 }
