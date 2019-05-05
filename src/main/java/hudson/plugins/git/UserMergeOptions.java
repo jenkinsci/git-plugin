@@ -68,7 +68,6 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     @DataBoundConstructor
     public UserMergeOptions(String mergeTarget) {
         this.mergeTarget = mergeTarget;
-        this.commitMessageStyle = CommitMessageStyle.NONE;
     }
 
     /**
@@ -135,7 +134,12 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     public CommitMessageStyle getCommitMessageStyle() {
-        return commitMessageStyle;
+        for (CommitMessageStyle commitMessageStyle : CommitMessageStyle.values()) {
+            if (commitMessageStyle.equals(this.commitMessageStyle)) {
+                return commitMessageStyle;
+            }
+        }
+        return CommitMessageStyle.NONE;
     }
 
     @DataBoundSetter

@@ -13,34 +13,44 @@ import org.junit.runners.Parameterized;
 public class UserMergeOptionsTest {
 
     private final UserMergeOptions options;
-    private final UserMergeOptions deprecatedOptions;
+    private final UserMergeOptions deprecatedOptions1;
+    private final UserMergeOptions deprecatedOptions2;
 
     private final String expectedMergeRemote;
     private final String expectedMergeTarget;
     private final MergeCommand.Strategy expectedMergeStrategy;
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
+    private final UserMergeOptions.CommitMessageStyle expectedCommitMessageStyle;
 
     public UserMergeOptionsTest(
             String mergeRemote,
             String mergeTarget,
             MergeCommand.Strategy mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+            MergeCommand.GitPluginFastForwardMode fastForwardMode,
+            UserMergeOptions.CommitMessageStyle commitMessageStyle) {
         this.expectedMergeRemote = mergeRemote;
         this.expectedMergeTarget = mergeTarget;
         this.expectedMergeStrategy = mergeStrategy;
         this.expectedFastForwardMode = fastForwardMode;
+        this.expectedCommitMessageStyle = commitMessageStyle;
         options = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
                 mergeStrategy == null ? null : mergeStrategy.toString(),
-                fastForwardMode);
-        deprecatedOptions = new UserMergeOptions(
+                fastForwardMode,
+                commitMessageStyle);
+        deprecatedOptions1 = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
                 mergeStrategy == null ? null : mergeStrategy.toString());
+        deprecatedOptions2 = new UserMergeOptions(
+                mergeRemote,
+                mergeTarget,
+                mergeStrategy == null ? null : mergeStrategy.toString(),
+                fastForwardMode);
     }
 
-    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
+    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}+{4}")
     public static Collection mergeOptionVariants() {
         List<Object[]> mergeOptions = new ArrayList<>();
         String[] remotes = new String[]{null, "src_remote"};
@@ -60,12 +70,19 @@ public class UserMergeOptionsTest {
             MergeCommand.GitPluginFastForwardMode.FF_ONLY,
             MergeCommand.GitPluginFastForwardMode.NO_FF
         };
+        UserMergeOptions.CommitMessageStyle[] commitMessageStyles = new UserMergeOptions.CommitMessageStyle[] {
+            null,
+            UserMergeOptions.CommitMessageStyle.NONE,
+            UserMergeOptions.CommitMessageStyle.GITLAB
+        };
         for (String remote : remotes) {
             for (String target : targets) {
                 for (MergeCommand.Strategy strategy : mergeStrategies) {
                     for (MergeCommand.GitPluginFastForwardMode mode : fastForwardModes) {
-                        Object[] mergeOption = {remote, target, strategy, mode};
-                        mergeOptions.add(mergeOption);
+                        for(UserMergeOptions.CommitMessageStyle messageStyle : commitMessageStyles) {
+                            Object[] mergeOption = {remote, target, strategy, mode, messageStyle};
+                            mergeOptions.add(mergeOption);
+                        }
                     }
                 }
             }
@@ -99,12 +116,22 @@ public class UserMergeOptionsTest {
     }
 
     @Test
+    public void testGetCommitMessageStyle() {
+        if (expectedCommitMessageStyle == null) {
+            assertEquals(UserMergeOptions.CommitMessageStyle.NONE, options.getCommitMessageStyle());
+        } else {
+            assertEquals(expectedCommitMessageStyle, options.getCommitMessageStyle());
+        }
+    }
+
+    @Test
     public void testToString() {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
                 + "mergeStrategy='" + expectedMergeStrategy + "', "
-                + "fastForwardMode='" + expectedFastForwardMode + "'"
+                + "fastForwardMode='" + expectedFastForwardMode + "', "
+                + "commitMessageStyle='" + expectedCommitMessageStyle + "'"
                 + '}';
         assertEquals(expected, options.toString());
     }
@@ -115,7 +142,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         assertEquals(expected, options);
         assertEquals(options, expected);
     }
@@ -126,7 +154,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         /* reflexive */
         assertEquals(options, options);
         assertEquals(expected, expected);
@@ -138,39 +167,53 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         UserMergeOptions expected1 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         assertEquals(expected, expected1);
         assertEquals(expected1, options);
         assertEquals(expected, options);
     }
 
     @Test
-    public void testEqualsDeprecatedConstructor() {
-        if (this.expectedFastForwardMode == MergeCommand.GitPluginFastForwardMode.FF) {
-            assertEquals(options, deprecatedOptions);
+    public void testEqualsDeprecatedConstructor1() {
+        if (this.expectedFastForwardMode == MergeCommand.GitPluginFastForwardMode.FF
+            && this.expectedCommitMessageStyle == UserMergeOptions.CommitMessageStyle.NONE) {
+            assertEquals(options, deprecatedOptions1);
         } else {
-            assertNotEquals(options, deprecatedOptions);
+            assertNotEquals(options, deprecatedOptions1);
         }
     }
 
+    @Test
+    public void testEqualsDeprecatedConstructor2() {
+        if (this.expectedCommitMessageStyle == UserMergeOptions.CommitMessageStyle.NONE) {
+            assertEquals(options, deprecatedOptions2);
+        } else {
+            assertNotEquals(options, deprecatedOptions2);
+        }
+    }
+    
     @Test
     public void testNotEquals() {
         UserMergeOptions notExpected1 = new UserMergeOptions(
                 "x" + this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         assertNotEquals(notExpected1, options);
         UserMergeOptions notExpected2 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 "y" + this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         assertNotEquals(notExpected2, options);
         assertNotEquals(options, "A different data type");
     }
@@ -181,7 +224,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedCommitMessageStyle);
         assertEquals(expected, options);
         assertEquals(expected.hashCode(), options.hashCode());
     }
