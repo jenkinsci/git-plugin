@@ -66,7 +66,6 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         assertTrue("SCM polling should detect changes", project.poll(listener).hasChanges());
 
         FreeStyleBuild secondBuild = build(project, Result.FAILURE);
-        assertThat(secondBuild.getLog(), containsString("Automatic merge failed; fix conflicts and then commit the result."));
         assertEquals(secondBuild.getNumber(), gitSCM.getBuildData(secondBuild).lastBuild.getBuildNumber());
         // buildData should mark this as built
         assertEquals(conflictSha1, gitSCM.getBuildData(secondBuild).lastBuild.getMarked().getSha1String());
