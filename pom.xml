@@ -32,8 +32,8 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
-    <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
-    <maven.checkstyle.version>8.20</maven.checkstyle.version>
+    <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
+    <maven.checkstyle.version>8.21</maven.checkstyle.version>
   </properties>
 
   <build>
