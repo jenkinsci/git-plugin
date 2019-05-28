@@ -32,8 +32,8 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
-    <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
-    <maven.checkstyle.version>8.20</maven.checkstyle.version>
+    <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
+    <maven.checkstyle.version>8.21</maven.checkstyle.version>
   </properties>
 
   <build>
@@ -120,7 +120,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.12</version>
+      <version>1.14</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -138,7 +138,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.58</version>
+      <version>1.59</version>
       <scope>test</scope>
     </dependency>
     <dependency>
