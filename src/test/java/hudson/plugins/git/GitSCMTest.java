@@ -59,6 +59,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -199,6 +200,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Issue("JENKINS-56176")
     public void testBasicRemotePoll() throws Exception {
 //        FreeStyleProject project = setupProject("master", true, false);
         FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
@@ -210,7 +212,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, janeDoe, "Commit number 2");
+        String sha1String = commit(commitFile2, janeDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
         // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
@@ -220,6 +222,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        // JENKINS-56176 token macro expansion broke when BuildData was no longer updated
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION,length=7}"), is(sha1String.substring(0, 7)));
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION}"), is(sha1String));
+        assertThat(TokenMacro.expandAll(build2, listener, "$GIT_REVISION"), is(sha1String));
     }
 
     @Test
