@@ -40,6 +40,7 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
+import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
@@ -1475,6 +1476,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(gitSCM);
+
+        /* Check that polling would force build through
+         * compareRemoteRevisionWith by detecting no last build */
+        FilePath filePath = new FilePath(new File("."));
+        assertThat(gitSCM.compareRemoteRevisionWith(project, new Launcher.LocalLauncher(listener), filePath, listener, null), is(PollingResult.BUILD_NOW));
 
         commit("commitFile1", johnDoe, "Commit number 1");
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1");
