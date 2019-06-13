@@ -1,6 +1,8 @@
 package hudson.plugins.git;
 
 import com.google.common.base.Joiner;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.util.Arrays;
 
 import java.util.regex.Pattern;
@@ -9,6 +11,18 @@ public class SubmoduleConfig implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     String   submoduleName;
     String[] branches;
+
+    public SubmoduleConfig() {
+        this(null, null);
+    }
+
+    @DataBoundConstructor
+    public SubmoduleConfig(String submoduleName, String[] branches) {
+        this.submoduleName = submoduleName;
+        if (branches != null) {
+            this.branches = Arrays.copyOf(branches, branches.length);
+        }
+    }
 
     public String getSubmoduleName() {
         return submoduleName;
