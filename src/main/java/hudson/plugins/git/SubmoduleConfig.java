@@ -1,10 +1,13 @@
 package hudson.plugins.git;
 
 import com.google.common.base.Joiner;
+import org.apache.commons.collections.CollectionUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Arrays;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 public class SubmoduleConfig implements java.io.Serializable {
@@ -13,14 +16,21 @@ public class SubmoduleConfig implements java.io.Serializable {
     String[] branches;
 
     public SubmoduleConfig() {
-        this(null, null);
+        this(null, Collections.emptySet());
     }
 
-    @DataBoundConstructor
     public SubmoduleConfig(String submoduleName, String[] branches) {
         this.submoduleName = submoduleName;
         if (branches != null) {
             this.branches = Arrays.copyOf(branches, branches.length);
+        }
+    }
+
+    @DataBoundConstructor
+    public SubmoduleConfig(String submoduleName, Collection<String> branches) {
+        this.submoduleName = submoduleName;
+        if (CollectionUtils.isNotEmpty(branches)) {
+            this.branches = branches.toArray(new String[branches.size()]);
         }
     }
 
