@@ -20,10 +20,7 @@ public class SubmoduleConfig implements java.io.Serializable {
     }
 
     public SubmoduleConfig(String submoduleName, String[] branches) {
-        this.submoduleName = submoduleName;
-        if (branches != null) {
-            this.branches = Arrays.copyOf(branches, branches.length);
-        }
+        this(submoduleName, branches != null ? Arrays.asList(branches) : Collections.emptySet());
     }
 
     @DataBoundConstructor

@@ -9,9 +9,6 @@ unclassified:
               git:
                 branches:
                   - name: "*/myprodbranch"
-                browser:
-                  assemblaWeb:
-                    repoUrl: "assembla.acmecorp.com"
                 buildChooser: "default"
                 doGenerateSubmoduleConfigurations: false
                 extensions:
