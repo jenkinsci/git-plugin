@@ -19,9 +19,9 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 
 ## Types of changes
 
-What types of changes does your code introduce? _Put an `x` in the boxes that apply_
+What types of changes does your code introduce? _Put an `x` in the boxes that apply. Delete the items in the list that do *not* apply_
 
-- [ ] Dependency or infrasrtructure update
+- [ ] Dependency or infrastructure update
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
