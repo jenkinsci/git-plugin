@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.45</version>
+    <version>3.46</version>
     <relativePath />
   </parent>
 
@@ -32,6 +32,7 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.3.0</scm-api-plugin.version>
+    <jcasc.version>1.20</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.21</maven.checkstyle.version>
   </properties>
@@ -287,6 +288,20 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
       <version>3.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JCasC compatibility -->
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${jcasc.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${jcasc.version}</version>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>
