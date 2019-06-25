@@ -1,0 +1,13 @@
+<div>
+  get the local directory basename,<p>
+  like a/b/c --> c, a/b/c.git --> c, https://github.com/jenkinsci/git-plugin.git --> git-plugin
+  <p>
+  This will be very useful when set local directory to ${GERRIT_PROJECT}(see <a href="https://wiki.jenkins.io/display/JENKINS/Gerrit+Trigger" target="_blank">Gerrit+Trigger</a>) or other parameter.<p>
+  For Example：GERRIT_PROJECT=git/android/platform/vendor/example/git-plugin.git,
+  set the check out sub-directory to ${GERRIT_PROJECT}, click this option to true, then git will 
+  checkout the code to sub-directory "git-plugin". if not click this option, git will checkout the 
+  code to sub-directory "git/android/platform/vendor/example/git-plugin.git" <p>
+  
+  
+
+</div>

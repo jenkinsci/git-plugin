@@ -1,0 +1,16 @@
+<div>
+  对这里设置的子目录取其basename。<p>
+  例如： <p>
+  a/b/c --> c, <p>
+  a/b/c.git --> c, <p>
+  https://github.com/jenkinsci/git-plugin.git --> git-plugin<p>
+  <p>
+  这个会很有用的，当你设置git checkout的路径是个变量${GERRIT_PROJECT}(可以参考 <a href="https://wiki.jenkins.io/display/JENKINS/Gerrit+Trigger" target="_blank">Gerrit+Trigger</a>)或其他变量.
+  例如：GERRIT_PROJECT=git/android/platform/vendor/example/git-plugin.git,
+  这里git checkout路径设置为${GERRIT_PROJECT}，同时勾选这个选项就会检出代码到子目录git-plugin中了。
+  如果不勾选就会检出代码到子目录git/android/platform/vendor/example/git-plugin.git中了。
+  <p>
+  
+  
+  
+</div>
