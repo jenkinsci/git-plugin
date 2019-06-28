@@ -19,6 +19,8 @@ unclassified:
                   - userIdentity:
                       email: "customuser@acmecorp.com"
                       name: "custom user"
+                  - messageExclusion:
+                      excludedMessage: ".*\[ci skip\].*"
                   - preBuildMerge:
                       options:
                         mergeRemote: "myrepo"
