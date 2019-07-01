@@ -33,7 +33,7 @@
     <concurrency>1C</concurrency>
     <findbugs.failOnError>false</findbugs.failOnError>
     <scm-api-plugin.version>2.2.6</scm-api-plugin.version>
-    <jcasc.version>1.20</jcasc.version>
+    <jcasc.version>1.22</jcasc.version>
   </properties>
 
   <repositories>
