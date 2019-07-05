@@ -16,7 +16,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>3.10.1</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -24,7 +24,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.10.1</revision>
+    <revision>3.10.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.121.1</jenkins.version>
     <java.level>8</java.level>
@@ -287,7 +287,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>git-3.10.1</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <pluginRepositories>
