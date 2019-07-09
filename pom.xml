@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.42</version>
+    <version>3.47</version>
     <relativePath />
   </parent>
 
@@ -24,15 +24,17 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.0.0-beta10</revision>
+    <revision>4.0.0-beta11</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.121.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
+    <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
-        <scm-api-plugin.version>2.6.2</scm-api-plugin.version>
-    <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
-    <maven.checkstyle.version>8.19</maven.checkstyle.version>
+    <scm-api-plugin.version>2.6.2</scm-api-plugin.version>
+    <jcasc.version>1.22</jcasc.version>
+    <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
+    <maven.checkstyle.version>8.22</maven.checkstyle.version>
   </properties>
 
   <build>
@@ -84,7 +86,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
-      <version>1.17</version>
+      <version>1.18</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -119,7 +121,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.12</version>
+      <version>1.14</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -137,7 +139,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.58</version>
+      <version>1.61</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -148,7 +150,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.8</version>
+      <version>3.1.9</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -196,7 +198,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.11</version>
+      <version>2.13</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -252,8 +254,28 @@
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
-      <version>2.6.2</version>
+      <version>2.6.3</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-tag-message</artifactId>
+      <version>1.6.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>com.infradna.tool</groupId>
+      <artifactId>bridge-method-annotation</artifactId>
+      <version>1.18</version>
+      <optional>true</optional>
+    </dependency>
+    <!-- Satisfy upper bounds dependency warnings -->
+    <dependency>
+      <groupId>org.jenkins-ci</groupId>
+      <artifactId>annotation-indexer</artifactId>
+      <version>1.12</version>
+      <optional>true</optional>
     </dependency>
     <!-- Satisfy upper bounds dependency warnings -->
     <dependency>
@@ -262,11 +284,24 @@
       <version>2.30</version>
       <scope>test</scope>
     </dependency>
-    <!-- Satisfy upper bounds dependency warnings -->
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
       <version>3.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JCasC compatibility -->
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${jcasc.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${jcasc.version}</version>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>

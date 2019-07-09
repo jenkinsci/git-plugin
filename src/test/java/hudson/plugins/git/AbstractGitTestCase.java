@@ -91,20 +91,20 @@ public abstract class AbstractGitTestCase {
         git = testRepo.git;
     }
 
-    protected void commit(final String fileName, final PersonIdent committer, final String message)
+    protected String commit(final String fileName, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
-        testRepo.commit(fileName, committer, message);
+        return testRepo.commit(fileName, committer, message);
     }
 
-    protected void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
+    protected String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
 
             throws GitException, InterruptedException {
-        testRepo.commit(fileName, fileContent, committer, message);
+        return testRepo.commit(fileName, fileContent, committer, message);
     }
 
-    protected void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+    protected String commit(final String fileName, final PersonIdent author, final PersonIdent committer,
                         final String message) throws GitException, InterruptedException {
-        testRepo.commit(fileName, author, committer, message);
+        return testRepo.commit(fileName, author, committer, message);
     }
 
     protected List<UserRemoteConfig> createRemoteRepositories() throws IOException {

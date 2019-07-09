@@ -32,7 +32,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
@@ -40,6 +39,7 @@ import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.PollingResult;
 import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
@@ -59,7 +59,9 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
@@ -198,6 +200,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Issue("JENKINS-56176")
     public void testBasicRemotePoll() throws Exception {
 //        FreeStyleProject project = setupProject("master", true, false);
         FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
@@ -209,7 +212,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, janeDoe, "Commit number 2");
+        String sha1String = commit(commitFile2, janeDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
         // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
@@ -219,6 +222,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        // JENKINS-56176 token macro expansion broke when BuildData was no longer updated
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION,length=7}"), is(sha1String.substring(0, 7)));
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION}"), is(sha1String));
+        assertThat(TokenMacro.expandAll(build2, listener, "$GIT_REVISION"), is(sha1String));
     }
 
     @Test
@@ -352,6 +359,304 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInExcludedRegionIsIgnored() confirms behavior of excluded regions with merge commits.
+     * This test has excluded and included regions, for files ending with .excluded and .included,
+     * respectively. The git repository is set up so that a non-fast-forward merge commit comes
+     * to master. The newly merged commit is a file ending with .excluded, so it should be ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInExcludedRegionIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.excluded";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our merge commit falls within the excluded region.
+        assertFalse("Polling should report no changes, because they are in the excluded region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInExcludedDirectoryIsIgnored() confirms behavior of excluded directories with merge commits.
+     * This test has excluded and included directories, named /excluded/ and /included/,respectively. The repository
+     * is set up so that a non-fast-forward merge commit comes to master, and is in the directory /excluded/,
+     * so it should be ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInExcludedDirectoryIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "excluded/should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our merge commit falls within the excluded directory.
+        assertFalse("Polling should see no changes, because they are in the excluded directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInIncludedRegionIsProcessed() confirms behavior of included regions with merge commits.
+     * This test has excluded and included regions, for files ending with .excluded and .included, respectively.
+     * The git repository is set up so that a non-fast-forward merge commit comes to master. The newly merged
+     * commit is a file ending with .included, so it should be processed as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInIncludedRegionIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.included";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls within the included region.
+        assertTrue("Polling should report changes, because they fall within the included region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInIncludedRegionIsProcessed() confirms behavior of included directories with merge commits.
+     * This test has excluded and included directories, named /excluded/ and /included/, respectively. The repository
+     * is set up so that a non-fast-forward merge commit comes to master, and is in the directory /included/,
+     * so it should be processed as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInIncludedDirectoryIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "included/should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // When this test passes, project.poll(listener).hasChanges()) should return
+        // true, because our commit falls within the included region.
+        assertTrue("Polling should report changes, because they are in the included directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideIncludedRegionIsIgnored() confirms behavior of included regions with merge commits.
+     * This test has an included region defined, for files ending with .included. There is no excluded region
+     * defined. The repository is set up and a non-fast-forward merge commit comes to master. The newly merged commit
+     * is a file ending with .should-be-ignored, thus falling outside of the included region, so it should ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideIncludedRegionIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, null, null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our commit falls outside the included region.
+        assertFalse("Polling should ignore the change, because it falls outside the included region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideIncludedDirectoryIsIgnored() confirms behavior of included directories with merge commits.
+     * This test has only an included directory `/included`  defined. The git repository is set up so that
+     * a non-fast-forward, but mergeable, commit comes to master. The newly merged commit is outside of the
+     * /included/ directory, so polling should report no changes.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideIncludedDirectoryIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, null, null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "directory-to-ignore/file-should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our commit falls outside of the included directory
+        assertFalse("Polling should ignore the change, because it falls outside the included directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideExcludedRegionIsProcessed() confirms behavior of excluded regions with merge commits.
+     * This test has an excluded region defined, for files ending with .excluded. There is no included region defined.
+     * The repository is set up so a non-fast-forward merge commit comes to master. The newly merged commit is a file
+     * ending with .should-be-processed, thus falling outside of the excluded region, so it should processed
+     * as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideExcludedRegionIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, null);
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls outside of the excluded region
+        assertTrue("Polling should process the change, because it falls outside the excluded region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideExcludedDirectoryIsProcessed() confirms behavior of excluded directories with merge commits.
+     * This test has an excluded directory `excluded` defined. There is no `included` directory defined. The repository
+     * is set up so that a non-fast-forward merge commit comes to master. The newly merged commit resides in a
+     * directory of its own, thus falling outside of the excluded directory, so it should processed
+     * as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideExcludedDirectoryIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, null);
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        // Create this new file outside of our excluded directory
+        final String fileToMerge = "directory-to-include/file-should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls outside of the excluded directory
+        assertTrue("SCM polling should process the change, because it falls outside the excluded directory.",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -1172,6 +1477,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(gitSCM);
 
+        /* Check that polling would force build through
+         * compareRemoteRevisionWith by detecting no last build */
+        FilePath filePath = new FilePath(new File("."));
+        assertThat(gitSCM.compareRemoteRevisionWith(project, new Launcher.LocalLauncher(listener), filePath, listener, null), is(PollingResult.BUILD_NOW));
+
         commit("commitFile1", johnDoe, "Commit number 1");
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1");
 
@@ -1181,10 +1491,10 @@ public class GitSCMTest extends AbstractGitTestCase {
             git.fetch_().from(remoteConfig.getURIs().get(0), remoteConfig.getFetchRefSpecs());
         }
         BuildChooser buildChooser = gitSCM.getBuildChooser();
-        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
+        Collection<Revision> candidateRevisions = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertEquals(1, candidateRevisions.size());
         gitSCM.setBuildChooser(buildChooser); // Should be a no-op
-        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, gitSCM.getBuildData(project.getLastBuild()), null);
+        Collection<Revision> candidateRevisions2 = buildChooser.getCandidateRevisions(false, "origin/master", git, listener, project.getLastBuild().getAction(BuildData.class), null);
         assertThat(candidateRevisions2, is(candidateRevisions));
     }
 
@@ -2077,8 +2387,8 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified Custom SCM names, associated with each build.
      * @throws Exception on error
      */
-    // Flaky test distracting from primary goal
-    // @Test
+    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
+    @Test
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
@@ -2176,6 +2486,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
      */
+    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
     @Issue("JENKINS-24133")
     // Flaky test distracting from primary focus
     // @Test
@@ -2382,41 +2693,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
-    }
-
-    @Issue("JENKINS-19022")
-    @Test
-    public void testGetBuildDataReadsBuildDetails() throws Exception {
-        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
-
-        /* This is the null that causes NPE */
-        Branch branch = new Branch("origin/master", sha1);
-
-        List<Branch> branchList = new ArrayList<>();
-        branchList.add(branch);
-
-        Revision revision = new Revision(sha1, branchList);
-
-        final FreeStyleProject project = setupProject("*/*", false);
-        GitSCM scm = (GitSCM) project.getScm();
-        hudson.plugins.git.util.Build buildInfo = new hudson.plugins.git.util.Build(revision, 1, Result.SUCCESS);
-        BuildDetails details = new BuildDetails(buildInfo, scm.getScmName(), scm.getUserRemoteConfigs());
-
-        /* List of build data that will be returned by the mocked BuildDetails */
-        List<BuildDetails> buildDetailsList = new ArrayList<>();
-        buildDetailsList.add(details);
-
-        /* AbstractBuild mock which returns the buildDetailsList that contains a null branch name */
-        AbstractBuild build = Mockito.mock(AbstractBuild.class);
-        Mockito.when(build.getActions(BuildDetails.class)).thenReturn(buildDetailsList);
-
-        BuildData buildData = scm.getBuildData(build);
-
-        assertEquals("BuildData lastBuild matches details", buildInfo, buildData.lastBuild);
-        assertEquals("BuildData buildsByBranchName was updated", 1, buildData.buildsByBranchName.values().size());
-        assertEquals("BuildData buildsByBranchName branch matches", buildInfo, buildData.getLastBuildOfBranch("origin/master"));
-
-        verify(build, times(1)).getActions(BuildDetails.class);
     }
 
     /**

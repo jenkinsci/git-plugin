@@ -34,12 +34,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
-import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Actionable;
-import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
@@ -52,7 +50,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
-import hudson.plugins.git.util.BuildChooserDescriptor;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.scm.SCM;
@@ -1466,27 +1463,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                            BuildChooserContext context) throws IOException, InterruptedException {
             // we have ditched that crazy multiple branch stuff from the regular GIT SCM.
             return data == null ? null : data.lastBuild;
-        }
-
-        @Extension
-        public static class DescriptorImpl extends BuildChooserDescriptor {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getDisplayName() {
-                return "Specific revision";
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public boolean isApplicable(java.lang.Class<? extends Item> job) {
-                return SCMSourceOwner.class.isAssignableFrom(job);
-            }
-
         }
 
     }
