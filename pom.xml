@@ -91,7 +91,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0-beta9</version>
+      <version>3.0.0-beta10</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
