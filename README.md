@@ -1,52 +1,67 @@
-# Git SCM plugin
+# Git SCM plugin for Jenkins
 
-Git software configuration management for Jenkins
+![Plugin Version](https://img.shields.io/jenkins/plugin/v/git.svg?label=version) [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/git-plugin/master)](https://ci.jenkins.io/job/Plugins/job/gitplugin/job/master/)
 
-* see [Jenkins wiki](https://plugins.jenkins.io/git) for feature descriptions
-* use [JIRA](https://issues.jenkins-ci.org) to report issues / feature requests
+Git software configuration management for Jenkins.
 
-## Master Branch
+* see [Jenkins Wiki](https://plugins.jenkins.io/git) for feature descriptions
+* use [Jenkins JIRA](https://issues.jenkins-ci.org) to report issues or request features
 
-The master branch is the primary development branch.
+## Requirements
 
-Branch names using the pattern 'stable-x.y' are development branches
-for changes from a base release 'x.y'.  For example, stable-3.9 is the
-branch used to release fixes based on git plugin 3.9 while master branch
-development is preparing for the 4.0.0 release.
+* Jenkins `2.121.1` or newer
 
-## Contributing to the Plugin
+## Development
+
+### Branches
+
+The `master` branch is the primary development branch.
+
+Branches using name pattern `stable-x.y` are development branches
+for changes from a base release `x.y`. For example `stable-3.9` is the
+branch used to release fixes based on git plugin `3.9`.
+
+### Building the Plugin
+
+To build the plugin you will need
+* [Maven](https://maven.apache.org/) version `3.5.4` or newer
+* [Java Development Kit (JDK)](https://jdk.java.net/) version `8`
+
+Run the following command to build the plugin
+
+```shell
+mvn package
+```
+
+### Contributing to the Plugin
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
 [pull requests](https://help.github.com/articles/creating-a-pull-request).
-Fork the repository, prepare your change on your forked
-copy, and submit a pull request to the master branch.  Your pull request will be evaluated
-by the [Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
+Fork the repository, Make the desired changes in your forked copy. Submit
+a pull request to the `master` branch. Your pull request will be evaluated
+by [Jenkins CI job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
 
 Before submitting your pull request, please add tests which verify your
-change.  There have been many developers involved in the git plugin and
-there are many users who depend on the git plugin.  Tests help us assure
+change. There have been many developers involved in the git plugin and
+there are many users who depend on the git plugin. Tests help us assure
 that we're delivering a reliable plugin, and that we've communicated
 our intent to other developers in a way that they can detect when they
 run tests.
 
 Code coverage reporting is available as a maven target and is actively
-monitored.  Please improve code coverage with the tests you submit.
-Code coverage reporting is written to `target/site/jacoco/` by the maven command:
+monitored. Please improve code coverage with the tests you submit.
+Code coverage reporting is written to `target/site/jacoco/` by the maven command
 
+```shell
+mvn -P enable-jacoco clean install jacoco:report
 ```
-  $ mvn -P enable-jacoco clean install jacoco:report
-```
 
-Before submitting your change, review the spotbugs output to
-assure that you haven't introduced new spotbugs warnings.
+Before submitting your change, review the SpotBugs output to
+assure that you haven't introduced new warnings.
 
-## Building the Plugin
-
-```bash
-  $ java -version # Need Java 1.8
-  $ mvn -version # Need a modern maven version; maven 3.5.4 or later are required
-  $ mvn clean install
+```shell
+mvn spotbugs:check
 ```
 
 ## To Do
