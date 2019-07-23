@@ -17,9 +17,9 @@ Git software configuration management for Jenkins.
 
 The `master` branch is the primary development branch.
 
-Branches using name pattern `stable-x.y` are development branches
-for changes from a base release `x.y`. For example `stable-3.9` is the
-branch used to release fixes based on git plugin `3.9`.
+Branches using name pattern `stable-{VERSION}` are development branches
+for changes from a base release `VERSION`. For example `stable-3.x` is the
+branch used to release fixes for plugin version `3.x`.
 
 ### Building the Plugin
 
@@ -38,9 +38,9 @@ mvn package
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
 New feature proposals and bug fix proposals should be submitted as
 [pull requests](https://help.github.com/articles/creating-a-pull-request).
-Fork the repository, Make the desired changes in your forked copy. Submit
+Fork the repository. Make the desired changes in your forked copy. Submit
 a pull request to the `master` branch. Your pull request will be evaluated
-by [Jenkins CI job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
+by the [Jenkins job](https://ci.jenkins.io/job/Plugins/job/git-plugin/).
 
 Before submitting your pull request, please add tests which verify your
 change. There have been many developers involved in the git plugin and
