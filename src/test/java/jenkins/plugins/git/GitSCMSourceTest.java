@@ -17,6 +17,7 @@ import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
 import hudson.util.LogTaskListener;
+import hudson.scm.SCMDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
