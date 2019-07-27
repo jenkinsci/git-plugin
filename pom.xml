@@ -24,14 +24,14 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.10.2</revision>
+    <revision>3.11.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.121.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
-    <scm-api-plugin.version>2.2.6</scm-api-plugin.version>
+    <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
     <jcasc.version>1.24</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.22</maven.checkstyle.version>
