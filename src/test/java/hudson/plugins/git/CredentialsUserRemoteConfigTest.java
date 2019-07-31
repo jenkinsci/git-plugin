@@ -56,7 +56,7 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
@@ -75,7 +75,7 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
@@ -95,7 +95,7 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
@@ -112,7 +112,7 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
@@ -130,7 +130,7 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
