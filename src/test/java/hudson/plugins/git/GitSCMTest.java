@@ -113,6 +113,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Before
     public void enableSystemCredentialsProvider() throws Exception {
+        /* Attempt to empty temporary directories */
+        FileUtils.deleteQuietly(new File("/tmp/"));
+        FileUtils.deleteQuietly(new File("/var/tmp/"));
+
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
         for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
