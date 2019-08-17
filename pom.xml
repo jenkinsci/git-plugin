@@ -24,9 +24,9 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.11.1</revision>
+    <revision>3.12.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.121.1</jenkins.version>
+    <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
