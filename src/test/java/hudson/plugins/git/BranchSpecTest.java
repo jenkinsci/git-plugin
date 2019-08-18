@@ -158,6 +158,7 @@ public class BranchSpecTest {
     }
 
     @Test
+    @Issue("JENKINS-26842")
     public void testUsesJavaPatternWithRepetition() {
     	// match pattern from JENKINS-26842
     	BranchSpec m = new BranchSpec(":origin/release-\\d{8}");
