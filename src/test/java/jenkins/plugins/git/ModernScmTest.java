@@ -28,6 +28,7 @@ import hudson.ExtensionList;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.contains;
@@ -40,6 +41,7 @@ public class ModernScmTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     @Test
+    @Issue("JENKINS-58964")
     public void gitIsModernScm() {
         SCMSourceRetriever.DescriptorImpl descriptor = ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
         assertThat(descriptor.getSCMDescriptors(), contains(instanceOf(GitSCMSource.DescriptorImpl.class)));
