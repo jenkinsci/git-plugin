@@ -9,7 +9,7 @@ Git software configuration management for Jenkins.
 
 ## Requirements
 
-* Jenkins `2.121.1` or newer
+* Jenkins `2.138.4` or newer
 
 ## Development
 
