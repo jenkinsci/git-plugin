@@ -25,12 +25,18 @@ branch used to release fixes for plugin version `3.x`.
 
 To build the plugin you will need
 * [Maven](https://maven.apache.org/) version `3.5.4` or newer
-* [Java Development Kit (JDK)](https://jdk.java.net/) version `8`
+* [Java Development Kit (JDK)](https://jdk.java.net/) version `8` or version `11`
 
-Run the following command to build the plugin
+Run the following command to build the plugin (Java 8)
 
 ```shell
 mvn package
+```
+
+Run the following command to build the plugin (Java 11)
+
+```shell
+mvn -Djenkins.version=2.164.1 package
 ```
 
 ### Contributing to the Plugin
