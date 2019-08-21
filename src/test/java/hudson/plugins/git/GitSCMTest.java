@@ -2182,6 +2182,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Issue("JENKINS-22009")
     @Test
+    @Issue("JENKINS-22009")
     public void testPolling_environmentValueInBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
