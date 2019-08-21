@@ -2180,7 +2180,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
-    @Issue("JENKINS-22009")
     @Test
     @Issue("JENKINS-22009")
     public void testPolling_environmentValueInBranchSpec() throws Exception {
