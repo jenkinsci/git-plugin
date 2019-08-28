@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.48</version>
+    <version>3.49</version>
     <relativePath />
   </parent>
 
@@ -32,7 +32,7 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
-    <jcasc.version>1.27</jcasc.version>
+    <jcasc.version>1.29</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.23</maven.checkstyle.version>
   </properties>
@@ -133,13 +133,11 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>junit</artifactId>
-      <version>1.27</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1.62</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -156,7 +154,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.5-3.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -198,7 +195,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.20</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -212,25 +208,21 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>2.71</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
-      <version>2.21</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
-      <version>2.7</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-durable-task-step</artifactId>
-      <version>2.20</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -281,13 +273,11 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-api</artifactId>
-      <version>2.33</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
-      <version>3.3</version>
       <scope>test</scope>
     </dependency>
     <!-- JCasC compatibility -->
@@ -305,6 +295,18 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom</artifactId>
+        <version>2.138.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
