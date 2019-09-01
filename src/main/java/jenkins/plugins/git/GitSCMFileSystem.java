@@ -113,12 +113,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
         cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
         listener = new LogTaskListener(LOGGER, Level.FINER);
         this.client = client;
-        commitId = rev == null ? invoke(new FSFunction<ObjectId>() {
-            @Override
-            public ObjectId invoke(Repository repository) throws IOException, InterruptedException {
-                return repository.getRef(head).getObjectId();
-            }
-        }) : ObjectId.fromString(rev.getHash());
+        commitId = rev == null ? invoke((Repository repository) -> repository.findRef(head).getObjectId()) : ObjectId.fromString(rev.getHash());
     }
 
     @Override
