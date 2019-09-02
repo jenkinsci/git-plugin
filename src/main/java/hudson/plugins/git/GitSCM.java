@@ -17,8 +17,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.init.Initializer;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor.FormException;
@@ -31,8 +29,6 @@ import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.extensions.GitClientConflictException;
-import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -77,9 +73,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
@@ -121,7 +115,6 @@ import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Git SCM.
@@ -698,7 +691,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.getInstance(), null);
+            GitClient git = createClient(listener, environment, project, Jenkins.get(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -1433,7 +1426,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (IOException | InterruptedException e) {
             LOGGER.log(Level.WARNING, "Git client using '" + gitTool + "' changelog parser failed, using deprecated changelog parser", e);
         }
-        return new GitChangeLogParser(getExtensions().get(AuthorInChangelog.class) != null);
+        return new GitChangeLogParser(null, getExtensions().get(AuthorInChangelog.class) != null);
     }
 
     @Extension
@@ -1474,7 +1467,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public boolean showGitToolOptions() {
-            return Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
+            return Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
 
         /**
@@ -1483,7 +1476,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          */
         @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public List<GitTool> getGitTools() {
-            GitTool[] gitToolInstallations = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            GitTool[] gitToolInstallations = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
         }
 
@@ -1876,7 +1869,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         DescriptorImpl desc = jenkins.getDescriptorByType(DescriptorImpl.class);
 
         if (desc.getOldGitExe() != null) {

@@ -32,7 +32,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
@@ -40,12 +39,10 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
-import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
-import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
@@ -115,7 +112,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void enableSystemCredentialsProvider() throws Exception {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
-        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;
@@ -1320,7 +1317,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
                     public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
                         assertTrue(channel instanceof Channel);
-                        assertTrue(Hudson.getInstance()!=null);
+                        assertTrue(Jenkins.getInstanceOrNull()!=null);
                         return param.toString();
                     }
                 });

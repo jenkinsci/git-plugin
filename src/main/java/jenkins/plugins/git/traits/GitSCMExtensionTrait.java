@@ -27,7 +27,6 @@ package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.scm.SCM;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceTrait;

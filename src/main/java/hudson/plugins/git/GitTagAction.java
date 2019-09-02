@@ -56,7 +56,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public Descriptor<GitTagAction> getDescriptor() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         return jenkins.getDescriptorOrDie(getClass());
     }
 
@@ -157,21 +157,22 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     public synchronized void doSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         getACL().checkPermission(getPermission());
 
-        MultipartFormDataParser parser = new MultipartFormDataParser(req);
+        try (MultipartFormDataParser parser = new MultipartFormDataParser(req)) {
 
-        Map<String, String> newTags = new HashMap<>();
+            Map<String, String> newTags = new HashMap<>();
 
-        int i = -1;
-        for (String e : tags.keySet()) {
-            i++;
-            if (tags.size() > 1 && parser.get("tag" + i) == null)
-                continue; // when tags.size()==1, UI won't show the checkbox.
-            newTags.put(e, parser.get("name" + i));
+            int i = -1;
+            for (String e : tags.keySet()) {
+                i++;
+                if (tags.size() > 1 && parser.get("tag" + i) == null)
+                    continue; // when tags.size()==1, UI won't show the checkbox.
+                newTags.put(e, parser.get("name" + i));
+            }
+
+            scheduleTagCreation(newTags, parser.get("comment"));
+
+            rsp.sendRedirect(".");
         }
-
-        scheduleTagCreation(newTags, parser.get("comment"));
-
-        rsp.sendRedirect(".");
     }
 
     /**

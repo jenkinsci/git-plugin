@@ -226,7 +226,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      */
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor)Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**
@@ -235,7 +235,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      */
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.getInstance()
+        return Jenkins.get()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 

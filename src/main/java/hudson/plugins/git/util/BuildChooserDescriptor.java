@@ -27,7 +27,7 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
                         justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         return jenkins.getDescriptorList(BuildChooser.class);
     }
 
