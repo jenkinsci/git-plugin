@@ -307,7 +307,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected GitTool resolveGitTool(String gitTool, TaskListener listener) {
-        final Jenkins jenkins = Jenkins.getInstance();
+        final Jenkins jenkins = Jenkins.get();
         return GitUtils.resolveGitTool(gitTool, jenkins, null, TaskListener.NULL);
     }
 
@@ -1215,7 +1215,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
             justification = "AbstractGitSCMSourceRetrieveHeadsTest mocking calls this with null Jenkins.getInstance()")
     protected static File getCacheDir(String cacheEntry) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
             return null;
         }

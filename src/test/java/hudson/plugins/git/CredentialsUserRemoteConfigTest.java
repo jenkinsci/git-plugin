@@ -18,7 +18,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class CredentialsUserRemoteConfigTest {
@@ -35,7 +34,7 @@ public class CredentialsUserRemoteConfigTest {
     public void enableSystemCredentialsProvider() {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
-        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;

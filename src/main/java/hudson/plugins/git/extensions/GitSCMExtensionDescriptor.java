@@ -16,6 +16,6 @@ public abstract class GitSCMExtensionDescriptor extends Descriptor<GitSCMExtensi
 
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static DescriptorExtensionList<GitSCMExtension,GitSCMExtensionDescriptor> all() {
-        return Jenkins.getInstance().getDescriptorList(GitSCMExtension.class);
+        return Jenkins.get().getDescriptorList(GitSCMExtension.class);
     }
 }

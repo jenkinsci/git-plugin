@@ -26,7 +26,6 @@
 package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -113,7 +112,7 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
                             justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Restricted(NoExternalUse.class) // stapler
         public List<Descriptor<RepositoryBrowser<?>>> getBrowserDescriptors() {
-            GitSCM.DescriptorImpl descriptor = (GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
+            GitSCM.DescriptorImpl descriptor = (GitSCM.DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
             if (descriptor == null) {
                 return java.util.Collections.emptyList(); // Should be unreachable
             }

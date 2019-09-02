@@ -14,7 +14,6 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 /**

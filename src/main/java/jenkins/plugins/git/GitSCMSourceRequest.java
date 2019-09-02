@@ -29,7 +29,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import jenkins.scm.api.SCMSource;

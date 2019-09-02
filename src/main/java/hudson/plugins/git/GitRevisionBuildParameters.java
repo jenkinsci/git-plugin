@@ -56,7 +56,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
 		BuildData data = build.getAction(BuildData.class);
-		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {
+		if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
                 data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);

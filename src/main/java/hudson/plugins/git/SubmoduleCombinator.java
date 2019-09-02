@@ -1,6 +1,5 @@
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
 import org.eclipse.jgit.lib.ObjectId;

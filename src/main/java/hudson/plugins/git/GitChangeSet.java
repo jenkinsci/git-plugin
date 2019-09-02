@@ -522,7 +522,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
         justification="Jenkins.getInstance() is not null")
     private DescriptorImpl getGitSCMDescriptor() {
-        return (DescriptorImpl) Jenkins.getInstance().getDescriptor(GitSCM.class);
+        return (DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
     }
 
     @Override

@@ -93,7 +93,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             if (url == null) // nothing entered yet
                 return FormValidation.ok();
             // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstance();
+            Jenkins jenkins = Jenkins.getInstanceOrNull();
             if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
             return new URLCheck() {
