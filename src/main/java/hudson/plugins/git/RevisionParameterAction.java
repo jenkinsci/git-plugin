@@ -196,7 +196,7 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         if(combineCommits) {
             //because we cannot modify the commit in the existing action remove it and add self
             // or no CauseAction found, so add a copy of this one
-            item.addAction(this);
+            item.replaceAction(this);
         }
     }
 
