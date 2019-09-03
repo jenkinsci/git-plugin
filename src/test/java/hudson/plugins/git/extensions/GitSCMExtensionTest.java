@@ -49,7 +49,7 @@ public abstract class GitSCMExtensionTest {
 	protected abstract GitSCMExtension getExtension();
 
 	protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult) throws Exception {
-		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 		if(expectedResult != null) {
 			j.assertBuildStatus(expectedResult, build);
 		}

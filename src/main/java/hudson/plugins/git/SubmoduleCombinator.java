@@ -108,7 +108,7 @@ public class SubmoduleCombinator {
                 if (min == 1) break; // look no further
             }
       
-            git.checkout(sha1.name());
+            git.checkout().ref(sha1.name());
             makeCombination(combination);
         }
     

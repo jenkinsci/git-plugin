@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import hudson.MarkupText;
+import hudson.Plugin;
 import hudson.model.User;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
@@ -18,6 +19,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -411,13 +413,13 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthorEmail, false);
+            user = User.get(csAuthorEmail, false, Collections.emptyMap());
 
             if (user == null) {
                 try {
-                    user = User.get(csAuthorEmail, !useExistingAccountWithSameEmail);
+                    user = User.get(csAuthorEmail, !useExistingAccountWithSameEmail, Collections.emptyMap());
                     boolean setUserDetails = true;
-                    if (user == null && useExistingAccountWithSameEmail && hasHudsonTasksMailer()) {
+                    if (user == null && useExistingAccountWithSameEmail && hasMailerPlugin()) {
                         for(User existingUser : User.getAll()) {
                             if (csAuthorEmail.equalsIgnoreCase(getMail(existingUser))) {
                                 user = existingUser;
@@ -427,11 +429,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         }
                     }
                     if (user == null) {
-                        user = User.get(csAuthorEmail, true);
+                        user = User.get(csAuthorEmail, true, Collections.emptyMap());
                     }
                     if (setUserDetails) {
                         user.setFullName(csAuthor);
-                        if (hasHudsonTasksMailer())
+                        if (hasMailerPlugin())
                             setMail(user, csAuthorEmail);
                         user.save();
                     }
@@ -444,7 +446,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthor, false);
+            user = User.get(csAuthor, false, Collections.emptyMap());
 
             if (user == null) {
                 if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
@@ -454,14 +456,14 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");
                 if (emailParts.length > 0) {
-                    user = User.get(emailParts[0], true);
+                    user = User.get(emailParts[0], true, Collections.emptyMap());
                 } else {
                     return User.getUnknown();
                 }
             }
         }
         // set email address for user if none is already available
-        if (fixEmpty(csAuthorEmail) != null && hasHudsonTasksMailer() && !hasMail(user)) {
+        if (fixEmpty(csAuthorEmail) != null && hasMailerPlugin() && !hasMail(user)) {
             try {
                 setMail(user, csAuthorEmail);
             } catch (IOException e) {
@@ -491,14 +493,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return email != null;
     }
 
-    private boolean hasHudsonTasksMailer() {
-        // TODO convert to checking for mailer plugin as plugin migrates to 1.509+
-        try {
-            Class.forName("hudson.tasks.Mailer");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+    private boolean hasMailerPlugin() {
+        Plugin p = Jenkins.get().getPlugin("mailer");
+        if (p != null) {
+            return p.getWrapper().isActive();
         }
+        return false;
     }
 
     @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",

@@ -25,7 +25,7 @@ public class CheckoutOptionWorkflowTest {
                 + "    [$class: 'GitSCM', extensions: [[$class: 'CheckoutOption', timeout: 1234]],\n"
                 + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
                 + "  )"
-                + "}"));
+                + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("# timeout=1234", b);
     }

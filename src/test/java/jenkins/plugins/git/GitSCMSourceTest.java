@@ -253,15 +253,15 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        Set<String> result = instance.fetchRevisions(null);
+        Set<String> result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu", "v1.0.0"));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        result = instance.fetchRevisions(null);
+        result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu"));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
-        result = instance.fetchRevisions(null);
+        result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("v1.0.0"));
     }
 
@@ -297,13 +297,13 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(instance.fetch("foo", null),
+        assertThat(instance.fetch("foo", null, null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch("bar", null),
+        assertThat(instance.fetch("bar", null, null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
-        assertThat(instance.fetch("manchu", null),
+        assertThat(instance.fetch("manchu", null, null),
                 hasProperty("hash", is("a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
-        assertThat(instance.fetch("v1.0.0", null),
+        assertThat(instance.fetch("v1.0.0", null, null),
                 hasProperty("hash", is("315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 

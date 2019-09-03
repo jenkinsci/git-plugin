@@ -8,9 +8,9 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertNull;
@@ -32,7 +32,7 @@ public class PathRestrictionTest {
         private Collection<String> paths;
 
         public FakePathGitChangeSet(Collection<String> paths) {
-            super(new ArrayList(), false);
+            super(Collections.emptyList(), false);
             this.paths = paths;
         }
 

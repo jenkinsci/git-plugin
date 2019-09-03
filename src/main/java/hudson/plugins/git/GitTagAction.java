@@ -198,7 +198,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         private final String comment;
 
         public TagWorkerThread(Map<String, String> tagSet,String comment) {
-            super(GitTagAction.this, ListenerAndText.forMemory());
+            super(GitTagAction.this, ListenerAndText.forMemory(null));
             this.tagSet = tagSet;
             this.comment = comment;
         }
