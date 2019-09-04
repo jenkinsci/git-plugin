@@ -113,8 +113,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 ServletException {
 
             // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
-            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
 
             if (value == null) // nothing entered yet
