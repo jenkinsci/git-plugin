@@ -32,7 +32,7 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
-    <jcasc.version>1.29</jcasc.version>
+    <jcasc.version>1.30-rc906.86de0756937e</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.24</maven.checkstyle.version>
     <linkXRef>false</linkXRef>
