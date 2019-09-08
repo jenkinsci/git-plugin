@@ -35,6 +35,7 @@
     <jcasc.version>1.29</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.24</maven.checkstyle.version>
+    <linkXRef>false</linkXRef>
   </properties>
 
   <build>
