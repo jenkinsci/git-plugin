@@ -254,6 +254,12 @@
       <artifactId>git-tag-message</artifactId>
       <version>1.6.1</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>git</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Satisfy upper bounds dependency warnings -->
     <dependency>
