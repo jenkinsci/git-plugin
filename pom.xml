@@ -20,7 +20,7 @@
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
-  <url>https://wiki.jenkins.io/display/JENKINS/Git+Plugin</url>
+  <url>https://plugins.jenkins.io/git</url>
   <inceptionYear>2007</inceptionYear>
 
   <properties>
