@@ -35,6 +35,6 @@ public class GitJCasCCompatibilityTest extends RoundTripAbstractTest {
 
     @Override
     protected String stringInLogExpected() {
-        return "Setting class hudson.plugins.git.SubmoduleConfig. branches = [mybranch-3, mybranch-4]";
+        return "Setting class hudson.plugins.git.SubmoduleConfig.branches = [mybranch-3, mybranch-4]";
     }
 }

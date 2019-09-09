@@ -20,7 +20,7 @@
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
-  <url>https://wiki.jenkins.io/display/JENKINS/Git+Plugin</url>
+  <url>https://github.com/jenkinsci/git-plugin</url>
   <inceptionYear>2007</inceptionYear>
 
   <properties>
@@ -32,9 +32,10 @@
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
     <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
-    <jcasc.version>1.29</jcasc.version>
+    <jcasc.version>1.30</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
     <maven.checkstyle.version>8.24</maven.checkstyle.version>
+    <linkXRef>false</linkXRef>
   </properties>
 
   <build>
