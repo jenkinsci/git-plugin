@@ -18,9 +18,6 @@ It can poll, fetch, checkout, branch, list, merge, and tag repositories.
 * [Extensions](#extensions)
 * [Environment Variables](#environment-variables)
 * [Properties](#properties)
-// * [Pipelines](#pipelines)
-// * [Performance Tuning](#performance-tuning)
-// * [Reference repositories](#reference-repositories)
 * [Combining repositories](#combining-repositories)
 * [Bug Reports](#bug-reports)
 * [Contributing to the Plugin](#contributing-to-the-plugin)
@@ -48,83 +45,134 @@ JGit becomes available throughout Jenkins once it has been enabled.
 
 ### Advanced checkout behaviors
 
-Timeout (in minutes) for checkout operation::
+<dl>
+
+<dt>Timeout (in minutes) for checkout operation</dt>
+  <dd>
   Specify a timeout (in minutes) for checkout.
+  </dd>
+
+</dl>
 
 ### Advanced clone behaviours
 
-Fetch tags::
-  Deselect this to perform a clone without tags, saving time and disk space when you just want to access what is specified by the refspec.
+<dl>
 
-Honor refspec on initial clone::
+<dt>Fetch tags</dt>
+  <dd>
+  Deselect this to perform a clone without tags, saving time and disk space when you just want to access what is specified by the refspec.
+  </dd>
+
+<dt>Honor refspec on initial clone</dt>
+  <dd>
   Perform initial clone using the refspec defined for the repository.
   This can save time, data transfer and disk space when you only need to access the references specified by the refspec.
+  </dd>
 
-Shallow clone::
+<dt>Shallow clone</dt>
+  <dd>
   Perform shallow clone.
   Git will not download the complete history of the project, saving time and disk space when you just want to access the latest version of a repository.
+  </dd>
 
-Shallow clone depth::
+<dt>Shallow clone depth</dt>
+  <dd>
   Set shallow clone depth to the specified numebr of commits.
   Git will only download that many commits from the remote repository, saving time and disk space.
+  </dd>
 
-[[clone-reference-repository-path,reference repository path]]
-Path of the reference repo to use during clone::
+<dt id="clone-reference-repository-path">Path of the reference repo to use during clone</dt>
+  <dd>
   Specify a folder containing a repository that will be used by git as a reference during clone operations.
   This option will be ignored if the folder is not available on the agent.
+  </dd>
 
-Timeout (in minutes) for clone and fetch operations::
+<dt>Timeout (in minutes) for clone and fetch operations</dt>
+  <dd>
   Specify a timeout (in minutes) for clone and fetch operations.
+  </dd>
+
+</dl>
 
 ### Advanced sub-modules behaviours
 
-Disable submodules processing::
-  Ignore submodules in the repository.
+<dl>
 
-Recursively update submodules::
+<dt>Disable submodules processing</dt>
+  <dd>
+  Ignore submodules in the repository.
+  </dd>
+
+<dt>Recursively update submodules</dt>
+  <dd>
   Retrieve all submodules recursively.
   Without this option, submodules which contain other submodules will ignore the contained submodules.
+  </dd>
 
-Update tracking submodules to tip of branch::
+<dt>Update tracking submodules to tip of branch</dt>
+  <dd>
   Retrieve the tip of the configured branch in .gitmodules.
+  </dd>
 
-Use credentials from default remote of parent repository::
+<dt>Use credentials from default remote of parent repository</dt>
+  <dd>
   Use credentials from the default remote of the parent project.
   Submodule updates do not use credentials by default.
   Enabling this extension will provide the parent repository credentials to each of the submodule repositories.
   Submodule credentials require that the submodule repository must accept the same credentials as the parent project.
   If the parent project is cloned with https, then the authenticated submodule references must use https as well.
   If the parent project is cloned with ssh, then the authenticated submodule references must use ssh as well.
+  </dd>
 
-Shallow clone::
+<dt>Shallow clone</dt>
+  <dd>
   Perform shallow clone of submodules.
   Git will not download the complete history of the project, saving time and disk space.
+  </dd>
 
-Shallow clone depth::
+<dt>Shallow clone depth</dt>
+  <dd>
   Set shallow clone depth for submodules.
   Git will only download recent history of the project, saving time and disk space.
+  </dd>
 
-Path of the reference repo to use during submodule update::
+<dt id="submodule-reference-repository-path">Path of the reference repo to use during submodule update</dt>
+  <dd>
   Folder containing a repository that will be used by git as a reference during submodule clone operations.
   This option will be ignored if the folder is not available on the agent running the build.
   A reference repository may contain multiple subprojects.
   See the [combining repositories](#combining-repositories) section for more details.
+  </dd>
 
-Timeout (in minutes) for submodules operations::
+<dt>Timeout (in minutes) for submodules operations</dt>
+  <dd>
   Specify a timeout (in minutes) for submodules operations.
   This option overrides the default timeout.
+  </dd>
 
-Number of threads to use when updating submodules::
+<dt>Number of threads to use when updating submodules</dt>
+  <dd>
   Number of parallel processes to be used when updating submodules.
   Default is to use a single thread for submodule updates
+  </dd>
+
+</dl>
 
 ### Calculate changelog against a specific branch
 
-Name of repository::
-  Name of the repository, such as origin, that contains the branch.
+<dl>
 
-Name of branch::
+<dt>Name of repository</dt>
+  <dd>
+  Name of the repository, such as origin, that contains the branch.
+  </dd>
+
+<dt>Name of branch</dt>
+  <dd>
   Name of the branch used for the changelog calculation within the named repository.
+  </dd>
+
+</dl>
 
 ### Checkout to a sub-directory
 
@@ -133,10 +181,16 @@ If left empty, the workspace root itself will be used.
 
 ### Checkout to specific local branch
 
-Branch name::
+<dl>
+
+<dt>Branch name</dt>
+  <dd>
   If given, checkout the revision to build as HEAD on the named branch.
-  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
+  If value is an empty string or "\*\*", then the branch name is computed from the remote branch without the origin.
   In that case, a remote branch origin/master will be checked out to a local branch named master, and a remote branch origin/develop/new-feature will be checked out to a local branch named develop/newfeature.
+  </dd>
+
+</dl>
 
 ### Clean after checkout
 
@@ -169,37 +223,32 @@ Pipeline is the robust and feature-rich way to checkout from multiple repositori
 
 ### Custom user name/e-mail address
 
-user.name::
+<dl>
+
+<dt>user.name</dt>
+  <dd>
   Defines the user name value which git will assign to new commits made in the workspace.
   If given, `git config user.name [this]` is called before builds.
   This overrides values from the global settings.
+  </dd>
 
-user.email::
+<dt>user.email</dt>
+  <dd>
   Defines the user email value which git will assign to new commits made in the workspace.
   If given, `git config user.email [this]` is called before builds.
   This overrides whatever is in the global settings.
+  </dd>
 
-// ### Don't trigger a build on commit notifications
-// ### Force polling using workspace
-// ### Git LFS pull after checkout
-// ### Merge before build
-// ### Polling ignores commits from certain users
-// ### Polling ignores commits in certain paths
-// ### Polling ignores commits with certain messages
+</dl>
 
 ### Prune stale remote tracking branches
 
 Runs `git remote prune` for each remote to prune obsolete local branches.
 
-// ### Sparse checkout paths
-// ### Strategy for choosing what to build
-
 ### Use commit author in changelog
 
 The default behavior is to use the Git commit's "Committer" value in build changesets.
 If this option is selected, the git commit's "Author" value is used instead.
-
-// ### Wipe out repository and force clone
 
 ## Environment Variables
 
@@ -207,15 +256,15 @@ If this option is selected, the git commit's "Author" value is used instead.
 
 Some git plugin settings can only be controlled from command line properties set at Jenkins startup.
 
-Default timeout::
-  The default initial git timeout value can be overridden through the property `org.jenkinsci.plugins.gitclient.Git.timeOut` (see [JENKINS-11286](https://issues.jenkins-ci.org/browse/JENKINS-11286)).
-  The property should be set on both master and agent to have effect (see [JENKINS-22547](https://issues.jenkins-ci.org/browse/JENKINS-22547)).
+<dl>
 
-// ## Pipelines
+<dt>Default timeout</dt>
+  <dd>
+  The default initial git timeout value can be overridden through the property `org.jenkinsci.plugins.gitclient.Git.timeOut` (see JENKINS-11286) ).
+  The property should be set on both master and agent to have effect (see JENKINS-22547).
+  </dd>
 
-// ## Performance Tuning
-
-// ### Reference repositories
+</dl>
 
 ### Combining repositories
 
@@ -232,8 +281,8 @@ $ git fetch --all
 ```
 
 Those commands will create a single bare repository which includes the current commits from all three repositories.
-If that reference repository is used in the advanced clone options <<clone-reference-repository-path>>, it will reduce data transfer and disc use for the parent repository.
-If that reference repository is used in the submodule options <<submodule-reference-repository-path>>, it will reduce data transfer and disc use for the submodule repositories.
+If that reference repository is used in the advanced clone options [clone reference repository](#clone-reference-repository-path), it will reduce data transfer and disc use for the parent repository.
+If that reference repository is used in the submodule options [clone reference repository](#submodule-reference-repository-path), it will reduce data transfer and disc use for the submodule repositories.
 
 ## Bug Reports
 
