@@ -6,8 +6,6 @@ import jenkins.model.Jenkins;
 import hudson.model.Item;
 import java.util.logging.Logger;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -24,8 +22,6 @@ public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
         return null;
     }
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
         Jenkins jenkins = Jenkins.get();
         return jenkins.getDescriptorList(BuildChooser.class);
