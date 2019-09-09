@@ -21,7 +21,6 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * @author Nicolas de Loof
@@ -48,8 +47,6 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
             tags.put(b.getName(), new ArrayList<>());
         }
     }
-
-    private static final Logger LOGGER = Logger.getLogger(GitTagAction.class.getName());
 
     public Descriptor<GitTagAction> getDescriptor() {
         Jenkins jenkins = Jenkins.get();

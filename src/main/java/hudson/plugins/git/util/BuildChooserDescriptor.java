@@ -4,13 +4,12 @@ import hudson.DescriptorExtensionList;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import hudson.model.Item;
-import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
  */
 public abstract class BuildChooserDescriptor extends Descriptor<BuildChooser> {
-    private static final Logger LOGGER = Logger.getLogger(BuildChooserDescriptor.class.getName());
+
     /**
      * Before this extension point was formalized, existing {@link BuildChooser}s had
      * a hard-coded ID name used for the persistence.
