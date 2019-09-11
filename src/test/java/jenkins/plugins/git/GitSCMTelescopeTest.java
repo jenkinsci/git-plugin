@@ -52,7 +52,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import static jenkins.plugins.git.AbstractGitSCMSourceRetrieveHeadsTest.EXPECTED_GIT_EXE;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.scm.api.SCMFileSystem;
@@ -555,7 +554,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         @NonNull
         @Override
         public List<SCMSourceTrait> getTraits() {
-            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait(EXPECTED_GIT_EXE) {
+            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait("git-custom") {
                 @Override
                 public SCMSourceTraitDescriptor getDescriptor() {
                     return new GitBrowserSCMSourceTrait.DescriptorImpl();

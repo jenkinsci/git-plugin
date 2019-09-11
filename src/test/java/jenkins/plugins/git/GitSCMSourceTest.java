@@ -373,7 +373,7 @@ public class GitSCMSourceTest {
         assertThat(resolved.getGitExe(), org.hamcrest.CoreMatchers.containsString("git"));
 
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
-        instance.retrieveRevisions(log);
+        instance.fetchRevisions(log, null);
         assertTrue("Installer should be invoked", inst.isInvoked());
     }
 

@@ -74,8 +74,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      If {@code isPollCall} is false, then call back to both project and build are available.
      *      If {@code isPollCall} is true, then only the callback to the project is available as there's
      *      no contextual build object.
-     * @return
-     *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
+     * @return the candidate revision. Can be an empty set to indicate that there's nothing to build.
      *
      * @throws IOException on input or output error
      * @throws GitException on git error
@@ -184,11 +183,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Object that provides access back to the model object. This is because
      *      the build chooser can be invoked on a slave where there's no direct access
      *      to the build/project for which this is invoked.
-     * @return preceding build
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
-     * @return
-     *      the candidate revision. Can be an empty set to indicate that there's nothing to build.
+     * @return candidate revision. Can be an empty set to indicate that there's nothing to build.
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
@@ -229,7 +226,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      */
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor)Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**
@@ -238,7 +235,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      */
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.getInstance()
+        return Jenkins.get()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 

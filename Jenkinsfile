@@ -1,10 +1,13 @@
 #!groovy
 
-// Test plugin compatibility to recent Jenkins LTS
+// Test plugin compatibility to recommended configurations
 // Allow failing tests to retry execution
-buildPlugin(jenkinsVersions: [null, '2.150.1'],
-            findbugs: [run:true, archive:true, unstableTotalAll: '0'],
-            failFast: false)
+subsetConfiguration = [ [ jdk: '8',  platform: 'windows', jenkins: null                      ],
+                        [ jdk: '8',  platform: 'linux',   jenkins: '2.164.1', javaLevel: '8' ],
+                        [ jdk: '11', platform: 'linux',   jenkins: '2.164.1', javaLevel: '8' ]
+                      ]
+
+buildPlugin(configurations: subsetConfiguration, failFast: false)
 
 def branches = [:]
 

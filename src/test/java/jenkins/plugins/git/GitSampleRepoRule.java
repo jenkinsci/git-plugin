@@ -114,7 +114,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         if (gitMajor < 1 || gitMajor > 3) {
             System.out.println("WARNING: Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
         }
-        if (gitMinor < 0 || gitMinor > 20) {
+        if (gitMinor < 0 || gitMinor > 50) {
             System.out.println("WARNING: Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
         }
         if (gitPatch < 0 || gitPatch > 20) {

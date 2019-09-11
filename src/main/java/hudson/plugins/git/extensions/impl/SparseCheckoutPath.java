@@ -61,7 +61,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
     @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public Descriptor<SparseCheckoutPath> getDescriptor()
     {
-        return Jenkins.getInstance().getDescriptor(getClass());
+        return Jenkins.get().getDescriptor(getClass());
     }
 
     @Extension

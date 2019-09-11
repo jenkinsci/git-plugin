@@ -3,13 +3,13 @@ package hudson.plugins.git.browser;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -19,7 +19,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
@@ -101,7 +100,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 				return FormValidation.errorWithMarkup("The URL should end like <tt>.../browse/foobar/</tt>");
 
 			// Connect to URL and check content only if we have admin permission
-			if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
+			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
 				return FormValidation.ok();
 
 			final String finalValue = value;

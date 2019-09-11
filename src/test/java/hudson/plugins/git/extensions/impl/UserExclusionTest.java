@@ -5,7 +5,6 @@ import hudson.model.Result;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

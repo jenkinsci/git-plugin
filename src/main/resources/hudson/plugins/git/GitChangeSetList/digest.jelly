@@ -14,10 +14,10 @@
     <j:otherwise>
       ${%Changes}
       <ol>
-        <j:forEach var="cs" items="${it.logs}" varStatus="loop">
+        <j:forEach var="cs" items="${it.logs}">
           <li>
             <j:out value="${cs.msgAnnotated}"/>
-            (<a href="changes#detail${loop.index}">${%detail}</a>
+            (<a href="changes#${cs.id}">${%details}</a>
             <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
             <j:if test="${cslink!=null}">
               <j:text> / </j:text>

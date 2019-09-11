@@ -30,7 +30,6 @@ import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -56,26 +55,19 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	@Override
 	@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
-		// We are running as a build promotion, so have to retrieve the git scm from target job
-		if (build instanceof hudson.plugins.promoted_builds.Promotion) {
-			return getAction(((hudson.plugins.promoted_builds.Promotion)build).getTarget(), listener);
-		}
-
-		// Check for BuildDetails first
-		BuildDetails details = build.getAction(BuildDetails.class);
-		if (details != null) {
-			return new RevisionParameterAction(details.getBuild().revision, getCombineQueuedCommits());
-		}
-
-		// If BuildDetails isn't there, check for deprecated BuildData
 		BuildData data = build.getAction(BuildData.class);
-		if (data != null) {
-			return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
+		if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
+            if (build instanceof hudson.plugins.promoted_builds.Promotion) {
+                // We are running as a build promotion, so have to retrieve the git scm from target job
+                data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);
+            }
+        }
+        if (data == null) {
+			listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
+			return null;
 		}
 
-		// No BuildDetails or BuildData ...
-		listener.getLogger().println("This project doesn't use Git as SCM. Can't pass the revision to downstream");
-		return null;
+		return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
 	}
 
 	public boolean getCombineQueuedCommits() {

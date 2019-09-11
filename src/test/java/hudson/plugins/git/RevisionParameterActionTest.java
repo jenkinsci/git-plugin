@@ -27,9 +27,8 @@ import hudson.model.Cause;
 import hudson.model.FreeStyleProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
-import hudson.plugins.git.util.BuildDetails;
+import hudson.plugins.git.util.BuildData;
 
-import java.util.concurrent.Future;
 import java.util.Collections;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         commitNewFile(commitFile1);
         FreeStyleBuild b1 = build(p1, Result.SUCCESS, commitFile1);
 
-        Revision r1 = b1.getAction(BuildDetails.class).getBuild().revision;
+        Revision r1 = b1.getAction(BuildData.class).getLastBuiltRevision();
 
         // create a second commit
         final String commitFile2 = "commitFile2";
@@ -62,18 +61,18 @@ public class RevisionParameterActionTest extends AbstractGitProject {
 				Collections.singletonList(new RevisionParameterAction(r1))).get();
 
         // Check revision built for b2 matches the r1 revision
-        assertEquals(b2.getAction(BuildDetails.class).getBuild().revision
-                .getSha1String(), r1.getSha1String());
-        assertEquals(b2.getAction(BuildDetails.class).getBuild().revision
-                        .getBranches().iterator().next()
+        assertEquals(b2.getAction(BuildData.class)
+                        .getLastBuiltRevision().getSha1String(), r1.getSha1String());
+        assertEquals(b2.getAction(BuildData.class)
+                        .getLastBuiltRevision().getBranches().iterator().next()
                         .getName(), r1.getBranches().iterator().next().getName());
 
         // create a third build
         FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
 
         // Check revision built for b3 does not match r1 revision
-        assertFalse(b3.getAction(BuildDetails.class).getBuild().revision
-                        .getSha1String().equals(r1.getSha1String()));
+        assertFalse(b3.getAction(BuildData.class)
+                        .getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
     }
 }
 
