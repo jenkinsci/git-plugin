@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
+import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.TaskListener;
@@ -46,9 +47,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @return display name of this build chooser
      */
     public final String getDisplayName() {
-        return getDescriptor().getDisplayName();
+        Descriptor<?> descriptor = Jenkins.get().getDescriptor(getClass());
+        return descriptor != null ? descriptor.getDisplayName() : getClass().getSimpleName();
     }
-    
+
     /**
      * Get a list of revisions that are candidates to be built.
      *
