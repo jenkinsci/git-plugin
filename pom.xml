@@ -30,7 +30,7 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
-    <concurrency>1C</concurrency>
+    <forkCount>1C</forkCount>
     <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
     <jcasc.version>1.30</jcasc.version>
     <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
