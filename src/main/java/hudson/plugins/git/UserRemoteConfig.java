@@ -6,11 +6,11 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -155,7 +155,6 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         }
 
         @RequirePOST
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
@@ -177,11 +176,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // get git executable on master
             EnvVars environment;
-            final Jenkins jenkins = Jenkins.get();
+            Jenkins jenkins = Jenkins.get();
             if (item instanceof Job) {
                 environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
             } else {
-                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
+                Computer computer = jenkins.toComputer();
+                environment = computer == null ? new EnvVars() : computer.buildEnvironment(TaskListener.NULL);
             }
 
             GitClient git = Git.with(TaskListener.NULL, environment)

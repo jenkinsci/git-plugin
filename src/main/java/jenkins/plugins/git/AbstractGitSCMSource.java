@@ -1211,9 +1211,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return getCacheEntry(getRemote());
     }
 
-    @SuppressFBWarnings(
-            value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-            justification = "AbstractGitSCMSourceRetrieveHeadsTest mocking calls this with null Jenkins.getInstance()")
     protected static File getCacheDir(String cacheEntry) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {

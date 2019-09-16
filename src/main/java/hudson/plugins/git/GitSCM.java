@@ -1465,7 +1465,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return GitSCMExtensionDescriptor.all();
         }
 
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public boolean showGitToolOptions() {
             return Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations().length>1;
         }
@@ -1474,7 +1473,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          * Lists available toolinstallations.
          * @return  list of available git tools
          */
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public List<GitTool> getGitTools() {
             GitTool[] gitToolInstallations = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
             return Arrays.asList(gitToolInstallations);
@@ -1864,9 +1862,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     @Initializer(after=PLUGINS_STARTED)
     public static void onLoaded() {
         Jenkins jenkins = Jenkins.get();
