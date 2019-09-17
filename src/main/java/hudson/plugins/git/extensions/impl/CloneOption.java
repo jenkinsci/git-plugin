@@ -238,7 +238,7 @@ public class CloneOption extends GitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced clone behaviours";
+            return Messages.Advanced_clone_behaviours();
         }
     }
 

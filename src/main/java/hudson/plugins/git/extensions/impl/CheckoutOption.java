@@ -7,6 +7,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
@@ -101,7 +102,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced checkout behaviours";
+            return Messages.advanced_checkout_behaviours();
         }
     }
 
