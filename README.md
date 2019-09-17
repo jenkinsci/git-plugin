@@ -386,30 +386,6 @@ Multiple sparse checkout path values can be added to a single job.
 
 </dl>
 
-### Polling ignores commits in certain paths
-
-If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
-
-Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the Force polling using workspace extension as well.
-This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-Using this behaviour will preclude the faster git `ls-remote` polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
-
-<dl>
-
-<dt>Included Regions</dt>
-  <dd>
-  Each inclusion uses [java regular expression pattern matching](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html), and must be separated by a new line.
-  An empty list implies that everything is included.
-  </dd>
-
-<dt>Excluded Regions</dt>
-  <dd>
-  Each exclusion uses [java regular expression pattern matching](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html), and must be separated by a new line.
-  An empty list excludes nothing.
-  </dd>
-
-</dl>
-
 ### Strategy for choosing what to build
 
 When you are interested in using a job to build multiple branches, you can choose how Jenkins chooses the branches to build and the order they should be built.
