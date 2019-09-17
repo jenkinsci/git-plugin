@@ -141,10 +141,10 @@ JGit becomes available throughout Jenkins once it has been enabled.
   Folder containing a repository that will be used by git as a reference during submodule clone operations.
   This option will be ignored if the folder is not available on the agent running the build.
   A reference repository may contain multiple subprojects.
-  See the [combining repositories](#combining-repositories) section for more details.
+  See the <a href="#combining-repositories">combining repositories</a> section for more details.
   </dd>
 
-<dt>Timeout (in minutes) for submodules operations</dt>
+<dt>Timeout (in minutes) for submodule operations</dt>
   <dd>
   Specify a timeout (in minutes) for submodules operations.
   This option overrides the default timeout.
