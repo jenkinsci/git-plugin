@@ -141,10 +141,10 @@ JGit becomes available throughout Jenkins once it has been enabled.
   Folder containing a repository that will be used by git as a reference during submodule clone operations.
   This option will be ignored if the folder is not available on the agent running the build.
   A reference repository may contain multiple subprojects.
-  See the [combining repositories](#combining-repositories) section for more details.
+  See the <a href="#combining-repositories">combining repositories</a> section for more details.
   </dd>
 
-<dt>Timeout (in minutes) for submodules operations</dt>
+<dt>Timeout (in minutes) for submodule operations</dt>
   <dd>
   Specify a timeout (in minutes) for submodules operations.
   This option overrides the default timeout.
@@ -228,15 +228,141 @@ Pipeline is the robust and feature-rich way to checkout from multiple repositori
 <dt>user.name</dt>
   <dd>
   Defines the user name value which git will assign to new commits made in the workspace.
-  If given, `git config user.name [this]` is called before builds.
+  If given, <code>git config user.name [this]</code> is called before builds.
   This overrides values from the global settings.
   </dd>
 
 <dt>user.email</dt>
   <dd>
   Defines the user email value which git will assign to new commits made in the workspace.
-  If given, `git config user.email [this]` is called before builds.
+  If given, <code>git config user.email [this]</code> is called before builds.
   This overrides whatever is in the global settings.
+  </dd>
+
+</dl>
+
+### Don't trigger a build on commit notifications
+
+If checked, this repository will be ignored when the notifyCommit URL is accessed regardless of if the repository matches or not.
+
+### Force polling using workspace
+
+The git plugin polls remotely using `ls-remote` when configured with a single branch (no wildcards!).
+When this extension is enabled, the polling is performed from a cloned copy of the workspace instead of using `ls-remote`.
+
+If this option is selected, polling will use a workspace instead of using `ls-remote`.
+
+### Git LFS pull after checkout
+
+Enable [git large file support](https://git-lfs.github.com/) for the workspace by pulling large files after the checkout completes.
+Requires that the master and each agent performing an LFS checkout have installed the `git lfs` command.
+
+### Merge before build
+
+These options allow you to perform a merge to a particular branch before building.
+For example, you could specify an integration branch to be built, and to merge to master.
+In this scenario, on every change of integration, Jenkins will perform a merge with the master branch, and try to perform a build if the merge is successful.
+It then may push the merge back to the remote repository if the Git Push post-build action is selected.
+
+<dl>
+
+<dt>Name of repository</dt>
+  <dd>
+  Name of the repository, such as <code>origin</code>, that contains the branch.
+  If left blank, it'll default to the name of the first repository configured.
+  </dd>
+
+<dt>Branch to merge to</dt>
+  <dd>
+  The name of the branch within the named repository to merge to, such as <code>master</code>.
+  </dd>
+
+<dt>Merge strategy</dt>
+  <dd>
+  Merge strategy selection.  Choices include:
+  <ul>
+    <li>default</li>
+    <li>resolve</li>
+    <li>recursive</li>
+    <li>octopus</li>
+    <li>ours</li>
+    <li>subtree</li>
+    <li>recursive_theirs</li>
+  </ul>
+  </dd>
+
+<dt>Fast-forward mode</dt>
+  <dd>
+  <ul>
+    <li><code>--ff</code>: fast-forward which gracefully falls back to a merge commit when required</li>
+    <li><code>--ff-only</code>: fast-forward without any fallback</li>
+    <li><code>--no-ff</code>: merge commit always, even if a ast-forwardwould have been allowed</li>
+  </ul>
+  </dd>
+
+</dl>
+
+### Polling ignores commits from certain users
+
+These options allow you to perform a merge to a particular branch before building.
+For example, you could specify an integration branch to be built, and to merge to master.
+In this scenario, on every change of integration, Jenkins will perform a merge with the master branch, and try to perform a build if the merge is successful.
+It then may push the merge back to the remote repository if the Git Push post-build action is selected.
+
+<dl>
+
+<dt>Excluded Users</dt>
+  <dd>
+  If set and Jenkins is configured to poll for changes, Jenkins will ignore any revisions committed by users in this list when determining if a build should be triggered.
+  This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
+  Using this behaviour will preclude the faster <code>git ls-remote</code> polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
+
+  <p>Each exclusion uses literal pattern matching, and must be separated by a new line.</p>
+  </dd>
+
+</dl>
+
+### Polling ignores commits in certain paths
+
+If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
+
+Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the Force polling using workspace extension as well.
+This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
+Using this behaviour will preclude the faster <code>git ls-remote</code> polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
+
+<dl>
+
+<dt>Included Regions</dt>
+  <dd>
+  Each inclusion uses <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">java regular expression pattern matching</a>, and must be separated by a new line.
+  An empty list implies that everything is included.
+  </dd>
+
+<dt>Excluded Regions</dt>
+  <dd>
+  Each exclusion uses <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">java regular expression pattern matching</a>, and must be separated by a new line.
+  An empty list excludes nothing.
+  </dd>
+
+</dl>
+
+### Polling ignores commits with certain messages
+
+<dl>
+
+<dt>Excluded Messages</dt>
+  <dd>
+  If set and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to Pattern when determining if a build needs to be triggered.
+  This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct message.
+
+  <p>Exclusion uses <a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html">pattern matching</a>.
+
+  <p>You can create more complex patterns using embedded flag expressions.
+
+  <p><code>(?s).*FOO.*</code>
+
+  <p>This example will search FOO message in all comment lines.
+
   </dd>
 
 </dl>
@@ -245,10 +371,59 @@ Pipeline is the robust and feature-rich way to checkout from multiple repositori
 
 Runs `git remote prune` for each remote to prune obsolete local branches.
 
+### Sparse Checkout paths
+
+Specify the paths that you'd like to sparse checkout.
+This may be used for saving space (Think about a reference repository).
+Be sure to use a recent version of Git, at least above 1.7.10.
+
+Multiple sparse checkout path values can be added to a single job.
+
+<dt>Path</dt>
+  <dd>
+  File or directory to be included in the checkout
+  </dd>
+
+</dl>
+
+### Strategy for choosing what to build
+
+When you are interested in using a job to build multiple branches, you can choose how Jenkins chooses the branches to build and the order they should be built.
+
+This extension point in Jenkins is used by many other plugins to control the job as it builds specific commits.
+When you activate those plugins, you may see them installing a custom build strategy.
+
+<dl>
+
+<dt>Ancestry</dt>
+  <dd>
+  <code>Maximum Age of Commit</code>: The maximum age of a commit (in days) for it to be built. This uses the GIT_COMMITTER_DATE, not GIT_AUTHOR_DATE
+  <p><code>Commit in Ancestry</code>: If an ancestor commit (sha1) is provided, only branches with this commit in their history will be built.
+  </dd>
+
+<dt>Default</dt>
+  <dd>
+  Build all the branches that match the branch namne pattern.
+  </dd>
+
+<dt>Inverse</dt>
+  <dd>
+  Build all branches <b>except</b> for those which match the branch specifiers configure above.
+  This is useful, for example, when you have jobs building your master and various release branches and you want a second job which builds all new feature branches.
+  For example, branches which do not match these patterns without redundantly building master and the release branches again each time they change.
+  </dd>
+
+</dl>
+
 ### Use commit author in changelog
 
 The default behavior is to use the Git commit's "Committer" value in build changesets.
 If this option is selected, the git commit's "Author" value is used instead.
+
+### Wipe out repository and force clone
+
+Delete the contents of the workspace before build and before checkout.
+This deletes the git repository inside the workspace and will force a full clone.
 
 ## Environment Variables
 
@@ -260,8 +435,8 @@ Some git plugin settings can only be controlled from command line properties set
 
 <dt>Default timeout</dt>
   <dd>
-  The default initial git timeout value can be overridden through the property `org.jenkinsci.plugins.gitclient.Git.timeOut` (see JENKINS-11286) ).
-  The property should be set on both master and agent to have effect (see JENKINS-22547).
+  The default initial git timeout value can be overridden through the property <code>org.jenkinsci.plugins.gitclient.Git.timeOut</code> (see <a href="https://issues.jenkins-ci.org/browse/JENKINS-11286">JENKINS-11286</a>) ).
+  The property should be set on both master and agent to have effect (see <a href="https://issues.jenkins-ci.org/browse/JENKINS-22547">JENKINS-22547</a>).
   </dd>
 
 </dl>
@@ -270,6 +445,7 @@ Some git plugin settings can only be controlled from command line properties set
 
 A single reference repository may contain commits from multiple repositories.
 For example, if a repository named `parent` includes references to submodules `child-1` and `child-2`, a reference repository could be created to cache commits from all three repositories using the commands:
+
 ```
 $ mkdir multirepository-cache.git
 $ cd  multirepository-cache.git
