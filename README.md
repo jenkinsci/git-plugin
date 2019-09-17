@@ -228,14 +228,14 @@ Pipeline is the robust and feature-rich way to checkout from multiple repositori
 <dt>user.name</dt>
   <dd>
   Defines the user name value which git will assign to new commits made in the workspace.
-  If given, `git config user.name [this]` is called before builds.
+  If given, <code>git config user.name [this]</code> is called before builds.
   This overrides values from the global settings.
   </dd>
 
 <dt>user.email</dt>
   <dd>
   Defines the user email value which git will assign to new commits made in the workspace.
-  If given, `git config user.email [this]` is called before builds.
+  If given, <code>git config user.email [this]</code> is called before builds.
   This overrides whatever is in the global settings.
   </dd>
 
@@ -268,13 +268,13 @@ It then may push the merge back to the remote repository if the Git Push post-bu
 
 <dt>Name of repository</dt>
   <dd>
-  Name of the repository, such as `origin`, that contains the branch.
+  Name of the repository, such as <code>origin</code>, that contains the branch.
   If left blank, it'll default to the name of the first repository configured.
   </dd>
 
 <dt>Branch to merge to</dt>
   <dd>
-  The name of the branch within the named repository to merge to, such as `master`.
+  The name of the branch within the named repository to merge to, such as <code>master</code>.
   </dd>
 
 <dt>Merge strategy</dt>
@@ -294,9 +294,9 @@ It then may push the merge back to the remote repository if the Git Push post-bu
 <dt>Fast-forward mode</dt>
   <dd>
   <ul>
-    <li>`--ff`: fast-forward which gracefully falls back to a merge commit when required</li>
-    <li>`--ff-only`: fast-forward without any fallback</li>
-    <li>`--no-ff`: merge commit always, even if a ast-forwardwould have been allowed</li>
+    <li><code>--ff</code>: fast-forward which gracefully falls back to a merge commit when required</li>
+    <li><code>--ff-only</code>: fast-forward without any fallback</li>
+    <li><code>--no-ff</code>: merge commit always, even if a ast-forwardwould have been allowed</li>
   </ul>
   </dd>
 
@@ -315,7 +315,7 @@ It then may push the merge back to the remote repository if the Git Push post-bu
   <dd>
   If set and Jenkins is configured to poll for changes, Jenkins will ignore any revisions committed by users in this list when determining if a build should be triggered.
   This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-  Using this behaviour will preclude the faster git `ls-remote` polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
+  Using this behaviour will preclude the faster <code>git ls-remote</code> polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
 
   <p>Each exclusion uses literal pattern matching, and must be separated by a new line.</p>
   </dd>
@@ -328,7 +328,7 @@ If set and Jenkins is configured to poll for changes, Jenkins will pay attention
 
 Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the Force polling using workspace extension as well.
 This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-Using this behaviour will preclude the faster git `ls-remote` polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
+Using this behaviour will preclude the faster <code>git ls-remote</code> polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
 
 <dl>
 
@@ -435,8 +435,8 @@ Some git plugin settings can only be controlled from command line properties set
 
 <dt>Default timeout</dt>
   <dd>
-  The default initial git timeout value can be overridden through the property `org.jenkinsci.plugins.gitclient.Git.timeOut` (see JENKINS-11286) ).
-  The property should be set on both master and agent to have effect (see JENKINS-22547).
+  The default initial git timeout value can be overridden through the property <code>org.jenkinsci.plugins.gitclient.Git.timeOut</code> (see <a href="https://issues.jenkins-ci.org/browse/JENKINS-11286">JENKINS-11286</a>) ).
+  The property should be set on both master and agent to have effect (see <a href="https://issues.jenkins-ci.org/browse/JENKINS-22547">JENKINS-22547</a>).
   </dd>
 
 </dl>
@@ -445,6 +445,7 @@ Some git plugin settings can only be controlled from command line properties set
 
 A single reference repository may contain commits from multiple repositories.
 For example, if a repository named `parent` includes references to submodules `child-1` and `child-2`, a reference repository could be created to cache commits from all three repositories using the commands:
+
 ```
 $ mkdir multirepository-cache.git
 $ cd  multirepository-cache.git
