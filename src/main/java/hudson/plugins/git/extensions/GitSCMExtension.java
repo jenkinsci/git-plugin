@@ -267,7 +267,13 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
      */
+    @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
+    }
+
+    public void decorateFetchCommand(GitSCM scm, @CheckForNull Run<?,?> run, GitClient git, TaskListener listener, FetchCommand cmd)
+            throws IOException, InterruptedException, GitException {
+        decorateFetchCommand(scm, git, listener, cmd);
     }
 
     /**

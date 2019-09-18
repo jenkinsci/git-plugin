@@ -781,7 +781,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             // Fetch updates
             for (RemoteConfig remoteRepository : getParamExpandedRepos(lastBuild, listener)) {
-                fetchFrom(git, listener, remoteRepository);
+                fetchFrom(git, null, listener, remoteRepository);
             }
 
             listener.getLogger().println("Polling for changes in");
@@ -876,12 +876,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * Fetch information from a particular remote repository.
      *
      * @param git git client
+     * @param run run context if it's running for build
      * @param listener build log
      * @param remoteRepository remote git repository
      * @throws InterruptedException when interrupted
      * @throws IOException on input or output error
      */
     private void fetchFrom(GitClient git,
+            @CheckForNull Run<?, ?> run,
             TaskListener listener,
             RemoteConfig remoteRepository) throws InterruptedException, IOException {
 
@@ -897,7 +899,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
                 FetchCommand fetch = git.fetch_().from(url, remoteRepository.getFetchRefSpecs());
                 for (GitSCMExtension extension : extensions) {
-                    extension.decorateFetchCommand(this, git, listener, fetch);
+                    extension.decorateFetchCommand(this, run, git, listener, fetch);
                 }
                 fetch.execute();
             } catch (GitException ex) {
@@ -1116,7 +1118,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (RemoteConfig remoteRepository : repos) {
             try {
-                fetchFrom(git, listener, remoteRepository);
+                fetchFrom(git, build, listener, remoteRepository);
             } catch (GitException ex) {
                 /* Allow retry by throwing AbortException instead of
                  * GitException. See JENKINS-20531. */
