@@ -3,6 +3,7 @@ package hudson.plugins.git.extensions.impl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.Util;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
@@ -73,7 +74,7 @@ public class LocalBranch extends FakeGitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Check out to specific local branch";
+            return Messages.check_out_to_specific_local_branch();
         }
     }
 }

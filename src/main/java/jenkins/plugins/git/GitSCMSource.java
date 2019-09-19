@@ -525,13 +525,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
             List<NamedArrayList<? extends SCMSourceTraitDescriptor>> result = new ArrayList<>();
             List<SCMSourceTraitDescriptor> descriptors =
                     SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
-            NamedArrayList.select(descriptors, "Within Repository",
+            NamedArrayList.select(descriptors, Messages.within_Repository(),
                     NamedArrayList.anyOf(
                             NamedArrayList.withAnnotation(Selection.class),
                             NamedArrayList.withAnnotation(Discovery.class)
                     ),
                     true, result);
-            NamedArrayList.select(descriptors, "Additional", null, true, result);
+            NamedArrayList.select(descriptors, Messages.additional(), null, true, result);
             return result;
         }
 
