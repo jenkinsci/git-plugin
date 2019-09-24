@@ -214,26 +214,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Satisfy upper bounds dependency warnings -->
-    <dependency>
-      <groupId>com.infradna.tool</groupId>
-      <artifactId>bridge-method-annotation</artifactId>
-      <version>1.18</version>
-      <optional>true</optional>
-    </dependency>
-    <!-- Satisfy upper bounds dependency warnings -->
-    <dependency>
-      <groupId>org.jenkins-ci</groupId>
-      <artifactId>annotation-indexer</artifactId>
-      <version>1.12</version>
-      <optional>true</optional>
-    </dependency>
-    <!-- Satisfy upper bounds dependency warnings -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-api</artifactId>
-      <scope>test</scope>
-    </dependency>
     <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
