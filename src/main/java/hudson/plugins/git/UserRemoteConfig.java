@@ -68,6 +68,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     }
 
     @Exported
+    @CheckForNull
     public String getUrl() {
         return url;
     }
