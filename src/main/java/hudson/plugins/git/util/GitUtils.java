@@ -21,7 +21,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -63,7 +62,7 @@ public class GitUtils implements Serializable {
                                          @Nonnull TaskListener listener) {
         GitTool git = gitTool == null
                 ? GitTool.getDefaultInstallation()
-                : Jenkins.getActiveInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
+                : Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
         if (git == null) {
             listener.getLogger().println("Selected Git installation does not exist. Using Default");
             git = GitTool.getDefaultInstallation();
@@ -97,7 +96,7 @@ public class GitUtils implements Serializable {
     }
 
     public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
-        Jenkins j = Jenkins.getActiveInstance();
+        Jenkins j = Jenkins.get();
         if (workspace != null && workspace.isRemote()) {
             for (Computer c : j.getComputers()) {
                 if (c.getChannel() == workspace.getChannel()) {
@@ -326,7 +325,7 @@ public class GitUtils implements Serializable {
             env = p.getEnvironment(workspaceToNode(ws), listener);
         }
 
-        Jenkins jenkinsInstance = Jenkins.getInstance();
+        Jenkins jenkinsInstance = Jenkins.get();
         if (jenkinsInstance == null) {
             throw new IllegalArgumentException("Jenkins instance is null");
         }

@@ -16,6 +16,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class SparseCheckoutPaths extends GitSCMExtension {
     private List<SparseCheckoutPath> sparseCheckoutPaths = Collections.emptyList();
@@ -48,5 +49,40 @@ public class SparseCheckoutPaths extends GitSCMExtension {
         public String getDisplayName() {
             return "Sparse Checkout paths";
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        
+        SparseCheckoutPaths that = (SparseCheckoutPaths) o;
+        return Objects.equals(getSparseCheckoutPaths(), that.getSparseCheckoutPaths());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSparseCheckoutPaths());
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "SparseCheckoutPaths{" +
+                "sparseCheckoutPaths=" + sparseCheckoutPaths +
+                '}';
     }
 }

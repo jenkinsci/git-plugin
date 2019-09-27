@@ -2,7 +2,7 @@ Contributing to the Git Plugin
 ==============================
 
 The git plugin implements the [Jenkins SCM API](https://plugins.jenkins.io/scm-api).
-Refer to the SCM API documentation for [plugin naming conventions]https://github.com/jenkinsci/scm-api-plugin/blob/master/docs/implementation.adoc#naming-your-plugin(),
+Refer to the SCM API documentation for [plugin naming conventions](https://github.com/jenkinsci/scm-api-plugin/blob/master/docs/implementation.adoc#naming-your-plugin),
 and for the [preferred locations of new functionality](https://github.com/jenkinsci/scm-api-plugin/blob/master/CONTRIBUTING.md#add-to-core-or-create-extension-plugin).
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/git-plugin).
@@ -21,9 +21,9 @@ Code coverage reporting is available as a maven target.
 Please try to improve code coverage with tests when you submit.
 * `mvn -P enable-jacoco clean install jacoco:report` to report code coverage
 
-Please don't introduce new findbugs output.
-* `mvn findbugs:check` to analyze project using [Findbugs](http://findbugs.sourceforge.net/)
-* `mvn findbugs:gui` to review Findbugs report using GUI
+Please don't introduce new spotbugs output.
+* `mvn spotbugs:check` to analyze project using [Spotbugs](https://spotbugs.github.io/)
+* `mvn spotbugs:gui` to review Findbugs report using GUI
 
 Code formatting in the git plugin varies between files.  Try to
 maintain reasonable consistency with the existing files where

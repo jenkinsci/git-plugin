@@ -30,7 +30,6 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
@@ -47,6 +46,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.ObjectStreamException;
@@ -431,7 +431,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item context,
                                                      @QueryParameter String remote,
                                                      @QueryParameter String credentialsId) {
-            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (context == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 context != null && !context.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
@@ -449,7 +449,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
-            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (context == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 context != null && !context.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
@@ -525,13 +525,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
             List<NamedArrayList<? extends SCMSourceTraitDescriptor>> result = new ArrayList<>();
             List<SCMSourceTraitDescriptor> descriptors =
                     SCMSourceTrait._for(this, GitSCMSourceContext.class, GitSCMBuilder.class);
-            NamedArrayList.select(descriptors, "Within Repository",
+            NamedArrayList.select(descriptors, Messages.within_Repository(),
                     NamedArrayList.anyOf(
                             NamedArrayList.withAnnotation(Selection.class),
                             NamedArrayList.withAnnotation(Discovery.class)
                     ),
                     true, result);
-            NamedArrayList.select(descriptors, "Additional", null, true, result);
+            NamedArrayList.select(descriptors, Messages.additional(), null, true, result);
             return result;
         }
 
@@ -548,8 +548,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     @Extension
     public static class ListenerImpl extends GitStatus.Listener {
-        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         @Override
         public List<GitStatus.ResponseContributor> onNotifyCommit(String origin,
                                                                   URIish uri,
@@ -561,9 +559,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
-            Jenkins jenkins = Jenkins.getInstance();
-            SecurityContext old = jenkins.getACL().impersonate(ACL.SYSTEM);
-            try {
+            try (ACLContext context = ACL.as(ACL.SYSTEM)) {
                 if (branches.length > 0) {
                     final URIish u = uri;
                     for (final String branch: branches) {
@@ -683,8 +679,6 @@ public class GitSCMSource extends AbstractGitSCMSource {
                         }
                     }
                 }
-            } finally {
-                SecurityContextHolder.setContext(old);
             }
             if (!notified[0]) {
                 result.add(new GitStatus.MessageResponseContributor("No Git consumers using SCM API plugin for: " + uri.toString()));

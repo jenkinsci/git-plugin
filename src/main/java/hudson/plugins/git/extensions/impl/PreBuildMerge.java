@@ -12,7 +12,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.BuildDetails;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import org.eclipse.jgit.lib.ObjectId;
@@ -90,27 +89,29 @@ public class PreBuildMerge extends GitSCMExtension {
             // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
             // all over again.
 
-            BuildDetails buildDetails = new BuildDetails(new Build(marked, rev, build.getNumber(), FAILURE),
-                                                         scm.getScmName(), scm.getUserRemoteConfigs());
-
-            // Track whether we're trying to add a duplicate BuildDetails object.
-            boolean buildDetailsAlreadyPresent = false;
-            List<BuildDetails> actions = build.getActions(BuildDetails.class);
-            for (BuildDetails d: actions)  {
-                if (d.similarTo(buildDetails)) {
-                    buildDetailsAlreadyPresent = true;
+            // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
+            // revision info for this build etc. The default assumption is that it's a duplicate.
+            BuildData buildData = scm.getBuildData(build, true);
+            boolean buildDataAlreadyPresent = false;
+            List<BuildData> actions = build.getActions(BuildData.class);
+            for (BuildData d: actions)  {
+                if (d.similarTo(buildData)) {
+                    buildDataAlreadyPresent = true;
                     break;
                 }
             }
             if (!actions.isEmpty()) {
-                buildDetails.setIndex(actions.size()+1);
+                buildData.setIndex(actions.size()+1);
             }
 
-            // Add the BuildDetails if it wasn't already present.
-            if (!buildDetailsAlreadyPresent) {
-                build.addAction(buildDetails);
+            // If the BuildData is not already attached to this build, add it to the build and mark that
+            // it wasn't already present, so that we add the GitTagAction and changelog after the checkout
+            // finishes.
+            if (!buildDataAlreadyPresent) {
+                build.addAction(buildData);
             }
 
+            buildData.saveBuild(new Build(marked,rev, build.getNumber(), FAILURE));
             throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
         }
 

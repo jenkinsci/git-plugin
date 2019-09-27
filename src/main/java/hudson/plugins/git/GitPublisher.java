@@ -209,10 +209,7 @@ public class GitPublisher extends Recorder implements Serializable {
                         listener.getLogger().println("Pushing HEAD to branch " + mergeTarget + " of " + remote.getName() + " repository");
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + mergeTarget);
-                        if (forcePush) {
-                          push.force();
-                        }
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + mergeTarget).force(forcePush);
                         push.execute();
                     } else {
                         //listener.getLogger().println("Pushing result " + buildnumber + " to origin repository");
@@ -266,10 +263,7 @@ public class GitPublisher extends Recorder implements Serializable {
                                                      + targetRepo);
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref(tagName);
-                        if (forcePush) {
-                          push.force();
-                        }
+                        PushCommand push = git.push().to(remoteURI).ref(tagName).force(forcePush);
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push tag " + tagName + " to " + targetRepo));
@@ -312,10 +306,7 @@ public class GitPublisher extends Recorder implements Serializable {
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName);
-                        if (forcePush) {
-                          push.force();
-                        }
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName).force(forcePush);
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
@@ -356,10 +347,7 @@ public class GitPublisher extends Recorder implements Serializable {
                             git.appendNote( noteMsg, noteNamespace );
 
                         remoteURI = remote.getURIs().get(0);
-                        PushCommand push = git.push().to(remoteURI).ref("refs/notes/*");
-                        if (forcePush) {
-                          push.force();
-                        }
+                        PushCommand push = git.push().to(remoteURI).ref("refs/notes/*").force(forcePush);
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to add note: \n" + noteMsg  + "\n******"));

@@ -34,8 +34,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * Represents a change set.
  * @author Nigel Magnay
@@ -501,8 +499,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         }
     }
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     private boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl descriptor = getGitSCMDescriptor();
 
@@ -519,10 +515,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return descriptor.isUseExistingAccountWithSameEmail();
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
-        justification="Jenkins.getInstance() is not null")
     private DescriptorImpl getGitSCMDescriptor() {
-        return (DescriptorImpl) Jenkins.getInstance().getDescriptor(GitSCM.class);
+        return (DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
     }
 
     @Override

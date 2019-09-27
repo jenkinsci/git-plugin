@@ -16,7 +16,6 @@ import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
-import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -27,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
@@ -65,12 +62,10 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -361,7 +356,7 @@ public class GitSCMSourceTest {
         assertThat(resolved.getGitExe(), org.hamcrest.CoreMatchers.containsString("git"));
 
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
-        instance.retrieveRevisions(log);
+        instance.fetchRevisions(log, null);
         assertTrue("Installer should be invoked", inst.isInvoked());
     }
 

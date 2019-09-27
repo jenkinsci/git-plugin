@@ -194,15 +194,9 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     public void foldIntoExisting(Queue.Item item, Queue.Task owner, List<Action> otherActions) {
         // only do this if we are asked to.
         if(combineCommits) {
-            RevisionParameterAction existing = item.getAction(RevisionParameterAction.class);
-            if (existing!=null) {
-                //because we cannot modify the commit in the existing action remove it and add self
-                item.getActions().remove(existing);
-                item.getActions().add(this);
-                return;
-            }
-            // no CauseAction found, so add a copy of this one
-            item.getActions().add(this);
+            //because we cannot modify the commit in the existing action remove it and add self
+            // or no CauseAction found, so add a copy of this one
+            item.replaceAction(this);
         }
     }
 

@@ -52,6 +52,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -108,7 +110,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
             @Override
             public BuildStepDescriptor getDescriptor() {
-                return (BuildStepDescriptor)Hudson.getInstance().getDescriptorOrDie(GitPublisher.class); // fake
+                return (BuildStepDescriptor)Jenkins.get().getDescriptorOrDie(GitPublisher.class); // fake
             }
 
             private Object writeReplace() { return new NullSCM(); }
