@@ -31,7 +31,6 @@
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <concurrency>1C</concurrency>
-    <jcasc.version>1.30</jcasc.version>
     <linkXRef>false</linkXRef>
   </properties>
 
@@ -215,13 +214,11 @@
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
-      <version>${jcasc.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
-      <version>${jcasc.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
