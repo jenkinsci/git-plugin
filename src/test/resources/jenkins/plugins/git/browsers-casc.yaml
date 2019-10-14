@@ -1,7 +1,7 @@
 unclassified:
   globalLibraries:
     libraries:
-      - name: "Lib1"
+      - name: "withAssembla"
         retriever:
           legacySCM:
             scm:
@@ -15,7 +15,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib2"
+      - name: "withFisheye"
         retriever:
           legacySCM:
             scm:
@@ -29,7 +29,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib3"
+      - name: "withKiln"
         retriever:
           legacySCM:
             scm:
@@ -43,7 +43,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib4"
+      - name: "withMic"
         retriever:
           legacySCM:
             scm:
@@ -57,7 +57,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib5"
+      - name: "withBitbucket"
         retriever:
           legacySCM:
             scm:
@@ -71,7 +71,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib6"
+      - name: "withCGit"
         retriever:
           legacySCM:
             scm:
@@ -85,7 +85,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib7"
+      - name: "withGitlib"
         retriever:
           legacySCM:
             scm:
@@ -100,7 +100,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib8"
+      - name: "withGithub"
         retriever:
           legacySCM:
             scm:
@@ -114,7 +114,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib9"
+      - name: "withGitiles"
         retriever:
           legacySCM:
             scm:
@@ -128,7 +128,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib10"
+      - name: "withGitlab"
         retriever:
           legacySCM:
             scm:
@@ -143,7 +143,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib11"
+      - name: "withGitlist"
         retriever:
           legacySCM:
             scm:
@@ -157,7 +157,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib12"
+      - name: "withGitorious"
         retriever:
           legacySCM:
             scm:
@@ -171,7 +171,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib13"
+      - name: "withGitweb"
         retriever:
           legacySCM:
             scm:
@@ -185,7 +185,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib14"
+      - name: "withGogsgit"
         retriever:
           legacySCM:
             scm:
@@ -199,7 +199,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib15"
+      - name: "withPhab"
         retriever:
           legacySCM:
             scm:
@@ -214,7 +214,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib16"
+      - name: "withRedmine"
         retriever:
           legacySCM:
             scm:
@@ -228,7 +228,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib17"
+      - name: "withRhodecode"
         retriever:
           legacySCM:
             scm:
@@ -242,7 +242,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib18"
+      - name: "withStash"
         retriever:
           legacySCM:
             scm:
@@ -256,7 +256,7 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
-      - name: "Lib19"
+      - name: "withViewgit"
         retriever:
           legacySCM:
             scm:

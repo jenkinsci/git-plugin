@@ -38,6 +38,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -45,7 +46,84 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
     @Override
     protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
         final List<LibraryConfiguration> libraries = GlobalLibraries.get().getLibraries();
-        assertThat(libraries, hasSize(19));
+        assertThat(libraries, containsInAnyOrder(
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withAssembla"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withFisheye"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withKiln"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withMic"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withBitbucket"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withCGit"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGithub"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitiles"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitlab"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitlist"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitorious"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitweb"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGogsgit"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withPhab"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withRedmine"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withRhodecode"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withStash"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withViewgit"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withGitlib"))
+                )
+        ));
 
         final List<GitRepositoryBrowser> browsers = new ArrayList<>();
         for (LibraryConfiguration library : libraries) {
@@ -59,7 +137,7 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
             browsers.add(gitSCM.getBrowser());
         }
 
-        assertThat(browsers, hasSize(19));
+        assertEquals(libraries.size(), browsers.size());
         assertThat(browsers, containsInAnyOrder(
                 // AssemblaWeb
                 allOf(
