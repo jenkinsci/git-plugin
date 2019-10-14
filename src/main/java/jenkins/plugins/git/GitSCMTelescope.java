@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -227,6 +228,12 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                 return build(remote, credentials, head, rev);
             }
         }
+        return null;
+    }
+
+    @Override
+    public final SCMFileSystem build(@NonNull Run build, @NonNull SCM scm, @CheckForNull SCMRevision rev)
+            throws IOException, InterruptedException {
         return null;
     }
 
