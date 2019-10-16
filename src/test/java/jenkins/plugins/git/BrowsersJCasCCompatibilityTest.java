@@ -1,7 +1,6 @@
 package jenkins.plugins.git;
 
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.GitTagAction;
 import hudson.plugins.git.browser.AssemblaWeb;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.CGit;
@@ -32,7 +31,6 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
@@ -44,8 +42,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
-    private static final Logger LOGGER = Logger.getLogger(BrowsersJCasCCompatibilityTest.class.getName());
-
     @Override
     protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
         final List<LibraryConfiguration> libraries = GlobalLibraries.get().getLibraries();
@@ -143,8 +139,9 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
         assertEquals(libraries.size(), browsers.size());
 
         GitLab failingObject = (GitLab) browsers.stream().filter(gitRepositoryBrowser -> gitRepositoryBrowser instanceof GitLab).findFirst().get();
-        LOGGER.info("RepoUrl: " + failingObject.getRepoUrl());
-        LOGGER.info("Version: " + failingObject.getVersion());
+        System.out.println("[BrowsersJCasCCompatibilityTest] Checking " + failingObject);
+        System.out.println("[BrowsersJCasCCompatibilityTest] - RepoUrl: " + failingObject.getRepoUrl());
+        System.out.println("[BrowsersJCasCCompatibilityTest] - Version: " + failingObject.getVersion());
 
         assertThat(browsers, containsInAnyOrder(
                 // AssemblaWeb
