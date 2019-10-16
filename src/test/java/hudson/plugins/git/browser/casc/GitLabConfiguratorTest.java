@@ -68,7 +68,7 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
 
     @Test
@@ -80,7 +80,8 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
+
     }
 
     @Test
@@ -91,7 +92,7 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertThat(instance.getRepoUrl(), isEmptyString());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
 
 
@@ -104,7 +105,7 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
 
     @Test
@@ -116,7 +117,8 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);    }
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
+    }
 
     @Test
     public void testInstanceWithNaNVersion() throws Exception {
@@ -128,7 +130,7 @@ public class GitLabConfiguratorTest {
 
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
-        assertEquals(expectedConfiguration.getVersion(), instance.getVersion(), 0.001);
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
 
 }
