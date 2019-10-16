@@ -133,18 +133,16 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
             assertThat(errorMessage, scm, instanceOf(GitSCM.class));
             final GitSCM gitSCM = (GitSCM)scm;
             assertNotNull(errorMessage, gitSCM.getBrowser());
-            if (!(gitSCM.getBrowser() instanceof GitLab)) {
-                browsers.add(gitSCM.getBrowser());
-            }
+            browsers.add(gitSCM.getBrowser());
         }
 
-       // assertEquals(libraries.size(), browsers.size());
+        assertEquals(libraries.size(), browsers.size());
 
-        /*GitLab failingObject = (GitLab) browsers.stream().filter(gitRepositoryBrowser -> gitRepositoryBrowser instanceof GitLab).findFirst().get();
+        GitLab failingObject = (GitLab) browsers.stream().filter(gitRepositoryBrowser -> gitRepositoryBrowser instanceof GitLab).findFirst().get();
         System.out.println("[BrowsersJCasCCompatibilityTest] Checking " + failingObject);
         System.out.println("[BrowsersJCasCCompatibilityTest] - RepoUrl: " + failingObject.getRepoUrl());
         System.out.println("[BrowsersJCasCCompatibilityTest] - Version: " + failingObject.getVersion());
-*/
+
         assertThat(browsers, containsInAnyOrder(
                 // AssemblaWeb
                 allOf(
@@ -191,13 +189,13 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 allOf(
                         instanceOf(Gitiles.class),
                         hasProperty("repoUrl", equalTo("http://url.gitiles"))
-                ),/*
+                ),
                 // gitlab
                 allOf(
-                        instanceOf(GitLab.class),
+                        instanceOf(GitLab.class)/*,
                         hasProperty("repoUrl", equalTo("http://gitlab.com")),
-                        hasProperty("version", equalTo(1.0))
-                ),*/
+                        hasProperty("version", equalTo(1.0))*/
+                ),
                 // gitlist
                 allOf(
                         instanceOf(GitList.class),
