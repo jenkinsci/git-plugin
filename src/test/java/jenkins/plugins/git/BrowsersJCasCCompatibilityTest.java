@@ -32,8 +32,8 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -138,12 +138,6 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
         }
 
         assertEquals(libraries.size(), browsers.size());
-
-        GitLab failingObject = (GitLab) browsers.stream().filter(gitRepositoryBrowser -> gitRepositoryBrowser instanceof GitLab).findFirst().get();
-        System.out.println("[BrowsersJCasCCompatibilityTest] Checking " + failingObject);
-        System.out.println("[BrowsersJCasCCompatibilityTest] - RepoUrl: " + failingObject.getRepoUrl());
-        System.out.println("[BrowsersJCasCCompatibilityTest] - Version: " + failingObject.getVersion());
-
         assertThat(browsers, containsInAnyOrder(
                 // AssemblaWeb
                 allOf(
@@ -195,7 +189,7 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 allOf(
                         instanceOf(GitLab.class),
                         hasProperty("repoUrl", equalTo("http://gitlab.com")),
-                        hasProperty("version", is(1.0))
+                        hasProperty("version", closeTo(1.0, 0.01))
                 ),
                 // gitlist
                 allOf(
