@@ -2,9 +2,7 @@ package hudson.plugins.git.browser.casc;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.plugins.git.GitTool;
 import hudson.plugins.git.browser.GitLab;
-import io.jenkins.plugins.casc.Attribute;
 import io.jenkins.plugins.casc.BaseConfigurator;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.Configurator;
@@ -13,7 +11,6 @@ import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.casc.model.Mapping;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
