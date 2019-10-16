@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -192,9 +193,9 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 ),
                 // gitlab
                 allOf(
-                        /*instanceOf(GitLab.class),
-                        hasProperty("repoUrl", equalTo("http://gitlab.com")),*/
-                        hasProperty("version", equalTo(1.0))
+                        instanceOf(GitLab.class),
+                        hasProperty("repoUrl", equalTo("http://gitlab.com")),
+                        hasProperty("version", is(1.0))
                 ),
                 // gitlist
                 allOf(
