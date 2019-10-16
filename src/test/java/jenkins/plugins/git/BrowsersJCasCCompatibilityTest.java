@@ -189,13 +189,13 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 allOf(
                         instanceOf(Gitiles.class),
                         hasProperty("repoUrl", equalTo("http://url.gitiles"))
-                ),
+                ),/*
                 // gitlab
                 allOf(
                         instanceOf(GitLab.class),
                         hasProperty("repoUrl", equalTo("http://gitlab.com")),
                         hasProperty("version", equalTo(1.0))
-                ),
+                ),*/
                 // gitlist
                 allOf(
                         instanceOf(GitList.class),
