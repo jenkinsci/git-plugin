@@ -192,8 +192,8 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 ),
                 // gitlab
                 allOf(
-                        instanceOf(GitLab.class)/*,
-                        hasProperty("repoUrl", equalTo("http://gitlab.com")),
+                        instanceOf(GitLab.class),
+                        hasProperty("repoUrl", equalTo("http://gitlab.com"))/*,
                         hasProperty("version", equalTo(1.0))*/
                 ),
                 // gitlist
