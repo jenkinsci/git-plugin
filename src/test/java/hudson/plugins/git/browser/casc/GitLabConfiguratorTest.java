@@ -2,7 +2,6 @@ package hudson.plugins.git.browser.casc;
 
 import hudson.plugins.git.browser.GitLab;
 import io.jenkins.plugins.casc.ConfigurationContext;
-import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.model.Mapping;
 import org.junit.Rule;
 import org.junit.Test;
@@ -11,6 +10,7 @@ import org.junit.rules.ExpectedException;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -118,6 +118,14 @@ public class GitLabConfiguratorTest {
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
         assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
         assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
+    }
+
+    @Test
+    public void testInstanceWithNullMapping() throws Exception {
+        final Mapping mapping = null;
+        final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
+        assertEquals("", instance.getRepoUrl());
+        assertNull(instance.getVersion());
     }
 
     @Test

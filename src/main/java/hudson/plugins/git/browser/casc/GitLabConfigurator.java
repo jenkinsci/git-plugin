@@ -1,5 +1,6 @@
 package hudson.plugins.git.browser.casc;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.plugins.git.browser.GitLab;
@@ -27,6 +28,7 @@ public class GitLabConfigurator extends BaseConfigurator<GitLab> {
         return new GitLab(url, version);
     }
 
+    @CheckForNull
     @Override
     public CNode describe(GitLab instance, ConfigurationContext context) throws Exception {
         Mapping mapping = new Mapping();
