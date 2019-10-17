@@ -15,7 +15,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class GitLabConfiguratorTest {
-    
+
     private final GitLabConfigurator configurator = new GitLabConfigurator();
     private static final ConfigurationContext NULL_CONFIGURATION_CONTEXT = null;
 
@@ -123,10 +123,12 @@ public class GitLabConfiguratorTest {
 
     @Test
     public void testInstanceWithNullMapping() throws Exception {
+        // A null mapping should create an instance with empty arguments
+        final GitLab expectedConfiguration = new GitLab("", "");
         final Mapping mapping = null;
         final GitLab instance = configurator.instance(mapping, NULL_CONFIGURATION_CONTEXT);
-        assertEquals("", instance.getRepoUrl());
-        assertNull(instance.getVersion());
+        assertEquals(expectedConfiguration.getRepoUrl(), instance.getRepoUrl());
+        assertEquals(String.valueOf(expectedConfiguration.getVersion()), String.valueOf(instance.getVersion()));
     }
 
     @Test
