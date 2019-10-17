@@ -1,0 +1,79 @@
+unclassified:
+  globalLibraries:
+    libraries:
+      - defaultVersion: "1.2.3"
+        implicit: true
+        name: "My Git Lib"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "master"
+                  - name: "myprodbranch"
+                browser:
+                  assemblaWeb:
+                    repoUrl: "assemblaweb.url"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                extensions:
+                  - checkoutOption:
+                      timeout: 1
+                  - cloneOption:
+                      depth: 2
+                      honorRefspec: true
+                      noTags: false
+                      reference: "/my/path/2"
+                      shallow: true
+                      timeout: 2
+                  - submoduleOption:
+                      disableSubmodules: true
+                      parentCredentials: true
+                      recursiveSubmodules: true
+                      reference: "/my/path/3"
+                      timeout: 3
+                      trackingSubmodules: true
+                  - changelogToBranch:
+                      options:
+                        compareRemote: "myrepo"
+                        compareTarget: "mybranch"
+                  - relativeTargetDirectory:
+                      relativeTargetDir: "/my/path/5"
+                  - localBranch:
+                      localBranch: "local_branch"
+                  - "cleanCheckout"
+                  - "cleanBeforeCheckout"
+                  - "perBuildTag"
+                  - scmName:
+                      name: "my_scm"
+                  - userIdentity:
+                      email: "custom@mail.com"
+                      name: "custom_name"
+                  - "ignoreNotifyCommit"
+                  - "disableRemotePoll"
+                  - "gitLFSPull"
+                  - preBuildMerge:
+                      options:
+                        fastForwardMode: FF_ONLY
+                        mergeRemote: "repo_merge"
+                        mergeStrategy: OCTOPUS
+                        mergeTarget: "branch_merge"
+                  - userExclusion:
+                      excludedUsers: "me"
+                  - pathRestriction:
+                      excludedRegions: "/path/excluded"
+                      includedRegions: "/path/included"
+                  - messageExclusion:
+                      excludedMessage: "message_excluded"
+                  - "pruneStaleBranch"
+                  - sparseCheckoutPaths:
+                      sparseCheckoutPaths:
+                        - path: "/first/last"
+                        - path: "/other/path"
+                  - "authorInChangelog"
+                  - "wipeWorkspace"
+                userRemoteConfigs:
+                  - credentialsId: "acmeuser-cred-Id"
+                    name: "field_name"
+                    refspec: "field_refspec"
+                    url: "https://git.acmecorp/myGitLib.git"
