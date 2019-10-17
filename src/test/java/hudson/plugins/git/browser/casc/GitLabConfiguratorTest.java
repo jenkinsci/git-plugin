@@ -15,6 +15,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class GitLabConfiguratorTest {
+    
     private final GitLabConfigurator configurator = new GitLabConfigurator();
     private static final ConfigurationContext NULL_CONFIGURATION_CONTEXT = null;
 
