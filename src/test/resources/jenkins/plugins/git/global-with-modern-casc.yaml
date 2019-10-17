@@ -1,0 +1,64 @@
+unclassified:
+  globalLibraries:
+    libraries:
+      - defaultVersion: "1.2.3"
+        implicit: true
+        name: "My Git Lib"
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                credentialsId: "acmeuser-cred-Id"
+                id: "ccdc6d86-b3cd-405f-8247-c196519234b7"
+                remote: "https://git.acmecorp/myGitLib.git"
+                traits:
+                  - "branchDiscoveryTrait"
+                  - discoverOtherRefsTrait:
+                      nameMapping: "mapping"
+                      ref: "other/refs"
+                  - "tagDiscoveryTrait"
+                  - headRegexFilter:
+                      regex: ".*acme*"
+                  - headWildcardFilter:
+                      excludes: "excluded"
+                      includes: "master"
+                  - checkoutOptionTrait:
+                      extension:
+                        timeout: 1
+                  - cloneOptionTrait:
+                      extension:
+                        depth: 2
+                        honorRefspec: true
+                        noTags: false
+                        reference: "/my/path/2"
+                        shallow: true
+                        timeout: 2
+                  - submoduleOptionTrait:
+                      extension:
+                        disableSubmodules: true
+                        parentCredentials: true
+                        recursiveSubmodules: true
+                        reference: "/my/path/3"
+                        timeout: 3
+                        trackingSubmodules: true
+                  - "localBranchTrait"
+                  - "cleanAfterCheckoutTrait"
+                  - "cleanBeforeCheckoutTrait"
+                  - gitBrowser:
+                      browser:
+                        bitbucketWeb:
+                          repoUrl: "bitbucketweb.url"
+                  - remoteName:
+                      remoteName: "other_remote"
+                  - userIdentityTrait:
+                      extension:
+                        email: "my@email.com"
+                        name: "my_user"
+                  - "gitLFSPullTrait"
+                  - "ignoreOnPushNotificationTrait"
+                  - "pruneStaleBranchTrait"
+                  - refSpecs:
+                      templates:
+                        - value: "+refs/heads/*:refs/remotes/@{remote}/*"
+                  - "authorInChangelogTrait"
+                  - "wipeWorkspaceTrait"

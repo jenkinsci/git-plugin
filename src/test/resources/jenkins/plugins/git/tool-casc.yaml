@@ -1,0 +1,20 @@
+tool:
+  git:
+    installations:
+      - home: "git"
+        name: "Default"
+        properties:
+          - installSource:
+              installers:
+                - command:
+                    command: "install git"
+                    label: "git command"
+                    toolHome: "/my/path/1"
+                - zip:
+                    label: "git zip"
+                    subdir: "/my/path/2"
+                    url: "http://fake.com"
+                - batchFile:
+                    command: "run batch command"
+                    label: "git batch"
+                    toolHome: "/my/path/3"

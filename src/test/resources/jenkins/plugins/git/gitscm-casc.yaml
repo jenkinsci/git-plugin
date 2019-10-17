@@ -1,0 +1,5 @@
+unclassified:
+  gitSCM:
+    createAccountBasedOnEmail: true
+    globalConfigEmail: "me@mail.com"
+    globalConfigName: "user_name"
