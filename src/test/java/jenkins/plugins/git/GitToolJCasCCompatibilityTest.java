@@ -53,7 +53,7 @@ public class GitToolJCasCCompatibilityTest extends RoundTripAbstractTest {
 
     @Override
     protected String stringInLogExpected() {
-        return "Setting class hudson.plugins.git.GitTool.name = Default";
+        return ".installations = [GitTool[Default]]"; // Git client custom configurator supports JGit and JGit Apache
     }
 
     @Override
