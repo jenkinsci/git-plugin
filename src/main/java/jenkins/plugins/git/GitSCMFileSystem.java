@@ -299,7 +299,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
             EnvVars environment = build.getEnvironment(listener);
-            String remote = environment.expand(config.getUrl());
+            String remote = environment.expand(config.getUrl()).trim();
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
@@ -333,7 +333,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                String remoteName = StringUtils.defaultIfBlank(environment.expand(config.getName()), Constants.DEFAULT_REMOTE_NAME);
+                String remoteName = StringUtils.defaultIfBlank(environment.expand(config.getName()).trim(), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
                 listener.getLogger().println("Fetching & pruning " + remoteName + "...");
@@ -345,9 +345,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
                 String headName;
                 if (rev != null) {
-                    headName = environment.expand(rev.getHead().getName());
+                    headName = environment.expand(rev.getHead().getName()).trim();
                 } else {
-                    String branch = environment.expand(branchSpec.getName());
+                    String branch = environment.expand(branchSpec.getName()).trim();
                     if (branch.startsWith(Constants.R_HEADS)) {
                         headName = branch.substring(Constants.R_HEADS.length());
                     } else if (branch.startsWith("*/")) {
@@ -357,7 +357,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     }
                 }
 
-                String refspec = environment.expand(config.getRefspec());
+                String refspec = environment.expand(config.getRefspec()).trim();
                 String head = headName;
                 if (refspec == null) {
                     refspec = "+" + Constants.R_HEADS + headName + ":" + Constants.R_REMOTES + remoteName + "/" + headName;
