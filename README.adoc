@@ -509,18 +509,15 @@ properties set at Jenkins startup.
 Default timeout
 
 The default initial git timeout value can be overridden through the
-property org.jenkinsci.plugins.gitclient.Git.timeOut (see JENKINS-11286)
+property org.jenkinsci.plugins.gitclient.Git.timeOut (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])
 ). The property should be set on both master and agent to have effect
-(see JENKINS-22547).
+(see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
 
 [[combining-repositories]]
 == Combining repositories
 
-A single reference repository may contain commits from multiple
-repositories. For example, if a repository named `parent` includes
-references to submodules `child-1` and `child-2`, a reference repository
-could be created to cache commits from all three repositories using the
-commands:
+A single reference repository may contain commits from multiple repositories.
+For example, if a repository named `parent` includes references to submodules `child-1` and `child-2`, a reference repository could be created to cache commits from all three repositories using the commands:
 
 ....
 $ mkdir multirepository-cache.git
@@ -532,15 +529,13 @@ $ git remote add child-2 https://github.com/jenkinsci/platformlabeler-plugin
 $ git fetch --all
 ....
 
-Those commands will create a single bare repository which includes the
-current commits from all three repositories. If that reference
-repository is used in the advanced clone options
+Those commands will create a single bare repository which includes the current commits from all three repositories.
+If that reference repository is used in the advanced clone options
 link:#clone-reference-repository-path[clone reference repository], it
-will reduce data transfer and disc use for the parent repository. If
-that reference repository is used in the submodule options
+will reduce data transfer and disc use for the parent repository.
+If that reference repository is used in the submodule options
 link:#submodule-reference-repository-path[clone reference repository],
-it will reduce data transfer and disc use for the submodule
-repositories.
+it will reduce data transfer and disc use for the submodule repositories.
 
 [[bug-reports]]
 == Bug Reports
