@@ -398,17 +398,9 @@ Excluded Regions::
 
 Excluded Messages::
 
-  If set and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to pattern when determining if a build needs to be triggered.
+  If set and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to the regular expression pattern when determining if a build needs to be triggered.
   This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct message.
-
-  Exclusion uses pattern matching.
-
   You can create more complex patterns using embedded flag expressions.
-
-  [source,regex]
-  (?s).__FOO.__
-
-  This example will search FOO message in all comment lines.
 
 [[prune-stale-remote-tracking-branches]]
 ==== Prune stale remote tracking branches
