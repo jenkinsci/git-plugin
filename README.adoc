@@ -417,9 +417,9 @@ recent version of Git, at least above 1.7.10.
 
 Multiple sparse checkout path values can be added to a single job.
 
-Path
+Path::
 
-File or directory to be included in the checkout
+  File or directory to be included in the checkout
 
 [[strategy-for-choosing-what-to-build]]
 ==== Strategy for choosing what to build
