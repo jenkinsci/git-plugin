@@ -406,7 +406,7 @@ Excluded Messages::
 [[prune-stale-remote-tracking-branches]]
 ==== Prune stale remote tracking branches
 
-Runs `git remote prune` for each remote to prune obsolete local
+Runs `link:https://git-scm.com/docs/git-remote[git remote prune]` for each remote to prune obsolete local
 branches.
 
 [[sparse-checkout-paths]]
