@@ -349,6 +349,7 @@ user.email::
   Defines the user email value which git will assign to new commits made
   in the workspace. If given, git config user.email [this] is called
   before builds. This overrides whatever is in the global settings.
+
 [[polling-ignores-commits-from-certain-users]]
 ==== Polling ignores commits from certain users
 
