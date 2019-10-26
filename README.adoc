@@ -9,13 +9,10 @@ The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, and tag repositories.
 
 [[changelog]]
-== Changelog
+== Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
 
-Release notes are recorded in
-https://github.com/jenkinsci/git-plugin/releases[GitHub] beginning with
-git plugin 3.10.1. Prior release notes are recorded on the
-https://wiki.jenkins.io/display/JENKINS/Git+Plugin#GitPlugin-ChangeLog-MovedtoGitHub[Jenkins
-wiki].
+Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] beginning July 1, 2019 (git plugin 3.10.1 and later).
+Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
 [[configuration]]
 == Configuration
@@ -352,6 +349,7 @@ user.email::
   Defines the user email value which git will assign to new commits made
   in the workspace. If given, git config user.email [this] is called
   before builds. This overrides whatever is in the global settings.
+
 [[polling-ignores-commits-from-certain-users]]
 ==== Polling ignores commits from certain users
 
@@ -401,22 +399,14 @@ Excluded Regions::
 
 Excluded Messages::
 
-  If set and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to pattern when determining if a build needs to be triggered.
+  If set and Jenkins is set to poll for changes, Jenkins will ignore any revisions committed with message matched to the regular expression pattern when determining if a build needs to be triggered.
   This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct message.
-
-  Exclusion uses pattern matching.
-
   You can create more complex patterns using embedded flag expressions.
-
-  [source,regex]
-  (?s).__FOO.__
-
-  This example will search FOO message in all comment lines.
 
 [[prune-stale-remote-tracking-branches]]
 ==== Prune stale remote tracking branches
 
-Runs `git remote prune` for each remote to prune obsolete local
+Runs `link:https://git-scm.com/docs/git-remote[git remote prune]` for each remote to prune obsolete local
 branches.
 
 [[sparse-checkout-paths]]
@@ -428,9 +418,9 @@ recent version of Git, at least above 1.7.10.
 
 Multiple sparse checkout path values can be added to a single job.
 
-Path
+Path::
 
-File or directory to be included in the checkout
+  File or directory to be included in the checkout
 
 [[strategy-for-choosing-what-to-build]]
 ==== Strategy for choosing what to build
@@ -546,5 +536,4 @@ https://issues.jenkins-ci.org[Jenkins issue tracker].
 [[contributing-to-the-plugin]]
 == Contributing to the Plugin
 
-Refer to link:CONTRIBUTING.md[contributing to the plugin] for
-contribution guidelines.
+Refer to link:CONTRIBUTING#[contributing to the plugin] for contribution guidelines.
