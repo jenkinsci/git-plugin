@@ -11,11 +11,8 @@ It can poll, fetch, checkout, branch, list, merge, and tag repositories.
 [[changelog]]
 == Changelog
 
-Release notes are recorded in
-https://github.com/jenkinsci/git-plugin/releases[GitHub] beginning with
-git plugin 3.10.1. Prior release notes are recorded on the
-https://wiki.jenkins.io/display/JENKINS/Git+Plugin#GitPlugin-ChangeLog-MovedtoGitHub[Jenkins
-wiki].
+Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub] beginning with git plugin 3.10.1.
+Prior release notes are recorded in the link:CHANGELOG.adoc#[change log] in the git plugin repository.
 
 [[configuration]]
 == Configuration
@@ -546,5 +543,4 @@ https://issues.jenkins-ci.org[Jenkins issue tracker].
 [[contributing-to-the-plugin]]
 == Contributing to the Plugin
 
-Refer to link:CONTRIBUTING.md[contributing to the plugin] for
-contribution guidelines.
+Refer to link:CONTRIBUTING#[contributing to the plugin] for contribution guidelines.

@@ -1,8 +1,7 @@
+[[changelog]]
 = Change Log - https://github.com/jenkinsci/git-plugin/releases[Moved to GitHub]
 
-== Version 3.11.0 (July 27, 2019) - https://github.com/jenkinsci/git-plugin/releases/tag/git-3.11.0[Moved to GitHub]
-
-== Version 3.10.1 (July 5, 2019) - https://github.com/jenkinsci/git-plugin/releases/tag/git-3.10.1[Moved to GitHub]
+== See https://github.com/jenkinsci/git-plugin/releases[GitHub] for all new changelogs (July 1, 2019)
 
 == Version 3.10.0 (May 2, 2019)
 
