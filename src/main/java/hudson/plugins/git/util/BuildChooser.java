@@ -69,7 +69,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        Information that captures what we did during the last build.
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
@@ -105,7 +105,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        Information that captures what we did during the last build.
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
@@ -182,7 +182,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Used for invoking Git
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
@@ -205,7 +205,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Used for invoking Git
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
