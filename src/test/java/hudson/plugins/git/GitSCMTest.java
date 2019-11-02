@@ -922,7 +922,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testBasicWithSlave() throws Exception {
+    public void testBasicWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -948,7 +948,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Issue("HUDSON-7547")
     @Test
-    public void testBasicWithSlaveNoExecutorsOnMaster() throws Exception {
+    public void testBasicWithAgentNoExecutorsOnMaster() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         rule.jenkins.setNumExecutors(0);
@@ -1079,32 +1079,32 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
-        Node s = rule.createSlave();
-        setVariables(s, new Entry("TESTKEY", "slaveValue"));
-        project.setAssignedLabel(s.getSelfLabel());
+        DumbSlave agent = rule.createSlave();
+        setVariables(agent, new Entry("TESTKEY", "agent value"));
+        project.setAssignedLabel(agent.getSelfLabel());
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
+        assertEquals("agent value", getEnvVars(project).get("TESTKEY"));
     }
 
     @Test
     public void testNodeOverrideGit() throws Exception {
         GitSCM scm = new GitSCM(null);
 
-        DumbSlave s = rule.createSlave();
+        DumbSlave agent = rule.createSlave();
         GitTool.DescriptorImpl gitToolDescriptor = rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
         GitTool installation = new GitTool("Default", "/usr/bin/git", null);
         gitToolDescriptor.setInstallations(installation);
 
-        String gitExe = scm.getGitExe(s, TaskListener.NULL);
+        String gitExe = scm.getGitExe(agent, TaskListener.NULL);
         assertEquals("/usr/bin/git", gitExe);
 
         ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
-        s.setNodeProperties(Collections.singletonList(nodeGitLocation));
+        agent.setNodeProperties(Collections.singletonList(nodeGitLocation));
 
-        gitExe = scm.getGitExe(s, TaskListener.NULL);
+        gitExe = scm.getGitExe(agent, TaskListener.NULL);
         assertEquals("C:\\Program Files\\Git\\bin\\git.exe", gitExe);
     }
 
@@ -1301,8 +1301,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return null;
             }
         });
-        DumbSlave s = rule.createOnlineSlave();
-        assertEquals(p.toString(), s.getChannel().call(new BuildChooserContextTestCallable(c)));
+        DumbSlave agent = rule.createOnlineSlave();
+        assertEquals(p.toString(), agent.getChannel().call(new BuildChooserContextTestCallable(c)));
     }
 
     private static class BuildChooserContextTestCallable extends MasterToSlaveCallable<String,IOException> {
@@ -1584,7 +1584,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeWithSlave() throws Exception {
+    public void testMergeWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -1696,7 +1696,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeFailedWithSlave() throws Exception {
+    public void testMergeFailedWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -2156,7 +2156,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckoutOverSlave() throws Exception {
+    public void testInitSparseCheckoutOverAgent() throws Exception {
         if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
