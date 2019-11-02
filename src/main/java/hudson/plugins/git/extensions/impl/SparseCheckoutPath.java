@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -23,6 +24,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
         this.path = path;
     }
 
+    @Whitelisted
     public String getPath() {
         return path;
     }

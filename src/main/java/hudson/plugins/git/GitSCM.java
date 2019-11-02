@@ -73,6 +73,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -161,6 +162,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable field")
     private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
+    @Whitelisted
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -236,6 +238,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * @since 2.0
      */
+    @Whitelisted
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
     }
@@ -347,6 +350,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
+    @Whitelisted
     public GitRepositoryBrowser getBrowser() {
         return browser;
     }
@@ -429,6 +433,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isUseExistingAccountWithSameEmail());
     }
 
+    @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
 
@@ -518,6 +523,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Exported
+    @Whitelisted
     public List<UserRemoteConfig> getUserRemoteConfigs() {
         if (userRemoteConfigs == null) {
             /* Prevent NPE when no remote config defined */
@@ -526,6 +532,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return Collections.unmodifiableList(userRemoteConfigs);
     }
 
+    @Whitelisted
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
@@ -570,6 +577,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @CheckForNull
+    @Whitelisted
     public String getGitTool() {
         return gitTool;
     }
@@ -1694,11 +1702,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private static final long serialVersionUID = 1L;
 
+    @Whitelisted
     public boolean isDoGenerateSubmoduleConfigurations() {
         return this.doGenerateSubmoduleConfigurations;
     }
 
     @Exported
+    @Whitelisted
     public List<BranchSpec> getBranches() {
         return branches;
     }

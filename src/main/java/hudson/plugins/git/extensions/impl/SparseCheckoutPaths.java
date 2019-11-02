@@ -11,6 +11,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
         this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.<SparseCheckoutPath>emptyList() : sparseCheckoutPaths;
     }
 
+    @Whitelisted
     public List<SparseCheckoutPath> getSparseCheckoutPaths() {
         return sparseCheckoutPaths;
     }
