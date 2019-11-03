@@ -1,6 +1,6 @@
-package hudson.plugins.git.extensions.impl.PathRestriction;
+package hudson.plugins.git.extensions.impl.PathRestriction
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry(title:_("Included Regions"), field:"includedRegions") {
     f.textarea()
