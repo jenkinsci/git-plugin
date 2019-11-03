@@ -1,6 +1,6 @@
-package hudson.plugins.git.extensions.impl.SubmoduleOption;
+package hudson.plugins.git.extensions.impl.SubmoduleOption
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry(title:_("Disable submodules processing"), field:"disableSubmodules") {
     f.checkbox()
