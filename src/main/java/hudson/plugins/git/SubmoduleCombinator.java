@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * A common usecase for git submodules is to have child submodules, and a parent 'configuration' project that ties the
+ * A common use case for git submodules is to have child submodules, and a parent 'configuration' project that ties the
  * correct versions together. It is useful to be able to speculatively compile all combinations of submodules, so that
  * you can _know_ if a particular combination is no longer compatible.
  * 

@@ -31,7 +31,7 @@ public class SubmoduleOptionTest {
 
         // In order to verify that the submodule option correctly converts
         // GitExceptions into IOExceptions, setup a SubmoduleOption, and run
-        // it's onCheckoutCOmpleted extension point with a mocked git client
+        // it's onCheckoutCompleted extension point with a mocked git client
         // that always throws an exception.
         BuildData buildData = Mockito.mock(BuildData.class);
         Build lastBuild = Mockito.mock(Build.class);

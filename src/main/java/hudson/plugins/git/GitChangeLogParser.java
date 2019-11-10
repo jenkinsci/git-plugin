@@ -55,7 +55,7 @@ public class GitChangeLogParser extends ChangeLogParser {
      * As a result of that change of responsibility, this class needs to know which implementation is being used so
      * that it can adapt for compatibility.
      *
-     * @param git the GitClient implmentation to be used by the change log parser
+     * @param git the GitClient implementation to be used by the change log parser
      * @param authorOrCommitter read author name instead of committer name if true
      */
     public GitChangeLogParser(GitClient git, boolean authorOrCommitter) {

@@ -143,7 +143,7 @@ enabled in all the right situations but as a result of the wrong test)
 * Provide an API to allow avoiding local repository cache for
 GitSCMSource
 (https://issues.jenkins-ci.org/browse/JENKINS-47526[JENKINS-47526])
-* Change the UI for Advaced Clone Behaviours to avoid confusing
+* Change the UI for Advanced Clone Behaviours to avoid confusing
 "negative" fetch tags label
 (https://issues.jenkins-ci.org/browse/JENKINS-45822[JENKINS-45822])
 
@@ -940,7 +940,7 @@ https://issues.jenkins-ci.org/browse/JENKINS-14321[JENKINS-14321]
 
 * restore GitAPI constructor for backward compatibility (https://issues.jenkins-ci.org/browse/JENKINS-12025[JENKINS-12025])
 * CGit browser support (https://issues.jenkins-ci.org/browse/JENKINS-6963[JENKINS-6963]).
-* Handle special meaning of some charactes on Windows (https://issues.jenkins-ci.org/browse/JENKINS-13007[JENKINS-13007])
+* Handle special meaning of some characters on Windows (https://issues.jenkins-ci.org/browse/JENKINS-13007[JENKINS-13007])
 * fixed java.lang.NoSuchMethodError: java/lang/String.isEmpty()
 (https://issues.jenkins-ci.org/browse/JENKINS-13993[JENKINS-13993]).
 * Git icon(git-48x48.png) missing in job page. (https://issues.jenkins-ci.org/browse/JENKINS-13413[JENKINS-13413]).

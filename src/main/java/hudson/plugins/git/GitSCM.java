@@ -1251,7 +1251,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * </pre>
      *
      * <p>
-     * If Jenkin built B1, C1, B2, C3 in that order, then one'd prefer that the changelog of B2 only shows
+     * If Jenkins built B1, C1, B2, C3 in that order, then one'd prefer that the changelog of B2 only shows
      * just B1..B2, not C1..B2. To do this, we attribute every build to specific branches, and when we say
      * "since the previous build", what we really mean is "since the last build that built the same branch".
      *
