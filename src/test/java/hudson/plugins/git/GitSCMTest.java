@@ -2351,7 +2351,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
-        // Inital commit and build
+        // Initial commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
         if (!sampleRepo.gitVersionAtLeast(1, 8)) {
@@ -2377,7 +2377,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
         assertEquals(environment.get("MY_BRANCH"), "master");
-        assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
+        assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
     }
 
     /**

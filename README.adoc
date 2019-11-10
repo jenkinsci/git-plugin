@@ -333,7 +333,7 @@ Fast-forward mode::
 
 * `--ff`: fast-forward which gracefully falls back to a merge commit when required
 * `-ff-only`: fast-forward without any fallback
-* `--no-ff`: merge commit always, even if a ast-forwardwould have been allowed
+* `--no-ff`: merge commit always, even if a fast-forward would have been allowed
 
 [[custom-user-name-e-mail-address]]
 ==== Custom user name/e-mail address

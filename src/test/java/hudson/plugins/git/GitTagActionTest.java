@@ -77,7 +77,7 @@ public class GitTagActionTest {
         /* Remove tags from working repository that start with TAG_PREFIX and don't contain TAG_SUFFIX */
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars())
                 .in(new File("."))
-                .using(random.nextBoolean() ? "git" : "jgit") // Use random implmentation, both should work
+                .using(random.nextBoolean() ? "git" : "jgit") // Use random implementation, both should work
                 .getClient();
         for (GitObject tag : gitClient.getTags()) {
             if (tag.getName().startsWith(TAG_PREFIX) && !tag.getName().contains(TAG_SUFFIX)) {
@@ -162,7 +162,7 @@ public class GitTagActionTest {
             /* Assumes workspace does not move after first run */
             workspaceGitClient = Git.with(TaskListener.NULL, new EnvVars())
                     .in(workspace)
-                    .using(random.nextBoolean() ? "git" : "jgit") // Use random implmentation, both should work
+                    .using(random.nextBoolean() ? "git" : "jgit") // Use random implementation, both should work
                     .getClient();
         }
         /* Fail if the workspace moved */

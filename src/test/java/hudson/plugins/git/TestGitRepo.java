@@ -56,7 +56,7 @@ public class TestGitRepo {
 	
     /**
      * Creates a commit in current repo.
-     * @param fileName relative path to the file to be commited with default content
+     * @param fileName relative path to the file to be committed with default content
      * @param committer author and committer of this commit
      * @param message commit message
      * @return SHA1 of latest commit
@@ -70,7 +70,7 @@ public class TestGitRepo {
 
     /**
      * Creates a commit in current repo.
-     * @param fileName relative path to the file to be commited with default content
+     * @param fileName relative path to the file to be committed with default content
      * @param author author of the commit
      * @param committer committer of this commit
      * @param message commit message
@@ -85,7 +85,7 @@ public class TestGitRepo {
 
     /**
      * Creates a commit in current repo.
-     * @param fileName relative path to the file to be commited with the given content
+     * @param fileName relative path to the file to be committed with the given content
      * @param fileContent content of the commit
      * @param committer author and committer of this commit
      * @param message commit message
@@ -100,7 +100,7 @@ public class TestGitRepo {
 
     /**
      * Creates a commit in current repo.
-     * @param fileName relative path to the file to be commited with the given content
+     * @param fileName relative path to the file to be committed with the given content
      * @param fileContent content of the commit
      * @param author author of the commit
      * @param committer committer of this commit
