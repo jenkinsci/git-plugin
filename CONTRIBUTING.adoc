@@ -19,7 +19,7 @@ Please try to improve code coverage with tests when you submit.
 
 Please don't introduce new spotbugs output.
 
-* `mvn spotbugs:check` to analyze project using [Spotbugs](https://spotbugs.github.io/)
+* `mvn spotbugs:check` to analyze project using https://spotbugs.github.io/[Spotbugs].
 * `mvn spotbugs:gui` to review Spotbugs report using GUI
 
 Code formatting in the git plugin varies between files.
