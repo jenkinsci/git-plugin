@@ -496,11 +496,11 @@ GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this 
 Some git plugin settings can only be controlled from command line
 properties set at Jenkins startup.
 
-Default timeout
+=== Default timeout
 
-The default initial git timeout value can be overridden through the
-property org.jenkinsci.plugins.gitclient.Git.timeOut (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])
-). The property should be set on both master and agent to have effect
+The default git timeout value (in minutes) can be overridden by the
+`org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])
+). The property should be set on the master and on all agents to have effect
 (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
 
 [[combining-repositories]]
@@ -536,4 +536,5 @@ https://issues.jenkins-ci.org[Jenkins issue tracker].
 [[contributing-to-the-plugin]]
 == Contributing to the Plugin
 
-Refer to link:CONTRIBUTING.adoc#[contributing to the plugin] for contribution guidelines.
+Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
+Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin development priorities] for the prioritized list of development topics.
