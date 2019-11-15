@@ -536,4 +536,4 @@ https://issues.jenkins-ci.org[Jenkins issue tracker].
 [[contributing-to-the-plugin]]
 == Contributing to the Plugin
 
-Refer to link:CONTRIBUTING#[contributing to the plugin] for contribution guidelines.
+Refer to link:CONTRIBUTING.adoc#[contributing to the plugin] for contribution guidelines.

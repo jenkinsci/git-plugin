@@ -26,3 +26,39 @@ Code formatting in the git plugin varies between files.
 Try to maintain reasonable consistency with the existing files where feasible.
 Please don't perform wholesale reformatting of a file without discussing with the current maintainers.
 New code should follow the https://github.com/jenkinsci/scm-api-plugin/blob/master/CONTRIBUTING.md#code-style-guidelines[SCM API code style guidelines].
+
+[[pull-request-review]]
+== Reviewing Pull Requests
+
+Maintainers triage pull requests by reviewing them and by assigning labels.
+Release drafter uses the labels to automate link:https://github.com/jenkinsci/git-plugin/releases[release notes].
+link:Priorities.adoc#git-plugin-development-priorities[Prioritization] uses the labels to group relevant pull requests.
+
+Others are encouraged to review pull requests, test pull request builds, and report their results in the pull request.
+Refer to the link:Priorities.adoc#priorities[maintainer's priority list] for topics the plugin maintainers are considering.
+
+=== Testing a Pull Request Build
+
+Pull request builds merge the most recent changes from their target branch with the change proposed in the pull request.
+They can be downloaded from ci.jenkins.io and used to test the pull request.
+Steps to test a pull request build are:
+
+. *Find the pull request on link:https://github.com/jenkinsci/git-plugin/pulls[GitHub]* - for example, link:https://github.com/jenkinsci/git-plugin/pull/676[pull request 676]
+. *Find the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/view/change-requests/[ci.jenkins.io] artifacts for that pull request* from the link to the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/PR-676/lastSuccessfulBuild/[artifacts in the Jenkins job] in "*Show all checks*"
+. *Download the `hpi` file* (like `git-4.0.1-rc3444.b3d767e3d46a.hpi`) to your computer
+. *Upload the `hpi` file* to Jenkins from the Jenkins Plugin Manager
+. *Restart your Jenkins* and you're ready to test
+
+[[bug-triage]]
+== Reviewing Bug Reports
+
+Git plugin bug reports are assigned to one of the maintainers by default.
+link:https://issues.jenkins-ci.org/issues/?jql=project%20%3D%20JENKINS%20AND%20status%20in%20(Open)%20AND%20component%20%3D%20git-plugin%20and%20assignee%20in%20(rsandell%2Cmarkewaite%2Cfcojfernandez)[Open bug reports] assigned to a maintainer are assumed to have not been reviewed.
+When a maintainer completes review of an issue, they include a comment on the bug report and set the 'Assignee' to 'Unassigned'.
+
+Others are welcome to review bug reports, comment on the results of the review, and set the 'Assignee' to 'Unassigned'.
+Typical bug review tasks include:
+
+* Review summary and description
+* Attempt to duplicate the issue
+* Add a comment with results of the attempt to duplicate the issue
