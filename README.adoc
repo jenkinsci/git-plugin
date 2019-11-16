@@ -3,7 +3,9 @@
 :toc: right
 
 [[introduction]]
-== Introduction
+== Introductio
+
+image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,width=303,role=center,float=right]
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, and tag repositories.
