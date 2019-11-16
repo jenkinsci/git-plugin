@@ -17,11 +17,8 @@ import org.junit.Test;
  */
 public class CommitTimeComparatorTest extends AbstractGitRepository {
 
-    /**
-     * Verifies that the sort is old to new.
-     */
     @Test
-    public void testSort() throws Exception {
+    public void testSort_OrderIsOldToNew() throws Exception {
         boolean first = true;
         // create repository with three commits
         for (int i=0; i<3; i++) {

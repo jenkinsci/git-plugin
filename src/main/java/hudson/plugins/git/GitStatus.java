@@ -3,7 +3,6 @@ package hudson.plugins.git;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.Util;
@@ -11,6 +10,7 @@ import hudson.model.*;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.triggers.SCMTrigger;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,15 +26,11 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Information screen for the use of Git in Hudson.
@@ -114,8 +110,6 @@ public class GitStatus implements UnprotectedRootAction {
         return s.toString();
     }
 
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public HttpResponse doNotifyCommit(HttpServletRequest request, @QueryParameter(required=true) String url,
                                        @QueryParameter(required=false) String branches,
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
@@ -153,7 +147,7 @@ public class GitStatus implements UnprotectedRootAction {
         }
 
         final List<ResponseContributor> contributors = new ArrayList<>();
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         String origin = SCMEvent.originOf(request);
         for (Listener listener : jenkins.getExtensionList(Listener.class)) {
             contributors.addAll(listener.onNotifyCommit(origin, uri, sha1, buildParameters, branchesArray));
@@ -321,8 +315,6 @@ public class GitStatus implements UnprotectedRootAction {
          * {@inheritDoc}
          */
         @Override
-        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                            justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
@@ -335,12 +327,10 @@ public class GitStatus implements UnprotectedRootAction {
             // run in high privilege to see all the projects anonymous users don't see.
             // this is safe because when we actually schedule a build, it's a build that can
             // happen at some random time anyway.
-            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-            try {
-
+            try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
                 boolean scmFound = false,
                         urlFound = false;
-                Jenkins jenkins = Jenkins.getInstance();
+                Jenkins jenkins = Jenkins.getInstanceOrNull();
                 if (jenkins == null) {
                     LOGGER.severe("Jenkins.getInstance() is null in GitStatus.onNotifyCommit");
                     return result;
@@ -462,8 +452,6 @@ public class GitStatus implements UnprotectedRootAction {
 
                 lastStaticBuildParameters = allBuildParameters;
                 return result;
-            } finally {
-                SecurityContextHolder.setContext(old);
             }
         }
 

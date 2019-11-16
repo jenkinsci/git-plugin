@@ -266,8 +266,26 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      * @throws GitException on git error
+     * @deprecated use {@link #decorateCheckoutCommand(GitSCM, Run, GitClient, TaskListener, CheckoutCommand)}
      */
+    @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
+    }
+
+    /**
+     * Called before a {@link FetchCommand} is executed to allow extensions to alter its behaviour.
+     * @param scm GitSCM object
+     * @param run Run when fetch is called for Run. null during Job polling.
+     * @param git GitClient
+     * @param listener build log
+     * @param cmd fetch command to be decorated
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     * @throws GitException on git error
+     */
+    public void decorateFetchCommand(GitSCM scm, @CheckForNull Run<?,?> run, GitClient git, TaskListener listener, FetchCommand cmd)
+            throws IOException, InterruptedException, GitException {
+        decorateFetchCommand(scm, git, listener, cmd);
     }
 
     /**

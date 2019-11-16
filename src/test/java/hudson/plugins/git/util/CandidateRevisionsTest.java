@@ -40,7 +40,7 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
                 .getClient();
     }
 
-    /**
+    /*
      * Regression test for a bug that accidentally resulted in empty build
      * candidates.
      *
@@ -115,8 +115,8 @@ public class CandidateRevisionsTest extends AbstractGitRepository {
     }
 
     /**
-     * inline ${@link hudson.Functions#isWindows()} to prevent a transient
-     * remote classloader issue
+     * Inline ${@link hudson.Functions#isWindows()} to prevent a transient
+     * remote classloader issue.
      */
     private boolean isWindows() {
         return File.pathSeparatorChar == ';';

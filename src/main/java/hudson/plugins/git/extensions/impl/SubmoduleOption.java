@@ -5,13 +5,17 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
 import java.io.IOException;
+import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -31,20 +35,22 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Kohsuke Kawaguchi
  */
 public class SubmoduleOption extends GitSCMExtension {
-    /**
-     * Use --recursive flag on submodule commands - requires git>=1.6.5
-     * Use --remote flag on submodule update command - requires git>=1.8.2
-     * Use --reference flag on submodule update command - requires git>=1.6.4
-     */
     private boolean disableSubmodules;
+    /** Use --recursive flag on submodule commands - requires git>=1.6.5 */
     private boolean recursiveSubmodules;
+    /** Use --remote flag on submodule update command - requires git>=1.8.2 */
     private boolean trackingSubmodules;
+    /** Use --reference flag on submodule update command - requires git>=1.6.4 */
     private String reference;
     private boolean parentCredentials;
     private Integer timeout;
+    /** Use --depth flag on submodule update command - requires git>=1.8.4 */
+    private boolean shallow;
+    private Integer depth;
+    private Integer threads;
 
     @DataBoundConstructor
-    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference,Integer timeout, boolean parentCredentials) {
+    public SubmoduleOption(boolean disableSubmodules, boolean recursiveSubmodules, boolean trackingSubmodules, String reference, Integer timeout, boolean parentCredentials) {
         this.disableSubmodules = disableSubmodules;
         this.recursiveSubmodules = recursiveSubmodules;
         this.trackingSubmodules = trackingSubmodules;
@@ -77,6 +83,33 @@ public class SubmoduleOption extends GitSCMExtension {
         return timeout;
     }
 
+    @DataBoundSetter
+    public void setShallow(boolean shallow) {
+        this.shallow = shallow;
+    }
+
+    public boolean getShallow() {
+        return shallow;
+    }
+
+    @DataBoundSetter
+    public void setDepth(Integer depth) {
+        this.depth = depth;
+    }
+
+    public Integer getDepth() {
+        return depth;
+    }
+
+    public Integer getThreads() {
+        return threads;
+    }
+
+    @DataBoundSetter
+    public void setThreads(Integer threads) {
+        this.threads = threads;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -95,17 +128,25 @@ public class SubmoduleOption extends GitSCMExtension {
         BuildData revToBuild = scm.getBuildData(build);
 
         try {
-            if (!disableSubmodules && git.hasGitModules()) {
+            if (!disableSubmodules && git.hasGitModules() && revToBuild != null && revToBuild.lastBuild != null) {
                 // This ensures we don't miss changes to submodule paths and allows
                 // seamless use of bare and non-bare superproject repositories.
                 git.setupSubmoduleUrls(revToBuild.lastBuild.getRevision(), listener);
-                git.submoduleUpdate()
+                SubmoduleUpdateCommand cmd = git.submoduleUpdate()
                         .recursive(recursiveSubmodules)
                         .remoteTracking(trackingSubmodules)
                         .parentCredentials(parentCredentials)
                         .ref(build.getEnvironment(listener).expand(reference))
                         .timeout(timeout)
-                        .execute();
+                        .shallow(shallow);
+                if (shallow) {
+                    int usedDepth = depth == null || depth < 1 ? 1 : depth;
+                    listener.getLogger().println("Using shallow submodule update with depth " + usedDepth);
+                    cmd.depth(usedDepth);
+                }
+                int usedThreads = threads == null || threads < 1 ? 1 : threads;
+                cmd.threads(usedThreads);
+                cmd.execute();
             }
         } catch (GitException e) {
             // Re-throw as an IOException in order to allow generic retry
@@ -144,22 +185,15 @@ public class SubmoduleOption extends GitSCMExtension {
 
         SubmoduleOption that = (SubmoduleOption) o;
 
-        if (disableSubmodules != that.disableSubmodules) {
-            return false;
-        }
-        if (recursiveSubmodules != that.recursiveSubmodules) {
-            return false;
-        }
-        if (trackingSubmodules != that.trackingSubmodules) {
-            return false;
-        }
-        if (parentCredentials != that.parentCredentials) {
-            return false;
-        }
-        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
-            return false;
-        }
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        return disableSubmodules == that.disableSubmodules
+                && recursiveSubmodules == that.recursiveSubmodules
+                && trackingSubmodules == that.trackingSubmodules
+                && parentCredentials == that.parentCredentials
+                && Objects.equals(reference, that.reference)
+                && Objects.equals(timeout, that.timeout)
+                && shallow == that.shallow
+                && Objects.equals(depth, that.depth)
+                && Objects.equals(threads, that.threads);
     }
 
     /**
@@ -167,7 +201,7 @@ public class SubmoduleOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return SubmoduleOption.class.hashCode();
+        return Objects.hash(disableSubmodules, recursiveSubmodules, trackingSubmodules, parentCredentials, reference, timeout, shallow, depth, threads);
     }
 
     /**
@@ -182,6 +216,9 @@ public class SubmoduleOption extends GitSCMExtension {
                 ", reference='" + reference + '\'' +
                 ", parentCredentials=" + parentCredentials +
                 ", timeout=" + timeout +
+                ", shallow=" + shallow +
+                ", depth=" + depth +
+                ", threads=" + threads +
                 '}';
     }
 
@@ -192,7 +229,7 @@ public class SubmoduleOption extends GitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced sub-modules behaviours";
+            return Messages.advanced_sub_modules_behaviours();
         }
     }
 }

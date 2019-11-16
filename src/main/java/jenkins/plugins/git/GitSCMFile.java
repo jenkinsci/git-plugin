@@ -26,6 +26,7 @@
 package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.SCMFile;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -48,6 +48,11 @@ import org.eclipse.jgit.treewalk.TreeWalk;
  *
  * @since 3.0.2
  */
+@SuppressFBWarnings(value = { "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                              "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE",
+                              "NP_LOAD_OF_KNOWN_NULL_VALUE"
+                            },
+                    justification = "Java 11 generated code causes redundant nullcheck")
 public class GitSCMFile extends SCMFile {
 
     private final GitSCMFileSystem fs;

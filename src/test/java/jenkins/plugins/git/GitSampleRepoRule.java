@@ -32,8 +32,6 @@ import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.scm.impl.mock.AbstractSampleDVCSRepoRule;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -59,8 +57,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     @Override
     public void init() throws Exception {
-        GitSampleRepoRule.checkGlobalConfig();
         run(true, tmp.getRoot(), "git", "version");
+        checkGlobalConfig();
         git("init");
         write("file", "");
         git("add", "file");
@@ -85,7 +83,6 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         r.waitUntilNoActivity();
     }
 
-    /** Returns the (full) commit hash of the current {@link Constants#HEAD} of the repository. */
     public String head() throws Exception {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }
@@ -101,9 +98,11 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int returnCode = -1;
         try {
-            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            if (returnCode != 0) {
+                System.out.println("Command 'git --version' returned " + returnCode);
+            }
         } catch (IOException | InterruptedException ex) {
             System.out.println("Error checking git version " + ex);
         }
@@ -115,7 +114,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         if (gitMajor < 1 || gitMajor > 3) {
             System.out.println("WARNING: Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
         }
-        if (gitMinor < 0 || gitMinor > 20) {
+        if (gitMinor < 0 || gitMinor > 50) {
             System.out.println("WARNING: Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
         }
         if (gitPatch < 0 || gitPatch > 20) {

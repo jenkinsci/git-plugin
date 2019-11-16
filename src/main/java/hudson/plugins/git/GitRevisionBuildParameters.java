@@ -23,7 +23,6 @@
  */
 package hudson.plugins.git;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
@@ -53,10 +52,9 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 	}
 
 	@Override
-	@SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
 	public Action getAction(AbstractBuild<?,?> build, TaskListener listener) {
 		BuildData data = build.getAction(BuildData.class);
-		if (data == null && Jenkins.getInstance().getPlugin("promoted-builds") != null) {
+		if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
                 data = ((hudson.plugins.promoted_builds.Promotion) build).getTarget().getAction(BuildData.class);
@@ -67,7 +65,13 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 			return null;
 		}
 
-		return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
+		Revision lastBuiltRevision = data.getLastBuiltRevision();
+		if (lastBuiltRevision == null) {
+			listener.getLogger().println("Missing build information. Can't pass the revision to downstream");
+			return null;
+		}
+
+		return new RevisionParameterAction(lastBuiltRevision, getCombineQueuedCommits());
 	}
 
 	public boolean getCombineQueuedCommits() {

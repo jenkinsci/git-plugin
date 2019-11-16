@@ -30,13 +30,9 @@ import jenkins.plugins.git.GitSCMSource;
 import jenkins.plugins.git.GitSCMSourceContext;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.GitTagSCMRevision;
-import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
-import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import jenkins.scm.api.mixin.SCMHeadMixin;
-import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMHeadAuthority;
 import jenkins.scm.api.trait.SCMHeadAuthorityDescriptor;
@@ -46,6 +42,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.TagSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -82,6 +79,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitTagDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
@@ -120,7 +118,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Trusts branches from the repository.
+     * Trusts tags from the repository.
      */
     public static class TagSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, GitTagSCMHead, GitTagSCMRevision> {
         /**

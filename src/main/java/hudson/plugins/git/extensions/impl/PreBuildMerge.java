@@ -22,6 +22,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import static hudson.model.Result.FAILURE;
 import hudson.model.Run;
@@ -38,7 +39,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
  * @author Kohsuke Kawaguchi
  */
 public class PreBuildMerge extends GitSCMExtension {
-    private UserMergeOptions options;
+    private final UserMergeOptions options;
 
     @DataBoundConstructor
     public PreBuildMerge(UserMergeOptions options) {
@@ -146,13 +147,9 @@ public class PreBuildMerge extends GitSCMExtension {
             return false;
         }
 
-        if (o instanceof PreBuildMerge) {
-            PreBuildMerge that = (PreBuildMerge) o;
-            return (options != null && options.equals(that.options))
-                    || (options == null && that.options == null);
-        }
+        PreBuildMerge that = (PreBuildMerge) o;
 
-        return false;
+        return Objects.equals(options, that.options);
     }
 
     /**
@@ -160,7 +157,7 @@ public class PreBuildMerge extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return PreBuildMerge.class.hashCode();
+        return Objects.hashCode(options);
     }
 
     /**

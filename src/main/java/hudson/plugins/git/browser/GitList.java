@@ -1,29 +1,19 @@
 package hudson.plugins.git.browser;
 
-import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.EnvironmentContributor;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
-import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
 
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Git Browser URLs
@@ -69,7 +59,7 @@ public class GitList extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
-        return new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1)));
     }
 
     /**
@@ -87,7 +77,7 @@ public class GitList extends GitRepositoryBrowser {
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
             URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(new URL(url, url.getPath() + spec));
         }
     }
 

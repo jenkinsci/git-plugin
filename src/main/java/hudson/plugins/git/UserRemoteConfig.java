@@ -6,11 +6,11 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -90,13 +90,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
-            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             if (project == null) {
                 /* Construct a fake project */
-                project = new FreeStyleProject(Jenkins.getInstance(), "fake-" + UUID.randomUUID().toString());
+                project = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
@@ -114,7 +114,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
@@ -155,14 +155,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         }
 
         @RequirePOST
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
-            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 item != null && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
@@ -177,11 +176,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // get git executable on master
             EnvVars environment;
-            final Jenkins jenkins = Jenkins.getActiveInstance();
+            Jenkins jenkins = Jenkins.get();
             if (item instanceof Job) {
                 environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
             } else {
-                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
+                Computer computer = jenkins.toComputer();
+                environment = computer == null ? new EnvVars() : computer.buildEnvironment(TaskListener.NULL);
             }
 
             GitClient git = Git.with(TaskListener.NULL, environment)

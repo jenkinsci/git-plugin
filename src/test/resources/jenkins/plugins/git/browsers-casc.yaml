@@ -1,0 +1,273 @@
+unclassified:
+  globalLibraries:
+    libraries:
+      - name: "withAssembla"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  assemblaWeb:
+                    repoUrl: "http://url.assembla"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withFisheye"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  fisheye:
+                    repoUrl: "http://url.fishEye/browse/foobar"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withKiln"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  kilnGit:
+                    repoUrl: "http://url.kiln"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withMic"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  tfs2013:
+                    repoUrl: "http://url.mic/_git/foobar/"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withBitbucket"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  bitbucketWeb:
+                    repoUrl: "http://url.bitbucket"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withCGit"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  cGit:
+                    repoUrl: "http://url.cgit"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitlib"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitBlitRepositoryBrowser:
+                    projectName: "my_project"
+                    repoUrl: "http://url.gitlib"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGithub"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  githubWeb:
+                    repoUrl: "http://github.com"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitiles"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitiles:
+                    repoUrl: "http://url.gitiles"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitlab"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitLab:
+                    repoUrl: "http://gitlab.com"
+                    version: "1.0"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitlist"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitList:
+                    repoUrl: "http://url.gitlist"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitorious"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitoriousWeb:
+                    repoUrl: "http://url.gitorious"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGitweb"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gitWeb:
+                    repoUrl: "http://url.gitweb"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withGogsgit"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  gogsGit:
+                    repoUrl: "http://url.gogs"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withPhab"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  phabricator:
+                    repo: "my_repository"
+                    repoUrl: "http://url.phabricator"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withRedmine"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  redmineWeb:
+                    repoUrl: "http://url.redmineweb"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withRhodecode"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  rhodeCode:
+                    repoUrl: "http://url.rhodecode"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withStash"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  stash:
+                    repoUrl: "http://url.stash"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withViewgit"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  viewGitWeb:
+                    projectName: "my_other_project"
+                    repoUrl: "http://url.viewgit"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"

@@ -13,7 +13,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -80,9 +79,9 @@ public class Stash extends GitRepositoryBrowser {
         URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).toString());
+            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).toString()));
         } else {
-            return new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getId()).toString());
+            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getId()).toString()));
         }
     }
 

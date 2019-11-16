@@ -39,12 +39,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
-import jenkins.plugins.git.GitSCMSourceContext;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
-import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.api.trait.SCMTrait;
@@ -184,7 +180,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      */
     @Restricted(NoExternalUse.class) // intended for use from stapler / jelly only
     public GitSCMExtensionDescriptor getExtensionDescriptor() {
-        return (GitSCMExtensionDescriptor) Jenkins.getActiveInstance().getDescriptor(extension);
+        return (GitSCMExtensionDescriptor) Jenkins.get().getDescriptor(extension);
     }
 
     /**

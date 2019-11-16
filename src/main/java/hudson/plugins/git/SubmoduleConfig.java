@@ -1,14 +1,35 @@
 package hudson.plugins.git;
 
 import com.google.common.base.Joiner;
+import org.apache.commons.collections.CollectionUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.util.Arrays;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 public class SubmoduleConfig implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     String   submoduleName;
     String[] branches;
+
+    public SubmoduleConfig() {
+        this(null, Collections.emptySet());
+    }
+
+    public SubmoduleConfig(String submoduleName, String[] branches) {
+        this(submoduleName, branches != null ? Arrays.asList(branches) : Collections.emptySet());
+    }
+
+    @DataBoundConstructor
+    public SubmoduleConfig(String submoduleName, Collection<String> branches) {
+        this.submoduleName = submoduleName;
+        if (CollectionUtils.isNotEmpty(branches)) {
+            this.branches = branches.toArray(new String[branches.size()]);
+        }
+    }
 
     public String getSubmoduleName() {
         return submoduleName;

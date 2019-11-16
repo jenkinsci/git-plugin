@@ -78,9 +78,13 @@ public class GithubWeb extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             final String spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
-            URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(buildURL(spec));
         }
+    }
+
+    private URL buildURL(String spec) throws IOException {
+        URL url = getUrl();
+        return new URL(url, url.getPath() + spec);
     }
 
     @Extension

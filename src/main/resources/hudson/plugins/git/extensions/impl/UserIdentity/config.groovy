@@ -1,6 +1,6 @@
-package hudson.plugins.git.extensions.impl.UserIdentity;
+package hudson.plugins.git.extensions.impl.UserIdentity
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry(title:_("user.name"), field:"name") {
     f.textbox()

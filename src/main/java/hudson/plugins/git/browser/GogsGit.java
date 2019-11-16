@@ -67,7 +67,7 @@ public class GogsGit extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
         // Gogs diff indices begin at 1.
-        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path) + 1));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path) + 1)));
     }
 
     /**
@@ -85,7 +85,7 @@ public class GogsGit extends GitRepositoryBrowser {
             return getDiffLinkRegardlessOfEditType(path);
         } else {
             URL url = getUrl();
-            return new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath());
+            return encodeURL(new URL(url, url.getPath() + "src/" + path.getChangeSet().getId() + "/" + path.getPath()));
         }
     }
 

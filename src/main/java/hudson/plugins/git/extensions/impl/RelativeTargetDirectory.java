@@ -7,6 +7,7 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -44,7 +45,7 @@ public class RelativeTargetDirectory extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Check out to a sub-directory";
+            return Messages.check_out_to_a_sub_directory();
         }
     }
 }

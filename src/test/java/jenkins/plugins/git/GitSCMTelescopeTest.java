@@ -38,6 +38,7 @@ import hudson.plugins.git.browser.GitWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.NullSCM;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.search.Search;
 import hudson.search.SearchIndex;
 import hudson.security.ACL;
@@ -51,7 +52,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import static jenkins.plugins.git.AbstractGitSCMSourceRetrieveHeadsTest.EXPECTED_GIT_EXE;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitToolSCMSourceTrait;
 import jenkins.scm.api.SCMFileSystem;
@@ -500,6 +500,16 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
         public void validate(String remote, StandardCredentials credentials) throws IOException, InterruptedException {
         }
 
@@ -544,7 +554,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         @NonNull
         @Override
         public List<SCMSourceTrait> getTraits() {
-            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait(EXPECTED_GIT_EXE) {
+            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait("git-custom") {
                 @Override
                 public SCMSourceTraitDescriptor getDescriptor() {
                     return new GitBrowserSCMSourceTrait.DescriptorImpl();

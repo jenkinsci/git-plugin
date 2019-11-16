@@ -29,6 +29,9 @@
       <reference>origin/bar</reference>
       <parentCredentials>true</parentCredentials>
       <timeout>4</timeout>
+      <shallow>true</shallow>
+      <depth>3</depth>
+      <threads>4</threads>
     </hudson.plugins.git.extensions.impl.SubmoduleOption>
     <hudson.plugins.git.extensions.impl.ChangelogToBranch>
       <options>
