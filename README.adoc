@@ -3,7 +3,7 @@
 :toc: right
 
 [[introduction]]
-== Introductio
+== Introduction
 
 image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,width=303,role=center,float=right]
 
