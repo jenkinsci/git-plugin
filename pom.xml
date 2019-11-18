@@ -232,7 +232,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.138.x</artifactId>
-        <version>3</version>
+        <version>4</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
