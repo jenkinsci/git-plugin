@@ -31,7 +31,7 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
-    <forkCount>1C</forkCount>
+    <forkCount>1</forkCount>
     <linkXRef>false</linkXRef>
   </properties>
 
