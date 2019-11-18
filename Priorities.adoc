@@ -12,7 +12,7 @@ When others provide additional help on an item, it tends to raise the priority o
 == Priorities
 
 . link:CONTRIBUTING.adoc#bug-triage[Bug report triage]
-. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AQuickFixes[Short term improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AShortTerm[Short term improvements]
 . link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3ACaching[Caching and performance improvements]
 . link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AnotifyCommit[notifyCommit and webhook improvements]
 . link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AChangelog+[Changelog improvements]
