@@ -1,0 +1,10 @@
+<jenkins.plugins.git.GitSCMSource>
+  <traits>
+    <jenkins.plugins.git.traits.CleanAfterCheckoutTrait>
+      <extension class="hudson.plugins.git.extensions.impl.CleanCheckout"/>
+    </jenkins.plugins.git.traits.CleanAfterCheckoutTrait>
+    <jenkins.plugins.git.traits.CleanBeforeCheckoutTrait>
+      <extension class="hudson.plugins.git.extensions.impl.CleanBeforeCheckout"/>
+    </jenkins.plugins.git.traits.CleanBeforeCheckoutTrait>
+  </traits>
+</jenkins.plugins.git.GitSCMSource>
