@@ -357,11 +357,14 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     }
                 }
 
-                String refspec = environment.expand(config.getRefspec()).trim();
+                String refspec = environment.expand(config.getRefspec());
                 String head = headName;
                 if (refspec == null) {
                     refspec = "+" + Constants.R_HEADS + headName + ":" + Constants.R_REMOTES + remoteName + "/" + headName;
                     head = Constants.R_REMOTES + remoteName + "/" +headName;
+                }
+                else {
+                    refspec = refspec.trim();
                 }
                 client.fetch_().prune().from(remoteURI, Arrays
                         .asList(new RefSpec (refspec))).execute();
