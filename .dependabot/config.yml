@@ -8,4 +8,4 @@ update_configs:
     default_reviewers:
       - "MarkEWaite"
     default_labels:
-      - "no-changelog"
+      - "dependencies"
