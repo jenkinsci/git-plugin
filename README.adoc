@@ -1,6 +1,13 @@
 [[git-plugin]]
 = Git Plugin
-:toc: right
+:toc: macro
+
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/git-plugin.svg)](https://github.com/jenkinsci/git-plugin/graphs/contributors)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/git.svg)](https://plugins.jenkins.io/git)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/git-plugin.svg?label=changelog)](https://github.com/jenkinsci/git-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/git.svg?color=blue)](https://plugins.jenkins.io/git)
+[![Gitter](https://badges.gitter.im/jenkinsci/git-plugin.svg)](https://gitter.im/jenkinsci/jenkins)
 
 [[introduction]]
 == Introduction
@@ -9,6 +16,8 @@ image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,wi
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, and tag repositories.
+
+toc::[]
 
 [[changelog]]
 == Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
