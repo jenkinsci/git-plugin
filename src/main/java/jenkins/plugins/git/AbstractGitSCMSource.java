@@ -573,8 +573,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     remoteReferences = Collections.emptyMap();
                 }
                 fetch.execute();
-                final Repository repository = client.getRepository();
-                try (RevWalk walk = new RevWalk(repository);
+                try (Repository repository = client.getRepository();
+                     RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
 
                     if (context.wantBranches()) {
