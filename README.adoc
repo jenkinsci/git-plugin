@@ -1,18 +1,23 @@
 [[git-plugin]]
 = Git Plugin
 :toc: macro
+:toc-title:
 
-[![Build Status](https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/)
-[![Contributors](https://img.shields.io/github/contributors/jenkinsci/git-plugin.svg)](https://github.com/jenkinsci/git-plugin/graphs/contributors)
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/git.svg)](https://plugins.jenkins.io/git)
-[![GitHub release](https://img.shields.io/github/release/jenkinsci/git-plugin.svg?label=changelog)](https://github.com/jenkinsci/git-plugin/releases/latest)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/git.svg?color=blue)](https://plugins.jenkins.io/git)
-[![Gitter](https://badges.gitter.im/jenkinsci/git-plugin.svg)](https://gitter.im/jenkinsci/jenkins)
+link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/[image:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/badge/icon[Build]]
+link:https://github.com/jenkinsci/git-plugin/graphs/contributors[image:https://img.shields.io/github/contributors/jenkinsci/git-plugin.svg?color=blue[Contributors]]
+link:https://plugins.jenkins.io/git[image:https://img.shields.io/jenkins/plugin/i/git.svg?color=blue&label=installations[Jenkins Plugin Installs]]
+link:https://github.com/jenkinsci/git-plugin/releases/latest[image:https://img.shields.io/github/release/jenkinsci/git-plugin.svg?label=changelog[GitHub release]]
 
 [[introduction]]
 == Introduction
 
-image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,width=303,role=center,float=right]
+[.float-group]
+--
+[.text-center]
+image:https://jenkins.io/images/logos/jenkins/jenkins.png[Jenkins logo,height=192,role=center,float=right]
+image:images/signe-1923369_640.png[plus,height=64,float=right]
+image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,height=128,float=right]
+--
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, and tag repositories.
