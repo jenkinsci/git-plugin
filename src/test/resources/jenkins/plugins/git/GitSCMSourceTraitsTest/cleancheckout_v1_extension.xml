@@ -1,0 +1,6 @@
+<jenkins.plugins.git.GitSCMSource>
+  <extensions>
+    <hudson.plugins.git.extensions.impl.CleanCheckout/>
+    <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
+  </extensions>
+</jenkins.plugins.git.GitSCMSource>

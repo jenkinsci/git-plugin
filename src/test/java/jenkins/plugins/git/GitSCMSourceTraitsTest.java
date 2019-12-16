@@ -48,6 +48,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
@@ -81,6 +82,56 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getRemote(), is("git://git.test/example.git"));
         assertThat(instance.getCredentialsId(), is(nullValue()));
         assertThat(instance.getTraits(), is(Collections.<SCMSourceTrait>emptyList()));
+    }
+
+    @Test
+    public void cleancheckout_v1_extension() {
+        verifyCleanCheckoutTraits(false);
+    }
+
+    @Test
+    public void cleancheckout_v1_trait() {
+        verifyCleanCheckoutTraits(false);
+    }
+
+    @Test
+    public void cleancheckout_v2_extension() {
+        verifyCleanCheckoutTraits(true);
+    }
+
+    @Test
+    public void cleancheckout_v2_trait() {
+        verifyCleanCheckoutTraits(true);
+    }
+
+    /**
+     * Tests loading of {@link CleanCheckout}/{@link CleanBeforeCheckout}.
+     */
+    private void verifyCleanCheckoutTraits(boolean deleteUntrackedNestedRepositories) {
+        GitSCMSource instance = load();
+
+        assertThat(instance.getTraits(),
+                hasItems(
+                        allOf(
+                                instanceOf(CleanBeforeCheckoutTrait.class),
+                                hasProperty("extension",
+                                        hasProperty(
+                                                "deleteUntrackedNestedRepositories",
+                                                is(deleteUntrackedNestedRepositories)
+                                        )
+                                )
+                        ),
+                        allOf(
+                                instanceOf(CleanAfterCheckoutTrait.class),
+                                hasProperty("extension",
+                                        hasProperty(
+                                                "deleteUntrackedNestedRepositories",
+                                                is(deleteUntrackedNestedRepositories)
+                                        )
+                                )
+                        )
+                )
+        );
     }
 
     @Test
@@ -137,8 +188,18 @@ public class GitSCMSourceTraitsTest {
                                         hasProperty("localBranch", is("**"))
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>instanceOf(CleanAfterCheckoutTrait.class),
-                        Matchers.<SCMSourceTrait>instanceOf(CleanBeforeCheckoutTrait.class),
+                        Matchers.<SCMSourceTrait>allOf(
+                                instanceOf(CleanBeforeCheckoutTrait.class),
+                                hasProperty("extension",
+                                        hasProperty("deleteUntrackedNestedRepositories", is(true))
+                                )
+                        ),
+                        Matchers.<SCMSourceTrait>allOf(
+                                instanceOf(CleanAfterCheckoutTrait.class),
+                                hasProperty("extension",
+                                        hasProperty("deleteUntrackedNestedRepositories", is(true))
+                                )
+                        ),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(UserIdentityTrait.class),
                                 hasProperty("extension",

@@ -30,18 +30,30 @@ import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Exposes {@link CleanBeforeCheckout} as a {@link SCMSourceTrait}.
  *
  * @since 3.4.0
  */
 public class CleanBeforeCheckoutTrait extends GitSCMExtensionTrait<CleanBeforeCheckout> {
+
+    /**
+     * @deprecated Use constructor that accepts extension instead.
+     */
+    @Deprecated
+    public CleanBeforeCheckoutTrait() {
+        this(null);
+    }
+
     /**
      * Stapler constructor.
      */
     @DataBoundConstructor
-    public CleanBeforeCheckoutTrait() {
-        super(new CleanBeforeCheckout());
+    public CleanBeforeCheckoutTrait(@CheckForNull CleanBeforeCheckout extension) {
+        super(extension == null ? new CleanBeforeCheckout() : extension);
     }
 
     /**
