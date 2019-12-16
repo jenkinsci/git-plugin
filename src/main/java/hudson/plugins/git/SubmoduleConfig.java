@@ -27,7 +27,7 @@ public class SubmoduleConfig implements java.io.Serializable {
     public SubmoduleConfig(String submoduleName, Collection<String> branches) {
         this.submoduleName = submoduleName;
         if (CollectionUtils.isNotEmpty(branches)) {
-            this.branches = branches.toArray(new String[branches.size()]);
+            this.branches = branches.toArray(new String[0]);
         }
     }
 
