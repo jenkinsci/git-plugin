@@ -83,10 +83,11 @@ public class CleanBeforeCheckout extends GitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
-        @Override
+
         /**
          * {@inheritDoc}
          */
+        @Override
         public String getDisplayName() {
             return "Clean before checkout";
         }
