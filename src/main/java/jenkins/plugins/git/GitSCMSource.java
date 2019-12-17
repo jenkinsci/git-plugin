@@ -275,7 +275,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
                 if (!templates.isEmpty()) {
-                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[templates.size()]));
+                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[0]));
                 }
             }
         }
