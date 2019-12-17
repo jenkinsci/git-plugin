@@ -98,7 +98,7 @@ public class GitLab extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        String filelink = null;
+        String filelink;
         if(getVersionDouble() < 8.0) {
                 filelink = "#" + path.getPath();
         } else

@@ -144,7 +144,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean doGenerateSubmoduleConfigurations;
 
     @CheckForNull
-    public String gitTool = null;
+    public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
@@ -732,7 +732,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             if (!branchSpec.matches(head, environment)) {
 
                                 // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
-                                String name = head;
+                                String name;
                                 Matcher matcher = GIT_REF.matcher(head);
                                 if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
                                 else name = remote + "/" + head;

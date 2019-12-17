@@ -33,7 +33,7 @@ public class CloneOption extends GitSCMExtension {
     private final String reference;
     private final Integer timeout;
     private Integer depth;
-    private boolean honorRefspec = false;
+    private boolean honorRefspec;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
         this(shallow, false, reference, timeout);
