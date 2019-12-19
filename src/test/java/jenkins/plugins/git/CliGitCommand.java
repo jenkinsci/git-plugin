@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.eclipse.jgit.lib.Repository;
 import static org.hamcrest.Matchers.hasItems;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Assert;
@@ -65,7 +66,9 @@ public class CliGitCommand {
         launcher = new Launcher.LocalLauncher(listener);
         env = new EnvVars();
         if (client != null) {
-            dir = client.getRepository().getWorkTree();
+            try (Repository repo = client.getRepository()) {
+                dir = repo.getWorkTree();
+            }
         } else {
             dir = new File(".");
         }

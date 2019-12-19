@@ -50,6 +50,8 @@ public class CleanBeforeCheckoutTrait extends GitSCMExtensionTrait<CleanBeforeCh
 
     /**
      * Stapler constructor.
+     *
+     * @param extension the option to clean subdirectories which contain git repositories.
      */
     @DataBoundConstructor
     public CleanBeforeCheckoutTrait(@CheckForNull CleanBeforeCheckout extension) {

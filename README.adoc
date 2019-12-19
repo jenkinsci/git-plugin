@@ -1,14 +1,28 @@
 [[git-plugin]]
 = Git Plugin
-:toc: right
+:toc: macro
+:toc-title:
+
+link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/[image:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/badge/icon[Build]]
+link:https://github.com/jenkinsci/git-plugin/graphs/contributors[image:https://img.shields.io/github/contributors/jenkinsci/git-plugin.svg?color=blue[Contributors]]
+link:https://plugins.jenkins.io/git[image:https://img.shields.io/jenkins/plugin/i/git.svg?color=blue&label=installations[Jenkins Plugin Installs]]
+link:https://github.com/jenkinsci/git-plugin/releases/latest[image:https://img.shields.io/github/release/jenkinsci/git-plugin.svg?label=changelog[GitHub release]]
 
 [[introduction]]
 == Introduction
 
-image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,width=303,role=center,float=right]
+[.float-group]
+--
+[.text-center]
+image:https://jenkins.io/images/logos/jenkins/jenkins.png[Jenkins logo,height=192,role=center,float=right]
+image:images/signe-1923369_640.png[plus,height=64,float=right]
+image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,height=128,float=right]
+--
 
 The git plugin provides fundamental git operations for Jenkins projects.
 It can poll, fetch, checkout, branch, list, merge, and tag repositories.
+
+toc::[]
 
 [[changelog]]
 == Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
@@ -49,7 +63,7 @@ Extensions include:
 - <<deprecated-extensions>>
 
 [[clone-extensions]]
-=== Clone Extensions
+===Clone Extensions
 
 [[advanced-clone-behaviours]]
 ==== Advanced clone behaviours
@@ -139,38 +153,34 @@ Update tracking submodules to tip of branch::
 
 Use credentials from default remote of parent repository::
 
-  Use credentials from the default remote of the parent project. Submodule
-  updates do not use credentials by default. Enabling this extension will
-  provide the parent repository credentials to each of the submodule
-  repositories. Submodule credentials require that the submodule
-  repository must accept the same credentials as the parent project. If
-  the parent project is cloned with https, then the authenticated
-  submodule references must use https as well. If the parent project is
-  cloned with ssh, then the authenticated submodule references must use
-  ssh as well.
+  Use credentials from the default remote of the parent project.
+  Submodule updates do not use credentials by default.
+  Enabling this extension will provide the parent repository credentials to each of the submodule repositories.
+  Submodule credentials require that the submodule repository must accept the same credentials as the parent project.
+  If the parent project is cloned with https, then the authenticated submodule references must use https as well.
+  If the parent project is cloned with ssh, then the authenticated submodule references must use ssh as well.
 
 Shallow clone::
 
-  Perform shallow clone of submodules. Git will not download the complete
-  history of the project, saving time and disk space.
+  Perform shallow clone of submodules.
+  Git will not download the complete history of the project, saving time and disk space.
 
 Shallow clone depth::
 
-  Set shallow clone depth for submodules. Git will only download recent
-  history of the project, saving time and disk space.
+  Set shallow clone depth for submodules.
+  Git will only download recent history of the project, saving time and disk space.
 
 Path of the reference repo to use during submodule update::
 
-  Folder containing a repository that will be used by git as a reference
-  during submodule clone operations. This option will be ignored if the
-  folder is not available on the agent running the build. A reference
-  repository may contain multiple subprojects. See the combining
-  repositories section for more details.
+  Folder containing a repository that will be used by git as a reference during submodule clone operations.
+  This option will be ignored if the folder is not available on the agent running the build.
+  A reference repository may contain multiple subprojects.
+  See the combining repositories section for more details.
 
 Timeout (in minutes) for submodule operations::
 
-  Specify a timeout (in minutes) for submodules operations. This option
-  overrides the default timeout.
+  Specify a timeout (in minutes) for submodules operations.
+  This option overrides the default timeout.
 
 Number of threads to use when updating submodules::
 
@@ -219,22 +229,18 @@ Does not remove files in the `.git` repository of the workspace.
 [[clean-before-checkout]]
 ==== Clean before checkout
 
-Clean the workspace *before* every checkout by deleting all untracked
-files and directories, including those which are specified in
-.gitignore. Resets all tracked files to their versioned state. Ensures
-that the workspace is in the same state as if cloned and checkout were
-performed in a new workspace. Reduces the risk that current build will
-be affected by files generated by prior builds. Does not remove files
-outside the workspace (like temporary files or cache files). Does not
-remove files in the `.git` repository of the workspace.
+Clean the workspace *before* every checkout by deleting all untracked files and directories, including those which are specified in .gitignore.
+Resets all tracked files to their versioned state.
+Ensures that the workspace is in the same state as if cloned and checkout were performed in a new workspace.
+Reduces the risk that current build will be affected by files generated by prior builds.
+Does not remove files outside the workspace (like temporary files or cache files).
+Does not remove files in the `.git` repository of the workspace.
 
 [[git-lfs-pull-after-checkout]]
 ==== Git LFS pull after checkout
 
-Enable https://git-lfs.github.com/[git large file support] for the
-workspace by pulling large files after the checkout completes. Requires
-that the master and each agent performing an LFS checkout have installed
-the `git lfs` command.
+Enable https://git-lfs.github.com/[git large file support] for the workspace by pulling large files after the checkout completes.
+Requires that the master and each agent performing an LFS checkout have installed `git lfs`.
 
 [[changelog-extensions]]
 === Changelog Extensions
@@ -259,9 +265,8 @@ Name of branch::
 [[use-commit-author-in-changelog]]
 ==== Use commit author in changelog
 
-The default behavior is to use the Git commit's "Committer" value in
-build changesets. If this option is selected, the git commit's "Author"
-value is used instead.
+The default behavior is to use the Git commit's "Committer" value in build changesets.
+If this option is selected, the git commit's "Author" value is used instead.
 
 [[tagging-extensions]]
 === Tagging Extensions
@@ -280,19 +285,15 @@ The git plugin can start builds based on many different conditions.
 [[dont-trigger-a-build-on-commit-notifications]]
 ==== Don't trigger a build on commit notifications
 
-If checked, this repository will be ignored when the notifyCommit URL is
-accessed regardless of if the repository matches or not.
+If checked, this repository will be ignored when the notifyCommit URL is accessed whether the repository matches or not.
 
 [[force-polling-using-workspace]]
 ==== Force polling using workspace
 
-The git plugin polls remotely using `ls-remote` when configured with a
-single branch (no wildcards!). When this extension is enabled, the
-polling is performed from a cloned copy of the workspace instead of
-using `ls-remote`.
+The git plugin polls remotely using `ls-remote` when configured with a single branch (no wildcards!).
+When this extension is enabled, the polling is performed from a cloned copy of the workspace instead of using `ls-remote`.
 
-If this option is selected, polling will use a workspace instead of
-using `ls-remote`.
+If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
 [[merge-extensions]]
 === Merge Extensions
@@ -300,13 +301,10 @@ using `ls-remote`.
 [[merge-before-build]]
 ==== Merge before build
 
-These options allow you to perform a merge to a particular branch before
-building. For example, you could specify an integration branch to be
-built, and to merge to master. In this scenario, on every change of
-integration, Jenkins will perform a merge with the master branch, and
-try to perform a build if the merge is successful. It then may push the
-merge back to the remote repository if the Git Push post-build action is
-selected.
+These options allow you to perform a merge to a particular branch before building.
+For example, you could specify an integration branch to be built, and to merge to master.
+In this scenario, on every change of integration, Jenkins will perform a merge with the master branch, and try to perform a build if the merge is successful.
+It then may push the merge back to the remote repository if the Git Push post-build action is selected.
 
 Name of repository::
 
@@ -372,19 +370,11 @@ Excluded Users::
 [[polling-ignores-commits-in-certain-paths]]
 ==== Polling ignores commits in certain paths
 
-If set and Jenkins is configured to poll for changes, Jenkins will pay
-attention to included and/or excluded files and/or folders when
-determining if a build needs to be triggered.
+If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
 
-Using this behaviour will preclude the faster remote polling mechanism,
-forcing polling to require a workspace thus sometimes triggering
-unwanted builds, as if you had selected the Force polling using
-workspace extension as well. This can be used to exclude commits done by
-the build itself from triggering another build, assuming the build
-server commits the change with a distinct SCM user. Using this behaviour
-will preclude the faster git ls-remote polling mechanism, forcing
-polling to require a workspace, as if you had selected the Force polling
-using workspace extension as well.
+Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the Force polling using workspace extension as well.
+This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
+Using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
 
 Included Regions::
 
@@ -408,15 +398,14 @@ Excluded Messages::
 [[prune-stale-remote-tracking-branches]]
 ==== Prune stale remote tracking branches
 
-Runs `link:https://git-scm.com/docs/git-remote[git remote prune]` for each remote to prune obsolete local
-branches.
+Runs `link:https://git-scm.com/docs/git-remote[git remote prune]` for each remote to prune obsolete local branches.
 
 [[sparse-checkout-paths]]
 ==== Sparse Checkout paths
 
-Specify the paths that you'd like to sparse checkout. This may be used
-for saving space (Think about a reference repository). Be sure to use a
-recent version of Git, at least above 1.7.10.
+Specify the paths that you'd like to sparse checkout.
+This may be used for saving space (Think about a reference repository).
+Be sure to use a recent version of Git, at least above 1.7.10.
 
 Multiple sparse checkout path values can be added to a single job.
 
@@ -427,13 +416,10 @@ Path::
 [[strategy-for-choosing-what-to-build]]
 ==== Strategy for choosing what to build
 
-When you are interested in using a job to build multiple branches, you
-can choose how Jenkins chooses the branches to build and the order they
-should be built.
+When you are interested in using a job to build multiple branches, you can choose how Jenkins chooses the branches to build and the order they should be built.
 
-This extension point in Jenkins is used by many other plugins to control
-the job as it builds specific commits. When you activate those plugins,
-you may see them installing a custom build strategy.
+This extension point in Jenkins is used by many other plugins to control the job as it builds specific commits.
+When you activate those plugins, you may see them installing a custom build strategy.
 
 Ancestry::
 
@@ -444,7 +430,7 @@ Maximum Age of Commit::
 
 Commit in Ancestry::
 
-  If an ancestor commit (sha1) is provided, only branches with this commit in their history will be built.
+  If an ancestor commit (SHA-1) is provided, only branches with this commit in their history will be built.
 
 Default::
 
@@ -462,9 +448,9 @@ Inverse::
 [[custom-scm-name---deprecated]]
 ==== Custom SCM name - *Deprecated*
 
-Unique name for this SCM. Was needed when using Git within the Multi SCM
-plugin. Pipeline is the robust and feature-rich way to checkout from
-multiple repositories in a single job.
+Unique name for this SCM.
+Was needed when using Git within the Multi SCM plugin.
+Pipeline is the robust and feature-rich way to checkout from multiple repositories in a single job.
 
 [[environment-variables]]
 == Environment Variables
@@ -479,9 +465,9 @@ GIT_LOCAL_BRANCH:: Name of branch being built without remote name, as in `master
 
 === Commit Variables
 
-GIT_COMMIT:: SHA1 of the commit used in this build
-GIT_PREVIOUS_COMMIT:: SHA1 of the commit used in the preceding build of this project
-GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA1 of the commit used in the most recent successful build of this project
+GIT_COMMIT:: SHA-1 of the commit used in this build
+GIT_PREVIOUS_COMMIT:: SHA-1 of the commit used in the preceding build of this project
+GIT_PREVIOUS_SUCCESSFUL_COMMIT:: SHA-1 of the commit used in the most recent successful build of this project
 
 === System Configuration Variables
 
@@ -495,15 +481,12 @@ GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this 
 [[properties]]
 == Properties
 
-Some git plugin settings can only be controlled from command line
-properties set at Jenkins startup.
+Some git plugin settings can only be controlled from command line properties set at Jenkins startup.
 
 === Default timeout
 
-The default git timeout value (in minutes) can be overridden by the
-`org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])
-). The property should be set on the master and on all agents to have effect
-(see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])).
+The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
 
 [[combining-repositories]]
 == Combining repositories
@@ -521,13 +504,9 @@ $ git remote add child-2 https://github.com/jenkinsci/platformlabeler-plugin
 $ git fetch --all
 ....
 
-Those commands will create a single bare repository which includes the current commits from all three repositories.
-If that reference repository is used in the advanced clone options
-link:#clone-reference-repository-path[clone reference repository], it
-will reduce data transfer and disc use for the parent repository.
-If that reference repository is used in the submodule options
-link:#submodule-reference-repository-path[clone reference repository],
-it will reduce data transfer and disc use for the submodule repositories.
+Those commands create a single bare repository with the current commits from all three repositories.
+If that reference repository is used in the advanced clone options link:#clone-reference-repository-path[clone reference repository], it will reduce data transfer and disc use for the parent repository.
+If that reference repository is used in the submodule options link:#submodule-reference-repository-path[clone reference repository], it will reduce data transfer and disc use for the submodule repositories.
 
 [[bug-reports]]
 == Bug Reports

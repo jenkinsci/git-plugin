@@ -4,8 +4,8 @@ update_configs:
   - package_manager: "java:maven"
     directory: "/"
     update_schedule: "weekly"
-    target_branch: "stable-3.x"
+    target_branch: "master"
     default_reviewers:
       - "MarkEWaite"
     default_labels:
-      - "no-changelog"
+      - "dependencies"

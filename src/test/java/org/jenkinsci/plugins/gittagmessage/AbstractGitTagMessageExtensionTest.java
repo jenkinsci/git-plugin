@@ -1,8 +1,10 @@
 package org.jenkinsci.plugins.gittagmessage;
 
 import hudson.model.Job;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.plugins.git.util.BuildData;
+import jenkins.model.ParameterizedJobMixIn;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Before;
@@ -15,7 +17,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertNotNull;
 
-public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R>, R extends Run<J, R>> {
+public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & ParameterizedJobMixIn.ParameterizedJob<J, R>, R extends Run<J, R> & Queue.Executable> {
 
     @Rule public final JenkinsRule jenkins = new JenkinsRule();
 
