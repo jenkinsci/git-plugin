@@ -78,6 +78,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -120,6 +121,13 @@ public class GitSCMTest extends AbstractGitTestCase {
             }
         }
         assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    @After
+    public void waitForJenkinsIdle() throws Exception {
+        if (cleanupIsUnreliable()) {
+            rule.waitUntilNoActivityUpTo(5001);
+        }
     }
 
     private StandardCredentials getInvalidCredential() {
@@ -1274,7 +1282,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
 
         FreeStyleBuild ub = rule.assertBuildStatusSuccess(u.scheduleBuild2(0));
-        System.out.println(ub.getLog());
         for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
             Thread.sleep(100);
 
@@ -2771,4 +2778,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
+    /** Returns true if test cleanup is not reliable */
+    private boolean cleanupIsUnreliable() {
+        // Windows cleanup is unreliable on ci.jenkins.io
+        String jobUrl = System.getenv("JOB_URL");
+        return isWindows() && jobUrl != null && jobUrl.contains("ci.jenkins.io");
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
+    }
 }
