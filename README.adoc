@@ -504,7 +504,7 @@ $ git remote add child-2 https://github.com/jenkinsci/platformlabeler-plugin
 $ git fetch --all
 ....
 
-Those commands will create a single bare repository which includes the current commits from all three repositories.
+Those commands create a single bare repository with the current commits from all three repositories.
 If that reference repository is used in the advanced clone options link:#clone-reference-repository-path[clone reference repository], it will reduce data transfer and disc use for the parent repository.
 If that reference repository is used in the submodule options link:#submodule-reference-repository-path[clone reference repository], it will reduce data transfer and disc use for the submodule repositories.
 
