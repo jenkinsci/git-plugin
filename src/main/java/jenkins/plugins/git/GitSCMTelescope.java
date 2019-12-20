@@ -137,10 +137,13 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             GitSCM git = (GitSCM) source;
             List<UserRemoteConfig> configs = git.getUserRemoteConfigs();
             List<BranchSpec> branches = git.getBranches();
-            return configs.size() == 1
-                    && supports(configs.get(0).getUrl())
+            if (configs.size() == 1) {
+                String remote = configs.get(0).getUrl();
+                return remote != null
+                    && supports(remote)
                     && branches.size() == 1
                     && !branches.get(0).getName().contains("*");
+            }
         }
         return false;
     }
@@ -183,48 +186,50 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
             GitSCM git = (GitSCM) scm;
             List<UserRemoteConfig> configs = git.getUserRemoteConfigs();
             List<BranchSpec> branches = git.getBranches();
-            if (configs.size() == 1 && supports(configs.get(0).getUrl())
-                    && branches.size() == 1 && !branches.get(0).getName().contains("*")) {
+            if (configs.size() == 1) {
                 UserRemoteConfig config = configs.get(0);
-                StandardCredentials credentials;
-                String credentialsId = config.getCredentialsId();
                 String remote = config.getUrl();
-                if (credentialsId != null) {
-                    List<StandardUsernameCredentials> urlCredentials = CredentialsProvider
-                            .lookupCredentials(StandardUsernameCredentials.class, owner,
-                                    owner instanceof Queue.Task
-                                            ? Tasks.getAuthenticationOf((Queue.Task) owner)
-                                            : ACL.SYSTEM, URIRequirementBuilder.fromUri(remote).build());
-                    credentials = CredentialsMatchers.firstOrNull(
-                            urlCredentials,
-                            CredentialsMatchers
-                                    .allOf(CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER)
-                    );
-                } else {
-                    credentials = null;
-                }
-                validate(remote, credentials);
-                SCMHead head;
-                if (rev == null) {
-                    String name = branches.get(0).getName();
-                    if (name.startsWith(Constants.R_TAGS)) {
-                        head = new GitTagSCMHead(
-                                name.substring(Constants.R_TAGS.length()),
-                                getTimestamp(remote, credentials, name)
+                if (remote != null && supports(remote)
+                    && branches.size() == 1 && !branches.get(0).getName().contains("*")) {
+                    StandardCredentials credentials;
+                    String credentialsId = config.getCredentialsId();
+                    if (credentialsId != null) {
+                        List<StandardUsernameCredentials> urlCredentials = CredentialsProvider
+                                .lookupCredentials(StandardUsernameCredentials.class, owner,
+                                        owner instanceof Queue.Task
+                                                ? Tasks.getAuthenticationOf((Queue.Task) owner)
+                                                : ACL.SYSTEM, URIRequirementBuilder.fromUri(remote).build());
+                        credentials = CredentialsMatchers.firstOrNull(
+                                urlCredentials,
+                                CredentialsMatchers
+                                        .allOf(CredentialsMatchers.withId(credentialsId), GitClient.CREDENTIALS_MATCHER)
                         );
-                    } else if (name.startsWith(Constants.R_HEADS)) {
-                        head = new GitBranchSCMHead(name.substring(Constants.R_HEADS.length()));
                     } else {
-                        if (name.startsWith(config.getName() + "/")) {
-                            head = new GitBranchSCMHead(name.substring(config.getName().length() + 1));
-                        } else {
-                            head = new GitBranchSCMHead(name);
-                        }
+                        credentials = null;
                     }
-                } else {
-                    head = rev.getHead();
+                    validate(remote, credentials);
+                    SCMHead head;
+                    if (rev == null) {
+                        String name = branches.get(0).getName();
+                        if (name.startsWith(Constants.R_TAGS)) {
+                            head = new GitTagSCMHead(
+                                    name.substring(Constants.R_TAGS.length()),
+                                    getTimestamp(remote, credentials, name)
+                            );
+                        } else if (name.startsWith(Constants.R_HEADS)) {
+                            head = new GitBranchSCMHead(name.substring(Constants.R_HEADS.length()));
+                        } else {
+                            if (name.startsWith(config.getName() + "/")) {
+                                head = new GitBranchSCMHead(name.substring(config.getName().length() + 1));
+                            } else {
+                                head = new GitBranchSCMHead(name);
+                            }
+                        }
+                    } else {
+                        head = rev.getHead();
+                    }
+                    return build(remote, credentials, head, rev);
                 }
-                return build(remote, credentials, head, rev);
             }
         }
         return null;
