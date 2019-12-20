@@ -63,7 +63,7 @@ Extensions include:
 - <<deprecated-extensions>>
 
 [[clone-extensions]]
-===Clone Extensions
+=== Clone Extensions
 
 [[advanced-clone-behaviours]]
 ==== Advanced clone behaviours
