@@ -91,7 +91,7 @@ public class PreBuildMerge extends GitSCMExtension {
 
             // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
             // revision info for this build etc. The default assumption is that it's a duplicate.
-            BuildData buildData = scm.getBuildData(build, true);
+            BuildData buildData = scm.copyBuildData(build);
             boolean buildDataAlreadyPresent = false;
             List<BuildData> actions = build.getActions(BuildData.class);
             for (BuildData d: actions)  {

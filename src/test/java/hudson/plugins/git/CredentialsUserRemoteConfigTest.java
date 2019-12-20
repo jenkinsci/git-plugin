@@ -57,7 +57,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("using credential github", b);
     }
@@ -76,7 +76,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
@@ -95,7 +95,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
@@ -112,7 +112,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
@@ -129,7 +129,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("No credentials specified", b);
     }

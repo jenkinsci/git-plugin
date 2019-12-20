@@ -342,7 +342,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         headName = branchSpec.getName();
                     }
                 }
-                client.fetch_().prune().from(remoteURI, Arrays
+                client.fetch_().prune(true).from(remoteURI, Arrays
                         .asList(new RefSpec(
                                 "+" + Constants.R_HEADS + headName + ":" + Constants.R_REMOTES + remoteName + "/"
                                         + headName))).execute();
@@ -388,7 +388,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_().prune().from(remoteURI, builder.asRefSpecs()).execute();
+                client.fetch_().prune(true).from(remoteURI, builder.asRefSpecs()).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);
