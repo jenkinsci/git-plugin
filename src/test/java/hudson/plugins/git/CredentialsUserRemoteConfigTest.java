@@ -78,7 +78,6 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -115,7 +114,6 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -133,7 +131,6 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}"));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("No credentials specified", b);
     }
 
