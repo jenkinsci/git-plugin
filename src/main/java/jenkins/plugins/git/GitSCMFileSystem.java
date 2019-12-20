@@ -286,10 +286,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
             String remote = config.getUrl();
-            LogTaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             if (remote == null) {
                 listener.getLogger().println("Git remote url is null");
-                listener.close();
                 return null;
             }
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
