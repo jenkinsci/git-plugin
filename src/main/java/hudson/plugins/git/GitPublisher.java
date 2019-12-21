@@ -25,10 +25,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.*;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -295,10 +292,20 @@ public class GitPublisher extends Recorder implements Serializable {
 
                         // expand environment variables in remote repository
                         remote = gitSCM.getParamExpandedRepo(environment, remote);
+                        remoteURI = remote.getURIs().get(0);
+
+                        if (b.getRebaseBeforePush()) {
+                            listener.getLogger().println("Fetch and rebase with " + branchName + " of " + targetRepo);
+                            git.fetch_().from(remoteURI, remote.getFetchRefSpecs()).execute();
+                            if (!git.revParse("HEAD").equals(git.revParse(targetRepo + "/" + branchName))) {
+                                git.rebase().setUpstream(targetRepo + "/" + branchName).execute();
+                            } else {
+                                listener.getLogger().println("No rebase required. HEAD equals " + targetRepo + "/" + branchName);
+                            }
+                        }
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
-                        remoteURI = remote.getURIs().get(0);
                         PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName).force(forcePush);
                         push.execute();
                     } catch (GitException e) {
@@ -478,6 +485,7 @@ public class GitPublisher extends Recorder implements Serializable {
 
     public static final class BranchToPush extends PushConfig {
         private String branchName;
+        private boolean rebaseBeforePush;
 
         public String getBranchName() {
             return branchName;
@@ -487,6 +495,15 @@ public class GitPublisher extends Recorder implements Serializable {
         public BranchToPush(String targetRepoName, String branchName) {
             super(targetRepoName);
             this.branchName = Util.fixEmptyAndTrim(branchName);
+        }
+
+        @DataBoundSetter
+        public void setRebaseBeforePush(boolean shouldRebase) {
+            this.rebaseBeforePush = shouldRebase;
+        }
+
+        public boolean getRebaseBeforePush() {
+            return rebaseBeforePush;
         }
 
         @Extension
