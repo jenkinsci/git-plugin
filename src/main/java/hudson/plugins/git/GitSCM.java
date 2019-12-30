@@ -152,7 +152,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
-    public static final String GIT_COMMIT_MESSAGE = "GIT_COMMIT_MESSAGE";
+    public static final String GIT_COMMIT_TITLE = "GIT_COMMIT_TITLE";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
 
@@ -1203,7 +1203,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             String shortMessage = getCommitMessage(listener, git, revToBuild);
             listener.getLogger().println("Commit message: \"" + shortMessage + "\"");
-            environment.put(GIT_COMMIT_MESSAGE, shortMessage);
+            environment.put(GIT_COMMIT_TITLE, shortMessage);
         } catch (GitException ge) {
             listener.getLogger().println("Exception logging commit message for " + revToBuild + ": " + ge.getMessage());
         }
@@ -1249,7 +1249,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         return "";
     }
-
 
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}.

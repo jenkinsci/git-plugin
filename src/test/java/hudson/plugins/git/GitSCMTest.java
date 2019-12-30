@@ -2699,6 +2699,24 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat(values, hasItem("Commit message: \"test commit\""));
     }
 
+    @Test
+    public void testCommitMessageIsEnvVar() throws Exception {
+        String title = "test commit";
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message", title);
+        FreeStyleProject p = setupSimpleProject("master");
+        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        TaskListener mockListener = Mockito.mock(TaskListener.class);
+        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
+
+        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
+                new FilePath(run.getRootDir()).child("tmp-" + "master"),
+                mockListener, null, SCMRevisionState.NONE);
+
+        assertEquals("Commit message should be an env var", getEnvVars(p), title);
+    }
+
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
