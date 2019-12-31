@@ -16,7 +16,7 @@
       <tr class="pane">
         <td colspan="2" class="changeset">
           <div class="changeset-message" id="${cs.id}">
-            <b>
+            <strong>
               ${%Commit}
               <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
               <j:if test="${cslink!=null}">
@@ -26,7 +26,7 @@
                 ${cs.id}
               </j:if>
               by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
-            </b>
+            </strong>
             <j:if test="${cs.branch!=null}">
               <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
             </j:if>

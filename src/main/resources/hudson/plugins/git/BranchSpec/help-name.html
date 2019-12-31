@@ -15,55 +15,55 @@
 
   <p>Possible options:
     <ul>
-      <li> <b><code>&lt;branchName&gt;</code></b><br/>
+      <li> <strong><code>&lt;branchName&gt;</code></strong><br/>
            Tracks/checks out the specified branch. If ambiguous the first result is taken, which is not necessarily
            the expected one. Better use <code>refs/heads/&lt;branchName&gt;</code>.<br/>
            E.g. <code>master</code>, <code>feature1</code>, ...
       </li>
-      <li> <b><code>refs/heads/&lt;branchName&gt;</code></b><br/>
+      <li> <strong><code>refs/heads/&lt;branchName&gt;</code></strong><br/>
            Tracks/checks out the specified branch.<br/>
            E.g. <code>refs/heads/master</code>, <code>refs/heads/feature1/master</code>, ...
       </li>
-      <li> <b><code>&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></b><br/>
+      <li> <strong><code>&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></strong><br/>
            Tracks/checks out the specified branch. If ambiguous the first result is taken, which is not necessarily
            the expected one.<br/>
            Better use <code>refs/heads/&lt;branchName&gt;</code>.<br/>
            E.g. <code>origin/master</code>
       </li>
-      <li> <b><code>remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></b><br/>
+      <li> <strong><code>remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></strong><br/>
            Tracks/checks out the specified branch.<br/>
            E.g. <code>remotes/origin/master</code>
       </li>
-      <li> <b><code>refs/remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></b><br/>
+      <li> <strong><code>refs/remotes/&lt;remoteRepoName&gt;/&lt;branchName&gt;</code></strong><br/>
            Tracks/checks out the specified branch.<br/>
            E.g. <code>refs/remotes/origin/master</code>
       </li>
-      <li> <b><code>&lt;tagName&gt;</code></b><br/>
+      <li> <strong><code>&lt;tagName&gt;</code></strong><br/>
            This does not work since the tag will not be recognized as tag.<br/>
            Use <code>refs/tags/&lt;tagName&gt;</code> instead.<br/>
            E.g. <code>git-2.3.0</code>
       </li>
-      <li> <b><code>refs/tags/&lt;tagName&gt;</code></b><br/>
+      <li> <strong><code>refs/tags/&lt;tagName&gt;</code></strong><br/>
            Tracks/checks out the specified tag.<br/>
            E.g. <code>refs/tags/git-2.3.0</code>
       </li>
-      <li> <b><code>&lt;commitId&gt;</code></b><br/>
+      <li> <strong><code>&lt;commitId&gt;</code></strong><br/>
            Checks out the specified commit.<br/>
            E.g. <code>5062ac843f2b947733e6a3b105977056821bd352</code>, <code>5062ac84</code>, ...
       </li>
-      <li> <b><code>${ENV_VARIABLE}</code></b><br/>
+      <li> <strong><code>${ENV_VARIABLE}</code></strong><br/>
            It is also possible to use environment variables. In this case the variables are evaluated and the
            result is used as described above.<br/>
            E.g. <code>${TREEISH}</code>, <code>refs/tags/${TAGNAME}</code>, ...
       </li>
-      <li> <b><code>&lt;Wildcards&gt;</code></b><br/>
+      <li> <strong><code>&lt;Wildcards&gt;</code></strong><br/>
            The syntax is of the form: <code>REPOSITORYNAME/BRANCH</code>.
            In addition, <code>BRANCH</code> is recognized as a shorthand of <code>*/BRANCH</code>, '*' is recognized as a wildcard,
            and '**' is recognized as wildcard that includes the separator '/'. Therefore, <code>origin/branches*</code> would
            match <code>origin/branches-foo</code> but not <code>origin/branches/foo</code>, while <code>origin/branches**</code> would
            match both <code>origin/branches-foo</code> and <code>origin/branches/foo</code>.
       </li>
-      <li> <b><code>:&lt;regular expression&gt;</code></b><br/>
+      <li> <strong><code>:&lt;regular expression&gt;</code></strong><br/>
            The syntax is of the form: <code>:regexp</code>.
            Regular expression syntax in branches to build will only
            build those branches whose names match the regular

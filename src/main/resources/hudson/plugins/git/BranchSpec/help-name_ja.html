@@ -13,52 +13,52 @@
 
   <p>オプション:
     <ul>
-      <li> <b><code>&lt;ブランチ名&gt;</code></b><br/>
+      <li> <strong><code>&lt;ブランチ名&gt;</code></strong><br/>
            指定したブランチを追跡します。もし、取得した結果があいまいで、必ずしも期待しているものではない場合、
            <code>refs/heads/&lt;ブランチ名&gt;</code>を使ってみてください。<br/>
            例: <code>master</code>, <code>feature1</code>, ...
       </li>
-      <li> <b><code>refs/heads/&lt;ブランチ名&gt;</code></b><br/>
+      <li> <strong><code>refs/heads/&lt;ブランチ名&gt;</code></strong><br/>
            指定したブランチ名を追跡します。<br/>
            例: <code>refs/heads/master</code>, <code>refs/heads/feature1/master</code>, ...
       </li>
-      <li> <b><code>&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></b><br/>
+      <li> <strong><code>&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></strong><br/>
            指定したブランチを追跡します。もし、取得した結果があいまいで、必ずしも期待しているものではない場合、
            <code>refs/heads/&lt;ブランチ名&gt;</code>を使ってみてください。<br/>
            例: <code>origin/master</code>
       </li>
-      <li> <b><code>remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></b><br/>
+      <li> <strong><code>remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></strong><br/>
            指定したブランチを追跡します。<br/>
            例: <code>remotes/origin/master</code>
       </li>
-      <li> <b><code>refs/remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></b><br/>
+      <li> <strong><code>refs/remotes/&lt;リモートリポジトリ名&gt;/&lt;ブランチ名&gt;</code></strong><br/>
            指定したブランチを追跡します。<br/>
            例: <code>refs/remotes/origin/master</code>
       </li>
-      <li> <b><code>&lt;タグ名&gt;</code></b><br/>
+      <li> <strong><code>&lt;タグ名&gt;</code></strong><br/>
            タグを認識できないため、動作しません。<br/>
            代わりに、<code>refs/tags/&lt;タグ名&gt;</code>を使用してください。<br/>
            例: <code>git-2.3.0</code>
       </li>
-      <li> <b><code>refs/tags/&lt;タグ名&gt;</code></b><br/>
+      <li> <strong><code>refs/tags/&lt;タグ名&gt;</code></strong><br/>
            指定したタグを追跡します。<br/>
            例: <code>refs/tags/git-2.3.0</code>
       </li>
-      <li> <b><code>&lt;コミットID&gt;</code></b><br/>
+      <li> <strong><code>&lt;コミットID&gt;</code></strong><br/>
            指定したコミットIDをチェックアウトします。<br/>
            例: <code>5062ac843f2b947733e6a3b105977056821bd352</code>, <code>5062ac84</code>, ...
       </li>
-      <li> <b><code>${ENV_VARIABLE}</code></b><br/>
+      <li> <strong><code>${ENV_VARIABLE}</code></strong><br/>
            環境変数も使用可能です。この場合、変数は評価され、結果は上記で説明したような値として使用されます。<br/>
            例: <code>${TREEISH}</code>, <code>refs/tags/${TAGNAME}</code>, ...
-      <li> <b><code>&lt;ワイルドカード&gt;</code></b><br/>
+      <li> <strong><code>&lt;ワイルドカード&gt;</code></strong><br/>
            文法は、<code>リポジトリ名/ブランチ名</code>の形式です。
            加えて、<code>ブランチ名</code>は、<code>*/ブランチ名</code>の省略と扱われます。ここで、'*'はワイルドカードとして扱われ、
            '**'はセパレータ'/'を含むワルドカードとして扱われます。それゆえ、<code>origin/branches*</code>は、<code>origin/branches-foo</code>に合致しますが、
            <code>origin/branches/foo</code>には合致しません。
            一方、<code>origin/branches**</code>は、<code>origin/branches-foo</code>と<code>origin/branches/foo</code>の両方に一致します。
       </li>
-      <li> <b><code>:&lt;正規表現&gt;</code></b><br/>
+      <li> <strong><code>:&lt;正規表現&gt;</code></strong><br/>
            文法は、<code>:regexp</code>の形式です。
            ここでの正規表現は、ブランチ名がその正規表現に合致するブランチだけをビルドします。<br/>
            例:<br/>
