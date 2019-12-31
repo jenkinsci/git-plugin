@@ -70,6 +70,7 @@ Refspec::
 
 The git plugin supports username / password credentials and private key credentials provided by the
 https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
 
 [[enabling-jgit]]
