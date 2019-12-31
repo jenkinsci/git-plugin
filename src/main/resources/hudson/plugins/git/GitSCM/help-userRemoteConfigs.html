@@ -16,24 +16,24 @@
   is bare or non-bare (i.e. has a working directory).
   <ul>
     <li>If the super-project is bare, the location of the submodules will be
-    taken from <i>.gitmodules</i>.</li>
+    taken from <em>.gitmodules</em>.</li>
     <li>If the super-project is <strong>not</strong> bare, it is assumed that the
     repository has each of its submodules cloned and checked out appropriately.
     Thus, the submodules will be taken directly from a path like
     <code>${SUPER_PROJECT_URL}/${SUBMODULE}</code>, rather than relying on
-    information from <i>.gitmodules</i>.</li>
+    information from <em>.gitmodules</em>.</li>
   </ul>
 
   For a local URL/path to a super-project,
-  <i>git rev-parse --is-bare-repository</i>
+  <em>git rev-parse --is-bare-repository</em>
   is used to detect whether the super-project is bare or not.
   <br>
   For a remote URL to a super-project, the ending of the URL determines whether
   a bare or non-bare repository is assumed:
   <ul>
-    <li>If the remote URL ends with <i>/.git</i>, a <i>non</i>-bare repository is
+    <li>If the remote URL ends with <em>/.git</em>, a <em>non</em>-bare repository is
     assumed.</li>
-    <li>If the remote URL does <strong>NOT</strong> end with <i>/.git</i>, a bare
+    <li>If the remote URL does <strong>NOT</strong> end with <em>/.git</em>, a bare
     repository is assumed.</li>
   </ul>
 </div>
