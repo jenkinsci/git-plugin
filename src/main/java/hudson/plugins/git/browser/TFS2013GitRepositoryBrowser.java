@@ -123,7 +123,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 GitSCM scm = (GitSCM) project.getScm();
                 RemoteConfig remote = scm.getRepositoryByName(value);
                 if (remote == null)
-                    return FormValidation.errorWithMarkup("There is no remote with the name <tt>" + value + "</tt>");
+                    return FormValidation.errorWithMarkup("There is no remote with the name <code>" + value + "</code>");
                 
                 value = remote.getURIs().get(0).toString();
             }
@@ -131,7 +131,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
             if (!value.endsWith("/"))
                 value += '/';
             if (!URL_PATTERN.matcher(value).matches())
-                return FormValidation.errorWithMarkup("The URL should end like <tt>.../_git/foobar/</tt>");
+                return FormValidation.errorWithMarkup("The URL should end like <code>.../_git/foobar/</code>");
 
             final String finalValue = value;
             return new FormValidation.URLCheck() {
