@@ -95,7 +95,7 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 			if (!value.endsWith("/"))
 				value += '/';
 			if (!URL_PATTERN.matcher(value).matches())
-				return FormValidation.errorWithMarkup("The URL should end like <tt>.../browse/foobar/</tt>");
+				return FormValidation.errorWithMarkup("The URL should end like <code>.../browse/foobar/</code>");
 
 			// Connect to URL and check content only if we have admin permission
 			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))

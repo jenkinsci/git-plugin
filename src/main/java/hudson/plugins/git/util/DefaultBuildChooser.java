@@ -74,7 +74,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
 
-            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // <code>BRANCH</code> is recognized as a shorthand of <code>*/BRANCH</code>
             // so check all remotes to fully qualify this branch spec
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
