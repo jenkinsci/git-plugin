@@ -33,6 +33,38 @@ Prior release notes are recorded in the git plugin repository link:CHANGELOG.ado
 [[configuration]]
 == Configuration
 
+[[using-repositories]]
+=== Repositories
+
+The git plugin fetches commits from one or more remote repositories and performs a checkout in the agent workspace.
+Repositories and their related information include:
+
+Repository URL::
+
+  The URL of the remote repository.
+  The git plugin passes the remote repository URL to the git implementation (command line or JGit).
+  Valid repository URL's include `https`, `ssh`, `scp`, `git`, `local file`, and other forms.
+  Valid repository URL forms are described in the link:https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_protocols[git documentation].
+
+Credentials::
+
+  Credentials are defined using the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+  They are selected from a drop-down list and their identifier is stored in the job definition.
+  Refer to <<using-credentials,using credentials>> for more details on supported credential types.
+
+Name::
+
+  Git uses a `shortname` to simplify user references to the URL of the remote repository.
+  The default `shortname` is `origin`.
+  Other values may be assigned and then used throughout the job definition to refer to the remote repository.
+
+Refspec::
+
+  A `refspec` maps remote branches to local references.
+  It defines the branches ags which will be fetched from the remote repository into the agent workspace.
+  The `refspec` can be used with the <<honor-refspec-on-initial-clone,honor refspec on initial clone>> option in the <<advanced-clone-behaviours,advanced clone behaviors>> to limit the number of remote branches mapped to local references.
+  Refer to the link:https://git-scm.com/book/en/v2/Git-Internals-The-Refspec[git refspec documention] for more refspec details.
+
 [[using-credentials]]
 === Using Credentials
 
@@ -79,6 +111,7 @@ They control:
 
 Advanced clone behaviors include:
 
+[[honor-refspec-on-initial-clone]]
 Honor refspec on initial clone::
 
   Perform initial clone using the refspec defined for the repository.
