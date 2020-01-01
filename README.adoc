@@ -413,7 +413,7 @@ Excluded Users::
   If set and Jenkins is configured to poll for changes, Jenkins will ignore any revisions committed by users in this list when determining if a build should be triggered.
   This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
   Using this behaviour prevents the faster `git ls-remote` polling mechanism.
-  It forces polling to require a workspace, as if you had selected the xxxx Force polling using workspace extension.
+  It forces polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension.
 
   Each exclusion uses literal pattern matching, and must be separated by a new line.
 
@@ -422,9 +422,9 @@ Excluded Users::
 
 If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
 
-Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the Force polling using workspace extension as well.
+Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
 This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-Using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace, as if you had selected the Force polling using workspace extension as well.
+Using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
 
 Included Regions::
 
