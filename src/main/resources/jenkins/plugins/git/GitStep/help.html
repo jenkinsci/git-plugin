@@ -3,12 +3,36 @@
     Git step. It performs a clone from the specified repository.
     </p>
     <p>
-    Note that this step is shorthand for the generic SCM step:<pre>
+    Use the <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the git step.
+    More advanced checkout operations require the <code>checkout</code> step rather than the <code>git</code> step.
+    Examples of the <code>git</code> step include:
+    <ul>
+      <li><a href="#git-step-with-defaults">Git step with defaults</a></li>
+      <li><a href="#git-step-with-https-and-branch">Git step with https and a specific branch</a></li>
+      <li><a href="#git-step-with-ssh-and-credential">Git step with ssh and a private key credential</a></li>
+      <li><a href="#git-step-with-https-and-changelog">Git step with https and changelog disabled</a></li>
+      <li><a href="#git-step-with-git-and-polling">Git step with git protocol and polling disabled</a></li>
+    </ul>
+    </p>
+
+    <p>
+    The <code>git</code> step is a simplified shorthand for a subset of the more powerful <code>checkout</code> step:
+<pre>
 checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-     userRemoteConfigs: [[url: 'http://git-server/user/repository.git']]])
-    </pre>
-    The <code>checkout</code> step is the preferred step for SCM checkout.
-    The <code>checkout</code> step provides significantly more functionality and can be used in many cases where the <code>git</code> step cannot be used.
+    userRemoteConfigs: [[url: 'http://git-server/user/repository.git']]])
+</pre>
+    </p>
+
+    <hr>
+
+    <p>
+    <strong>NOTE:</strong> The <code>checkout</code> step is the <strong>preferred SCM checkout method</strong>.
+    It provides significantly more functionality than the <code>git</code> step.
+    </p>
+    <p>Use the <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the checkout step.
+    </p>
+    <p>
+    The <code>checkout</code> step can be used in many cases where the <code>git</code> step cannot be used.
     For example, the <code>git</code> step does <strong>not</strong> support:
     <ul>
       <li>SHA-1 checkout</li>
@@ -16,9 +40,9 @@ checkout([$class: 'GitSCM', branches: [[name: '*/master']],
       <li>Submodule checkout</li>
       <li>Sparse checkout</li>
       <li>Large file checkout (LFS)</li>
+      <li>Reference repositories</li>
       <li>Branch merges</li>
       <li>Repository tagging</li>
-      <li>Reference repositories</li>
       <!-- Less commonly used features that are also not supported by the git step -->
       <!--
       <li>Custom refspecs</li>
@@ -28,4 +52,54 @@ checkout([$class: 'GitSCM', branches: [[name: '*/master']],
       -->
     </ul>
     </p>
+
+    <hr>
+
+    <strong><a name="git-step-with-defaults">Example: Git step with defaults</a></strong>
+    <p>
+    Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
+    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+<pre>
+git 'https://github.com/jenkinsci/git-plugin'
+</pre>
+    </p>
+
+    <strong><a name="git-step-with-https-and-branch">Example: Git step with https and a specific branch</a></strong>
+    <p>
+    Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.204).
+    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+<pre>
+git branch: 'stable-2.204', url: 'https://github.com/jenkinsci/jenkins.git'
+</pre>
+    </p>
+
+    <strong><a name="git-step-with-ssh-and-credential">Example: Git step with ssh and a private key credential</a></strong>
+    <p>
+    Checkout from the git client plugin source repository using ssh protocol, private key credentials, and the master branch.
+    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+<pre>
+git credentialsId: 'my-private-key-credential-id', url: 'git@github.com:jenkinsci/git-client-plugin.git'
+</pre>
+    </p>
+
+    <strong><a name="git-step-with-https-and-changelog">Example: Git step with https and changelog disabled</a></strong>
+    <p>
+    Checkout from the Jenkins source repository using https protocol, no credentials, the master branch, and changelog calculation disabled.
+    See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#changelogs">workflow scm step documentation</a> for more changelog details.
+    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+<pre>
+git changelog: false, url: 'https://github.com/jenkinsci/credentials-plugin.git'
+</pre>
+    </p>
+
+    <strong><a name="git-step-with-git-and-polling">Example: Git step with git protocol and polling disabled</a></strong>
+    <p>
+    Checkout from the Jenkins platform labeler repository using git protocol, no credentials, the master branch, and no polling for changes.
+    See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#polling">workflow scm step documentation</a> for more polling details.
+    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+<pre>
+git poll: false, url: 'git://github.com/jenkinsci/platformlabeler-plugin.git'
+</pre>
+    </p>
+
 </div>
