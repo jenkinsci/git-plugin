@@ -74,7 +74,8 @@ git 'https://github.com/jenkinsci/git-plugin'
     Remote branch names and SHA-1 hashes <strong>are supported</strong> by the general purpose <code>checkout</code> step.
     </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
-git branch: 'stable-2.204', url: 'https://github.com/jenkinsci/jenkins.git'
+git branch: 'stable-2.204',
+    url: 'https://github.com/jenkinsci/jenkins.git'
 </pre>
     </p>
 
@@ -85,7 +86,8 @@ git branch: 'stable-2.204', url: 'https://github.com/jenkinsci/jenkins.git'
     The credential must be a username / password credential if the remote git repository is accessed with http or https protocol.
     </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
-git credentialsId: 'my-private-key-credential-id', url: 'git@github.com:jenkinsci/git-client-plugin.git'
+git credentialsId: 'my-private-key-credential-id',
+    url: 'git@github.com:jenkinsci/git-client-plugin.git'
 </pre>
     </p>
 
@@ -97,7 +99,8 @@ git credentialsId: 'my-private-key-credential-id', url: 'git@github.com:jenkinsc
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#changelogs">workflow scm step documentation</a> for more changelog details.
     </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
-git changelog: false, url: 'https://github.com/jenkinsci/credentials-plugin.git'
+git changelog: false,
+    url: 'https://github.com/jenkinsci/credentials-plugin.git'
 </pre>
     </p>
 
@@ -109,7 +112,8 @@ git changelog: false, url: 'https://github.com/jenkinsci/credentials-plugin.git'
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#polling">workflow scm step documentation</a> for more polling details.
     </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
-git poll: false, url: 'git://github.com/jenkinsci/platformlabeler-plugin.git'
+git poll: false,
+    url: 'git://github.com/jenkinsci/platformlabeler-plugin.git'
 </pre>
     </p>
 
