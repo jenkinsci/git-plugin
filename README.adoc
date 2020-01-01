@@ -20,24 +20,73 @@ image:https://git-scm.com/images/logos/downloads/Git-Logo-2Color.png[Git logo,he
 --
 
 The git plugin provides fundamental git operations for Jenkins projects.
-It can poll, fetch, checkout, branch, list, merge, and tag repositories.
+It can poll, fetch, checkout, branch, list, merge, tag, and push repositories.
 
 toc::[]
 
 [[changelog]]
 == Changelog in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases]
 
-Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] beginning July 1, 2019 (git plugin 3.10.1 and later).
+Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
 [[configuration]]
 == Configuration
+
+[[using-repositories]]
+=== Repositories
+
+The git plugin fetches commits from one or more remote repositories and performs a checkout in the agent workspace.
+Repositories and their related information include:
+
+Repository URL::
+
+  The URL of the remote repository.
+  The git plugin passes the remote repository URL to the git implementation (command line or JGit).
+  Valid repository URL's include `https`, `ssh`, `scp`, `git`, `local file`, and other forms.
+  Valid repository URL forms are described in the link:https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_the_protocols[git documentation].
+
+Credentials::
+
+  Credentials are defined using the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+  They are selected from a drop-down list and their identifier is stored in the job definition.
+  Refer to <<using-credentials,using credentials>> for more details on supported credential types.
+
+Name::
+
+  Git uses a shortname to simplify user references to the URL of the remote repository.
+  The default shortname is `origin`.
+  Other values may be assigned and then used throughout the job definition to refer to the remote repository.
+
+Refspec::
+
+  A refspec maps remote branches to local references.
+  It defines the branches and tags which will be fetched from the remote repository into the agent workspace.
++
+A refspec defines the remote references that will be retrieved and how they map to local references.
+If left blank, it will default to the normal `git fetch` behavior and will retrieve all branches.
+This default behaviour is sufficient for most cases.
++
+The default refspec is `+refs/heads/*:refs/remotes/REPOSITORYNAME/` where REPOSITORYNAME is the value you specify in the above repository "Name" field.
+The default refspec retrieves all branches.
+If a checkout only needs one branch, then a more restrictive refspec can reduce the data transfer from the remote repository to the agent workspace.
+For example, `+refs/heads/master:refs/remotes/origin/master` will retrieve only the master branch and nothing else.
++
+The refspec can be used with the <<honor-refspec-on-initial-clone,honor refspec on initial clone>> option in the <<advanced-clone-behaviours,advanced clone behaviors>> to limit the number of remote branches mapped to local references.
+If "honor refspec on initial clone" is not enabled, then a default refspec for its initial fetch.
+This maintains compatibility with previous behavior and allows the job definition to decide if the refspec should be honored on initial clone.
++
+Multiple refspecs can be entered by separating them with a space character.
+The refspec value `+refs/heads/master:refs/remotes/origin/master +refs/heads/develop:refs/remotes/origin/develop` retrieves the master branch and the develop branch and nothing else.
++
+Refer to the link:https://git-scm.com/book/en/v2/Git-Internals-The-Refspec[git refspec documention] for more refspec details.
 
 [[using-credentials]]
 === Using Credentials
 
 The git plugin supports username / password credentials and private key credentials provided by the
 https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
 
 [[enabling-jgit]]
@@ -79,6 +128,7 @@ They control:
 
 Advanced clone behaviors include:
 
+[[honor-refspec-on-initial-clone]]
 Honor refspec on initial clone::
 
   Perform initial clone using the refspec defined for the repository.
@@ -304,7 +354,7 @@ If this option is selected, polling will use a workspace instead of using `ls-re
 These options allow you to perform a merge to a particular branch before building.
 For example, you could specify an integration branch to be built, and to merge to master.
 In this scenario, on every change of integration, Jenkins will perform a merge with the master branch, and try to perform a build if the merge is successful.
-It then may push the merge back to the remote repository if the Git Push post-build action is selected.
+It then may push the merge back to the remote repository if the <<publisher-push-merge-results,Git Publisher post-build action>> is selected.
 
 Name of repository::
 
@@ -487,6 +537,103 @@ Some git plugin settings can only be controlled from command line properties set
 
 The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])).
 The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+
+[[git-publisher]]
+== Git Publisher
+
+The Jenkins git plugin provides a "git publisher" as a post-build action.
+The git publisher can push commits or tags from the workspace of a Freestyle project to the remote repository.
+
+The git publisher is **only available** for Freestyle projects.
+It is **not available** for Pipeline, Multibranch Pipeline, Organization Folder, or any other job type other than Freestyle.
+
+=== Git Publisher Options
+
+The git publisher behaviors are controlled by options that can be configured as part of the Jenkins job.
+Options include;
+
+Push Only If Build Succeeds::
+
+  Only push changes from the workspace to the remote repository if the build succeeds.
+  If the build status is unstable, failed, or cancelled, the changes from the workspace will not be pushed.
+
+[[publisher-push-merge-results]]
+Merge Results::
+
+  If pre-build merging is configured through one of the <<merge-extensions,merge extensions>>, then enabling this checkbox will push the merge to the remote repository.
+
+[[publisher-tag-force-push]]
+Force Push::
+
+  Git refuses to replace a remote commit with a different commit.
+  This prevents accidental overwrite of new commits on the remote repository.
+  However, there may be times when overwriting commits on the remote repostory is acceptable and even desired.
+  If the commits from the local workspace should overwrite commits on the remote repository, enable this option.
+  It will request that the remote repository destroy history and replace it with history from the workspace.
+
+==== Git Publisher Tags Options
+
+The git publisher can push tags from the workspace to the remote repository.
+Options in this section will allow the plugin to create a new tag.
+Options will also allow the plugin to update an existing tag, though the link:https://git-scm.com/docs/git-tag#_on_re_tagging[git documentation] **strongly advises** against updating tags.
+
+Tag to push::
+
+  Name of the tag to be pushed from the local workspace to the remote repository.
+  The name may include link:https://jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables[Jenkins environment variables] or may be a fixed string.
+  For example, the tag to push might be `$BUILD_TAG`, `my-tag-$BUILD_NUMBER`, `build-$BUILD_NUMBER-from-$NODE_NAME`, or `a-very-specific-string-that-will-be-used-once`.
+
+Tag message::
+
+  If the option is selected to create a tag or update a tag, then this message will be associated with the tag that is created.
+  The message will expand references to link:https://jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables[Jenkins environment variables].
+  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on master` if build 1 of the job runs on the master.
+
+Create new tag::
+
+  Create a new tag in the workspace.
+  The git publisher will fail the job if the tag already exists.
+
+Update new tag::
+
+  Modify existing tag in the workspace so that it points to the most recent commit.
+  Many git repository hosting services will reject attempts to push a tag which has been modified to point to a different commit than its original commit.
+  Refer to <<publisher-tag-force-push,force push>> for an option which may force the remote repository to accept a modified tag.
+  The link:https://git-scm.com/docs/git-tag#_on_re_tagging[git documentation] **strongly advises against updating tags**.
+
+Tag remote name::
+
+  Git uses the 'remote name' as a short string replacement for the full URL of the remote repository.
+  This option defines which remote should receive the push.
+  This is typically `origin`, though it could be any one of the remote names defined when the plugin performs the checkout.
+
+==== Git Publisher Branches Options
+
+The git publisher can push branches from the workspace to the remote repository.
+Options in this section will allow the plugin to push the contents of a local branch to the remote repository.
+
+Branch to push::
+
+  The name of the remote branch that will receive the latest commits from the agent workspace.
+  This is usually the same branch that was used for the checkout
+
+Target remote name::
+
+  The shortname of the remote that will receive the latest commits from the agent workspace.
+  Usually this is `origin`.
+  It needs to be a shortname that is defined in the agent workspace, either through the initial checkout or through later configuration.
+
+Rebase before push::
+
+  Some Jenkins jobs may be blocked from pushing changes to the remote repository because the remote repository has received new commits since the start of the job.
+  This may happen with projects that receive many commits or with projects that have long running jobs.
+  The `Rebase before push` option fetches the most recent commits from the remote repository, applies local changes over the most recent commits, then pushes the result.
+  The plugin uses `git rebase` to apply the local changes over the most recent remote changes.
++
+Because `Rebase before push` is modifying the commits in the agent workspace **after the job has completed**, it is creating a configuration of commits that has **not been evaluated by any Jenkins job**.
+The commits in the local workspace have been evaluated by the job.
+The most recent commits from the remote repository have not been evaluated by the job.
+Users may find that the risk of pushing an untested configuration is less than the risk of delaying the visibility of the changes which have been evaluated by the job.
 
 [[combining-repositories]]
 == Combining repositories
