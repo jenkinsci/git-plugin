@@ -763,6 +763,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
+            listener.getLogger().println("[poll] Working Directory does not exist");
             return BUILD_NOW;
         }
 
