@@ -56,7 +56,7 @@ checkout([$class: 'GitSCM', branches: [[name: '*/master']],
 
     <hr>
 
-    <strong><a name="git-step-with-defaults">Example: Git step with defaults</a></strong>
+    <strong><a id="git-step-with-defaults">Example: Git step with defaults</a></strong>
     <p>
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
     </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
@@ -65,7 +65,7 @@ git 'https://github.com/jenkinsci/git-plugin'
 </pre>
     </p>
 
-    <strong><a name="git-step-with-https-and-branch">Example: Git step with https and a specific branch</a></strong>
+    <strong><a id="git-step-with-https-and-branch">Example: Git step with https and a specific branch</a></strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.204).
     Note that this must be a local branch name like 'master' or 'develop' or a tag name.
@@ -79,7 +79,7 @@ git branch: 'stable-2.204',
 </pre>
     </p>
 
-    <strong><a name="git-step-with-ssh-and-credential">Example: Git step with ssh and a private key credential</a></strong>
+    <strong><a id="git-step-with-ssh-and-credential">Example: Git step with ssh and a private key credential</a></strong>
     <p>
     Checkout from the git client plugin source repository using ssh protocol, private key credentials, and the master branch.
     The credential must be a private key credential if the remote git repository is accessed with the ssh protocol.
@@ -91,7 +91,7 @@ git credentialsId: 'my-private-key-credential-id',
 </pre>
     </p>
 
-    <strong><a name="git-step-with-https-and-changelog">Example: Git step with https and changelog disabled</a></strong>
+    <strong><a id="git-step-with-https-and-changelog">Example: Git step with https and changelog disabled</a></strong>
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, the master branch, and changelog calculation disabled.
     If changelog is <code>false</code>, then the changelog will not be computed for this job.
@@ -104,7 +104,7 @@ git changelog: false,
 </pre>
     </p>
 
-    <strong><a name="git-step-with-git-and-polling">Example: Git step with git protocol and polling disabled</a></strong>
+    <strong><a id="git-step-with-git-and-polling">Example: Git step with git protocol and polling disabled</a></strong>
     <p>
     Checkout from the Jenkins platform labeler repository using git protocol, no credentials, the master branch, and no polling for changes.
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
