@@ -46,6 +46,8 @@ import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
 import jenkins.security.MasterToSlaveCallable;
@@ -71,6 +73,9 @@ import java.io.Serializable;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -1389,6 +1394,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("", jeffDoe.getName(), culprit.getFullName());
 
         rule.assertBuildStatusSuccess(build);
+    }
+    
+    @Issue("JENKINS-59868")
+    @Test
+    public void testNonExistentWorkingDirectoryPoll() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        project.setScm(new GitSCM(
+                ((GitSCM)project.getScm()).getUserRemoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
+                Collections.singletonList(new DisableRemotePoll())));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        // Empty the workspace directory
+        build1.getWorkspace().deleteRecursive();
+
+        // Setup a recorder for polling logs
+        RingBufferLogHandler pollLogHandler = new RingBufferLogHandler(10);
+        Logger pollLogger = Logger.getLogger(GitSCMTest.class.getName());
+        pollLogger.addHandler(pollLogHandler);
+        TaskListener taskListener = new LogTaskListener(pollLogger, Level.INFO);
+
+        // Make sure that polling returns BUILD_NOW and properly log the reason
+        FilePath filePath = build1.getWorkspace();
+        assertThat(project.getScm().compareRemoteRevisionWith(project, new Launcher.LocalLauncher(taskListener), 
+                filePath, taskListener, null), is(PollingResult.BUILD_NOW));
+        assertTrue(pollLogHandler.getView().stream().anyMatch(m -> 
+                m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
     // Disabled - consistently fails, needs more analysis
