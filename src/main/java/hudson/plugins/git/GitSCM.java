@@ -1139,6 +1139,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         EnvVars environment = build.getEnvironment(listener);
         GitClient git = createClient(listener, environment, build, workspace);
 
+        if (launcher instanceof Launcher.DecoratedLauncher) {
+            // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we will actually have a RemoteGitImpl which is opaque.
+            listener.getLogger().println("Warning: JENKINS-30600: special launcher " + launcher + " will be ignored (a typical symptom is the Git executable not being run inside a designated container)");
+        }
+
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
         }
