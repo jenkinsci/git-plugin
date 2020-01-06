@@ -2714,7 +2714,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 new FilePath(run.getRootDir()).child("tmp-" + "master"),
                 mockListener, null, SCMRevisionState.NONE);
 
-        assertEquals("Commit message should be an env var", getEnvVars(p), title);
+        assertEquals("Commit message should be an env var", title, getEnvVars(p).get(GitSCM.GIT_COMMIT_TITLE));
     }
 
     /**
