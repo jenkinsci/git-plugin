@@ -95,6 +95,11 @@ Select credentials from the job definition drop down menu or enter their identif
 See the https://plugins.jenkins.io/git-client[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
+[[repository-browser]]
+=== Repository Browser
+
+A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes. The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect Cloud versions of GitHub, BitBucket and GitLab.
+
 [[extensions]]
 == Extensions
 
