@@ -65,7 +65,7 @@ Refspec::
 +
 A refspec defines the remote references that will be retrieved and how they map to local references.
 If left blank, it will default to the normal `git fetch` behavior and will retrieve all branches.
-This default behaviour is sufficient for most cases.
+This default behavior is sufficient for most cases.
 +
 The default refspec is `+refs/heads/*:refs/remotes/REPOSITORYNAME/` where REPOSITORYNAME is the value you specify in the above repository "Name" field.
 The default refspec retrieves all branches.
@@ -79,7 +79,7 @@ This maintains compatibility with previous behavior and allows the job definitio
 Multiple refspecs can be entered by separating them with a space character.
 The refspec value `+refs/heads/master:refs/remotes/origin/master +refs/heads/develop:refs/remotes/origin/develop` retrieves the master branch and the develop branch and nothing else.
 +
-Refer to the link:https://git-scm.com/book/en/v2/Git-Internals-The-Refspec[git refspec documention] for more refspec details.
+Refer to the link:https://git-scm.com/book/en/v2/Git-Internals-The-Refspec[git refspec documentation] for more refspec details.
 
 [[using-credentials]]
 === Using Credentials
@@ -98,7 +98,7 @@ JGit becomes available throughout Jenkins once it has been enabled.
 [[repository-browser]]
 === Repository Browser
 
-A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes. The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect Cloud versions of GitHub, BitBucket and GitLab.
+A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes. The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect Cloud versions of GitHub, Bitbucket and GitLab.
 
 [[extensions]]
 == Extensions
@@ -148,7 +148,7 @@ Shallow clone::
 
 Shallow clone depth::
 
-  Set shallow clone depth to the specified numebr of commits.
+  Set shallow clone depth to the specified number of commits.
   Git will only download `depth` commits from the remote repository, saving time and disk space.
 
 Path of the reference repo to use during clone::
@@ -429,7 +429,7 @@ Excluded Users::
 
   If set and Jenkins is configured to poll for changes, Jenkins will ignore any revisions committed by users in this list when determining if a build should be triggered.
   This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-  Using this behaviour prevents the faster `git ls-remote` polling mechanism.
+  Using this behavior prevents the faster `git ls-remote` polling mechanism.
   It forces polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension.
 
   Each exclusion uses literal pattern matching, and must be separated by a new line.
@@ -439,9 +439,9 @@ Excluded Users::
 
 If set and Jenkins is configured to poll for changes, Jenkins will pay attention to included and/or excluded files and/or folders when determining if a build needs to be triggered.
 
-Using this behaviour will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
+Using this behavior will preclude the faster remote polling mechanism, forcing polling to require a workspace thus sometimes triggering unwanted builds, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
 This can be used to exclude commits done by the build itself from triggering another build, assuming the build server commits the change with a distinct SCM user.
-Using this behaviour will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
+Using this behavior will preclude the faster git ls-remote polling mechanism, forcing polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension as well.
 
 Included Regions::
 
@@ -501,7 +501,7 @@ Commit in Ancestry::
 
 Default::
 
-  Build all the branches that match the branch namne pattern.
+  Build all the branches that match the branch name pattern.
 
 Inverse::
 
@@ -572,7 +572,7 @@ Options include;
 Push Only If Build Succeeds::
 
   Only push changes from the workspace to the remote repository if the build succeeds.
-  If the build status is unstable, failed, or cancelled, the changes from the workspace will not be pushed.
+  If the build status is unstable, failed, or canceled, the changes from the workspace will not be pushed.
 
 [[publisher-push-merge-results]]
 Merge Results::
@@ -584,7 +584,7 @@ Force Push::
 
   Git refuses to replace a remote commit with a different commit.
   This prevents accidental overwrite of new commits on the remote repository.
-  However, there may be times when overwriting commits on the remote repostory is acceptable and even desired.
+  However, there may be times when overwriting commits on the remote repository is acceptable and even desired.
   If the commits from the local workspace should overwrite commits on the remote repository, enable this option.
   It will request that the remote repository destroy history and replace it with history from the workspace.
 
