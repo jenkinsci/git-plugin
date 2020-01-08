@@ -99,7 +99,281 @@ JGit becomes available throughout Jenkins once it has been enabled.
 [[repository-browser]]
 === Repository Browser
 
-A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes. The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect Cloud versions of GitHub, Bitbucket and GitLab.
+A Repository Browser adds links in "changes" views within Jenkins to an external system for browsing the details of those changes.
+The "Auto" selection attempts to infer the repository browser from the "Repository URL" and can detect Cloud versions of GitHub, Bitbucket and GitLab.
+
+Repository browsers include:
+
+[[assemblaweb-repository-browser]]
+=== AssemblaWeb
+
+Repository browser for git repositories hosted by link:https://www.assembla.com/home[Assembla].
+Options include:
+
+[[assembla-git-url]]
+Assembla Git URL::
+
+  Root URL serving this Assembla repository.
+  For example, \https://app.assembla.com/spaces/git-plugin/git/source
+
+[[fisheye-repository-browser]]
+=== FishEye
+
+Repository browser for git repositories hosted by link:https://www.atlassian.com/software/fisheye[Atlassian Fisheye].
+Options include:
+
+[[fisheye-url]]
+URL::
+
+  Root URL serving this FishEye repository.
+  For example, \https://fisheye.example.com/browser/my-project
+
+[[gitlab-com-repository-browser]]
+=== GitLab
+
+Repository browser for git repositories hosted on link:https://gitlab.com[GitLab.com].
+No options can be configured for this repository browser.
+Users hosting their own instances of GitLab should use the <<gitlab-self-hosted-repository-browser>>.
+
+[[gitea-repository-browser]]
+=== Gitea
+
+Repository browser for git repositories hosted by link:https://gitea.io/[Gitea].
+Options include:
+
+[[gitea-url]]
+Repository URL::
+
+  Root URL serving this gitea repository.
+  For example, \https://gitea.example.com/username/project-name
+
+[[kiln-repository-browser]]
+=== Kiln
+
+Repository browser for git repositories hosted by link:http://www.fogbugz.com/version-control[Kiln].
+Options include:
+
+[[kiln-url]]
+URL::
+
+  Root URL serving this Kiln repository.
+  For example, \https://kiln.example.com/username/my-project
+
+[[visual-studio-team-services-repository-browser]]
+=== Microsoft Team Foundation Server/Visual Studio Team Services
+
+Repository browser for git repositories hosted by link:https://azure.microsoft.com/en-us/solutions/devops/[Azure DevOps].
+Options include:
+
+[[visual-studio-repository-url-or-name]]
+URL or name::
+
+  Root URL serving this Azure DevOps repository.
+  For example, \https://example.visualstudio.com/_git/my-project.
+
+[[bitbucketweb-repository-browser]]
+=== bitbucketweb
+
+Repository browser for git repositories hosted by link:https://bitbucket.org/[Bitbucket].
+Options include:
+
+[[bitbucketweb-url]]
+URL::
+
+  Root URL serving this Bitbucket repository.
+  For example, \https://bitbucket.example.com/username/my-project
+
+[[cgit-repository-browser]]
+=== cgit
+
+Repository browser for git repositories hosted by link:https://git.zx2c4.com/cgit/[cgit].
+Options include:
+
+[[cgit-url]]
+URL::
+
+  Root URL serving this cgit repository.
+  For example, \https://git.zx2c4.com/cgit/
+
+[[gitblit-repository-browser]]
+=== gitblit
+
+[[gitblit-url]]
+GitBlit root url::
+
+  Root URL serving this GitBlit repository.
+  For example, \https://gitblit.example.com/cgit/
+
+[[gitblit-project-name]]
+Project name in GitBlit::
+
+  Name of the GitBlit project.
+  For example, `my-project`
+
+[[githubweb-repository-browser]]
+=== githubweb
+
+Repository browser for git repositories hosted by link:https://github.com//[GitHub].
+Options include:
+
+[[githubweb-url]]
+GitHub root url::
+
+  Root URL serving this GitHub repository.
+  For example, \https://github.example.com/username/my-project
+
+[[gitiles-repository-browser]]
+=== gitiles
+
+Repository browser for git repositories hosted by link:https://gerrit.googlesource.com/gitiles/[Gitiles].
+Options include:
+
+[[githubweb-url]]
+gitiles root url::
+
+  Root URL serving this Gitiles repository.
+  For example, \https://gerrit.googlesource.com/gitiles/
+
+[[gitlab-self-hosted-repository-browser]]
+=== gitlab
+
+Repository browser for git repositories hosted by link:https://gitlab.com/[GitLab].
+Options include:
+
+[[gitlab-url]]
+URL::
+
+  Root URL serving this GitLab repository.
+  For example, \https://gitlab.example.com/username/my-project
+
+[[gitlab-version]]
+Version::
+
+  Major and minor version of GitLab you use, such as 12.6.
+  If you don't specify a version, a modern version of GitLab (>= 8.0) is assumed.
+  For example, `12.6`
+
+[[gitlist-repository-browser]]
+=== gitlist
+
+Repository browser for git repositories hosted by link:https://gitlist.org/[GitList].
+Options include:
+
+[[gitlist-url]]
+URL::
+
+  Root URL serving this GitList repository.
+  For example, \https://gitlist.example.com/username/my-project
+
+[[gitoriousweb-repository-browser]]
+=== gitoriousweb
+
+Gitorious was acquired in 2015.
+This browser is *deprecated*.
+
+[[gitoriousweb-url]]
+URL::
+
+  Root URL serving this Gitorious repository.
+  For example, \https://gitorious.org/username/my-project
+
+[[gitweb-repository-browser]]
+=== gitweb
+
+Repository browser for git repositories hosted by link:https://git-scm.com/docs/gitweb[GitWeb].
+Options include:
+
+[[gitweb-url]]
+URL::
+
+  Root URL serving this GitWeb repository.
+  For example, \https://gitweb.example.com/username/my-project
+
+[[gogs-repository-browser]]
+=== gogs
+
+Repository browser for git repositories hosted by link:https://gogs.io/[Gogs].
+Options include:
+
+[[gogs-url]]
+URL::
+
+  Root URL serving this Gogs repository.
+  For example, \https://gogs.example.com/username/my-project
+
+[[phabricator-repository-browser]]
+=== phabricator
+
+Repository browser for git repositories hosted by link:https://www.phacility.com/phabricator/[Phacility Phabricator].
+Options include:
+
+[[phabricator-url]]
+URL::
+
+  Root URL serving this Phabricator repository.
+  For example, \https://phabricator.example.com/
+
+[[phabricator-repository-name]]
+Repository name in Phab::
+
+  Name of the Phabricator repository.
+  For example, `my-project`
+
+[[redmineweb-repository-browser]]
+=== redmineweb
+
+Repository browser for git repositories hosted by link:https://www.redmine.org/[Redmine].
+Options include:
+
+[[redmineweb-url]]
+URL::
+
+  Root URL serving this Redmine repository.
+  For example, \https://redmine.example.com/username/projects/my-project/repository
+
+[[rhodecode-repository-browser]]
+=== rhodecode
+
+Repository browser for git repositories hosted by link:https://thodecode.com/[RhodeCode].
+Options include:
+
+[[rhodecode-url]]
+URL::
+
+  Root URL serving this RhodeCode repository.
+  For example, \https://rhodecode.example.com/username/my-project
+
+[[stash-repository-browser]]
+=== stash
+
+Stash is now called *BitBucket Server*.
+Repository browser for git repositories hosted by link:https://www.atlassian.com/software/bitbucket[BitBucket Server].
+Options include:
+
+stash 
+[[stash-url]]
+URL::
+
+  Root URL serving this Stash repository.
+  For example, \https://stash.example.com/username/my-project
+
+[[viewgit-repository-browser]]
+=== viewgit
+
+Repository browser for git repositories hosted by link:https://www.openhub.net/p/viewgit[viewgit].
+Options include:
+
+[[viewgit-root-url]]
+ViewGit root url::
+
+  Root URL serving this ViewGit repository.
+  For example, \https://viewgit.example.com/
+
+[[viewgit-project-name]]
+Project Name in ViewGit::
+
+  ViewGit project name.
+  For example, `my-project`
 
 [[extensions]]
 == Extensions
