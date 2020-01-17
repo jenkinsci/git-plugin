@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.55</version>
+    <version>3.56</version>
     <relativePath />
   </parent>
 
@@ -31,13 +31,10 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
-    <forkCount>1</forkCount>
+    <forkCount>1C</forkCount>
     <linkXRef>false</linkXRef>
     <configuration-as-code.version>1.35</configuration-as-code.version>
-   <!-- Fix InjectedTest hang on multi-core machines and InjectedTest failures on ci.jenkins.io -->
-    <!-- Remove when parent pom 3.56 is used -->
-    <jenkins-test-harness.version>2.60</jenkins-test-harness.version>
-   </properties>
+  </properties>
 
   <build>
     <plugins>
