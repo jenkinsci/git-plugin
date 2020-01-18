@@ -538,7 +538,7 @@ Branch name::
 
   If given, checkout the revision to build as HEAD on the named branch.
   If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
-  In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/newfeature'.
+  In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
 
 [[wipe-out-repository-and-force-clone]]
 ==== Wipe out repository and force clone
