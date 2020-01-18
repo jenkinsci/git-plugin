@@ -114,7 +114,7 @@ Options include:
 Assembla Git URL::
 
   Root URL serving this Assembla repository.
-  For example, \https://app.assembla.com/spaces/git-plugin/git/source
+  For example, `\https://app.assembla.com/spaces/git-plugin/git/source`
 
 [[fisheye-repository-browser]]
 ==== FishEye
@@ -126,14 +126,14 @@ Options include:
 URL::
 
   Root URL serving this FishEye repository.
-  For example, \https://fisheye.example.com/browser/my-project
+  For example, `\https://fisheye.example.com/browser/my-project`
 
 [[gitlab-com-repository-browser]]
 ==== GitLab
 
 Repository browser for git repositories hosted on link:https://gitlab.com[GitLab.com].
 No options can be configured for this repository browser.
-Users hosting their own instances of GitLab should use the <<gitlab-self-hosted-repository-browser>>.
+Users hosting their own instances of GitLab should use the <<gitlab-self-hosted-repository-browser>> browser instead.
 
 [[gitea-repository-browser]]
 ==== Gitea
@@ -145,7 +145,7 @@ Options include:
 Repository URL::
 
   Root URL serving this gitea repository.
-  For example, \https://gitea.example.com/username/project-name
+  For example, `\https://gitea.example.com/username/project-name`
 
 [[kiln-repository-browser]]
 ==== Kiln
@@ -157,7 +157,7 @@ Options include:
 URL::
 
   Root URL serving this Kiln repository.
-  For example, \https://kiln.example.com/username/my-project
+  For example, `\https://kiln.example.com/username/my-project`
 
 [[visual-studio-team-services-repository-browser]]
 ==== Microsoft Team Foundation Server/Visual Studio Team Services
@@ -169,7 +169,7 @@ Options include:
 URL or name::
 
   Root URL serving this Azure DevOps repository.
-  For example, \https://example.visualstudio.com/_git/my-project.
+  For example, `\https://example.visualstudio.com/_git/my-project.`
 
 [[bitbucketweb-repository-browser]]
 ==== bitbucketweb
@@ -181,7 +181,7 @@ Options include:
 URL::
 
   Root URL serving this Bitbucket repository.
-  For example, \https://bitbucket.example.com/username/my-project
+  For example, `\https://bitbucket.example.com/username/my-project`
 
 [[cgit-repository-browser]]
 ==== cgit
@@ -193,7 +193,7 @@ Options include:
 URL::
 
   Root URL serving this cgit repository.
-  For example, \https://git.zx2c4.com/cgit/
+  For example, `\https://git.zx2c4.com/cgit/`
 
 [[gitblit-repository-browser]]
 ==== gitblit
@@ -202,7 +202,7 @@ URL::
 GitBlit root url::
 
   Root URL serving this GitBlit repository.
-  For example, \https://gitblit.example.com/cgit/
+  For example, `\https://gitblit.example.com/cgit/`
 
 [[gitblit-project-name]]
 Project name in GitBlit::
@@ -220,7 +220,7 @@ Options include:
 GitHub root url::
 
   Root URL serving this GitHub repository.
-  For example, \https://github.example.com/username/my-project
+  For example, `\https://github.example.com/username/my-project`
 
 [[gitiles-repository-browser]]
 ==== gitiles
@@ -232,7 +232,7 @@ Options include:
 gitiles root url::
 
   Root URL serving this Gitiles repository.
-  For example, \https://gerrit.googlesource.com/gitiles/
+  For example, `\https://gerrit.googlesource.com/gitiles/`
 
 [[gitlab-self-hosted-repository-browser]]
 ==== gitlab
@@ -244,7 +244,7 @@ Options include:
 URL::
 
   Root URL serving this GitLab repository.
-  For example, \https://gitlab.example.com/username/my-project
+  For example, `\https://gitlab.example.com/username/my-project`
 
 [[gitlab-version]]
 Version::
@@ -263,7 +263,7 @@ Options include:
 URL::
 
   Root URL serving this GitList repository.
-  For example, \https://gitlist.example.com/username/my-project
+  For example, `\https://gitlist.example.com/username/my-project`
 
 [[gitoriousweb-repository-browser]]
 ==== gitoriousweb
@@ -275,7 +275,7 @@ This browser is *deprecated*.
 URL::
 
   Root URL serving this Gitorious repository.
-  For example, \https://gitorious.org/username/my-project
+  For example, `\https://gitorious.org/username/my-project`
 
 [[gitweb-repository-browser]]
 ==== gitweb
@@ -287,7 +287,7 @@ Options include:
 URL::
 
   Root URL serving this GitWeb repository.
-  For example, \https://gitweb.example.com/username/my-project
+  For example, `\https://gitweb.example.com/username/my-project`
 
 [[gogs-repository-browser]]
 ==== gogs
@@ -299,7 +299,7 @@ Options include:
 URL::
 
   Root URL serving this Gogs repository.
-  For example, \https://gogs.example.com/username/my-project
+  For example, `\https://gogs.example.com/username/my-project`
 
 [[phabricator-repository-browser]]
 ==== phabricator
@@ -311,7 +311,7 @@ Options include:
 URL::
 
   Root URL serving this Phabricator repository.
-  For example, \https://phabricator.example.com/
+  For example, `\https://phabricator.example.com/`
 
 [[phabricator-repository-name]]
 Repository name in Phab::
@@ -329,7 +329,7 @@ Options include:
 URL::
 
   Root URL serving this Redmine repository.
-  For example, \https://redmine.example.com/username/projects/my-project/repository
+  For example, `\https://redmine.example.com/username/projects/my-project/repository`
 
 [[rhodecode-repository-browser]]
 ==== rhodecode
@@ -341,7 +341,7 @@ Options include:
 URL::
 
   Root URL serving this RhodeCode repository.
-  For example, \https://rhodecode.example.com/username/my-project
+  For example, `\https://rhodecode.example.com/username/my-project`
 
 [[stash-repository-browser]]
 ==== stash
@@ -355,7 +355,7 @@ stash
 URL::
 
   Root URL serving this Stash repository.
-  For example, \https://stash.example.com/username/my-project
+  For example, `\https://stash.example.com/username/my-project`
 
 [[viewgit-repository-browser]]
 ==== viewgit
@@ -367,7 +367,7 @@ Options include:
 ViewGit root url::
 
   Root URL serving this ViewGit repository.
-  For example, \https://viewgit.example.com/
+  For example, `\https://viewgit.example.com/`
 
 [[viewgit-project-name]]
 Project Name in ViewGit::
