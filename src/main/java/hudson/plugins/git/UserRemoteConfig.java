@@ -39,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
 import hudson.model.FreeStyleProject;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @ExportedBean
@@ -58,27 +59,32 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     }
 
     @Exported
+    @Whitelisted
     public String getName() {
         return name;
     }
 
     @Exported
+    @Whitelisted
     public String getRefspec() {
         return refspec;
     }
 
     @Exported
     @CheckForNull
+    @Whitelisted
     public String getUrl() {
         return url;
     }
 
     @Exported
+    @Whitelisted
     @CheckForNull
     public String getCredentialsId() {
         return credentialsId;
     }
 
+    @Override
     public String toString() {
         return getRefspec() + " => " + getUrl() + " (" + getName() + ")";
     }

@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class PreBuildMerge extends GitSCMExtension {
         this.options = options;
     }
 
+    @Whitelisted
     public UserMergeOptions getOptions() {
         return options;
     }
