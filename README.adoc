@@ -105,7 +105,7 @@ The "Auto" selection attempts to infer the repository browser from the "Reposito
 Repository browsers include:
 
 [[assemblaweb-repository-browser]]
-=== AssemblaWeb
+==== AssemblaWeb
 
 Repository browser for git repositories hosted by link:https://www.assembla.com/home[Assembla].
 Options include:
@@ -117,7 +117,7 @@ Assembla Git URL::
   For example, \https://app.assembla.com/spaces/git-plugin/git/source
 
 [[fisheye-repository-browser]]
-=== FishEye
+==== FishEye
 
 Repository browser for git repositories hosted by link:https://www.atlassian.com/software/fisheye[Atlassian Fisheye].
 Options include:
@@ -129,14 +129,14 @@ URL::
   For example, \https://fisheye.example.com/browser/my-project
 
 [[gitlab-com-repository-browser]]
-=== GitLab
+==== GitLab
 
 Repository browser for git repositories hosted on link:https://gitlab.com[GitLab.com].
 No options can be configured for this repository browser.
 Users hosting their own instances of GitLab should use the <<gitlab-self-hosted-repository-browser>>.
 
 [[gitea-repository-browser]]
-=== Gitea
+==== Gitea
 
 Repository browser for git repositories hosted by link:https://gitea.io/[Gitea].
 Options include:
@@ -148,7 +148,7 @@ Repository URL::
   For example, \https://gitea.example.com/username/project-name
 
 [[kiln-repository-browser]]
-=== Kiln
+==== Kiln
 
 Repository browser for git repositories hosted by link:http://www.fogbugz.com/version-control[Kiln].
 Options include:
@@ -160,7 +160,7 @@ URL::
   For example, \https://kiln.example.com/username/my-project
 
 [[visual-studio-team-services-repository-browser]]
-=== Microsoft Team Foundation Server/Visual Studio Team Services
+==== Microsoft Team Foundation Server/Visual Studio Team Services
 
 Repository browser for git repositories hosted by link:https://azure.microsoft.com/en-us/solutions/devops/[Azure DevOps].
 Options include:
@@ -172,7 +172,7 @@ URL or name::
   For example, \https://example.visualstudio.com/_git/my-project.
 
 [[bitbucketweb-repository-browser]]
-=== bitbucketweb
+==== bitbucketweb
 
 Repository browser for git repositories hosted by link:https://bitbucket.org/[Bitbucket].
 Options include:
@@ -184,7 +184,7 @@ URL::
   For example, \https://bitbucket.example.com/username/my-project
 
 [[cgit-repository-browser]]
-=== cgit
+==== cgit
 
 Repository browser for git repositories hosted by link:https://git.zx2c4.com/cgit/[cgit].
 Options include:
@@ -196,7 +196,7 @@ URL::
   For example, \https://git.zx2c4.com/cgit/
 
 [[gitblit-repository-browser]]
-=== gitblit
+==== gitblit
 
 [[gitblit-url]]
 GitBlit root url::
@@ -211,7 +211,7 @@ Project name in GitBlit::
   For example, `my-project`
 
 [[githubweb-repository-browser]]
-=== githubweb
+==== githubweb
 
 Repository browser for git repositories hosted by link:https://github.com//[GitHub].
 Options include:
@@ -223,7 +223,7 @@ GitHub root url::
   For example, \https://github.example.com/username/my-project
 
 [[gitiles-repository-browser]]
-=== gitiles
+==== gitiles
 
 Repository browser for git repositories hosted by link:https://gerrit.googlesource.com/gitiles/[Gitiles].
 Options include:
@@ -235,7 +235,7 @@ gitiles root url::
   For example, \https://gerrit.googlesource.com/gitiles/
 
 [[gitlab-self-hosted-repository-browser]]
-=== gitlab
+==== gitlab
 
 Repository browser for git repositories hosted by link:https://gitlab.com/[GitLab].
 Options include:
@@ -254,7 +254,7 @@ Version::
   For example, `12.6`
 
 [[gitlist-repository-browser]]
-=== gitlist
+==== gitlist
 
 Repository browser for git repositories hosted by link:https://gitlist.org/[GitList].
 Options include:
@@ -266,7 +266,7 @@ URL::
   For example, \https://gitlist.example.com/username/my-project
 
 [[gitoriousweb-repository-browser]]
-=== gitoriousweb
+==== gitoriousweb
 
 Gitorious was acquired in 2015.
 This browser is *deprecated*.
@@ -278,7 +278,7 @@ URL::
   For example, \https://gitorious.org/username/my-project
 
 [[gitweb-repository-browser]]
-=== gitweb
+==== gitweb
 
 Repository browser for git repositories hosted by link:https://git-scm.com/docs/gitweb[GitWeb].
 Options include:
@@ -290,7 +290,7 @@ URL::
   For example, \https://gitweb.example.com/username/my-project
 
 [[gogs-repository-browser]]
-=== gogs
+==== gogs
 
 Repository browser for git repositories hosted by link:https://gogs.io/[Gogs].
 Options include:
@@ -302,7 +302,7 @@ URL::
   For example, \https://gogs.example.com/username/my-project
 
 [[phabricator-repository-browser]]
-=== phabricator
+==== phabricator
 
 Repository browser for git repositories hosted by link:https://www.phacility.com/phabricator/[Phacility Phabricator].
 Options include:
@@ -320,7 +320,7 @@ Repository name in Phab::
   For example, `my-project`
 
 [[redmineweb-repository-browser]]
-=== redmineweb
+==== redmineweb
 
 Repository browser for git repositories hosted by link:https://www.redmine.org/[Redmine].
 Options include:
@@ -332,7 +332,7 @@ URL::
   For example, \https://redmine.example.com/username/projects/my-project/repository
 
 [[rhodecode-repository-browser]]
-=== rhodecode
+==== rhodecode
 
 Repository browser for git repositories hosted by link:https://thodecode.com/[RhodeCode].
 Options include:
@@ -344,7 +344,7 @@ URL::
   For example, \https://rhodecode.example.com/username/my-project
 
 [[stash-repository-browser]]
-=== stash
+==== stash
 
 Stash is now called *BitBucket Server*.
 Repository browser for git repositories hosted by link:https://www.atlassian.com/software/bitbucket[BitBucket Server].
@@ -358,7 +358,7 @@ URL::
   For example, \https://stash.example.com/username/my-project
 
 [[viewgit-repository-browser]]
-=== viewgit
+==== viewgit
 
 Repository browser for git repositories hosted by link:https://www.openhub.net/p/viewgit[viewgit].
 Options include:
