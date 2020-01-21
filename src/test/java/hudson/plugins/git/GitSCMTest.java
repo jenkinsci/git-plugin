@@ -312,6 +312,26 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(projectWithMaster, Result.SUCCESS); /* If clone refspec had been honored, this would fail */
         build(projectWithFoo, Result.SUCCESS, commitFile1);
     }
+    
+    /**
+     * This test confirm the behaviour of not allowing null values as environment variables and hence has been fixed
+     * with a null check. If the second repo is added accidentally but not filled in the text field, the build won't fail.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNULLValue() throws Exception{
+        String repoURL = "https://github.com/jenkinsci/git-plugin";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(repoURL, null, null, null));
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        EnvVars vars = project.getCharacteristicEnvVars();
+        FreeStyleBuild build = build(project, Result.SUCCESS);
+        GitSCM scm = (GitSCM) project.getScm();
+        scm.getExtensions().add(new LocalBranch("master"));
+        scm.buildEnvironment(build, vars);
+    }
 
     @Test
     public void testBranchSpecWithRemotesHierarchical() throws Exception {
