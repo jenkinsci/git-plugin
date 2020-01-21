@@ -20,8 +20,9 @@
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
-  <description>Integrates Jenkins with GIT SCM</description>
-  <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
+  <description>Integrates Jenkins with Git SCM</description>
+  <!-- Use documentation from tagged release -->
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin/tree/${project.artifactId}-${revision}/README.adoc</url>
   <inceptionYear>2007</inceptionYear>
 
   <properties>
