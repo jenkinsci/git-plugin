@@ -1376,16 +1376,24 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
         }
 
+        /* Check all repository URLs are not empty */
+        /* JENKINS-38608 reports an unhelpful error message when a repository URL is empty */
+        /* Throws an IllegalArgumentException because that exception is thrown by env.put() on a null argument */
+        int repoCount = 1;
+        for (UserRemoteConfig config:userRemoteConfigs) {
+            if (config.getUrl() == null) {
+                throw new IllegalArgumentException("Git repository URL " + repoCount + " is an empty string in job definition. Checkout requires a valid repository URL");
+            }
+            repoCount++;
+        }
 
         if (userRemoteConfigs.size()==1){
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
         } else {
             int count=1;
-            for(UserRemoteConfig config:userRemoteConfigs)   {
-               	if(config.getUrl()!=null) {
-                    env.put("GIT_URL_" + count, config.getUrl());
-                    count++;
-                }
+            for (UserRemoteConfig config:userRemoteConfigs) {
+                env.put("GIT_URL_" + count, config.getUrl());
+                count++;
             }
         }
 

@@ -312,25 +312,51 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(projectWithMaster, Result.SUCCESS); /* If clone refspec had been honored, this would fail */
         build(projectWithFoo, Result.SUCCESS, commitFile1);
     }
-    
+
     /**
-     * This test confirm the behaviour of not allowing null values as environment variables and hence has been fixed
-     * with a null check. If the second repo is added accidentally but not filled in the text field, the build won't fail.
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message.
      * @throws Exception on error
      */
     @Test
     @Issue("JENKINS-38608")
-    public void testAddSecondRepositoryWithNULLValue() throws Exception{
-        String repoURL = "https://github.com/jenkinsci/git-plugin";
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition",
+                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message when the second URL is empty.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+        String repoURL = "https://example.com/non-empty/repo/url";
         List<UserRemoteConfig> repos = new ArrayList<>();
         repos.add(new UserRemoteConfig(repoURL, null, null, null));
         repos.add(new UserRemoteConfig(null, null, null, null));
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
-        EnvVars vars = project.getCharacteristicEnvVars();
-        FreeStyleBuild build = build(project, Result.SUCCESS);
-        GitSCM scm = (GitSCM) project.getScm();
-        scm.getExtensions().add(new LocalBranch("master"));
-        scm.buildEnvironment(build, vars);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition for URL 2",
+                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
