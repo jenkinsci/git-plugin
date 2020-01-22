@@ -1391,7 +1391,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
         } else {
             int count=1;
-            for (UserRemoteConfig config:userRemoteConfigs) {
+            for(UserRemoteConfig config:userRemoteConfigs)   {
                 env.put("GIT_URL_" + count, config.getUrl());
                 count++;
             }
