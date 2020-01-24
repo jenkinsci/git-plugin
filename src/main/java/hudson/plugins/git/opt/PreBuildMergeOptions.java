@@ -17,6 +17,11 @@ public class PreBuildMergeOptions implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
+     * Timeout after which the merge aborts.
+     */
+    public Integer timeout = 10;
+
+    /**
      * Remote repository that contains the {@linkplain #mergeTarget ref}.
      */
     public RemoteConfig mergeRemote = null;
@@ -48,6 +53,15 @@ public class PreBuildMergeOptions implements Serializable {
 
     public void setMergeTarget(String mergeTarget) {
         this.mergeTarget = mergeTarget;
+    }
+
+    @Exported
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 
     @Exported

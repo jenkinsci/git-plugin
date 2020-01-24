@@ -28,6 +28,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     private final String mergeTarget;
     private String mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
+    private Integer timeout;
 
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
@@ -36,8 +37,8 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeStrategy merge strategy to be used
      */
     @Deprecated
-    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
-        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy, Integer timeout) {
+        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF, timeout);
     }
 
     /**
@@ -45,13 +46,16 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeTarget remote branch to be merged into current branch
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
+     * @param
+     *
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+            MergeCommand.GitPluginFastForwardMode fastForwardMode, Integer timeout) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
         this.mergeStrategy = mergeStrategy;
         this.fastForwardMode = fastForwardMode;
+        this.timeout = timeout;
     }
 
     @DataBoundConstructor
@@ -64,7 +68,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param pbm pre-build merge options used to construct UserMergeOptions
      */
     public UserMergeOptions(PreBuildMergeOptions pbm) {
-        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode());
+        this(pbm.getRemoteBranchName(), pbm.getMergeTarget(), pbm.getMergeStrategy().toString(), pbm.getFastForwardMode(), pbm.getTimeout());
     }
 
     /**
@@ -120,8 +124,17 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     }
 
     @DataBoundSetter
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
+    }
+
+    @DataBoundSetter
     public void setFastForwardMode(MergeCommand.GitPluginFastForwardMode fastForwardMode) {
         this.fastForwardMode = fastForwardMode;
+    }
+
+    public Integer getTimeout() {
+        return timeout;
     }
 
     @Override
