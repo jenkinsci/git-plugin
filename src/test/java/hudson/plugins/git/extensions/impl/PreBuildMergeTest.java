@@ -87,7 +87,7 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
     @Override
     protected GitSCMExtension getExtension() {
         return new PreBuildMerge(new UserMergeOptions("origin", "integration", "default",
-                MergeCommand.GitPluginFastForwardMode.FF));
+                MergeCommand.GitPluginFastForwardMode.FF, 10));
     }
 
 }

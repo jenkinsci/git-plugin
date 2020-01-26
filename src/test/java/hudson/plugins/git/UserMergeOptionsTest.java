@@ -29,32 +29,36 @@ public class UserMergeOptionsTest {
     private final String expectedMergeTarget;
     private final MergeCommand.Strategy expectedMergeStrategy;
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
+    private final Integer expectedTimeout;
 
     public UserMergeOptionsTest(
             String mergeRemote,
             String mergeTarget,
             MergeCommand.Strategy mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+            MergeCommand.GitPluginFastForwardMode fastForwardMode, Integer timeout) {
         this.expectedMergeRemote = mergeRemote;
         this.expectedMergeTarget = mergeTarget;
         this.expectedMergeStrategy = mergeStrategy;
         this.expectedFastForwardMode = fastForwardMode;
+        this.expectedTimeout = timeout;
         options = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
                 mergeStrategy == null ? null : mergeStrategy.toString(),
-                fastForwardMode);
+                fastForwardMode, timeout);
         deprecatedOptions = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
-                mergeStrategy == null ? null : mergeStrategy.toString());
+                mergeStrategy == null ? null : mergeStrategy.toString(),
+                timeout);
     }
 
-    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}")
+    @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}+{4}")
     public static Collection mergeOptionVariants() {
         List<Object[]> mergeOptions = new ArrayList<>();
         String[] remotes = new String[]{null, "src_remote"};
         String[] targets = new String[]{null, "dst_remote"};
+        Integer[] timeouts = new Integer[]{null, 10};
         MergeCommand.Strategy[] mergeStrategies = new MergeCommand.Strategy[]{
             null,
             MergeCommand.Strategy.DEFAULT,
@@ -74,8 +78,10 @@ public class UserMergeOptionsTest {
             for (String target : targets) {
                 for (MergeCommand.Strategy strategy : mergeStrategies) {
                     for (MergeCommand.GitPluginFastForwardMode mode : fastForwardModes) {
-                        Object[] mergeOption = {remote, target, strategy, mode};
-                        mergeOptions.add(mergeOption);
+                            for(Integer timeout: timeouts) {
+                                Object[] mergeOption = {remote, target, strategy, mode, timeout};
+                                mergeOptions.add(mergeOption);
+                            }
                     }
                 }
             }
@@ -109,12 +115,18 @@ public class UserMergeOptionsTest {
     }
 
     @Test
+    public void testTimeout() {
+        assertEquals(expectedTimeout, options.getTimeout());
+    }
+
+    @Test
     public void testToString() {
         final String expected = "UserMergeOptions{"
                 + "mergeRemote='" + expectedMergeRemote + "', "
                 + "mergeTarget='" + expectedMergeTarget + "', "
                 + "mergeStrategy='" + (expectedMergeStrategy == null ? MergeCommand.Strategy.DEFAULT : expectedMergeStrategy).name() + "', "
-                + "fastForwardMode='" + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode).name() + "'"
+                + "fastForwardMode='" + (expectedFastForwardMode == null ? MergeCommand.GitPluginFastForwardMode.FF : expectedFastForwardMode).name() + "', "
+                + "timeout='" + expectedTimeout + "'"
                 + '}';
         assertEquals(expected, options.toString());
     }
@@ -125,7 +137,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         assertEquals(expected, options);
         assertEquals(options, expected);
     }
@@ -136,7 +149,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         /* reflexive */
         assertEquals(options, options);
         assertEquals(expected, expected);
@@ -148,12 +162,14 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         UserMergeOptions expected1 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         assertEquals(expected, expected1);
         assertEquals(expected1, options);
         assertEquals(expected, options);
@@ -174,13 +190,15 @@ public class UserMergeOptionsTest {
                 "x" + this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         assertNotEquals(notExpected1, options);
         UserMergeOptions notExpected2 = new UserMergeOptions(
                 this.expectedMergeRemote,
                 "y" + this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         assertNotEquals(notExpected2, options);
         assertNotEquals(options, "A different data type");
     }
@@ -191,7 +209,8 @@ public class UserMergeOptionsTest {
                 this.expectedMergeRemote,
                 this.expectedMergeTarget,
                 this.expectedMergeStrategy == null ? null : this.expectedMergeStrategy.toString(),
-                this.expectedFastForwardMode);
+                this.expectedFastForwardMode,
+                this.expectedTimeout);
         assertEquals(expected, options);
         assertEquals(expected.hashCode(), options.hashCode());
     }
@@ -208,6 +227,9 @@ public class UserMergeOptionsTest {
     @Test
     public void mergeStrategyCase() throws Exception {
         Map<String, Object> args = new HashMap<>();
+        if (expectedTimeout != null) {
+            args.put("timeout", expectedTimeout);
+        }
         if (expectedMergeTarget != null) {
             args.put("mergeTarget", expectedMergeTarget);
         }

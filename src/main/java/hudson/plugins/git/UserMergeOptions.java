@@ -46,7 +46,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeTarget remote branch to be merged into current branch
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
-     * @param
+     * @param timeout timeout before merge aborts
      *
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
@@ -144,6 +144,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                 ", mergeTarget='" + mergeTarget + '\'' +
                 ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
                 ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
+                ", timeout='" + timeout + '\'' +
                 '}';
     }
 
@@ -161,12 +162,13 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return Objects.equals(mergeRemote, that.mergeRemote)
                 && Objects.equals(mergeTarget, that.mergeTarget)
                 && Objects.equals(mergeStrategy, that.mergeStrategy)
-                && Objects.equals(fastForwardMode, that.fastForwardMode);
+                && Objects.equals(fastForwardMode, that.fastForwardMode)
+                && Objects.equals(timeout, that.timeout);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode);
+        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode, timeout);
     }
 
     @Extension
