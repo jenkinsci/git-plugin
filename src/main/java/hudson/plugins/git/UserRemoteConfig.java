@@ -229,8 +229,8 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             String refSpec = Util.fixEmptyAndTrim(value);
 
-            if(refSpec==null){
-                return FormValidation.error(Messages.UserRemoteConfig_CheckRefSpec_RefSpecIsNull());
+            if(refSpec == null){
+                return FormValidation.error(Messages.UserRemoteConfig_CheckUrl_UrlIsNull());
             }
 
             if(refSpec.contains("$")){
