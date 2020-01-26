@@ -248,7 +248,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             try {
                 RemoteConfig.getAllRemoteConfigs(repoConfig);
             } catch (Exception e) {
-                return FormValidation.error("Specification is wrong");
+                return FormValidation.error("Specification is invalid");
             }
 
             return FormValidation.ok();
