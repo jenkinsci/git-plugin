@@ -34,7 +34,6 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
 import java.util.regex.Pattern;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
@@ -231,7 +230,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             String refSpec = Util.fixEmptyAndTrim(value);
 
             if(refSpec==null){
-                return FormValidation.error(Messages.UserRemoteConfig_CheckUrl_UrlIsNull());
+                return FormValidation.error(Messages.UserRemoteConfig_CheckRefSpec_RefSpecIsNull());
             }
 
             if(refSpec.contains("$")){
@@ -248,7 +247,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
             try {
                 RemoteConfig.getAllRemoteConfigs(repoConfig);
             } catch (Exception e) {
-                return FormValidation.error("Specification is invalid");
+                return FormValidation.error(Messages.UserRemoteConfig_CheckRefSpec_InvalidRefSpec());
             }
 
             return FormValidation.ok();
