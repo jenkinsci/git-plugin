@@ -21,6 +21,8 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -207,6 +209,46 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 git.getHeadRev(url, "HEAD");
             } catch (GitException e) {
                 return FormValidation.error(Messages.UserRemoteConfig_FailedToConnect(e.getMessage()));
+            }
+
+            return FormValidation.ok();
+        }
+
+        /**
+         * A form validation logic as a method to check the specification of 'refSpec' and notify the user about
+         * illegal specs before applying the project configuration
+         * @param name Name of the remote repository
+         * @param url Repository URL
+         * @param value value of RefSpec
+         * @return FormValidation.ok() or FormValidation.error()
+         * @throws IllegalArgumentException
+         */
+        public FormValidation doCheckRefspec(@QueryParameter String name,
+                                             @QueryParameter String url,
+                                             @QueryParameter String value) throws IllegalArgumentException {
+
+            String refSpec = Util.fixEmptyAndTrim(value);
+
+            if(refSpec == null){
+                // We fix empty field value with a default refspec, hence we send ok.
+                return FormValidation.ok();
+            }
+
+            if(refSpec.contains("$")){
+                // set by variable, can't validate
+                return FormValidation.ok();
+            }
+
+            Config repoConfig = new Config();
+
+            repoConfig.setString("remote", name, "url", url);
+            repoConfig.setString("remote", name, "fetch", refSpec);
+
+            //Attempt to fetch remote repositories using the repoConfig
+            try {
+                RemoteConfig.getAllRemoteConfigs(repoConfig);
+            } catch (Exception e) {
+                return FormValidation.error(Messages.UserRemoteConfig_CheckRefSpec_InvalidRefSpec());
             }
 
             return FormValidation.ok();
