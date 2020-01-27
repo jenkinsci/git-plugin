@@ -62,7 +62,7 @@ public class UserRemoteConfigRefSpecTest {
 
     @Issue("JENKINS-57660")
     @Test
-    public void testdoCheckRefspecFailureWithEmptyString(){
+    public void testdoCheckRefspecSuccessWithEmptyString(){
         String url = "git://git.example.com/repository-that-does-not-exist";
         String name = "origin";
         List<String> refSpec = new ArrayList<>();
@@ -70,8 +70,8 @@ public class UserRemoteConfigRefSpecTest {
 
         UserRemoteConfig.DescriptorImpl descriptor = new UserRemoteConfig.DescriptorImpl();
         for (String ref:refSpec) {
-            assertEquals("Please enter valid RefSpec.",
-                    descriptor.doCheckRefspec(url, name, ref).getLocalizedMessage());
+            assertEquals(FormValidation.ok(),
+                    descriptor.doCheckRefspec(url, name, ref));
         }
     }
 
