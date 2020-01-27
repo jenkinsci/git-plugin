@@ -37,8 +37,23 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeStrategy merge strategy to be used
      */
     @Deprecated
-    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy, Integer timeout) {
-        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF, timeout);
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy) {
+        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
+    }
+
+    /**
+     * @param mergeRemote remote name used for merge
+     * @param mergeTarget remote branch to be merged into current branch
+     * @param mergeStrategy merge strategy
+     * @param fastForwardMode fast forward mode
+     *
+     */
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
+            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+        this.mergeRemote = mergeRemote;
+        this.mergeTarget = mergeTarget;
+        this.mergeStrategy = mergeStrategy;
+        this.fastForwardMode = fastForwardMode;
     }
 
     /**
@@ -50,7 +65,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      *
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode, Integer timeout) {
+        MergeCommand.GitPluginFastForwardMode fastForwardMode, Integer timeout) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
         this.mergeStrategy = mergeStrategy;
