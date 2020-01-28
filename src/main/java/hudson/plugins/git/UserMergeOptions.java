@@ -46,7 +46,6 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeTarget remote branch to be merged into current branch
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
-     *
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
             MergeCommand.GitPluginFastForwardMode fastForwardMode) {
@@ -62,7 +61,6 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param mergeStrategy merge strategy
      * @param fastForwardMode fast forward mode
      * @param timeout timeout before merge aborts
-     *
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
         MergeCommand.GitPluginFastForwardMode fastForwardMode, Integer timeout) {

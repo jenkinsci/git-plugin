@@ -64,6 +64,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * Tests for {@link GitPublisher}
@@ -74,6 +75,9 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
+
+    @Rule
+    public JenkinsRule r = new JenkinsRule();
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
@@ -258,7 +262,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
-        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF, 10)));
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF, 1234)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
@@ -680,6 +684,30 @@ public class GitPublisherTest extends AbstractGitProject {
         assertFalse("Env " + envName + " empty", envValue.isEmpty());
 
         checkEnvVar(project, envName, envValue);
+    }
+
+    @Test
+    public void testTimeout() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        GitSCM scm = new GitSCM(
+            remoteConfigs(),
+            Collections.singletonList(new BranchSpec("*")),
+            false, Collections.<SubmoduleConfig>emptyList(),
+            null, null,
+            Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF, 1234)));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
+        project.getPublishersList().add(new GitPublisher(
+            Collections.<TagToPush>emptyList(),
+            Collections.singletonList(new BranchToPush("origin", "integration")),
+            Collections.<NoteToPush>emptyList(),
+            true, true, false));
+        // create initial commit and then run the build against it:
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
+        final FreeStyleBuild build = build(project, Result.SUCCESS, "commitFileBase");
+        r.assertLogContains("# timeout=1234", build);
     }
 
     private void checkEnvVar(FreeStyleProject project, String envName, String envValue) throws Exception {

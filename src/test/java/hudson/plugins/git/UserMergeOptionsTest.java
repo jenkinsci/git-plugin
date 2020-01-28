@@ -49,8 +49,7 @@ public class UserMergeOptionsTest {
         deprecatedOptions = new UserMergeOptions(
                 mergeRemote,
                 mergeTarget,
-                mergeStrategy == null ? null : mergeStrategy.toString(),
-                timeout);
+                mergeStrategy == null ? null : mergeStrategy.toString());
     }
 
     @Parameterized.Parameters(name = "{0}+{1}+{2}+{3}+{4}")
