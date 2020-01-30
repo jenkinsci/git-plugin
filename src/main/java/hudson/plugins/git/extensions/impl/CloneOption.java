@@ -14,6 +14,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
@@ -148,7 +149,20 @@ public class CloneOption extends GitSCMExtension {
             // in a single job definition.
             RemoteConfig rc = scm.getRepositories().get(0);
             List<RefSpec> refspecs = rc.getFetchRefSpecs();
-            cmd.refspecs(refspecs);
+            List<RefSpec> expandedrefSpecs = new ArrayList<>();
+            Boolean check = false;
+            for (RefSpec ref:refspecs) {
+                if(ref.toString().contains("$")){
+                    EnvVars env = build.getEnvironment(listener);
+                    expandedrefSpecs.add(new RefSpec(env.expand(ref.toString())));
+                    check = true;
+                }
+            }
+            if(!check) {
+                cmd.refspecs(refspecs);
+            } else{
+                cmd.refspecs(expandedrefSpecs);
+            }
         }
         cmd.timeout(timeout);
 
