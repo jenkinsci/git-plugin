@@ -151,10 +151,10 @@ public class CloneOption extends GitSCMExtension {
             List<RefSpec> refspecs = rc.getFetchRefSpecs();
             List<RefSpec> expandedRefSpecs = new ArrayList<>();
             EnvVars env = build.getEnvironment(listener);
-            for (RefSpec ref:refspecs) {
+            for (RefSpec ref : refspecs) {
                 expandedRefSpecs.add(new RefSpec(env.expand(ref.toString())));
             }
-                cmd.refspecs(expandedRefSpecs);
+            cmd.refspecs(expandedRefSpecs);
         }
         cmd.timeout(timeout);
 
