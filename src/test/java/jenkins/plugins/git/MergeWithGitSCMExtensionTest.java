@@ -3,25 +3,16 @@ package jenkins.plugins.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.plugins.git.*;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.BuildData;
-import junit.framework.TestCase;
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.eclipse.jgit.lib.Constants;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
 
