@@ -35,7 +35,7 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
     public void before() throws Exception {
         repo = new TestGitRepo("repo", tmp.newFolder(), listener);
         // make an initial commit to master and get hash
-        this.baseHash=repo.commit(MASTER_FILE, repo.johnDoe, "Initial Commit");
+        this.baseHash = repo.commit(MASTER_FILE, repo.johnDoe, "Initial Commit");
         // set the base name as HEAD
         this.baseName = Constants.MASTER;
         project = setupBasicProject(repo);
