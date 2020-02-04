@@ -37,7 +37,7 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
         // make an initial commit to master and get hash
         this.baseHash=repo.commit(MASTER_FILE, repo.johnDoe, "Initial Commit");
         // set the base name as HEAD
-        this.baseName=Constants.MASTER;
+        this.baseName = Constants.MASTER;
         project = setupBasicProject(repo);
         // create integration branch
         repo.git.branch("integration");
