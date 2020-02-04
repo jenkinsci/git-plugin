@@ -64,7 +64,7 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
         // delete integration branch successfully and commit successfully
         repo.git.deleteBranch("integration");
         repo.git.checkoutBranch("integration", "master");
-        this.baseName=Constants.HEAD;
+        this.baseName = Constants.HEAD;
         this.baseHash = repo.git.revParse(baseName).name();
         repo.commit(MASTER_FILE, "new content on integration branch", repo.johnDoe, repo.johnDoe, "Commit success!");
         repo.git.checkout().ref("master").execute();
