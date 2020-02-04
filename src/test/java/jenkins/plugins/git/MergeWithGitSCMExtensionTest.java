@@ -71,7 +71,7 @@ public class MergeWithGitSCMExtensionTest extends GitSCMExtensionTest {
 
         // as baseName and baseHash don't change in master branch, this commit should  merge !
         assertFalse("SCM polling should not detect any more changes after build", project.poll(listener).hasChanges());
-        String conflictSha1= repo.commit(MASTER_FILE, "new content ", repo.johnDoe, repo.johnDoe, "Commit success!");
+        String conflictSha1= repo.commit(MASTER_FILE, "new John Doe content will conflict", repo.johnDoe, repo.johnDoe, "Commit success!");
         assertTrue("SCM polling should detect changes", project.poll(listener).hasChanges());
 
 
