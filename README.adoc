@@ -31,6 +31,7 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
+[[GitPlugin-ProjectConfiguration]]
 [[configuration]]
 == Configuration
 
