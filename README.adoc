@@ -103,7 +103,7 @@ Refer to webhook documentation for your repository:
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
 
 Other git repositories can use a link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[post-receive hook] in the remote repository to notify Jenkins of changes.
-Add the following line in your hooks/post-receive file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository.
+Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository.
 
 ....
 curl http://yourserver/git/notifyCommit?url=<URL of the Git repository>
