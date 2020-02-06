@@ -903,6 +903,12 @@ Some git plugin settings can only be controlled from command line properties set
 The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])).
 The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
 
+[[GitPlugin-WhyNotJGit]]
+Command line git is the reference git implementation in the git plugin and the git client plugin.
+Command line git provides the most functionality and is the most stable implementation.
+Some installations may not want to install command line git and may want to disable the command line git implementation.
+Administrators may disable command line git with the property `org.jenkinsci.plugins.gitclient.Git.useCLI=false`.
+
 [[git-publisher]]
 == Git Publisher
 
