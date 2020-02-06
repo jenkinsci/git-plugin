@@ -131,6 +131,40 @@ When notifyCommit is successful, the list of triggered projects is returned.
 See the https://plugins.jenkins.io/git-client[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
+[[GitPlugin-Configuration]]
+[[global-configuration]]
+=== Global Configuration
+
+In the `Configure System` page, the Git Plugin provides the following options:
+
+[[global-config-user-name]]
+Global Config user.name Value::
+
+  Defines the default git user name that will be assigned when git commits a change from Jenkins.
+  For example, `Janice Examplesperson`.
+  This can be overridden by individual projects with the <<custom-user-name-e-mail-address>> extension.
+
+[[global-config-user-email]]
+Global Config user.email Value::
+
+  Defines the default git user e-mail that will be assigned when git commits a change from Jenkins.
+  For example, `janice.examplesperson@example.com`.
+  This can be overridden by individual projects with the <<custom-user-name-e-mail-address>> extension.
+
+[[create-new-accounts-based-on-author-email]]
+Create new accounts based on author/committer's email::
+
+  New user accounts are created in Jenkins for committers and authors identified in changelogs.
+  The new user accounts are added to the internal Jenkins database.
+  The e-mail address is used as the id of the account.
+
+[[show-the-entire-commit-summary-in-changes]]
+Show the entire commit summary in changes::
+
+  The `changes` page for each job would truncate the change summary prior to git plugin 3.0.
+  With the release of git plugin 3.0, the default was changed to show the complete change summary.
+  Administrators that want to restore the old behavior may disable this setting.
+
 [[repository-browser]]
 === Repository Browser
 
