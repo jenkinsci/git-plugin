@@ -706,6 +706,10 @@ When this extension is enabled, the polling is performed from a cloned copy of t
 
 If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
+By default, the plugin polls by executing a polling process or thread on the Jenkins master.
+If the Jenkins master does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
+In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins master.
+
 [[merge-extensions]]
 === Merge Extensions
 
