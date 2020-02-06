@@ -31,6 +31,7 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
+[[GitPlugin-ProjectConfiguration]]
 [[configuration]]
 == Configuration
 
@@ -117,7 +118,7 @@ This will scan all the jobs that:
 For jobs that meet these conditions, polling will be triggered.
 If polling finds a change worthy of a build, a build will be triggered.
 
-This allows a script to remain the same when jobs come and go in Jenkins. 
+This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
 Finally, this URL doesn't require authentication even for secured Jenkins, because the server doesn't directly use anything that the client is sending.
 It runs polling to verify that there is a change before it actually starts a build.
@@ -129,6 +130,40 @@ When notifyCommit is successful, the list of triggered projects is returned.
 
 See the https://plugins.jenkins.io/git-client[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
+
+[[GitPlugin-Configuration]]
+[[global-configuration]]
+=== Global Configuration
+
+In the `Configure System` page, the Git Plugin provides the following options:
+
+[[global-config-user-name]]
+Global Config user.name Value::
+
+  Defines the default git user name that will be assigned when git commits a change from Jenkins.
+  For example, `Janice Examplesperson`.
+  This can be overridden by individual projects with the <<custom-user-name-e-mail-address>> extension.
+
+[[global-config-user-email]]
+Global Config user.email Value::
+
+  Defines the default git user e-mail that will be assigned when git commits a change from Jenkins.
+  For example, `janice.examplesperson@example.com`.
+  This can be overridden by individual projects with the <<custom-user-name-e-mail-address>> extension.
+
+[[create-new-accounts-based-on-author-email]]
+Create new accounts based on author/committer's email::
+
+  New user accounts are created in Jenkins for committers and authors identified in changelogs.
+  The new user accounts are added to the internal Jenkins database.
+  The e-mail address is used as the id of the account.
+
+[[show-the-entire-commit-summary-in-changes]]
+Show the entire commit summary in changes::
+
+  The `changes` page for each job would truncate the change summary prior to git plugin 3.0.
+  With the release of git plugin 3.0, the default was changed to show the complete change summary.
+  Administrators that want to restore the old behavior may disable this setting.
 
 [[repository-browser]]
 === Repository Browser
@@ -671,6 +706,10 @@ When this extension is enabled, the polling is performed from a cloned copy of t
 
 If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
+By default, the plugin polls by executing a polling process or thread on the Jenkins master.
+If the Jenkins master does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
+In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins master.
+
 [[merge-extensions]]
 === Merge Extensions
 
@@ -863,6 +902,12 @@ Some git plugin settings can only be controlled from command line properties set
 
 The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])).
 The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+
+[[GitPlugin-WhyNotJGit]]
+Command line git is the reference git implementation in the git plugin and the git client plugin.
+Command line git provides the most functionality and is the most stable implementation.
+Some installations may not want to install command line git and may want to disable the command line git implementation.
+Administrators may disable command line git with the property `org.jenkinsci.plugins.gitclient.Git.useCLI=false`.
 
 [[git-publisher]]
 == Git Publisher
