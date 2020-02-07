@@ -38,7 +38,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     @Parameterized.Parameters(name = "{0}")
     public static Collection permuteRefSpecVariable() {
         List<Object[]> values = new ArrayList<>();
-        String[] allowed = {"${BUILD_NO}","${BUILD_ID}",
+        String[] allowed = {"${BUILD_NUMBER}","${BUILD_ID}",
                 "${GIT_COMMIT}"};
         for (String refSpecValue : allowed) {
             Object[] combination = {refSpecValue};
