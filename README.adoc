@@ -31,9 +31,8 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
-[[GitPlugin-ProjectConfiguration]]
-[[configuration]]
-== Configuration
+[#configuration]
+== [[GitPlugin-ProjectConfiguration]]Configuration
 
 [[using-repositories]]
 === Repositories
@@ -91,9 +90,8 @@ https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
 
-[[push-notification-from-repository]]
-[[GitPlugin-Pushnotificationfromrepository]]
-=== Push notification from repository
+[#push-notification-from-repository]
+=== [[GitPlugin-Pushnotificationfromrepository]]Push notification from repository
 
 To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changs to the repository.
 Refer to webhook documentation for your repository:
@@ -125,15 +123,14 @@ It runs polling to verify that there is a change before it actually starts a bui
 
 When notifyCommit is successful, the list of triggered projects is returned.
 
-[[enabling-jgit]]
+[#enabling-jgit]
 === Enabling JGit
 
-See the https://plugins.jenkins.io/git-client[git client plugin documentation] for instructions to enable JGit.
+See the link:https://plugins.jenkins.io/git-client/#enabling-jgit[git client plugin documentation] for instructions to enable JGit.
 JGit becomes available throughout Jenkins once it has been enabled.
 
-[[GitPlugin-Configuration]]
-[[global-configuration]]
-=== Global Configuration
+[#global-configuration]
+=== [[GitPlugin-Configuration]]Global Configuration
 
 In the `Configure System` page, the Git Plugin provides the following options:
 
