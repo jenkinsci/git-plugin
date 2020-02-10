@@ -901,7 +901,7 @@ Some git plugin settings can only be controlled from command line properties set
 [#default-timeout]
 === Default timeout
 
-The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286])).
+The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286]).
 The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
