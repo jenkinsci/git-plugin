@@ -809,7 +809,8 @@ Excluded Messages::
 [#prune-stale-remote-tracking-branches]
 ==== Prune stale remote tracking branches
 
-Runs `link:https://git-scm.com/docs/git-remote[git remote prune]` for each remote to prune obsolete local branches.
+Removes remote tracking branches from the local workspace if they no longer exist on the remote.
+See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empruneem[git remote prune]` and `link:https://git-scm.com/docs/git-fetch#_pruning[git fetch --prune]` for more details.
 
 [#sparse-checkout-paths]
 ==== Sparse Checkout paths
