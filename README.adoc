@@ -119,7 +119,7 @@ If polling finds a change worthy of a build, a build will be triggered.
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
 Finally, this URL doesn't require authentication even for secured Jenkins, because the server doesn't directly use anything that the client is sending.
-It runs polling to verify that there is a change before it actually starts a build.
+It polls to verify that there is a change before it actually starts a build.
 
 When notifyCommit is successful, the list of triggered projects is returned.
 
