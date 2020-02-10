@@ -419,7 +419,6 @@ Stash is now called *BitBucket Server*.
 Repository browser for git repositories hosted by link:https://www.atlassian.com/software/bitbucket[BitBucket Server].
 Options include:
 
-stash 
 [[stash-url]]
 URL::
 
