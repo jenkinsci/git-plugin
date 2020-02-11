@@ -251,7 +251,7 @@ public class BuildData implements Action, Serializable, Cloneable {
             else
                 orgName = "";
 
-        } else {
+        } else { // TODO: Handling the multuple remote URLs situation.
             orgName = "";
         }
 
@@ -273,7 +273,7 @@ public class BuildData implements Action, Serializable, Cloneable {
                     .replaceAll("[.]git$", "");
             if (!repoName.equals(url))
                 repoName = repoName.split("/")[1];
-        } else {
+        } else { // TODO: Handling the multuple remote URLs situation.
             repoName = "";
         }
 
