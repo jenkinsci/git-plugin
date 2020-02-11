@@ -6,14 +6,25 @@
 
 	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
         <j:if test="${!empty(it.scmName)}"> from <strong>SCM:</strong> ${it.scmName}</j:if>
-        <ul>
-        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
-          <j:if test="${branch!=''}">
-            <li>${branch.name}</li>
-          </j:if>
-        </j:forEach>
-        </ul>
-
+            <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+                <j:if test="${branch!=''}">
+                    <table style="border-spacing: 10px 5px">
+                        <tr>
+                            <td rowspan="2">
+                                <ul><li>${branch.name}</li></ul>
+                            </td>
+                            <td style="font-weight: bold; font-size: large;">
+                                ${it.organizationName}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; font-size: large">
+                                ${it.repositoryName}
+                            </td>
+                        </tr>
+                    </table>
+                </j:if>
+            </j:forEach>
 
 	</t:summary>
 </j:jelly>

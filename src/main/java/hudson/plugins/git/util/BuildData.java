@@ -230,6 +230,41 @@ public class BuildData implements Action, Serializable, Cloneable {
         return remoteUrls;
     }
 
+    @Exported
+    public String getOrganizationName() {
+        String orgName;
+        if (remoteUrls.size() == 1) {
+            String url = remoteUrls.iterator().next();
+            orgName = url.replaceAll("^http[s]?://github.com/", "")
+                    .replaceAll("[.]git$", "");
+            if (!orgName.equals(url))
+                orgName = orgName.split("/")[0];
+            else
+                orgName = "";
+
+        } else {
+            orgName = "";
+        }
+
+        return orgName;
+    }
+
+    @Exported
+    public String getRepositoryName() {
+        String repoName;
+        if (remoteUrls.size() == 1) {
+            String url = remoteUrls.iterator().next();
+            repoName = url.replaceAll("^http[s]?://github.com/", "")
+                    .replaceAll("[.]git$", "");
+            if (!repoName.equals(url))
+                repoName = repoName.split("/")[1];
+        } else {
+            repoName = "";
+        }
+
+        return repoName;
+    }
+
     public boolean hasBeenReferenced(String remoteUrl) {
         return remoteUrls.contains(remoteUrl);
     }
