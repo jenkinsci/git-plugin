@@ -230,14 +230,23 @@ public class BuildData implements Action, Serializable, Cloneable {
         return remoteUrls;
     }
 
+    /**
+     * Gets organization name for this build. The valid github project
+     * url should be : http[s]://github.com/[ORGANIZATION-NAME]/[REPOSITORY-NAME],
+     * note that organization name can also be a user name if it a personal repository.
+     * @return Organization name of this build
+     *    Currently it can only get the name if there is only one
+     *      single remote URLs.
+     */
     @Exported
     public String getOrganizationName() {
         String orgName;
         if (remoteUrls.size() == 1) {
+            // if there is only one remote url
             String url = remoteUrls.iterator().next();
             orgName = url.replaceAll("^http[s]?://github.com/", "")
                     .replaceAll("[.]git$", "");
-            if (!orgName.equals(url))
+            if (!orgName.equals(url)) // if not equal then it is a valid github link
                 orgName = orgName.split("/")[0];
             else
                 orgName = "";
@@ -249,6 +258,12 @@ public class BuildData implements Action, Serializable, Cloneable {
         return orgName;
     }
 
+    /**
+     * Gets repository name for this build, similar to getOrganizationName method
+     * @return Repository name of this build
+     *    Currently it can only get the name if there is only one
+     *      single remote URLs.
+     */
     @Exported
     public String getRepositoryName() {
         String repoName;
