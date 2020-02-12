@@ -332,10 +332,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 if (rev != null) {
                     headName = rev.getHead().getName();
                 } else {
-                    if (branchSpec.getName().startsWith(Constants.R_TAGS)){
-                        headName = branchSpec.getName().substring(Constants.R_TAGS.length()); 
-                    } else if (branchSpec.getName().startsWith(Constants.R_HEADS)) {
-                        headName = branchSpec.getName().substring(Constants.R_HEADS.length());
+                    if (branchSpec.getName().startsWith(prefix)){
+                        headName = branchSpec.getName().substring(prefix.length()); 
                     } else if (branchSpec.getName().startsWith("*/")) {
                         headName = branchSpec.getName().substring(2);
                     } else {
