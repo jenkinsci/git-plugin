@@ -30,18 +30,32 @@ import hudson.plugins.git.extensions.impl.CleanCheckout;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Exposes {@link CleanCheckout} as a {@link SCMSourceTrait}.
  *
  * @since 3.4.0
  */
 public class CleanAfterCheckoutTrait extends GitSCMExtensionTrait<CleanCheckout> {
+
+    /**
+     * @deprecated Use constructor that accepts extension instead.
+     */
+    @Deprecated
+    public CleanAfterCheckoutTrait() {
+        this(null);
+    }
+
     /**
      * Stapler constructor.
+     *
+     * @param extension the option to clean subdirectories which contain git repositories.
      */
     @DataBoundConstructor
-    public CleanAfterCheckoutTrait() {
-        super(new CleanCheckout());
+    public CleanAfterCheckoutTrait(@CheckForNull CleanCheckout extension) {
+        super(extension == null ? new CleanCheckout() : extension);
     }
 
     /**

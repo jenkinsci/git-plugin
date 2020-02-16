@@ -1,22 +1,14 @@
 package hudson.plugins.git.extensions.impl;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.GitTool;
-import hudson.plugins.git.SubmoduleConfig;
-import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +52,14 @@ public class CheckoutOptionTest {
         option = new CheckoutOption(NEW_TIMEOUT);
         option.decorateCheckoutCommand(scm, build, git, listener, cmd);
         assertEquals(NEW_TIMEOUT, cmd.getTimeout());
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(CheckoutOption.class)
+                .usingGetClass()
+                .suppress(Warning.NONFINAL_FIELDS)
+                .verify();
     }
 
     public class CheckoutCommandImpl implements CheckoutCommand {

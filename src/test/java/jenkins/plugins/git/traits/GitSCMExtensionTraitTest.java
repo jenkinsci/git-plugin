@@ -6,7 +6,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import jenkins.scm.api.trait.SCMTrait;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;

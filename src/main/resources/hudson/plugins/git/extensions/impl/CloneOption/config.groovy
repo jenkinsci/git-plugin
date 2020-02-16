@@ -1,6 +1,6 @@
-package hudson.plugins.git.extensions.impl.CloneOption;
+package hudson.plugins.git.extensions.impl.CloneOption
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry(title:_("Fetch tags"), field:"noTags") {
     f.checkbox(negative:true, checked:(instance==null||!instance.noTags))

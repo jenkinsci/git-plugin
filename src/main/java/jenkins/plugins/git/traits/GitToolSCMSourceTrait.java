@@ -37,10 +37,8 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.GitSCMSourceContext;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMBuilder;
 import jenkins.scm.api.trait.SCMSourceContext;
-import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.kohsuke.accmod.Restricted;
@@ -155,7 +153,7 @@ public class GitToolSCMSourceTrait extends SCMSourceTrait {
          * @return the {@link GitSCM.DescriptorImpl}.
          */
         private GitSCM.DescriptorImpl getSCMDescriptor() {
-            return (GitSCM.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(GitSCM.class);
+            return (GitSCM.DescriptorImpl) Jenkins.get().getDescriptor(GitSCM.class);
         }
 
         /**

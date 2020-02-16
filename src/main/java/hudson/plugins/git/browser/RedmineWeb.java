@@ -12,7 +12,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -75,11 +74,11 @@ public class RedmineWeb extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(Path path) throws IOException {
         if (path.getEditType().equals(EditType.DELETE)) {
-            return getDiffLink(path);
+            return encodeURL(getDiffLink(path));
         } else {
             final String spec = "revisions/" + path.getChangeSet().getId() + "/entry/" + path.getPath();
             URL url = getUrl();
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(new URL(url, url.getPath() + spec));
         }
     }
 

@@ -1,5 +1,5 @@
-package hudson.plugins.git.extensions.impl.ChangelogToBranch;
+package hudson.plugins.git.extensions.impl.ChangelogToBranch
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.property(field:"options")

@@ -18,10 +18,12 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import static hudson.model.Result.FAILURE;
 import hudson.model.Run;
@@ -38,7 +40,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
  * @author Kohsuke Kawaguchi
  */
 public class PreBuildMerge extends GitSCMExtension {
-    private UserMergeOptions options;
+    private final UserMergeOptions options;
 
     @DataBoundConstructor
     public PreBuildMerge(UserMergeOptions options) {
@@ -46,6 +48,7 @@ public class PreBuildMerge extends GitSCMExtension {
         this.options = options;
     }
 
+    @Whitelisted
     public UserMergeOptions getOptions() {
         return options;
     }
@@ -90,7 +93,7 @@ public class PreBuildMerge extends GitSCMExtension {
 
             // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
             // revision info for this build etc. The default assumption is that it's a duplicate.
-            BuildData buildData = scm.getBuildData(build, true);
+            BuildData buildData = scm.copyBuildData(build);
             boolean buildDataAlreadyPresent = false;
             List<BuildData> actions = build.getActions(BuildData.class);
             for (BuildData d: actions)  {
@@ -146,13 +149,9 @@ public class PreBuildMerge extends GitSCMExtension {
             return false;
         }
 
-        if (o instanceof PreBuildMerge) {
-            PreBuildMerge that = (PreBuildMerge) o;
-            return (options != null && options.equals(that.options))
-                    || (options == null && that.options == null);
-        }
+        PreBuildMerge that = (PreBuildMerge) o;
 
-        return false;
+        return Objects.equals(options, that.options);
     }
 
     /**
@@ -160,7 +159,7 @@ public class PreBuildMerge extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return PreBuildMerge.class.hashCode();
+        return Objects.hashCode(options);
     }
 
     /**

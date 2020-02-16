@@ -13,7 +13,7 @@ import java.io.Serializable;
  * Provides access to the model object on the master for {@link BuildChooser}.
  *
  * <p>
- * {@link BuildChooser} runs on a node that has the workspace, which means it can run on a slave.
+ * {@link BuildChooser} runs on a node that has the workspace, which means it can run on an agent.
  * This interface provides access for {@link BuildChooser} to send a closure to the master and execute code there.
  *
  * @author Kohsuke Kawaguchi

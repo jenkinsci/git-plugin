@@ -15,9 +15,8 @@
     <j:forEach var="cs" items="${it.logs}">
       <tr class="pane">
         <td colspan="2" class="changeset">
-          <a name="${cs.id}"></a>
-          <div class="changeset-message">
-            <b>
+          <div class="changeset-message" id="${cs.id}">
+            <strong>
               ${%Commit}
               <j:set var="cslink" value="${browser.getChangeSetLink(cs)}"/>
               <j:if test="${cslink!=null}">
@@ -27,7 +26,7 @@
                 ${cs.id}
               </j:if>
               by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
-            </b>
+            </strong>
             <j:if test="${cs.branch!=null}">
               <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
             </j:if>
@@ -40,10 +39,10 @@
           <td width="16"><t:editTypeIcon type="${p.editType}"/></td>
           <td>
             <a href="${browser.getFileLink(p)}">${p.path}</a>
-            <j:set var="diff" value="${browser.getDiffLink(p)}"/>
-            <j:if test="${diff!=null}">
+            <j:set var="difflink" value="${browser.getDiffLink(p)}"/>
+            <j:if test="${difflink!=null}">
               <st:nbsp/>
-              <a href="${diff}">(${%diff})</a>
+              <a href="${difflink}">(${%diff})</a>
             </j:if>
           </td>
         </tr>

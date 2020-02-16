@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.eclipse.jgit.transport.RefSpec;
 import org.junit.Test;
 
@@ -143,6 +144,13 @@ public class AbstractGitSCMSourceTrivialTest {
         List<BranchSpec> branches = gitSCM.getBranches();
         assertEquals(expectedBranchName, branches.get(0).getName());
         assertEquals("Wrong number of branches", 1, branches.size());
+    }
+
+    @Test
+    public void equalsContractSCMRevisionImpl() {
+        EqualsVerifier.forClass(AbstractGitSCMSource.SCMRevisionImpl.class)
+                .usingGetClass()
+                .verify();
     }
 
     public class AbstractGitSCMSourceImpl extends AbstractGitSCMSource {

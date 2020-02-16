@@ -1,4 +1,4 @@
-package hudson.plugins.git.BranchSpec;
+package hudson.plugins.git.BranchSpec
 
 f = namespace(lib.FormTagLib)
 

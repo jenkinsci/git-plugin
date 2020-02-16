@@ -7,9 +7,12 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
+import java.util.Objects;
+
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * git-clean before the checkout.
@@ -17,8 +20,19 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author David S Wang
  */
 public class CleanBeforeCheckout extends GitSCMExtension {
+    private boolean deleteUntrackedNestedRepositories;
+
     @DataBoundConstructor
     public CleanBeforeCheckout() {
+    }
+
+    public boolean isDeleteUntrackedNestedRepositories() {
+        return deleteUntrackedNestedRepositories;
+    }
+
+    @DataBoundSetter
+    public void setDeleteUntrackedNestedRepositories(boolean deleteUntrackedNestedRepositories) {
+        this.deleteUntrackedNestedRepositories = deleteUntrackedNestedRepositories;
     }
 
     /**
@@ -27,7 +41,7 @@ public class CleanBeforeCheckout extends GitSCMExtension {
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Cleaning workspace");
-        git.clean();
+        git.clean(deleteUntrackedNestedRepositories);
         // TODO: revisit how to hand off to SubmoduleOption
         for (GitSCMExtension ext : scm.getExtensions()) {
             ext.onClean(scm, git);
@@ -45,7 +59,8 @@ public class CleanBeforeCheckout extends GitSCMExtension {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return o instanceof CleanBeforeCheckout;
+        CleanBeforeCheckout that = (CleanBeforeCheckout) o;
+        return deleteUntrackedNestedRepositories == that.deleteUntrackedNestedRepositories;
     }
 
     /**
@@ -53,7 +68,7 @@ public class CleanBeforeCheckout extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return CleanBeforeCheckout.class.hashCode();
+        return Objects.hash(deleteUntrackedNestedRepositories);
     }
 
     /**
@@ -61,15 +76,18 @@ public class CleanBeforeCheckout extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "CleanBeforeCheckout{}";
+        return "CleanBeforeCheckout{" +
+                "deleteUntrackedNestedRepositories=" + deleteUntrackedNestedRepositories +
+                '}';
     }
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
-        @Override
+
         /**
          * {@inheritDoc}
          */
+        @Override
         public String getDisplayName() {
             return "Clean before checkout";
         }

@@ -60,7 +60,7 @@ public class GitChangeSetEuroTest {
         gitChangeLog.add("    Tested-by: Jenkins <jenkins@no-mail.com>");
         gitChangeLog.add("    Reviewed-by: Mister Another <mister.another@ericsson.com>");
         gitChangeLog.add("");
-        changeSet = new GitChangeSet(gitChangeLog, useAuthorName);
+        changeSet = new GitChangeSet(gitChangeLog, useAuthorName, false);
     }
 
     @Test

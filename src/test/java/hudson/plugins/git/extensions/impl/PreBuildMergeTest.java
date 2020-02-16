@@ -10,10 +10,10 @@ import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 /**
@@ -58,7 +58,7 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         repo.git.deleteBranch("integration");
         repo.git.checkoutBranch("integration", "master");
         repo.commit(MASTER_FILE, "new content on integration branch", repo.johnDoe, repo.johnDoe, "Commit which should fail!");
-        repo.git.checkout("master");
+        repo.git.checkout().ref("master").execute();
 
         // make a new commit in master branch, this commit should not merge cleanly!
         assertFalse("SCM polling should not detect any more changes after build", project.poll(listener).hasChanges());
@@ -66,7 +66,6 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         assertTrue("SCM polling should detect changes", project.poll(listener).hasChanges());
 
         FreeStyleBuild secondBuild = build(project, Result.FAILURE);
-        assertThat(secondBuild.getLog(), containsString("Automatic merge failed; fix conflicts and then commit the result."));
         assertEquals(secondBuild.getNumber(), gitSCM.getBuildData(secondBuild).lastBuild.getBuildNumber());
         // buildData should mark this as built
         assertEquals(conflictSha1, gitSCM.getBuildData(secondBuild).lastBuild.getMarked().getSha1String());
@@ -76,6 +75,13 @@ public class PreBuildMergeTest extends GitSCMExtensionTest
         assertEquals(firstBuild.getNumber(), gitSCM.getBuildData(firstBuild).lastBuild.getBuildNumber());
         assertEquals(firstMarked, gitSCM.getBuildData(firstBuild).lastBuild.getMarked());
         assertEquals(firstRevision, gitSCM.getBuildData(firstBuild).lastBuild.getRevision());
+    }
+
+    @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(PreBuildMerge.class)
+                .usingGetClass()
+                .verify();
     }
 
     @Override

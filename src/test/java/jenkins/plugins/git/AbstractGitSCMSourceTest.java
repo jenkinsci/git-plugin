@@ -1,12 +1,14 @@
 package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
 import hudson.scm.SCMRevisionState;
@@ -28,18 +30,30 @@ import java.util.UUID;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
+import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.TagDiscoveryTrait;
+
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import static org.hamcrest.Matchers.*;
+
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.gitclient.FetchCommand;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +61,20 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.collection.IsMapContaining.hasKey;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.CombinableMatcher.both;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.when;
 
 /**
@@ -237,13 +264,13 @@ public class AbstractGitSCMSourceTest {
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
-        assertThat(source.fetchRevisions(listener), hasSize(0));
+        assertThat(source.fetchRevisions(listener, null), hasSize(0));
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener), containsInAnyOrder("dev", "master"));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master"));
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener), containsInAnyOrder("annotated", "lightweight"));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("annotated", "lightweight"));
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
     }
 
     @Issue("JENKINS-47824")
@@ -269,69 +296,69 @@ public class AbstractGitSCMSourceTest {
         TaskListener listener = StreamTaskListener.fromStderr();
 
         listener.getLogger().println("\n=== fetch('master') ===\n");
-        SCMRevision rev = source.fetch("master", listener);
+        SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         listener.getLogger().println("\n=== fetch('dev') ===\n");
-        rev = source.fetch("dev", listener);
+        rev = source.fetch("dev", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
         listener.getLogger().println("\n=== fetch('v1') ===\n");
-        rev = source.fetch("v1", listener);
+        rev = source.fetch("v1", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
         assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
         listener.getLogger().println("\n=== fetch('v2') ===\n");
-        rev = source.fetch("v2", listener);
+        rev = source.fetch("v2", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
         assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
-        rev = source.fetch(masterHash, listener);
+        rev = source.fetch(masterHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash.substring(0, 10));
-        rev = source.fetch(masterHash.substring(0, 10), listener);
+        rev = source.fetch(masterHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash);
-        rev = source.fetch(devHash, listener);
+        rev = source.fetch(devHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash.substring(0, 10));
-        rev = source.fetch(devHash.substring(0, 10), listener);
+        rev = source.fetch(devHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash);
-        rev = source.fetch(v1Hash, listener);
+        rev = source.fetch(v1Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash.substring(0, 10));
-        rev = source.fetch(v1Hash.substring(0, 10), listener);
+        rev = source.fetch(v1Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash);
-        rev = source.fetch(v2Hash, listener);
+        rev = source.fetch(v2Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash.substring(0, 10));
-        rev = source.fetch(v2Hash.substring(0, 10), listener);
+        rev = source.fetch(v2Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
         String v2Tag = "refs/tags/v2";
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
-        rev = source.fetch(v2Tag, listener);
+        rev = source.fetch(v2Tag, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
@@ -450,7 +477,7 @@ public class AbstractGitSCMSourceTest {
         assertNull(fileAt("1234567", run, source, listener));
         assertNull(fileAt("", run, source, listener));
         assertNull(fileAt("\n", run, source, listener));
-        assertThat(source.fetchRevisions(listener), hasItems("master", "dev", "v1"));
+        assertThat(source.fetchRevisions(listener, null), hasItems("master", "dev", "v1"));
         // we do not care to return commit hashes or other references
     }
 
@@ -657,12 +684,13 @@ public class AbstractGitSCMSourceTest {
         assertEquals("v3", fileAt("pr/1", run, source, listener));
     }
 
+    private int wsCount;
     private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
-        SCMRevision rev = source.fetch(revision, listener);
+        SCMRevision rev = source.fetch(revision, listener, null);
         if (rev == null) {
             return null;
         } else {
-            FilePath ws = new FilePath(run.getRootDir()).child("tmp-" + revision);
+            FilePath ws = new FilePath(run.getRootDir()).child("ws" + ++wsCount);
             source.build(rev.getHead(), rev).checkout(run, new Launcher.LocalLauncher(listener), ws, listener, null, SCMRevisionState.NONE);
             return ws.child("file").readToString();
         }
@@ -732,7 +760,7 @@ public class AbstractGitSCMSourceTest {
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
 
-        final Set<String> revisions = source.fetchRevisions(listener);
+        final Set<String> revisions = source.fetchRevisions(listener, null);
 
         assertThat(revisions, hasSize(4));
         assertThat(revisions, containsInAnyOrder(
@@ -870,6 +898,217 @@ public class AbstractGitSCMSourceTest {
         UserRemoteConfig config = configs.get(0);
         assertEquals("origin", config.getName());
         assertEquals("+refs/heads/*:refs/remotes/origin/* +refs/merge-requests/*/head:refs/remotes/origin/merge-requests/*", config.getRefspec());
+    }
+
+    @Test
+    public void refLockEncounteredIfPruneTraitNotPresentOnNotFoundRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Collections.singletonList(new BranchDiscoveryTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        try {
+            source.fetch("v1.2", listener, null);
+        } catch (GitException e){
+            assertFalse(e.getMessage().contains("--prune"));
+            return;
+        }
+        //fail if ref lock does not occur
+        fail();
+    }
+
+    @Test
+    public void refLockEncounteredIfPruneTraitNotPresentOnTagRetrieval() throws Exception {
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Collections.singletonList(new TagDiscoveryTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        try {
+            source.fetch("v1.2", listener, null);
+        } catch (GitException e){
+            assertFalse(e.getMessage().contains("--prune"));
+            return;
+        }
+        //fail if ref lock does not occur
+        fail();
+    }
+
+    @Test
+    public void refLockAvoidedIfPruneTraitPresentOnNotFoundRetrieval() throws Exception {
+        /* Older git versions have unexpected behaviors with prune */
+        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        source.fetch("v1.2", listener, null);
+
+        assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
+    }
+
+    @Test
+    public void refLockAvoidedIfPruneTraitPresentOnTagRetrieval() throws Exception {
+        /* Older git versions have unexpected behaviors with prune */
+        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
+        TaskListener listener = StreamTaskListener.fromStderr();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
+
+        createRefLockEnvironment(listener, source);
+
+        source.fetch("v1.2", listener, null);
+
+        assertEquals("[SCMHead{'v1.2'}]", source.fetch(listener).toString());
+    }
+
+    private void createRefLockEnvironment(TaskListener listener, GitSCMSource source) throws Exception {
+        String branch = "prune";
+        String branchRefLock = "prune/prune";
+        sampleRepo.init();
+
+        //Create branch x
+        sampleRepo.git("checkout", "-b", branch);
+        sampleRepo.git("push", "--set-upstream", source.getRemote(), branch);
+
+        //Ensure source retrieval has fetched branch x
+        source.fetch("v1.2", listener, null);
+
+        //Remove branch x
+        sampleRepo.git("checkout", "master");
+        sampleRepo.git("push", source.getRemote(), "--delete", branch);
+
+        //Create branch x/x (ref lock engaged)
+        sampleRepo.git("checkout", "-b", branchRefLock);
+        sampleRepo.git("push", "--set-upstream", source.getRemote(), branchRefLock);
+
+        //create tag for retrieval
+        sampleRepo.git("tag", "v1.2");
+        sampleRepo.git("push", source.getRemote(), "v1.2");
+    }
+
+    @Test @Issue("JENKINS-50394")
+    public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        System.setProperty(Git.class.getName() + ".mockClient", MockGitClient.class.getName());
+        sharedSampleRepo = sampleRepo;
+        try {
+            GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+            source.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait()));
+            TaskListener listener = StreamTaskListener.fromStderr();
+            SCMHeadObserver.Collector c = source.fetch(new SCMSourceCriteria() {
+                @Override
+                public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
+                    return true;
+                }
+            }, new SCMHeadObserver.Collector(), listener);
+
+            assertThat(c.result().keySet(), containsInAnyOrder(
+                    hasProperty("name", equalTo("master")),
+                    hasProperty("name", equalTo("dev"))
+            ));
+        } catch(MissingObjectException me) {
+            fail("Not supposed to get MissingObjectException");
+        } finally {
+            System.clearProperty(Git.class.getName() + ".mockClient");
+            sharedSampleRepo = null;
+        }
+    }
+    //Ugly but MockGitClient needs to be static and no good way to pass it on
+    static GitSampleRepoRule sharedSampleRepo;
+
+    public static class MockGitClient extends TestJGitAPIImpl {
+        final String exe;
+        final EnvVars env;
+
+        public MockGitClient(String exe, EnvVars env, File workspace, TaskListener listener) {
+            super(workspace, listener);
+            this.exe = exe;
+            this.env = env;
+        }
+
+        @Override
+        public Map<String, ObjectId> getRemoteReferences(String url, String pattern, boolean headsOnly, boolean tagsOnly) throws GitException, InterruptedException {
+            final Map<String, ObjectId> remoteReferences = super.getRemoteReferences(url, pattern, headsOnly, tagsOnly);
+            try {
+                //Now update the repo with new commits
+                sharedSampleRepo.write("file2", "New");
+                sharedSampleRepo.git("add", "file2");
+                sharedSampleRepo.git("commit", "--all", "--message=inbetween");
+            } catch (Exception e) {
+                throw new GitException("Sneaking in something didn't work", e);
+            }
+            return remoteReferences;
+        }
+
+        @Override
+        public FetchCommand fetch_() {
+            final FetchCommand fetchCommand = super.fetch_();
+            //returning something that updates the repo after the fetch is performed
+            return new FetchCommand() {
+                @Override
+                public FetchCommand from(URIish urIish, List<RefSpec> list) {
+                    fetchCommand.from(urIish, list);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand prune() {
+                    fetchCommand.prune(true);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand prune(boolean b) {
+                    fetchCommand.prune(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand shallow(boolean b) {
+                    fetchCommand.shallow(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand timeout(Integer integer) {
+                    fetchCommand.timeout(integer);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand tags(boolean b) {
+                    fetchCommand.tags(b);
+                    return this;
+                }
+
+                @Override
+                public FetchCommand depth(Integer integer) {
+                    fetchCommand.depth(integer);
+                    return this;
+                }
+
+                @Override
+                public void execute() throws GitException, InterruptedException {
+                    fetchCommand.execute();
+                    try {
+                        //Now update the repo with new commits
+                        sharedSampleRepo.write("file3", "New");
+                        sharedSampleRepo.git("add", "file3");
+                        sharedSampleRepo.git("commit", "--all", "--message=inbetween");
+                    } catch (Exception e) {
+                        throw new GitException(e);
+                    }
+                }
+            };
+        }
     }
 
     private boolean isWindows() {

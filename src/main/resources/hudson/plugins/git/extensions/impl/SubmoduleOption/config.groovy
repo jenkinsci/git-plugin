@@ -1,6 +1,6 @@
-package hudson.plugins.git.extensions.impl.SubmoduleOption;
+package hudson.plugins.git.extensions.impl.SubmoduleOption
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry(title:_("Disable submodules processing"), field:"disableSubmodules") {
     f.checkbox()
@@ -24,6 +24,9 @@ f.entry(title:_("Path of the reference repo to use during submodule update"), fi
     f.textbox()
 }
 f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeout") {
+    f.number(clazz:"number", min:1, step:1)
+}
+f.entry(title:_("Number of threads to use when updating submodules"), field:"threads") {
     f.number(clazz:"number", min:1, step:1)
 }
 

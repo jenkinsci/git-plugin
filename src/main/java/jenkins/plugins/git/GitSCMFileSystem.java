@@ -43,6 +43,7 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import java.io.File;
@@ -61,6 +62,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -72,7 +74,6 @@ import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 /**
  * Base implementation of {@link SCMFileSystem}.
@@ -271,16 +272,30 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return descriptor instanceof GitSCM.DescriptorImpl;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
+        }
+
+        @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
             }
-            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
             String remote = config.getUrl();
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
+            if (remote == null) {
+                listener.getLogger().println("Git remote url is null");
+                return null;
+            }
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
@@ -340,7 +355,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         headName = branchSpec.getName();
                     }
                 }
-                client.fetch_().prune().from(remoteURI, Arrays
+                client.fetch_().prune(true).from(remoteURI, Arrays
                         .asList(new RefSpec(
                                 "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
                                         + headName))).execute();
@@ -386,7 +401,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                client.fetch_().prune().from(remoteURI, builder.asRefSpecs()).execute();
+                client.fetch_().prune(true).from(remoteURI, builder.asRefSpecs()).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, gitSCMSource.getRemote(), Constants.R_REMOTES+remoteName+"/"+head.getName(),
                         (AbstractGitSCMSource.SCMRevisionImpl) rev);

@@ -11,20 +11,23 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class SparseCheckoutPaths extends GitSCMExtension {
-    private List<SparseCheckoutPath> sparseCheckoutPaths = Collections.emptyList();
+    private List<SparseCheckoutPath> sparseCheckoutPaths;
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
         this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.<SparseCheckoutPath>emptyList() : sparseCheckoutPaths;
     }
 
+    @Whitelisted
     public List<SparseCheckoutPath> getSparseCheckoutPaths() {
         return sparseCheckoutPaths;
     }
@@ -48,5 +51,40 @@ public class SparseCheckoutPaths extends GitSCMExtension {
         public String getDisplayName() {
             return "Sparse Checkout paths";
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        
+        SparseCheckoutPaths that = (SparseCheckoutPaths) o;
+        return Objects.equals(getSparseCheckoutPaths(), that.getSparseCheckoutPaths());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSparseCheckoutPaths());
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "SparseCheckoutPaths{" +
+                "sparseCheckoutPaths=" + sparseCheckoutPaths +
+                '}';
     }
 }
