@@ -359,7 +359,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("mv", "file", "dir/subdir/file");
         sampleRepo.write("dir/subdir/file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        sampleRepo.git("tag", "-a", "v1.0");
+        sampleRepo.git("tag", "v1.0");
         SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
