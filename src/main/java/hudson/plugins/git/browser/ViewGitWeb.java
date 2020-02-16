@@ -50,10 +50,10 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
             String spec = buildCommitDiffSpec(url, path);
-            return new URL(url, url.getPath() + spec);
+            return encodeURL(new URL(url, url.getPath() + spec));
         }
         String spec = param(url).add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
-        return new URL(url, url.getPath() + spec);
+        return encodeURL(new URL(url, url.getPath() + spec));
     }
 
 	private String buildCommitDiffSpec(URL url, Path path)
@@ -93,8 +93,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             if (url == null) // nothing entered yet
                 return FormValidation.ok();
             // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {

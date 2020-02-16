@@ -6,11 +6,11 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -21,6 +21,8 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.GitURIRequirementsBuilder;
@@ -39,6 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import static hudson.Util.fixEmpty;
 import static hudson.Util.fixEmptyAndTrim;
 import hudson.model.FreeStyleProject;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 @ExportedBean
@@ -58,26 +61,32 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
     }
 
     @Exported
+    @Whitelisted
     public String getName() {
         return name;
     }
 
     @Exported
+    @Whitelisted
     public String getRefspec() {
         return refspec;
     }
 
     @Exported
+    @CheckForNull
+    @Whitelisted
     public String getUrl() {
         return url;
     }
 
     @Exported
+    @Whitelisted
     @CheckForNull
     public String getCredentialsId() {
         return credentialsId;
     }
 
+    @Override
     public String toString() {
         return getRefspec() + " => " + getUrl() + " (" + getName() + ")";
     }
@@ -90,13 +99,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project,
                                                      @QueryParameter String url,
                                                      @QueryParameter String credentialsId) {
-            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             if (project == null) {
                 /* Construct a fake project */
-                project = new FreeStyleProject(Jenkins.getInstance(), "fake-" + UUID.randomUUID().toString());
+                project = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
@@ -114,7 +123,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
                                                    @QueryParameter String url,
                                                    @QueryParameter String value) {
-            if (project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 project != null && !project.hasPermission(Item.EXTENDED_READ)) {
                 return FormValidation.ok();
             }
@@ -155,14 +164,13 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
         }
 
         @RequirePOST
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
         public FormValidation doCheckUrl(@AncestorInPath Item item,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String value) throws IOException, InterruptedException {
 
             // Normally this permission is hidden and implied by Item.CONFIGURE, so from a view-only form you will not be able to use this check.
             // (TODO under certain circumstances being granted only USE_OWN might suffice, though this presumes a fix of JENKINS-31870.)
-            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 item != null && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
@@ -177,11 +185,12 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // get git executable on master
             EnvVars environment;
-            final Jenkins jenkins = Jenkins.getActiveInstance();
+            Jenkins jenkins = Jenkins.get();
             if (item instanceof Job) {
                 environment = ((Job) item).getEnvironment(jenkins, TaskListener.NULL);
             } else {
-                environment = jenkins.toComputer().buildEnvironment(TaskListener.NULL);
+                Computer computer = jenkins.toComputer();
+                environment = computer == null ? new EnvVars() : computer.buildEnvironment(TaskListener.NULL);
             }
 
             GitClient git = Git.with(TaskListener.NULL, environment)
@@ -200,6 +209,46 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 git.getHeadRev(url, "HEAD");
             } catch (GitException e) {
                 return FormValidation.error(Messages.UserRemoteConfig_FailedToConnect(e.getMessage()));
+            }
+
+            return FormValidation.ok();
+        }
+
+        /**
+         * A form validation logic as a method to check the specification of 'refSpec' and notify the user about
+         * illegal specs before applying the project configuration
+         * @param name Name of the remote repository
+         * @param url Repository URL
+         * @param value value of RefSpec
+         * @return FormValidation.ok() or FormValidation.error()
+         * @throws IllegalArgumentException
+         */
+        public FormValidation doCheckRefspec(@QueryParameter String name,
+                                             @QueryParameter String url,
+                                             @QueryParameter String value) throws IllegalArgumentException {
+
+            String refSpec = Util.fixEmptyAndTrim(value);
+
+            if(refSpec == null){
+                // We fix empty field value with a default refspec, hence we send ok.
+                return FormValidation.ok();
+            }
+
+            if(refSpec.contains("$")){
+                // set by variable, can't validate
+                return FormValidation.ok();
+            }
+
+            Config repoConfig = new Config();
+
+            repoConfig.setString("remote", name, "url", url);
+            repoConfig.setString("remote", name, "fetch", refSpec);
+
+            //Attempt to fetch remote repositories using the repoConfig
+            try {
+                RemoteConfig.getAllRemoteConfigs(repoConfig);
+            } catch (Exception e) {
+                return FormValidation.error(Messages.UserRemoteConfig_CheckRefSpec_InvalidRefSpec());
             }
 
             return FormValidation.ok();

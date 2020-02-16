@@ -2,25 +2,23 @@ package jenkins.plugins.git;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.TopLevelItem;
+import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.Launcher;
+import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
-import hudson.tools.ToolInstaller;
-import hudson.util.LogTaskListener;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -28,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
@@ -43,6 +39,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -63,18 +60,14 @@ import org.mockito.Mockito;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -260,15 +253,15 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        Set<String> result = instance.fetchRevisions(null);
+        Set<String> result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu", "v1.0.0"));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        result = instance.fetchRevisions(null);
+        result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("foo", "bar", "manchu"));
 
         instance.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
-        result = instance.fetchRevisions(null);
+        result = instance.fetchRevisions(null, null);
         assertThat(result, containsInAnyOrder("v1.0.0"));
     }
 
@@ -304,13 +297,13 @@ public class GitSCMSourceTest {
         assertThat(GitSCMTelescope.of(instance), notNullValue());
 
         instance.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(instance.fetch("foo", null),
+        assertThat(instance.fetch("foo", null, null),
                 hasProperty("hash", is("6769413a79793e242c73d7377f0006c6aea95480")));
-        assertThat(instance.fetch("bar", null),
+        assertThat(instance.fetch("bar", null, null),
                 hasProperty("hash", is("3f0b897057d8b43d3b9ff55e3fdefbb021493470")));
-        assertThat(instance.fetch("manchu", null),
+        assertThat(instance.fetch("manchu", null, null),
                 hasProperty("hash", is("a94782d8d90b56b7e0d277c04589bd2e6f70d2cc")));
-        assertThat(instance.fetch("v1.0.0", null),
+        assertThat(instance.fetch("v1.0.0", null, null),
                 hasProperty("hash", is("315fd8b5cae3363b29050f1aabfc27c985e22f7e")));
     }
 
@@ -348,7 +341,6 @@ public class GitSCMSourceTest {
                 is(Collections.<Action>emptyList()));
     }
 
-
     @Issue("JENKINS-52754")
     @Test
     public void gitSCMSourceShouldResolveToolsForMaster() throws Exception {
@@ -364,7 +356,7 @@ public class GitSCMSourceTest {
         assertThat(resolved.getGitExe(), org.hamcrest.CoreMatchers.containsString("git"));
 
         GitSCMSource instance = new GitSCMSource("http://git.test/telescope.git");
-        instance.retrieveRevisions(log);
+        instance.fetchRevisions(log, null);
         assertTrue("Installer should be invoked", inst.isInvoked());
     }
 
@@ -393,6 +385,16 @@ public class GitSCMSourceTest {
         @Override
         public boolean supports(@NonNull String remote) {
             return "http://git.test/telescope.git".equals(remote);
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMDescriptor descriptor) {
+            return false;
+        }
+
+        @Override
+        public boolean supportsDescriptor(SCMSourceDescriptor descriptor) {
+            return false;
         }
 
         @Override

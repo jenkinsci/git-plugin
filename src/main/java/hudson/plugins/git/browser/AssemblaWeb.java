@@ -8,7 +8,6 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-import hudson.scm.browsers.QueryBuilder;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -19,10 +18,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 /**
  * AssemblaWeb Git Browser URLs
@@ -78,9 +74,9 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "nodes/" + changeSet.getParentCommit() + path.getPath());
+            return encodeURL(new URL(url, url.getPath() + "nodes/" + changeSet.getParentCommit() + path.getPath()));
         } else {
-            return new URL(url, url.getPath() + "nodes/" + changeSet.getId() + path.getPath());
+            return encodeURL(new URL(url, url.getPath() + "nodes/" + changeSet.getId() + path.getPath()));
         }
     }
 
@@ -105,8 +101,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins == null || !jenkins.hasPermission(Jenkins.ADMINISTER))
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {

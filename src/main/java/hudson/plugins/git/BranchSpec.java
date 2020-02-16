@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -38,6 +39,7 @@ public class BranchSpec extends AbstractDescribableImpl<BranchSpec> implements S
     private String name;
 
     @Exported
+    @Whitelisted
     public String getName() {
         return name;
     }

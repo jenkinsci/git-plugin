@@ -29,7 +29,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.plugins.git.util.BuildData;
 
-import java.util.concurrent.Future;
 import java.util.Collections;
 import static org.junit.Assert.*;
 import org.junit.Test;

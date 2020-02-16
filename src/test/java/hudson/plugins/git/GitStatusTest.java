@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -533,6 +534,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
+        assumeTrue(runUnreliableTests()); // Test cleanup is unreliable in some cases
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -574,6 +576,18 @@ public class GitStatusTest extends AbstractGitProject {
                 + (allowedExtra ? "extra='" + extraValue + "'," : "")
                 + "A='aaa',C='ccc',B='$A$C'";
         assertEquals(expected, this.gitStatus.toString());
+    }
+
+    /** Returns true if unreliable tests should be run */
+    private boolean runUnreliableTests() {
+        if (!isWindows()) {
+            return true; // Always run tests on non-Windows platforms
+        }
+        String jobUrl = System.getenv("JOB_URL");
+        if (jobUrl == null) {
+            return true; // Always run tests when not inside a CI environment
+        }
+        return !jobUrl.contains("ci.jenkins.io"); // Skip some tests on ci.jenkins.io, windows cleanup is unreliable on those machines
     }
 
     /**

@@ -93,13 +93,13 @@ public class RemoteConfigConverter implements Converter {
                 if (null != key)
                     switch (key) {
                     case KEY_URL:
-                        uris = values.toArray(new String[values.size()]);
+                        uris = values.toArray(new String[0]);
                         break;
                     case KEY_FETCH:
-                        fetch = values.toArray(new String[values.size()]);
+                        fetch = values.toArray(new String[0]);
                         break;
                     case KEY_PUSH:
-                        push = values.toArray(new String[values.size()]);
+                        push = values.toArray(new String[0]);
                         break;
                     case KEY_UPLOADPACK:
                         for (String value : values)

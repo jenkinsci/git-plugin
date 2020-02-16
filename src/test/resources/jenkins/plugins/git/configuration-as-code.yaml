@@ -1,0 +1,38 @@
+unclassified:
+  globalLibraries:
+    libraries:
+      - defaultVersion: "1.2.3"
+        name: "My Git Lib"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/myprodbranch"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                extensions:
+                  - "cleanCheckout"
+                  - "gitLFSPull"
+                  - checkoutOption:
+                      timeout: 60
+                  - userIdentity:
+                      email: "customuser@acmecorp.com"
+                      name: "custom user"
+                  - preBuildMerge:
+                      options:
+                        mergeRemote: "myrepo"
+                        mergeStrategy: RECURSIVE
+                        mergeTarget: "master"
+                submoduleCfg:
+                  - submoduleName: "submodule-1"
+                    branches:
+                    - "mybranch-1"
+                    - "mybranch-2"
+                  - submoduleName: "submodule-2"
+                    branches:
+                    - "mybranch-3"
+                    - "mybranch-4"
+                userRemoteConfigs:
+                  - credentialsId: "acmeuser-cred-Id"
+                    url: "https://git.acmecorp/myGitLib.git"

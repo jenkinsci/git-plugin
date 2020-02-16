@@ -32,7 +32,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
@@ -44,8 +43,11 @@ import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
 import jenkins.security.MasterToSlaveCallable;
@@ -56,7 +58,9 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
@@ -69,6 +73,9 @@ import java.io.Serializable;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -76,12 +83,13 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -110,7 +118,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void enableSystemCredentialsProvider() throws Exception {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
-        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;
@@ -118,6 +126,13 @@ public class GitSCMTest extends AbstractGitTestCase {
             }
         }
         assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    @After
+    public void waitForJenkinsIdle() throws Exception {
+        if (cleanupIsUnreliable()) {
+            rule.waitUntilNoActivityUpTo(5001);
+        }
     }
 
     private StandardCredentials getInvalidCredential() {
@@ -195,6 +210,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Issue("JENKINS-56176")
     public void testBasicRemotePoll() throws Exception {
 //        FreeStyleProject project = setupProject("master", true, false);
         FreeStyleProject project = setupProject("master", false, null, null, null, true, null);
@@ -206,7 +222,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
 
         final String commitFile2 = "commitFile2";
-        commit(commitFile2, janeDoe, "Commit number 2");
+        String sha1String = commit(commitFile2, janeDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
         // ... and build it...
         final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
@@ -216,6 +232,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+        // JENKINS-56176 token macro expansion broke when BuildData was no longer updated
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION,length=7}"), is(sha1String.substring(0, 7)));
+        assertThat(TokenMacro.expandAll(build2, listener, "${GIT_REVISION}"), is(sha1String));
+        assertThat(TokenMacro.expandAll(build2, listener, "$GIT_REVISION"), is(sha1String));
     }
 
     @Test
@@ -293,6 +313,52 @@ public class GitSCMTest extends AbstractGitTestCase {
         build(projectWithFoo, Result.SUCCESS, commitFile1);
     }
 
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition",
+                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message when the second URL is empty.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+        String repoURL = "https://example.com/non-empty/repo/url";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(repoURL, null, null, null));
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition for URL 2",
+                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
     @Test
     public void testBranchSpecWithRemotesHierarchical() throws Exception {
       FreeStyleProject projectMasterBranch = setupProject("master", false, null, null, null, true, null);
@@ -349,6 +415,304 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build2.getWorkspace().child(commitFile3).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInExcludedRegionIsIgnored() confirms behavior of excluded regions with merge commits.
+     * This test has excluded and included regions, for files ending with .excluded and .included,
+     * respectively. The git repository is set up so that a non-fast-forward merge commit comes
+     * to master. The newly merged commit is a file ending with .excluded, so it should be ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInExcludedRegionIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.excluded";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our merge commit falls within the excluded region.
+        assertFalse("Polling should report no changes, because they are in the excluded region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInExcludedDirectoryIsIgnored() confirms behavior of excluded directories with merge commits.
+     * This test has excluded and included directories, named /excluded/ and /included/,respectively. The repository
+     * is set up so that a non-fast-forward merge commit comes to master, and is in the directory /excluded/,
+     * so it should be ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInExcludedDirectoryIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "excluded/should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our merge commit falls within the excluded directory.
+        assertFalse("Polling should see no changes, because they are in the excluded directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInIncludedRegionIsProcessed() confirms behavior of included regions with merge commits.
+     * This test has excluded and included regions, for files ending with .excluded and .included, respectively.
+     * The git repository is set up so that a non-fast-forward merge commit comes to master. The newly merged
+     * commit is a file ending with .included, so it should be processed as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInIncludedRegionIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.included";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls within the included region.
+        assertTrue("Polling should report changes, because they fall within the included region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitInIncludedRegionIsProcessed() confirms behavior of included directories with merge commits.
+     * This test has excluded and included directories, named /excluded/ and /included/, respectively. The repository
+     * is set up so that a non-fast-forward merge commit comes to master, and is in the directory /included/,
+     * so it should be processed as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitInIncludedDirectoryIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "included/should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // When this test passes, project.poll(listener).hasChanges()) should return
+        // true, because our commit falls within the included region.
+        assertTrue("Polling should report changes, because they are in the included directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideIncludedRegionIsIgnored() confirms behavior of included regions with merge commits.
+     * This test has an included region defined, for files ending with .included. There is no excluded region
+     * defined. The repository is set up and a non-fast-forward merge commit comes to master. The newly merged commit
+     * is a file ending with .should-be-ignored, thus falling outside of the included region, so it should ignored.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideIncludedRegionIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, null, null, ".*\\.included");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our commit falls outside the included region.
+        assertFalse("Polling should ignore the change, because it falls outside the included region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideIncludedDirectoryIsIgnored() confirms behavior of included directories with merge commits.
+     * This test has only an included directory `/included`  defined. The git repository is set up so that
+     * a non-fast-forward, but mergeable, commit comes to master. The newly merged commit is outside of the
+     * /included/ directory, so polling should report no changes.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideIncludedDirectoryIsIgnored() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, null, null, "included/.*");
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "directory-to-ignore/file-should-be-ignored";
+        commit(fileToMerge, johnDoe, "Commit should be ignored: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return false, because our commit falls outside of the included directory
+        assertFalse("Polling should ignore the change, because it falls outside the included directory.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideExcludedRegionIsProcessed() confirms behavior of excluded regions with merge commits.
+     * This test has an excluded region defined, for files ending with .excluded. There is no included region defined.
+     * The repository is set up so a non-fast-forward merge commit comes to master. The newly merged commit is a file
+     * ending with .should-be-processed, thus falling outside of the excluded region, so it should processed
+     * as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideExcludedRegionIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, ".*\\.excluded", null, null);
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        final String fileToMerge = "fileToMerge.should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls outside of the excluded region
+        assertTrue("Polling should process the change, because it falls outside the excluded region.",
+                project.poll(listener).hasChanges());
+    }
+
+    /**
+     * testMergeCommitOutsideExcludedDirectoryIsProcessed() confirms behavior of excluded directories with merge commits.
+     * This test has an excluded directory `excluded` defined. There is no `included` directory defined. The repository
+     * is set up so that a non-fast-forward merge commit comes to master. The newly merged commit resides in a
+     * directory of its own, thus falling outside of the excluded directory, so it should processed
+     * as a new change.
+     *
+     * @throws Exception on error
+     */
+    @Issue({"JENKINS-20389","JENKINS-23606"})
+    @Test
+    public void testMergeCommitOutsideExcludedDirectoryIsProcessed() throws Exception {
+        final String branchToMerge = "new-branch-we-merge-to-master";
+
+        FreeStyleProject project = setupProject("master", false, null, "excluded/.*", null, null);
+
+        final String initialCommit = "initialCommit";
+        commit(initialCommit, johnDoe, "Commit " + initialCommit + " to master");
+        build(project, Result.SUCCESS, initialCommit);
+
+        final String secondCommit = "secondCommit";
+        commit(secondCommit, johnDoe, "Commit " + secondCommit + " to master");
+
+        testRepo.git.checkoutBranch(branchToMerge, "HEAD~");
+        // Create this new file outside of our excluded directory
+        final String fileToMerge = "directory-to-include/file-should-be-processed";
+        commit(fileToMerge, johnDoe, "Commit should be noticed and processed as a change: " + fileToMerge + " to " + branchToMerge);
+
+        ObjectId branchSHA = git.revParse("HEAD");
+        testRepo.git.checkoutBranch("master", "refs/heads/master");
+        MergeCommand mergeCommand = testRepo.git.merge();
+        mergeCommand.setRevisionToMerge(branchSHA);
+        mergeCommand.execute();
+
+        // Should return true, because our commit falls outside of the excluded directory
+        assertTrue("SCM polling should process the change, because it falls outside the excluded directory.",
+                project.poll(listener).hasChanges());
     }
 
     @Test
@@ -617,7 +981,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testBasicWithSlave() throws Exception {
+    public void testBasicWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -643,7 +1007,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Issue("HUDSON-7547")
     @Test
-    public void testBasicWithSlaveNoExecutorsOnMaster() throws Exception {
+    public void testBasicWithAgentNoExecutorsOnMaster() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         rule.jenkins.setNumExecutors(0);
@@ -774,14 +1138,33 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
-        Node s = rule.createSlave();
-        setVariables(s, new Entry("TESTKEY", "slaveValue"));
-        project.setAssignedLabel(s.getSelfLabel());
+        DumbSlave agent = rule.createSlave();
+        setVariables(agent, new Entry("TESTKEY", "agent value"));
+        project.setAssignedLabel(agent.getSelfLabel());
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
+        assertEquals("agent value", getEnvVars(project).get("TESTKEY"));
+    }
+
+    @Test
+    public void testNodeOverrideGit() throws Exception {
+        GitSCM scm = new GitSCM(null);
+
+        DumbSlave agent = rule.createSlave();
+        GitTool.DescriptorImpl gitToolDescriptor = rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
+        GitTool installation = new GitTool("Default", "/usr/bin/git", null);
+        gitToolDescriptor.setInstallations(installation);
+
+        String gitExe = scm.getGitExe(agent, TaskListener.NULL);
+        assertEquals("/usr/bin/git", gitExe);
+
+        ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
+        agent.setNodeProperties(Collections.singletonList(nodeGitLocation));
+
+        gitExe = scm.getGitExe(agent, TaskListener.NULL);
+        assertEquals("C:\\Program Files\\Git\\bin\\git.exe", gitExe);
     }
 
     /*
@@ -950,7 +1333,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
 
         FreeStyleBuild ub = rule.assertBuildStatusSuccess(u.scheduleBuild2(0));
-        System.out.println(ub.getLog());
         for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
             Thread.sleep(100);
 
@@ -977,8 +1359,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return null;
             }
         });
-        DumbSlave s = rule.createOnlineSlave();
-        assertEquals(p.toString(), s.getChannel().call(new BuildChooserContextTestCallable(c)));
+        DumbSlave agent = rule.createOnlineSlave();
+        assertEquals(p.toString(), agent.getChannel().call(new BuildChooserContextTestCallable(c)));
     }
 
     private static class BuildChooserContextTestCallable extends MasterToSlaveCallable<String,IOException> {
@@ -993,7 +1375,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
                     public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
                         assertTrue(channel instanceof Channel);
-                        assertTrue(Hudson.getInstance()!=null);
+                        assertTrue(Jenkins.getInstanceOrNull()!=null);
                         return param.toString();
                     }
                 });
@@ -1031,6 +1413,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setCreateAccountBasedOnEmail(true);
         assertTrue("Create account based on e-mail not set", scm.isCreateAccountBasedOnEmail());
 
+        assertFalse("Wrong initial value for use existing user if same e-mail already found", scm.isUseExistingAccountWithSameEmail());
+        descriptor.setUseExistingAccountWithSameEmail(true);
+        assertTrue("Use existing user if same e-mail already found is not set", scm.isUseExistingAccountWithSameEmail());
+
         // create initial commit and then run the build against it:
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
@@ -1054,6 +1440,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("", jeffDoe.getName(), culprit.getFullName());
 
         rule.assertBuildStatusSuccess(build);
+    }
+    
+    @Issue("JENKINS-59868")
+    @Test
+    public void testNonExistentWorkingDirectoryPoll() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        project.setScm(new GitSCM(
+                ((GitSCM)project.getScm()).getUserRemoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
+                Collections.singletonList(new DisableRemotePoll())));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        // Empty the workspace directory
+        build1.getWorkspace().deleteRecursive();
+
+        // Setup a recorder for polling logs
+        RingBufferLogHandler pollLogHandler = new RingBufferLogHandler(10);
+        Logger pollLogger = Logger.getLogger(GitSCMTest.class.getName());
+        pollLogger.addHandler(pollLogHandler);
+        TaskListener taskListener = new LogTaskListener(pollLogger, Level.INFO);
+
+        // Make sure that polling returns BUILD_NOW and properly log the reason
+        FilePath filePath = build1.getWorkspace();
+        assertThat(project.getScm().compareRemoteRevisionWith(project, new Launcher.LocalLauncher(taskListener), 
+                filePath, taskListener, null), is(PollingResult.BUILD_NOW));
+        assertTrue(pollLogHandler.getView().stream().anyMatch(m -> 
+                m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
     // Disabled - consistently fails, needs more analysis
@@ -1145,6 +1565,11 @@ public class GitSCMTest extends AbstractGitTestCase {
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(gitSCM);
+
+        /* Check that polling would force build through
+         * compareRemoteRevisionWith by detecting no last build */
+        FilePath filePath = new FilePath(new File("."));
+        assertThat(gitSCM.compareRemoteRevisionWith(project, new Launcher.LocalLauncher(listener), filePath, listener, null), is(PollingResult.BUILD_NOW));
 
         commit("commitFile1", johnDoe, "Commit number 1");
         FreeStyleBuild build = build(project, Result.SUCCESS, "commitFile1");
@@ -1251,7 +1676,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeWithSlave() throws Exception {
+    public void testMergeWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -1363,7 +1788,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeFailedWithSlave() throws Exception {
+    public void testMergeFailedWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -1823,7 +2248,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckoutOverSlave() throws Exception {
+    public void testInitSparseCheckoutOverAgent() throws Exception {
         if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
@@ -1844,8 +2269,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
-    @Issue("JENKINS-22009")
     @Test
+    @Issue("JENKINS-22009")
     public void testPolling_environmentValueInBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
@@ -2018,7 +2443,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
-        // Inital commit and build
+        // Initial commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
         if (!sampleRepo.gitVersionAtLeast(1, 8)) {
@@ -2044,15 +2469,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
         assertEquals(environment.get("MY_BRANCH"), "master");
-        assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
+        assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
     }
 
     /**
      * Tests that builds have the correctly specified Custom SCM names, associated with each build.
      * @throws Exception on error
      */
-    // Flaky test distracting from primary goal
-    // @Test
+    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
+    @Test
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
         final FreeStyleProject project = setupProject(branchName, false);
@@ -2150,6 +2575,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified branches, associated with
      * the commit id, passed with "notifyCommit" URL.
      */
+    @Ignore("Intermittent failures on stable-3.10 branch, not on stable-3.9 or master")
     @Issue("JENKINS-24133")
     // Flaky test distracting from primary focus
     // @Test
@@ -2437,4 +2863,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
+    /** Returns true if test cleanup is not reliable */
+    private boolean cleanupIsUnreliable() {
+        // Windows cleanup is unreliable on ci.jenkins.io
+        String jobUrl = System.getenv("JOB_URL");
+        return isWindows() && jobUrl != null && jobUrl.contains("ci.jenkins.io");
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
+    }
 }

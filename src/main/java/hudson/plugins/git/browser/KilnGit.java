@@ -15,8 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * @author Chris Klaiber (cklaiber@gmail.com)
@@ -45,7 +43,7 @@ public class KilnGit extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "History/" + changeSet.getId() + param(url).toString());
+        return encodeURL(new URL(url, url.getPath() + "History/" + changeSet.getId() + param(url).toString()));
     }
 
     /**
@@ -98,7 +96,7 @@ public class KilnGit extends GitRepositoryBrowser {
         } else {
             GitChangeSet changeSet = path.getChangeSet();
             URL url = getUrl();
-            return new URL(url, url.getPath() + "FileHistory/" + path.getPath() + param(url).add("rev=" + changeSet.getId()).toString());
+            return encodeURL(new URL(url, url.getPath() + "FileHistory/" + path.getPath() + param(url).add("rev=" + changeSet.getId()).toString()));
         }
     }
 

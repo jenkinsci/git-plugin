@@ -7,24 +7,23 @@ import hudson.plugins.git.*;
 import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.*;
 
 /**
- * Git build chooser which will select all branches <b>except</b> for those which match the
+ * Git build chooser which will select all branches <strong>except</strong> for those which match the
  * configured branch specifiers.
  * <p>
- * e.g. If <tt>&#x2a;&#x2a;/master</tt> and <tt>&#x2a;&#x2a;/release-&#x2a;</tt> are configured as
- * "Branches to build" then any branches matching those patterns <b>will not</b> be built, unless
+ * e.g. If {@code &#x2a;&#x2a;/master} and {@code &#x2a;&#x2a;/release-&#x2a;} are configured as
+ * "Branches to build" then any branches matching those patterns <strong>will not</strong> be built, unless
  * another branch points to the same revision.
  * <p>
- * This is useful, for example, when you have jobs building your <tt>master</tt> and various
- * <tt>release</tt> branches and you want a second job which builds all new feature branches &mdash;
+ * This is useful, for example, when you have jobs building your {@code master} and various
+ * {@code release} branches and you want a second job which builds all new feature branches &mdash;
  * i.e. branches which do not match these patterns &mdash; without redundantly building
- * <tt>master</tt> and the release branches again each time they change.
+ * {@code master} and the release branches again each time they change.
  *
  * @author Christopher Orr
  */

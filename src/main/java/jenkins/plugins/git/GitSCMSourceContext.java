@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -66,6 +67,10 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      * {@code true} if the {@link GitSCMSourceRequest} will need information about tags.
      */
     private boolean wantTags;
+    /**
+     * {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     */
+    private boolean pruneRefs;
     /**
      * A list of other references to discover and search
      */
@@ -116,6 +121,15 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
      */
     public final boolean wantTags() {
         return wantTags;
+    }
+
+    /**
+     * Returns {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     *
+     * @return {@code true} if the {@link GitSCMSourceRequest} needs to be prune aware.
+     */
+    public final boolean pruneRefs() {
+        return pruneRefs;
     }
 
     /**
@@ -203,6 +217,20 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
     @NonNull
     public C wantTags(boolean include) {
         wantTags = wantTags || include;
+        return (C) this;
+    }
+
+    /**
+     * Adds a requirement for git ref pruning to any {@link GitSCMSourceRequest} for this context.
+     *
+     * @param include {@code true} to add the requirement or {@code false} to leave the requirement as is (makes
+     *                simpler with method chaining)
+     * @return {@code this} for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public C pruneRefs(boolean include) {
+        pruneRefs = pruneRefs || include;
         return (C) this;
     }
 
@@ -369,20 +397,22 @@ public class GitSCMSourceContext<C extends GitSCMSourceContext<C, R>, R extends 
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             RefNameMapping that = (RefNameMapping) o;
 
-            if (!ref.equals(that.ref)) return false;
-            return name.equals(that.name);
+            return Objects.equals(ref, that.ref)
+                    && Objects.equals(name, that.name);
         }
 
         @Override
         public int hashCode() {
-            int result = ref.hashCode();
-            result = 31 * result + name.hashCode();
-            return result;
+            return Objects.hash(ref, name);
         }
 
         @Override

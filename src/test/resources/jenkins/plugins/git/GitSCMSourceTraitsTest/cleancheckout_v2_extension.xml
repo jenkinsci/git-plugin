@@ -1,0 +1,10 @@
+<jenkins.plugins.git.GitSCMSource>
+  <extensions>
+    <hudson.plugins.git.extensions.impl.CleanBeforeCheckout>
+      <deleteUntrackedNestedRepositories>true</deleteUntrackedNestedRepositories>
+    </hudson.plugins.git.extensions.impl.CleanBeforeCheckout>
+    <hudson.plugins.git.extensions.impl.CleanCheckout>
+      <deleteUntrackedNestedRepositories>true</deleteUntrackedNestedRepositories>
+    </hudson.plugins.git.extensions.impl.CleanCheckout>
+  </extensions>
+</jenkins.plugins.git.GitSCMSource>

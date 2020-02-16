@@ -1,0 +1,31 @@
+[[git-plugin-development-priorities]]
+= Git Plugin Development Priorities
+
+[[introduction]]
+== Introduction
+
+The maintainers of this plugin use this file to list the work areas which are receiving more attention from them.
+Higher priority items will generally receive more attention from maintainers than lower priority items.
+Others are encouraged to help with the plugin in areas of their own interest.
+When others provide additional help on an item, it tends to raise the priority of the item.
+
+== Priorities
+
+. link:CONTRIBUTING.adoc#bug-triage[Bug report triage]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AShortTerm[Short term improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3ACaching[Caching and performance improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AnotifyCommit[notifyCommit and webhook improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3AChangelog+[Changelog improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3ASubmodules[Submodule improvements]
+. link:https://github.com/jenkinsci/git-plugin/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aunmerged+label%3ABuildData[BuildData memory bloat]
+
+[[bug-reports]]
+== Bug Reports
+
+Report issues and enhancements in the https://issues.jenkins-ci.org[Jenkins issue tracker].
+link:CONTRIBUTING.adoc#bug-triage[Review bug reports] and provide comments to submitters.
+
+[[contributing-to-the-plugin]]
+== Contributing to the Plugin
+
+Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
