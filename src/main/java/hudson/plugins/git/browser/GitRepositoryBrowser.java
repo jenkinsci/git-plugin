@@ -119,7 +119,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         }
     }
 
-    public static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
+    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
         if (cleanUrl == null) {
             return true;
         }
@@ -133,7 +133,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return false;
     }
 
-    public static boolean checkURIFormat(String url, String browserName) throws URISyntaxException {
+    protected static boolean checkURIFormat(String url, String browserName) throws URISyntaxException {
         URI uri = new URI(url);
         String[] schemes = {"http", "https"};
         UrlValidator urlValidator = new UrlValidator(schemes);
