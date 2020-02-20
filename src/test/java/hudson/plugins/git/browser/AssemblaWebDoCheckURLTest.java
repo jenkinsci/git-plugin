@@ -87,7 +87,7 @@ public class AssemblaWebDoCheckURLTest {
 
     @Test
     public void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
-        Random random = new Random();
+        java.util.Random random = new java.util.Random();
         String [] urls = {
           "http://assemblage.com/",
           "http://assemblage.net/",
