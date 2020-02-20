@@ -12,7 +12,6 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -23,7 +22,6 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -105,7 +103,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             FormValidation response;
-            if (checkURIFormat(cleanUrl)) {
+            if (checkURIFormat(cleanUrl, "gitblit")) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
                         String v = cleanUrl;
@@ -128,13 +126,6 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                 response = FormValidation.error(Messages.invalidUrl());
             }
             return response;
-        }
-
-        private boolean checkURIFormat(String url) throws URISyntaxException {
-            URI uri = new URI(url);
-            String[] schemes = {"http", "https"};
-            UrlValidator urlValidator = new UrlValidator(schemes);
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains("gitblit");
         }
     }
 }

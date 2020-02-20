@@ -12,7 +12,6 @@ import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -21,7 +20,6 @@ import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
-import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -79,21 +77,11 @@ public class Gitiles extends GitRepositoryBrowser {
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-
-            if (cleanUrl == null) {
-                return FormValidation.ok();
-            }
-
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
-                return FormValidation.ok();
-            }
-
-            if (cleanUrl.contains("$")) {
-                // set by variable, can't validate
+            if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
             FormValidation response;
-            if (checkURIFormat(cleanUrl)) {
+            if (checkURIFormat(cleanUrl, "gerrit")) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
                         String v = cleanUrl;
@@ -116,13 +104,6 @@ public class Gitiles extends GitRepositoryBrowser {
                 response = FormValidation.error(Messages.invalidUrl());
             }
             return response;
-        }
-
-        private boolean checkURIFormat(String url) throws URISyntaxException {
-            URI uri = new URI(url);
-            String[] schemes = {"http", "https"};
-            UrlValidator urlValidator = new UrlValidator(schemes);
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains("gerrit");
         }
     }
 }

@@ -99,6 +99,6 @@ public class AssemblaWebDoCheckURLTest {
         };
         String url = urls[random.nextInt(urls.length)]; // Don't abuse a single web site with tests
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("This is a valid URL but it does not look like Assembla"));
+                is("Invalid URL"));
     }
 }
