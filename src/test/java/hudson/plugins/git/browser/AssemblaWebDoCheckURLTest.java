@@ -65,8 +65,7 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testPathLevelChecksOnRepoUrlValidURL() throws Exception {
-        // Syntax issue related specific to Assembla
+    public void testPathLevelChecksOnRepoUrlValidURLNullProject() throws Exception {
         String url = "https://app.assembla.com/space/git-plugin/git/source";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(null, url), is(FormValidation.ok()));
     }
