@@ -87,7 +87,17 @@ public class AssemblaWebDoCheckURLTest {
 
     @Test
     public void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
-        String url = "http://assemblagist.com/";
+        Random random = new Random();
+        String [] urls = {
+          "http://assemblage.com/",
+          "http://assemblage.net/",
+          "http://assemblage.org/",
+          "http://assemblages.com/",
+          "http://assemblages.net/",
+          "http://assemblages.org/",
+          "http://assemblagist.com/",
+        };
+        String url = urls[random.nextInt(urls.length)]; // Don't abuse a single web site with tests
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
                 is("This is a valid URL but it does not look like Assembla"));
     }
