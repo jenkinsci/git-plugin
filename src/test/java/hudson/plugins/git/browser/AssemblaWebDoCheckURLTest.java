@@ -3,61 +3,93 @@ package hudson.plugins.git.browser;
 import hudson.model.FreeStyleProject;
 import hudson.util.FormValidation;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 public class AssemblaWebDoCheckURLTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule r = new JenkinsRule();
+    private static int counter = 0;
 
     private FreeStyleProject project;
     private AssemblaWeb.AssemblaWebDescriptor assemblaWebDescriptor;
 
     @Before
     public void setProject() throws Exception {
-        project = r.createFreeStyleProject("p1");
+        project = r.createFreeStyleProject("assembla-project-" + counter++);
         assemblaWebDescriptor = new AssemblaWeb.AssemblaWebDescriptor();
     }
 
     @Test
     public void testInitialChecksOnRepoUrl() throws Exception {
         String url = "https://app.assembla.com/spaces/git-plugin/git/source";
-        // Empty url
-        String url2 = "";
-        // URL with env variable
-        String url3 = "https://www.assembla.com/spaces/$";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
 
-        assertEquals(FormValidation.ok(), assemblaWebDescriptor.doCheckRepoUrl(project, url));
-        assertEquals(FormValidation.ok(), assemblaWebDescriptor.doCheckRepoUrl(project, url2));
-        assertEquals(FormValidation.ok(), assemblaWebDescriptor.doCheckRepoUrl(project, url3));
+    @Test
+    public void testInitialChecksOnRepoUrlEmpty() throws Exception {
+        String url = "";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
+
+    @Test
+    public void testInitialChecksOnRepoUrlWithVariable() throws Exception {
+        String url = "https://www.assembla.com/spaces/$";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
     }
 
     @Test
     public void testDomainLevelChecksOnRepoUrl() throws Exception {
         // illegal syntax - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "https:/assembla.com";
-        String url2 = "http//assmebla";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
+    }
 
-        assertEquals("Invalid URL", assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage());
-        assertEquals("Invalid URL", assemblaWebDescriptor.doCheckRepoUrl(project, url2).getLocalizedMessage());
+    @Test
+    public void testDomainLevelChecksOnRepoUrlInvalidURL() throws Exception {
+        // illegal syntax - Earlier it would open connection for such mistakes but now check resolves it beforehand.
+        String url = "http//assmebla";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
+    }
+
+    @Test
+    public void testPathLevelChecksOnRepoUrlInvalidPathSyntax() throws Exception {
+        // Invalid path syntax
+        String url = "https://assembla.comspaces/git-plugin/git/source";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
+    }
+
+    @Test
+    public void testPathLevelChecksOnRepoUrlValidURL() throws Exception {
+        // Syntax issue related specific to Assembla
+        String url = "https://app.assembla.com/space/git-plugin/git/source";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(null, url), is(FormValidation.ok()));
+    }
+
+    @Test
+    public void testPathLevelChecksOnRepoUrlUnableToConnect() throws Exception {
+        // Syntax issue related specific to Assembla
+        String url = "https://app.assembla.com/space/git-plugin/git/source";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("Unable to connect https://app.assembla.com/space/git-plugin/git/source/"));
     }
 
     @Test
     public void testPathLevelChecksOnRepoUrl() throws Exception {
-        // Invalid path syntax
-        String url = "https://assembla.comspaces/git-plugin/git/source";
-        // Syntax issue related specific to Assembla
-        String url2 = "https://app.assembla.com/space/git-plugin/git/source";
         // Any path related errors will not be caught except syntax issues
-        String url3 = "https://app.assembla.com/spaces";
+        String url = "https://app.assembla.com/spaces/";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
 
-        assertEquals("Invalid URL", assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage());
-        assertEquals("Unable to connect https://app.assembla.com/space/git-plugin/git/source/", assemblaWebDescriptor.doCheckRepoUrl(project, url2).getLocalizedMessage());
-        assertEquals(FormValidation.ok(), assemblaWebDescriptor.doCheckRepoUrl(project, url3));
+    @Test
+    public void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
+        String url = "http://assemblagist.com/";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("This is a valid URL but it does not look like Assembla"));
     }
 }

@@ -130,7 +130,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                             if (findText(open(new URL(v)), "Assembla")) {
                                 return FormValidation.ok();
                             } else {
-                                return FormValidation.error("This is a valid URL but it doesn't look like Assembla");
+                                return FormValidation.error("This is a valid URL but it does not look like Assembla");
                             }
                         } catch (IOException e) {
                             return handleIOException(v, e);
