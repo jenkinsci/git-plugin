@@ -12,7 +12,6 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -22,7 +21,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -108,7 +106,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             FormValidation response;
-            if (checkURIFormatAndHostName(cleanUrl, "assembla")) {
+            if (checkURIFormat(cleanUrl, "assembla")) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
                         String v = cleanUrl;
@@ -131,14 +129,6 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 response = FormValidation.error(Messages.invalidUrl());
             }
             return response;
-        }
-
-        private boolean checkURIFormatAndHostName(String url, String browserName) throws URISyntaxException {
-            URI uri = new URI(url);
-            String[] schemes = {"http", "https"};
-            UrlValidator urlValidator = new UrlValidator(schemes);
-            browserName = browserName + ".";
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains(browserName);
         }
     }
 }

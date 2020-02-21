@@ -133,11 +133,12 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return false;
     }
 
-    protected static boolean checkURIFormat(String url) throws URISyntaxException {
+    protected static boolean checkURIFormat(String url, String browserName) throws URISyntaxException {
         URI uri = new URI(url);
         String[] schemes = {"http", "https"};
         UrlValidator urlValidator = new UrlValidator(schemes);
-        return urlValidator.isValid(uri.toString());
+        browserName = browserName + ".";
+        return urlValidator.isValid(uri.toString()) && uri.getHost().contains(browserName);
     }
 
     private static final long serialVersionUID = 1L;
