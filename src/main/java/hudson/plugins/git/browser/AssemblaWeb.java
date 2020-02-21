@@ -107,7 +107,6 @@ public class AssemblaWeb extends GitRepositoryBrowser {
             if (initialChecksAndReturnOk(project, cleanUrl)) {
                 return FormValidation.ok();
             }
-            FormValidation response;
             if (checkURIFormatAndHostName(cleanUrl, "assembla")) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
@@ -128,9 +127,8 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                     }
                 }.check();
             } else {
-                response = FormValidation.error(Messages.invalidUrl());
+                return FormValidation.error(Messages.invalidUrl());
             }
-            return response;
         }
 
         private boolean checkURIFormatAndHostName(String url, String browserName) throws URISyntaxException {

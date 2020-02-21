@@ -44,7 +44,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         if (path.getEditType() == EditType.EDIT) {
             URL url = getUrl();
             String spec = buildCommitDiffSpec(url, path);
-            return new URL(url, url.getPath() + spec);
+              return new URL(url, url.getPath() + spec);
         }
         return null;
     }
@@ -56,14 +56,14 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             String spec = buildCommitDiffSpec(url, path);
             return encodeURL(new URL(url, url.getPath() + spec));
         }
-        String spec = param(url).add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" + path.getPath()).toString();
+        String spec = param(url).add("p=" + projectName).add("a=viewblob").add("h=" + path.getDst()).add("f=" +  path.getPath()).toString();
         return encodeURL(new URL(url, url.getPath() + spec));
     }
 
-    private String buildCommitDiffSpec(URL url, Path path)
-            throws UnsupportedEncodingException {
-        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" + URLEncoder.encode(path.getPath(), "UTF-8").toString();
-    }
+      private String buildCommitDiffSpec(URL url, Path path)
+                      throws UnsupportedEncodingException {
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(), "UTF-8").toString();
+      }
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -100,7 +100,6 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
-            FormValidation response;
             if (checkURIFormat(cleanUrl)) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
@@ -121,9 +120,8 @@ public class ViewGitWeb extends GitRepositoryBrowser {
                     }
                 }.check();
             } else {
-                response = FormValidation.error(Messages.invalidUrl());
+                return FormValidation.error(Messages.invalidUrl());
             }
-            return response;
         }
     }
 }

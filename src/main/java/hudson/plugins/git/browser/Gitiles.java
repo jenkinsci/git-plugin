@@ -80,7 +80,6 @@ public class Gitiles extends GitRepositoryBrowser {
             if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
-            FormValidation response;
             if (checkURIFormat(cleanUrl)) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
@@ -101,9 +100,8 @@ public class Gitiles extends GitRepositoryBrowser {
                     }
                 }.check();
             } else {
-                response = FormValidation.error(Messages.invalidUrl());
+                return FormValidation.error(Messages.invalidUrl());
             }
-            return response;
         }
     }
 }

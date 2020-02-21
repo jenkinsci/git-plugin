@@ -67,7 +67,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         return projectName;
     }
 
-    private String encodeString(final String s) throws UnsupportedEncodingException {
+     private String encodeString(final String s) throws UnsupportedEncodingException {
         return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
     }
 
@@ -89,20 +89,9 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-
-            if (cleanUrl == null) {
+            if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
-
-            if (project == null || !project.hasPermission(Item.CONFIGURE)) {
-                return FormValidation.ok();
-            }
-
-            if (cleanUrl.contains("$")) {
-                // set by variable, can't validate
-                return FormValidation.ok();
-            }
-            FormValidation response;
             if (checkURIFormat(cleanUrl)) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
@@ -123,9 +112,8 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                     }
                 }.check();
             } else {
-                response = FormValidation.error(Messages.invalidUrl());
+                return FormValidation.error(Messages.invalidUrl());
             }
-            return response;
         }
     }
 }
