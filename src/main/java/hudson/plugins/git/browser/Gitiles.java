@@ -81,7 +81,7 @@ public class Gitiles extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             FormValidation response;
-            if (checkURIFormat(cleanUrl, "gerrit")) {
+            if (checkURIFormat(cleanUrl)) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
                         String v = cleanUrl;

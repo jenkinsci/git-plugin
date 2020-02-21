@@ -101,7 +101,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             FormValidation response;
-            if (checkURIFormat(cleanUrl, "viewgit")) {
+            if (checkURIFormat(cleanUrl)) {
                 return new URLCheck() {
                     protected FormValidation check() throws IOException, ServletException {
                         String v = cleanUrl;
