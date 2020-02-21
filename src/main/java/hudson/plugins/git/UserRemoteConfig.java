@@ -221,7 +221,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
          * @param url Repository URL
          * @param value value of RefSpec
          * @return FormValidation.ok() or FormValidation.error()
-         * @throws IllegalArgumentException
+         * @throws IllegalArgumentException on unexpected argument error
          */
         public FormValidation doCheckRefspec(@QueryParameter String name,
                                              @QueryParameter String url,
