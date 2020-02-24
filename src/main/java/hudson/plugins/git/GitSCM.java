@@ -1093,6 +1093,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
+        boolean redundantFetchCheck = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
@@ -1106,6 +1107,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Cloning the remote Git repository");
 
             RemoteConfig rc = repos.get(0);
+            redundantFetchCheck = true;
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
@@ -1119,6 +1121,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
+            if (remoteRepository == repos.get(0) && redundantFetchCheck){
+                continue;
+            }
             try {
                 fetchFrom(git, build, listener, remoteRepository);
             } catch (GitException ex) {
