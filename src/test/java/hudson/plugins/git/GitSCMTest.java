@@ -2738,6 +2738,38 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat(values, hasItem("Commit message: \"test commit\""));
     }
 
+    @Issue("JENKINS-49757")
+    @Test
+    public void testRedundantFetchCallFromLogs() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message=test commit");
+        FreeStyleProject p = setupSimpleProject("master");
+        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        TaskListener mockListener = Mockito.mock(TaskListener.class);
+        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
+
+        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
+                new FilePath(run.getRootDir()).child("tmp-" + "master"),
+                mockListener, null, SCMRevisionState.NONE);
+
+        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
+        List<String> values = logCaptor.getAllValues();
+        int countFetches = 0;
+        String fetchArg = " > git fetch --tags --force --progress -- " + sampleRepo.getRoot().getAbsolutePath() + " +refs/heads/*:refs/remotes/origin/*" + " # timeout=10";
+        for (String value : values) {
+            if(value.equals(fetchArg)){
+                countFetches++;
+            }
+        }
+        // Before the flag check, countFetches was "2" because git fetch was called twice
+        assertThat(2, is(not(countFetches)));
+
+        // After the fix, git fetch is called exactly once
+        assertThat(1, is(countFetches));
+    }
+
     /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for build data consistency.
