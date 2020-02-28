@@ -26,7 +26,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.1.2</revision>
+    <revision>4.2.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
@@ -242,6 +242,12 @@
       <artifactId>test-harness</artifactId>
       <version>${configuration-as-code.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jsoup</groupId>
+          <artifactId>jsoup</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Exclude JTH dependency commons-net - otherwise it is included in hpi file as a transient dependency -->
     <dependency>
