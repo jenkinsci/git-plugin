@@ -904,7 +904,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 for (GitSCMExtension extension : extensions) {
                     extension.decorateFetchCommand(this, run, git, listener, fetch);
                 }
-                fetch.execute();
             } catch (GitException ex) {
                 throw new GitException("Failed to fetch from "+url.toString(), ex);
             }

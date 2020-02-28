@@ -53,6 +53,7 @@ import hudson.util.StreamTaskListener;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -63,6 +64,8 @@ import org.jenkinsci.plugins.gitclient.*;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -103,6 +106,9 @@ import jenkins.plugins.git.GitSampleRepoRule;
  * @author ishaaq
  */
 public class GitSCMTest extends AbstractGitTestCase {
+
+    @Rule public JenkinsRule r = new JenkinsRule();
+    @Rule public TemporaryFolder tmp = new TemporaryFolder();
     @Rule
     public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
 
@@ -141,6 +147,30 @@ public class GitSCMTest extends AbstractGitTestCase {
         CredentialsScope scope = CredentialsScope.GLOBAL;
         String id = "username-" + username + "-password-" + password;
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Issue("JENKINS-56404")
+    @Test
+    public void testRedundantFetch() throws Exception {
+        TestGitRepo repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+        // make an initial commit to master
+        repo.commit("Initial Commit", repo.johnDoe, "Initial Commit");
+        FreeStyleProject project = r.createFreeStyleProject("p");
+        List<BranchSpec> branch = Collections.singletonList(new BranchSpec("master"));
+        GitSCM scm = new GitSCM(
+                repo.remoteConfigs(),
+                branch,
+                false,
+                Collections.<SubmoduleConfig>emptyList(),
+                null,
+                null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+        project.getBuildersList().add(new CaptureEnvironmentBuilder());
+        FreeStyleBuild baseBuild = build(project, Result.SUCCESS);
+        r.assertLogContains("git fetch",baseBuild);
+        // fetch should be called once and log contains 1 git fetch
+        assertEquals(1, StringUtils.countMatches(JenkinsRule.getLog(baseBuild),"git fetch"));
     }
 
     @Test
