@@ -134,10 +134,9 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     }
 
     protected static boolean checkURIFormat(String url) throws URISyntaxException {
-        URI uri = new URI(url);
         String[] schemes = {"http", "https"};
         UrlValidator urlValidator = new UrlValidator(schemes);
-        return urlValidator.isValid(uri.toString());
+        return urlValidator.isValid(url);
     }
 
     private static final long serialVersionUID = 1L;

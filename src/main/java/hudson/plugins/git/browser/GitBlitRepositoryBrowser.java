@@ -89,31 +89,32 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if(initialChecksAndReturnOk(project, cleanUrl)){
+            if (initialChecksAndReturnOk(project, cleanUrl))
+            {
                 return FormValidation.ok();
             }
-            if (checkURIFormat(cleanUrl)) {
-                return new URLCheck() {
-                    protected FormValidation check() throws IOException, ServletException {
-                        String v = cleanUrl;
-                        if (!v.endsWith("/")) {
-                            v += '/';
-                        }
-
-                        try {
-                            if (findText(open(new URL(v)), "Gitblit")) {
-                                return FormValidation.ok();
-                            } else {
-                                return FormValidation.error("This is a valid URL but it doesn't look like Gitblit");
-                            }
-                        } catch (IOException e) {
-                            return handleIOException(v, e);
-                        }
-                    }
-                }.check();
-            } else {
+            if (!checkURIFormat(cleanUrl))
+            {
                 return FormValidation.error(Messages.invalidUrl());
             }
+            return new URLCheck() {
+                protected FormValidation check() throws IOException, ServletException {
+                    String v = cleanUrl;
+                    if (!v.endsWith("/")) {
+                        v += '/';
+                    }
+
+                    try {
+                        if (findText(open(new URL(v)), "Gitblit")) {
+                            return FormValidation.ok();
+                        } else {
+                            return FormValidation.error("This is a valid URL but it doesn't look like Gitblit");
+                        }
+                    } catch (IOException e) {
+                        return handleIOException(v, e);
+                    }
+                }
+            }.check();
         }
     }
 }

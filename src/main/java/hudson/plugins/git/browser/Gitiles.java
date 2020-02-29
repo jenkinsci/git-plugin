@@ -80,28 +80,27 @@ public class Gitiles extends GitRepositoryBrowser {
             if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
-            if (checkURIFormat(cleanUrl)) {
-                return new URLCheck() {
-                    protected FormValidation check() throws IOException, ServletException {
-                        String v = cleanUrl;
-                        if (!v.endsWith("/")) {
-                            v += '/';
-                        }
-
-                        try {
-                            if (findText(open(new URL(v)), "git clone")) {
-                                return FormValidation.ok();
-                            } else {
-                                return FormValidation.error("This is a valid URL but it doesn't look like Gitiles");
-                            }
-                        } catch (IOException e) {
-                            return handleIOException(v, e);
-                        }
-                    }
-                }.check();
-            } else {
+            if (!checkURIFormat(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
+            return new URLCheck() {
+                protected FormValidation check() throws IOException, ServletException {
+                    String v = cleanUrl;
+                    if (!v.endsWith("/"))
+                        v += '/';
+
+                    try {
+                        // gitiles has a line in main page indicating how to clone the project
+                        if (findText(open(new URL(v)), "git clone")) {
+                            return FormValidation.ok();
+                        } else {
+                            return FormValidation.error("This is a valid URL but it doesn't look like Gitiles");
+                        }
+                    } catch (IOException e) {
+                        return handleIOException(v, e);
+                    }
+                }
+            }.check();
         }
     }
 }

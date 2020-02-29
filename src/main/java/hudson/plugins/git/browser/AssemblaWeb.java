@@ -104,31 +104,32 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if (initialChecksAndReturnOk(project, cleanUrl)) {
+            if (initialChecksAndReturnOk(project, cleanUrl))
+            {
                 return FormValidation.ok();
             }
-            if (checkURIFormatAndHostName(cleanUrl, "assembla")) {
-                return new URLCheck() {
-                    protected FormValidation check() throws IOException, ServletException {
-                        String v = cleanUrl;
-                        if (!v.endsWith("/")) {
-                            v += '/';
-                        }
-
-                        try {
-                            if (findText(open(new URL(v)), "Assembla")) {
-                                return FormValidation.ok();
-                            } else {
-                                return FormValidation.error("This is a valid URL but it does not look like Assembla");
-                            }
-                        } catch (IOException e) {
-                            return handleIOException(v, e);
-                        }
-                    }
-                }.check();
-            } else {
+            // Connect to URL and check content only if we have permission
+            if (!checkURIFormatAndHostName(cleanUrl, "assembla")) {
                 return FormValidation.error(Messages.invalidUrl());
             }
+            return new URLCheck() {
+                protected FormValidation check() throws IOException, ServletException {
+                    String v = cleanUrl;
+                    if (!v.endsWith("/")) {
+                        v += '/';
+                    }
+
+                    try {
+                        if (findText(open(new URL(v)), "Assembla")) {
+                            return FormValidation.ok();
+                        } else {
+                            return FormValidation.error("This is a valid URL but it does not look like Assembla");
+                        }
+                    } catch (IOException e) {
+                        return handleIOException(v, e);
+                    }
+                }
+            }.check();
         }
 
         private boolean checkURIFormatAndHostName(String url, String browserName) throws URISyntaxException {

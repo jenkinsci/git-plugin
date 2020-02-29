@@ -44,7 +44,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         if (path.getEditType() == EditType.EDIT) {
             URL url = getUrl();
             String spec = buildCommitDiffSpec(url, path);
-              return new URL(url, url.getPath() + spec);
+        	return new URL(url, url.getPath() + spec);
         }
         return null;
     }
@@ -60,10 +60,10 @@ public class ViewGitWeb extends GitRepositoryBrowser {
         return encodeURL(new URL(url, url.getPath() + spec));
     }
 
-      private String buildCommitDiffSpec(URL url, Path path)
-                      throws UnsupportedEncodingException {
-        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(), "UTF-8").toString();
-      }
+	private String buildCommitDiffSpec(URL url, Path path)
+			throws UnsupportedEncodingException {
+        return param(url).add("p=" + projectName).add("a=commitdiff").add("h=" + path.getChangeSet().getId()) + "#" +  URLEncoder.encode(path.getPath(),"UTF-8").toString();
+	}
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
@@ -97,31 +97,29 @@ public class ViewGitWeb extends GitRepositoryBrowser {
                 throws IOException, ServletException, URISyntaxException {
 
             String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
-            if(initialChecksAndReturnOk(project, cleanUrl)){
+            // Connect to URL and check content only if we have admin permission
+            if (initialChecksAndReturnOk(project, cleanUrl))
                 return FormValidation.ok();
-            }
-            if (checkURIFormat(cleanUrl)) {
-                return new URLCheck() {
-                    protected FormValidation check() throws IOException, ServletException {
-                        String v = cleanUrl;
-                        if (!v.endsWith("/")) {
-                            v += '/';
-                        }
-
-                        try {
-                            if (findText(open(new URL(v)), "ViewGit")) {
-                                return FormValidation.ok();
-                            } else {
-                                return FormValidation.error("This is a valid URL but it doesn't look like ViewGit");
-                            }
-                        } catch (IOException e) {
-                            return handleIOException(v, e);
-                        }
-                    }
-                }.check();
-            } else {
+            if (!checkURIFormat(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
+            return new URLCheck() {
+                protected FormValidation check() throws IOException, ServletException {
+                    String v = cleanUrl;
+                    if (!v.endsWith("/"))
+                        v += '/';
+
+                    try {
+                        if (findText(open(new URL(v)), "ViewGit")) {
+                            return FormValidation.ok();
+                        } else {
+                            return FormValidation.error("This is a valid URL but it doesn't look like ViewGit");
+                        }
+                    } catch (IOException e) {
+                        return handleIOException(v, e);
+                    }
+                }
+            }.check();
         }
     }
 }
