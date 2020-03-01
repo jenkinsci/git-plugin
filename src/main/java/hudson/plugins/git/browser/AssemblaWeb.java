@@ -132,12 +132,12 @@ public class AssemblaWeb extends GitRepositoryBrowser {
             }.check();
         }
 
-        private boolean checkURIFormatAndHostName(String url, String browserName) throws URISyntaxException {
+        private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
             URI uri = new URI(url);
             String[] schemes = {"http", "https"};
             UrlValidator urlValidator = new UrlValidator(schemes);
-            browserName = browserName + ".";
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains(browserName);
+            hostNameFragment = hostNameFragment + ".";
+            return urlValidator.isValid(uri.toString()) && uri.getHost().contains(hostNameFragment);
         }
     }
 }
