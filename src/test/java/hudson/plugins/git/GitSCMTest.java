@@ -77,6 +77,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
@@ -283,6 +284,137 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         build(projectWithMaster, Result.FAILURE);
         build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
+
+    /**
+     * This test confirms the behaviour of avoiding the second fetch in GitSCM checkout()
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetch() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/*:refs/remotes/*", null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsTrue(build, "+refs/heads/*:refs/remotes/origin/*");
+    }
+
+    /**
+     * After avoiding the second fetch call in retrieveChanges(), this test verifies there is no data loss by fetching a repository
+     * (git init + git fetch) with a narrow refspec but without CloneOption of honorRefspec = true on initial clone
+     * First fetch -> wide refspec
+     * Second fetch -> narrow refspec (avoided)
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetchWithoutHonorRefSpec() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+        // Add another branch 'foo'
+        git.branch("foo");
+        git.checkout().branch("foo");
+        commit(commitFile1, johnDoe, "Commit in foo");
+
+        // Build will be success because the initial clone disregards refspec and fetches all branches
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+        FilePath childFile = returnFile(build);
+
+        if (childFile != null) {
+            // assert that no data is lost by avoidance of second fetch
+            assertThat("master branch was not fetched", childFile.readToString(), containsString("master"));
+            assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
+        }
+
+        String wideRefSpec = "+refs/heads/*:refs/remotes/origin/*";
+        assertRedundantFetchIsTrue(build, wideRefSpec);
+
+        assertThat("FAILURE", is(not(build.getResult().toString())));
+    }
+
+    /**
+     * After avoiding the second fetch call in retrieveChanges(), this test verifies there is no data loss by fetching a
+     * repository(git init + git fetch) with a narrow refspec with CloneOption of honorRefspec = true on initial clone
+     * First fetch -> narrow refspec (since refspec is honored on initial clone)
+     * Second fetch -> narrow refspec (avoided)
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetchWithHonorRefSpec() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        String refSpec = "+refs/heads/foo:refs/remotes/foo";
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refSpec, null));
+
+        /* With honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+        cloneOptionMaster.setHonorRefspec(true);
+        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+        // Add another branch 'foo'
+        git.branch("foo");
+        git.checkout().branch("foo");
+        commit(commitFile1, johnDoe, "Commit in foo");
+
+        // Build will be failure because the initial clone regards refspec and fetches branch 'foo' only.
+        FreeStyleBuild build = build(projectWithMaster, Result.FAILURE);
+
+        FilePath childFile = returnFile(build);
+        if (childFile != null) {
+            // assert that no data is lost by avoidance of second fetch
+            assertThat(childFile.readToString(), not(containsString("master")));
+            assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
+        }
+        assertRedundantFetchIsTrue(build, refSpec);
+
+        assertThat("FAILURE", is((build.getResult().toString())));
+    }
+
+    // Checks if the second fetch is being avoided
+    private void assertRedundantFetchIsTrue(FreeStyleBuild build, String refSpec) throws IOException {
+        List<String> values = build.getLog(Integer.MAX_VALUE);
+        int countFetches = 0;
+        String argRefSpec = " " + refSpec;
+        String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
+        for (String value : values) {
+            if(value.equals(fetchArg)){
+                countFetches++;
+            }
+        }
+        // Before the flag check, countFetches was "2" because git fetch was called twice
+        assertThat(countFetches, is(not(2)));
+
+        // After the fix, git fetch is called exactly once
+        assertThat(countFetches, is(1));
+    }
+
+    // Returns the file FETCH_HEAD found in .git
+    private FilePath returnFile(FreeStyleBuild build) throws IOException, InterruptedException {
+        List<FilePath> files = build.getProject().getWorkspace().list();
+        FilePath resultFile = null;
+        for (FilePath s : files) {
+            if(s.getName().equals(".git")) {
+                resultFile = s.child("FETCH_HEAD");
+            }
+        }
+        return resultFile;
     }
 
     /**
@@ -2736,38 +2868,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
-    }
-
-    @Issue("JENKINS-49757")
-    @Test
-    public void testRedundantFetchCallFromLogs() throws Exception {
-        sampleRepo.init();
-        sampleRepo.write("file", "v1");
-        sampleRepo.git("commit", "--all", "--message=test commit");
-        FreeStyleProject p = setupSimpleProject("master");
-        Run<?,?> run = rule.buildAndAssertSuccess(p);
-        TaskListener mockListener = Mockito.mock(TaskListener.class);
-        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
-
-        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
-                new FilePath(run.getRootDir()).child("tmp-" + "master"),
-                mockListener, null, SCMRevisionState.NONE);
-
-        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
-        List<String> values = logCaptor.getAllValues();
-        int countFetches = 0;
-        String fetchArg = " > git fetch --tags --force --progress -- " + sampleRepo.getRoot().getAbsolutePath() + " +refs/heads/*:refs/remotes/origin/*" + " # timeout=10";
-        for (String value : values) {
-            if(value.equals(fetchArg)){
-                countFetches++;
-            }
-        }
-        // Before the flag check, countFetches was "2" because git fetch was called twice
-        assertThat(2, is(not(countFetches)));
-
-        // After the fix, git fetch is called exactly once
-        assertThat(1, is(countFetches));
     }
 
     /**
