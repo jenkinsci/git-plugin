@@ -1,6 +1,7 @@
 package hudson.plugins.git.browser;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
@@ -125,8 +126,8 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 GitSCM scm = (GitSCM) project.getScm();
                 RemoteConfig remote = scm.getRepositoryByName(value);
                 if (remote == null)
-                    return FormValidation.errorWithMarkup("There is no remote with the name <tt>" + value + "</tt>");
-                
+                    return FormValidation.errorWithMarkup("There is no remote with the name <tt>" + Util.escape(value) + "</tt>");
+
                 value = remote.getURIs().get(0).toString();
             }
             
