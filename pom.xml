@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.56</version>
+    <version>3.57</version>
     <relativePath />
   </parent>
 
@@ -21,12 +21,11 @@
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
-  <!-- Use documentation from tagged release -->
-  <url>https://github.com/jenkinsci/${project.artifactId}-plugin/tree/${project.artifactId}-${revision}/README.adoc</url>
+  <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.1.2</revision>
+    <revision>4.2.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
@@ -42,7 +41,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.1.1</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
@@ -140,7 +139,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.11</version>
+      <version>3.1.12</version>
       <scope>test</scope>
     </dependency>
 
@@ -242,6 +241,12 @@
       <artifactId>test-harness</artifactId>
       <version>${configuration-as-code.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jsoup</groupId>
+          <artifactId>jsoup</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Exclude JTH dependency commons-net - otherwise it is included in hpi file as a transient dependency -->
     <dependency>
@@ -252,6 +257,17 @@
         <exclusion>
           <groupId>commons-net</groupId>
           <artifactId>commons-net</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-validator</groupId>
+      <artifactId>commons-validator</artifactId>
+      <version>1.6</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-digester</groupId>
+          <artifactId>commons-digester</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

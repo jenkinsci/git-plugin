@@ -1,15 +1,18 @@
 package hudson.plugins.git.browser;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import hudson.plugins.git.Messages;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
@@ -19,6 +22,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -66,6 +70,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
      private String encodeString(final String s) throws UnsupportedEncodingException {
         return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
     }
+
     @Extension
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @Nonnull
@@ -80,18 +85,21 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
         }
 
         @RequirePOST
-        public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)
-                throws IOException, ServletException {
-            if (url == null) // nothing entered yet
+        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+                throws IOException, ServletException, URISyntaxException {
+
+            String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
+            if (initialChecksAndReturnOk(project, cleanUrl))
             {
                 return FormValidation.ok();
             }
-            // Connect to URL and check content only if we have admin permission
-            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
-                return FormValidation.ok();
+            if (!checkURIFormat(cleanUrl))
+            {
+                return FormValidation.error(Messages.invalidUrl());
+            }
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
-                    String v = url;
+                    String v = cleanUrl;
                     if (!v.endsWith("/")) {
                         v += '/';
                     }
