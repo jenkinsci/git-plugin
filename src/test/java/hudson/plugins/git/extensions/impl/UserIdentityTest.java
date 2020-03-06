@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
@@ -12,6 +11,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
+import org.jvnet.hudson.test.WithoutJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -22,9 +22,8 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     GitClient git;
 
     @Override
-    public void before() throws Exception {
-        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
-        git = Git.with(listener, new EnvVars()).in(repo.gitDir).getClient();
+    public void before() {
+        // do nothing
     }
 
     @Override
@@ -34,19 +33,20 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
 
     @Test
     public void testUserIdentity() throws Exception {
+        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+        git = Git.with(listener, new EnvVars()).in(repo.gitDir).getClient();
+
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
-        UserIdentity userIdentity = new UserIdentity("Jane Doe", "janeDoe@xyz.com");
-        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(userIdentity);
-
         git.commit("First commit");
-
         FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
         EnvVars envVars = build.getEnvironment(listener);
+
         assertThat("Jane Doe", is(envVars.get("GIT_AUTHOR_NAME")));
         assertThat("janeDoe@xyz.com", is(envVars.get("GIT_AUTHOR_EMAIL")));
     }
 
     @Test
+    @WithoutJenkins
     public void testGetNameAndEmail(){
         UserIdentity userIdentity = new UserIdentity("Jane Doe", "janeDoe@xyz.com");
 
@@ -55,6 +55,7 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     }
 
     @Test
+    @WithoutJenkins
     public void equalsContract() {
         EqualsVerifier.forClass(UserIdentity.class)
                 .usingGetClass()
