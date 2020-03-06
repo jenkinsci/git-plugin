@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
@@ -12,6 +11,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
+import org.jvnet.hudson.test.WithoutJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -38,9 +38,6 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
     @Test
     public void testWipeWorkspace() throws Exception {
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
-        WipeWorkspace wipeWorkspaceExtension = new WipeWorkspace();
-        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(wipeWorkspaceExtension);
-
         git.commit("First commit");
         FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
 
@@ -49,6 +46,7 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
     }
 
     @Test
+    @WithoutJenkins
     public void equalsContract() {
         EqualsVerifier.forClass(WipeWorkspace.class)
                 .usingGetClass()
