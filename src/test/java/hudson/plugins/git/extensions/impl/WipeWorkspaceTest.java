@@ -23,8 +23,7 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
 
     @Override
     public void before() throws Exception {
-        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
-        git = Git.with(listener, new EnvVars()).in(repo.gitDir).getClient();
+        // do nothing
     }
 
     @Override
@@ -37,6 +36,9 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
      **/
     @Test
     public void testWipeWorkspace() throws Exception {
+        repo = new TestGitRepo("repo", tmp.newFolder(), listener);
+        git = Git.with(listener, new EnvVars()).in(repo.gitDir).getClient();
+
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
         git.commit("First commit");
         FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
