@@ -21,12 +21,9 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * @author Vivek Pandey
+ * @author Nicolas de Loof
  */
 @ExportedBean
 public class GitTagAction extends AbstractScmTagAction implements Describable<GitTagAction> {
@@ -40,24 +37,19 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     private final String ws;
 
+    private String lastTagName = null;
+    private GitException lastTagException = null;
+
     protected GitTagAction(Run build, FilePath workspace, Revision revision) {
         super(build);
         this.ws = workspace.getRemote();
         for (Branch b : revision.getBranches()) {
-            tags.put(b.getName(), new ArrayList<String>());
+            tags.put(b.getName(), new ArrayList<>());
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(GitTagAction.class.getName());
-
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                        justification = "Tests use null instance, Jenkins 2.60 declares instance is not null")
     public Descriptor<GitTagAction> getDescriptor() {
-        Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.severe("Jenkins.getInstance() null in GitTagAction.getDescriptor");
-            return null;
-        }
+        Jenkins jenkins = Jenkins.get();
         return jenkins.getDescriptorOrDie(getClass());
     }
 
@@ -69,12 +61,14 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         return false;
     }
 
+    @Override
     public String getIconFileName() {
         if (!isTagged() && !getACL().hasPermission(getPermission()))
             return null;
         return "save.gif";
     }
 
+    @Override
     public String getDisplayName() {
         int nonNullTag = 0;
         for (List<String> v : tags.values()) {
@@ -113,7 +107,8 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
     @ExportedBean
     public static class TagInfo {
-        private String module, url;
+        private final String module;
+        private final String url;
 
         private TagInfo(String branch, String tag) {
             this.module = branch;
@@ -155,21 +150,34 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     public synchronized void doSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         getACL().checkPermission(getPermission());
 
-        MultipartFormDataParser parser = new MultipartFormDataParser(req);
+        try (MultipartFormDataParser parser = new MultipartFormDataParser(req)) {
 
-        Map<String, String> newTags = new HashMap<>();
+            Map<String, String> newTags = new HashMap<>();
 
-        int i = -1;
-        for (String e : tags.keySet()) {
-            i++;
-            if (tags.size() > 1 && parser.get("tag" + i) == null)
-                continue; // when tags.size()==1, UI won't show the checkbox.
-            newTags.put(e, parser.get("name" + i));
+            int i = -1;
+            for (String e : tags.keySet()) {
+                i++;
+                if (tags.size() > 1 && parser.get("tag" + i) == null)
+                    continue; // when tags.size()==1, UI won't show the checkbox.
+                newTags.put(e, parser.get("name" + i));
+            }
+
+            scheduleTagCreation(newTags, parser.get("comment"));
+
+            rsp.sendRedirect(".");
         }
+    }
 
-        new TagWorkerThread(newTags, parser.get("comment")).start();
-
-        rsp.sendRedirect(".");
+    /**
+     * Schedule creation of a tag. For test purposes only, not to be called outside this package.
+     *
+     * @param newTags tags to be created
+     * @param comment tag comment to be included with created tags
+     * @throws IOException on IO error
+     * @throws ServletException on servlet exception
+     */
+    void scheduleTagCreation(Map<String, String> newTags, String comment) throws IOException, ServletException {
+        new TagWorkerThread(newTags, comment).start();
     }
 
     /**
@@ -183,7 +191,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         private final String comment;
 
         public TagWorkerThread(Map<String, String> tagSet,String comment) {
-            super(GitTagAction.this, ListenerAndText.forMemory());
+            super(GitTagAction.this, ListenerAndText.forMemory(null));
             this.tagSet = tagSet;
             this.comment = comment;
         }
@@ -203,6 +211,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                                      + getRun().getParent().getName().replace(" ", "_")
                                      + "-" + entry.getValue();
                     git.tag(entry.getValue(), "Jenkins Build #" + buildNum);
+                    lastTagName = entry.getValue();
 
                     for (Map.Entry<String, String> e : tagSet.entrySet())
                         GitTagAction.this.tags.get(e.getKey()).add(e.getValue());
@@ -211,6 +220,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
                     workerThread = null;
                 }
                 catch (GitException ex) {
+                    lastTagException = ex;
                     ex.printStackTrace(listener.error("Error tagging repo '%s' : %s", entry.getKey(), ex.getMessage()));
                     // Failed. Try the next one
                     listener.getLogger().println("Trying next branch");
@@ -230,8 +240,19 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
      */
     @Extension
     public static class DescriptorImpl extends Descriptor<GitTagAction> {
+        @Override
         public String getDisplayName() {
             return "Tag";
         }
+    }
+
+    /* Package protected for use only by tests */
+    String getLastTagName() {
+        return lastTagName;
+    }
+
+    /* Package protected for use only by tests */
+    GitException getLastTagException() {
+        return lastTagException;
     }
 }

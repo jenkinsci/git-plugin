@@ -2,6 +2,7 @@ package hudson.plugins.git;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.collections.CollectionUtils;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Arrays;
@@ -27,10 +28,11 @@ public class SubmoduleConfig implements java.io.Serializable {
     public SubmoduleConfig(String submoduleName, Collection<String> branches) {
         this.submoduleName = submoduleName;
         if (CollectionUtils.isNotEmpty(branches)) {
-            this.branches = branches.toArray(new String[branches.size()]);
+            this.branches = branches.toArray(new String[0]);
         }
     }
 
+    @Whitelisted
     public String getSubmoduleName() {
         return submoduleName;
     }

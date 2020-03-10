@@ -12,7 +12,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -44,7 +43,7 @@ public class GitoriousWeb extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(getUrl(), "commit/" + changeSet.getId() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath());
+        return encodeURL(new URL(getUrl(), "commit/" + changeSet.getId() + "/diffs?diffmode=sidebyside&fragment=1#" + path.getPath()));
     }
 
     /**

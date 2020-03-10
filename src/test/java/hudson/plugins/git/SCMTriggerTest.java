@@ -12,7 +12,6 @@ import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -277,12 +276,9 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     private Future<Void> triggerSCMTrigger(final SCMTrigger trigger)
     {
         if(trigger == null) return null;
-        Callable<Void> callable = new Callable<Void>() {
-            public Void call() throws Exception
-            {
-                trigger.run();
-                return null;
-            }
+        Callable<Void> callable = () -> {
+            trigger.run();
+            return null;
         };
         return singleThreadExecutor.submit(callable);
     }

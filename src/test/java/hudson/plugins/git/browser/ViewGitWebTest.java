@@ -1,22 +1,23 @@
 package hudson.plugins.git.browser;
 
-import hudson.model.Run;
+import hudson.EnvVars;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeLogParser;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-
-import org.xml.sax.SAXException;
 
 /**
  * @author Paul Nyheim (paul.nyheim@gmail.com)
@@ -27,50 +28,24 @@ public class ViewGitWebTest {
     private static final String PROJECT_NAME = "PROJECT";
     private final ViewGitWeb viewGitWeb = new ViewGitWeb(VIEWGIT_URL, PROJECT_NAME);
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.ViewGitWeb#getUrl()}.
-     * 
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrl() throws IOException {
         assertEquals(String.valueOf(viewGitWeb.getUrl()), VIEWGIT_URL + "/");
     }
 
-    /**
-     * Test method for {@link hudson.plugins.git.browser.ViewGitWeb#getUrl()}.
-     * 
-     * @throws MalformedURLException
-     */
     @Test
     public void testGetUrlForRepoWithTrailingSlash() throws IOException {
         assertEquals(String.valueOf(new ViewGitWeb(VIEWGIT_URL + "/", PROJECT_NAME).getUrl()), VIEWGIT_URL + "/");
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getChangeSetLink(hudson.plugins.git.GitChangeSet)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
-    public void testGetChangeSetLinkGitChangeSet() throws IOException, SAXException {
+    public void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = viewGitWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals("http://SERVER/viewgit/?p=PROJECT&a=commit&h=396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getDiffLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
-    public void testGetDiffLinkPath() throws IOException, SAXException {
+    public void testGetDiffLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path1 = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         assertEquals(VIEWGIT_URL + "/?p=PROJECT&a=commitdiff&h=396fc230a3db05c427737aa5c2eb7856ba72b05d#src%2Fmain%2Fjava%2Fhudson%2Fplugins%2Fgit%2Fbrowser%2FGithubWeb.java", viewGitWeb.getDiffLink(path1).toString());
@@ -80,16 +55,8 @@ public class ViewGitWebTest {
         assertNull("Do not return a diff link for added files.", viewGitWeb.getDiffLink(path3));
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
-    public void testGetFileLinkPath() throws IOException, SAXException {
+    public void testGetFileLinkPath() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog");
         final Path path = pathMap.get("src/main/java/hudson/plugins/git/browser/GithubWeb.java");
         final URL fileLink = viewGitWeb.getFileLink(path);
@@ -98,42 +65,32 @@ public class ViewGitWebTest {
     }
     
     @Test
-    public void testGetDiffLinkForDeletedFile() throws Exception{
+    public void testGetDiffLinkForDeletedFile() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         assertNull("Do not return a diff link for deleted files.", viewGitWeb.getDiffLink(path));
 
     }
 
-    /**
-     * Test method for
-     * {@link hudson.plugins.git.browser.ViewGitWeb#getFileLink(hudson.plugins.git.GitChangeSet.Path)}
-     * .
-     * 
-     * @throws SAXException on XML parsing exception
-     * @throws IOException on input or output error
-     */
     @Test
-    public void testGetFileLinkPathForDeletedFile() throws IOException, SAXException {
+    public void testGetFileLinkPathForDeletedFile() throws Exception {
         final HashMap<String, Path> pathMap = createPathMap("rawchangelog-with-deleted-file");
         final Path path = pathMap.get("bar");
         final URL fileLink = viewGitWeb.getFileLink(path);
         assertEquals(VIEWGIT_URL + "/?p=PROJECT&a=commitdiff&h=fc029da233f161c65eb06d0f1ed4f36ae81d1f4f#bar", String.valueOf(fileLink));
     }
 
-    private GitChangeSet createChangeSet(String rawchangelogpath) throws IOException, SAXException {
-        final GitChangeLogParser logParser = new GitChangeLogParser(false);
+    private final Random random = new Random();
+
+    private GitChangeSet createChangeSet(String rawchangelogpath) throws Exception {
+        /* Use randomly selected git client implementation since the client implementation should not change result */
+        GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(new File(".")).using(random.nextBoolean() ? null : "jgit").getClient();
+        final GitChangeLogParser logParser = new GitChangeLogParser(gitClient, false);
         final List<GitChangeSet> changeSetList = logParser.parse(ViewGitWebTest.class.getResourceAsStream(rawchangelogpath));
         return changeSetList.get(0);
     }
 
-    /**
-     * @param changelog
-     * @return
-     * @throws IOException on input or output error
-     * @throws SAXException on XML parsing exception
-     */
-    private HashMap<String, Path> createPathMap(final String changelog) throws IOException, SAXException {
+    private HashMap<String, Path> createPathMap(final String changelog) throws Exception {
         final HashMap<String, Path> pathMap = new HashMap<>();
         final Collection<Path> changeSet = createChangeSet(changelog).getPaths();
         for (final Path path : changeSet) {
@@ -141,5 +98,4 @@ public class ViewGitWebTest {
         }
         return pathMap;
     }
-
 }

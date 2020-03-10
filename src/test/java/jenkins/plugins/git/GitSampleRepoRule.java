@@ -46,6 +46,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     private static boolean initialized = false;
 
+    private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
+
     public void git(String... cmds) throws Exception {
         run("git", cmds);
     }
@@ -59,8 +61,8 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     @Override
     public void init() throws Exception {
-        GitSampleRepoRule.checkGlobalConfig();
         run(true, tmp.getRoot(), "git", "version");
+        checkGlobalConfig();
         git("init");
         write("file", "");
         git("add", "file");
@@ -76,16 +78,15 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public void notifyCommit(JenkinsRule r) throws Exception {
         synchronousPolling(r);
         WebResponse webResponse = r.createWebClient().goTo("git/notifyCommit?url=" + bareUrl(), "text/plain").getWebResponse();
-        System.out.println(webResponse.getContentAsString());
+        LOGGER.log(Level.FINE, webResponse.getContentAsString());
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {
-                System.out.println("Triggered: " + pair.getValue());
+                LOGGER.log(Level.FINE, "Triggered: " + pair.getValue());
             }
         }
         r.waitUntilNoActivity();
     }
 
-    /** Returns the (full) commit hash of the current {@link Constants#HEAD} of the repository. */
     public String head() throws Exception {
         return new RepositoryBuilder().setWorkTree(sampleRepo).build().resolve(Constants.HEAD).name();
     }
@@ -101,11 +102,13 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int returnCode = -1;
         try {
-            returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            if (returnCode != 0) {
+                LOGGER.log(Level.WARNING, "Command 'git --version' returned " + returnCode);
+            }
         } catch (IOException | InterruptedException ex) {
-            System.out.println("Error checking git version " + ex);
+            LOGGER.log(Level.WARNING, "Exception checking git version " + ex);
         }
         final String versionOutput = out.toString().trim();
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
@@ -113,13 +116,13 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         final int gitMinor = Integer.parseInt(fields[1]);
         final int gitPatch = Integer.parseInt(fields[2]);
         if (gitMajor < 1 || gitMajor > 3) {
-            System.out.println("WARNING: Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
+            LOGGER.log(Level.WARNING, "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields[0] + "'");
         }
-        if (gitMinor < 0 || gitMinor > 20) {
-            System.out.println("WARNING: Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
+        if (gitMinor < 0 || gitMinor > 50) {
+            LOGGER.log(Level.WARNING, "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields[1] + "'");
         }
         if (gitPatch < 0 || gitPatch > 20) {
-            System.out.println("WARNING: Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields[2] + "'");
+            LOGGER.log(Level.WARNING, "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields[2] + "'");
         }
 
         return gitMajor >  neededMajor ||

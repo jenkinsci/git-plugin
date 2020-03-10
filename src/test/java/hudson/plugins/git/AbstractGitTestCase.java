@@ -91,20 +91,20 @@ public abstract class AbstractGitTestCase {
         git = testRepo.git;
     }
 
-    protected void commit(final String fileName, final PersonIdent committer, final String message)
+    protected String commit(final String fileName, final PersonIdent committer, final String message)
             throws GitException, InterruptedException {
-        testRepo.commit(fileName, committer, message);
+        return testRepo.commit(fileName, committer, message);
     }
 
-    protected void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
+    protected String commit(final String fileName, final String fileContent, final PersonIdent committer, final String message)
 
             throws GitException, InterruptedException {
-        testRepo.commit(fileName, fileContent, committer, message);
+        return testRepo.commit(fileName, fileContent, committer, message);
     }
 
-    protected void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+    protected String commit(final String fileName, final PersonIdent author, final PersonIdent committer,
                         final String message) throws GitException, InterruptedException {
-        testRepo.commit(fileName, author, committer, message);
+        return testRepo.commit(fileName, author, committer, message);
     }
 
     protected List<UserRemoteConfig> createRemoteRepositories() throws IOException {
@@ -211,12 +211,13 @@ public abstract class AbstractGitTestCase {
 
     /**
      * Creates a new project and configures the GitSCM according the parameters.
-     * @param repos
-     * @param branchSpecs
-     * @param scmTriggerSpec
-     * @param disableRemotePoll Disable Workspace-less polling via "git ls-remote"
-     * @return
-     * @throws Exception
+     * @param repos git remote repositories
+     * @param branchSpecs branch specs
+     * @param scmTriggerSpec scm trigger spec
+     * @param disableRemotePoll disable workspace-less polling via "git ls-remote"
+     * @param enforceGitClient enforce git client
+     * @return the created project
+     * @throws Exception on error
      */
     protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
                 String scmTriggerSpec, boolean disableRemotePoll, EnforceGitClient enforceGitClient) throws Exception {
@@ -246,7 +247,6 @@ public abstract class AbstractGitTestCase {
 
     protected FreeStyleBuild build(final FreeStyleProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
-        System.out.println(build.getLog());
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -258,7 +258,6 @@ public abstract class AbstractGitTestCase {
 
     protected FreeStyleBuild build(final FreeStyleProject project, final String parentDir, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final FreeStyleBuild build = project.scheduleBuild2(0).get();
-        System.out.println(build.getLog());
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(build.getWorkspace().child(parentDir).child(expectedNewlyCommittedFile).exists());
         }
@@ -270,7 +269,6 @@ public abstract class AbstractGitTestCase {
     
     protected MatrixBuild build(final MatrixProject project, final Result expectedResult, final String...expectedNewlyCommittedFiles) throws Exception {
         final MatrixBuild build = project.scheduleBuild2(0).get();
-        System.out.println(build.getLog());
         for(final String expectedNewlyCommittedFile : expectedNewlyCommittedFiles) {
             assertTrue(expectedNewlyCommittedFile + " file not found in workspace", build.getWorkspace().child(expectedNewlyCommittedFile).exists());
         }
@@ -309,15 +307,6 @@ public abstract class AbstractGitTestCase {
                 }
 
             });
-    }
-
-    /** A utility method that displays a git repo. Useful to visualise merges. */
-    public void showRepo(TestGitRepo repo, String msg) throws Exception {
-        System.out.println("*********** "+msg+" ***********");
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            int returnCode = new Launcher.LocalLauncher(listener).launch().cmds("git", "log","--all","--graph","--decorate","--oneline").pwd(repo.gitDir.getCanonicalPath()).stdout(out).join();
-            System.out.println(out.toString());
-        }
     }
 
     public static class HasCredentialBuilder extends Builder {

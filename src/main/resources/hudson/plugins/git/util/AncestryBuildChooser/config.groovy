@@ -1,6 +1,6 @@
-package hudson.plugins.git.util.AncestryBuildChooser;
+package hudson.plugins.git.util.AncestryBuildChooser
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.description {
     raw(_("maximum_age_of_commit_blurb"))

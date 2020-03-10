@@ -9,7 +9,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -75,7 +74,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
 
-            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // <code>BRANCH</code> is recognized as a shorthand of <code>*/BRANCH</code>
             // so check all remotes to fully qualify this branch spec
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
@@ -280,11 +279,9 @@ public class DefaultBuildChooser extends BuildChooser {
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
         final List<Revision> in = revs;
-        return utils.git.withRepository(new RepositoryCallback<List<Revision>>() {
-            public List<Revision> invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                Collections.sort(in,new CommitTimeComparator(repo));
-                return in;
-            }
+        return utils.git.withRepository((Repository repo, VirtualChannel channel) -> {
+            Collections.sort(in,new CommitTimeComparator(repo));
+            return in;
         });
     }
 

@@ -1,14 +1,15 @@
 package hudson.plugins.git.extensions.impl;
 
 import com.google.common.base.Function;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPath> implements Serializable {
 
@@ -16,31 +17,35 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     public static final transient SparseCheckoutPathToPath SPARSE_CHECKOUT_PATH_TO_PATH = new SparseCheckoutPathToPath();
 
-    private String path;
+    private final String path;
 
     @DataBoundConstructor
     public SparseCheckoutPath(String path) {
         this.path = path;
     }
 
+    @Whitelisted
     public String getPath() {
         return path;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SparseCheckoutPath)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         SparseCheckoutPath that = (SparseCheckoutPath) o;
 
-        return path.equals(that.path);
-
+        return Objects.equals(path, that.path);
     }
 
     @Override
     public int hashCode() {
-        return path.hashCode();
+        return Objects.hashCode(path);
     }
 
     @Override
@@ -54,10 +59,9 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
         }
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public Descriptor<SparseCheckoutPath> getDescriptor()
     {
-        return Jenkins.getInstance().getDescriptor(getClass());
+        return Jenkins.get().getDescriptor(getClass());
     }
 
     @Extension

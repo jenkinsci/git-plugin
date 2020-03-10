@@ -1,16 +1,21 @@
 package hudson.plugins.git.browser;
 
 import hudson.EnvVars;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
 
+import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.net.IDN;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
@@ -72,8 +77,9 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @return
      *      null if the browser doesn't have any suitable URL.
      * @throws IOException on input or output error
+     * @throws URISyntaxException on URI syntax error
      */
-    public abstract URL getFileLink(GitChangeSet.Path path) throws IOException;
+    public abstract URL getFileLink(GitChangeSet.Path path) throws IOException, URISyntaxException;
 
     /**
      * Determines whether a URL should be normalized
@@ -103,6 +109,34 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     			i++;
     	}
         return i;
+    }
+
+    public static URL encodeURL(URL url) throws IOException {
+        try {
+            return new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef()).toURL();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+    }
+
+    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
+        if (cleanUrl == null) {
+            return true;
+        }
+        if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            return true;
+        }
+        if (cleanUrl.contains("$")) {
+            // set by variable, can't validate
+            return true;
+        }
+        return false;
+    }
+
+    protected static boolean checkURIFormat(String url) throws URISyntaxException {
+        String[] schemes = {"http", "https"};
+        UrlValidator urlValidator = new UrlValidator(schemes);
+        return urlValidator.isValid(url);
     }
 
     private static final long serialVersionUID = 1L;

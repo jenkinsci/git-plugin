@@ -50,6 +50,7 @@ import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -169,13 +170,13 @@ public class AbstractGitProject extends AbstractGitRepository {
     /**
      * Creates a new project and configures the GitSCM according the parameters.
      *
-     * @param repos
-     * @param branchSpecs
-     * @param scmTriggerSpec
-     * @param disableRemotePoll Disable Workspace-less polling via "git
-     * ls-remote"
-     * @return
-     * @throws Exception
+     * @param repos git remote repositories
+     * @param branchSpecs branch specs
+     * @param scmTriggerSpec scm trigger spec
+     * @param disableRemotePoll disable workspace-less polling via "git ls-remote"
+     * @param enforceGitClient enforce git client
+     * @return the created project
+     * @throws Exception on error
      */
     protected FreeStyleProject setupProject(List<UserRemoteConfig> repos, List<BranchSpec> branchSpecs,
             String scmTriggerSpec, boolean disableRemotePoll, EnforceGitClient enforceGitClient) throws Exception {
@@ -239,9 +240,8 @@ public class AbstractGitProject extends AbstractGitRepository {
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
         return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
             public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                try {
-                    ObjectId oid = Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/" + branch);
-                    return oid.name();
+                try (Repository repo = Git.with(null, null).in(f).getClient().getRepository()) {
+                    return repo.resolve("refs/heads/" + branch).name();
                 } catch (GitException e) {
                     throw new RuntimeException(e);
                 }

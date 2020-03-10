@@ -17,9 +17,9 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.google.common.base.Predicate;
@@ -55,66 +55,65 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         final Collection<Revision> candidates = super.getCandidateRevisions(isPollCall, branchSpec, git, listener, data, context);
         
         // filter candidates based on branch age and ancestry
-        return git.withRepository(new RepositoryCallback<List<Revision>>() {
-            public List<Revision> invoke(Repository repository, VirtualChannel channel) throws IOException {
-                try (RevWalk walk = new RevWalk(repository)) {
+        return git.withRepository((Repository repository, VirtualChannel channel) -> {
+            try (RevWalk walk = new RevWalk(repository)) {
 
-                    RevCommit ancestor = null;
-                    if (!Strings.isNullOrEmpty(ancestorCommitSha1)) {
-                        try {
-                            ancestor = walk.parseCommit(ObjectId.fromString(ancestorCommitSha1));
-                        } catch (IllegalArgumentException e) {
-                            throw new GitException(e);
-                        }
-                    }
-
-                    final CommitAgeFilter ageFilter = new CommitAgeFilter(maximumAgeInDays);
-                    final AncestryFilter ancestryFilter = new AncestryFilter(walk, ancestor);
-
-                    final List<Revision> filteredCandidates = Lists.newArrayList();
-
+                RevCommit ancestor = null;
+                if (!Strings.isNullOrEmpty(ancestorCommitSha1)) {
                     try {
-                        for (Revision currentRevision : candidates) {
-                            RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
-
-                            if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
-                                continue;
-                            }
-
-                            if (ancestryFilter.isEnabled() && !ancestryFilter.apply(currentRev)) {
-                                continue;
-                            }
-
-                            filteredCandidates.add(currentRevision);
-                        }
-                    } catch (Throwable e) {
-
-                        // if a wrapped IOException was thrown, unwrap before throwing it
-                        Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
-                        if (ioeIter.hasNext())
-                            throw ioeIter.next();
-                        else
-                            throw Throwables.propagate(e);
+                        ancestor = walk.parseCommit(ObjectId.fromString(ancestorCommitSha1));
+                    } catch (IllegalArgumentException e) {
+                        throw new GitException(e);
                     }
-
-                    return filteredCandidates;
                 }
+
+                final CommitAgeFilter ageFilter = new CommitAgeFilter(maximumAgeInDays);
+                final AncestryFilter ancestryFilter = new AncestryFilter(walk, ancestor);
+
+                final List<Revision> filteredCandidates = Lists.newArrayList();
+
+                try {
+                    for (Revision currentRevision : candidates) {
+                        RevCommit currentRev = walk.parseCommit(ObjectId.fromString(currentRevision.getSha1String()));
+
+                        if (ageFilter.isEnabled() && !ageFilter.apply(currentRev)) {
+                            continue;
+                        }
+
+                        if (ancestryFilter.isEnabled() && !ancestryFilter.apply(currentRev)) {
+                            continue;
+                        }
+
+                        filteredCandidates.add(currentRevision);
+                    }
+                } catch (Throwable e) {
+
+                    // if a wrapped IOException was thrown, unwrap before throwing it
+                    Iterator<IOException> ioeIter = Iterables.filter(Throwables.getCausalChain(e), IOException.class).iterator();
+                    if (ioeIter.hasNext())
+                        throw ioeIter.next();
+                    else
+                        throw Throwables.propagate(e);
+                }
+
+                return filteredCandidates;
             }
         });
     }
     
     private static class CommitAgeFilter implements Predicate<RevCommit> {
         
-        private DateTime oldestAllowableCommitDate = null;
+        private LocalDateTime oldestAllowableCommitDate = null;
         
         public CommitAgeFilter(Integer oldestAllowableAgeInDays) {
             if (oldestAllowableAgeInDays != null && oldestAllowableAgeInDays >= 0) {
-                this.oldestAllowableCommitDate = new LocalDate().toDateTimeAtStartOfDay().minusDays(oldestAllowableAgeInDays);
+                this.oldestAllowableCommitDate = LocalDate.now().atStartOfDay().minusDays(oldestAllowableAgeInDays);
             }
         }
         
+        @Override
         public boolean apply(RevCommit rev) {
-            return new DateTime(rev.getCommitterIdent().getWhen()).isAfter(this.oldestAllowableCommitDate);
+            return LocalDateTime.ofInstant(rev.getCommitterIdent().getWhen().toInstant(), ZoneId.systemDefault()).isAfter(this.oldestAllowableCommitDate);
         }
         
         public boolean isEnabled() {

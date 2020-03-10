@@ -1,8 +1,11 @@
 package hudson.plugins.git;
 
+import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -14,17 +17,22 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
-
 import org.eclipse.jgit.transport.URIish;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +40,7 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+@RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
 
     private GitStatus gitStatus;
@@ -155,9 +164,7 @@ public class GitStatusTest extends AbstractGitProject {
         this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master,topic,feature/def", null);
         Mockito.verify(aMasterTrigger).run();
         Mockito.verify(aTopicTrigger).run();
-        // trigger containing slash is not called in current code, should be
-        // JENKINS-29603 may be related
-        Mockito.verify(aFeatureTrigger, Mockito.never()).run();
+        Mockito.verify(aFeatureTrigger).run();
 
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
         Mockito.verify(bTopicTrigger, Mockito.never()).run();
@@ -190,7 +197,7 @@ public class GitStatusTest extends AbstractGitProject {
         SCMTrigger aSlashesTrigger = setupProjectWithTrigger("a", "name/with/slashes", false);
 
         this.gitStatus.doNotifyCommit(requestWithParameter, "a", "name/with/slashes", null);
-        Mockito.verify(aSlashesTrigger, Mockito.never()).run(); // Should be run
+        Mockito.verify(aSlashesTrigger).run();
         Mockito.verify(bMasterTrigger, Mockito.never()).run();
 
         assertEquals("URL: a Branches: name/with/slashes", this.gitStatus.toString());
@@ -281,6 +288,68 @@ public class GitStatusTest extends AbstractGitProject {
                 + (allowedParamKey1 ? " Parameters: paramKey1='paramValue1'" : "")
                 + (allowedParamKey1 ? " More parameters: paramKey1='paramValue1'" : "");
         assertEquals(expected, this.gitStatus.toString());
+    }
+
+    @DataPoints("branchSpecPrefixes")
+    public static final String[] BRANCH_SPEC_PREFIXES = new String[] {
+            "",
+            "refs/remotes/",
+            "refs/heads/",
+            "origin/",
+            "remotes/origin/"
+    };
+
+    @Theory
+    public void testDoNotifyCommitBranchWithSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "feature/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchWithoutSlash(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Theory
+    public void testDoNotifyCommitBranchByBranchRef(@FromDataPoints("branchSpecPrefixes") String branchSpecPrefix) throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", branchSpecPrefix + "awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "refs/heads/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithRegex() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", ":[^/]*/awesome-feature", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    @Test
+    public void testDoNotifyCommitBranchWithWildcard() throws Exception {
+        SCMTrigger trigger = setupProjectWithTrigger("remote", "origin/feature/*", false);
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, "remote", "feature/awesome-feature", null);
+
+        Mockito.verify(trigger).run();
+    }
+
+    private void assertAdditionalParameters(Collection<? extends Action> actions) {
+        for (Action action: actions) {
+            if (action instanceof ParametersAction) {
+                final List<ParameterValue> parameters = ((ParametersAction) action).getParameters();
+                assertEquals(2, parameters.size());
+                for (ParameterValue value : parameters) {
+                    assertTrue((value.getName().equals("paramKey1") && value.getValue().equals("paramValue1"))
+                            || (value.getName().equals("paramKey2") && value.getValue().equals("paramValue2")));
+                }
+            }
+        }
     }
 
     private SCMTrigger setupProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
@@ -465,6 +534,7 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
+        assumeTrue(runUnreliableTests()); // Test cleanup is unreliable in some cases
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -506,6 +576,18 @@ public class GitStatusTest extends AbstractGitProject {
                 + (allowedExtra ? "extra='" + extraValue + "'," : "")
                 + "A='aaa',C='ccc',B='$A$C'";
         assertEquals(expected, this.gitStatus.toString());
+    }
+
+    /** Returns true if unreliable tests should be run */
+    private boolean runUnreliableTests() {
+        if (!isWindows()) {
+            return true; // Always run tests on non-Windows platforms
+        }
+        String jobUrl = System.getenv("JOB_URL");
+        if (jobUrl == null) {
+            return true; // Always run tests when not inside a CI environment
+        }
+        return !jobUrl.contains("ci.jenkins.io"); // Skip some tests on ci.jenkins.io, windows cleanup is unreliable on those machines
     }
 
     /**

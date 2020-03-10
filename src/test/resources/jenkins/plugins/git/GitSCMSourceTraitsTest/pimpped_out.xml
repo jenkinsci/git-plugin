@@ -29,6 +29,9 @@
       <reference>origin/bar</reference>
       <parentCredentials>true</parentCredentials>
       <timeout>4</timeout>
+      <shallow>true</shallow>
+      <depth>3</depth>
+      <threads>4</threads>
     </hudson.plugins.git.extensions.impl.SubmoduleOption>
     <hudson.plugins.git.extensions.impl.ChangelogToBranch>
       <options>
@@ -42,8 +45,12 @@
     <hudson.plugins.git.extensions.impl.LocalBranch>
       <localBranch>**</localBranch>
     </hudson.plugins.git.extensions.impl.LocalBranch>
-    <hudson.plugins.git.extensions.impl.CleanCheckout/>
-    <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
+    <hudson.plugins.git.extensions.impl.CleanCheckout>
+      <deleteUntrackedNestedRepositories>true</deleteUntrackedNestedRepositories>
+    </hudson.plugins.git.extensions.impl.CleanCheckout>
+    <hudson.plugins.git.extensions.impl.CleanBeforeCheckout>
+      <deleteUntrackedNestedRepositories>true</deleteUntrackedNestedRepositories>
+    </hudson.plugins.git.extensions.impl.CleanBeforeCheckout>
     <hudson.plugins.git.extensions.impl.PerBuildTag/>
     <hudson.plugins.git.extensions.impl.ScmName>
       <name>irrelevant</name>

@@ -1,9 +1,9 @@
 package hudson.plugins.git.browser;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.RepositoryBrowser;
@@ -45,7 +45,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
         String spec = String.format("commit/%s#path=%s&_a=history", path.getChangeSet().getId(), path.getPath());
-        return new URL(getRepoUrl(path.getChangeSet()), spec);
+        return encodeURL(new URL(getRepoUrl(path.getChangeSet()), spec));
     }
 
     @Override
@@ -114,8 +114,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 ServletException {
 
             // Connect to URL and check content only if we have admin permission
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins == null || !jenkins.hasPermission(Hudson.ADMINISTER))
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
                 return FormValidation.ok();
 
             if (value == null) // nothing entered yet
@@ -125,7 +124,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 GitSCM scm = (GitSCM) project.getScm();
                 RemoteConfig remote = scm.getRepositoryByName(value);
                 if (remote == null)
-                    return FormValidation.errorWithMarkup("There is no remote with the name <tt>" + value + "</tt>");
+                    return FormValidation.errorWithMarkup("There is no remote with the name <code>" + Util.escape(value) + "</code>");
                 
                 value = remote.getURIs().get(0).toString();
             }
@@ -133,7 +132,7 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
             if (!value.endsWith("/"))
                 value += '/';
             if (!URL_PATTERN.matcher(value).matches())
-                return FormValidation.errorWithMarkup("The URL should end like <tt>.../_git/foobar/</tt>");
+                return FormValidation.errorWithMarkup("The URL should end like <code>.../_git/foobar/</code>");
 
             final String finalValue = value;
             return new FormValidation.URLCheck() {

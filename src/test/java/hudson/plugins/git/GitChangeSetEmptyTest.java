@@ -14,7 +14,7 @@ public class GitChangeSetEmptyTest {
 
     @Before
     public void createEmptyChangeSet() {
-        changeSet = new GitChangeSet(new ArrayList<String>(), false);
+        changeSet = new GitChangeSet(new ArrayList<>(), false);
     }
 
     @Test

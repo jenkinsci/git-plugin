@@ -56,7 +56,7 @@ public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced clone behaviours";
+            return Messages.Advanced_clone_behaviours();
         }
     }
 }

@@ -1,6 +1,9 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
@@ -8,13 +11,17 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.util.GitUtils;
+import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -26,8 +33,8 @@ public class CloneOption extends GitSCMExtension {
     private final boolean noTags;
     private final String reference;
     private final Integer timeout;
-    private int depth = 1;
-    private boolean honorRefspec = false;
+    private Integer depth;
+    private boolean honorRefspec;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
         this(shallow, false, reference, timeout);
@@ -42,10 +49,12 @@ public class CloneOption extends GitSCMExtension {
         this.honorRefspec = false;
     }
 
+    @Whitelisted
     public boolean isShallow() {
         return shallow;
     }
 
+    @Whitelisted
     public boolean isNoTags() {
         return noTags;
     }
@@ -88,24 +97,28 @@ public class CloneOption extends GitSCMExtension {
      *
      * @return true if initial clone will honor the user defined refspec
      */
+    @Whitelisted
     public boolean isHonorRefspec() {
         return honorRefspec;
     }
 
+    @Whitelisted
     public String getReference() {
         return reference;
     }
 
+    @Whitelisted
     public Integer getTimeout() {
         return timeout;
     }
 
     @DataBoundSetter
-    public void setDepth(int depth) {
+    public void setDepth(Integer depth) {
         this.depth = depth;
     }
 
-    public int getDepth() {
+    @Whitelisted
+    public Integer getDepth() {
         return depth;
     }
 
@@ -114,13 +127,11 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
+        cmd.shallow(shallow);
         if (shallow) {
-            listener.getLogger().println("Using shallow clone");
-            cmd.shallow();
-            if (depth > 1) {
-                listener.getLogger().println("shallow clone depth " + depth);
-                cmd.depth(depth);
-            }
+            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            listener.getLogger().println("Using shallow clone with depth " + usedDepth);
+            cmd.depth(usedDepth);
         }
         if (noTags) {
             listener.getLogger().println("Avoid fetching tags");
@@ -140,7 +151,17 @@ public class CloneOption extends GitSCMExtension {
             cmd.refspecs(refspecs);
         }
         cmd.timeout(timeout);
-        cmd.reference(build.getEnvironment(listener).expand(reference));
+
+        Node node = GitUtils.workspaceToNode(git.getWorkTree());
+        EnvVars env = build.getEnvironment(listener);
+        Computer comp = node.toComputer();
+        if (comp != null) {
+            env.putAll(comp.getEnvironment());
+        }
+        for (NodeProperty nodeProperty: node.getNodeProperties()) {
+            nodeProperty.buildEnvVars(env, listener);
+        }
+        cmd.reference(env.expand(reference));
     }
 
     /**
@@ -149,8 +170,10 @@ public class CloneOption extends GitSCMExtension {
     @Override
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
-        if (shallow && depth > 1) {
-            cmd.depth(depth);
+        if (shallow) {
+            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            listener.getLogger().println("Using shallow fetch with depth " + usedDepth);
+            cmd.depth(usedDepth);
         }
         cmd.tags(!noTags);
         /* cmd.refspecs() not required.
@@ -184,22 +207,12 @@ public class CloneOption extends GitSCMExtension {
 
         CloneOption that = (CloneOption) o;
 
-        if (shallow != that.shallow) {
-            return false;
-        }
-        if (noTags != that.noTags) {
-            return false;
-        }
-        if (depth != that.depth) {
-            return false;
-        }
-        if (honorRefspec != that.honorRefspec) {
-            return false;
-        }
-        if (reference != null ? !reference.equals(that.reference) : that.reference != null) {
-            return false;
-        }
-        return timeout != null ? timeout.equals(that.timeout) : that.timeout == null;
+        return shallow == that.shallow
+                && noTags == that.noTags
+                && Objects.equals(depth, that.depth)
+                && honorRefspec == that.honorRefspec
+                && Objects.equals(reference, that.reference)
+                && Objects.equals(timeout, that.timeout);
     }
 
     /**
@@ -207,7 +220,7 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return CloneOption.class.hashCode();
+        return Objects.hash(shallow, noTags, depth, honorRefspec, reference, timeout);
     }
 
     /**
@@ -232,7 +245,7 @@ public class CloneOption extends GitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced clone behaviours";
+            return Messages.Advanced_clone_behaviours();
         }
     }
 
