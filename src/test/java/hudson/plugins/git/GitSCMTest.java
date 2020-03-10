@@ -32,7 +32,6 @@ import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.plugins.git.util.BuildChooserContext.ContextCallable;
 import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.DefaultBuildChooser;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
@@ -40,15 +39,15 @@ import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
-import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
-import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
 import jenkins.security.MasterToSlaveCallable;
@@ -74,6 +73,9 @@ import java.io.Serializable;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -81,6 +83,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -115,7 +118,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void enableSystemCredentialsProvider() throws Exception {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
-        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;
@@ -123,6 +126,13 @@ public class GitSCMTest extends AbstractGitTestCase {
             }
         }
         assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
+    @After
+    public void waitForJenkinsIdle() throws Exception {
+        if (cleanupIsUnreliable()) {
+            rule.waitUntilNoActivityUpTo(5001);
+        }
     }
 
     private StandardCredentials getInvalidCredential() {
@@ -301,6 +311,52 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         build(projectWithMaster, Result.SUCCESS); /* If clone refspec had been honored, this would fail */
         build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition",
+                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message when the second URL is empty.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+        String repoURL = "https://example.com/non-empty/repo/url";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(repoURL, null, null, null));
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition for URL 2",
+                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -925,7 +981,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testBasicWithSlave() throws Exception {
+    public void testBasicWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -951,7 +1007,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Issue("HUDSON-7547")
     @Test
-    public void testBasicWithSlaveNoExecutorsOnMaster() throws Exception {
+    public void testBasicWithAgentNoExecutorsOnMaster() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
         rule.jenkins.setNumExecutors(0);
@@ -1082,32 +1138,32 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testNodeEnvVarsAvailable() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
-        Node s = rule.createSlave();
-        setVariables(s, new Entry("TESTKEY", "slaveValue"));
-        project.setAssignedLabel(s.getSelfLabel());
+        DumbSlave agent = rule.createSlave();
+        setVariables(agent, new Entry("TESTKEY", "agent value"));
+        project.setAssignedLabel(agent.getSelfLabel());
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS, commitFile1);
 
-        assertEquals("slaveValue", getEnvVars(project).get("TESTKEY"));
+        assertEquals("agent value", getEnvVars(project).get("TESTKEY"));
     }
 
     @Test
     public void testNodeOverrideGit() throws Exception {
         GitSCM scm = new GitSCM(null);
 
-        DumbSlave s = rule.createSlave();
+        DumbSlave agent = rule.createSlave();
         GitTool.DescriptorImpl gitToolDescriptor = rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class);
         GitTool installation = new GitTool("Default", "/usr/bin/git", null);
         gitToolDescriptor.setInstallations(installation);
 
-        String gitExe = scm.getGitExe(s, TaskListener.NULL);
+        String gitExe = scm.getGitExe(agent, TaskListener.NULL);
         assertEquals("/usr/bin/git", gitExe);
 
         ToolLocationNodeProperty nodeGitLocation = new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(gitToolDescriptor, "Default", "C:\\Program Files\\Git\\bin\\git.exe"));
-        s.setNodeProperties(Collections.singletonList(nodeGitLocation));
+        agent.setNodeProperties(Collections.singletonList(nodeGitLocation));
 
-        gitExe = scm.getGitExe(s, TaskListener.NULL);
+        gitExe = scm.getGitExe(agent, TaskListener.NULL);
         assertEquals("C:\\Program Files\\Git\\bin\\git.exe", gitExe);
     }
 
@@ -1277,7 +1333,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
 
         FreeStyleBuild ub = rule.assertBuildStatusSuccess(u.scheduleBuild2(0));
-        System.out.println(ub.getLog());
         for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
             Thread.sleep(100);
 
@@ -1304,8 +1359,8 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return null;
             }
         });
-        DumbSlave s = rule.createOnlineSlave();
-        assertEquals(p.toString(), s.getChannel().call(new BuildChooserContextTestCallable(c)));
+        DumbSlave agent = rule.createOnlineSlave();
+        assertEquals(p.toString(), agent.getChannel().call(new BuildChooserContextTestCallable(c)));
     }
 
     private static class BuildChooserContextTestCallable extends MasterToSlaveCallable<String,IOException> {
@@ -1320,7 +1375,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
                     public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
                         assertTrue(channel instanceof Channel);
-                        assertTrue(Hudson.getInstance()!=null);
+                        assertTrue(Jenkins.getInstanceOrNull()!=null);
                         return param.toString();
                     }
                 });
@@ -1385,6 +1440,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("", jeffDoe.getName(), culprit.getFullName());
 
         rule.assertBuildStatusSuccess(build);
+    }
+    
+    @Issue("JENKINS-59868")
+    @Test
+    public void testNonExistentWorkingDirectoryPoll() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        project.setScm(new GitSCM(
+                ((GitSCM)project.getScm()).getUserRemoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
+                Collections.singletonList(new DisableRemotePoll())));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        // Empty the workspace directory
+        build1.getWorkspace().deleteRecursive();
+
+        // Setup a recorder for polling logs
+        RingBufferLogHandler pollLogHandler = new RingBufferLogHandler(10);
+        Logger pollLogger = Logger.getLogger(GitSCMTest.class.getName());
+        pollLogger.addHandler(pollLogHandler);
+        TaskListener taskListener = new LogTaskListener(pollLogger, Level.INFO);
+
+        // Make sure that polling returns BUILD_NOW and properly log the reason
+        FilePath filePath = build1.getWorkspace();
+        assertThat(project.getScm().compareRemoteRevisionWith(project, new Launcher.LocalLauncher(taskListener), 
+                filePath, taskListener, null), is(PollingResult.BUILD_NOW));
+        assertTrue(pollLogHandler.getView().stream().anyMatch(m -> 
+                m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
     // Disabled - consistently fails, needs more analysis
@@ -1587,7 +1676,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeWithSlave() throws Exception {
+    public void testMergeWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -1699,7 +1788,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testMergeFailedWithSlave() throws Exception {
+    public void testMergeFailedWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
@@ -2159,7 +2248,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckoutOverSlave() throws Exception {
+    public void testInitSparseCheckoutOverAgent() throws Exception {
         if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
@@ -2180,8 +2269,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
-    @Issue("JENKINS-22009")
     @Test
+    @Issue("JENKINS-22009")
     public void testPolling_environmentValueInBranchSpec() throws Exception {
         // create parameterized project with environment value in branch specification
         FreeStyleProject project = createFreeStyleProject();
@@ -2354,7 +2443,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
-        // Inital commit and build
+        // Initial commit and build
         commit("toto/commitFile1", johnDoe, "Commit number 1");
         String brokenPath = "\\broken/path\\of/doom";
         if (!sampleRepo.gitVersionAtLeast(1, 8)) {
@@ -2380,7 +2469,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final EnvVars environment = GitUtils.getPollEnvironment(project, workspace, launcher, listener);
 
         assertEquals(environment.get("MY_BRANCH"), "master");
-        assertNotSame("Enviroment path should not be broken path", environment.get("PATH"), brokenPath);
+        assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
     }
 
     /**
@@ -2774,4 +2863,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
     }
 
+    /** Returns true if test cleanup is not reliable */
+    private boolean cleanupIsUnreliable() {
+        // Windows cleanup is unreliable on ci.jenkins.io
+        String jobUrl = System.getenv("JOB_URL");
+        return isWindows() && jobUrl != null && jobUrl.contains("ci.jenkins.io");
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
+    }
 }

@@ -13,10 +13,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URI;
-import java.net.IDN;
 
 /**
  * Git Browser URLs

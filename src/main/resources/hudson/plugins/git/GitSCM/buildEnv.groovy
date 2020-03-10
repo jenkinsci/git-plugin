@@ -1,4 +1,4 @@
-package hudson.plugins.git.GitSCM;
+package hudson.plugins.git.GitSCM
 
 def l = namespace(lib.JenkinsTagLib)
 

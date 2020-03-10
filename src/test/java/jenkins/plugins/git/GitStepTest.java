@@ -98,7 +98,7 @@ public class GitStepTest {
             "        git(url: $/" + sampleRepo + "/$, poll: false, changelog: false)\n" +
             "        archive '**'\n" +
             "    }\n" +
-            "}"));
+            "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Cloning the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("file").isFile());
@@ -121,7 +121,7 @@ public class GitStepTest {
             "    ws {\n" +
             "        git($/" + sampleRepo + "/$)\n" +
             "    }\n" +
-            "}"));
+            "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Cloning the remote Git repository", b);
         sampleRepo.write("nextfile", "");
@@ -164,7 +164,7 @@ public class GitStepTest {
             "        }\n" +
             "        archive '**'\n" +
             "    }\n" +
-            "}"));
+            "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         VirtualFile artifacts = b.getArtifactManager().root();
         assertTrue(artifacts.child("main/file").isFile());
@@ -223,7 +223,7 @@ public class GitStepTest {
             "    dir('other') {\n" +
             "        git($/" + otherRepo + "/$)\n" +
             "    }\n" +
-            "}"));
+            "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         assertEquals(1, b.getActions(BuildData.class).size());
         assertEquals(1, b.getActions(GitTagAction.class).size());
@@ -252,7 +252,7 @@ public class GitStepTest {
             "  writeFile file: 'file', text: 'edited by build'\n" +
             "  rungit 'commit --all --message=edits'\n" +
             "  rungit 'show master'\n" +
-            "}"));
+            "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("+edited by build", b);
     }

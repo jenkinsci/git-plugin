@@ -18,7 +18,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class CredentialsUserRemoteConfigTest {
@@ -35,7 +34,7 @@ public class CredentialsUserRemoteConfigTest {
     public void enableSystemCredentialsProvider() {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
                 Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
-        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.getInstance())) {
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;
                 break;
@@ -56,9 +55,9 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("using credential github", b);
     }
@@ -75,11 +74,10 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -95,9 +93,9 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
@@ -112,11 +110,10 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -130,11 +127,10 @@ public class CredentialsUserRemoteConfigTest {
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$, branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false]]]\n"
+                        + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
-                        + "}"));
+                        + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        System.out.println(JenkinsRule.getLog(b));
         r.assertLogContains("No credentials specified", b);
     }
 

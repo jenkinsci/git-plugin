@@ -1,6 +1,6 @@
 package hudson.plugins.git.extensions.impl.BuildChooserSetting
 
-def f = namespace(lib.FormTagLib);
+def f = namespace(lib.FormTagLib)
 
 f.entry() {
     f.dropdownDescriptorSelector(title:_("Choosing strategy"), field:"buildChooser",

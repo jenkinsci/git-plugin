@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 /**
  * This is a portion of {@link GitSCM} for the stuff that's used to be in {@link GitSCM}
@@ -178,6 +179,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     private transient BuildChooser buildChooser;
 
 
+    @Whitelisted
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override

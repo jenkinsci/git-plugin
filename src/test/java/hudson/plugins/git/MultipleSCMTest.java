@@ -52,28 +52,28 @@ public class MultipleSCMTest {
         repo0.commit("repo0-init", repo0.johnDoe, "repo0 initial commit");
 
         assertTrue("scm polling should detect a change after initial commit",
-                project.pollSCMChanges(listener));
+                project.poll(listener).hasChanges());
 
         repo1.commit("repo1-init", repo1.janeDoe, "repo1 initial commit");
 
 		build(project, Result.SUCCESS);
 		
 		assertFalse("scm polling should not detect any more changes after build", 
-				project.pollSCMChanges(listener));
+				project.poll(listener).hasChanges());
 
         repo1.commit("repo1-1", repo1.johnDoe, "repo1 commit 1");
 
         build(project, Result.SUCCESS);
 
         assertFalse("scm polling should not detect any more changes after build",
-                project.pollSCMChanges(listener));
+                project.poll(listener).hasChanges());
 
         repo0.commit("repo0-1", repo0.janeDoe, "repo0 commit 1");
 
         build(project, Result.SUCCESS);
 
         assertFalse("scm polling should not detect any more changes after build",
-                project.pollSCMChanges(listener));
+                project.poll(listener).hasChanges());
 	}
 	
 	private FreeStyleProject setupBasicProject(String name) throws IOException
@@ -113,7 +113,7 @@ public class MultipleSCMTest {
 	
 	private FreeStyleBuild build(final FreeStyleProject project, 
 			final Result expectedResult) throws Exception {
-		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		final FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 		if(expectedResult != null) {
 			r.assertBuildStatus(expectedResult, build);
 		}

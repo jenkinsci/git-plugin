@@ -1,4 +1,4 @@
-package hudson.plugins.git.UserRemoteConfig;
+package hudson.plugins.git.UserRemoteConfig
 
 f = namespace(lib.FormTagLib)
 c = namespace(lib.CredentialsTagLib)

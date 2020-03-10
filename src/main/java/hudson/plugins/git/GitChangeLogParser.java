@@ -31,7 +31,6 @@ public class GitChangeLogParser extends ChangeLogParser {
     private boolean authorOrCommitter;
     private boolean showEntireCommitSummaryInChanges;
 
-    @Deprecated
     /**
      * Git client plugin 2.x silently truncated the first line of a commit message when showing the changelog summary in
      * the 'Changes' page using command line git. They did not truncate when using JGit. In order to simplify the git
@@ -43,6 +42,7 @@ public class GitChangeLogParser extends ChangeLogParser {
      * @param authorOrCommitter read author name instead of committer name if true
      * @deprecated use #GitChangeLogParser(GitClient, boolean)
      */
+    @Deprecated
     public GitChangeLogParser(boolean authorOrCommitter) {
         this(null, authorOrCommitter);
     }
@@ -55,7 +55,7 @@ public class GitChangeLogParser extends ChangeLogParser {
      * As a result of that change of responsibility, this class needs to know which implementation is being used so
      * that it can adapt for compatibility.
      *
-     * @param git the GitClient implmentation to be used by the change log parser
+     * @param git the GitClient implementation to be used by the change log parser
      * @param authorOrCommitter read author name instead of committer name if true
      */
     public GitChangeLogParser(GitClient git, boolean authorOrCommitter) {

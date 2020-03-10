@@ -3,10 +3,10 @@ package hudson.plugins.git.util;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
+import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.TaskListener;
@@ -46,9 +46,10 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @return display name of this build chooser
      */
     public final String getDisplayName() {
-        return getDescriptor().getDisplayName();
+        Descriptor<?> descriptor = Jenkins.get().getDescriptor(getClass());
+        return descriptor != null ? descriptor.getDisplayName() : getClass().getSimpleName();
     }
-    
+
     /**
      * Get a list of revisions that are candidates to be built.
      *
@@ -68,7 +69,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        Information that captures what we did during the last build.
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
@@ -104,7 +105,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *        Information that captures what we did during the last build.
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
@@ -181,7 +182,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Used for invoking Git
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
@@ -204,7 +205,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Used for invoking Git
      * @param context
      *      Object that provides access back to the model object. This is because
-     *      the build chooser can be invoked on a slave where there's no direct access
+     *      the build chooser can be invoked on an agent where there's no direct access
      *      to the build/project for which this is invoked.
      *
      *      If {@code isPollCall} is false, then call back to both project and build are available.
@@ -224,18 +225,16 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * Returns build chooser descriptor.
      * @return build chooser descriptor
      */
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public BuildChooserDescriptor getDescriptor() {
-        return (BuildChooserDescriptor)Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (BuildChooserDescriptor)Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**
      * All the registered build choosers.
      * @return all registered build choosers
      */
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
     public static DescriptorExtensionList<BuildChooser,BuildChooserDescriptor> all() {
-        return Jenkins.getInstance()
+        return Jenkins.get()
                .<BuildChooser,BuildChooserDescriptor>getDescriptorList(BuildChooser.class);
     }
 

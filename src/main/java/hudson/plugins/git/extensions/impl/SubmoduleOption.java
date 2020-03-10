@@ -5,6 +5,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Messages;
 import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -58,26 +60,32 @@ public class SubmoduleOption extends GitSCMExtension {
         this.timeout = timeout;
     }
 
+    @Whitelisted
     public boolean isDisableSubmodules() {
         return disableSubmodules;
     }
 
+    @Whitelisted
     public boolean isRecursiveSubmodules() {
         return recursiveSubmodules;
     }
 
+    @Whitelisted
     public boolean isTrackingSubmodules() {
         return trackingSubmodules;
     }
 
+    @Whitelisted
     public boolean isParentCredentials() {
         return parentCredentials;
     }
 
+    @Whitelisted
     public String getReference() {
         return reference;
     }
 
+    @Whitelisted
     public Integer getTimeout() {
         return timeout;
     }
@@ -87,6 +95,7 @@ public class SubmoduleOption extends GitSCMExtension {
         this.shallow = shallow;
     }
 
+    @Whitelisted
     public boolean getShallow() {
         return shallow;
     }
@@ -96,10 +105,12 @@ public class SubmoduleOption extends GitSCMExtension {
         this.depth = depth;
     }
 
+    @Whitelisted
     public Integer getDepth() {
         return depth;
     }
 
+    @Whitelisted
     public Integer getThreads() {
         return threads;
     }
@@ -228,7 +239,7 @@ public class SubmoduleOption extends GitSCMExtension {
          */
         @Override
         public String getDisplayName() {
-            return "Advanced sub-modules behaviours";
+            return Messages.advanced_sub_modules_behaviours();
         }
     }
 }

@@ -18,6 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class PreBuildMerge extends GitSCMExtension {
         this.options = options;
     }
 
+    @Whitelisted
     public UserMergeOptions getOptions() {
         return options;
     }
@@ -91,7 +93,7 @@ public class PreBuildMerge extends GitSCMExtension {
 
             // Track whether we're trying to add a duplicate BuildData, now that it's been updated with
             // revision info for this build etc. The default assumption is that it's a duplicate.
-            BuildData buildData = scm.getBuildData(build, true);
+            BuildData buildData = scm.copyBuildData(build);
             boolean buildDataAlreadyPresent = false;
             List<BuildData> actions = build.getActions(BuildData.class);
             for (BuildData d: actions)  {

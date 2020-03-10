@@ -1,15 +1,15 @@
 <div>
     A refspec controls the remote refs to be retrieved and how they map to local refs. If left blank, it will default to
-    the normal behaviour of <tt>git fetch</tt>, which retrieves all the branch heads as <tt>remotes/REPOSITORYNAME/BRANCHNAME</tt>.
+    the normal behaviour of <code>git fetch</code>, which retrieves all the branch heads as <code>remotes/REPOSITORYNAME/BRANCHNAME</code>.
     This default behaviour is OK for most cases.
 
     <p>
-    In other words, the default refspec is "+refs/heads/*:refs/remotes/REPOSITORYNAME/*" where <tt>REPOSITORYNAME</tt> is the value
+    In other words, the default refspec is "+refs/heads/*:refs/remotes/REPOSITORYNAME/*" where <code>REPOSITORYNAME</code> is the value
     you specify in the above "name of repository" textbox.
 
     <p>
     When do you want to modify this value? A good example is when you want to just retrieve one branch. For example,
-    <tt>+refs/heads/master:refs/remotes/origin/master</tt> would only retrieve the master branch and nothing else.
+    <code>+refs/heads/master:refs/remotes/origin/master</code> would only retrieve the master branch and nothing else.
 
     <p>
     The plugin uses a default refspec for its initial fetch, unless the "Advanced Clone Option" is set to honor refspec.
@@ -18,9 +18,9 @@
 
     <p>
     Multiple refspecs can be entered by separating them with a space character.
-    <tt>+refs/heads/master:refs/remotes/origin/master&nbsp;+refs/heads/develop:refs/remotes/origin/develop</tt>
+    <code>+refs/heads/master:refs/remotes/origin/master&nbsp;+refs/heads/develop:refs/remotes/origin/develop</code>
     retrieves the master branch and the develop branch and nothing else.
 
     <p>
-    See <a href="http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#def_refspec">the term definition in Git user manual</a> for more details.
+    See <a href="https://git-scm.com/book/en/v2/Git-Internals-The-Refspec">the refspec definition in Git user manual</a> for more details.
 </div>

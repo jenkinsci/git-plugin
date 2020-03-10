@@ -204,7 +204,7 @@ public class UserMergeOptionsTest {
                 .verify();
     }
 
-    @Issue("JENKINS-51638")
+    @Issue({"JENKINS-51638", "JENKINS-34070"})
     @Test
     public void mergeStrategyCase() throws Exception {
         Map<String, Object> args = new HashMap<>();
