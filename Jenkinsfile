@@ -7,7 +7,7 @@ subsetConfiguration = [ [ jdk: '8',  platform: 'windows', jenkins: null         
                         [ jdk: '11', platform: 'linux',   jenkins: '2.164.1', javaLevel: '8' ]
                       ]
 
-buildPlugin(configurations: subsetConfiguration, failFast: false)
+buildPlugin(forceAci: true, configurations: subsetConfiguration, failFast: false)
 
 def branches = [:]
 
