@@ -69,7 +69,7 @@ public class CloneOptionDepthTest {
         PrintStream logger = mock(PrintStream.class);
         when(listener.getLogger()).thenReturn(logger);
 
-        CloneOption cloneOption = new CloneOption(true, false, null, null);
+        CloneOption cloneOption = new CloneOption(true, false, false,null, null);
         cloneOption.setDepth(configuredDepth);
 
         cloneOption.decorateCloneCommand(scm, build, git, listener, cloneCommand);
@@ -87,7 +87,7 @@ public class CloneOptionDepthTest {
         PrintStream logger = mock(PrintStream.class);
         when(listener.getLogger()).thenReturn(logger);
 
-        CloneOption cloneOption = new CloneOption(true, false, null, null);
+        CloneOption cloneOption = new CloneOption(true, false, false,null, null);
         cloneOption.setDepth(configuredDepth);
 
         cloneOption.decorateFetchCommand(scm, git, listener, fetchCommand);

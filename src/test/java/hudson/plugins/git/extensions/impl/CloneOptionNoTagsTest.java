@@ -36,7 +36,7 @@ public class CloneOptionNoTagsTest extends GitSCMExtensionTest {
         final boolean dontFetchTags = true;
         final String noReference = null;
         final Integer noTimeout = null;
-        return new CloneOption(shallowClone, dontFetchTags, noReference, noTimeout);
+        return new CloneOption(shallowClone, dontFetchTags, false, noReference, noTimeout);
     }
 
     @Test

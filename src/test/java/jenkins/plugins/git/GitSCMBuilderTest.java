@@ -291,7 +291,7 @@ public class GitSCMBuilderTest {
     @Test
     public void withRefSpecAndCloneOption() throws Exception {
         instance.withRefSpec("+refs/heads/master:refs/remotes/@{remote}/master");
-        instance.withExtension(new CloneOption(false, false, null, null));
+        instance.withExtension(new CloneOption(false, false, false, null, null));
         assertThat(instance.refSpecs(), contains("+refs/heads/master:refs/remotes/@{remote}/master"));
         GitSCM scm = instance.build();
         assertThat(scm.getBrowser(), is(nullValue()));
