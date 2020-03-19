@@ -5,6 +5,9 @@ def f = namespace(lib.FormTagLib)
 f.entry(title:_("Fetch tags"), field:"noTags") {
     f.checkbox(negative:true, checked:(instance==null||!instance.noTags))
 }
+f.entry(title:_("Enable core.longpaths"), field:"longPath") {
+    f.checkbox()
+}
 f.entry(title:_("Honor refspec on initial clone"), field:"honorRefspec") {
     f.checkbox()
 }

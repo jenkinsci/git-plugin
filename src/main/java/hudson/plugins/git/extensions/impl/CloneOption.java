@@ -31,19 +31,20 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class CloneOption extends GitSCMExtension {
     private final boolean shallow;
     private final boolean noTags;
+    private final boolean longPath;
     private final String reference;
     private final Integer timeout;
     private Integer depth;
     private boolean honorRefspec;
 
-    public CloneOption(boolean shallow, String reference, Integer timeout) {
-        this(shallow, false, reference, timeout);
+    public CloneOption(boolean shallow, String reference, Integer timeout) { this(shallow, false, false, reference, timeout);
     }
 
     @DataBoundConstructor
-    public CloneOption(boolean shallow, boolean noTags, String reference, Integer timeout) {
+    public CloneOption(boolean shallow, boolean noTags, boolean longPath, String reference, Integer timeout) {
         this.shallow = shallow;
         this.noTags = noTags;
+        this.longPath = longPath;
         this.reference = reference;
         this.timeout = timeout;
         this.honorRefspec = false;
@@ -58,6 +59,9 @@ public class CloneOption extends GitSCMExtension {
     public boolean isNoTags() {
         return noTags;
     }
+
+    @Whitelisted
+    public boolean isLongPath() { return longPath; }
 
     /**
      * This setting allows the job definition to control whether the refspec
@@ -137,6 +141,10 @@ public class CloneOption extends GitSCMExtension {
             listener.getLogger().println("Avoid fetching tags");
             cmd.tags(false);
         }
+        if (longPath) {
+            listener.getLogger().println("Setting core.longpaths to true");
+            cmd.longPath(true);
+        }
         if (honorRefspec) {
             listener.getLogger().println("Honoring refspec on initial clone");
             // Read refspec configuration from the first configured repository.
@@ -209,6 +217,7 @@ public class CloneOption extends GitSCMExtension {
 
         return shallow == that.shallow
                 && noTags == that.noTags
+                && longPath == that.longPath
                 && Objects.equals(depth, that.depth)
                 && honorRefspec == that.honorRefspec
                 && Objects.equals(reference, that.reference)
@@ -220,7 +229,7 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(shallow, noTags, depth, honorRefspec, reference, timeout);
+        return Objects.hash(shallow, noTags, longPath, depth, honorRefspec, reference, timeout);
     }
 
     /**
@@ -231,6 +240,7 @@ public class CloneOption extends GitSCMExtension {
         return "CloneOption{" +
                 "shallow=" + shallow +
                 ", noTags=" + noTags +
+                ", longPath=" + longPath +
                 ", reference='" + reference + '\'' +
                 ", timeout=" + timeout +
                 ", depth=" + depth +
