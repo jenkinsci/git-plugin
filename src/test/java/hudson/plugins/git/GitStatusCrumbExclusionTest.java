@@ -34,14 +34,17 @@ public class GitStatusCrumbExclusionTest {
     private HttpServletResponse resp;
     private FilterChain chain;
 
+    private static String systemPropertyPreviousValue;
+
     @BeforeClass
     public static void setProps() {
+        systemPropertyPreviousValue = System.getProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO");
         System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", "true");
     }
 
     @AfterClass
     public static void unsetProps() {
-        System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", "");
+        System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", systemPropertyPreviousValue);
     }
 
     @Before
