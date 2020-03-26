@@ -44,7 +44,7 @@ public class GitStatusCrumbExclusionTest {
 
     @AfterClass
     public static void unsetProps() {
-        System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", systemPropertyPreviousValue);
+        System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", systemPropertyPreviousValue != null ? systemPropertyPreviousValue : "");
     }
 
     @Before
