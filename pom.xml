@@ -56,6 +56,13 @@
           <threshold>Low</threshold>
           <failOnError>true</failOnError>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs</artifactId>
+            <version>4.0.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
