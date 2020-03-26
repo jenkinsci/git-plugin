@@ -10,7 +10,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URL;
 
@@ -67,13 +67,13 @@ public class GitoriousWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class GitoriousWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "gitoriousweb";
         }
 
         @Override
-        public GitoriousWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+        public GitoriousWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             assert req != null; //see inherited javadoc
             return req.bindJSON(GitoriousWeb.class, jsonObject);
         }
