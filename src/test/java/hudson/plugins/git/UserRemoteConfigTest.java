@@ -12,7 +12,7 @@ import hudson.util.ListBoxModel;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
 import org.junit.Test;
