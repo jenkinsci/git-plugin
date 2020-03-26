@@ -253,6 +253,18 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
+      <optional>true</optional>
+      <version>4.0.1</version>
+    </dependency>
     <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
