@@ -47,6 +47,30 @@
           <failOnViolation>true</failOnViolation>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.0.0</version>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <xmlOutput>true</xmlOutput>
+              <spotbugsXmlOutput>false</spotbugsXmlOutput>
+              <effort>default</effort>
+              <threshold>Medium</threshold>
+              <failOnError>true</failOnError>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <failOnError>true</failOnError>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
