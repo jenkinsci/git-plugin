@@ -16,7 +16,6 @@ import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -270,7 +269,6 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
-    @ParametersAreNonnullByDefault
     public void prepareWorkingTree(GitClient git, TaskListener listener, BuildChooserContext context) throws IOException,InterruptedException {
         // Nop
     }

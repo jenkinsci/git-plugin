@@ -29,18 +29,18 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class GitUtils implements Serializable {
     
     @SuppressFBWarnings(value="SE_BAD_FIELD", justification="known non-serializable field")
-    @Nonnull
+    @NonNull
     GitClient git;
-    @Nonnull
+    @NonNull
     TaskListener listener;
 
-    public GitUtils(@Nonnull TaskListener listener, @Nonnull GitClient git) {
+    public GitUtils(@NonNull TaskListener listener, @NonNull GitClient git) {
         this.git = git;
         this.listener = listener;
     }
@@ -59,7 +59,7 @@ public class GitUtils implements Serializable {
     public static GitTool resolveGitTool(@CheckForNull String gitTool,
                                          @CheckForNull Node builtOn,
                                          @CheckForNull EnvVars env,
-                                         @Nonnull TaskListener listener) {
+                                         @NonNull TaskListener listener) {
         GitTool git = gitTool == null
                 ? GitTool.getDefaultInstallation()
                 : Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
@@ -91,7 +91,7 @@ public class GitUtils implements Serializable {
      * @since TODO
      */
     @CheckForNull
-    public static GitTool resolveGitTool(@CheckForNull String gitTool, @Nonnull TaskListener listener) {
+    public static GitTool resolveGitTool(@CheckForNull String gitTool, @NonNull TaskListener listener) {
         return resolveGitTool(gitTool, null, null, listener);
     }
 
