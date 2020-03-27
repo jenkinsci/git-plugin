@@ -209,7 +209,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
 
-        // TODO: getBrowserFromRequest
         this.browser = browser;
 
         // emulate bindJSON behavior here
@@ -1584,20 +1583,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          */
         public String getOldGitExe() {
             return gitExe;
-        }
-
-        /**
-         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
-         *
-         * @param scmData data read for SCM browser
-         * @return browser based on request scmData
-         */
-        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
-            if (scmData.containsKey("browser")) {
-                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
-            } else {
-                return null;
-            }
         }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,
