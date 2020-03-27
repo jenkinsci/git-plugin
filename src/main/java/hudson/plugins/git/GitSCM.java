@@ -984,11 +984,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
-                public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
 
-                public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(project,Channel.current());
                 }
 
