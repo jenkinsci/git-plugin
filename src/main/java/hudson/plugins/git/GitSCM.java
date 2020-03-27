@@ -966,11 +966,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.environment = environment;
         }
 
-        public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build, FilePath.localChannel);
         }
 
-        public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(project, FilePath.localChannel);
         }
 
