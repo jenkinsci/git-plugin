@@ -2,7 +2,9 @@ package hudson.plugins.git;
 
 import hudson.security.csrf.CrumbFilter;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,6 +33,23 @@ public class GitStatusCrumbExclusionTest {
     private HttpServletRequest req;
     private HttpServletResponse resp;
     private FilterChain chain;
+
+    private static String systemPropertyPreviousValue;
+
+    @BeforeClass
+    public static void setProps() {
+        systemPropertyPreviousValue = System.getProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO");
+        System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", "true");
+    }
+
+    @AfterClass
+    public static void unsetProps() {
+        if (systemPropertyPreviousValue == null) {
+            System.clearProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO");
+        } else {
+            System.setProperty("hudson.security.csrf.CrumbFilter.UNPROCESSED_PATHINFO", systemPropertyPreviousValue);
+        }
+    }
 
     @Before
     public void before() {
