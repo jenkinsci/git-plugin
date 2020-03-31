@@ -114,7 +114,22 @@ public class GitSCMSourceTest {
         return owner;
     }
 
-    private interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {
+    /* Intentionally made public to prevent Java 11 mocking failure
+     * due to class loading of a non-public interface in a different
+     * class loader than the mocking framework. Since this is a test,
+     * it seems quite safe to make the interface slightly more visible
+     * than private.
+     *
+     * The message from mockito is:
+     *
+     * The type is not public and its mock class is loaded by a different class loader.
+     * This can have multiple reasons:
+     *  - You are mocking a class with additional interfaces of another class loader
+     *  - Mockito is loaded by a different class loader than the mocked type (e.g. with OSGi)
+     *  - The thread's context class loader is different than the mock's class loader
+     *
+     */
+    public interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {
     }
 
     @TestExtension
