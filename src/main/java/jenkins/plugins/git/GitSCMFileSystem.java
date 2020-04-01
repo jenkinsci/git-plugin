@@ -287,6 +287,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
             }
+            if (!(scm instanceof GitSCM)) {
+                return null; // Spotbugs warns about unchecked cast without this check
+            }
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);

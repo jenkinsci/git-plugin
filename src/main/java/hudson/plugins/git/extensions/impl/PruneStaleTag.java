@@ -56,7 +56,12 @@ public class PruneStaleTag extends GitSCMExtension {
     private boolean pruneTags;
 
     /**
-     * Default constructor.
+     * Control pruning of tags that exist in the local repository but
+     * not in any remote repository.  If pruneTags is true, then local
+     * tags will be deleted if no corresponding tag exists in at least
+     * one of the remote repositories.
+     *
+     * @param pruneTags if true, tags not found in any remote are deleted from local repository
      */
     @DataBoundConstructor
     public PruneStaleTag(boolean pruneTags) {

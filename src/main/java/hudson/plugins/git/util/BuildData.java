@@ -166,17 +166,21 @@ public class BuildData implements Action, Serializable, Cloneable {
     public Build getLastBuild(ObjectId sha1) {
         // fast check by first checking most recent build
         if (lastBuild != null && (lastBuild.revision.getSha1().equals(sha1) || lastBuild.marked.getSha1().equals(sha1))) return lastBuild;
-        try {
-            for(Build b : buildsByBranchName.values()) {
-                if(b.revision.getSha1().equals(sha1) || b.marked.getSha1().equals(sha1))
-                    return b;
+        for (Build b : buildsByBranchName.values()) {
+            if (b == null || b.revision == null || b.revision.getSha1() == null) {
+                continue;
             }
-
-            return null;
+            if (b.revision.getSha1().equals(sha1)) {
+                return b;
+            }
+            if (b.marked == null || b.marked.getSha1() == null) {
+                continue;
+            }
+            if (b.marked.getSha1().equals(sha1)) {
+                return b;
+            }
         }
-        catch(Exception ex) {
-            return null;
-        }
+        return null;
     }
 
     public void saveBuild(Build build) {
