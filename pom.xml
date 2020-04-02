@@ -33,7 +33,6 @@
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
-    <forkCount>3</forkCount>
     <linkXRef>false</linkXRef>
     <configuration-as-code.version>1.36</configuration-as-code.version>
     <slf4jVersion>1.7.26</slf4jVersion>
