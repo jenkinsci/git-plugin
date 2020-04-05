@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.57</version>
+    <version>4.0-beta-6</version>
     <relativePath />
   </parent>
 
@@ -27,12 +27,15 @@
   <properties>
     <revision>4.3.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.138.4</jenkins.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+    <jenkins.version>2.204.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <linkXRef>false</linkXRef>
-    <configuration-as-code.version>1.35</configuration-as-code.version>
+    <configuration-as-code.version>1.36</configuration-as-code.version>
+    <slf4jVersion>1.7.26</slf4jVersion>
   </properties>
 
   <build>
@@ -297,6 +300,10 @@
           <groupId>commons-digester</groupId>
           <artifactId>commons-digester</artifactId>
         </exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
+          <groupId>commons-beanutils</groupId>
+          <artifactId>commons-beanutils</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>
@@ -305,7 +312,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.138.x</artifactId>
+        <artifactId>bom-2.176.x</artifactId>
         <version>4</version>
         <scope>import</scope>
         <type>pom</type>
