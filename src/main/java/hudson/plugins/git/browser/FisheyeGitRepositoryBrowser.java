@@ -15,7 +15,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URL;
@@ -68,13 +68,13 @@ public class FisheyeGitRepositoryBrowser extends GitRepositoryBrowser {
 	@Extension
 	public static class FisheyeGitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
-		@Nonnull
+		@NonNull
 		public String getDisplayName() {
 			return "FishEye";
 		}
 
 		@Override
-		public FisheyeGitRepositoryBrowser newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+		public FisheyeGitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
 			assert req != null; //see inherited javadoc
 			return req.bindJSON(FisheyeGitRepositoryBrowser.class, jsonObject);
 		}

@@ -7,16 +7,21 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
+import hudson.model.View;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
+import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.jgit.transport.URIish;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -66,6 +71,34 @@ public class GitStatusTest extends AbstractGitProject {
     public void resetAllowNotifyCommitParameters() throws Exception {
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
+    }
+
+    @After
+    public void waitForAllJobsToComplete() {
+        /* Windows job cleanup fails to delete build logs in some of these tests.
+         * Wait for the jobs to complete before exiting the test so that the
+         * build logs will not be active when the cleanup process tries to
+         * delete them.
+         */
+        if (!isWindows() || jenkins == null || jenkins.jenkins == null) {
+            return;
+        }
+        View allView = jenkins.jenkins.getView("All");
+        if (allView == null) {
+            return;
+        }
+        RunList<Run> runList = allView.getBuilds();
+        if (runList == null) {
+            return;
+        }
+        runList.forEach((Run run) -> {
+            try {
+                Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
+                jenkins.waitForCompletion(run);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
+            }
+        });
     }
 
     @WithoutJenkins

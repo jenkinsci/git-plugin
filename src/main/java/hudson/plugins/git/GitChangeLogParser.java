@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.xml.sax.SAXException;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.File;
 import java.io.InputStream;
@@ -68,11 +68,11 @@ public class GitChangeLogParser extends ChangeLogParser {
         this.showEntireCommitSummaryInChanges = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
     }
     
-    public List<GitChangeSet> parse(@Nonnull InputStream changelog) throws IOException {
+    public List<GitChangeSet> parse(@NonNull InputStream changelog) throws IOException {
         return parse(IOUtils.readLines(changelog, "UTF-8"));
     }
 
-    public List<GitChangeSet> parse(@Nonnull List<String> changelog) {
+    public List<GitChangeSet> parse(@NonNull List<String> changelog) {
         return parse(changelog.iterator());
     }
 

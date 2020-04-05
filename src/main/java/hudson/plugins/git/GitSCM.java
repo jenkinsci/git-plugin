@@ -209,7 +209,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
 
-        // TODO: getBrowserFromRequest
         this.browser = browser;
 
         // emulate bindJSON behavior here
@@ -967,11 +966,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.environment = environment;
         }
 
-        public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(build, FilePath.localChannel);
         }
 
-        public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
+        public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
             return callable.invoke(project, FilePath.localChannel);
         }
 
@@ -985,11 +984,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         private Object writeReplace() {
             return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
-                public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
 
-                public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
+                public <T> T actOnProject(@NonNull ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(project,Channel.current());
                 }
 
@@ -1584,20 +1583,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          */
         public String getOldGitExe() {
             return gitExe;
-        }
-
-        /**
-         * Determine the browser from the scmData contained in the {@link StaplerRequest}.
-         *
-         * @param scmData data read for SCM browser
-         * @return browser based on request scmData
-         */
-        private GitRepositoryBrowser getBrowserFromRequest(final StaplerRequest req, final JSONObject scmData) {
-            if (scmData.containsKey("browser")) {
-                return req.bindJSON(GitRepositoryBrowser.class, scmData.getJSONObject("browser"));
-            } else {
-                return null;
-            }
         }
 
         public static List<RemoteConfig> createRepositoryConfigurations(String[] urls,

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017 CloudBees, Inc.
+ * Copyright (c) 2020 Nikolas Falco
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,37 +25,25 @@
 
 package jenkins.plugins.git.traits;
 
-import hudson.Extension;
-import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
-import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
+import hudson.plugins.git.extensions.impl.PruneStaleTag;
+import jenkins.scm.api.trait.SCMSourceTrait;
 
 /**
- * Exposes {@link CleanBeforeCheckout} as a {@link SCMSourceTrait}.
+ * Exposes {@link PruneStaleTag} as a {@link SCMSourceTrait}.
  *
- * @since 3.4.0
+ * @author Nikolas Falco
+ * @since 4.3.0
  */
-public class CleanBeforeCheckoutTrait extends GitSCMExtensionTrait<CleanBeforeCheckout> {
-
-    /**
-     * @deprecated Use constructor that accepts extension instead.
-     */
-    @Deprecated
-    public CleanBeforeCheckoutTrait() {
-        this(null);
-    }
-
+public class PruneStaleTagTrait extends GitSCMExtensionTrait<PruneStaleTag> {
     /**
      * Stapler constructor.
-     *
-     * @param extension the option to clean subdirectories which contain git repositories.
      */
     @DataBoundConstructor
-    public CleanBeforeCheckoutTrait(@CheckForNull CleanBeforeCheckout extension) {
-        super(extension == null ? new CleanBeforeCheckout() : extension);
+    public PruneStaleTagTrait() {
+        super(new PruneStaleTag(true));
     }
 
     /**
@@ -68,7 +56,7 @@ public class CleanBeforeCheckoutTrait extends GitSCMExtensionTrait<CleanBeforeCh
          */
         @Override
         public String getDisplayName() {
-            return "Clean before checkout";
+            return "Prune stale tags";
         }
     }
 }
