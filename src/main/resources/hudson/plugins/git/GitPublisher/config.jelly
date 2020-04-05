@@ -1,18 +1,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry field="pushOnlyIfSuccess"
-             title="${%Push Only If Build Succeeds}">
-      <f:checkbox />
+    <f:entry field="pushOnlyIfSuccess">
+      <f:checkbox title="${%Push Only If Build Succeeds}" />
     </f:entry>
     <f:entry field="pushMerge"
-             title="${%Merge Results}"
              description="${%If pre-build merging is configured, push the result back to the origin}">
-      <f:checkbox />
+      <f:checkbox title="${%Merge Results}" />
     </f:entry>
     <f:entry field="forcePush"
-             title="${%Force Push}"
              description="${%Add force option to git push}">
-      <f:checkbox />
+      <f:checkbox title="${%Force Push}" />
     </f:entry>
     <f:entry field="tagsToPush"
              title="${%Tags}"
@@ -29,13 +26,11 @@
                    title="${%Tag message}">
             <f:textarea/>
           </f:entry>
-          <f:entry field="createTag"
-                   title="${%Create new tag}">
-            <f:checkbox />
+          <f:entry field="createTag">
+            <f:checkbox title="${%Create new tag}" />
           </f:entry>
-          <f:entry field="updateTag"
-                   title="${%Update new tag}">
-            <f:checkbox />
+          <f:entry field="updateTag">
+            <f:checkbox title="${%Update new tag}" />
           </f:entry>
           <f:entry field="targetRepoName"
                    title="${%Target remote name}">
@@ -64,9 +59,8 @@
             <f:textbox
                 checkUrl="'descriptorByName/GitPublisher/checkRemote?value='+escape(this.value)" />
           </f:entry>
-          <f:entry field="rebaseBeforePush"
-                   title="${%Rebase before push}">
-            <f:checkbox />
+          <f:entry field="rebaseBeforePush">
+            <f:checkbox title="${%Rebase before push}" />
           </f:entry>
         </table>
         <div align="right">
@@ -93,8 +87,8 @@
             <f:textbox/>
           </f:entry>
           
-          <f:entry title="${%Abort if note exists}" field="noteReplace" >
-            <f:checkbox />
+          <f:entry field="noteReplace" >
+            <f:checkbox title="${%Abort if note exists}" />
           </f:entry>
           
         </table>

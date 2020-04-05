@@ -13,7 +13,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;

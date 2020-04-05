@@ -18,7 +18,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -85,13 +85,13 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return REPOSITORY_BROWSER_LABEL;
         }
 
         @Override
-        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             assert req != null; //see inherited javadoc
             try {
                 req.getSubmittedForm();
