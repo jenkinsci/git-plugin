@@ -32,6 +32,8 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import net.sf.json.JSONObject;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +47,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Prune stale local tags that do not exist on any remote.
@@ -161,6 +164,12 @@ public class PruneStaleTag extends GitSCMExtension {
     @Symbol("pruneTags")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+
+        @Override
+        public GitSCMExtension newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return new PruneStaleTag(true);
+        }
+
         /**
          * {@inheritDoc}
          */
