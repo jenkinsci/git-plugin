@@ -36,10 +36,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -69,6 +71,15 @@ public class PruneStaleTag extends GitSCMExtension {
     }
 
     /**
+     * Needed for pipeline syntax generator.
+     *
+     * @return {@code true} if this extension is enable, {@code false} otherwise.
+     */
+    public boolean getPruneTags() {
+        return pruneTags;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -94,7 +105,7 @@ public class PruneStaleTag extends GitSCMExtension {
 
         List<RemoteConfig> remoteRepos = run == null ? scm.getRepositories() : scm.getParamExpandedRepos(run, listener);
         for (RemoteConfig remote : remoteRepos) {
-            for(URIish url : remote.getURIs()) {
+            for (URIish url : remote.getURIs()) {
                 Map<String, ObjectId> refs = git.getRemoteReferences(url.toASCIIString(), null, false, true);
                 for (Entry<String, ObjectId> ref : refs.entrySet()) {
                     String remoteTagName = ref.getKey();
@@ -125,7 +136,10 @@ public class PruneStaleTag extends GitSCMExtension {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return o instanceof PruneStaleTag;
+
+        PruneStaleTag that = (PruneStaleTag) o;
+
+        return pruneTags == that.pruneTags;
     }
 
     /**
@@ -133,7 +147,7 @@ public class PruneStaleTag extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return PruneStaleTag.class.hashCode();
+        return Objects.hashCode(pruneTags);
     }
 
     /**
@@ -144,6 +158,7 @@ public class PruneStaleTag extends GitSCMExtension {
         return "PruneStaleTag {}";
     }
 
+    @Symbol("pruneTags")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
