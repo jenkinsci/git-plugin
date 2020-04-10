@@ -812,6 +812,14 @@ Excluded Messages::
 Removes remote tracking branches from the local workspace if they no longer exist on the remote.
 See `link:https://git-scm.com/docs/git-remote#Documentation/git-remote.txt-empruneem[git remote prune]` and `link:https://git-scm.com/docs/git-fetch#_pruning[git fetch --prune]` for more details.
 
+[#prune-stale-tags]
+==== Prune stale tags
+
+Removes tags from the local workspace before fetch if they no longer exist on the remote.
+If stale tags are not pruned, deletion of a remote tag will not remove the local tag in the workspace.
+If the local tag already exists in the workspace, git correctly refuses to create the tag again.
+Pruning stale tags allows the local workspace to create a tag with the same name as a tag which was removed from the remote.
+
 [#sparse-checkout-paths]
 ==== Sparse Checkout paths
 
