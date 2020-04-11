@@ -59,7 +59,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("using credential github", b);
+        r.waitForMessage("using credential github", b);
     }
 
     @Issue("JENKINS-30515")
@@ -78,7 +78,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
+        r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
     @Issue("JENKINS-30515")
@@ -97,7 +97,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
+        r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
     @Issue("JENKINS-30515")
@@ -114,7 +114,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Warning: CredentialId \"github\" could not be found", b);
+        r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
     @Issue("JENKINS-30515")
@@ -131,7 +131,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "  )"
                         + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("No credentials specified", b);
+        r.waitForMessage("No credentials specified", b);
     }
 
 
