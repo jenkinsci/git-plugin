@@ -15,7 +15,6 @@ import java.io.File;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
