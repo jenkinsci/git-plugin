@@ -100,13 +100,13 @@ public class GitStepTest {
             "    }\n" +
             "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Cloning the remote Git repository", b); // GitSCM.retrieveChanges
+        r.waitForMessage("Cloning the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("file").isFile());
         sampleRepo.write("nextfile", "");
         sampleRepo.git("add", "nextfile");
         sampleRepo.git("commit", "--message=next");
         b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Fetching changes from the remote Git repository", b); // GitSCM.retrieveChanges
+        r.waitForMessage("Fetching changes from the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("nextfile").isFile());
     }
 
@@ -123,14 +123,14 @@ public class GitStepTest {
             "    }\n" +
             "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("Cloning the remote Git repository", b);
+        r.waitForMessage("Cloning the remote Git repository", b);
         sampleRepo.write("nextfile", "");
         sampleRepo.git("add", "nextfile");
         sampleRepo.git("commit", "--message=next");
         sampleRepo.notifyCommit(r);
         b = p.getLastBuild();
         assertEquals(2, b.number);
-        r.assertLogContains("Fetching changes from the remote Git repository", b);
+        r.waitForMessage("Fetching changes from the remote Git repository", b);
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
         assertEquals(1, changeSets.size());
         ChangeLogSet<? extends ChangeLogSet.Entry> changeSet = changeSets.get(0);
@@ -254,7 +254,7 @@ public class GitStepTest {
             "  rungit 'show master'\n" +
             "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("+edited by build", b);
+        r.waitForMessage("+edited by build", b);
     }
 
 }

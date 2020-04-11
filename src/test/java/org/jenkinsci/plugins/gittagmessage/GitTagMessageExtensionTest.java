@@ -48,8 +48,8 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
     protected void assertBuildEnvironment(FreeStyleBuild build, String expectedName, String expectedMessage)
             throws Exception {
         // In the freestyle shell step, unknown environment variables are returned as empty strings
-        jenkins.assertLogContains(String.format("tag='%s'", Util.fixNull(expectedName)), build);
-        jenkins.assertLogContains(String.format("msg='%s'", Util.fixNull(expectedMessage)), build);
+        jenkins.waitForMessage(String.format("tag='%s'", Util.fixNull(expectedName)), build);
+        jenkins.waitForMessage(String.format("msg='%s'", Util.fixNull(expectedMessage)), build);
     }
 
     private static Builder createEnvEchoBuilder(String key, String envVarName) {

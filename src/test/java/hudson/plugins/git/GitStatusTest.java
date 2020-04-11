@@ -595,7 +595,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
 
-        jenkins.assertLogContains("aaa aaaccc ccc", build);
+        jenkins.waitForMessage("aaa aaaccc ccc", build);
 
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));
