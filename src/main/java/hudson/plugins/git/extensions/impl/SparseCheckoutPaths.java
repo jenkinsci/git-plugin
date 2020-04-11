@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SparseCheckoutPaths extends GitSCMExtension {
-    private List<SparseCheckoutPath> sparseCheckoutPaths;
+    private final List<SparseCheckoutPath> sparseCheckoutPaths;
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
