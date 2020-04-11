@@ -115,8 +115,11 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         Thread.sleep(750L); // Wait briefly for scheduled job to start
         RunList<FreeStyleBuild> builds = project.getBuilds();
         for (FreeStyleBuild aBuild : builds) {
-            rule.assertBuildStatusSuccess(aBuild);
-            rule.waitForMessage("Finished: SUCCESS", aBuild);
+            if (!aBuild.equals(build)) {
+                /* Don't wait for the build that already finished */
+                rule.assertBuildStatusSuccess(aBuild);
+                rule.waitForMessage("Finished: SUCCESS", aBuild);
+            }
         }
     }
 
