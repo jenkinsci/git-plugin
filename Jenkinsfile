@@ -1,6 +1,8 @@
 #!groovy
 
-library identifier: 'MarkEWaite-fork-of-ci-jenkins-io-pipeline-library', retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/MarkEWaite/pipeline-library'])
+library identifier: 'MarkEWaite@clean-workspace-if-incrementals',
+        retriever:  modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/MarkEWaite/pipeline-library']),
+        changelog:  false
 
 Random random = new Random() // Randomize which Jenkins version is selected for more testing
 def use_newer_jenkins = random.nextBoolean() // Use newer Jenkins on one build but slightly older on other
