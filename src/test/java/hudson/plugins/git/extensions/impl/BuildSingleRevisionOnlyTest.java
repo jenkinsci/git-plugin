@@ -15,6 +15,7 @@ import java.io.File;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -110,6 +111,13 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
         rule.assertBuildStatusSuccess(build);
         rule.waitForMessage(String.format("Scheduling another build to catch up with %s", project.getName()), build);
+
+        Thread.sleep(750L); // Wait briefly for scheduled job to start
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+        for (FreeStyleBuild aBuild : builds) {
+            rule.assertBuildStatusSuccess(aBuild);
+            rule.waitForMessage("Finished: SUCCESS", aBuild);
+        }
     }
 
     /**
