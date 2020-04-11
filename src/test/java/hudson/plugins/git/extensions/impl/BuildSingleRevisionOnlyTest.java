@@ -81,7 +81,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
         boolean result = build.getLog(100).contains(
                 String.format("Scheduling another build to catch up with %s", project.getName()));
-        Assert.assertFalse(result);
+        Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
     }
 
     @Test
