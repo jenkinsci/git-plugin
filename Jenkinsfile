@@ -1,9 +1,8 @@
 #!groovy
 
 // Temporary library until https://github.com/jenkins-infra/pipeline-library/pull/141 is merged
-library identifier: 'MarkEWaite@clean-workspace-if-incrementals',
-        retriever:  modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/MarkEWaite/pipeline-library']),
-        changelog:  false
+library retriever:  modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/MarkEWaite/pipeline-library']),
+        identifier: 'infra@clean-workspace-if-incrementals'
 
 Random random = new Random() // Randomize which Jenkins version is selected for more testing
 def use_newer_jenkins = random.nextBoolean() // Use newer Jenkins on one build but slightly older on other
