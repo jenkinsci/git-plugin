@@ -1,5 +1,6 @@
 #!groovy
 
+// Temporary library until https://github.com/jenkins-infra/pipeline-library/pull/141 is merged
 library identifier: 'MarkEWaite@clean-workspace-if-incrementals',
         retriever:  modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/MarkEWaite/pipeline-library']),
         changelog:  false
