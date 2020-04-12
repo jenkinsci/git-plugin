@@ -1609,18 +1609,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         @Override
         public SCMProbeStat stat(@NonNull String path) throws IOException {
             try {
-                SCMFileSystem fileSystem;
+                SCMFileSystem fileSystemForStat;
                 synchronized (this) {
                     if (this.fileSystem == null) {
                         this.fileSystem = telescope.build(remote, credentials, revision.getHead(), revision);
                     }
-                    fileSystem = this.fileSystem;
+                    fileSystemForStat = this.fileSystem;
                 }
-                if (fileSystem == null) {
+                if (fileSystemForStat == null) {
                     throw new IOException("Cannot connect to " + remote + " as "
                             + (credentials == null ? "anonymous" : CredentialsNameProvider.name(credentials)));
                 }
-                return SCMProbeStat.fromType(fileSystem.child(path).getType());
+                return SCMProbeStat.fromType(fileSystemForStat.child(path).getType());
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
@@ -1655,16 +1655,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     return lastModified;
                 }
             }
-            long lastModified;
+            long lastModifiedTimeStamp;
             try {
-                lastModified = telescope.getTimestamp(remote, credentials, revision.getHead());
+                lastModifiedTimeStamp = telescope.getTimestamp(remote, credentials, revision.getHead());
             } catch (IOException | InterruptedException e) {
                 return -1L;
             }
             synchronized (this) {
-                this.lastModified = lastModified;
+                this.lastModified = lastModifiedTimeStamp;
             }
-            return lastModified;
+            return lastModifiedTimeStamp;
         }
     }
 }
