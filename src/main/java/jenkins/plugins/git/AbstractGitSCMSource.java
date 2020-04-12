@@ -517,7 +517,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 continue;
                             }
                             count++;
-                            if (request.process((GitTagSCMHead) revision.getHead(),
+                            SCMHead scmHead = revision.getHead();
+                            if (!(scmHead instanceof GitTagSCMHead)) {
+                                continue;
+                            }
+                            GitTagSCMHead gitTagHead = (GitTagSCMHead) scmHead;
+                            if (request.process(gitTagHead,
                                     new SCMSourceRequest.RevisionLambda<GitTagSCMHead, GitTagSCMRevision>() {
                                         @NonNull
                                         @Override
