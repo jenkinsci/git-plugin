@@ -983,7 +983,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         private Object writeReplace() {
-            return Channel.current().export(BuildChooserContext.class,new BuildChooserContext() {
+            Channel currentChannel = Channel.current();
+            if (currentChannel == null) {
+                return null;
+            }
+            return currentChannel.export(BuildChooserContext.class,new BuildChooserContext() {
                 public <T> T actOnBuild(@NonNull ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
                     return callable.invoke(build,Channel.current());
                 }
