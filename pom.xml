@@ -296,13 +296,17 @@
       <artifactId>commons-validator</artifactId>
       <version>1.6</version>
       <exclusions>
-        <exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
           <groupId>commons-digester</groupId>
           <artifactId>commons-digester</artifactId>
         </exclusion>
         <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
           <groupId>commons-beanutils</groupId>
           <artifactId>commons-beanutils</artifactId>
+        </exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides commons-collections, no need to bundle it -->
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
