@@ -158,7 +158,7 @@ public class PruneStaleTag extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "PruneStaleTag {}";
+        return "PruneStaleTag { " + pruneTags + " }";
     }
 
     @Symbol("pruneTags")
