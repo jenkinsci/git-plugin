@@ -103,7 +103,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -146,9 +145,20 @@
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
+      <artifactId>hamcrest</artifactId>
       <version>2.2</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion> <!-- Hamcrest 2.x bundles all hamcrest-core functionality in the hamcrest artifact -->
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -235,6 +245,12 @@
       <artifactId>xmlunit-matchers</artifactId>
       <version>2.6.4</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion> <!-- Hamcrest 2.x bundles all hamcrest-core functionality in the hamcrest artifact -->
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -296,13 +312,17 @@
       <artifactId>commons-validator</artifactId>
       <version>1.6</version>
       <exclusions>
-        <exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
           <groupId>commons-digester</groupId>
           <artifactId>commons-digester</artifactId>
         </exclusion>
         <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
           <groupId>commons-beanutils</groupId>
           <artifactId>commons-beanutils</artifactId>
+        </exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides commons-collections, no need to bundle it -->
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -312,7 +332,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.176.x</artifactId>
+        <artifactId>bom-2.190.x</artifactId>
         <version>7</version>
         <scope>import</scope>
         <type>pom</type>
