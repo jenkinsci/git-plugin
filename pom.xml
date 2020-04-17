@@ -62,7 +62,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.0.1</version>
+            <version>4.0.2</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -274,7 +274,7 @@
         </exclusion>
       </exclusions>
       <optional>true</optional>
-      <version>4.0.1</version>
+      <version>4.0.2</version>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
