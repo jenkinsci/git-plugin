@@ -36,6 +36,9 @@
     <linkXRef>false</linkXRef>
     <configuration-as-code.version>1.36</configuration-as-code.version>
     <slf4jVersion>1.7.26</slf4jVersion>
+    <spotbugs.effort>Max</spotbugs.effort>
+    <spotbugs.failOnError>true</spotbugs.failOnError>
+    <spotbugs.threshold>Medium</spotbugs.threshold>
   </properties>
 
   <build>
@@ -53,11 +56,6 @@
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
         <version>4.0.0</version>
-        <configuration>
-          <effort>Max</effort>
-          <threshold>Low</threshold>
-          <failOnError>true</failOnError>
-        </configuration>
         <dependencies>
           <dependency>
             <groupId>com.github.spotbugs</groupId>
