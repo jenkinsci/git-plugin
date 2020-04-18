@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
@@ -39,6 +40,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import hudson.EnvVars;
 import hudson.Functions;
@@ -230,4 +235,50 @@ public class PruneStaleTagTest {
         return remoteClient;
     }
 
+    @Test
+    public void testGetPruneTags() {
+        PruneStaleTag pruneEnabled = new PruneStaleTag(true);
+        assertThat(pruneEnabled.getPruneTags(), is(true));
+    }
+
+    @Test
+    public void testGetPruneTagsDisabled() {
+        PruneStaleTag pruneEnabled = new PruneStaleTag(false);
+        assertThat(pruneEnabled.getPruneTags(), is(false));
+    }
+
+    @Test
+    public void testEquals() {
+        EqualsVerifier.forClass(PruneStaleTag.class).usingGetClass().verify();
+    }
+
+    @Test
+    public void testHashCode() {
+        PruneStaleTag enabledOne = new PruneStaleTag(true);
+        PruneStaleTag enabledTwo = new PruneStaleTag(true);
+        assertThat(enabledOne.equals(enabledTwo), is(true));
+        assertThat(enabledTwo.equals(enabledOne), is(true));
+        assertThat(enabledOne.hashCode(), is(enabledTwo.hashCode()));
+
+        PruneStaleTag disabledOne = new PruneStaleTag(false);
+        PruneStaleTag disabledTwo = new PruneStaleTag(false);
+        assertThat(disabledOne.equals(disabledTwo), is(true));
+        assertThat(disabledTwo.equals(disabledOne), is(true));
+        assertThat(disabledOne.hashCode(), is(disabledTwo.hashCode()));
+
+        // Not required by hashCode contract, expected in this case
+        assertThat(enabledOne.hashCode(), not(is(disabledOne.hashCode())));
+    }
+
+    @Test
+    public void testToString() {
+        PruneStaleTag enabled = new PruneStaleTag(true);
+        assertThat(enabled.toString(), is("PruneStaleTag { true }"));
+    }
+
+    @Test
+    public void testToStringDisabled() {
+        PruneStaleTag disabled = new PruneStaleTag(false);
+        assertThat(disabled.toString(), is("PruneStaleTag { false }"));
+    }
 }
