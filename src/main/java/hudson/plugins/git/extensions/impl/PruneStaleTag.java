@@ -58,7 +58,7 @@ import org.kohsuke.stapler.StaplerRequest;
 public class PruneStaleTag extends GitSCMExtension {
 
     private static final String TAG_REF = "refs/tags/";
-    private boolean pruneTags;
+    private final boolean pruneTags;
 
     /**
      * Control pruning of tags that exist in the local repository but
@@ -158,7 +158,7 @@ public class PruneStaleTag extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "PruneStaleTag {}";
+        return "PruneStaleTag { " + pruneTags + " }";
     }
 
     @Symbol("pruneTags")
