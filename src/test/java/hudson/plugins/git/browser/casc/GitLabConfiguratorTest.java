@@ -5,7 +5,6 @@ import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.model.Mapping;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -18,9 +17,6 @@ public class GitLabConfiguratorTest {
 
     private final GitLabConfigurator configurator = new GitLabConfigurator();
     private static final ConfigurationContext NULL_CONFIGURATION_CONTEXT = null;
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testGetName() {

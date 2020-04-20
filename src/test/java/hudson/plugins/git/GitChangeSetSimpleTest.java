@@ -7,17 +7,20 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class GitChangeSetSimpleTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private GitChangeSet changeSet = null;
     private final boolean useAuthorName;
@@ -174,8 +177,10 @@ public class GitChangeSetSimpleTest {
         final String expectedLineContent = "commit ";
         ArrayList<String> lines = new ArrayList<>();
         lines.add(expectedLineContent);
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Commit has no ID[" + expectedLineContent + "]");
-        GitChangeSet badChangeSet = new GitChangeSet(lines, true);
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                                                  () -> {
+                                                      new GitChangeSet(lines, true);
+                                                  });
+        assertThat(e.getMessage(), containsString("Commit has no ID[" + expectedLineContent + "]"));
     }
 }
