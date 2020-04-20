@@ -9,8 +9,11 @@ import org.jenkinsci.plugins.gitclient.JGitAPIImpl;
 
 import java.io.File;
 import java.io.FileWriter;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

@@ -26,9 +26,10 @@ package hudson.plugins.git;
 import hudson.model.Item;
 import java.util.ArrayList;
 import java.util.List;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Mark Waite

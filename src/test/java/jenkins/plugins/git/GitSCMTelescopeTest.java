@@ -69,7 +69,9 @@ import org.acegisecurity.AccessDeniedException;
 import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.ClassRule;
 
