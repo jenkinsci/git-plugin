@@ -3,8 +3,10 @@ package hudson.plugins.git;
 import java.util.ArrayList;
 import java.util.Arrays;
 import static hudson.plugins.git.GitChangeSet.TRUNCATE_LIMIT;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class GitChangeSetBasicTest {

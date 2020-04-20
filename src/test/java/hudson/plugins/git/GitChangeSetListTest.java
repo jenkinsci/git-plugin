@@ -30,8 +30,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.junit.Test;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 
 public class GitChangeSetListTest {
