@@ -32,6 +32,7 @@ import hudson.plugins.git.extensions.impl.LocalBranch;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -52,6 +53,7 @@ public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
     /**
      * Our {@link hudson.model.Descriptor}
      */
+    @Symbol("localBranchTrait")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
