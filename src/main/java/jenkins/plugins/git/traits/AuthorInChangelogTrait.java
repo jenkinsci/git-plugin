@@ -28,6 +28,7 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -47,6 +48,7 @@ public class AuthorInChangelogTrait extends GitSCMExtensionTrait<AuthorInChangel
     /**
      * Our {@link hudson.model.Descriptor}
      */
+    @Symbol("authorInChangelogTrait")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**

@@ -1,3 +1,4 @@
+
 package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.*;
@@ -65,6 +66,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'PruneStaleBranch']",
             "[$class: 'PruneStaleTag']",
             "[$class: 'WipeWorkspace']",
+            "authorInChangelog()",
             "localBranch('master')",
         };
         List<String> extensionList = Arrays.asList(extensions);
