@@ -51,11 +51,13 @@ public class CredentialsUserRemoteConfigTest {
 
     /* Return randomly selected pipeline checkout configurations.
      * Pipeline assertions in this file are not affected by these assertions.
+     * References to invalid classes or invalid keywords will fail the tests.
      */
     private String randomPipelineExtensions() {
         /* Valid extensions to apply to a git checkout */
         String [] extensions = {
             "[$class: 'AuthorInChangelog']",
+            "[$class: 'BuildSingleRevisionOnly']",
             "[$class: 'ChangelogToBranch', options: [compareRemote: 'origin', compareTarget: 'master']]",
             "[$class: 'CheckoutOption', timeout: 1]",
             "[$class: 'CleanBeforeCheckout']",
@@ -67,6 +69,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'PruneStaleTag']",
             "[$class: 'WipeWorkspace']",
             "authorInChangelog()",
+            "buildSingleRevisionOnly()",
             "localBranch('master')",
         };
         List<String> extensionList = Arrays.asList(extensions);
