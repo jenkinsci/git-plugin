@@ -109,7 +109,6 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'FisheyeGitRepositoryBrowser', repoUrl: 'https://fisheye.apache.org/browse/ant-git']",
             "[$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1']",
             "[$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin']",
-            "[$class: 'GitLabBrowser']",
             "[$class: 'GitList', repoUrl: 'http://gitlist.org/']", // Not a real gitlist site, just the org home page
             "[$class: 'GitWeb', repoUrl: 'https://git.ti.com/gitweb']",
             "[$class: 'GithubWeb', repoUrl: 'https://github.com/jenkinsci/git-plugin']",
