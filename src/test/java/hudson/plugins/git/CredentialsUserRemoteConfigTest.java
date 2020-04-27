@@ -5,7 +5,9 @@ import com.cloudbees.plugins.credentials.*;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import jenkins.model.Jenkins;
@@ -18,8 +20,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Collections;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -63,7 +63,6 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'CleanBeforeCheckout']",
             "[$class: 'CleanCheckout']",
             "[$class: 'DisableRemotePoll']",
-            "[$class: 'GitLFSPull']",
             "[$class: 'LocalBranch', localBranch: 'master']",
             "[$class: 'PruneStaleBranch']",
             "[$class: 'PruneStaleTag']",
@@ -73,6 +72,12 @@ public class CredentialsUserRemoteConfigTest {
             "localBranch('master')",
         };
         List<String> extensionList = Arrays.asList(extensions);
+        if (sampleRepo.gitVersionAtLeast(1, 9)) {
+            // Require at least git 1.9 before testing git large file support
+            // Make extensionList mutable
+            extensionList = new ArrayList<>(extensionList);
+            extensionList.add( "[$class: 'GitLFSPull']");
+        }
         Collections.shuffle(extensionList); // Randomize the list of extensions
         int extensionCount = random.nextInt(extensions.length); // How many extensions to add
         if (extensionCount == 0) {
