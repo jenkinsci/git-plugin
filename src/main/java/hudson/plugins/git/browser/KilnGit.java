@@ -9,6 +9,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -101,6 +102,7 @@ public class KilnGit extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("kiln")
     public static class KilnGitDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
