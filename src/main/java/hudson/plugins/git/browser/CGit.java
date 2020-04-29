@@ -81,7 +81,7 @@ public class CGit extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("gitBrowserCGitDescriptor")
+    @Symbol("cgit")
     public static class CGITDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
