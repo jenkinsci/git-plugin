@@ -6,6 +6,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -70,6 +71,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("bitbucketWeb")
     public static class BitbucketWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
