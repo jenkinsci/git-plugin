@@ -9,6 +9,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -134,6 +135,7 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     @Extension
+    @Symbol("gitLab")
     public static class GitLabDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
