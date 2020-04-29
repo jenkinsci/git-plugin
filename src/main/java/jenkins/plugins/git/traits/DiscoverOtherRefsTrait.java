@@ -36,6 +36,7 @@ import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -114,6 +115,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitDiscoverOtherRefs")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
