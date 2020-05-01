@@ -28,6 +28,7 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.GitLFSPull;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -48,6 +49,7 @@ public class GitLFSPullTrait extends GitSCMExtensionTrait<GitLFSPull> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("gitLFSPullTrait")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
