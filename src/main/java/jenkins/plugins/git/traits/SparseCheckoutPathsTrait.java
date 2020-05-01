@@ -3,6 +3,7 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -25,6 +26,7 @@ public class SparseCheckoutPathsTrait extends GitSCMExtensionTrait<SparseCheckou
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("gitSparseCheckoutPaths")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
