@@ -28,6 +28,7 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import jenkins.scm.api.trait.SCMSourceTrait;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -50,6 +51,7 @@ public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
+    @Symbol("gitCloneOptionTrait")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
