@@ -139,7 +139,7 @@ public class CredentialsUserRemoteConfigTest {
             "gitiles('https://gerrit.googlesource.com/gitiles/')",
             "gitoriousWeb('https://gerrit.googlesource.com/gitiles/')",
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
-            "kilnGit('https://kiln.example.com/MarkEWaite/git-plugin')",
+            "kiln('https://kiln.example.com/MarkEWaite/git-plugin')",
             "microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmineWeb('https://www.redmine.org/projects/redmine/repository')",
