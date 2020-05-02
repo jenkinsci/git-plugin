@@ -112,7 +112,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'BitbucketWeb', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'CGit', repoUrl: 'https://git.zx2c4.com/cgit'],",
             "[$class: 'FisheyeGitRepositoryBrowser', repoUrl: 'https://fisheye.apache.org/browse/ant-git']",
-            "[$class: 'GitBlit', repoUrl: 'https://github.com/MarkEWaite/git-client-plugin']",
+            "[$class: 'GitBlitRepositoryBrowser', repoUrl: 'https://github.com/MarkEWaite/git-plugin', projectName: 'git-plugin-project-name-value']",
             "[$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1']",
             "[$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin']",
             "[$class: 'GitList', repoUrl: 'http://gitlist.org/']", // Not a real gitlist site, just the org home page
@@ -126,13 +126,14 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce']",
             "[$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
+            "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
             "assemblaWeb(repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source')",
             "bitbucketWeb(repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin')",
             "cgit(repoUrl: 'https://git.zx2c4.com/cgit')",
             "fisheye(repoUrl: 'https://fisheye.apache.org/browse/ant-git')",
-            "gitBlit(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin')",
+            "gitBlit(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value')",
             "gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1')",
-            "gitList(repoUrl: 'http://gitlist.org/') ", // Not a real gitlist site, just the org home page
+            "gitList(repoUrl: 'http://gitlist.org/')", // Not a real gitlist site, just the org home page
             "gitWeb(repoUrl: 'https://git.ti.com/gitweb')",
             "githubWeb(repoUrl: 'https://github.com/jenkinsci/git-plugin')",
             "gitiles(repoUrl: 'https://gerrit.googlesource.com/gitiles/')",
@@ -143,7 +144,7 @@ public class CredentialsUserRemoteConfigTest {
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
             "redmineWeb(repoUrl: 'https://www.redmine.org/projects/redmine/repository')",
             "rhodeCode(repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce')",
-            "viewGit(repoUrl: 'https://git.ti.com/gitweb')", // Not likely a viewGit site, but reasonable approximation
+            "viewGitWeb(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value')", // Not likely a viewGit site, but reasonable approximation
             //  The Gitea browser is provided by the Gitea plugin, not the git plugin
             // "[$class: 'GiteaBrowser', repoUrl: 'https://try.gitea.io/MarkEWaite/git-plugin']",
         };
