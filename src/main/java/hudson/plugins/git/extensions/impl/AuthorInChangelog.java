@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.scm.ChangeLogSet.Entry;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -47,6 +48,7 @@ public class AuthorInChangelog extends FakeGitSCMExtension {
         return "AuthorInChangelog{}";
     }
 
+    @Symbol("authorInChangelog")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
