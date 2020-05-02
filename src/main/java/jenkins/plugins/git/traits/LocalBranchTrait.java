@@ -53,7 +53,6 @@ public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
     /**
      * Our {@link hudson.model.Descriptor}
      */
-    @Symbol("localBranchTrait")
     @Extension
     @Symbol("gitLocalBranch")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
