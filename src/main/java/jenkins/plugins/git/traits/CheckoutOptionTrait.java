@@ -51,7 +51,7 @@ public class CheckoutOptionTrait extends GitSCMExtensionTrait<CheckoutOption> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitCheckoutOption")
+    @Symbol("gitCheckoutOptionTrait")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
