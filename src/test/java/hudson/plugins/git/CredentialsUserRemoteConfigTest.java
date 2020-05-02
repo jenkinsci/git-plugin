@@ -132,7 +132,7 @@ public class CredentialsUserRemoteConfigTest {
             "cgit('https://git.zx2c4.com/cgit')",
             "fisheye('https://fisheye.apache.org/browse/ant-git')",
             "gitBlitRepositoryBrowser(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value')",
-            "gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1')",
+            "gitLabBrowser(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1')",
             "gitList('http://gitlist.org/')", // Not a real gitlist site, just the org home page
             "gitWeb('https://git.ti.com/gitweb')",
             "githubWeb('https://github.com/jenkinsci/git-plugin')",

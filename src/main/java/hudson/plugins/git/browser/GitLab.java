@@ -135,7 +135,7 @@ public class GitLab extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("gitLab")
+    @Symbol("gitLabBrowser")
     public static class GitLabDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
