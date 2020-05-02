@@ -127,23 +127,23 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
             "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
-            "assemblaWeb(repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source')",
-            "bitbucketWeb(repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin')",
-            "cgit(repoUrl: 'https://git.zx2c4.com/cgit')",
-            "fisheye(repoUrl: 'https://fisheye.apache.org/browse/ant-git')",
+            "assemblaWeb('https://app.assembla.com/spaces/git-plugin/git/source')",
+            "bitbucketWeb('https://markewaite@bitbucket.org/markewaite/git-plugin')",
+            "cgit('https://git.zx2c4.com/cgit')",
+            "fisheye('https://fisheye.apache.org/browse/ant-git')",
             "gitBlit(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value')",
             "gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1')",
-            "gitList(repoUrl: 'http://gitlist.org/')", // Not a real gitlist site, just the org home page
-            "gitWeb(repoUrl: 'https://git.ti.com/gitweb')",
-            "githubWeb(repoUrl: 'https://github.com/jenkinsci/git-plugin')",
-            "gitiles(repoUrl: 'https://gerrit.googlesource.com/gitiles/')",
-            "gitoriousWeb(repoUrl: 'https://gerrit.googlesource.com/gitiles/')",
-            "gogs(repoUrl: 'https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
-            "kilnGit(repoUrl: 'https://kiln.example.com/MarkEWaite/git-plugin')",
-            "microsoftTFS(repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
+            "gitList('http://gitlist.org/')", // Not a real gitlist site, just the org home page
+            "gitWeb('https://git.ti.com/gitweb')",
+            "githubWeb('https://github.com/jenkinsci/git-plugin')",
+            "gitiles('https://gerrit.googlesource.com/gitiles/')",
+            "gitoriousWeb('https://gerrit.googlesource.com/gitiles/')",
+            "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
+            "kilnGit('https://kiln.example.com/MarkEWaite/git-plugin')",
+            "microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
             "phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/')",
-            "redmineWeb(repoUrl: 'https://www.redmine.org/projects/redmine/repository')",
-            "rhodeCode(repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce')",
+            "redmineWeb('https://www.redmine.org/projects/redmine/repository')",
+            "rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce')",
             "viewGitWeb(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value')", // Not likely a viewGit site, but reasonable approximation
             //  The Gitea browser is provided by the Gitea plugin, not the git plugin
             // "[$class: 'GiteaBrowser', repoUrl: 'https://try.gitea.io/MarkEWaite/git-plugin']",
