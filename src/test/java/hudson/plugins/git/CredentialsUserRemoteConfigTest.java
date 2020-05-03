@@ -69,6 +69,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'WipeWorkspace']",
             "authorInChangelog()",
             "buildSingleRevisionOnly()",
+            "changelogToBranch(changelogToBranchOptions(compareRemote: 'origin', compareTarget: 'master'))",
             "localBranch('master')",
         };
         List<String> extensionList = Arrays.asList(extensions);
