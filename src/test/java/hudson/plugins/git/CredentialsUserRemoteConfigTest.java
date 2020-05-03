@@ -70,7 +70,10 @@ public class CredentialsUserRemoteConfigTest {
             "authorInChangelog()",
             "buildSingleRevisionOnly()",
             "changelogToBranch(changelogToBranchOptions(compareRemote: 'origin', compareTarget: 'master'))",
-            "checkoutOption(17)",
+            "checkoutOption(timeout: 17)",
+            "cleanBeforeCheckout()",
+            "cleanBeforeCheckout(deleteUntrackedNestedRepositories: false)",
+            "cleanBeforeCheckout(deleteUntrackedNestedRepositories: true)",
             "localBranch('master')",
         };
         List<String> extensionList = Arrays.asList(extensions);
