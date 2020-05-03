@@ -84,13 +84,14 @@ public class CredentialsUserRemoteConfigTest {
             // Require at least git 1.9 before testing git large file support
             // Make extensionList mutable
             extensionList = new ArrayList<>(extensionList);
-            extensionList.add( "[$class: 'GitLFSPull']");
+            extensionList.add("[$class: 'GitLFSPull']");
+            extensionList.add("gitLFSPull()");
         }
-        Collections.shuffle(extensionList); // Randomize the list of extensions
-        int extensionCount = random.nextInt(extensions.length); // How many extensions to add
+        int extensionCount = random.nextInt(extensionList.size()); // How many extensions to add
         if (extensionCount == 0) {
             return "";
         }
+        Collections.shuffle(extensionList); // Randomize the list of extensions
         StringBuilder extensionBuffer = new StringBuilder();
         extensionBuffer.append("      , extensions: [\n");
         int added = 0;
