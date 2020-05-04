@@ -12,6 +12,7 @@ import java.util.List;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -75,6 +76,7 @@ public class GitLFSPull extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("gitLFSPull")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}

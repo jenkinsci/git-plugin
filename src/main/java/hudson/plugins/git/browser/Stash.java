@@ -8,7 +8,6 @@ import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import net.sf.json.JSONObject;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -87,7 +86,7 @@ public class Stash extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("stash")
+    // @Symbol("stash") // Intentionally not providing a symbol named 'stash', would collide with existing 'stash' symbol
     public static class StashDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

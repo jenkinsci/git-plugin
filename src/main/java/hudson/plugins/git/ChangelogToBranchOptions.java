@@ -1,6 +1,7 @@
 package hudson.plugins.git;
 
 import java.io.Serializable;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
@@ -39,6 +40,7 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
     }
 
     @Extension
+    @Symbol("changelogToBranchOptions")
     public static class DescriptorImpl extends Descriptor<ChangelogToBranchOptions> {
 
         @Override

@@ -9,6 +9,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Objects;
 
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -82,6 +83,7 @@ public class CleanBeforeCheckout extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("cleanBeforeCheckout")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         /**

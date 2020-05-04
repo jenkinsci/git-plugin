@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -95,6 +96,7 @@ public class CheckoutOption extends FakeGitSCMExtension {
     }
 
     @Extension
+    @Symbol("checkoutOption")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         /**

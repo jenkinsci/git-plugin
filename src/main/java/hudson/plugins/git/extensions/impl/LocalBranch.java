@@ -8,6 +8,7 @@ import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -69,6 +70,7 @@ public class LocalBranch extends FakeGitSCMExtension {
                 + '}';
     }
 
+    @Symbol("localBranch")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
