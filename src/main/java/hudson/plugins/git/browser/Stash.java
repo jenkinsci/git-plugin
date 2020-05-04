@@ -86,7 +86,7 @@ public class Stash extends GitRepositoryBrowser {
     }
 
     @Extension
-    // @Symbol("stash") // Intentionally not providing a symbol named 'stash', would collide with existing 'stash' symbol
+    // @Symbol("stash") // Intentionally not providing a symbol named 'stash', would collide with existing 'stash' Pipeline step
     public static class StashDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {

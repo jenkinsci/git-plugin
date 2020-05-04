@@ -28,7 +28,6 @@ package jenkins.plugins.git.traits;
 import hudson.Extension;
 import hudson.plugins.git.extensions.impl.WipeWorkspace;
 import jenkins.scm.api.trait.SCMSourceTrait;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -49,7 +48,7 @@ public class WipeWorkspaceTrait extends GitSCMExtensionTrait<WipeWorkspace> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitWipeWorkspace")
+    // No @Symbol annotation, because wipeWorkspace is considered a deprecated Pipeline step.
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}
