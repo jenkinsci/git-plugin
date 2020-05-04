@@ -124,6 +124,7 @@ public class CredentialsUserRemoteConfigTest {
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: false)",
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: true)",
             "localBranch('master')",
+            "pruneStaleBranch()",
         };
         List<String> extensionList = Arrays.asList(extensions);
         if (sampleRepo.gitVersionAtLeast(1, 9)) {

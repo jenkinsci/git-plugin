@@ -9,6 +9,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -62,6 +63,7 @@ public class PruneStaleBranch extends GitSCMExtension {
     }
 
     @Extension
+    @Symbol("pruneStaleBranch")
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}
