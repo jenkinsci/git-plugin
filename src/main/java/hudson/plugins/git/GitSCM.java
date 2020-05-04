@@ -75,6 +75,7 @@ import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -1465,6 +1466,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Extension
+    @Symbol("gitSCM")
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
         private String gitExe;
