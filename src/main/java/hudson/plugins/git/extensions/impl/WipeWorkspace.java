@@ -61,6 +61,7 @@ public class WipeWorkspace extends GitSCMExtension {
     }
 
     @Extension
+    /* Intentionally no symbol, use pipeline standard deleteDir() */
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         /**
          * {@inheritDoc}
