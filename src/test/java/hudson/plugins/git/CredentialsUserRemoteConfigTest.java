@@ -124,6 +124,7 @@ public class CredentialsUserRemoteConfigTest {
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: false)",
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: true)",
             "localBranch('master')",
+            "perBuildTag()",
             "pruneStaleBranch()",
             "pruneTags()",
             "pruneTags(false)",
