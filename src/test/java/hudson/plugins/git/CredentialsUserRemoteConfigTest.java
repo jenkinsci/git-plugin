@@ -1,4 +1,3 @@
-
 package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.*;
@@ -61,14 +60,14 @@ public class CredentialsUserRemoteConfigTest {
     public void generateCredentialID() {
         credential = "credential-id-" + (100 + random.nextInt(900));
     }
-    
+
     private String classProlog() {
         if (useSymbolForGitSCM) {
             return "    gitSCM(\n";
         }
         return "    [$class: 'GitSCM', \n";
     }
-    
+
     private String classEpilog() {
         if (useSymbolForGitSCM) {
             return "    )\n";
@@ -131,8 +130,8 @@ public class CredentialsUserRemoteConfigTest {
             "pruneTags(true)",
         };
         List<String> extensionList = Arrays.asList(extensions);
-        if (sampleRepo.gitVersionAtLeast(1, 9)) {
-            // Require at least git 1.9 before testing git large file support
+        if (sampleRepo.hasGitLFS()) {
+            // Do not test git LFS unless it is installed
             // Make extensionList mutable
             extensionList = new ArrayList<>(extensionList);
             extensionList.add("[$class: 'GitLFSPull']");

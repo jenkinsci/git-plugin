@@ -129,4 +129,19 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
               (gitMajor == neededMajor && gitMinor >  neededMinor) ||
               (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
     }
+
+    public boolean hasGitLFS() {
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "lfs", "version").stdout(out).join();
+            if (returnCode != 0) {
+                return false;
+            }
+        } catch (IOException | InterruptedException ex) {
+            return false;
+        }
+        final String versionOutput = out.toString().trim();
+        return versionOutput.startsWith("git-lfs/");
+    }
 }
