@@ -102,6 +102,8 @@ public class CredentialsUserRemoteConfigTest {
         /* Valid extensions to apply to a git checkout */
         String [] extensions = {
             "[$class: 'AuthorInChangelog']",
+            "[$class: 'BuildChooserSetting', buildChooser: [$class: 'AncestryBuildChooser', ancestorCommitSha1: 'feedbeefbeadcededeedabed', maximumAgeInDays: 23]]",
+            "[$class: 'BuildChooserSetting', buildChooser: [$class: 'InverseBuildChooser']]",
             "[$class: 'BuildSingleRevisionOnly']",
             "[$class: 'ChangelogToBranch', options: [compareRemote: 'origin', compareTarget: 'master']]",
             "[$class: 'CheckoutOption', timeout: 1]",
@@ -112,6 +114,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'PreBuildMerge', options: [mergeRemote: 'origin-a', mergeTarget: 'master-a']]",
             "[$class: 'PruneStaleBranch']",
             "[$class: 'PruneStaleTag']",
+            "[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']]]",
             "[$class: 'SubmoduleOption', depth: 17, disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '/cache/git.git', shallow: true, threads: 13, timeout: 11, trackingSubmodules: true]",
             "[$class: 'UserIdentity', email: 'custom.user.email@example.com', name: 'Custom User Name']",
             "[$class: 'WipeWorkspace']",
