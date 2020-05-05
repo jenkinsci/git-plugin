@@ -187,7 +187,7 @@ public class CredentialsUserRemoteConfigTest {
             "",
             "[$class: 'AssemblaWeb', repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source']",
             "[$class: 'BitbucketWeb', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin']",
-            "[$class: 'CGit', repoUrl: 'https://git.zx2c4.com/cgit'],",
+            "[$class: 'CGit', repoUrl: 'https://git.zx2c4.com/cgit']",
             "[$class: 'FisheyeGitRepositoryBrowser', repoUrl: 'https://fisheye.apache.org/browse/ant-git']",
             "[$class: 'GitBlitRepositoryBrowser', repoUrl: 'https://github.com/MarkEWaite/git-plugin', projectName: 'git-plugin-project-name-value']",
             "[$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1']",
