@@ -1,4 +1,3 @@
-
 package hudson.plugins.git;
 
 import com.cloudbees.plugins.credentials.*;
@@ -61,14 +60,14 @@ public class CredentialsUserRemoteConfigTest {
     public void generateCredentialID() {
         credential = "credential-id-" + (100 + random.nextInt(900));
     }
-    
+
     private String classProlog() {
         if (useSymbolForGitSCM) {
             return "    gitSCM(\n";
         }
         return "    [$class: 'GitSCM', \n";
     }
-    
+
     private String classEpilog() {
         if (useSymbolForGitSCM) {
             return "    )\n";
@@ -102,7 +101,11 @@ public class CredentialsUserRemoteConfigTest {
     private String randomPipelineExtensions() {
         /* Valid extensions to apply to a git checkout */
         String [] extensions = {
+            // "[$class: 'BuildChooserSetting', buildChooser: [$class: 'AncestryBuildChooser', ancestorCommitSha1: 'feedbeefbeadcededeedabed', maximumAgeInDays: 23]]",
+            // "[$class: 'BuildChooserSetting', buildChooser: [$class: 'InverseBuildChooser']]",
+            // "[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'src'], [path: 'Makefile']]]",
             "[$class: 'AuthorInChangelog']",
+            "[$class: 'BuildChooserSetting', buildChooser: [$class: 'DefaultBuildChooser']]",
             "[$class: 'BuildSingleRevisionOnly']",
             "[$class: 'ChangelogToBranch', options: [compareRemote: 'origin', compareTarget: 'master']]",
             "[$class: 'CheckoutOption', timeout: 1]",
@@ -110,8 +113,11 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'CleanCheckout']",
             "[$class: 'DisableRemotePoll']",
             "[$class: 'LocalBranch', localBranch: 'master']",
+            "[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'master']]",
             "[$class: 'PruneStaleBranch']",
             "[$class: 'PruneStaleTag']",
+            "[$class: 'SubmoduleOption', depth: 17, disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '/cache/git1.git', shallow: true, threads: 13, timeout: 11, trackingSubmodules: true]",
+            "[$class: 'UserIdentity', email: 'custom.user.email@example.com', name: 'Custom User Name']",
             "[$class: 'WipeWorkspace']",
             "authorInChangelog()",
             "buildSingleRevisionOnly()",
@@ -123,6 +129,17 @@ public class CredentialsUserRemoteConfigTest {
             "cleanBeforeCheckout()",
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: false)",
             "cleanBeforeCheckout(deleteUntrackedNestedRepositories: true)",
+            "cloneOption(depth: 3, honorRefspec: true, noTags: true, reference: '/cache/git2.git', shallow: true, timeout: 13)",
+            "cloneOption(depth: 3, honorRefspec: true, noTags: true, reference: '/cache/git3.git', shallow: true)",
+            "cloneOption(depth: 3, honorRefspec: true, noTags: true, reference: '/cache/git4.git')",
+            "cloneOption(depth: 3, honorRefspec: true, noTags: true)",
+            "cloneOption(depth: 3, honorRefspec: true)",
+            "cloneOption(depth: 3)",
+            "cloneOption(honorRefspec: true, noTags: true, reference: '/cache/git5.git', shallow: true, timeout: 13)",
+            "cloneOption(honorRefspec: true, noTags: true, reference: '/cache/git6.git', shallow: true)",
+            "cloneOption(honorRefspec: true, noTags: true, reference: '/cache/git7.git')",
+            "cloneOption(honorRefspec: true, noTags: true)",
+            "cloneOption(honorRefspec: true)",
             "localBranch('master')",
             "perBuildTag()",
             "pruneStaleBranch()",
@@ -131,8 +148,8 @@ public class CredentialsUserRemoteConfigTest {
             "pruneTags(true)",
         };
         List<String> extensionList = Arrays.asList(extensions);
-        if (sampleRepo.gitVersionAtLeast(1, 9)) {
-            // Require at least git 1.9 before testing git large file support
+        if (sampleRepo.hasGitLFS()) {
+            // Do not test git LFS unless it is installed
             // Make extensionList mutable
             extensionList = new ArrayList<>(extensionList);
             extensionList.add("[$class: 'GitLFSPull']");
