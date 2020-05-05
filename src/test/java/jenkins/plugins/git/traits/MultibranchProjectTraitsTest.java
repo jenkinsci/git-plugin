@@ -21,13 +21,12 @@ public class MultibranchProjectTraitsTest {
     public RestartableJenkinsRule story = new RestartableJenkinsRule();
     @Rule
     public GitSampleRepoRule sharedLibrarySampleRepo = new GitSampleRepoRule();
-    @Rule
-    public GitSampleRepoRule multibranchProjectSampleRepo = new GitSampleRepoRule();
 
     private Random random = new Random();
 
     @Before
     public void setUpTestRepositories() throws Exception {
+        // Initialize our repository and put shared library code in the branch `libraryBranch`
         sharedLibrarySampleRepo.init();
         sharedLibrarySampleRepo.write("vars/book.groovy", "def call() {echo 'Greetings from the library'}");
         sharedLibrarySampleRepo.git("checkout", "-b", "libraryBranch");
@@ -41,22 +40,19 @@ public class MultibranchProjectTraitsTest {
     @Test
     public void basicSharedLibrarySymbolsTest() throws Exception {
         story.then( r -> {
-            GlobalLibraries.get().setLibraries(Collections.singletonList(new LibraryConfiguration("thelibrary", new SCMSourceRetriever(new GitSCMSource(sharedLibrarySampleRepo.toString())))));
+            GlobalLibraries.get().setLibraries(Collections.singletonList( // TODO: Something more interesting with traits, maybe gitBranchDiscovery
+                    new LibraryConfiguration("thelibrary", new SCMSourceRetriever(new GitSCMSource(sharedLibrarySampleRepo.toString())))));;
             WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
             job.setDefinition(new CpsFlowDefinition(
                             "library 'thelibrary@libraryBranch'\n"
                             + "node() {\n"
                             + "  book()\n"
                             + "  checkout gitSCM(\n"
-                            // Put in some randomized thing here
-                            // + "    browser: gitLabBrowser(repoUrl: 'https://prettymuchanythinghere.io/a/b', version: '9.0'),\n"
                             + randomBrowserSymbolName()
                             + "    userRemoteConfigs: [[url: $/" + sharedLibrarySampleRepo + "/$]]\n"
                             + "  )"
                             + "}"
-                    ,
-                    true));
-
+                    , true));
             WorkflowRun run = story.j.waitForCompletion(job.scheduleBuild2(0).waitForStart());
             story.j.waitForCompletion(run);
             story.j.waitForMessage("Finished: SUCCESS", run);
@@ -74,15 +70,14 @@ public class MultibranchProjectTraitsTest {
             WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "test-pipeline-job");
             job.setDefinition(new CpsFlowDefinition(
                     "library 'thelibrary@libraryBranch'\n"
-                            + "node() {\n"
+                            + "node {\n"
                             + "  book()\n"
-                            + "  checkout gitSCM(\n"
-                            + "    browser: [$class: 'CGit', repoUrl: 'https://prettymuchanythinghere.io/a/b'],\n"
-                            + "    userRemoteConfigs: [[url: $/" + sharedLibrarySampleRepo + "/$]]\n"
+                            + "  checkout(\n"
+                            + "    [$class: 'GitSCM', \n"
+                            + randomBrowserClass()
+                            + "    userRemoteConfigs: [[url: $/" + sharedLibrarySampleRepo + "/$]]]\n"
                             + "  )"
-                            + "}"
-                    ,
-                    true));
+                            + "}", true));
             WorkflowRun run = story.j.waitForCompletion(job.scheduleBuild2(0).waitForStart());
             story.j.waitForCompletion(run);
             story.j.waitForMessage("Finished: SUCCESS", run);
@@ -90,8 +85,11 @@ public class MultibranchProjectTraitsTest {
         });
     }
 
+    /*
+     Returns a randomly selected browser for use in a pipeline checkout, using Symbol names
+     */
     private String randomBrowserSymbolName() {
-        String[] browsers = {
+        String[] browsersBySymbolName = {
                 "    browser: assemblaWeb('https://app.assembla.com/spaces/git-plugin/git/source'),\n",
                 "    browser: bitbucketWeb('https://markewaite@bitbucket.org/markewaite/git-plugin'),\n",
                 "    browser: cgit('https://git.zx2c4.com/cgit'),\n",
@@ -111,9 +109,35 @@ public class MultibranchProjectTraitsTest {
                 "    browser: rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce'),\n",
                 "    browser: viewGit(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value'),\n", // Not likely a viewGit site, but reasonable approximation
         };
-        String browser = browsers[random.nextInt(browsers.length)];
+        String browser = browsersBySymbolName[random.nextInt(browsersBySymbolName.length)];
         return browser;
     }
 
-
+    /*
+     Returns a randomly selected browser for use in a pipeline checkout, using the $class syntax
+     */
+    private String randomBrowserClass() {
+        String[] browsersByClass = {
+                "    browser: [$class: 'AssemblaWeb', repoUrl: 'https://app.assembla.com/spaces/git-plugin/git/source'],\n",
+                "    browser: [$class: 'BitbucketWeb', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin'],\n",
+                "    browser: [$class: 'CGit', repoUrl: 'https://git.zx2c4.com/cgit'],\n",
+                "    browser: [$class: 'FisheyeGitRepositoryBrowser', repoUrl: 'https://fisheye.apache.org/browse/ant-git'],\n",
+                "    browser: [$class: 'GitBlitRepositoryBrowser', repoUrl: 'https://github.com/MarkEWaite/git-plugin', projectName: 'git-plugin-project-name-value'],\n",
+                "    browser: [$class: 'GitLab', repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1'],\n",
+                "    browser: [$class: 'GitList', repoUrl: 'http://gitlist.org/'],\n", // Not a real gitlist site, just the org home page
+                "    browser: [$class: 'GitWeb', repoUrl: 'https://git.ti.com/gitweb'],\n",
+                "    browser: [$class: 'GithubWeb', repoUrl: 'https://github.com/jenkinsci/git-plugin'],\n",
+                "    browser: [$class: 'Gitiles', repoUrl: 'https://gerrit.googlesource.com/gitiles/'],\n",
+                "    browser: [$class: 'GogsGit', repoUrl: 'https://try.gogs.io/MarkEWaite/git-plugin'],\n",
+                "    browser: [$class: 'KilnGit', repoUrl: 'https://kiln.example.com/MarkEWaite/git-plugin'],\n",
+                "    browser: [$class: 'Phabricator', repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/'],\n",
+                "    browser: [$class: 'RedmineWeb', repoUrl: 'https://www.redmine.org/projects/redmine/repository'],\n",
+                "    browser: [$class: 'Stash', repoUrl: 'https://markewaite@bitbucket.org/markewaite/git-plugin'],\n",
+                "    browser: [$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'],\n",
+                "    browser: [$class: 'RhodeCode', repoUrl: 'https://code.rhodecode.com/rhodecode-enterprise-ce'],\n",
+                "    browser: [$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value'],\n", // Not likely a viewGit site, but reasonable approximation
+        };
+        String browser = browsersByClass[random.nextInt(browsersByClass.length)];
+        return browser;
+    }
 }
