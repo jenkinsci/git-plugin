@@ -88,7 +88,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("assemblaWeb")
+    @Symbol("assembla")
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
