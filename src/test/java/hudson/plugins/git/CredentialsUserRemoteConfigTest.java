@@ -205,7 +205,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'TFS2013GitRepositoryBrowser', repoUrl: 'https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin']",
             "[$class: 'ViewGitWeb', repoUrl: 'https://git.ti.com/gitweb', projectName: 'viewgitweb-project-name-value']",
             "assembla('https://app.assembla.com/spaces/git-plugin/git/source')",
-            "bitbucketWeb('https://markewaite@bitbucket.org/markewaite/git-plugin')",
+            "bitbucket('https://markewaite@bitbucket.org/markewaite/git-plugin')",
             "cgit('https://git.zx2c4.com/cgit')",
             "fisheye('https://fisheye.apache.org/browse/ant-git')",
             "gitBlitRepositoryBrowser(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value')",

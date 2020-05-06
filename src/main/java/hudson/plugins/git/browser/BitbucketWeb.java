@@ -71,7 +71,7 @@ public class BitbucketWeb extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("bitbucketWeb")
+    @Symbol("bitbucket")
     public static class BitbucketWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
