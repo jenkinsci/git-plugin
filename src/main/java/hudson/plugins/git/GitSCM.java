@@ -1466,7 +1466,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Extension
-    @Symbol("gitSCM")
+    @Symbol("git")
     public static final class DescriptorImpl extends SCMDescriptor<GitSCM> {
 
         private String gitExe;
