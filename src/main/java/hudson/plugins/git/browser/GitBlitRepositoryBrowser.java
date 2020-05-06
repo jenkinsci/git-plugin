@@ -73,7 +73,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("gitBlitRepositoryBrowser")
+    @Symbol("gitBlit")
     public static class ViewGitWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
