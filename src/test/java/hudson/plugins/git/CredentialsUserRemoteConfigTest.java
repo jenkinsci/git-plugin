@@ -63,7 +63,7 @@ public class CredentialsUserRemoteConfigTest {
 
     private String classProlog() {
         if (useSymbolForGitSCM) {
-            return "    git(\n";
+            return "    gitSCM(\n";
         }
         return "    [$class: 'GitSCM', \n";
     }
