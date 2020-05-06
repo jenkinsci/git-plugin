@@ -40,7 +40,7 @@ public class ChangelogToBranchOptions extends AbstractDescribableImpl<ChangelogT
     }
 
     @Extension
-    @Symbol("changelogToBranchOptions")
+    @Symbol("changelogBase")
     public static class DescriptorImpl extends Descriptor<ChangelogToBranchOptions> {
 
         @Override

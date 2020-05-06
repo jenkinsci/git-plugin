@@ -121,7 +121,7 @@ public class CredentialsUserRemoteConfigTest {
             "[$class: 'WipeWorkspace']",
             "authorInChangelog()",
             "buildSingleRevisionOnly()",
-            "changelogToBranch(changelogToBranchOptions(compareRemote: 'origin', compareTarget: 'master'))",
+            "changelogToBranch(changelogBase(compareRemote: 'origin', compareTarget: 'master'))",
             "checkoutOption(timeout: 17)",
             "cleanAfterCheckout()",
             "cleanAfterCheckout(deleteUntrackedNestedRepositories: false)",
