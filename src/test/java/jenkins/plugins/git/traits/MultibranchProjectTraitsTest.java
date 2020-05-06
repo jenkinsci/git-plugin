@@ -90,12 +90,12 @@ public class MultibranchProjectTraitsTest {
      */
     private String randomBrowserSymbolName() {
         String[] browsersBySymbolName = {
-                "    browser: assemblaWeb('https://app.assembla.com/spaces/git-plugin/git/source'),\n",
-                "    browser: bitbucketWeb('https://markewaite@bitbucket.org/markewaite/git-plugin'),\n",
+                "    browser: assembla('https://app.assembla.com/spaces/git-plugin/git/source'),\n",
+                "    browser: bitbucket('https://markewaite@bitbucket.org/markewaite/git-plugin'),\n",
                 "    browser: cgit('https://git.zx2c4.com/cgit'),\n",
                 "    browser: fisheye('https://fisheye.apache.org/browse/ant-git'),\n",
-                "    browser: gitBlitRepositoryBrowser(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value'),\n",
-                "    browser: gitLabBrowser(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1'),\n",
+                "    browser: gitBlit(repoUrl: 'https://github.com/MarkEWaite/git-client-plugin', projectName: 'git-plugin-project-name-value'),\n",
+                "    browser: gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1'),\n",
                 "    browser: gitList('http://gitlist.org/'),\n", // Not a real gitlist site, just the org home page
                 "    browser: gitWeb('https://git.ti.com/gitweb'),\n",
                 "    browser: githubWeb('https://github.com/jenkinsci/git-plugin'),\n",
