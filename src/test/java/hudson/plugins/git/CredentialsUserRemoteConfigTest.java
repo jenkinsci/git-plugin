@@ -214,7 +214,6 @@ public class CredentialsUserRemoteConfigTest {
             "gitWeb('https://git.ti.com/gitweb')",
             "github('https://github.com/jenkinsci/git-plugin')",
             "gitiles('https://gerrit.googlesource.com/gitiles/')",
-            "gitoriousWeb('https://gerrit.googlesource.com/gitiles/')",
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?
             "kiln('https://kiln.example.com/MarkEWaite/git-plugin')",
             "microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin')",
