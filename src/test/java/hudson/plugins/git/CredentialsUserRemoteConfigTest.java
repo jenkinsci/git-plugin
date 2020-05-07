@@ -212,7 +212,7 @@ public class CredentialsUserRemoteConfigTest {
             "gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1')",
             "gitList('http://gitlist.org/')", // Not a real gitlist site, just the org home page
             "gitWeb('https://git.ti.com/gitweb')",
-            "githubWeb('https://github.com/jenkinsci/git-plugin')",
+            "github('https://github.com/jenkinsci/git-plugin')",
             "gitiles('https://gerrit.googlesource.com/gitiles/')",
             "gitoriousWeb('https://gerrit.googlesource.com/gitiles/')",
             "gogs('https://try.gogs.io/MarkEWaite/git-plugin')", // Should this be gogsGit?

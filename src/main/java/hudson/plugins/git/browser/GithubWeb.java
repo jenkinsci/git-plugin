@@ -89,7 +89,7 @@ public class GithubWeb extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("githubWeb")
+    @Symbol("github")
     public static class GithubWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
