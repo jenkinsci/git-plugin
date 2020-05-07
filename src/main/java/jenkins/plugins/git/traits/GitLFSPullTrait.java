@@ -49,7 +49,7 @@ public class GitLFSPullTrait extends GitSCMExtensionTrait<GitLFSPull> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitLFSPullTrait")
+    @Symbol("gitLFSPull")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

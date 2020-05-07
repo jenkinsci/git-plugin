@@ -51,7 +51,7 @@ public class UserIdentityTrait extends GitSCMExtensionTrait<UserIdentity> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitUserIdentity")
+    @Symbol("userIdentity")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

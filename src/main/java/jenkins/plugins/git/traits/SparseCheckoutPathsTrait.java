@@ -26,7 +26,7 @@ public class SparseCheckoutPathsTrait extends GitSCMExtensionTrait<SparseCheckou
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitSparseCheckoutPaths")
+    @Symbol("sparseCheckoutPaths")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

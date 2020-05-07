@@ -177,7 +177,7 @@ public class RemoteNameSCMSourceTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitRemoteName")
+    @Symbol("remoteName")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**

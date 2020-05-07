@@ -136,7 +136,7 @@ public class RefSpecsSCMSourceTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitSpecifyRefSpecs")
+    @Symbol("refSpecs")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**

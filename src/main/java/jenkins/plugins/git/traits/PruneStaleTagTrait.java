@@ -51,7 +51,7 @@ public class PruneStaleTagTrait extends GitSCMExtensionTrait<PruneStaleTag> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitPruneStaleTag")
+    @Symbol("pruneStaleTag")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

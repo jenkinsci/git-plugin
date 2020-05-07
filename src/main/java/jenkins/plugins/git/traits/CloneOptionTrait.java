@@ -51,7 +51,7 @@ public class CloneOptionTrait extends GitSCMExtensionTrait<CloneOption> {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitCloneOptionTrait")
+    @Symbol("cloneOption")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

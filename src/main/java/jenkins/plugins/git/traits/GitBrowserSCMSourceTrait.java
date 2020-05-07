@@ -93,7 +93,7 @@ public class GitBrowserSCMSourceTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitBrowser")
+    @Symbol("browser")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**

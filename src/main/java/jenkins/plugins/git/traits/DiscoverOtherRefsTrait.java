@@ -115,7 +115,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
-    @Symbol("gitDiscoverOtherRefs")
+    @Symbol("discoverOtherRefs")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {

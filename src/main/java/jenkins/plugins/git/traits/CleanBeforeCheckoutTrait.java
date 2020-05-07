@@ -63,7 +63,7 @@ public class CleanBeforeCheckoutTrait extends GitSCMExtensionTrait<CleanBeforeCh
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitCleanBeforeCheckout")
+    @Symbol("cleanBeforeCheckout")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

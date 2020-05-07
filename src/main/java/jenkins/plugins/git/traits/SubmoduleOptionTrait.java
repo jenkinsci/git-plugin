@@ -51,7 +51,7 @@ public class SubmoduleOptionTrait extends GitSCMExtensionTrait<SubmoduleOption> 
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitSubmoduleOption")
+    @Symbol("submoduleOption")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

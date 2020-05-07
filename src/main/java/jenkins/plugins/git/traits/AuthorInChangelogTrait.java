@@ -49,7 +49,7 @@ public class AuthorInChangelogTrait extends GitSCMExtensionTrait<AuthorInChangel
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitAuthorInChangelog")
+    @Symbol("authorInChangelog")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

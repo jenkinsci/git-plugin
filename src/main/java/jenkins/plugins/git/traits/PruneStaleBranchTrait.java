@@ -62,7 +62,7 @@ public class PruneStaleBranchTrait extends GitSCMExtensionTrait<PruneStaleBranch
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitPruneStaleBranch")
+    @Symbol("pruneStaleBranch")
     public static class DescriptorImpl extends GitSCMExtensionTraitDescriptor {
         /**
          * {@inheritDoc}

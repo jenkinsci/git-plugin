@@ -70,7 +70,7 @@ public class IgnoreOnPushNotificationTrait extends SCMSourceTrait {
      * Our {@link hudson.model.Descriptor}
      */
     @Extension
-    @Symbol("gitIgnoreOnPush")
+    @Symbol("ignoreOnPush")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         /**
