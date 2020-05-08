@@ -98,14 +98,15 @@ public class MultibranchProjectTraitsTest {
                 "    browser: gitLab(repoUrl: 'https://gitlab.com/MarkEWaite/git-client-plugin', version: '12.10.1'),\n",
                 "    browser: gitList('http://gitlist.org/'),\n", // Not a real gitlist site, just the org home page
                 "    browser: gitWeb('https://git.ti.com/gitweb'),\n",
-                "    browser: githubWeb('https://github.com/jenkinsci/git-plugin'),\n",
+                "    browser: github('https://github.com/jenkinsci/git-plugin'),\n",
                 "    browser: gitiles('https://gerrit.googlesource.com/gitiles/'),\n",
-                "    browser: gitoriousWeb('https://gerrit.googlesource.com/gitiles/'),\n",
+                // No symbol for gitorious - dead site
+                // "    browser: gitoriousWeb('https://gerrit.googlesource.com/gitiles/'),\n",
                 "    browser: gogs('https://try.gogs.io/MarkEWaite/git-plugin'),\n", // Should this be gogsGit?
                 "    browser: kiln('https://kiln.example.com/MarkEWaite/git-plugin'),\n",
                 "    browser: microsoftTFS('https://markwaite.visualstudio.com/DefaultCollection/git-plugin/_git/git-plugin'),\n",
                 "    browser: phabricator(repo: 'source/tool-spacemedia', repoUrl: 'https://phabricator.wikimedia.org/source/tool-spacemedia/'),\n",
-                "    browser: redmineWeb('https://www.redmine.org/projects/redmine/repository'),\n",
+                "    browser: redmine('https://www.redmine.org/projects/redmine/repository'),\n",
                 "    browser: rhodeCode('https://code.rhodecode.com/rhodecode-enterprise-ce'),\n",
                 "    browser: viewGit(repoUrl: 'https://repo.or.cz/viewgit.git', projectName: 'viewgit-project-name-value'),\n", // Not likely a viewGit site, but reasonable approximation
         };
