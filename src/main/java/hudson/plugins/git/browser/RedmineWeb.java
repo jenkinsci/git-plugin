@@ -84,7 +84,7 @@ public class RedmineWeb extends GitRepositoryBrowser {
     }
 
     @Extension
-    @Symbol("redmineWeb")
+    @Symbol("redmine")
     public static class RedmineWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
