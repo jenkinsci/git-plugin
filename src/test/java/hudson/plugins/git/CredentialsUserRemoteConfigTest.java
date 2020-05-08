@@ -75,7 +75,7 @@ public class CredentialsUserRemoteConfigTest {
         return "    ]\n";
     }
 
-    private WorkflowJob createProject() throws IOException {
+    private WorkflowJob createProjectWithCredential() throws IOException {
         return createProject(true);
     }
 
@@ -248,7 +248,7 @@ public class CredentialsUserRemoteConfigTest {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, credential));
         store.save();
 
-        WorkflowJob p = createProject();
+        WorkflowJob p = createProjectWithCredential();
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.waitForMessage("using credential " + credential, b);
     }
@@ -260,7 +260,7 @@ public class CredentialsUserRemoteConfigTest {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "other"));
         store.save();
 
-        WorkflowJob p = createProject();
+        WorkflowJob p = createProjectWithCredential();
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.waitForMessage("Warning: CredentialId \"" + credential + "\" could not be found", b);
     }
@@ -272,7 +272,7 @@ public class CredentialsUserRemoteConfigTest {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.SYSTEM, "github"));
         store.save();
 
-        WorkflowJob p = createProject();
+        WorkflowJob p = createProjectWithCredential();
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.waitForMessage("Warning: CredentialId \"" + credential + "\" could not be found", b);
     }
@@ -282,7 +282,7 @@ public class CredentialsUserRemoteConfigTest {
     public void checkoutWithNoCredentialsStoredButUsed() throws Exception {
         sampleRepo.init();
 
-        WorkflowJob p = createProject();
+        WorkflowJob p = createProjectWithCredential();
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
         r.waitForMessage("Warning: CredentialId \"" + credential + "\" could not be found", b);
     }
