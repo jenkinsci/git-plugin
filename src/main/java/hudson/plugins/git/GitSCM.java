@@ -1148,7 +1148,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (VERBOSE)
             listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
-        BuildData previousBuildData = getBuildData(build.getPreviousBuild());   // read only
+        Run<?, ?> previousBuild = build.getPreviousBuild();
+        BuildData previousBuildData = getBuildData(previousBuild);   // read only
         BuildData buildData = copyBuildData(build.getPreviousBuild());
 
         if (VERBOSE && buildData.lastBuild != null) {
@@ -1239,7 +1240,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             if (changelogFile != null) {
-                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
+                MergeRecord previousBuildMergeRecord = previousBuild == null ? null : previousBuild.getAction(MergeRecord.class);
+                computeChangeLog(git, revToBuild.revision, listener, previousBuildData, previousBuildMergeRecord, new FilePath(changelogFile),
                         new BuildChooserContextImpl(build.getParent(), build, environment));
             }
         }
@@ -1300,8 +1302,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param previousBuildData
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
+     * @param previousBuildMerge
+     *      Merge record for the previous build if applicable. It is used to generate changelog
+     *      in case if merge commit for the previous build is not present in the repo.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, MergeRecord previousBuildMerge, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
@@ -1315,9 +1320,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             } else {
                 for (Branch b : revToBuild.getBranches()) {
                     Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
-                    if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
-                        changelog.excludes(lastRevWas.getSHA1());
-                        exclusion = true;
+                    if (lastRevWas != null && lastRevWas.revision != null) {
+                        if (git.isCommitInRepo(lastRevWas.getSHA1())) {
+                            changelog.excludes(lastRevWas.getSHA1());
+                            exclusion = true;
+                        } else if (lastRevWas.marked != null && previousBuildMerge != null) {
+                            ObjectId upstreamCommit = ObjectId.fromString(previousBuildMerge.getSha1());
+                            if (git.isCommitInRepo(upstreamCommit) && git.isCommitInRepo(lastRevWas.marked.getSha1())) {
+                                listener.getLogger().println("Using parents of the last build's merge commit.");
+                                changelog.excludes(upstreamCommit);
+                                changelog.excludes(lastRevWas.marked.getSha1());
+                                exclusion = true;
+                            }
+                        }
                     }
                 }
             }
