@@ -1680,6 +1680,47 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("Changelog should contain commit number 2", commitMessage, singleChange.getComment().trim());
     }
 
+    @Issue("JENKINS-62246")
+    @Test
+    public void testMergeChangelogWithWipe() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        GitSCM scm = new GitSCM(
+                createRemoteRepositories(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.NO_FF)));
+        scm.getExtensions().add(new WipeWorkspace());
+        addChangelogToBranchExtension(scm);
+        project.setScm(scm);
+
+        // Create first commit and run build
+        commit("commitFileBase", johnDoe, "Initial Commit");
+        testRepo.git.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        // Create create second commit and run build
+        testRepo.git.checkout("master", "topic");
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+        build(project, Result.SUCCESS, commitFile2);
+
+        // Create third commit and run build
+        // Here the changelog should contain exactly this one new commit
+        final String commitFile3 = "commitFile3";
+        final String commitMessage = "Commit number 3";
+        commit(commitFile3, johnDoe, commitMessage);
+        final FreeStyleBuild build = build(project, Result.SUCCESS, commitFile3);
+
+        ChangeLogSet<? extends ChangeLogSet.Entry> changeLog = build.getChangeSet();
+        assertEquals("Changelog should contain one item", 1, changeLog.getItems().length);
+
+        GitChangeSet singleChange = (GitChangeSet) changeLog.getItems()[0];
+        assertEquals("Changelog should contain commit number 3", commitMessage, singleChange.getComment().trim());
+    }
+
     @Test
     public void testMergeWithAgent() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
