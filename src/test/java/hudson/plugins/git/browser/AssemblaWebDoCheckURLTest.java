@@ -44,6 +44,18 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
+    public void testDomainLevelChecksOnRepoUrlAllowLocalHostnames() throws Exception {
+        String url = "https://localhost/space/git-plugin/git/source";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
+
+    @Test
+    public void testDomainLevelChecksOnRepoUrlCorpDomainMustBeValid() throws Exception {
+        String url = "https://assembla.myorg.corp/space/git-plugin/git/source";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
+
+    @Test
     public void testDomainLevelChecksOnRepoUrl() throws Exception {
         // Invalid URL, missing '/' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "https:/assembla.com";
@@ -54,13 +66,6 @@ public class AssemblaWebDoCheckURLTest {
     public void testDomainLevelChecksOnRepoUrlInvalidURL() throws Exception {
         // Invalid URL, missing ':' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "http//assmebla";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
-    }
-
-    @Test
-    public void testPathLevelChecksOnRepoUrlInvalidPathSyntax() throws Exception {
-        // Invalid hostname in URL
-        String url = "https://assembla.comspaces/git-plugin/git/source";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
     }
 

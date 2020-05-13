@@ -135,7 +135,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
             URI uri = new URI(url);
             String[] schemes = {"http", "https"};
-            UrlValidator urlValidator = new UrlValidator(schemes);
+            UrlValidator urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS);
             hostNameFragment = hostNameFragment + ".";
             return urlValidator.isValid(uri.toString()) && uri.getHost().contains(hostNameFragment);
         }

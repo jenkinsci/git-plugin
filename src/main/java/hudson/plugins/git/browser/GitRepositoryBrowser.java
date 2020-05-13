@@ -135,7 +135,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
 
     protected static boolean checkURIFormat(String url) throws URISyntaxException {
         String[] schemes = {"http", "https"};
-        UrlValidator urlValidator = new UrlValidator(schemes);
+        UrlValidator urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS);
         return urlValidator.isValid(url);
     }
 
