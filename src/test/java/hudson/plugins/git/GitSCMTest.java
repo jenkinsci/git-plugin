@@ -77,13 +77,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.transport.RemoteConfig;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -443,6 +447,52 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         build(projectWithMaster, Result.SUCCESS); /* If clone refspec had been honored, this would fail */
         build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition",
+                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message when the second URL is empty.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+        String repoURL = "https://example.com/non-empty/repo/url";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(repoURL, null, null, null));
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertFalse("Build log reports 'Null value not allowed'",
+                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        // After JENKINS-38608 fix
+        assertTrue("Build log did not report empty string in job definition for URL 2",
+                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -1205,19 +1255,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-        rule.assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        rule.waitForMessage(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
     @Issue("HUDSON-7411")
@@ -2226,7 +2276,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
-            rule.assertLogContains("java.io.IOException: Could not checkout", build2);
+            rule.waitForMessage("java.io.IOException: Could not checkout", build2);
         } finally {
             lock.delete();
         }

@@ -42,14 +42,6 @@ import org.eclipse.jgit.transport.RefSpec;
  */
 public class GitSCMSourceRequest extends SCMSourceRequest {
     /**
-     * {@code true} if branch details need to be fetched.
-     */
-    private final boolean fetchBranches;
-    /**
-     * {@code true} if tag details need to be fetched.
-     */
-    private final boolean fetchTags;
-    /**
      * The {@link RefSpec} instances.
      */
     private final List<RefSpec> refSpecs;
@@ -71,8 +63,6 @@ public class GitSCMSourceRequest extends SCMSourceRequest {
      */
     public GitSCMSourceRequest(@NonNull SCMSource source, @NonNull GitSCMSourceContext<?, ?> context, TaskListener listener) {
         super(source, context, listener);
-        fetchBranches = context.wantBranches();
-        fetchTags = context.wantTags();
         remoteName = context.remoteName();
         gitTool = context.gitTool();
         refSpecs = Collections.unmodifiableList(context.asRefSpecs());

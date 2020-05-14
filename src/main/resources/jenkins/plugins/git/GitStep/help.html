@@ -67,10 +67,18 @@ git 'https://github.com/jenkinsci/git-plugin'
     <p>
     Checkout from the Jenkins source repository using https protocol, no credentials, and a specific branch (stable-2.204).
     Note that this must be a local branch name like 'master' or 'develop' or a tag name.
-    Remote branch names like 'origin/master' and 'origin/develop' are <strong>not supported</strong> as the branch argument.
-    SHA-1 hashes are <strong>not supported</strong> as the branch argument.
-    Remote branch names and SHA-1 hashes <strong>are supported</strong> by the general purpose <code>checkout</code> step.
-    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    </p>
+    <p>
+    <strong>Branch names that are not supported by the <code>git</code> step</strong>
+    <ul>
+      <li> Remote branch names like 'origin/master' and 'origin/develop' are <strong>not supported</strong> as the branch argument</li>
+      <li>SHA-1 hashes are <strong>not supported</strong> as the branch argument</li>
+      <li>Tag names are <strong>not supported</strong> as the branch argument</li>
+    </ul>
+    <p>
+    Remote branch names, SHA-1 hashes, and tag names <strong>are supported</strong> by the general purpose <code>checkout</code> step.
+    </p>
+    <p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git branch: 'stable-2.204',
     url: 'https://github.com/jenkinsci/jenkins.git'

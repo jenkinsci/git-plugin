@@ -352,6 +352,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
         return GitClientType.ANY;
     }
 
+    /**
+     *
+     * @return <code>true</code> to disable the scheduling of another build to catch up
+     * when multiple revisions are detected
+     */
+    public boolean enableMultipleRevisionDetection() {
+        return true;
+    }
+
     @Override
     public GitSCMExtensionDescriptor getDescriptor() {
         return (GitSCMExtensionDescriptor) super.getDescriptor();
