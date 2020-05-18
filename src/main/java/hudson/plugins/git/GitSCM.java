@@ -50,6 +50,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
+import hudson.security.Permission;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import hudson.triggers.SCMTrigger;
@@ -79,6 +80,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 
 import java.io.File;
@@ -1478,6 +1480,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        @Nonnull
+        @Override
+        public Permission getRequiredGlobalConfigPagePermission() {
+            return Jenkins.MANAGE;
         }
 
         public boolean isShowEntireCommitSummaryInChanges() {
