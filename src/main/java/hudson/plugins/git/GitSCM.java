@@ -80,7 +80,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 
 import java.io.File;
@@ -1482,7 +1482,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             load();
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public Permission getRequiredGlobalConfigPagePermission() {
             return Jenkins.MANAGE;
