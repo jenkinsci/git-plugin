@@ -168,7 +168,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         try (ACLContext c = ACL.as(User.getById(USER, true))) {
             Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
-            assertTrue("Global configuration should not be accessible to READ users", descriptors.size() == 0);
+            assertThat("Global configuration should not be accessible to READ users", descriptors, is(empty()));
         }
         try (ACLContext c = ACL.as(User.getById(MANAGER, true))) {
             Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
