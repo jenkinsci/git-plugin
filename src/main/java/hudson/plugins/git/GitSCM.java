@@ -80,7 +80,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 
 import java.io.File;
@@ -89,6 +88,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +111,7 @@ import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.Util;
 import hudson.util.LogTaskListener;
+import hudson.util.ReflectionUtils;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1483,9 +1484,20 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         @NonNull
-        @Override
+        // TODO: Add @Override when Jenkins core baseline is 2.222+
         public Permission getRequiredGlobalConfigPagePermission() {
-            return Jenkins.MANAGE;
+            return getJenkinsManageOrAdmin();
+        }
+
+        // TODO: remove when Jenkins core baseline is 2.222+
+        Permission getJenkinsManageOrAdmin() {
+            Permission manage;
+            try { // Manage is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
+                manage = (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
+            } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                manage = Jenkins.ADMINISTER;
+            }
+            return manage;
         }
 
         public boolean isShowEntireCommitSummaryInChanges() {

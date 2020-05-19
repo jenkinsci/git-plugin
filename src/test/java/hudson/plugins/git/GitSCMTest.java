@@ -44,12 +44,14 @@ import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import hudson.security.Permission;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.LogTaskListener;
+import hudson.util.ReflectionUtils;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
@@ -63,6 +65,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,6 +77,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
@@ -156,6 +160,13 @@ public class GitSCMTest extends AbstractGitTestCase {
     public void manageShouldAccessGlobalConfig() {
         final String USER = "user";
         final String MANAGER = "manager";
+        Permission jenkinsManage;
+        try {
+            jenkinsManage = getJenkinsManage();
+        } catch (Exception e) {
+            Assume.assumeTrue("Jenkins baseline is too old for this test (requires Jenkins.MANAGE)", false);
+            return;
+        }
         rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
         rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
                                                    // Read access
@@ -163,7 +174,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
                                                    // Read and Manage
                                                    .grant(Jenkins.READ).everywhere().to(MANAGER)
-                                                   .grant(Jenkins.MANAGE).everywhere().to(MANAGER)
+                                                   .grant(jenkinsManage).everywhere().to(MANAGER)
         );
 
         try (ACLContext c = ACL.as(User.getById(USER, true))) {
@@ -176,6 +187,13 @@ public class GitSCMTest extends AbstractGitTestCase {
                     descriptors.stream().filter(descriptor -> descriptor instanceof GitSCM.DescriptorImpl).findFirst();
             assertTrue("Global configuration should be accessible to MANAGE users", found.isPresent());
         }
+    }
+
+    // TODO: remove when Jenkins core baseline is 2.222+
+    private Permission getJenkinsManage() throws NoSuchMethodException, IllegalAccessException,
+                                                 InvocationTargetException {
+        // Jenkins.MANAGE is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
+        return (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
     }
 
     @Test
