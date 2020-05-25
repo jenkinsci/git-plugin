@@ -374,9 +374,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         headName = branchSpec.getName();
                     }
                 }
-                if (build != null) {
-                    headName = expand(headName, env);
-                }
+                headName = expand(headName, env);
                 client.fetch_().prune(true).from(remoteURI, Arrays
                         .asList(new RefSpec(
                                 "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
