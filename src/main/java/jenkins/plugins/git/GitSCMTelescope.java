@@ -32,10 +32,12 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -54,6 +56,8 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.mixin.TagSCMHead;
 import org.eclipse.jgit.lib.Constants;
 import org.jenkinsci.plugins.gitclient.GitClient;
+
+import static hudson.plugins.git.util.GitUtils.expand;
 
 /**
  * An implementation of this extension point allows {@link AbstractGitSCMSource} to examine a repository from a distance
@@ -182,14 +186,27 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
     @Override
     public final SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, SCMRevision rev)
             throws IOException, InterruptedException {
+        return build(scm, rev, owner, null);
+    }
+
+    @Override
+    public SCMFileSystem build(@NonNull Run<?, ?> build, @NonNull SCM scm, SCMRevision rev)
+            throws IOException, InterruptedException {
+        Item owner = build.getParent();
+        return build(scm, rev, owner, build);
+    }
+
+    private SCMFileSystem build(@NonNull SCM scm, SCMRevision rev, Item owner, @CheckForNull Run<?, ?> build)
+            throws IOException, InterruptedException {
         if (scm instanceof GitSCM) {
             // we only support the GitSCM if the branch is completely unambiguous
             GitSCM git = (GitSCM) scm;
             List<UserRemoteConfig> configs = git.getUserRemoteConfigs();
             List<BranchSpec> branches = git.getBranches();
+            EnvVars env = build == null ? null : build.getEnvironment(TaskListener.NULL);
             if (configs.size() == 1) {
                 UserRemoteConfig config = configs.get(0);
-                String remote = config.getUrl();
+                String remote = expand(config.getUrl(), env);
                 if (remote != null && supports(remote)
                     && branches.size() == 1 && !branches.get(0).getName().contains("*")) {
                     StandardCredentials credentials;
@@ -211,7 +228,7 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                     validate(remote, credentials);
                     SCMHead head;
                     if (rev == null) {
-                        String name = branches.get(0).getName();
+                        String name = expand(branches.get(0).getName(), env);
                         if (name.startsWith(Constants.R_TAGS)) {
                             head = new GitTagSCMHead(
                                     name.substring(Constants.R_TAGS.length()),
@@ -220,8 +237,10 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                         } else if (name.startsWith(Constants.R_HEADS)) {
                             head = new GitBranchSCMHead(name.substring(Constants.R_HEADS.length()));
                         } else {
-                            if (name.startsWith(config.getName() + "/")) {
-                                head = new GitBranchSCMHead(name.substring(config.getName().length() + 1));
+                            String remoteName = expand(config.getName(), env);
+                            if (name.startsWith(remoteName + "/")) {
+                                head = new GitBranchSCMHead(name.substring(
+                                        remoteName.length() + 1));
                             } else {
                                 head = new GitBranchSCMHead(name);
                             }
@@ -233,12 +252,6 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
                 }
             }
         }
-        return null;
-    }
-
-    @Override
-    public final SCMFileSystem build(@NonNull Run build, @NonNull SCM scm, @CheckForNull SCMRevision rev)
-            throws IOException, InterruptedException {
         return null;
     }
 

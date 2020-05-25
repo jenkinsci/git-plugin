@@ -76,6 +76,8 @@ import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import static hudson.plugins.git.util.GitUtils.expand;
+
 /**
  * Base implementation of {@link SCMFileSystem}.
  *
@@ -283,96 +285,20 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        public SCMFileSystem build(@NonNull Run build, @NonNull SCM scm, @CheckForNull SCMRevision rev)
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
-            if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
-                return null;
-            }
-            Item owner = build.getParent();
-            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
-            GitSCM gitSCM = (GitSCM) scm;
-            UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
-            BranchSpec branchSpec = gitSCM.getBranches().get(0);
-            EnvVars environment = build.getEnvironment(listener);
-            String remote = environment.expand(config.getUrl()).trim();
-            String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
-            Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
-            cacheLock.lock();
-            try {
-                File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
-                Git git = Git.with(listener, environment).in(cacheDir);
-                GitTool tool = gitSCM.resolveGitTool(listener);
-                if (tool != null) {
-                    git.using(tool.getGitExe());
-                }
-                GitClient client = git.getClient();
-                String credentialsId = config.getCredentialsId();
-                if (credentialsId != null) {
-                    StandardCredentials credential = CredentialsMatchers.firstOrNull(
-                            CredentialsProvider.lookupCredentials(
-                                    StandardUsernameCredentials.class,
-                                    owner,
-                                    ACL.SYSTEM,
-                                    URIRequirementBuilder.fromUri(remote).build()
-                            ),
-                            CredentialsMatchers.allOf(
-                                    CredentialsMatchers.withId(credentialsId),
-                                    GitClient.CREDENTIALS_MATCHER
-                            )
-                    );
-                    client.addDefaultCredentials(credential);
-                    CredentialsProvider.track(owner, credential);
-                }
-
-                if (!client.hasGitRepo()) {
-                    listener.getLogger().println("Creating git repository in " + cacheDir);
-                    client.init();
-                }
-                String remoteName = StringUtils.defaultIfBlank(environment.expand(config.getName()).trim(), Constants.DEFAULT_REMOTE_NAME);
-                listener.getLogger().println("Setting " + remoteName + " to " + remote);
-                client.setRemoteUrl(remoteName, remote);
-                listener.getLogger().println("Fetching & pruning " + remoteName + "...");
-                URIish remoteURI = null;
-                try {
-                    remoteURI = new URIish(remoteName);
-                } catch (URISyntaxException ex) {
-                    listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
-                }
-                String headName;
-                if (rev != null) {
-                    headName = environment.expand(rev.getHead().getName()).trim();
-                } else {
-                    String branch = environment.expand(branchSpec.getName()).trim();
-                    if (branch.startsWith(Constants.R_HEADS)) {
-                        headName = branch.substring(Constants.R_HEADS.length());
-                    } else if (branch.startsWith("*/")) {
-                        headName = branch.substring(2);
-                    } else {
-                        headName = branch;
-                    }
-                }
-
-                String refspec = environment.expand(config.getRefspec());
-                String head = headName;
-                if (refspec == null) {
-                    refspec = "+" + Constants.R_HEADS + headName + ":" + Constants.R_REMOTES + remoteName + "/" + headName;
-                    head = Constants.R_REMOTES + remoteName + "/" +headName;
-                }
-                else {
-                    refspec = refspec.trim();
-                }
-                client.fetch_().prune().from(remoteURI, Arrays
-                        .asList(new RefSpec (refspec))).execute();
-                listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, head, (AbstractGitSCMSource.SCMRevisionImpl) rev);
-            } finally {
-                cacheLock.unlock();
-            }
+            return getScmFileSystem(scm, rev, owner, null);
         }
 
         @Override
-        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
-                throws IOException, InterruptedException {
+        public SCMFileSystem build(@NonNull Run<?, ?> build, @NonNull SCM scm, SCMRevision rev)
+            throws IOException, InterruptedException {
+            Item owner = build.getParent();
+            return getScmFileSystem(scm, rev, owner, build);
+        }
+
+        private SCMFileSystem getScmFileSystem(@NonNull SCM scm,
+            SCMRevision rev, Item owner, @CheckForNull Run<?, ?> build) throws IOException, InterruptedException {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
             }
@@ -380,10 +306,11 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 return null; // Spotbugs warns about unchecked cast without this check
             }
             GitSCM gitSCM = (GitSCM) scm;
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
-            String remote = config.getUrl();
-            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
+            EnvVars env = build == null ? null : build.getEnvironment(listener);
+            String remote = expand(config.getUrl(), env);
             if (remote == null) {
                 listener.getLogger().println("Git remote url is null");
                 return null;
@@ -421,7 +348,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
-                String remoteName = StringUtils.defaultIfBlank(config.getName(), Constants.DEFAULT_REMOTE_NAME);
+                String remoteName = StringUtils.defaultIfBlank(expand(config.getName(), env), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
                 listener.getLogger().println("Fetching & pruning " + remoteName + "...");
@@ -446,6 +373,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     } else {
                         headName = branchSpec.getName();
                     }
+                }
+                if (build != null) {
+                    headName = expand(headName, env);
                 }
                 client.fetch_().prune(true).from(remoteURI, Arrays
                         .asList(new RefSpec(

@@ -408,6 +408,10 @@ public class GitUtils implements Serializable {
         return returnNames;
     }
 
+    public static String expand(String str, EnvVars env) {
+        return env == null ? str : env.expand(str);
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
 
     private static final long serialVersionUID = 1L;
