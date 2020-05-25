@@ -16,8 +16,7 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

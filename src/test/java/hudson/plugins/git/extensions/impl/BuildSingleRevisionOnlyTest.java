@@ -80,7 +80,7 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
         rule.assertBuildStatusSuccess(build);
         boolean result = build.getLog(100).contains(
                 String.format("Scheduling another build to catch up with %s", project.getName()));
-        Assert.assertFalse(result);
+        Assert.assertFalse("Single revision scheduling did not prevent a build of a different revision", result);
     }
 
     @Test
@@ -110,6 +110,14 @@ public class BuildSingleRevisionOnlyTest extends AbstractGitTestCase {
 
         rule.assertBuildStatusSuccess(build);
         rule.waitForMessage(String.format("Scheduling another build to catch up with %s", project.getName()), build);
+
+        // Wait briefly for newly scheduled job to start.
+        // Once job has started, waitForAllJobsToComplete will hold the test until job completes.
+        // Windows can remove log files once job completes.
+        // Wait on non-Windows reduces log file InterruptedException from rule teardown before job completion.
+        // Wait on non-Windows not strictly required but gives one less exception in the test log.
+        java.util.Random random = new java.util.Random();
+        Thread.sleep(500L + random.nextInt(300));
     }
 
     /**

@@ -77,12 +77,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -1119,19 +1124,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-        rule.assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        rule.waitForMessage(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
     @Issue("HUDSON-7411")
@@ -2140,7 +2145,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
-            rule.assertLogContains("java.io.IOException: Could not checkout", build2);
+            rule.waitForMessage("java.io.IOException: Could not checkout", build2);
         } finally {
             lock.delete();
         }

@@ -42,7 +42,7 @@ import org.eclipse.jgit.lib.Repository;
 import static org.hamcrest.Matchers.hasItems;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Assert;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Run a command line git command, return output as array of String, optionally

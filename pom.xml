@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.0-beta-6</version>
+    <version>4.2</version>
     <relativePath />
   </parent>
 
@@ -37,6 +37,9 @@
     <scm-api-plugin.version>2.6.4-SNAPSHOT</scm-api-plugin.version>
     <configuration-as-code.version>1.36</configuration-as-code.version>
     <slf4jVersion>1.7.26</slf4jVersion>
+    <spotbugs.effort>Max</spotbugs.effort>
+    <spotbugs.failOnError>true</spotbugs.failOnError>
+    <spotbugs.threshold>Medium</spotbugs.threshold>
   </properties>
 
   <build>
@@ -54,16 +57,11 @@
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
         <version>4.0.0</version>
-        <configuration>
-          <effort>Max</effort>
-          <threshold>Low</threshold>
-          <failOnError>true</failOnError>
-        </configuration>
         <dependencies>
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.0.1</version>
+            <version>4.0.3</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -104,7 +102,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -148,9 +145,20 @@
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
+      <artifactId>hamcrest</artifactId>
       <version>2.2</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion> <!-- Hamcrest 2.x bundles all hamcrest-core functionality in the hamcrest artifact -->
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -160,7 +168,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.13</version>
+      <version>3.3</version>
       <scope>test</scope>
     </dependency>
 
@@ -235,13 +243,19 @@
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
-      <version>2.6.4</version>
+      <version>2.7.0</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion> <!-- Hamcrest 2.x bundles all hamcrest-core functionality in the hamcrest artifact -->
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-tag-message</artifactId>
-      <version>1.6.1</version>
+      <version>1.7.1</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -260,7 +274,7 @@
         </exclusion>
       </exclusions>
       <optional>true</optional>
-      <version>4.0.1</version>
+      <version>4.0.3</version>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
@@ -298,13 +312,17 @@
       <artifactId>commons-validator</artifactId>
       <version>1.6</version>
       <exclusions>
-        <exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
           <groupId>commons-digester</groupId>
           <artifactId>commons-digester</artifactId>
         </exclusion>
         <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
           <groupId>commons-beanutils</groupId>
           <artifactId>commons-beanutils</artifactId>
+        </exclusion>
+        <exclusion> <!-- Jenkins 2.204.1 provides commons-collections, no need to bundle it -->
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -314,8 +332,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.176.x</artifactId>
-        <version>4</version>
+        <artifactId>bom-2.204.x</artifactId>
+        <version>9</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>

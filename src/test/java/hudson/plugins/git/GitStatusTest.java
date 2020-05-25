@@ -74,7 +74,17 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     @After
-    public void waitForAllJobsToComplete() {
+    public void waitForAllJobsToComplete() throws Exception {
+        // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
+        if (jenkins != null && jenkins.jenkins != null) {
+            jenkins.jenkins.doQuietDown();
+        }
+        // JenkinsRule cleanup throws exceptions during tearDown.
+        // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
+        // Adding roughly 0.7 seconds to these JenkinsRule tests is a small price
+        // for fewer exceptions and for better Windows job cleanup.
+        java.util.Random random = new java.util.Random();
+        Thread.sleep(500L + random.nextInt(400));
         /* Windows job cleanup fails to delete build logs in some of these tests.
          * Wait for the jobs to complete before exiting the test so that the
          * build logs will not be active when the cleanup process tries to
@@ -595,7 +605,7 @@ public class GitStatusTest extends AbstractGitProject {
 
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
 
-        jenkins.assertLogContains("aaa aaaccc ccc", build);
+        jenkins.waitForMessage("aaa aaaccc ccc", build);
 
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));

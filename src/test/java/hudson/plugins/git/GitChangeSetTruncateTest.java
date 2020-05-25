@@ -23,8 +23,8 @@ import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;

@@ -14,12 +14,7 @@ f.entry(field:"trackingSubmodules") {
 f.entry(field:"parentCredentials") {
     f.checkbox(title:_("Use credentials from default remote of parent repository"))
 }
-f.entry(field:"shallow") {
-    f.checkbox(title:_("Shallow clone"))
-}
-f.entry(title:_("Shallow clone depth"), field:"depth") {
-    f.number(clazz:"number", min:1, step:1)
-}
+
 f.entry(title:_("Path of the reference repo to use during submodule update"), field:"reference") {
     f.textbox()
 }
@@ -28,6 +23,12 @@ f.entry(title:_("Timeout (in minutes) for submodules operations"), field:"timeou
 }
 f.entry(title:_("Number of threads to use when updating submodules"), field:"threads") {
     f.number(clazz:"number", min:1, step:1)
+}
+
+f.optionalBlock(title:_("Shallow clone"), field:"shallow", inline: true) {
+    f.entry(title:_("Shallow clone depth"), field:"depth") {
+        f.number(clazz:"number", min:1, step:1)
+    }
 }
 
 /*

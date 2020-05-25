@@ -1,8 +1,7 @@
 /*
- *
  * The MIT License
  *
- * Copyright (c) Red Hat, Inc.
+ * Copyright 2020 Mark Waite.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package jenkins.plugins.git;
+package hudson.plugins.git.extensions.impl;
 
-import hudson.ExtensionList;
-import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
+/**
+ * Recording log handler to allow assertions on logging. Not intended for use
+ * outside this package. Not intended for use outside tests.
+ *
+ * @author <a href="mailto:mark.earl.waite@gmail.com">Mark Waite</a>
+ */
+public class LogHandler extends Handler {
 
-public class ModernScmTest {
+    private List<String> messages = new ArrayList<>();
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    @Override
+    public void publish(LogRecord lr) {
+        messages.add(lr.getMessage());
+    }
 
-    @Test
-    @Issue("JENKINS-58964")
-    public void gitIsModernScm() {
-        SCMSourceRetriever.DescriptorImpl descriptor = ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
-        assertThat(descriptor.getSCMDescriptors(), contains(instanceOf(GitSCMSource.DescriptorImpl.class)));
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void close() throws SecurityException {
+        messages = new ArrayList<>();
+    }
+
+    /* package */ List<String> getMessages() {
+        return messages;
     }
 }

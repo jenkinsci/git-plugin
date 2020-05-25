@@ -514,8 +514,10 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
                     (AbstractGitSCMSource.SCMRevisionImpl) revision)));
         }
-        if (head() instanceof GitRefSCMHead) {
-            withRefSpec(((GitRefSCMHead) head()).getRef());
+        SCMHead scmHead = head();
+        if (scmHead instanceof GitRefSCMHead) {
+            GitRefSCMHead gitHead = (GitRefSCMHead) scmHead;
+            withRefSpec(gitHead.getRef());
         }
         return new GitSCM(
                 asRemoteConfigs(),
