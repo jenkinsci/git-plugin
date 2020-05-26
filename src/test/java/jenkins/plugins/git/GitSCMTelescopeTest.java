@@ -382,6 +382,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
+        @Deprecated
         public String getAbsoluteUrl() {
             throw new UnsupportedOperationException("Not called.");
         }
@@ -601,6 +602,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
+        @Deprecated
         public void onSCMSourceUpdated(SCMSource scms) {
             throw new UnsupportedOperationException("Not called.");
         }
@@ -661,6 +663,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         }
 
         @Override
+        @Deprecated
         public String getAbsoluteUrl() {
             throw new UnsupportedOperationException("Not called.");
         }

@@ -82,6 +82,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     }
 
     @Override
+    @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
             throws IOException, InterruptedException, GitException {
         // we are doing a merge, so cannot permit a shallow clone
