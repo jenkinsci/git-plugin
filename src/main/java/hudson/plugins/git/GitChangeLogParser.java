@@ -79,12 +79,8 @@ public class GitChangeLogParser extends ChangeLogParser {
     @Override public GitChangeSetList parse(Run build, RepositoryBrowser<?> browser, File changelogFile)
         throws IOException, SAXException {
         // Parse the log file into GitChangeSet items - each one is a commit
-        LineIterator lineIterator = null;
-        try {
-        	lineIterator = FileUtils.lineIterator(changelogFile,"UTF-8");
-        	return new GitChangeSetList(build, browser, parse(lineIterator));
-        } finally {
-        	LineIterator.closeQuietly(lineIterator);
+        try (LineIterator lineIterator = FileUtils.lineIterator(changelogFile, "UTF-8")) {
+            return new GitChangeSetList(build, browser, parse(lineIterator));
         }
     }
 
