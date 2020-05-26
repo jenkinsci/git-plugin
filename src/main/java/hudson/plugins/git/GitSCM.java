@@ -110,6 +110,7 @@ import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.Util;
+import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
 import hudson.util.ReflectionUtils;
 import java.util.Map.Entry;
@@ -469,9 +470,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return parameter-expanded local branch name in build.
      */
     public String getParamLocalBranch(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
-        String branch = getLocalBranch();
+        LocalBranch localBranch = getExtensions().get(LocalBranch.class);
         // substitute build parameters if available
-        return getParameterString(branch != null ? branch : null, build.getEnvironment(listener));
+        return getParameterString(localBranch == null ? null : localBranch.getLocalBranch(), build.getEnvironment(listener));
     }
 
     @Deprecated
@@ -849,7 +850,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         StandardUsernameCredentials.class,
                         project,
                         project instanceof Queue.Task
-                                ? Tasks.getDefaultAuthenticationOf((Queue.Task)project)
+                                ? ((Queue.Task) project).getDefaultAuthentication()
                                 : ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(url).build()
                 );
@@ -874,7 +875,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @NonNull
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
+        ScmName sn = getExtensions().get(ScmName.class);
+        String scmName = sn == null ? null : sn.getName();
+        return bd != null ? bd : new BuildData(scmName, getUserRemoteConfigs());
     }
 
     /**
@@ -1340,6 +1343,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @Override
+    @Deprecated // Overrides a deprecated implementation, must also be deprecated
     public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
         buildEnvironment(build, env);
     }
@@ -1741,9 +1746,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override public String getKey() {
-        String name = getScmName();
-        if (name != null) {
-            return name;
+        ScmName scmName = getExtensions().get(ScmName.class);
+        if (scmName != null) {
+            return scmName.getName();
         }
         StringBuilder b = new StringBuilder("git");
         for (RemoteConfig cfg : getRepositories()) {
@@ -1792,11 +1797,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public BuildData copyBuildData(Run build) {
         BuildData base = getBuildData(build);
+        ScmName sn = getExtensions().get(ScmName.class);
+        String scmName = sn == null ? null : sn.getName();
         if (base==null)
-            return new BuildData(getScmName(), getUserRemoteConfigs());
+            return new BuildData(scmName, getUserRemoteConfigs());
         else {
            BuildData buildData = base.clone();
-           buildData.setScmName(getScmName());
+           buildData.setScmName(scmName);
            return buildData;
         }
     }
