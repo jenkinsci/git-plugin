@@ -269,6 +269,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @SuppressWarnings("deprecation") // `source` field is deprecated but required
     public Object readResolve() throws IOException {
         // Migrate data
 
@@ -277,7 +278,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             configVersion = 0L;
         }
 
-
+        // Deprecated field needed to retain compatibility
         if (source != null) {
             remoteRepositories = new ArrayList<>();
             branches = new ArrayList<>();

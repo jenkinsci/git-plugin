@@ -198,6 +198,7 @@ public class GitPublisher extends Recorder implements Serializable {
                         git.tag(buildnumber, "Jenkins Build #" + buildNumber);
                     }
 
+                    @SuppressWarnings("deprecation") // Too much work to replace with non-deprecated
                     PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
 
                     String mergeTarget = environment.expand(mergeOptions.getMergeTarget());

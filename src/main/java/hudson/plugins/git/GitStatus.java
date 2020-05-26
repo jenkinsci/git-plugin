@@ -508,7 +508,10 @@ public class GitStatus implements UnprotectedRootAction {
              * {@inheritDoc}
              */
             @Override
+            @SuppressWarnings("deprecation")
             public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
+                // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());
             }
 
@@ -540,7 +543,10 @@ public class GitStatus implements UnprotectedRootAction {
              * {@inheritDoc}
              */
             @Override
+            @SuppressWarnings("deprecation")
             public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
+                // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                 rsp.addHeader("Triggered", project.getAbsoluteUrl());
             }
 
