@@ -415,7 +415,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 return new BitbucketWeb(url);
             }
             if (url.startsWith("https://gitlab.com/")) {
-                return new GitLab(url, "");
+                return new GitLab(url);
             }
             if (url.startsWith("https://github.com/")) {
                 return new GithubWeb(url);
