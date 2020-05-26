@@ -12,7 +12,6 @@ import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -85,7 +84,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
                     @NonNull BuildData buildData, @NonNull BuildChooserContext context) 
                     throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
-        return getCandidateRevisions(isPollCall, singleBranch, (IGitAPI) git, listener, buildData, context);
+        @SuppressWarnings("deprecation")
+        hudson.plugins.git.IGitAPI iGit = (hudson.plugins.git.IGitAPI) git;
+        return getCandidateRevisions(isPollCall, singleBranch, iGit, listener, buildData, context);
     }
 
     /**
@@ -116,8 +117,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException on git error
      * @throws InterruptedException when interrupted
      */
+    @Deprecated
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                               IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
+                               hudson.plugins.git.IGitAPI git, TaskListener listener, BuildData buildData, BuildChooserContext context) throws GitException, IOException, InterruptedException {
         // fallback to the previous signature
         return getCandidateRevisions(isPollCall,singleBranch,git,listener,buildData);
     }
@@ -125,7 +127,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
 
     /**
      * @deprecated as of 1.1.17
-     *      Use and override {@link #getCandidateRevisions(boolean, String, IGitAPI, TaskListener, BuildData, BuildChooserContext)}
+     *      Use and override {@link #getCandidateRevisions(boolean, String, hudson.plugins.git.IGitAPI, TaskListener, BuildData, BuildChooserContext)}
      * @param isPollCall true if this method is called from pollChanges.
      * @param singleBranch contains the name of a single branch to be built
      *        this will be non-null only in the simple case, in advanced
@@ -140,14 +142,15 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws IOException on input or output error
      * @throws GitException on git error
      */
+    @Deprecated
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                               IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {
+                               hudson.plugins.git.IGitAPI git, TaskListener listener, BuildData buildData) throws GitException, IOException {
         throw new UnsupportedOperationException("getCandidateRevisions method must be overridden");
     }
 
     /**
      * @deprecated as of 1.1.25
-     *      Use and override {@link #prevBuildForChangelog(String, BuildData, IGitAPI, BuildChooserContext)}
+     *      Use and override {@link #prevBuildForChangelog(String, BuildData, hudson.plugins.git.IGitAPI, BuildChooserContext)}
      * @param branch contains the name of branch to be built
      *        this will be non-null only in the simple case, in advanced
      *        cases with multiple repositories and/or branches specified
@@ -158,7 +161,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *      Used for invoking Git
      * @return
      *      the candidate revision. Can be an empty set to indicate that there's nothi     */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData buildData, IGitAPI git) {
+    @Deprecated
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData buildData, hudson.plugins.git.IGitAPI git) {
         return buildData == null ? null : buildData.getLastBuildOfBranch(branch);
     }
 
@@ -166,7 +170,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * Determines the baseline to compute the changelog against.
      *
      * <p>
-     * {@link #getCandidateRevisions(boolean, String, IGitAPI, TaskListener, BuildData, BuildChooserContext)} determine
+     * {@link #getCandidateRevisions(boolean, String, hudson.plugins.git.IGitAPI, TaskListener, BuildData, BuildChooserContext)} determine
      * what commits can be subject for a build, and for each commit it determines the branches that contribute to them.
      *
      * <p>
@@ -188,7 +192,9 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @return candidate revision. Can be an empty set to indicate that there's nothing to build.
      */
     public Build prevBuildForChangelog(String branch, @Nullable BuildData data, GitClient git, BuildChooserContext context) throws IOException,InterruptedException {
-        return prevBuildForChangelog(branch,data, (IGitAPI) git, context);
+        @SuppressWarnings("deprecation")
+        hudson.plugins.git.IGitAPI iGit = (hudson.plugins.git.IGitAPI) git;
+        return prevBuildForChangelog(branch, data, iGit, context);
     }
 
     /**
@@ -216,7 +222,8 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * @throws GitException on git error
      * @throws InterruptedException if interrupted
      */
-    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
+    @Deprecated
+    public Build prevBuildForChangelog(String branch, @Nullable BuildData data, hudson.plugins.git.IGitAPI git, BuildChooserContext context) throws IOException,InterruptedException {
         return prevBuildForChangelog(branch,data,git);
     }
 
