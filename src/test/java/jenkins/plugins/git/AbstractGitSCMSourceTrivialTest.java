@@ -41,6 +41,7 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
+    @Deprecated
     public void basicTestIsExcluded() {
         AbstractGitSCMSource abstractGitSCMSource = mock(AbstractGitSCMSource.class);
 
@@ -98,6 +99,7 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
+    @Deprecated
     public void testIsExcluded() {
         assertFalse(gitSCMSource.isExcluded("master"));
         assertFalse(gitSCMSource.isExcluded("remote/master"));

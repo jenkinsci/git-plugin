@@ -17,6 +17,7 @@ import java.util.Random;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
+@Deprecated
 public class GitLabTest {
 
     private static final String GITLAB_URL = "https://SERVER/USER/REPO/";
