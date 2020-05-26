@@ -381,11 +381,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition",
-                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     /**
@@ -405,11 +405,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition for URL 2",
-                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition for URL 2",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -855,14 +855,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.branch(branch1);
         git.checkout(branch1);
         p.poll(listener).hasChanges();
-        assertTrue(firstBuild.getLog().contains("Cleaning"));
+        assertThat(firstBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
         assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
         assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
         git.checkout(branch1);
         final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
         p.poll(listener).hasChanges();
-        assertTrue(secondBuild.getLog().contains("Cleaning"));
+        assertThat(secondBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
         assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
 
