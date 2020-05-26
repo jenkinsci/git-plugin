@@ -206,6 +206,7 @@ public class UserMergeOptionsTest {
 
     @Issue({"JENKINS-51638", "JENKINS-34070"})
     @Test
+    @Deprecated // Testing deprecated method instantiate
     public void mergeStrategyCase() throws Exception {
         Map<String, Object> args = new HashMap<>();
         if (expectedMergeTarget != null) {

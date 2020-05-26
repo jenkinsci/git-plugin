@@ -37,6 +37,7 @@ public class GitChangeSetTest {
     }
 
     @Test
+    @Deprecated
     public void testFindOrCreateUserBasedOnExistingUsersEmail() throws IOException {
         final GitChangeSet committerCS = GitChangeSetUtil.genChangeSet(true, false);
         final String existingUserId = "An existing user";
@@ -68,6 +69,7 @@ public class GitChangeSetTest {
     }
 
     @Test
+    @Deprecated
     public void findOrCreateByFullName() throws Exception {
         GitChangeSet cs = GitChangeSetUtil.genChangeSet(false, false);
         User user = User.get("john");

@@ -89,6 +89,7 @@ public class AbstractGitSCMSourceTest {
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
     @Issue("JENKINS-37482")
     @Test
+    @Deprecated
     public void retrieveHeads() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -372,6 +373,7 @@ public class AbstractGitSCMSourceTest {
         retrievePrimaryHead(true);
     }
 
+    @Deprecated
     public void retrievePrimaryHead(boolean duplicatePrimary) throws Exception {
         sampleRepo.init();
         sampleRepo.write("file.txt", "");
@@ -767,6 +769,7 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-37727")
     @Test
+    @Deprecated
     public void pruneRemovesDeletedBranches() throws Exception {
         sampleRepo.init();
 
@@ -806,6 +809,7 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
+    @Deprecated
     public void testSpecificRevisionBuildChooser() throws Exception {
         sampleRepo.init();
 
@@ -865,6 +869,7 @@ public class AbstractGitSCMSourceTest {
 
 
     @Test
+    @Deprecated
     public void testCustomRemoteName() throws Exception {
         sampleRepo.init();
 
@@ -879,6 +884,7 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
+    @Deprecated
     public void testCustomRefSpecs() throws Exception {
         sampleRepo.init();
 
@@ -1054,6 +1060,7 @@ public class AbstractGitSCMSourceTest {
                 }
 
                 @Override
+                @Deprecated
                 public FetchCommand prune() {
                     fetchCommand.prune(true);
                     return this;
