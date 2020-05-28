@@ -22,7 +22,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -134,11 +134,31 @@ public class AssemblaWeb extends GitRepositoryBrowser {
         }
 
         private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
-            URI uri = new URI(url);
+            URL checkURL;
+            try {
+                checkURL = new URL(url);
+            } catch (MalformedURLException e) {
+                return false;
+            }
+            if (!checkURL.getHost().contains(hostNameFragment + ".")) {
+                return false;
+            }
             String[] schemes = {"http", "https"};
             UrlValidator urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS);
-            hostNameFragment = hostNameFragment + ".";
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains(hostNameFragment);
+            return urlValidator.isValid(url) || simpleCheck(checkURL);
+        }
+
+        private boolean simpleCheck(URL url) {
+            if (!url.getProtocol().equals("https") && !url.getProtocol().equals("http")) {
+                return false;
+            }
+            if (url.getHost().isEmpty()) {
+                return false;
+            }
+            if (url.getPath().isEmpty()) {
+                return false;
+            }
+            return true;
         }
     }
 }
