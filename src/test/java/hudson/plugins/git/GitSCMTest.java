@@ -2879,7 +2879,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final URL notifyUrl = new URL(notificationPath);
         String notifyContent = null;
         try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = IOUtils.toString(is);
+            notifyContent = IOUtils.toString(is, "UTF-8");
         }
         assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 
