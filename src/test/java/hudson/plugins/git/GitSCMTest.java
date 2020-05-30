@@ -2432,6 +2432,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             this.m_forwardingAction = new ParametersAction(params);
         }
 
+        @Deprecated
         public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
             this.m_forwardingAction.buildEnvVars(ab, ev);
         }
@@ -2660,6 +2661,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * in the build data, but no branch name.
      */
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testNoNullPointerExceptionWithNullBranch() throws Exception {
         ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2695,6 +2697,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2736,6 +2739,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNull() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2777,6 +2781,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
