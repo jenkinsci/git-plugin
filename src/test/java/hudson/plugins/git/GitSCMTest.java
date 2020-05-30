@@ -2409,7 +2409,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, build);
 
         assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
@@ -2475,7 +2475,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 		project.setScm(scm);
 		commit("commitFile1", johnDoe, "Commit number 1");
 
-		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
 		first_build.getWorkspace().deleteContents();
@@ -2515,7 +2515,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // SECURITY-170 - have to use ParametersDefinitionProperty
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
-        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
         Launcher launcher = workspace.createLauncher(listener);
