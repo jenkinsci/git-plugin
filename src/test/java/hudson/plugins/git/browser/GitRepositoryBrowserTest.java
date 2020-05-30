@@ -120,10 +120,12 @@ public class GitRepositoryBrowserTest {
 
     public class GitRepositoryBrowserImpl extends GitRepositoryBrowser {
 
+        @Override
         public URL getDiffLink(GitChangeSet.Path path) throws IOException {
             return getURL(path, true);
         }
 
+        @Override
         public URL getFileLink(GitChangeSet.Path path) throws IOException {
             return getURL(path, false);
         }
