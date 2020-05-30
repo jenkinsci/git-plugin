@@ -120,6 +120,10 @@ public class GitRepositoryBrowserTest {
 
     public class GitRepositoryBrowserImpl extends GitRepositoryBrowser {
 
+        protected GitRepositoryBrowserImpl(String repourl) {
+            super(repourl);
+        }
+
         @Override
         public URL getDiffLink(GitChangeSet.Path path) throws IOException {
             return getURL(path, true);
