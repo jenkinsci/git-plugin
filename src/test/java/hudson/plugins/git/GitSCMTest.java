@@ -2189,7 +2189,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile2, janeDoe, "Commit number 2");
 
         // create lock file to simulate lock collision
-        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        File lock = new File(build1.getWorkspace().getRemote(), ".git/index.lock");
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
