@@ -66,7 +66,7 @@ public class GitRepositoryBrowserTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        browser = new GitRepositoryBrowserImpl();
+        browser = new GitRepositoryBrowserImpl(null);
         changeSet = GitChangeSetUtil.genChangeSet(sha1, gitImplementation, useAuthorName);
         paths = changeSet.getPaths();
     }
