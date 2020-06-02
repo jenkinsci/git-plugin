@@ -110,8 +110,9 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                 return FormValidation.ok();
             }
             // Connect to URL and check content only if we have permission
-            if (!checkURIFormatAndHostName(cleanUrl, "assembla")) {
-                return FormValidation.error(Messages.invalidUrl());
+            FormValidation validation = checkURIFormatAndHostName(cleanUrl, "assembla");
+            if (validation != FormValidation.ok()) {
+                return validation;
             }
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
@@ -133,32 +134,32 @@ public class AssemblaWeb extends GitRepositoryBrowser {
             }.check();
         }
 
-        private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
+        /*
+         * Return FormValidation for url after checking that the hostname of the URL includes hostNameFragment.
+         */
+        private FormValidation checkURIFormatAndHostName(String url, String hostNameFragment) {
             URL checkURL;
             try {
                 checkURL = new URL(url);
             } catch (MalformedURLException e) {
-                return false;
+                return FormValidation.error(e.getMessage());
             }
-            if (!checkURL.getHost().contains(hostNameFragment + ".")) {
-                return false;
+            String hostname = checkURL.getHost();
+            if (hostname == null) {
+                return FormValidation.error("Invalid URL: " + url + " null hostname");
+            }
+            if (hostname.isEmpty()) {
+                return FormValidation.error("Invalid URL: " + url + " could not parse hostname in URL");
+            }
+            if (!hostname.contains(hostNameFragment + ".")) {
+                return FormValidation.error("Invalid URL: " + url + " hostname does not include " + hostNameFragment + ".");
             }
             String[] schemes = {"http", "https"};
             UrlValidator urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS);
-            return urlValidator.isValid(url) || simpleCheck(checkURL);
-        }
-
-        private boolean simpleCheck(URL url) {
-            if (!url.getProtocol().equals("https") && !url.getProtocol().equals("http")) {
-                return false;
+            if (!urlValidator.isValid(url)) {
+                return FormValidation.error("Invalid URL: " + url);
             }
-            if (url.getHost().isEmpty()) {
-                return false;
-            }
-            if (url.getPath().isEmpty()) {
-                return false;
-            }
-            return true;
+            return FormValidation.ok();
         }
     }
 }
