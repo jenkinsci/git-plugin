@@ -54,8 +54,8 @@ public class AssemblaWebDoCheckURLTest {
         String hostname = "assembla.example.localnet";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
-        assertThat(validation.kind, is(FormValidation.Kind.ERROR));
-        assertThat(validation.getLocalizedMessage(), is("Invalid URL: " + url));
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                   is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
     }
 
     @Test
@@ -63,8 +63,8 @@ public class AssemblaWebDoCheckURLTest {
         String hostname = "assembla.example.home";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
-        assertThat(validation.kind, is(FormValidation.Kind.ERROR));
-        assertThat(validation.getLocalizedMessage(), is("Invalid URL: " + url));
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                   is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
     }
 
     @Test
@@ -72,8 +72,8 @@ public class AssemblaWebDoCheckURLTest {
         String hostname = "assembla.myorg.corp";
         String url = "https://" + hostname + "/space/git-plugin/git/source";
         FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
-        assertThat(validation.kind, is(FormValidation.Kind.ERROR));
-        assertThat(validation.getLocalizedMessage(), is("Invalid URL: " + url));
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                   is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class AssemblaWebDoCheckURLTest {
         // Invalid URL, missing '/' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "https:/assembla.com";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Invalid URL: " + url + " could not parse hostname in URL"));
+                   is("Invalid URL: " + url + " could not parse hostname in URL"));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class AssemblaWebDoCheckURLTest {
         // Syntax issue related specific to Assembla
         String url = "https://app.assembla.com/space/git-plugin/git/source/";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Unable to connect " + url));
+                   is("Exception reading from Assembla URL " + url + " : ERROR: Unable to connect " + url));
     }
 
     @Test
@@ -134,6 +134,6 @@ public class AssemblaWebDoCheckURLTest {
         };
         String url = urls[random.nextInt(urls.length)]; // Don't abuse a single web site with tests
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Invalid URL: " + url + " hostname does not include assembla."));
+                   is("Invalid URL: " + url + " hostname does not include assembla."));
     }
 }

@@ -128,7 +128,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it does not look like Assembla");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        return FormValidation.error("Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
                     }
                 }
             }.check();
@@ -153,6 +153,11 @@ public class AssemblaWeb extends GitRepositoryBrowser {
             }
             if (!hostname.contains(hostNameFragment + ".")) {
                 return FormValidation.error("Invalid URL: " + url + " hostname does not include " + hostNameFragment + ".");
+            }
+            if (hostname.endsWith(".corp") || hostname.endsWith(".home") || hostname.endsWith(".local") || hostname.endsWith(".localnet")) {
+                /* UrlValidator does not handle those common local host suffixes */
+                /* Rely on later checks to confirm connectivity to the server */
+                return FormValidation.ok();
             }
             String[] schemes = {"http", "https"};
             UrlValidator urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS);
