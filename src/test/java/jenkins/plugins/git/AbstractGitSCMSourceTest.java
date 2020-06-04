@@ -89,7 +89,7 @@ public class AbstractGitSCMSourceTest {
     // TODO AbstractGitSCMSourceRetrieveHeadsTest *sounds* like it would be the right place, but it does not in fact retrieve any heads!
     @Issue("JENKINS-37482")
     @Test
-    @Deprecated
+    @Deprecated // Tests deprecated GitSCMSource constructor
     public void retrieveHeads() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -364,17 +364,19 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
+    @Deprecated
     public void retrievePrimaryHead_NotDuplicated() throws Exception {
         retrievePrimaryHead(false);
     }
 
     @Test
+    @Deprecated
     public void retrievePrimaryHead_Duplicated() throws Exception {
         retrievePrimaryHead(true);
     }
 
-    @Deprecated
-    public void retrievePrimaryHead(boolean duplicatePrimary) throws Exception {
+    @Deprecated // Calls deprecated GitSCMSource constructor
+    private void retrievePrimaryHead(boolean duplicatePrimary) throws Exception {
         sampleRepo.init();
         sampleRepo.write("file.txt", "");
         sampleRepo.git("add", "file.txt");
@@ -769,7 +771,7 @@ public class AbstractGitSCMSourceTest {
 
     @Issue("JENKINS-37727")
     @Test
-    @Deprecated
+    @Deprecated // Check GitSCMSource deprecated constructor
     public void pruneRemovesDeletedBranches() throws Exception {
         sampleRepo.init();
 
@@ -869,7 +871,7 @@ public class AbstractGitSCMSourceTest {
 
 
     @Test
-    @Deprecated
+    @Deprecated // Tests deprecated GitSCMSource constructor
     public void testCustomRemoteName() throws Exception {
         sampleRepo.init();
 
@@ -884,7 +886,7 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated // Tests deprecated GitSCMSource constructor
     public void testCustomRefSpecs() throws Exception {
         sampleRepo.init();
 

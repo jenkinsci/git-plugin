@@ -298,7 +298,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults1() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "*", "", false);
         assertThat(instance.getTraits(), contains(
