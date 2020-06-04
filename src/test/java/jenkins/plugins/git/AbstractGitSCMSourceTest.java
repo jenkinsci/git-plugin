@@ -811,7 +811,7 @@ public class AbstractGitSCMSourceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated // Tests deprecated getExtensions() and setExtensions()
     public void testSpecificRevisionBuildChooser() throws Exception {
         sampleRepo.init();
 

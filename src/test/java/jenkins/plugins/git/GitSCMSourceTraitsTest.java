@@ -135,7 +135,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
-    @Deprecated // Testing deprecated methods on GitSCMSource
+    @Deprecated // Includes tests of deprecated methods getIncludes, getExcludes, & getRawRefSpecs
     public void pimpped_out() throws Exception {
         GitSCMSource instance = load();
         assertThat(instance.getId(), is("fd2380f8-d34f-48d5-8006-c34542bc4a89"));
