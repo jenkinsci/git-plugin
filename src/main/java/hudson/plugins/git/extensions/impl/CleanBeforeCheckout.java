@@ -39,6 +39,7 @@ public class CleanBeforeCheckout extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Cleaning workspace");
         git.clean(deleteUntrackedNestedRepositories);

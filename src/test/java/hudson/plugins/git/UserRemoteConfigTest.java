@@ -48,7 +48,8 @@ public class UserRemoteConfigTest {
         assertCredentials(null, null, "admin", "", "mycreds");
         assertCredentials(null, "othercreds", "admin", "", "mycreds", "othercreds");
     }
-    
+
+    @Deprecated
     private void assertCredentials(@CheckForNull final Item project, @CheckForNull final String currentCredentialsId, @NonNull String user, @NonNull String... expectedCredentialsIds) {
         final Set<String> actual = new TreeSet<>(); // for purposes of this test we do not care about order (though StandardListBoxModel does define some)
         ACL.impersonate(User.get(user).impersonate(), () -> {

@@ -81,6 +81,7 @@ public class CloneOptionDepthTest {
 
     @Issue("JENKINS-53050")
     @Test
+    @Deprecated
     public void decorateFetchCommandShouldUseValidShallowDepth() throws Exception {
         FetchCommand fetchCommand = mock(FetchCommand.class, Mockito.RETURNS_SELF);
 

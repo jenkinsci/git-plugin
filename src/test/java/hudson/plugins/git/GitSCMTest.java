@@ -381,11 +381,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition",
-                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     /**
@@ -405,11 +405,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition for URL 2",
-                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition for URL 2",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -855,14 +855,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.branch(branch1);
         git.checkout(branch1);
         p.poll(listener).hasChanges();
-        assertTrue(firstBuild.getLog().contains("Cleaning"));
+        assertThat(firstBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
         assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
         assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
         git.checkout(branch1);
         final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
         p.poll(listener).hasChanges();
-        assertTrue(secondBuild.getLog().contains("Cleaning"));
+        assertThat(secondBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
         assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
 
@@ -2189,7 +2189,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile2, janeDoe, "Commit number 2");
 
         // create lock file to simulate lock collision
-        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        File lock = new File(build1.getWorkspace().getRemote(), ".git/index.lock");
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
@@ -2409,7 +2409,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, build);
 
         assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
@@ -2432,6 +2432,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             this.m_forwardingAction = new ParametersAction(params);
         }
 
+        @Deprecated
         public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
             this.m_forwardingAction.buildEnvVars(ab, ev);
         }
@@ -2475,7 +2476,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 		project.setScm(scm);
 		commit("commitFile1", johnDoe, "Commit number 1");
 
-		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
 		first_build.getWorkspace().deleteContents();
@@ -2515,7 +2516,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // SECURITY-170 - have to use ParametersDefinitionProperty
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
-        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
         Launcher launcher = workspace.createLauncher(listener);
@@ -2660,6 +2661,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * in the build data, but no branch name.
      */
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testNoNullPointerExceptionWithNullBranch() throws Exception {
         ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2695,6 +2697,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2736,6 +2739,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNull() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2777,6 +2781,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2879,7 +2884,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final URL notifyUrl = new URL(notificationPath);
         String notifyContent = null;
         try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = IOUtils.toString(is);
+            notifyContent = IOUtils.toString(is, "UTF-8");
         }
         assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 

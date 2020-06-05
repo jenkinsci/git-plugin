@@ -659,10 +659,13 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                 if (GitStatus.looselyMatches(uri, remote)) {
                                     LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
                                             + " as a result of event from " + origin);
-                                    owner.onSCMSourceUpdated(source);
+                                    triggerIndexing(owner, source);
                                     result.add(new GitStatus.ResponseContributor() {
                                         @Override
+                                        @SuppressWarnings("deprecation")
                                         public void addHeaders(StaplerRequest req, StaplerResponse rsp) {
+                                            // Calls a deprecated getAbsoluteUrl() method because this is a remote API case
+                                            // as described in the Javadoc of the deprecated getAbsoluteUrl() method.
                                             rsp.addHeader("Triggered", owner.getAbsoluteUrl());
                                         }
 
@@ -682,6 +685,11 @@ public class GitSCMSource extends AbstractGitSCMSource {
                 result.add(new GitStatus.MessageResponseContributor("No Git consumers using SCM API plugin for: " + uri.toString()));
             }
             return result;
+        }
+
+        @SuppressWarnings("deprecation")
+        private void triggerIndexing(SCMSourceOwner owner, SCMSource source) {
+            owner.onSCMSourceUpdated(source);
         }
     }
 }

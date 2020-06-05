@@ -320,7 +320,7 @@ public class GitUtils implements Serializable {
                 env = p.getEnvironment(workspaceToNode(ws), listener);
             }
 
-            p.getScm().buildEnvVars(b,env);
+            p.getScm().buildEnvironment(b,env);
         } else {
             env = p.getEnvironment(workspaceToNode(ws), listener);
         }
@@ -367,7 +367,7 @@ public class GitUtils implements Serializable {
             // most importantly, ParametersAction will be processed here (for parameterized builds)
             if (action instanceof ParametersAction) {
                 ParametersAction envAction = (ParametersAction) action;
-                envAction.buildEnvVars(b, env);
+                envAction.buildEnvironment(b, env);
             }
         }
 

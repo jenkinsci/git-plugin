@@ -603,7 +603,7 @@ public class GitStatusTest extends AbstractGitProject {
                 : new Shell("echo $A $B $C");
         project.getBuildersList().add(script);
 
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
         jenkins.waitForMessage("aaa aaaccc ccc", build);
 

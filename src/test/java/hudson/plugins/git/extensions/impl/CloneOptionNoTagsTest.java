@@ -71,7 +71,7 @@ public class CloneOptionNoTagsTest extends GitSCMExtensionTest {
     }
 
     private Set<String> allTagsInProjectWorkspace() throws IOException, InterruptedException {
-        GitClient git = Git.with(listener, null).in(project.getWorkspace()).getClient();
+        GitClient git = Git.with(listener, null).in(project.getSomeWorkspace()).getClient();
         return git.getTagNames("*");
     }
 }

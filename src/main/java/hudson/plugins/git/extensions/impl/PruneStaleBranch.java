@@ -26,6 +26,7 @@ public class PruneStaleBranch extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         listener.getLogger().println("Pruning obsolete local branches");
         cmd.prune(true);
