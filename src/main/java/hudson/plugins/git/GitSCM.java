@@ -1132,7 +1132,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            if (remoteRepository == repos.get(0) && redundantFetchCheck){
+            if (remoteRepository.equals(repos.get(0)) && redundantFetchCheck){
                 continue;
             }
             try {
