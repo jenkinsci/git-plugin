@@ -184,14 +184,17 @@ public class GithubWebTest {
             return remote;
         }
         @Override
+        @Deprecated
         public String getIncludes() {
             return "*";
         }
         @Override
+        @Deprecated
         public String getExcludes() {
             return "";
         }
         @Override
+        @Deprecated
         protected List<RefSpec> getRefSpecs() {
             List<RefSpec> result = new ArrayList<>();
             for (String refSpec : refSpecs) {

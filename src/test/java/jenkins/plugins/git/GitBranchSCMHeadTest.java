@@ -56,6 +56,7 @@ public class GitBranchSCMHeadTest {
     @Issue("JENKINS-48061")
     @Test
     @LocalData
+    @Deprecated // getBuilds.size()
     public void testMigrationNoBuildStorm() throws Exception {
         assumeFalse(Functions.isWindows());
         final WorkflowMultiBranchProject job = j.jenkins.getItemByFullName("job", WorkflowMultiBranchProject.class);

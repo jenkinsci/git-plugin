@@ -110,6 +110,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSource_Smokes() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -134,6 +135,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSourceRevision() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -154,6 +156,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSourceRevision_GitBranchSCMHead() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -195,6 +198,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void lastModified_Smokes() throws Exception {
         Assume.assumeTrue("Windows file system last modify dates not trustworthy", !isWindows());
         sampleRepo.init();
@@ -217,6 +221,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void directoryTraversal() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -252,6 +257,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void mixedContent() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");

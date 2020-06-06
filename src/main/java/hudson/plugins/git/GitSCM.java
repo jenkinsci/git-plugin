@@ -50,6 +50,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
+import hudson.security.Permission;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import hudson.triggers.SCMTrigger;
@@ -87,6 +88,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +110,9 @@ import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.Util;
+import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
+import hudson.util.ReflectionUtils;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -265,6 +269,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @SuppressWarnings("deprecation") // `source` field is deprecated but required
     public Object readResolve() throws IOException {
         // Migrate data
 
@@ -273,7 +278,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             configVersion = 0L;
         }
 
-
+        // Deprecated field needed to retain compatibility
         if (source != null) {
             remoteRepositories = new ArrayList<>();
             branches = new ArrayList<>();
@@ -412,7 +417,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 return new BitbucketWeb(url);
             }
             if (url.startsWith("https://gitlab.com/")) {
-                return new GitLab(url, "");
+                return new GitLab(url);
             }
             if (url.startsWith("https://github.com/")) {
                 return new GithubWeb(url);
@@ -466,9 +471,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @return parameter-expanded local branch name in build.
      */
     public String getParamLocalBranch(Run<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
-        String branch = getLocalBranch();
+        LocalBranch localBranch = getExtensions().get(LocalBranch.class);
         // substitute build parameters if available
-        return getParameterString(branch != null ? branch : null, build.getEnvironment(listener));
+        return getParameterString(localBranch == null ? null : localBranch.getLocalBranch(), build.getEnvironment(listener));
     }
 
     @Deprecated
@@ -846,7 +851,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         StandardUsernameCredentials.class,
                         project,
                         project instanceof Queue.Task
-                                ? Tasks.getDefaultAuthenticationOf((Queue.Task)project)
+                                ? ((Queue.Task) project).getDefaultAuthentication()
                                 : ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(url).build()
                 );
@@ -871,7 +876,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @NonNull
     private BuildData fixNull(BuildData bd) {
-        return bd != null ? bd : new BuildData(getScmName(), getUserRemoteConfigs()) /*dummy*/;
+        ScmName sn = getExtensions().get(ScmName.class);
+        String scmName = sn == null ? null : sn.getName();
+        return bd != null ? bd : new BuildData(scmName, getUserRemoteConfigs());
     }
 
     /**
@@ -1342,6 +1349,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    @Override
+    @Deprecated // Overrides a deprecated implementation, must also be deprecated
     public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
         buildEnvironment(build, env);
     }
@@ -1483,6 +1492,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
             load();
+        }
+
+        @NonNull
+        // TODO: Add @Override when Jenkins core baseline is 2.222+
+        public Permission getRequiredGlobalConfigPagePermission() {
+            return getJenkinsManageOrAdmin();
+        }
+
+        // TODO: remove when Jenkins core baseline is 2.222+
+        Permission getJenkinsManageOrAdmin() {
+            Permission manage;
+            try { // Manage is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
+                manage = (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
+            } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                manage = Jenkins.ADMINISTER;
+            }
+            return manage;
         }
 
         public boolean isShowEntireCommitSummaryInChanges() {
@@ -1726,9 +1752,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override public String getKey() {
-        String name = getScmName();
-        if (name != null) {
-            return name;
+        ScmName scmName = getExtensions().get(ScmName.class);
+        if (scmName != null) {
+            return scmName.getName();
         }
         StringBuilder b = new StringBuilder("git");
         for (RemoteConfig cfg : getRepositories()) {
@@ -1777,11 +1803,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      */
     public BuildData copyBuildData(Run build) {
         BuildData base = getBuildData(build);
+        ScmName sn = getExtensions().get(ScmName.class);
+        String scmName = sn == null ? null : sn.getName();
         if (base==null)
-            return new BuildData(getScmName(), getUserRemoteConfigs());
+            return new BuildData(scmName, getUserRemoteConfigs());
         else {
            BuildData buildData = base.clone();
-           buildData.setScmName(getScmName());
+           buildData.setScmName(scmName);
            return buildData;
         }
     }

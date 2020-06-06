@@ -40,10 +40,12 @@ public class CommitTimeComparatorTest extends AbstractGitRepository {
         }
         assertEquals(3,revs.size());
 
+        @SuppressWarnings("deprecation") // Local repository reference
+        org.eclipse.jgit.lib.Repository testRepo = testGitClient.getRepository();
         for (int i=0; i<16; i++) {
             // shuffle, then sort.
             Collections.shuffle(revs);
-            Collections.sort(revs, new CommitTimeComparator(testGitClient.getRepository()));
+            Collections.sort(revs, new CommitTimeComparator(testRepo));
 
             // it should be always branch1, branch2, branch3
             for (int j=0; j<3; j++)

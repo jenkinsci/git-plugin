@@ -77,7 +77,8 @@ public class GitStatusMultipleSCMTest {
     }
 
     private SCMTrigger setupProject(String branchString, boolean ignoreNotifyCommit) throws Exception {
-        SCMTrigger trigger = new SCMTrigger("", ignoreNotifyCommit);
+        SCMTrigger trigger = new SCMTrigger("");
+        trigger.setIgnorePostCommitHooks(ignoreNotifyCommit);
         setupProject(branchString, trigger);
         return trigger;
     }

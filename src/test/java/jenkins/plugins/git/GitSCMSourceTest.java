@@ -91,6 +91,7 @@ public class GitSCMSourceTest {
     }
 
     @Test
+    @Deprecated
     public void testSourceOwnerTriggeredByDoNotifyCommit() throws Exception {
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
