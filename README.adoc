@@ -609,16 +609,6 @@ Use credentials from default remote of parent repository::
   If the parent project is cloned with https, then the authenticated submodule references must use https as well.
   If the parent project is cloned with ssh, then the authenticated submodule references must use ssh as well.
 
-Shallow clone::
-
-  Perform shallow clone of submodules.
-  Git will not download the complete history of the project, saving time and disk space.
-
-Shallow clone depth::
-
-  Set shallow clone depth for submodules.
-  Git will only download recent history of the project, saving time and disk space.
-
 Path of the reference repo to use during submodule update::
 
   Folder containing a repository that will be used by git as a reference during submodule clone operations.
@@ -635,6 +625,16 @@ Number of threads to use when updating submodules::
 
   Number of parallel processes to be used when updating submodules.
   Default is to use a single thread for submodule updates
+
+Shallow clone::
+
+  Perform shallow clone of submodules.
+  Git will not download the complete history of the project, saving time and disk space.
+
+Shallow clone depth::
+
+  Set shallow clone depth for submodules.
+  Git will only download recent history of the project, saving time and disk space.
 
 [#checkout-to-a-sub-directory]
 ==== Checkout to a sub-directory
