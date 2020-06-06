@@ -387,7 +387,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
         assertRedundantFetchIsTrue(build, refSpec);
 
-        assertThat("FAILURE", is((build.getResult().toString())));
+        assertThat(build.getResult(), is(Result.SUCCESS);
     }
 
     // Checks if the second fetch is being avoided
