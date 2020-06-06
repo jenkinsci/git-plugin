@@ -710,6 +710,8 @@ Delete untracked nested repositories::
 [#sparse-checkout-paths]
 ==== Sparse checkout paths
 
+image:/images/git-sparse-checkout-paths.png[Sparse checkout paths]
+
 Specify the paths that you'd like to sparse checkout.
 This may be used for saving space (Think about a reference repository).
 Be sure to use a recent version of Git, at least above 1.7.10.
