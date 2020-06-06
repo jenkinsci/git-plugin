@@ -67,6 +67,9 @@ public class LocalBranchTrait extends GitSCMExtensionTrait<LocalBranch> {
          */
         @Override
         public SCMSourceTrait convertToTrait(@NonNull GitSCMExtension extension) {
+            if (!(extension instanceof LocalBranch)) {
+                return null; // spotbugs warns of unchecked cast without this check
+            }
             LocalBranch ext = (LocalBranch) extension;
             if ("**".equals(StringUtils.defaultIfBlank(ext.getLocalBranch(), "**"))) {
                 return new LocalBranchTrait();

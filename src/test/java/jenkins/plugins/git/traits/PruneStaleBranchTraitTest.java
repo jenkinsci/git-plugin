@@ -8,7 +8,7 @@ import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;

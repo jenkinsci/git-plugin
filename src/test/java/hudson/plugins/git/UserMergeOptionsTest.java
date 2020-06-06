@@ -31,6 +31,14 @@ public class UserMergeOptionsTest {
     private final MergeCommand.GitPluginFastForwardMode expectedFastForwardMode;
     private final Integer expectedTimeout;
 
+    @Deprecated
+    private UserMergeOptions defineDeprecatedOptions(String mergeRemote, String mergeTarget, MergeCommand.Strategy mergeStrategy) {
+        return new UserMergeOptions(
+                mergeRemote,
+                mergeTarget,
+                mergeStrategy == null ? null : mergeStrategy.toString());
+    }
+
     public UserMergeOptionsTest(
             String mergeRemote,
             String mergeTarget,
@@ -224,6 +232,7 @@ public class UserMergeOptionsTest {
 
     @Issue({"JENKINS-51638", "JENKINS-34070"})
     @Test
+    @Deprecated // Testing deprecated method instantiate
     public void mergeStrategyCase() throws Exception {
         Map<String, Object> args = new HashMap<>();
         if (expectedTimeout != null) {

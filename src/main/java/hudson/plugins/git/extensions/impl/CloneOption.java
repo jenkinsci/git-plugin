@@ -168,6 +168,7 @@ public class CloneOption extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated // Deprecate because the super implementation is deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {

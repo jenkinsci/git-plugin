@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -41,12 +42,16 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
+import hudson.security.Permission;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.LogTaskListener;
+import hudson.util.ReflectionUtils;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
@@ -60,9 +65,11 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
+import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -70,6 +77,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
@@ -77,12 +85,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -141,6 +154,46 @@ public class GitSCMTest extends AbstractGitTestCase {
         CredentialsScope scope = CredentialsScope.GLOBAL;
         String id = "username-" + username + "-password-" + password;
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Test
+    public void manageShouldAccessGlobalConfig() {
+        final String USER = "user";
+        final String MANAGER = "manager";
+        Permission jenkinsManage;
+        try {
+            jenkinsManage = getJenkinsManage();
+        } catch (Exception e) {
+            Assume.assumeTrue("Jenkins baseline is too old for this test (requires Jenkins.MANAGE)", false);
+            return;
+        }
+        rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
+        rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
+                                                   // Read access
+                                                   .grant(Jenkins.READ).everywhere().to(USER)
+
+                                                   // Read and Manage
+                                                   .grant(Jenkins.READ).everywhere().to(MANAGER)
+                                                   .grant(jenkinsManage).everywhere().to(MANAGER)
+        );
+
+        try (ACLContext c = ACL.as(User.getById(USER, true))) {
+            Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
+            assertThat("Global configuration should not be accessible to READ users", descriptors, is(empty()));
+        }
+        try (ACLContext c = ACL.as(User.getById(MANAGER, true))) {
+            Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
+            Optional<Descriptor> found =
+                    descriptors.stream().filter(descriptor -> descriptor instanceof GitSCM.DescriptorImpl).findFirst();
+            assertTrue("Global configuration should be accessible to MANAGE users", found.isPresent());
+        }
+    }
+
+    // TODO: remove when Jenkins core baseline is 2.222+
+    private Permission getJenkinsManage() throws NoSuchMethodException, IllegalAccessException,
+                                                 InvocationTargetException {
+        // Jenkins.MANAGE is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
+        return (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
     }
 
     @Test
@@ -328,11 +381,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition",
-                build.getLog().contains("Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     /**
@@ -352,11 +405,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
         FreeStyleBuild build = build(project, Result.FAILURE);
         // Before JENKINS-38608 fix
-        assertFalse("Build log reports 'Null value not allowed'",
-                build.getLog().contains("Null value not allowed as an environment variable: GIT_URL_2"));
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
         // After JENKINS-38608 fix
-        assertTrue("Build log did not report empty string in job definition for URL 2",
-                build.getLog().contains("Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
+        assertThat("Build log did not report empty string in job definition for URL 2",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -802,14 +855,14 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.branch(branch1);
         git.checkout(branch1);
         p.poll(listener).hasChanges();
-        assertTrue(firstBuild.getLog().contains("Cleaning"));
+        assertThat(firstBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
         assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
         assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
         git.checkout(branch1);
         final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
         p.poll(listener).hasChanges();
-        assertTrue(secondBuild.getLog().contains("Cleaning"));
+        assertThat(secondBuild.getLog(175), hasItem("Cleaning workspace"));
         assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
         assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
 
@@ -1119,19 +1172,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-        rule.assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        rule.waitForMessage(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
     @Issue("HUDSON-7411")
@@ -2136,11 +2189,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile2, janeDoe, "Commit number 2");
 
         // create lock file to simulate lock collision
-        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        File lock = new File(build1.getWorkspace().getRemote(), ".git/index.lock");
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
-            rule.assertLogContains("java.io.IOException: Could not checkout", build2);
+            rule.waitForMessage("java.io.IOException: Could not checkout", build2);
         } finally {
             lock.delete();
         }
@@ -2356,7 +2409,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, build);
 
         assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
@@ -2379,6 +2432,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             this.m_forwardingAction = new ParametersAction(params);
         }
 
+        @Deprecated
         public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
             this.m_forwardingAction.buildEnvVars(ab, ev);
         }
@@ -2422,7 +2476,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 		project.setScm(scm);
 		commit("commitFile1", johnDoe, "Commit number 1");
 
-		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
 		first_build.getWorkspace().deleteContents();
@@ -2462,7 +2516,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // SECURITY-170 - have to use ParametersDefinitionProperty
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
-        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
         Launcher launcher = workspace.createLauncher(listener);
@@ -2607,6 +2661,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * in the build data, but no branch name.
      */
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testNoNullPointerExceptionWithNullBranch() throws Exception {
         ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2642,6 +2697,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2683,6 +2739,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNull() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2724,6 +2781,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2826,7 +2884,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final URL notifyUrl = new URL(notificationPath);
         String notifyContent = null;
         try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = IOUtils.toString(is);
+            notifyContent = IOUtils.toString(is, "UTF-8");
         }
         assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 

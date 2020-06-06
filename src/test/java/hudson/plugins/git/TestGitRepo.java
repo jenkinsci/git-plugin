@@ -38,11 +38,11 @@ public class TestGitRepo {
 		EnvVars envVars = new EnvVars();
 		
 		gitDir = tmpDir;
-		User john = User.get(johnDoe.getName(), true);
+		User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
 		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
 		john.addProperty(johnsMailerProperty);
 		
-		User jane = User.get(janeDoe.getName(), true);
+		User jane = User.getOrCreateByIdOrFullName(janeDoe.getName());
 		UserProperty janesMailerProperty = new Mailer.UserProperty(janeDoe.getEmailAddress());
 		jane.addProperty(janesMailerProperty);
 

@@ -41,6 +41,7 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
+    @Deprecated
     public void basicTestIsExcluded() {
         AbstractGitSCMSource abstractGitSCMSource = mock(AbstractGitSCMSource.class);
 
@@ -78,26 +79,31 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
+    @Deprecated
     public void testGetIncludes() {
         assertEquals(expectedIncludes, gitSCMSource.getIncludes());
     }
 
     @Test
+    @Deprecated
     public void testGetExcludes() {
         assertEquals(expectedExcludes, gitSCMSource.getExcludes());
     }
 
     @Test
+    @Deprecated
     public void testGetRemoteName() {
         assertEquals(expectedRemote, gitSCMSource.getRemoteName());
     }
 
     @Test
+    @Deprecated
     public void testGetRefSpecs() {
         assertEquals(expectedRefSpecs, gitSCMSource.getRefSpecs());
     }
 
     @Test
+    @Deprecated
     public void testIsExcluded() {
         assertFalse(gitSCMSource.isExcluded("master"));
         assertFalse(gitSCMSource.isExcluded("remote/master"));
@@ -122,6 +128,7 @@ public class AbstractGitSCMSourceTrivialTest {
     }
 
     @Test
+    @Deprecated
     public void testGetRemoteConfigs() {
         List<UserRemoteConfig> remoteConfigs = gitSCMSource.getRemoteConfigs();
         assertEquals(expectedRemote, remoteConfigs.get(0).getName());
@@ -167,14 +174,20 @@ public class AbstractGitSCMSourceTrivialTest {
             return expectedRemote;
         }
 
+        @Override
+        @Deprecated
         public String getIncludes() {
             return expectedIncludes;
         }
 
+        @Override
+        @Deprecated
         public String getExcludes() {
             return expectedExcludes;
         }
 
+        @Override
+        @Deprecated
         public List<RefSpec> getRefSpecs() {
             return expectedRefSpecs;
         }

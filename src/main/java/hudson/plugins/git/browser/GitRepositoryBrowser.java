@@ -1,12 +1,14 @@
 package hudson.plugins.git.browser;
 
 import hudson.EnvVars;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
 
+import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -115,6 +117,26 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
+    }
+
+    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
+        if (cleanUrl == null) {
+            return true;
+        }
+        if (project == null || !project.hasPermission(Item.CONFIGURE)) {
+            return true;
+        }
+        if (cleanUrl.contains("$")) {
+            // set by variable, can't validate
+            return true;
+        }
+        return false;
+    }
+
+    protected static boolean checkURIFormat(String url) throws URISyntaxException {
+        String[] schemes = {"http", "https"};
+        UrlValidator urlValidator = new UrlValidator(schemes);
+        return urlValidator.isValid(url);
     }
 
     private static final long serialVersionUID = 1L;

@@ -16,8 +16,7 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -67,7 +66,7 @@ public class GitRepositoryBrowserTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        browser = new GitRepositoryBrowserImpl();
+        browser = new GitRepositoryBrowserImpl(null);
         changeSet = GitChangeSetUtil.genChangeSet(sha1, gitImplementation, useAuthorName);
         paths = changeSet.getPaths();
     }
@@ -121,10 +120,16 @@ public class GitRepositoryBrowserTest {
 
     public class GitRepositoryBrowserImpl extends GitRepositoryBrowser {
 
+        protected GitRepositoryBrowserImpl(String repourl) {
+            super(repourl);
+        }
+
+        @Override
         public URL getDiffLink(GitChangeSet.Path path) throws IOException {
             return getURL(path, true);
         }
 
+        @Override
         public URL getFileLink(GitChangeSet.Path path) throws IOException {
             return getURL(path, false);
         }

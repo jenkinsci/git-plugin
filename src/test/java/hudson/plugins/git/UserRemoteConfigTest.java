@@ -12,8 +12,8 @@ import hudson.util.ListBoxModel;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -48,8 +48,9 @@ public class UserRemoteConfigTest {
         assertCredentials(null, null, "admin", "", "mycreds");
         assertCredentials(null, "othercreds", "admin", "", "mycreds", "othercreds");
     }
-    
-    private void assertCredentials(@CheckForNull final Item project, @CheckForNull final String currentCredentialsId, @Nonnull String user, @Nonnull String... expectedCredentialsIds) {
+
+    @Deprecated
+    private void assertCredentials(@CheckForNull final Item project, @CheckForNull final String currentCredentialsId, @NonNull String user, @NonNull String... expectedCredentialsIds) {
         final Set<String> actual = new TreeSet<>(); // for purposes of this test we do not care about order (though StandardListBoxModel does define some)
         ACL.impersonate(User.get(user).impersonate(), () -> {
             for (ListBoxModel.Option option : r.jenkins.getDescriptorByType(UserRemoteConfig.DescriptorImpl.class).

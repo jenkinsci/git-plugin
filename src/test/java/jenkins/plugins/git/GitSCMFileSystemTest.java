@@ -65,7 +65,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -110,6 +110,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSource_Smokes() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -134,6 +135,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSourceRevision() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -154,6 +156,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void ofSourceRevision_GitBranchSCMHead() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -195,6 +198,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void lastModified_Smokes() throws Exception {
         Assume.assumeTrue("Windows file system last modify dates not trustworthy", !isWindows());
         sampleRepo.init();
@@ -217,6 +221,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void directoryTraversal() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -252,6 +257,7 @@ public class GitSCMFileSystemTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void mixedContent() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -352,6 +358,41 @@ public class GitSCMFileSystemTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertTrue(gitPlugin260FS.changesSince(rev261, out));
         assertThat(out.toString(), is(""));
+    }
+
+    @Test
+    public void create_SCMFileSystem_from_tag() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.mkdirs("dir/subdir");
+        sampleRepo.git("mv", "file", "dir/subdir/file");
+        sampleRepo.write("dir/subdir/file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "v1.0");
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        assertThat(fs.getRoot(), notNullValue());
+        Iterable<SCMFile> children = fs.getRoot().children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile dir = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(dir.getName(), is("dir"));
+        assertThat(dir.getType(), is(SCMFile.Type.DIRECTORY));
+        children = dir.children();
+        iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile subdir = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(subdir.getName(), is("subdir"));
+        assertThat(subdir.getType(), is(SCMFile.Type.DIRECTORY));
+        children = subdir.children();
+        iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
     }
 
     @Issue("JENKINS-52964")

@@ -54,7 +54,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class GitSCMSourceTraitsTest {
     /**
@@ -135,6 +135,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Includes tests of deprecated methods getIncludes, getExcludes, & getRawRefSpecs
     public void pimpped_out() throws Exception {
         GitSCMSource instance = load();
         assertThat(instance.getId(), is("fd2380f8-d34f-48d5-8006-c34542bc4a89"));
@@ -297,6 +298,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults1() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "*", "", false);
         assertThat(instance.getTraits(), contains(
@@ -310,6 +312,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults2() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "*", "", true);
         assertThat(instance.getTraits(), containsInAnyOrder(
@@ -320,6 +323,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults3() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "foo/*", "", false);
         assertThat(instance.getTraits(), contains(
@@ -335,6 +339,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults4() throws Exception {
         GitSCMSource instance = new GitSCMSource("id", "git://git.test/example.git", null, "", "foo/*", false);
         assertThat(instance.getTraits(), contains(
@@ -350,6 +355,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults5() throws Exception {
         GitSCMSource instance =
                 new GitSCMSource("id", "git://git.test/example.git", null, "upstream", null, "*", "", false);
@@ -364,6 +370,7 @@ public class GitSCMSourceTraitsTest {
     }
 
     @Test
+    @Deprecated // Testing deprecated GitSCMSource constructor
     public void given__legacyCode__when__constructor__then__traitsContainLegacyDefaults6() throws Exception {
         GitSCMSource instance =
                 new GitSCMSource("id", "git://git.test/example.git", null, null, "refs/pulls/*:refs/upstream/*", "*",

@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -112,7 +113,7 @@ public class AncestryBuildChooser extends DefaultBuildChooser {
         }
         
         @Override
-        public boolean apply(RevCommit rev) {
+        public boolean apply(@NonNull RevCommit rev) {
             return LocalDateTime.ofInstant(rev.getCommitterIdent().getWhen().toInstant(), ZoneId.systemDefault()).isAfter(this.oldestAllowableCommitDate);
         }
         

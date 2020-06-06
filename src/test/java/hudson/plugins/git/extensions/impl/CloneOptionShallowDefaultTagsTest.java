@@ -52,7 +52,7 @@ public class CloneOptionShallowDefaultTagsTest extends GitSCMExtensionTest {
     }
 
     private Set<String> tagsInProjectWorkspaceWithName(String tagPattern) throws IOException, InterruptedException {
-        GitClient git = Git.with(listener, null).in(project.getWorkspace()).getClient();
+        GitClient git = Git.with(listener, null).in(project.getSomeWorkspace()).getClient();
         return git.getTagNames(tagPattern);
     }
 }

@@ -676,7 +676,7 @@ public class GitPublisherTest extends AbstractGitProject {
         String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
         assumeThat(envValue, notNullValue());
-        assumeThat(envValue, not(isEmptyString()));
+        assumeThat(envValue, is(not(emptyString())));
 
         FreeStyleProject project = setupSimpleProject("master");
 
