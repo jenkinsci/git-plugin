@@ -381,11 +381,10 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build = build(projectWithMaster, Result.FAILURE);
 
         FilePath childFile = returnFile(build);
-        if (childFile != null) {
-            // assert that no data is lost by avoidance of second fetch
-            assertThat(childFile.readToString(), not(containsString("master")));
-            assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
-        }
+        assertNotNull(childFile);
+        // assert that no data is lost by avoidance of second fetch
+        assertThat(childFile.readToString(), not(containsString("master")));
+        assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
         assertRedundantFetchIsTrue(build, refSpec);
 
         assertThat("FAILURE", is((build.getResult().toString())));
