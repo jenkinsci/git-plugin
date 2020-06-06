@@ -395,7 +395,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         String wideRefSpec = "+refs/heads/*:refs/remotes/origin/*";
         assertRedundantFetchIsTrue(build, wideRefSpec);
 
-        assertThat(build.getResult(), is(Result.SUCCESS);
+        assertThat(build.getResult(), is(Result.SUCCESS));
     }
 
     /**
@@ -435,7 +435,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
         assertRedundantFetchIsTrue(build, refSpec);
 
-        assertThat(build.getResult(), is(Result.SUCCESS);
+        assertThat(build.getResult(), is(Result.SUCCESS));
     }
 
     // Checks if the second fetch is being avoided
