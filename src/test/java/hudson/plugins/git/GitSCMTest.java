@@ -347,7 +347,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         String wideRefSpec = "+refs/heads/*:refs/remotes/origin/*";
         assertRedundantFetchIsTrue(build, wideRefSpec);
 
-        assertThat("FAILURE", is(not(build.getResult().toString())));
+        assertThat(build.getResult(), is(Result.SUCCESS);
     }
 
     /**
