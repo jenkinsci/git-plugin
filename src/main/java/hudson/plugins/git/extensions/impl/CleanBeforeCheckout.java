@@ -1,6 +1,7 @@
 package hudson.plugins.git.extensions.impl;
 
 import hudson.Extension;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -9,6 +10,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.io.IOException;
 import java.util.Objects;
 
+import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -41,6 +43,17 @@ public class CleanBeforeCheckout extends GitSCMExtension {
     @Override
     @Deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
+        listener.getLogger().println("Cleaning workspace");
+        git.clean(deleteUntrackedNestedRepositories);
+        // TODO: revisit how to hand off to SubmoduleOption
+        for (GitSCMExtension ext : scm.getExtensions()) {
+            ext.onClean(scm, git);
+        }
+    }
+
+    @Override
+    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
+                                     CloneCommand cmd) throws IOException, InterruptedException {
         listener.getLogger().println("Cleaning workspace");
         git.clean(deleteUntrackedNestedRepositories);
         // TODO: revisit how to hand off to SubmoduleOption
