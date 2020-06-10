@@ -1129,11 +1129,9 @@ https://issues.jenkins-ci.org[Jenkins issue tracker].
 Refer to link:CONTRIBUTING.adoc#contributing-to-the-git-plugin[contributing to the plugin] for contribution guidelines.
 Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin development priorities] for the prioritized list of development topics.
 
-[#Remove Git Plugin BuildsByBranch BuildData Script]
 == Remove Git Plugin BuildsByBranch BuildData Script
 
-This script is used to remove the static list of BuildsByBranch that is
-uselessly stored for each build by the Git Plugin.
+This script is used to remove the static list of BuildsByBranch that is uselessly stored for each build by the Git Plugin.
 
 * This is a workaround for the problem described here:
 https://issues.jenkins-ci.org/browse/JENKINS-19022
@@ -1143,7 +1141,7 @@ https://issues.jenkins-ci.org/browse/JENKINS-19022
 * Updated to handle Pipeline job types (just call getJobNames() to find
 everything)
 
-[source,syntaxhighlighter-pre]
+[source,groovy]
 ----
 import hudson.matrix.*
 import hudson.model.*
@@ -1213,4 +1211,3 @@ for (job in allItems) {
   }
 }
 ----
-
