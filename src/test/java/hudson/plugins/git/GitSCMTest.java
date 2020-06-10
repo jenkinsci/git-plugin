@@ -443,9 +443,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         List<String> values = build.getLog(Integer.MAX_VALUE);
         int countFetches = 0;
         String argRefSpec = " " + refSpec;
-        String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
+        //String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
         for (String value : values) {
-            if(value.equals(fetchArg)){
+            if(value.contains("git fetch")){
                 countFetches++;
             }
         }
