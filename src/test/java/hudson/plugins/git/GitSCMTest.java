@@ -83,6 +83,8 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.eclipse.jgit.transport.RemoteConfig;
 import static org.hamcrest.MatcherAssert.*;
@@ -441,19 +443,13 @@ public class GitSCMTest extends AbstractGitTestCase {
     // Checks if the second fetch is being avoided
     private void assertRedundantFetchIsTrue(FreeStyleBuild build, String refSpec) throws IOException {
         List<String> values = build.getLog(Integer.MAX_VALUE);
-        int countFetches = 0;
-        String argRefSpec = " " + refSpec;
+
         //String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
-        for (String value : values) {
-            if(value.contains("git fetch")){
-                countFetches++;
-            }
-        }
-        // Before the flag check, countFetches was "2" because git fetch was called twice
-        assertThat(countFetches, is(not(2)));
+        Pattern fetchPattern = Pattern.compile(".* git.* fetch .*");
+        List<String> fetchCommands = values.stream().filter(fetchPattern.asPredicate()).collect(Collectors.toList());
 
         // After the fix, git fetch is called exactly once
-        assertThat(countFetches, is(1));
+        assertThat("Fetch commands were: " + fetchCommands, fetchCommands, hasSize(1));
     }
 
     // Returns the file FETCH_HEAD found in .git
@@ -986,15 +982,15 @@ public class GitSCMTest extends AbstractGitTestCase {
         git.checkout(branch1);
         p.poll(listener).hasChanges();
         assertThat(firstBuild.getLog(175), hasItem("Cleaning workspace"));
-        assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
-        assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
-        assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
+        assertThat(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning"), is(true)); //clean should be after clone
+        assertThat(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out"), is(true)); //clean before checkout
+        assertThat(firstBuild.getWorkspace().child(commitFile1).exists(), is(true));
         git.checkout(branch1);
         final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
         p.poll(listener).hasChanges();
         assertThat(secondBuild.getLog(175), hasItem("Cleaning workspace"));
-        assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
-        assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
+        assertThat(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes"), is(true));
+        assertThat(secondBuild.getWorkspace().child(commitFile2).exists(), is(true));
 
         
     }
