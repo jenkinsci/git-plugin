@@ -272,7 +272,7 @@
         </exclusion>
       </exclusions>
       <optional>true</optional>
-      <version>4.0.3</version>
+      <version>4.0.4</version>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
