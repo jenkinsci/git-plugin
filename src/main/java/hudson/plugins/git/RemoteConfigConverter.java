@@ -160,8 +160,10 @@ public class RemoteConfigConverter implements Converter {
      */
     public RemoteConfigConverter(XStream xStream) {
         mapper = xStream.getMapper();
-        converter = new SerializableConverter(mapper,
+        @SuppressWarnings("deprecation")
+        SerializableConverter tempConvertor = new SerializableConverter(mapper,
                 xStream.getReflectionProvider());
+        converter = tempConvertor;
     }
 
     public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
@@ -224,6 +226,7 @@ public class RemoteConfigConverter implements Converter {
             }
         };
         try {
+            @SuppressWarnings("deprecation")
             CustomObjectInputStream objectInput = CustomObjectInputStream
                     .getInstance(context, callback);
             proxy.readExternal(objectInput);

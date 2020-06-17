@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SparseCheckoutPaths extends GitSCMExtension {
-    private List<SparseCheckoutPath> sparseCheckoutPaths;
+    private final List<SparseCheckoutPath> sparseCheckoutPaths;
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
@@ -36,7 +36,6 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (! sparseCheckoutPaths.isEmpty()) {
             listener.getLogger().println("Using no checkout clone with sparse checkout.");
-            cmd.noCheckout();
         }
     }
 

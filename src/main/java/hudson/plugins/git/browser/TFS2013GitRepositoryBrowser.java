@@ -18,7 +18,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -85,13 +85,13 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
     public static class TFS2013GitRepositoryBrowserDescriptor extends Descriptor<RepositoryBrowser<?>> {
 
         private static final String REPOSITORY_BROWSER_LABEL = "Microsoft Team Foundation Server/Visual Studio Team Services";
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return REPOSITORY_BROWSER_LABEL;
         }
 
         @Override
-        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+        public TFS2013GitRepositoryBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             assert req != null; //see inherited javadoc
             try {
                 req.getSubmittedForm();
@@ -139,10 +139,10 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 @Override
                 protected FormValidation check() throws IOException, ServletException {
                     try {
-                        if (findText(open(new URL(finalValue)), REPOSITORY_BROWSER_LABEL)) {
+                        if (findText(open(new URL(finalValue)), "icrosoft")) {
                             return FormValidation.ok();
                         } else {
-                            return FormValidation.error("This is a valid URL but it doesn't look like Microsoft TFS 2013");
+                            return FormValidation.error("This is a valid URL but it doesn't look like a Microsoft server");
                         }
                     } catch (IOException e) {
                         return handleIOException(finalValue, e);

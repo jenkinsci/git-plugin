@@ -42,7 +42,7 @@ import org.eclipse.jgit.lib.Repository;
 import static org.hamcrest.Matchers.hasItems;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Assert;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Run a command line git command, return output as array of String, optionally
@@ -66,7 +66,8 @@ public class CliGitCommand {
         launcher = new Launcher.LocalLauncher(listener);
         env = new EnvVars();
         if (client != null) {
-            try (Repository repo = client.getRepository()) {
+            try (@SuppressWarnings("deprecation") // Local repository reference
+                 Repository repo = client.getRepository()) {
                 dir = repo.getWorkTree();
             }
         } else {

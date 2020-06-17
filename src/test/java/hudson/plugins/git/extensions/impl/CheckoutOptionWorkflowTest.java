@@ -27,6 +27,6 @@ public class CheckoutOptionWorkflowTest {
                 + "  )"
                 + "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.assertLogContains("# timeout=1234", b);
+        r.waitForMessage("# timeout=1234", b);
     }
 }

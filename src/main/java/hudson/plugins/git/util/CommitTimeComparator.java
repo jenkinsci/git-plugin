@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.plugins.git.Revision;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -35,6 +36,7 @@ import java.util.Comparator;
  * 
  * @author Kohsuke Kawaguchi
  */
+@SuppressFBWarnings(value="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE", justification="Known non-serializable field critical part of class")
 public class CommitTimeComparator implements Comparator<Revision> {
     private final RevWalk walk;
 

@@ -30,8 +30,10 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.*;
 
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
