@@ -963,36 +963,36 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    private int findLogLineStartsWith(List<String> buildLog, String initialString) {
+        int logLine = 0;
+        for (String logString : buildLog) {
+            if (logString.startsWith(initialString)) {
+                return logLine;
+            }
+            logLine++;
+        }
+        return -1;
+    }
+
     @Test
     public void testCleanBeforeCheckout() throws Exception {
     	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
         ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
-        final String commitFile1 = "commitFile1";
-        final String commitFile2 = "commitFile2";
-        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
-        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
-        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
-        final String branch1 = "Branch1";
-        final String branch2 = "Branch2";
-        List<BranchSpec> branches = new ArrayList<>();
-        branches.add(new BranchSpec("master"));
-        branches.add(new BranchSpec(branch1));
-        branches.add(new BranchSpec(branch2));
-        git.branch(branch1);
-        git.checkout(branch1);
-        p.poll(listener).hasChanges();
-        assertThat(firstBuild.getLog(175), hasItem("Cleaning workspace"));
-        assertThat(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning"), is(true)); //clean should be after clone
-        assertThat(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out"), is(true)); //clean before checkout
-        assertThat(firstBuild.getWorkspace().child(commitFile1).exists(), is(true));
-        git.checkout(branch1);
-        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
-        p.poll(listener).hasChanges();
-        assertThat(secondBuild.getLog(175), hasItem("Cleaning workspace"));
-        assertThat(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes"), is(true));
-        assertThat(secondBuild.getWorkspace().child(commitFile2).exists(), is(true));
 
-        
+        /* First build should not clean, since initial clone is always clean */
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
+        assertThat(firstBuild.getLog(50), not(hasItem("Cleaning workspace")));
+        /* Second build should clean, since first build might have modified the workspace */
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
+        List<String> secondLog = secondBuild.getLog(50);
+        assertThat(secondLog, hasItem("Cleaning workspace"));
+        int cleaningLogLine = findLogLineStartsWith(secondLog, "Cleaning workspace");
+        int fetchingLogLine = findLogLineStartsWith(secondLog, "Fetching upstream changes from ");
+        assertThat("Cleaning should happen before fetch", cleaningLogLine, is(lessThan(fetchingLogLine)));
     }
 
     @Issue("JENKINS-8342")
