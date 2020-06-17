@@ -51,17 +51,6 @@ public class CleanBeforeCheckout extends GitSCMExtension {
         }
     }
 
-    @Override
-    public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
-                                     CloneCommand cmd) throws IOException, InterruptedException {
-        listener.getLogger().println("Cleaning workspace");
-        git.clean(deleteUntrackedNestedRepositories);
-        // TODO: revisit how to hand off to SubmoduleOption
-        for (GitSCMExtension ext : scm.getExtensions()) {
-            ext.onClean(scm, git);
-        }
-    }
-
     /**
      * {@inheritDoc}
      */
