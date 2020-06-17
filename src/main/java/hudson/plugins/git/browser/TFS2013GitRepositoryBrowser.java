@@ -139,10 +139,10 @@ public class TFS2013GitRepositoryBrowser extends GitRepositoryBrowser {
                 @Override
                 protected FormValidation check() throws IOException, ServletException {
                     try {
-                        if (findText(open(new URL(finalValue)), REPOSITORY_BROWSER_LABEL)) {
+                        if (findText(open(new URL(finalValue)), "icrosoft")) {
                             return FormValidation.ok();
                         } else {
-                            return FormValidation.error("This is a valid URL but it doesn't look like Microsoft TFS 2013");
+                            return FormValidation.error("This is a valid URL but it doesn't look like a Microsoft server");
                         }
                     } catch (IOException e) {
                         return handleIOException(finalValue, e);
