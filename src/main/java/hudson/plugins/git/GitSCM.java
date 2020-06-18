@@ -835,7 +835,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
-
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
             c = ext.decorate(this,c);
@@ -1483,6 +1482,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean useExistingAccountWithSameEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
+        private boolean enablePerformanceImprovement = true; // By default, performance is enabled in git plugin
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1605,6 +1605,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public void setUseExistingAccountWithSameEmail(boolean useExistingAccountWithSameEmail) {
             this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
         }
+
+        public boolean isPerformanceEnabled() { return enablePerformanceImprovement; }
 
         /**
          * Old configuration of git executable - exposed so that we can
