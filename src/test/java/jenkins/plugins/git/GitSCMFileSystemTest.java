@@ -207,7 +207,10 @@ public class GitSCMFileSystemTest {
         SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        final long fileSystemAllowedOffset = 1500;
+        long fileSystemAllowedOffset = 1500;
+        if ("OpenBSD".equals(System.getProperty("os.name"))) {
+            fileSystemAllowedOffset = 2 * fileSystemAllowedOffset;
+        }
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
         long currentTime = System.currentTimeMillis();
         long lastModified = fs.lastModified();
