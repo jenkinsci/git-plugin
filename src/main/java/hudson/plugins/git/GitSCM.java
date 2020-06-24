@@ -31,14 +31,7 @@ import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.extensions.impl.AuthorInChangelog;
-import hudson.plugins.git.extensions.impl.BuildChooserSetting;
-import hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly;
-import hudson.plugins.git.extensions.impl.ChangelogToBranch;
-import hudson.plugins.git.extensions.impl.PathRestriction;
-import hudson.plugins.git.extensions.impl.LocalBranch;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.*;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.*;
@@ -110,7 +103,6 @@ import hudson.plugins.git.browser.GitLab;
 import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
 import hudson.Util;
-import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
 import hudson.util.ReflectionUtils;
 import java.util.Map.Entry;
@@ -1111,7 +1103,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
-        boolean redundantFetchCheck = false;
+        boolean removeRedundantFetch = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
@@ -1125,13 +1117,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             log.println("Cloning the remote Git repository");
 
             RemoteConfig rc = repos.get(0);
-            redundantFetchCheck = true;
             try {
                 CloneCommand cmd = git.clone_().url(rc.getURIs().get(0).toPrivateString()).repositoryName(rc.getName());
                 for (GitSCMExtension ext : extensions) {
                     ext.decorateCloneCommand(this, build, git, listener, cmd);
                 }
                 cmd.execute();
+                // determine if second fetch is required
+                CloneOption option = extensions.get(CloneOption.class);
+                removeRedundantFetch = determineRedundantFetch(option, rc);
             } catch (GitException ex) {
                 ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
                 throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
@@ -1139,7 +1133,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            if (remoteRepository.equals(repos.get(0)) && redundantFetchCheck){
+            if (remoteRepository.equals(repos.get(0)) && removeRedundantFetch){
+                log.println("Avoid second fetch");
                 continue;
             }
             try {
@@ -1151,6 +1146,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Error fetching remote repo '" + remoteRepository.getName() + "'");
             }
         }
+    }
+
+    private boolean determineRedundantFetch(CloneOption option, RemoteConfig rc) {
+        List<RefSpec> initialFetchRefSpecs = rc.getFetchRefSpecs();
+        boolean isDefaultRefspec = true; // default refspec is any refspec with "refs/heads/" mapping
+        boolean removeSecondFetch = true;
+        if (initialFetchRefSpecs != null) {
+            for (RefSpec ref:initialFetchRefSpecs) {
+                if (!ref.toString().contains("refs/heads")) {
+                    isDefaultRefspec = false; // if refspec is not of default type, preserve second fetch
+                }
+            }
+            if (option == null) {
+                removeSecondFetch = isDefaultRefspec;
+            } else {
+                if (!option.isHonorRefspec()) {
+                    removeSecondFetch = isDefaultRefspec;
+                } else {
+                    removeSecondFetch = true; // avoid second fetch call if honor refspec is enabled
+                }
+            }
+        }
+        // if initial fetch refspec contains "refs/heads/*" (default refspec), ignore the second fetch call
+        return removeSecondFetch;
     }
 
     @Override
