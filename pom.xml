@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.2</version>
+    <version>4.3</version>
     <relativePath />
   </parent>
 
@@ -25,7 +25,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.3.0</revision>
+    <revision>4.3.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
@@ -55,12 +55,12 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.4</version>
         <dependencies>
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.0.4</version>
+            <version>4.0.5</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -166,7 +166,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.4</version>
+      <version>3.4.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -272,7 +272,7 @@
         </exclusion>
       </exclusions>
       <optional>true</optional>
-      <version>4.0.4</version>
+      <version>4.0.5</version>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
@@ -331,7 +331,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.204.x</artifactId>
-        <version>10</version>
+        <version>11</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
