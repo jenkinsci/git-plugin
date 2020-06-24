@@ -1161,7 +1161,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         boolean isDefaultRefspec = true; // default refspec is any refspec with "refs/heads/" mapping
         boolean removeSecondFetch = true;
         if (initialFetchRefSpecs != null) {
-            for (RefSpec ref:initialFetchRefSpecs) {
+            for (RefSpec ref : initialFetchRefSpecs) {
                 if (!ref.toString().contains("refs/heads")) {
                     isDefaultRefspec = false; // if refspec is not of default type, preserve second fetch
                 }
