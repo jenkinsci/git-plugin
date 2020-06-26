@@ -166,6 +166,11 @@ Show the entire commit summary in changes::
   With the release of git plugin 4.0, the default was changed to show the complete change summary.
   Administrators that want to restore the old behavior may disable this setting.
 
+[[hide-credentials]]
+Hide credential usage in job output::
+
+  If checked the output will not show the credential being used to clone a repository
+
 [#repository-browser]
 === Repository Browser
 

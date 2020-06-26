@@ -837,8 +837,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @NonNull
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
-
-        new DescriptorImpl().isHideCredentials()
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 

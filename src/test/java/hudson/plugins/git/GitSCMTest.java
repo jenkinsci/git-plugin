@@ -1456,6 +1456,37 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    public void testHideCredentials() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        // setup global config
+        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
+        project.setScm(new GitSCM(remoteConfigs,
+                Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
+
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertFalse("Wrong initial value for hide credentials", scm.isHideCredentials());
+        descriptor.setHideCredentials(true);
+        assertTrue("Hide credentials not set", scm.isHideCredentials());
+
+
+        descriptor.setHideCredentials(false);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS);
+        List<String> logLines = project.getLastBuild().getLog(100);
+        assertTrue(logLines.get(3).contains("using credential"));
+
+        descriptor.setHideCredentials(true);
+        build(project, Result.SUCCESS);
+        logLines = project.getLastBuild().getLog(100);
+        assertFalse(logLines.get(3).contains("using credential"));
+
+    }
+
+
+    @Test
     public void testEmailCommitter() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -2931,5 +2962,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
         return java.io.File.pathSeparatorChar==';';
+    }
+
+    private StandardCredentials createCredential(CredentialsScope scope, String id) {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
     }
 }
