@@ -934,12 +934,12 @@ image:/images/git-custom-user-name-e-mail-address.png[Custom user name/e-mail ad
 user.name::
 
   Defines the user name value which git will assign to new commits made in the workspace.
-  If given, `git config user.name` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_NAME` and `GIT_AUTHOR_NAME` are set for builds and override values from the global settings.
 
 user.email::
 
   Defines the user email value which git will assign to new commits made in the workspace.
-  If given, `git config user.email` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_EMAIL` and `GIT_AUTHOR_EMAIL` are set for builds and override values from the global settings.
 
 [#deprecated-extensions]
 === Deprecated Extensions
