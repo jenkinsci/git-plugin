@@ -438,6 +438,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isUseExistingAccountWithSameEmail());
     }
 
+    public boolean isHideCredentials() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return gitDescriptor != null && gitDescriptor.isHideCredentials();
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -833,6 +838,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @NonNull
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
+        new DescriptorImpl().isHideCredentials()
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
@@ -860,12 +866,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
-                    listener.getLogger().println(format("using credential %s", credentials.getId()));
+                    if(!isHideCredentials()) {
+                        listener.getLogger().println(format("using credential %s", credentials.getId()));
+                    }
                     if (project != null && project.getLastBuild() != null) {
                         CredentialsProvider.track(project.getLastBuild(), credentials);
                     }
                 } else {
-                    listener.getLogger().println(format("Warning: CredentialId \"%s\" could not be found.", ucCredentialsId));
+                    if(!isHideCredentials()) {
+                        listener.getLogger().println(format("Warning: CredentialId \"%s\" could not be found.", ucCredentialsId));
+                    }
                 }
             }
         }
@@ -1487,6 +1497,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean useExistingAccountWithSameEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
+        private boolean hideCredentials;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1512,6 +1523,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public boolean isShowEntireCommitSummaryInChanges() {
             return showEntireCommitSummaryInChanges;
+        }
+
+        public boolean isHideCredentials() { return hideCredentials; }
+
+        public void setHideCredentials(boolean hideCredentials) {
+            this.hideCredentials = hideCredentials;
         }
 
         public void setShowEntireCommitSummaryInChanges(boolean showEntireCommitSummaryInChanges) {
