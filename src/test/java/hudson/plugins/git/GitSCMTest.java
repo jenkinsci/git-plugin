@@ -364,7 +364,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
 
-        assertRedundantFetchIsTrue(build, "+refs/heads/*:refs/remotes/origin/*");
+        assertRedundantFetchIsSkipped(build, "+refs/heads/*:refs/remotes/origin/*");
     }
 
     /**
@@ -407,7 +407,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         }
 
         String wideRefSpec = "+refs/heads/*:refs/remotes/origin/*";
-        assertRedundantFetchIsTrue(build, wideRefSpec);
+        assertRedundantFetchIsSkipped(build, wideRefSpec);
 
         assertThat(build.getResult(), is(Result.SUCCESS));
     }
@@ -447,13 +447,87 @@ public class GitSCMTest extends AbstractGitTestCase {
         // assert that no data is lost by avoidance of second fetch
         assertThat(childFile.readToString(), not(containsString("master")));
         assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
-        assertRedundantFetchIsTrue(build, refSpec);
+        assertRedundantFetchIsSkipped(build, refSpec);
 
         assertThat(build.getResult(), is(Result.FAILURE));
     }
 
+    @Test
+    @Issue("JENKINS-49757")
+    public void testAvoidRedundantFetchWithNullRefspec() throws Exception {
+        String nullRefspec = null;
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", nullRefspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsSkipped(build, "+refs/heads/*:refs/remotes/origin/*");
+    }
+
+    /*
+     * When initial clone does not honor the refspec and a custom refspec is used
+     * that is not part of the default refspec, then the second fetch is not
+     * redundant and must not be fetched.
+     *
+     * This example uses the format to reference GitHub pull request 553. Other
+     * formats would apply as well, but the case is illustrated well enough by
+     * using the GitHub pull request as an example of this type of problem.
+     */
+    @Test
+    @Issue("JENKINS-49757")
+    public void testRetainRedundantFetch() throws Exception {
+        String refspec = "+refs/heads/*:refs/remotes/origin/* +refs/pull/553/head:refs/remotes/origin/pull/553";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        /* Create a ref for the fake pull in the source repository */
+        String[] expectedResult = {""};
+        CliGitCommand gitCmd = new CliGitCommand(testRepo.git, "update-ref", "refs/pull/553/head", "HEAD");
+        assertThat(gitCmd.run(), is(expectedResult));
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsUsed(build, refspec);
+    }
+
     // Checks if the second fetch is being avoided
-    private void assertRedundantFetchIsTrue(FreeStyleBuild build, String refSpec) throws IOException {
+    private void assertRedundantFetchIsSkipped(FreeStyleBuild build, String refSpec) throws IOException {
+        assertRedundantFetchCount(build, refSpec, 1);
+    }
+
+    // Checks if the second fetch is being called
+    private void assertRedundantFetchIsUsed(FreeStyleBuild build, String refSpec) throws IOException {
+        assertRedundantFetchCount(build, refSpec, 2);
+    }
+
+    // Checks if the second fetch is being avoided
+    private void assertRedundantFetchCount(FreeStyleBuild build, String refSpec, int expectedFetchCount) throws IOException {
         List<String> values = build.getLog(Integer.MAX_VALUE);
 
         //String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
@@ -461,7 +535,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         List<String> fetchCommands = values.stream().filter(fetchPattern.asPredicate()).collect(Collectors.toList());
 
         // After the fix, git fetch is called exactly once
-        assertThat("Fetch commands were: " + fetchCommands, fetchCommands, hasSize(1));
+        assertThat("Fetch commands were: " + fetchCommands, fetchCommands, hasSize(expectedFetchCount));
     }
 
     // Returns the file FETCH_HEAD found in .git
