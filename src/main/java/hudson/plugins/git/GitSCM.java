@@ -1169,10 +1169,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (option == null) {
                 removeSecondFetch = isDefaultRefspec;
             } else {
-                if (!option.isHonorRefspec()) {
-                    removeSecondFetch = isDefaultRefspec;
-                } else {
+                if (option.isHonorRefspec()) {
                     removeSecondFetch = true; // avoid second fetch call if honor refspec is enabled
+                } else {
+                    removeSecondFetch = isDefaultRefspec;
                 }
             }
         }
