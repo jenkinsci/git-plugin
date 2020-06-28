@@ -1156,7 +1156,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private boolean determineRedundantFetch(CloneOption option, RemoteConfig rc) {
+    private boolean determineRedundantFetch(CloneOption option, @NonNull RemoteConfig rc) {
         List<RefSpec> initialFetchRefSpecs = rc.getFetchRefSpecs();
         boolean isDefaultRefspec = true; // default refspec is any refspec with "refs/heads/" mapping
         boolean removeSecondFetch = true;
