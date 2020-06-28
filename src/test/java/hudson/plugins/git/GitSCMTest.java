@@ -351,6 +351,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         /* Without honor refspec on initial clone */
         FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
 
         // create initial commit
         final String commitFile1 = "commitFile1";
@@ -375,6 +381,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         /* Without honor refspec on initial clone */
         FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
 
         // create initial commit
         final String commitFile1 = "commitFile1";
