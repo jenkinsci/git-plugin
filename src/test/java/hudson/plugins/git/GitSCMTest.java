@@ -1476,12 +1476,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile1, johnDoe, "Commit number 1");
         build(project, Result.SUCCESS);
         List<String> logLines = project.getLastBuild().getLog(100);
-        assertTrue(logLines.get(3).contains("using credential"));
+        assertThat(logLines, hasItem("using credential github"));
 
         descriptor.setHideCredentials(true);
         build(project, Result.SUCCESS);
         logLines = project.getLastBuild().getLog(100);
-        assertFalse(logLines.get(3).contains("using credential"));
+        assertThat(logLines, not(hasItem("using credential github")));
 
     }
 
