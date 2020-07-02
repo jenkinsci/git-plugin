@@ -169,7 +169,7 @@ Show the entire commit summary in changes::
 [[hide-credentials]]
 Hide credential usage in job output::
 
-  If checked the output will not show the credential being used to clone a repository
+  If checked the output will not show the credential identifier used to clone a repository.
 
 [#repository-browser]
 === Repository Browser
