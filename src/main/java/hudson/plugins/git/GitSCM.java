@@ -438,6 +438,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isUseExistingAccountWithSameEmail());
     }
 
+    public boolean isRedundantFetchAllowed() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isRedundantFetchAllowed());
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -1132,7 +1137,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 cmd.execute();
                 // determine if second fetch is required
                 CloneOption option = extensions.get(CloneOption.class);
-                removeRedundantFetch = determineRedundantFetch(option, rc);
+                if (!isRedundantFetchAllowed()) {
+                    removeRedundantFetch = determineRedundantFetch(option, rc);
+                }
             } catch (GitException ex) {
                 ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
                 throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
@@ -1518,7 +1525,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean useExistingAccountWithSameEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
-        private boolean enablePerformanceImprovement = true; // By default, performance is enabled in git plugin
+        private boolean allowSecondFetch;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1642,7 +1649,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
         }
 
-        public boolean isPerformanceEnabled() { return enablePerformanceImprovement; }
+        public boolean isRedundantFetchAllowed() { return allowSecondFetch; }
+
+        public void setAllowSecondFetch(boolean allowSecondFetch) {
+            this.allowSecondFetch = allowSecondFetch;
+        }
 
         /**
          * Old configuration of git executable - exposed so that we can

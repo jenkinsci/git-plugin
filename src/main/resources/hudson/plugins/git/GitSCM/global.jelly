@@ -16,8 +16,8 @@
     <f:entry field="showEntireCommitSummaryInChanges">
       <f:checkbox title="${%Show the entire commit summary in changes}" name="showEntireCommitSummaryInChanges" checked="${descriptor.showEntireCommitSummaryInChanges}"/>
     </f:entry>
-    <f:entry field="enablePerformanceImprovement">
-      <f:checkbox title="${%Revert performance improvement changes}" name="enablePerformanceImprovement" checked="${descriptor.enablePerformanceImprovement}"/>
+    <f:entry field="allowSecondFetch">
+      <f:checkbox title="${%Preserve second fetch during checkout}" name="allowSecondFetch" checked="${descriptor.allowSecondFetch}"/>
     </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
