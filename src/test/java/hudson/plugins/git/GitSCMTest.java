@@ -431,11 +431,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         // create initial commit
         final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit in master");
+        final String commitFile1SHA1a = commit(commitFile1, johnDoe, "Commit in master");
         // Add another branch 'foo'
-        git.branch("foo");
-        git.checkout().branch("foo");
-        commit(commitFile1, johnDoe, "Commit in foo");
+        git.checkout().ref("master").branch("foo").execute();
+        final String commitFile1SHA1b = commit(commitFile1, johnDoe, "Commit in foo");
 
         // Build will be failure because the initial clone regards refspec and fetches branch 'foo' only.
         FreeStyleBuild build = build(projectWithMaster, Result.FAILURE);
@@ -443,8 +442,12 @@ public class GitSCMTest extends AbstractGitTestCase {
         FilePath childFile = returnFile(build);
         assertNotNull(childFile);
         // assert that no data is lost by avoidance of second fetch
-        assertThat(childFile.readToString(), not(containsString("master")));
-        assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
+        final String fetchHeadContents = childFile.readToString();
+        final List<String> buildLog = build.getLog(50);
+        assertThat("master branch was fetched: " + buildLog, fetchHeadContents, not(containsString("branch 'master'")));
+        assertThat("foo branch was not fetched: " + buildLog, fetchHeadContents, containsString("branch 'foo'"));
+        assertThat("master branch SHA1 '" + commitFile1SHA1a + "' fetched " + buildLog, fetchHeadContents, not(containsString(commitFile1SHA1a)));
+        assertThat("foo branch SHA1 '" + commitFile1SHA1b + "' was not fetched " + buildLog, fetchHeadContents, containsString(commitFile1SHA1b));
         assertRedundantFetchIsSkipped(build, refSpec);
 
         assertThat(build.getResult(), is(Result.FAILURE));
