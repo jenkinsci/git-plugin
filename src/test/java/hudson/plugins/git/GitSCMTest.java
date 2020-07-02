@@ -517,6 +517,42 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertRedundantFetchIsUsed(build, refspec);
     }
 
+    /*
+    * When "Preserve second fetch during checkout" is checked in during configuring Jenkins,
+    * the second fetch should be retained
+    */
+    @Test
+    @Issue("JENKINS-49757")
+    public void testRetainRedundantFetchIfSecondFetchIsAllowed() throws Exception {
+        String refspec = "+refs/heads/*:refs/remotes/*";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+
+        GitSCM scm = (GitSCM) projectWithMaster.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertThat("Redundant fetch is skipped by default", scm.isRedundantFetchAllowed(), is(false));
+        descriptor.setAllowSecondFetch(true);
+        assertThat("Redundant fetch should be allowed", scm.isRedundantFetchAllowed(), is(true));
+
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsUsed(build, refspec);
+    }
+
     // Checks if the second fetch is being avoided
     private void assertRedundantFetchIsSkipped(FreeStyleBuild build, String refSpec) throws IOException {
         assertRedundantFetchCount(build, refSpec, 1);
