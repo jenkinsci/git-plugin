@@ -188,6 +188,7 @@ public class AbstractGitSCMSourceTest {
                 // FAT file system time stamps only resolve to 2 second boundary
                 // EXT3 file system time stamps only resolve to 1 second boundary
                 long fileTimeStampFuzz = isWindows() ? 2000L : 1000L;
+                fileTimeStampFuzz = 12 * fileTimeStampFuzz / 10; // 20% grace for file system noise
                 switch (scmHead.getName()) {
                     case "lightweight":
                         {
