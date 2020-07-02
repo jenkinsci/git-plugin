@@ -391,8 +391,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit in master");
         // Add another branch 'foo'
-        git.branch("foo");
-        git.checkout().branch("foo");
+        git.checkout().ref("master").branch("foo").execute();
         commit(commitFile1, johnDoe, "Commit in foo");
 
         // Build will be success because the initial clone disregards refspec and fetches all branches
