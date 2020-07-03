@@ -62,6 +62,11 @@ public class CheckoutOptionTest {
                 .verify();
     }
 
+    @Test
+    public void checkToString() {
+        assertEquals("CheckoutOption{timeout=" + INITIAL_TIMEOUT + "}", option.toString());
+    }
+
     public class CheckoutCommandImpl implements CheckoutCommand {
 
         private int timeout = INITIAL_TIMEOUT;
