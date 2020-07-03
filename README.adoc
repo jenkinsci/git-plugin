@@ -170,6 +170,11 @@ Show the entire commit summary in changes::
 Preserve second fetch during checkout::
 
   If checked the checkout step will not avoid the second fetch.
+  Git plugin versions prior to git plugin 4.4 would perform two fetch operations for each repository checkout.
+  Git plugin 4.4 removes the redundant fetch operation.
+  Enabling this option will restore the redundant fetch operation.
+  This setting is only needed if there is a bug in the redundant fetch removal logic.
+  If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
 
 [#repository-browser]
 === Repository Browser
