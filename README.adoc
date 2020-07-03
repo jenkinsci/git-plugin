@@ -1007,6 +1007,51 @@ Unique name for this SCM.
 Was needed when using Git within the Multi SCM plugin.
 Pipeline is the robust and feature-rich way to checkout from multiple repositories in a single job.
 
+[#submodule-combinator---removed]
+==== Submodule Combinator - *Removed*
+
+An experiment was created many years ago that attempted to create combinations of submodules within the Jenkins job.
+The experiment was never available to Freestyle projects or other legacy projects like multi-configuration projects.
+It was visible in Pipeline, configuration as code, and JobDSL.
+
+The implementation of the experiment has been removed.
+Dependabot and other configuration tools are better suited to evaluate submodule combinations.
+
+There are no known uses of the submodule combinator and no open Jira issues reported against the submodule combinator.
+Those who were using submodule combinator should remain with git plugin versions prior to 4.6.0.
+
+The submodule combinator ignores any user provided value of the following arguments to git's `checkout scm`:
+
+doGenerateSubmoduleConfigurations::
+
+  A boolean that is now always set to `false`.
+  Submodule configurations are no longer evaluated by the git plugin.
+
+submoduleCfg::
+
+  A list of submodule names and branches that is now always empty.
+  Submodule configurations are no longer evaluated by the git plugin.
+
+Previous Pipeline syntax looked like this:
+
+```groovy
+checkout([$class: 'GitSCM',
+          branches: [[name: 'master']],
+          doGenerateSubmoduleConfigurations: false,
+          extensions: [],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+```
+
+Current Pipeline Syntax looks like this:
+
+```groovy
+checkout([$class: 'GitSCM',
+          branches: [[name: 'master']],
+          extensions: [],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+```
+
 [#environment-variables]
 == Environment Variables
 

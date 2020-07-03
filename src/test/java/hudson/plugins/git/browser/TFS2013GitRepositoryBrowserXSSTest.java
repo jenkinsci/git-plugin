@@ -29,7 +29,6 @@ public class TFS2013GitRepositoryBrowserXSSTest {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig("http://tfs/tfs/project/_git/repo", null, null, null)),
                 new ArrayList<>(),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
         scm.setBrowser(new TFS2013GitRepositoryBrowser("<img src=x onerror=alert(232)>"));

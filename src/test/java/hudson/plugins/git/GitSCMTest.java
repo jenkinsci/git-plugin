@@ -1823,7 +1823,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setScm(new GitSCM(
                 ((GitSCM)project.getScm()).getUserRemoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
                 Collections.singletonList(new DisableRemotePoll())));
@@ -1859,7 +1858,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setScm(new GitSCM(
                 remotes,
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList()));
 
@@ -1900,7 +1898,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         project.setScm(new GitSCM(
                 remotes,
                 Collections.singletonList(new BranchSpec(branchName)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList()));
 
@@ -1931,7 +1928,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM gitSCM = new GitSCM(
                 remotes,
                 Collections.singletonList(new BranchSpec("origin/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(gitSCM);
@@ -1976,7 +1972,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
@@ -2017,7 +2012,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", "default", MergeCommand.GitPluginFastForwardMode.FF)));
@@ -2053,7 +2047,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
@@ -2093,7 +2086,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -2132,7 +2124,6 @@ public class GitSCMTest extends AbstractGitTestCase {
     	GitSCM scm = new GitSCM(
     			createRemoteRepositories(),
     			Collections.singletonList(new BranchSpec("master")),
-    			false, Collections.<SubmoduleConfig>emptyList(),
     			null, null,
     			Collections.<GitSCMExtension>emptyList());
     	project.setScm(scm);
@@ -2165,7 +2156,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
@@ -2207,7 +2197,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
@@ -2287,7 +2276,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitRepositoryBrowser browser = new GithubWeb(url);
         GitSCM scm = new GitSCM(createRepoList(url),
                                 Collections.singletonList(new BranchSpec("")),
-                                false, Collections.<SubmoduleConfig>emptyList(),
                                 browser, null, null);
         p.setScm(scm);
         rule.configRoundtrip(p);
@@ -2306,7 +2294,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitRepositoryBrowser browser = new GithubWeb(url);
         GitSCM scm = new GitSCM(createRepoList(url),
                 Collections.singletonList(new BranchSpec("*/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 browser, null, null);
         p.setScm(scm);
 
@@ -2647,7 +2634,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -2669,7 +2655,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("**")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 extensions);
         project.setScm(scm);
@@ -2711,7 +2696,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -2809,7 +2793,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(),
                 Collections.singletonList(new BranchSpec("${MY_BRANCH}")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);

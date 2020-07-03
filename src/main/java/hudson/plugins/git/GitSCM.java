@@ -65,6 +65,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
@@ -135,13 +136,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * All the branches that we wish to care about building.
      */
     private List<BranchSpec> branches;
-    private boolean doGenerateSubmoduleConfigurations;
+    private boolean doGenerateSubmoduleConfigurations = false;
 
     @CheckForNull
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
-    private Collection<SubmoduleConfig> submoduleCfg;
+    private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
@@ -156,12 +157,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
     @Whitelisted
+    @Deprecated
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
 
+    @DataBoundSetter
     public void setSubmoduleCfg(Collection<SubmoduleConfig> submoduleCfg) {
-        this.submoduleCfg = submoduleCfg;
     }
 
     public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
@@ -180,17 +182,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this(
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
     }
 
-//    @Restricted(NoExternalUse.class) // because this keeps changing
-    @DataBoundConstructor
+    @Deprecated
     public GitSCM(
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
             Boolean doGenerateSubmoduleConfigurations,
             Collection<SubmoduleConfig> submoduleCfg,
+            @CheckForNull GitRepositoryBrowser browser,
+            @CheckForNull String gitTool,
+            List<GitSCMExtension> extensions) {
+        this(userRemoteConfigs, branches, browser, gitTool, extensions);
+    }
+
+    @DataBoundConstructor
+    public GitSCM(
+            List<UserRemoteConfig> userRemoteConfigs,
+            List<BranchSpec> branches,
             @CheckForNull GitRepositoryBrowser browser,
             @CheckForNull String gitTool,
             List<GitSCMExtension> extensions) {
@@ -202,18 +212,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         updateFromUserData();
 
         this.browser = browser;
-
-        // emulate bindJSON behavior here
-        if (doGenerateSubmoduleConfigurations != null) {
-            this.doGenerateSubmoduleConfigurations = doGenerateSubmoduleConfigurations;
-        } else {
-            this.doGenerateSubmoduleConfigurations = false;
-        }
-
-        if (submoduleCfg == null) {
-            submoduleCfg = new ArrayList<>();
-        }
-        this.submoduleCfg = submoduleCfg;
 
         this.configVersion = 2L;
         this.gitTool = gitTool;
@@ -270,7 +268,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (source != null) {
             remoteRepositories = new ArrayList<>();
             branches = new ArrayList<>();
-            doGenerateSubmoduleConfigurations = false;
 
             List<RefSpec> rs = new ArrayList<>();
             rs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
@@ -1892,8 +1889,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private static final long serialVersionUID = 1L;
 
     @Whitelisted
+    @Deprecated
     public boolean isDoGenerateSubmoduleConfigurations() {
-        return this.doGenerateSubmoduleConfigurations;
+        return false;
     }
 
     @Exported
@@ -2067,6 +2065,29 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
             return false;   // for historical reason this is not considered a fatal error.
         }
+    }
+
+    /**
+     * Data bound setter for doGenerateSubmoduleConfigurations that
+     * intentionally ignores the value passed by the caller.
+     * Submodule configuration generation was untested and unlikely to
+     * work prior to git plugin 4.6.0.  It was removed from git plugin
+     * 4.6.0 to improve the experience for Pipeline Syntax users.
+     *
+     * @param ignoredValue ignored because submodule configuration
+     * generation is no longer supported
+     */
+    @DataBoundSetter
+    public void setDoGenerateSubmoduleConfigurations(boolean ignoredValue) {
+    }
+
+    /**
+     * Returns false, the constant value of doGenerateSubmoduleConfigurations.
+     * @return false, the constant value of doGenerateSubmoduleConfigurations.
+     */
+    @Deprecated
+    public boolean getDoGenerateSubmoduleConfigurations() {
+        return doGenerateSubmoduleConfigurations;
     }
 
     @Initializer(after=PLUGINS_STARTED)

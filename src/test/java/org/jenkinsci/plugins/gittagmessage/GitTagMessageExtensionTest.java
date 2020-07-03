@@ -33,7 +33,6 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
         GitSCM scm = new GitSCM(
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>singletonList(extension));
 

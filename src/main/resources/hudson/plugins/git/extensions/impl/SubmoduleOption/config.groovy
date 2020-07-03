@@ -30,33 +30,3 @@ f.optionalBlock(title:_("Shallow clone"), field:"shallow", inline: true) {
         f.number(clazz:"number", min:1, step:1)
     }
 }
-
-/*
-  This needs more thought
-
-  <f:entry>
-    <f:checkbox title="Autogenerate submodule configurations" name="git.generate" checked="${scm.doGenerate}"/>
-    <label class="attach-previous">Generate submodule configurations</label>
-
-    <f:repeatable var="smcfg" name="smcfg" varStatus="cfgStatus" items="${scm.submoduleCfg}" noAddButton="false">
-           <table width="100%">
-           <f:entry title="Name of submodule">
-             <f:textbox name="git.submodule.name" value="${smcfg.submoduleName}" />
-           </f:entry>
-
-           <f:entry title="Matching Branches">
-            <f:textbox name="git.submodule.match" value="${smcfg.branchesString}" />
-           </f:entry>
-
-
-           <f:entry>
-            <div align="right">
-                <input type="button" value="Delete" class="repeatable-delete" style="margin-left: 1em;" />
-            </div>
-          </f:entry>
-          </table>
-
-        </f:repeatable>
-
-  </f:entry>
-*/

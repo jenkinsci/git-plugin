@@ -23,18 +23,10 @@ public class GitJCasCCompatibilityTest extends RoundTripAbstractTest {
         assertThat(retriever, CoreMatchers.instanceOf(SCMRetriever.class));
         SCM scm =  ((SCMRetriever) retriever).getScm();
         assertThat(scm, CoreMatchers.instanceOf(GitSCM.class));
-
-        Collection<SubmoduleConfig> submodulesConfig = ((GitSCM) scm).getSubmoduleCfg();
-
-        assertThat(submodulesConfig.size(), is(2));
-        assertTrue(submodulesConfig.stream().anyMatch(m -> m.getSubmoduleName().equals("submodule-1")));
-        assertTrue(submodulesConfig.stream().anyMatch(m -> m.getSubmoduleName().equals("submodule-2")));
-        assertTrue(submodulesConfig.stream().anyMatch(m -> m.getBranchesString().equals("mybranch-1,mybranch-2")));
-        assertTrue(submodulesConfig.stream().anyMatch(m -> m.getBranchesString().equals("mybranch-3,mybranch-4")));
     }
 
     @Override
     protected String stringInLogExpected() {
-        return "Setting class hudson.plugins.git.SubmoduleConfig.branches = [mybranch-3, mybranch-4]";
+        return "Setting class hudson.plugins.git.GitSCM.extensions = [cleanCheckout, gitLFSPull, {checkoutOption={}}, {userIdentity={}}, {preBuildMerge={}}]";
     }
 }
