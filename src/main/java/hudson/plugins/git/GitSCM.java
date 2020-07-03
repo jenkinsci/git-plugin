@@ -440,7 +440,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     public boolean isRedundantFetchAllowed() {
         DescriptorImpl gitDescriptor = getDescriptor();
-        return (gitDescriptor != null && gitDescriptor.isRedundantFetchAllowed());
+        return (gitDescriptor != null && gitDescriptor.isAllowSecondFetch());
     }
 
     @Whitelisted
@@ -840,6 +840,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         String gitExe = getGitExe(n, listener);
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
+
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
             c = ext.decorate(this,c);
@@ -1649,7 +1650,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
         }
 
-        public boolean isRedundantFetchAllowed() { return allowSecondFetch; }
+        public boolean isAllowSecondFetch() { return allowSecondFetch; }
 
         public void setAllowSecondFetch(boolean allowSecondFetch) {
             this.allowSecondFetch = allowSecondFetch;
