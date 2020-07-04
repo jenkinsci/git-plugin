@@ -441,6 +441,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isHideCredentials() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return gitDescriptor != null && gitDescriptor.isHideCredentials();
+    }
 
     public boolean isRedundantFetchAllowed() {
         DescriptorImpl gitDescriptor = getDescriptor();
