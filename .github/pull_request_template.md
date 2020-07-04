@@ -14,6 +14,8 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] I have added documentation as necessary
 - [ ] No Javadoc warnings were introduced with my changes
 - [ ] No spotbugs warnings were introduced with my changes
+- [ ] Documentation in README has been updated as necessary
+- [ ] Online help has been added and reviewed for any new or modified fields
 - [ ] I have interactively tested my changes
 - [ ] Any dependent changes have been merged and published in upstream modules (like git-client-plugin)
 
