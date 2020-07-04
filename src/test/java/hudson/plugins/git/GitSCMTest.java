@@ -533,9 +533,9 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         GitSCM scm = (GitSCM) projectWithMaster.getScm();
         final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
-        assertThat("Redundant fetch is skipped by default", scm.isRedundantFetchAllowed(), is(false));
+        assertThat("Redundant fetch is skipped by default", scm.isAllowSecondFetch(), is(false));
         descriptor.setAllowSecondFetch(true);
-        assertThat("Redundant fetch should be allowed", scm.isRedundantFetchAllowed(), is(true));
+        assertThat("Redundant fetch should be allowed", scm.isAllowSecondFetch(), is(true));
 
         if (random.nextBoolean()) {
             /* Randomly enable shallow clone, should not alter test assertions */

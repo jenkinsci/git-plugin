@@ -443,7 +443,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return gitDescriptor != null && gitDescriptor.isHideCredentials();
     }
 
-    public boolean isRedundantFetchAllowed() {
+    public boolean isAllowSecondFetch() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isAllowSecondFetch());
     }
@@ -1147,7 +1147,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 cmd.execute();
                 // determine if second fetch is required
                 CloneOption option = extensions.get(CloneOption.class);
-                if (!isRedundantFetchAllowed()) {
+                if (!isAllowSecondFetch()) {
                     removeRedundantFetch = determineRedundantFetch(option, rc);
                 }
             } catch (GitException ex) {
