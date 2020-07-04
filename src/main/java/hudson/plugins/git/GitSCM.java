@@ -443,6 +443,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return gitDescriptor != null && gitDescriptor.isHideCredentials();
     }
 
+    public boolean isAllowSecondFetch() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isAllowSecondFetch());
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -1120,7 +1125,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void retrieveChanges(Run build, GitClient git, TaskListener listener) throws IOException, InterruptedException {
         final PrintStream log = listener.getLogger();
 
-        boolean removeRedundantFetch = false;
+        boolean removeSecondFetch = false;
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
@@ -1142,7 +1147,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 cmd.execute();
                 // determine if second fetch is required
                 CloneOption option = extensions.get(CloneOption.class);
-                removeRedundantFetch = determineRedundantFetch(option, rc);
+                if (!isAllowSecondFetch()) {
+                    removeSecondFetch = determineSecondFetch(option, rc);
+                }
             } catch (GitException ex) {
                 ex.printStackTrace(listener.error("Error cloning remote repo '" + rc.getName() + "'"));
                 throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
@@ -1150,7 +1157,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         for (RemoteConfig remoteRepository : repos) {
-            if (remoteRepository.equals(repos.get(0)) && removeRedundantFetch){
+            if (remoteRepository.equals(repos.get(0)) && removeSecondFetch){
                 log.println("Avoid second fetch");
                 continue;
             }
@@ -1165,7 +1172,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private boolean determineRedundantFetch(CloneOption option, @NonNull RemoteConfig rc) {
+    private boolean determineSecondFetch(CloneOption option, @NonNull RemoteConfig rc) {
         List<RefSpec> initialFetchRefSpecs = rc.getFetchRefSpecs();
         boolean isDefaultRefspec = true; // default refspec is any refspec with "refs/heads/" mapping
         boolean removeSecondFetch = true;
@@ -1529,6 +1536,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
         private boolean showEntireCommitSummaryInChanges;
         private boolean hideCredentials;
+        private boolean allowSecondFetch;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1656,6 +1664,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         public void setUseExistingAccountWithSameEmail(boolean useExistingAccountWithSameEmail) {
             this.useExistingAccountWithSameEmail = useExistingAccountWithSameEmail;
+        }
+
+        public boolean isAllowSecondFetch() { return allowSecondFetch; }
+
+        public void setAllowSecondFetch(boolean allowSecondFetch) {
+            this.allowSecondFetch = allowSecondFetch;
         }
 
         /**
