@@ -3,7 +3,7 @@
 import java.util.Collections
 
 // Valid Jenkins versions for test
-def testJenkinsVersions = [ '2.204.1', '2.204.6', '2.222.1', '2.222.4', '2.235', '2.240' ]
+def testJenkinsVersions = [ '2.204.1', '2.204.6', '2.222.4', '2.235.1', '2.243' ]
 Collections.shuffle(testJenkinsVersions)
 
 // Test plugin compatibility to subset of Jenkins versions
