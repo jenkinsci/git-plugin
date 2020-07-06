@@ -8,18 +8,24 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Job;
+import hudson.model.Node;
+import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.security.ACL;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +34,7 @@ import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 /**
@@ -39,8 +46,14 @@ public class GitLFSPull extends GitSCMExtension {
     private String credentialsId;
 
     @DataBoundConstructor
-    public GitLFSPull(@CheckForNull String credentialsId) {
-        this.credentialsId = credentialsId;
+    public GitLFSPull() {
+        this.credentialsId = "";
+    }
+
+
+    @DataBoundSetter
+    public void setCredentialsId(@CheckForNull String credentialsId) {
+        this.credentialsId = Util.fixNull(credentialsId);
     }
 
     public String getCredentialsId() {
@@ -71,7 +84,7 @@ public class GitLFSPull extends GitSCMExtension {
                         StandardUsernameCredentials.class,
                         project,
                         project instanceof Queue.Task
-                                ? ((Queue.Task) project).getDefaultAuthenticationOf()
+                                ? Tasks.getDefaultAuthenticationOf((Queue.Task)project)
                                 : ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(repo.getURIs().get(0).toString()).build()
                 );
@@ -94,7 +107,9 @@ public class GitLFSPull extends GitSCMExtension {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        return o instanceof GitLFSPull;
+
+        GitLFSPull that = (GitLFSPull) o;
+        return Objects.equals(credentialsId, that.credentialsId);
     }
 
     /**
@@ -102,7 +117,7 @@ public class GitLFSPull extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return GitLFSPull.class.hashCode();
+        return Objects.hash(credentialsId);
     }
 
     /**
@@ -110,7 +125,9 @@ public class GitLFSPull extends GitSCMExtension {
      */
     @Override
     public String toString() {
-        return "GitLFSPull{}";
+        return "GitLFSPull{" +
+               "credentialsId=" + credentialsId +
+               "}";
     }
 
     @Extension

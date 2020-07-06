@@ -31,6 +31,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.GitLFSPull;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 
@@ -42,11 +43,10 @@ import javax.annotation.CheckForNull;
 public class GitLFSPullTrait extends GitSCMExtensionTrait<GitLFSPull> {
     /**
      * Stapler constructor.
-     * @param credentialsId identifier of credentials to use for LFS pull
      */
     @DataBoundConstructor
-    public GitLFSPullTrait(String credentialsId) {
-        super(new GitLFSPull(credentialsId));
+    public GitLFSPullTrait() {
+        super(new GitLFSPull());
     }
 
     /**
@@ -60,13 +60,6 @@ public class GitLFSPullTrait extends GitSCMExtensionTrait<GitLFSPull> {
         @Override
         public String getDisplayName() {
             return "Git LFS pull after checkout";
-        }
-
-        @CheckForNull
-        @Override
-        public SCMSourceTrait convertToTrait(@NonNull GitSCMExtension extension) {
-            GitLFSPull pull = (GitLFSPull)extension;
-            return new GitLFSPullTrait(pull.getCredentialsId());
         }
     }
 }

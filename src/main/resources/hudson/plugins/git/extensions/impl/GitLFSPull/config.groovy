@@ -1,4 +1,4 @@
-package hudson.plugins.git.extensions.impl.GitLFSPull;
+package hudson.plugins.git.extensions.impl.GitLFSPull
 
 f = namespace(lib.FormTagLib)
 c = namespace(lib.CredentialsTagLib)
