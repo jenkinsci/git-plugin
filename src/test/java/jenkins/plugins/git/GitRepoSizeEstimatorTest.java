@@ -11,6 +11,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
@@ -69,7 +70,7 @@ public class GitRepoSizeEstimatorTest {
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
-        assertThat(repoSizeEstimator.getGitTool(), is("git"));
+        assertThat(repoSizeEstimator.getGitTool(), containsString("git"));
     }
 
 
