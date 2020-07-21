@@ -25,7 +25,7 @@ public class GitRepoSizeEstimator {
     private long sizeOfRepo = 0L;
     private String implementation;
     private String gitTool;
-    public static final int SIZE_TO_SWITCH = 5000;
+    public static final int SIZE_TO_SWITCH = 50000;
 
     /**
      * Instantiate class using {@link AbstractGitSCMSource}. It looks for a cached .git directory first, calculates the
@@ -78,7 +78,8 @@ public class GitRepoSizeEstimator {
      */
     private void determineGitTool(String gitImplementation) {
         if (gitImplementation.equals("DEFAULT")) {
-            gitTool = null;
+            gitTool = "NONE";
+            return; // Recommend nothing (GitToolRecommendation = NONE)
         }
         final Jenkins jenkins = Jenkins.get();
         GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
@@ -106,6 +107,7 @@ public class GitRepoSizeEstimator {
             } else {
                 useCache = true;
                 sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
+                sizeOfRepo = (sizeOfRepo/1000); // Conversion from Bytes to Kilo Bytes
             }
         } else {
             useCache = false;
@@ -126,7 +128,7 @@ public class GitRepoSizeEstimator {
                 return "jgit";
             }
         }
-        return "DEFAULT";
+        return "NONE";
     }
 
     /**
@@ -158,7 +160,7 @@ public class GitRepoSizeEstimator {
 
     /**
      * Recommend git tool to be used by the git client
-     * @return
+     * @return git implementation recommendation in the form of a string
      */
     public String getGitTool() {
         return gitTool;
