@@ -38,12 +38,12 @@ public class GitRepoSizeEstimator {
         boolean useCache;
         boolean useAPI = false;
 
-        useCache = determineCacheEstimation(source);
+        useCache = setSizeFromCache(source);
 
         if (useCache) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         } else {
-            useAPI = getSizeFromAPI(source.getRemote());
+            useAPI = setSizeFromAPI(source.getRemote());
         }
 
         if (useAPI) {
@@ -61,7 +61,7 @@ public class GitRepoSizeEstimator {
      * @param remoteName: The URL of the repository
      */
     public GitRepoSizeEstimator(String remoteName) {
-        boolean useAPI = getSizeFromAPI(remoteName);
+        boolean useAPI = setSizeFromAPI(remoteName);
 
         if (useAPI) {
             implementation = determineSwitchOnSize(sizeOfRepo);
@@ -95,7 +95,7 @@ public class GitRepoSizeEstimator {
      * @throws IOException
      * @throws InterruptedException
      */
-    private boolean determineCacheEstimation(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
+    private boolean setSizeFromCache(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
         boolean useCache;
         String cacheEntry = source.getCacheEntry();
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
@@ -148,7 +148,7 @@ public class GitRepoSizeEstimator {
         }
     }
 
-    private boolean getSizeFromAPI(String repoUrl) {
+    private boolean setSizeFromAPI(String repoUrl) {
         for (RepositorySizeAPI r: Objects.requireNonNull(RepositorySizeAPI.all())) {
             if (r != null) {
                 sizeOfRepo = r.getSizeOfRepository(repoUrl);
