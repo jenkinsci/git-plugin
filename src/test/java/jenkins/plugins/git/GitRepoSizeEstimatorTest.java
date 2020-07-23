@@ -36,6 +36,46 @@ public class GitRepoSizeEstimatorTest {
     NONE which means keep the impl as is.
      */
     @Test
+    public void testSizeEstimationWithNoGitCache() throws Exception {
+        GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
+        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(instance);
+        String tool = repoSizeEstimator.getGitTool();
+
+        // The class should make no recommendation since it can't find a .git cached directory
+        assertThat(tool, is("NONE"));
+    }
+
+    /*
+    In the case of having a cached .git repository, the estimator class should estimate the size of the local checked
+    out repository and ultimately provide a suggestion on the base of decided heuristic.
+     */
+    @Test
+    public void testSizeEstimationWithGitCache() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "lightweight");
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=dev3");
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        TaskListener listener = StreamTaskListener.fromStderr();
+        // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
+        assertEquals("[]", source.fetch(listener).toString());
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
+
+        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(source);
+        /*
+        Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
+         */
+        assertThat(repoSizeEstimator.getGitTool(), containsString("git"));
+    }
+
+    @Test
     public void testSizeEstimationWithGithubAPI() {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
