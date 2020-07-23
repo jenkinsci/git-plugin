@@ -14,7 +14,9 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * A class which allows {@link AbstractGitSCMSource} to estimate the size of a repository from a distance
@@ -25,7 +27,10 @@ public class GitRepoSizeEstimator {
     private long sizeOfRepo = 0L;
     private String implementation;
     private String gitTool;
-    public static final int SIZE_TO_SWITCH = 50000;
+    /**
+     * Size to switch implementation in KiB
+     */
+    public static final int SIZE_TO_SWITCH = 5000;
 
     /**
      * Instantiate class using {@link AbstractGitSCMSource}. It looks for a cached .git directory first, calculates the
@@ -137,6 +142,8 @@ public class GitRepoSizeEstimator {
      */
     public static abstract class RepositorySizeAPI implements ExtensionPoint {
 
+        public abstract boolean acceptsRemote(String remote);
+
         public abstract Long getSizeOfRepository(String remote);
 
         public static ExtensionList<RepositorySizeAPI> all() {
@@ -149,13 +156,17 @@ public class GitRepoSizeEstimator {
     }
 
     private boolean setSizeFromAPI(String repoUrl) {
-        for (RepositorySizeAPI r: Objects.requireNonNull(RepositorySizeAPI.all())) {
-            if (r != null) {
-                sizeOfRepo = r.getSizeOfRepository(repoUrl);
-                return true;
-            }
+        List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
+                .stream()
+                .filter(r -> r.acceptsRemote(repoUrl))
+                .collect(Collectors.toList());
+
+        if (acceptedRepository.size() == 1) {
+            sizeOfRepo = acceptedRepository.get(0).getSizeOfRepository(repoUrl);
+            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     /**
