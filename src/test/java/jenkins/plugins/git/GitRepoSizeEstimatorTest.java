@@ -4,9 +4,11 @@ import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 
 import java.util.Collections;
 
@@ -34,43 +36,49 @@ public class GitRepoSizeEstimatorTest {
     NONE which means keep the impl as is.
      */
     @Test
-    public void testSizeEstimationWithNoGitCache() throws Exception {
-        GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
-        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(instance);
-        String tool = repoSizeEstimator.getGitTool();
-
-        // The class should make no recommendation since it can't find a .git cached directory
-        assertThat(tool.equals("NONE"), is(true));
+    public void testSizeEstimationWithGithubAPI() {
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
+        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        assertThat(sizeEstimator.getGitTool(), is("git"));
     }
 
-    /*
-    In the case of having a cached .git repository, the estimator class should estimate the size of the local checked
-    out repository and ultimately provide a suggestion on the base of decided heuristic.
-     */
     @Test
-    public void testSizeEstimationWithGitCache() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("checkout", "-b", "dev");
-        sampleRepo.write("file", "modified");
-        sampleRepo.git("commit", "--all", "--message=dev");
-        sampleRepo.git("tag", "lightweight");
-        sampleRepo.write("file", "modified2");
-        sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
-        sampleRepo.write("file", "modified3");
-        sampleRepo.git("commit", "--all", "--message=dev3");
-        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        TaskListener listener = StreamTaskListener.fromStderr();
-        // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
-        assertEquals("[]", source.fetch(listener).toString());
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
+    public void testSizeEstimationWithBitbucketAPIs() {
+        String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
+        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        assertThat(sizeEstimator.getGitTool(), is("NONE"));
+    }
 
-        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(source);
-        /*
-        Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
-         */
-        assertThat(repoSizeEstimator.getGitTool(), containsString("git"));
+    @org.jvnet.hudson.test.TestExtension
+    public static class TestExtensionGithub extends GitRepoSizeEstimator.RepositorySizeAPI {
+
+        @Override
+        public boolean acceptsRemote(String remote) {
+            return remote.contains("github");
+        }
+
+        @Override
+        public Long getSizeOfRepository(String remote) {
+            // from remote, remove .git and https://github.com
+            long mockedSize = 500;
+            return mockedSize;
+        }
+    }
+
+    @org.jvnet.hudson.test.TestExtension
+    public static class TestExtensionGitlab extends GitRepoSizeEstimator.RepositorySizeAPI {
+
+        @Override
+        public boolean acceptsRemote(String remote) {
+            return remote.contains("gitlab");
+        }
+
+        @Override
+        public Long getSizeOfRepository(String remote) {
+            // from remote, remove .git and https://github.com
+            long mockedSize = 1000;
+            return mockedSize;
+        }
     }
 
 
