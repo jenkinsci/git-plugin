@@ -77,23 +77,6 @@ public class GitRepoSizeEstimator {
     }
 
     /**
-     * For a given recommended git implementation, validate if the installation exists and provide no suggestion if
-     * implementation doesn't exist.
-     * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
-     */
-    private void determineGitTool(String gitImplementation) {
-        if (gitImplementation.equals("DEFAULT")) {
-            gitTool = "NONE";
-            return; // Recommend nothing (GitToolRecommendation = NONE)
-        }
-        final Jenkins jenkins = Jenkins.get();
-        GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
-        if (tool != null) {
-            gitTool = tool.getGitExe();
-        }
-    }
-
-    /**
      * Determine and estimate the size of a .git cached directory
      * @param source: Use a {@link AbstractGitSCMSource} to access a cached Jenkins directory, we do not lock it.
      * @return useCache
@@ -121,6 +104,25 @@ public class GitRepoSizeEstimator {
     }
 
     /**
+     * Check if the desired implementation of extension is present and ask for the size of repository if it does
+     * @param repoUrl: The remote name derived from {@link GitSCMSource} object
+     * @return boolean useAPI or not.
+     */
+    private boolean setSizeFromAPI(String repoUrl) {
+        List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
+                .stream()
+                .filter(r -> r.acceptsRemote(repoUrl))
+                .collect(Collectors.toList());
+
+        if (acceptedRepository.size() == 1) {
+            sizeOfRepo = acceptedRepository.get(0).getSizeOfRepository(repoUrl);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Recommend a git implementation on the basis of the given size of a repository
      * @param sizeOfRepo: Size of a repository (in KiBs)
      * @return a git implementation, "git" or "jgit"
@@ -134,6 +136,31 @@ public class GitRepoSizeEstimator {
             }
         }
         return "NONE";
+    }
+
+    /**
+     * For a given recommended git implementation, validate if the installation exists and provide no suggestion if
+     * implementation doesn't exist.
+     * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
+     */
+    private void determineGitTool(String gitImplementation) {
+        if (gitImplementation.equals("DEFAULT")) {
+            gitTool = "NONE";
+            return; // Recommend nothing (GitToolRecommendation = NONE)
+        }
+        final Jenkins jenkins = Jenkins.get();
+        GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
+        if (tool != null) {
+            gitTool = tool.getGitExe();
+        }
+    }
+
+    /**
+     * Recommend git tool to be used by the git client
+     * @return git implementation recommendation in the form of a string
+     */
+    public String getGitTool() {
+        return gitTool;
     }
 
     /**
@@ -153,27 +180,5 @@ public class GitRepoSizeEstimator {
             }
             return jenkins.getExtensionList(RepositorySizeAPI.class);
         }
-    }
-
-    private boolean setSizeFromAPI(String repoUrl) {
-        List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
-                .stream()
-                .filter(r -> r.acceptsRemote(repoUrl))
-                .collect(Collectors.toList());
-
-        if (acceptedRepository.size() == 1) {
-            sizeOfRepo = acceptedRepository.get(0).getSizeOfRepository(repoUrl);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Recommend git tool to be used by the git client
-     * @return git implementation recommendation in the form of a string
-     */
-    public String getGitTool() {
-        return gitTool;
     }
 }
