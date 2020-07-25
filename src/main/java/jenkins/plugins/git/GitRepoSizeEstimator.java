@@ -16,10 +16,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * A class which allows {@link AbstractGitSCMSource} to estimate the size of a repository from a distance
+ * A class which allows Git Plugin to estimate the size of a repository from a distance
  * without requiring a local checkout.
  */
 public class GitRepoSizeEstimator {
@@ -43,6 +45,7 @@ public class GitRepoSizeEstimator {
         boolean useCache;
         boolean useAPI = false;
 
+        implementation = determineSwitchOnSize(sizeOfRepo);
         useCache = setSizeFromCache(source);
 
         if (useCache) {
@@ -53,10 +56,6 @@ public class GitRepoSizeEstimator {
 
         if (useAPI) {
             implementation = determineSwitchOnSize(sizeOfRepo);
-        }
-
-        if (!useAPI && !useCache) {
-            implementation = "DEFAULT";
         }
         determineGitTool(implementation);
     }
@@ -70,8 +69,6 @@ public class GitRepoSizeEstimator {
 
         if (useAPI) {
             implementation = determineSwitchOnSize(sizeOfRepo);
-        } else {
-            implementation = "DEFAULT";
         }
         determineGitTool(implementation);
     }
@@ -84,21 +81,17 @@ public class GitRepoSizeEstimator {
      * @throws InterruptedException
      */
     private boolean setSizeFromCache(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
-        boolean useCache;
+        boolean useCache = false;
         String cacheEntry = source.getCacheEntry();
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
         if (cacheDir != null) {
             Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
             GitClient client = git.getClient();
-            if (!client.hasGitRepo()) {
-                useCache = false;
-            } else {
-                useCache = true;
+            if (client.hasGitRepo()) {
                 sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
                 sizeOfRepo = (sizeOfRepo/1000); // Conversion from Bytes to Kilo Bytes
+                useCache = true;
             }
-        } else {
-            useCache = false;
         }
         return useCache;
     }
@@ -111,12 +104,17 @@ public class GitRepoSizeEstimator {
     private boolean setSizeFromAPI(String repoUrl) {
         List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
                 .stream()
-                .filter(r -> r.acceptsRemote(repoUrl))
+                .filter(r -> r.isApplicableTo(repoUrl))
                 .collect(Collectors.toList());
 
-        if (acceptedRepository.size() == 1) {
-            sizeOfRepo = acceptedRepository.get(0).getSizeOfRepository(repoUrl);
-            return true;
+        if (acceptedRepository.size() > 0) {
+            try {
+                sizeOfRepo = acceptedRepository.get(0).getSizeOfRepository(repoUrl);
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, "Not using size API estimation based performance improvement");
+                return false;
+            }
+            return sizeOfRepo != 0; // Check if the size of the repository is zero
         } else {
             return false;
         }
@@ -169,16 +167,14 @@ public class GitRepoSizeEstimator {
      */
     public static abstract class RepositorySizeAPI implements ExtensionPoint {
 
-        public abstract boolean acceptsRemote(String remote);
+        public abstract boolean isApplicableTo(String remote);
 
-        public abstract Long getSizeOfRepository(String remote);
+        public abstract Long getSizeOfRepository(String remote) throws Exception;
 
         public static ExtensionList<RepositorySizeAPI> all() {
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
-            if (jenkins == null) {
-                return null;
-            }
-            return jenkins.getExtensionList(RepositorySizeAPI.class);
+            return Jenkins.get().getExtensionList(RepositorySizeAPI.class);
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(GitRepoSizeEstimator.class.getName());
 }
