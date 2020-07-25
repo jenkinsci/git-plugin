@@ -172,7 +172,7 @@ public class GitRepoSizeEstimatorTest {
 
     /*
     A test extension implemented to clone the behavior of a plugin extending the capability of providing the size of
-    repo from a remote URL of "Bitbucket".
+    repo from a remote URL of "BitBucket".
      */
     @TestExtension
     public static class TestExtensionBit extends GitRepoSizeEstimator.RepositorySizeAPI {

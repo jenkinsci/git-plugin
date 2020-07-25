@@ -65,8 +65,9 @@ public class GitRepoSizeEstimator {
      * @param remoteName: The URL of the repository
      */
     public GitRepoSizeEstimator(String remoteName) {
-        boolean useAPI = setSizeFromAPI(remoteName);
+        implementation = determineSwitchOnSize(sizeOfRepo);
 
+        boolean useAPI = setSizeFromAPI(remoteName);
         if (useAPI) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         }
@@ -142,7 +143,7 @@ public class GitRepoSizeEstimator {
      * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
      */
     private void determineGitTool(String gitImplementation) {
-        if (gitImplementation.equals("DEFAULT")) {
+        if (gitImplementation.equals("NONE")) {
             gitTool = "NONE";
             return; // Recommend nothing (GitToolRecommendation = NONE)
         }
