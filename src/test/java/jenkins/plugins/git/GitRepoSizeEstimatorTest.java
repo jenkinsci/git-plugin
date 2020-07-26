@@ -90,7 +90,7 @@ public class GitRepoSizeEstimatorTest {
     public void testSizeEstimationWithAPIForGit() {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
-        assertThat(sizeEstimator.getGitTool(), is("git"));
+        assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
     /*
@@ -103,7 +103,7 @@ public class GitRepoSizeEstimatorTest {
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
         GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
-        assertThat(sizeEstimator.getGitTool(), is("jgit"));
+        assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
     /*
