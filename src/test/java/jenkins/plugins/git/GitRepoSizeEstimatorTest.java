@@ -145,8 +145,7 @@ public class GitRepoSizeEstimatorTest {
         @Override
         public Long getSizeOfRepository(String remote) {
             // from remote, remove .git and https://github.com
-            long mockedSize = 500;
-            return mockedSize;
+            return (long) 500;
         }
     }
 
@@ -165,8 +164,7 @@ public class GitRepoSizeEstimatorTest {
         @Override
         public Long getSizeOfRepository(String remote) {
             // from remote, remove .git and https://github.com
-            long mockedSize = 10000;
-            return mockedSize;
+            return (long) 10000;
         }
     }
 
