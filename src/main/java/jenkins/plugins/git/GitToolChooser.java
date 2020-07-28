@@ -21,10 +21,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * A class which allows Git Plugin to estimate the size of a repository from a distance
+ * A class which allows Git Plugin to choose a git implementation by estimating the size of a repository from a distance
  * without requiring a local checkout.
  */
-public class GitRepoSizeEstimator {
+public class GitToolChooser {
 
     private long sizeOfRepo = 0L;
     private String implementation;
@@ -41,7 +41,7 @@ public class GitRepoSizeEstimator {
      * @throws IOException
      * @throws InterruptedException
      */
-    public GitRepoSizeEstimator(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
+    public GitToolChooser(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
         boolean useCache;
         boolean useAPI = false;
 
@@ -64,7 +64,7 @@ public class GitRepoSizeEstimator {
      * Estimate size of a repository using the extension point
      * @param remoteName: The URL of the repository
      */
-    public GitRepoSizeEstimator(String remoteName) {
+    public GitToolChooser(String remoteName) {
         implementation = determineSwitchOnSize(sizeOfRepo);
 
         boolean useAPI = setSizeFromAPI(remoteName);
@@ -177,5 +177,5 @@ public class GitRepoSizeEstimator {
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(GitRepoSizeEstimator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GitToolChooser.class.getName());
 }

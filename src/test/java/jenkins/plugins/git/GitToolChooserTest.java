@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
  * The test aims to functionally validate "estimation of size" and "git implementation recommendation" from a
  * cached directory and from plugin extensions.
  */
-public class GitRepoSizeEstimatorTest {
+public class GitToolChooserTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -41,7 +41,7 @@ public class GitRepoSizeEstimatorTest {
     @Test
     public void testSizeEstimationWithNoGitCache() throws Exception {
         GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
-        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(instance);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(instance);
         String tool = repoSizeEstimator.getGitTool();
 
         // The class should make recommendation because of APIs implementation even though
@@ -75,7 +75,7 @@ public class GitRepoSizeEstimatorTest {
         // Add a JGit tool to the Jenkins instance to let the estimator find and recommend "jgit"
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitRepoSizeEstimator repoSizeEstimator = new GitRepoSizeEstimator(source);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(source);
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
@@ -89,7 +89,7 @@ public class GitRepoSizeEstimatorTest {
     @Test
     public void testSizeEstimationWithAPIForGit() {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
-        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -102,7 +102,7 @@ public class GitRepoSizeEstimatorTest {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote);
         assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
@@ -113,7 +113,7 @@ public class GitRepoSizeEstimatorTest {
     @Test
     public void testSizeEstimationWithBitbucketAPIs() {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote);
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
@@ -125,7 +125,7 @@ public class GitRepoSizeEstimatorTest {
     @Test
     public void testSizeEstimationWithException() {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitRepoSizeEstimator sizeEstimator = new GitRepoSizeEstimator(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -135,7 +135,7 @@ public class GitRepoSizeEstimatorTest {
     repo from a remote URL of "Github".
      */
     @TestExtension
-    public static class TestExtensionGithub extends GitRepoSizeEstimator.RepositorySizeAPI {
+    public static class TestExtensionGithub extends GitToolChooser.RepositorySizeAPI {
 
         @Override
         public boolean isApplicableTo(String remote) {
@@ -154,7 +154,7 @@ public class GitRepoSizeEstimatorTest {
     repo from a remote URL of "GitLab".
      */
     @TestExtension
-    public static class TestExtensionGitlab extends GitRepoSizeEstimator.RepositorySizeAPI {
+    public static class TestExtensionGitlab extends GitToolChooser.RepositorySizeAPI {
 
         @Override
         public boolean isApplicableTo(String remote) {
@@ -173,7 +173,7 @@ public class GitRepoSizeEstimatorTest {
     repo from a remote URL of "BitBucket".
      */
     @TestExtension
-    public static class TestExtensionBit extends GitRepoSizeEstimator.RepositorySizeAPI {
+    public static class TestExtensionBit extends GitToolChooser.RepositorySizeAPI {
 
         @Override
         public boolean isApplicableTo(String remote) {
