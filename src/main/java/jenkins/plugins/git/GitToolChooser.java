@@ -42,20 +42,15 @@ public class GitToolChooser {
      * @throws InterruptedException
      */
     public GitToolChooser(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
-        boolean useCache;
-        boolean useAPI = false;
+        boolean useCache = false;
 
-        implementation = determineSwitchOnSize(sizeOfRepo);
-        useCache = setSizeFromCache(source);
+        implementation = "NONE";
+        useCache = decideAndUseCache(source);
 
         if (useCache) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         } else {
-            useAPI = setSizeFromAPI(source.getRemote());
-        }
-
-        if (useAPI) {
-            implementation = determineSwitchOnSize(sizeOfRepo);
+            decideAndUseAPI(source.getRemote());
         }
         determineGitTool(implementation);
     }
@@ -66,11 +61,7 @@ public class GitToolChooser {
      */
     public GitToolChooser(String remoteName) {
         implementation = determineSwitchOnSize(sizeOfRepo);
-
-        boolean useAPI = setSizeFromAPI(remoteName);
-        if (useAPI) {
-            implementation = determineSwitchOnSize(sizeOfRepo);
-        }
+        decideAndUseAPI(remoteName);
         determineGitTool(implementation);
     }
 
@@ -81,7 +72,7 @@ public class GitToolChooser {
      * @throws IOException
      * @throws InterruptedException
      */
-    private boolean setSizeFromCache(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
+    private boolean decideAndUseCache(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
         boolean useCache = false;
         String cacheEntry = source.getCacheEntry();
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
@@ -95,6 +86,12 @@ public class GitToolChooser {
             }
         }
         return useCache;
+    }
+
+    private void decideAndUseAPI(String remoteName) {
+        if (setSizeFromAPI(remoteName)) {
+            implementation = determineSwitchOnSize(sizeOfRepo);
+        }
     }
 
     /**
