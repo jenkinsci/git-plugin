@@ -58,6 +58,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitToolChooser;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import net.sf.json.JSONObject;
 
@@ -75,6 +76,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -844,6 +846,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
+
+        UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
+        for (GitSCMExtension ext : extensions) {
+            ext.determineSupportForJGit(this, unsupportedCommand);
+        }
+
+        listener.getLogger().println("Using Performance Improvement");
+        GitToolChooser estimator = null;
+        for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+            String url = getParameterString(uc.getUrl(), environment);
+            estimator = new GitToolChooser(url, unsupportedCommand.determineSupportForJGit());
+        }
+        listener.getLogger().println("The recommended git tool is: " + estimator.getGitTool());
+
+        gitExe = estimator.getGitTool();
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
