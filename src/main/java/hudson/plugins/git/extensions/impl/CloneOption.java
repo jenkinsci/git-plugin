@@ -21,6 +21,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -191,6 +192,13 @@ public class CloneOption extends GitSCMExtension {
     @Override
     public GitClientType getRequiredClient() {
         return GitClientType.GITCLI;
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand cmd) {
+        cmd.timeout(timeout);
+        cmd.shallow(shallow);
+        cmd.depth(depth);
     }
 
 
