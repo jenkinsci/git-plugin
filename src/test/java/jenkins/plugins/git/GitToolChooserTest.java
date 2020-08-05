@@ -88,8 +88,9 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithAPIForGit() {
+        boolean useJGit = false;
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, useJGit);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -99,10 +100,11 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithAPIForJGit() {
+        boolean useJGit = true;
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, useJGit);
         assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
@@ -112,8 +114,9 @@ public class GitToolChooserTest {
      */
     @Test
     public void testSizeEstimationWithBitbucketAPIs() {
+        boolean useJGit = true;
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, useJGit);
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
@@ -125,7 +128,7 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithException() {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, true);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
