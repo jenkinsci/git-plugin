@@ -1,0 +1,956 @@
+@startuml
+
+title __IMPL's Class Diagram__\n
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.AuthorInChangelog {
+              + AuthorInChangelog()
+              + equals()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.AuthorInChangelog.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.BuildChooserSetting {
+              + BuildChooserSetting()
+              + getBuildChooser()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.BuildChooserSetting.DescriptorImpl {
+              + getBuildChooserDescriptors()
+              + getBuildChooserDescriptors()
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly {
+              + BuildSingleRevisionOnly()
+              + enableMultipleRevisionDetection()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.ChangelogToBranch {
+              + ChangelogToBranch()
+              + getOptions()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.ChangelogToBranch.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CheckoutOption {
+              - timeout : Integer
+              + CheckoutOption()
+              + decorateCheckoutCommand()
+              + decorateCheckoutCommand()
+              + equals()
+              + getTimeout()
+              + hashCode()
+              + requiresWorkspaceForPolling()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CheckoutOption.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CleanBeforeCheckout {
+              - deleteUntrackedNestedRepositories : boolean
+              + CleanBeforeCheckout()
+              + decorateFetchCommand()
+              + equals()
+              + hashCode()
+              + isDeleteUntrackedNestedRepositories()
+              + setDeleteUntrackedNestedRepositories()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CleanBeforeCheckout.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CleanCheckout {
+              - deleteUntrackedNestedRepositories : boolean
+              + CleanCheckout()
+              + equals()
+              + hashCode()
+              + isDeleteUntrackedNestedRepositories()
+              + onCheckoutCompleted()
+              + setDeleteUntrackedNestedRepositories()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CleanCheckout.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CloneOption {
+              - depth : Integer
+              - honorRefspec : boolean
+              - noTags : boolean
+              - reference : String
+              - shallow : boolean
+              - timeout : Integer
+              + CloneOption()
+              + CloneOption()
+              + decorateCloneCommand()
+              + decorateFetchCommand()
+              + equals()
+              + getDepth()
+              + getReference()
+              + getRequiredClient()
+              + getTimeout()
+              + hashCode()
+              + isHonorRefspec()
+              + isNoTags()
+              + isShallow()
+              + setDepth()
+              + setHonorRefspec()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.CloneOption.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.DisableRemotePoll {
+              + DisableRemotePoll()
+              + requiresWorkspaceForPolling()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.DisableRemotePoll.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.GitLFSPull {
+              + GitLFSPull()
+              + decorateCheckoutCommand()
+              + equals()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.GitLFSPull.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.IgnoreNotifyCommit {
+              + IgnoreNotifyCommit()
+              + equals()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.IgnoreNotifyCommit.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.LocalBranch {
+              - localBranch : String
+              + LocalBranch()
+              + equals()
+              + getLocalBranch()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.LocalBranch.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.MessageExclusion {
+              - excludedMessage : String
+              - excludedPattern : Pattern
+              + MessageExclusion()
+              + getExcludedMessage()
+              + isRevExcluded()
+              + requiresWorkspaceForPolling()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.MessageExclusion.DescriptorImpl {
+              + doCheckExcludedMessage()
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PathRestriction {
+              - excludedPatterns : List<Pattern>
+              - excludedRegions : String
+              - includedPatterns : List<Pattern>
+              - includedRegions : String
+              + PathRestriction()
+              + getExcludedRegions()
+              + getExcludedRegionsNormalized()
+              + getIncludedRegions()
+              + getIncludedRegionsNormalized()
+              + isRevExcluded()
+              + requiresWorkspaceForPolling()
+              - getExcludedPatterns()
+              - getIncludedPatterns()
+              - getRegionsPatterns()
+              - normalize()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PathRestriction.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PerBuildTag {
+              + PerBuildTag()
+              + onCheckoutCompleted()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PerBuildTag.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PreBuildMerge {
+              + PreBuildMerge()
+              + decorateMergeCommand()
+              + decorateRevisionToBuild()
+              + equals()
+              + getOptions()
+              + getRequiredClient()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PreBuildMerge.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PruneStaleBranch {
+              + PruneStaleBranch()
+              + decorateFetchCommand()
+              + equals()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PruneStaleBranch.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PruneStaleTag {
+              {static} - TAG_REF : String
+              - pruneTags : boolean
+              + PruneStaleTag()
+              + decorateFetchCommand()
+              + equals()
+              + getPruneTags()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.PruneStaleTag.DescriptorImpl {
+              + getDisplayName()
+              + newInstance()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.RelativeTargetDirectory {
+              - relativeTargetDir : String
+              + RelativeTargetDirectory()
+              + getRelativeTargetDir()
+              + getWorkingDirectory()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.RelativeTargetDirectory.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.ScmName {
+              - name : String
+              + ScmName()
+              + getName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.ScmName.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SparseCheckoutPath {
+              {static} + SPARSE_CHECKOUT_PATH_TO_PATH : SparseCheckoutPathToPath
+              - path : String
+              {static} - serialVersionUID : long
+              + SparseCheckoutPath()
+              + equals()
+              + getDescriptor()
+              + getPath()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SparseCheckoutPath.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SparseCheckoutPath.SparseCheckoutPathToPath {
+              + apply()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SparseCheckoutPaths {
+              - sparseCheckoutPaths : List<SparseCheckoutPath>
+              + SparseCheckoutPaths()
+              + decorateCheckoutCommand()
+              + decorateCloneCommand()
+              + equals()
+              + getSparseCheckoutPaths()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SparseCheckoutPaths.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SubmoduleOption {
+              - depth : Integer
+              - disableSubmodules : boolean
+              - parentCredentials : boolean
+              - recursiveSubmodules : boolean
+              - reference : String
+              - shallow : boolean
+              - threads : Integer
+              - timeout : Integer
+              - trackingSubmodules : boolean
+              + SubmoduleOption()
+              + equals()
+              + getDepth()
+              + getReference()
+              + getShallow()
+              + getThreads()
+              + getTimeout()
+              + hashCode()
+              + isDisableSubmodules()
+              + isParentCredentials()
+              + isRecursiveSubmodules()
+              + isTrackingSubmodules()
+              + onCheckoutCompleted()
+              + onClean()
+              + setDepth()
+              + setShallow()
+              + setThreads()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.SubmoduleOption.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.UserExclusion {
+              - excludedUsers : String
+              + UserExclusion()
+              + getExcludedUsers()
+              + getExcludedUsersNormalized()
+              + isRevExcluded()
+              + requiresWorkspaceForPolling()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.UserExclusion.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.UserIdentity {
+              - email : String
+              - name : String
+              + UserIdentity()
+              + decorate()
+              + equals()
+              + getEmail()
+              + getName()
+              + hashCode()
+              + populateEnvironmentVariables()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.UserIdentity.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.WipeWorkspace {
+              + WipeWorkspace()
+              + beforeCheckout()
+              + equals()
+              + hashCode()
+              + toString()
+          }
+        }
+      }
+    }
+  }
+  
+
+  namespace  {
+    namespace udson.plugins.git {
+      namespace extensions {
+        namespace impl {
+          class hudson.plugins.git.extensions.impl.WipeWorkspace.DescriptorImpl {
+              + getDisplayName()
+          }
+        }
+      }
+    }
+  }
+  
+
+  hudson.plugins.git.extensions.impl.AuthorInChangelog -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.AuthorInChangelog +-down- hudson.plugins.git.extensions.impl.AuthorInChangelog.DescriptorImpl
+  hudson.plugins.git.extensions.impl.AuthorInChangelog.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.BuildChooserSetting -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.BuildChooserSetting o-- hudson.plugins.git.util.BuildChooser : buildChooser
+  hudson.plugins.git.extensions.impl.BuildChooserSetting +-down- hudson.plugins.git.extensions.impl.BuildChooserSetting.DescriptorImpl
+  hudson.plugins.git.extensions.impl.BuildChooserSetting.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly +-down- hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly.DescriptorImpl
+  hudson.plugins.git.extensions.impl.BuildSingleRevisionOnly.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.ChangelogToBranch -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.ChangelogToBranch o-- hudson.plugins.git.ChangelogToBranchOptions : options
+  hudson.plugins.git.extensions.impl.ChangelogToBranch +-down- hudson.plugins.git.extensions.impl.ChangelogToBranch.DescriptorImpl
+  hudson.plugins.git.extensions.impl.ChangelogToBranch.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.CheckoutOption -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.CheckoutOption +-down- hudson.plugins.git.extensions.impl.CheckoutOption.DescriptorImpl
+  hudson.plugins.git.extensions.impl.CheckoutOption.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.CleanBeforeCheckout -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.CleanBeforeCheckout +-down- hudson.plugins.git.extensions.impl.CleanBeforeCheckout.DescriptorImpl
+  hudson.plugins.git.extensions.impl.CleanBeforeCheckout.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.CleanCheckout -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.CleanCheckout +-down- hudson.plugins.git.extensions.impl.CleanCheckout.DescriptorImpl
+  hudson.plugins.git.extensions.impl.CleanCheckout.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.CloneOption -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.CloneOption +-down- hudson.plugins.git.extensions.impl.CloneOption.DescriptorImpl
+  hudson.plugins.git.extensions.impl.CloneOption.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.DisableRemotePoll -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.DisableRemotePoll +-down- hudson.plugins.git.extensions.impl.DisableRemotePoll.DescriptorImpl
+  hudson.plugins.git.extensions.impl.DisableRemotePoll.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.GitLFSPull -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.GitLFSPull +-down- hudson.plugins.git.extensions.impl.GitLFSPull.DescriptorImpl
+  hudson.plugins.git.extensions.impl.GitLFSPull.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.IgnoreNotifyCommit -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.IgnoreNotifyCommit +-down- hudson.plugins.git.extensions.impl.IgnoreNotifyCommit.DescriptorImpl
+  hudson.plugins.git.extensions.impl.IgnoreNotifyCommit.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.LocalBranch -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.LocalBranch +-down- hudson.plugins.git.extensions.impl.LocalBranch.DescriptorImpl
+  hudson.plugins.git.extensions.impl.LocalBranch.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.MessageExclusion -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.MessageExclusion +-down- hudson.plugins.git.extensions.impl.MessageExclusion.DescriptorImpl
+  hudson.plugins.git.extensions.impl.MessageExclusion.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.PathRestriction -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.PathRestriction +-down- hudson.plugins.git.extensions.impl.PathRestriction.DescriptorImpl
+  hudson.plugins.git.extensions.impl.PathRestriction.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.PerBuildTag -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.PerBuildTag +-down- hudson.plugins.git.extensions.impl.PerBuildTag.DescriptorImpl
+  hudson.plugins.git.extensions.impl.PerBuildTag.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.PreBuildMerge -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.PreBuildMerge o-- hudson.plugins.git.UserMergeOptions : options
+  hudson.plugins.git.extensions.impl.PreBuildMerge +-down- hudson.plugins.git.extensions.impl.PreBuildMerge.DescriptorImpl
+  hudson.plugins.git.extensions.impl.PreBuildMerge.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.PruneStaleBranch -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.PruneStaleBranch +-down- hudson.plugins.git.extensions.impl.PruneStaleBranch.DescriptorImpl
+  hudson.plugins.git.extensions.impl.PruneStaleBranch.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.PruneStaleTag -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.PruneStaleTag +-down- hudson.plugins.git.extensions.impl.PruneStaleTag.DescriptorImpl
+  hudson.plugins.git.extensions.impl.PruneStaleTag.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.RelativeTargetDirectory -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.RelativeTargetDirectory +-down- hudson.plugins.git.extensions.impl.RelativeTargetDirectory.DescriptorImpl
+  hudson.plugins.git.extensions.impl.RelativeTargetDirectory.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.ScmName -up-|> hudson.plugins.git.extensions.FakeGitSCMExtension
+  hudson.plugins.git.extensions.impl.ScmName +-down- hudson.plugins.git.extensions.impl.ScmName.DescriptorImpl
+  hudson.plugins.git.extensions.impl.ScmName.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath .up.|> java.io.Serializable
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath -up-|> hudson.model.AbstractDescribableImpl
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath +-down- hudson.plugins.git.extensions.impl.SparseCheckoutPath.DescriptorImpl
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath +-down- hudson.plugins.git.extensions.impl.SparseCheckoutPath.SparseCheckoutPathToPath
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath.DescriptorImpl -up-|> hudson.model.Descriptor
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath.SparseCheckoutPathToPath .up.|> com.google.common.base.Function
+  hudson.plugins.git.extensions.impl.SparseCheckoutPath.SparseCheckoutPathToPath .up.|> java.io.Serializable
+  hudson.plugins.git.extensions.impl.SparseCheckoutPaths -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.SparseCheckoutPaths +-down- hudson.plugins.git.extensions.impl.SparseCheckoutPaths.DescriptorImpl
+  hudson.plugins.git.extensions.impl.SparseCheckoutPaths.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.SubmoduleOption -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.SubmoduleOption +-down- hudson.plugins.git.extensions.impl.SubmoduleOption.DescriptorImpl
+  hudson.plugins.git.extensions.impl.SubmoduleOption.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.UserExclusion -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.UserExclusion +-down- hudson.plugins.git.extensions.impl.UserExclusion.DescriptorImpl
+  hudson.plugins.git.extensions.impl.UserExclusion.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.UserIdentity -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.UserIdentity +-down- hudson.plugins.git.extensions.impl.UserIdentity.DescriptorImpl
+  hudson.plugins.git.extensions.impl.UserIdentity.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+  hudson.plugins.git.extensions.impl.WipeWorkspace -up-|> hudson.plugins.git.extensions.GitSCMExtension
+  hudson.plugins.git.extensions.impl.WipeWorkspace +-down- hudson.plugins.git.extensions.impl.WipeWorkspace.DescriptorImpl
+  hudson.plugins.git.extensions.impl.WipeWorkspace.DescriptorImpl -up-|> hudson.plugins.git.extensions.GitSCMExtensionDescriptor
+
+
+right footer
+
+
+PlantUML diagram generated by SketchIt! (https://bitbucket.org/pmesmeur/sketch.it)
+For more information about this tool, please contact philippe.mesmeur@gmail.com
+endfooter
+
+@enduml
