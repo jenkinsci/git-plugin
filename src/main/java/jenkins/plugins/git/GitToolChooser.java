@@ -33,6 +33,7 @@ public class GitToolChooser {
      * Size to switch implementation in KiB
      */
     public static final int SIZE_TO_SWITCH = 5000;
+    public boolean JGIT_SUPPORTED = true;
 
     /**
      * Instantiate class using {@link AbstractGitSCMSource}. It looks for a cached .git directory first, calculates the
@@ -59,7 +60,10 @@ public class GitToolChooser {
      * Estimate size of a repository using the extension point
      * @param remoteName: The URL of the repository
      */
-    public GitToolChooser(String remoteName) {
+    public GitToolChooser(String remoteName, Boolean useJGit) {
+        if (useJGit != null) {
+            JGIT_SUPPORTED = useJGit;
+        }
         implementation = determineSwitchOnSize(sizeOfRepo);
         decideAndUseAPI(remoteName);
         determineGitTool(implementation);
@@ -128,10 +132,10 @@ public class GitToolChooser {
      */
     private String determineSwitchOnSize(Long sizeOfRepo) {
         if (sizeOfRepo != 0L) {
-            if (sizeOfRepo >= SIZE_TO_SWITCH) {
-                return "git";
-            } else {
+            if (sizeOfRepo < SIZE_TO_SWITCH && JGIT_SUPPORTED) {
                 return "jgit";
+            } else {
+                return "git";
             }
         }
         return "NONE";
@@ -159,6 +163,9 @@ public class GitToolChooser {
      * @return git implementation recommendation in the form of a string
      */
     public String getGitTool() {
+        if (!JGIT_SUPPORTED && gitTool.equals("jgit")) {
+            return "NONE";
+        }
         return gitTool;
     }
 
