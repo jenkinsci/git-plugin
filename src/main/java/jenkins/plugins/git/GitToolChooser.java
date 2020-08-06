@@ -163,9 +163,6 @@ public class GitToolChooser {
      * @return git implementation recommendation in the form of a string
      */
     public String getGitTool() {
-        if (!JGIT_SUPPORTED && gitTool.equals("jgit")) {
-            return "NONE";
-        }
         return gitTool;
     }
 
