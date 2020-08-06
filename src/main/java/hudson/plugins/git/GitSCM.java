@@ -853,14 +853,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         listener.getLogger().println("Using Performance Improvement");
-        GitToolChooser estimator = null;
+        GitToolChooser chooser = null;
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             String url = getParameterString(uc.getUrl(), environment);
-            estimator = new GitToolChooser(url, unsupportedCommand.determineSupportForJGit());
+            chooser = new GitToolChooser(url, unsupportedCommand.determineSupportForJGit());
         }
-        listener.getLogger().println("The recommended git tool is: " + estimator.getGitTool());
+        listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
 
-        gitExe = estimator.getGitTool();
+        gitExe = chooser.getGitTool();
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
