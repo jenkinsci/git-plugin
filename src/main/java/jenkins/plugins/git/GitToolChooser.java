@@ -56,16 +56,6 @@ public class GitToolChooser {
         determineGitTool(implementation);
     }
 
-//    /**
-//     * Estimate size of a repository using the extension point
-//     * @param remoteName: The URL of the repository
-//     */
-//    public GitToolChooser(String remoteName) {
-//        implementation = determineSwitchOnSize(sizeOfRepo);
-//        decideAndUseAPI(remoteName);
-//        determineGitTool(implementation);
-//    }
-
     /**
      * Determine and estimate the size of a .git cached directory
      * @param remoteName: Use the repository url to access a cached Jenkins directory, we do not lock it.
