@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
@@ -35,46 +36,46 @@ public class GitToolChooser {
     public static final int SIZE_TO_SWITCH = 5000;
 
     /**
-     * Instantiate class using {@link AbstractGitSCMSource}. It looks for a cached .git directory first, calculates the
+     * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
      * size if it is found else checks if the extension point has been implemented and asks for the size.
-     * @param source the {@link AbstractGitSCMSource}
+     * @param remoteName the repository url
      * @throws IOException
      * @throws InterruptedException
      */
-    public GitToolChooser(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
 
         implementation = "NONE";
-        useCache = decideAndUseCache(source);
+        useCache = decideAndUseCache(remoteName);
 
         if (useCache) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         } else {
-            decideAndUseAPI(source.getRemote());
+            decideAndUseAPI(remoteName);
         }
         determineGitTool(implementation);
     }
 
-    /**
-     * Estimate size of a repository using the extension point
-     * @param remoteName: The URL of the repository
-     */
-    public GitToolChooser(String remoteName) {
-        implementation = determineSwitchOnSize(sizeOfRepo);
-        decideAndUseAPI(remoteName);
-        determineGitTool(implementation);
-    }
+//    /**
+//     * Estimate size of a repository using the extension point
+//     * @param remoteName: The URL of the repository
+//     */
+//    public GitToolChooser(String remoteName) {
+//        implementation = determineSwitchOnSize(sizeOfRepo);
+//        decideAndUseAPI(remoteName);
+//        determineGitTool(implementation);
+//    }
 
     /**
      * Determine and estimate the size of a .git cached directory
-     * @param source: Use a {@link AbstractGitSCMSource} to access a cached Jenkins directory, we do not lock it.
+     * @param remoteName: Use the repository url to access a cached Jenkins directory, we do not lock it.
      * @return useCache
      * @throws IOException
      * @throws InterruptedException
      */
-    private boolean decideAndUseCache(@NonNull AbstractGitSCMSource source) throws IOException, InterruptedException {
+    private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
-        String cacheEntry = source.getCacheEntry();
+        String cacheEntry = getCacheEntry(remoteName);
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
         if (cacheDir != null) {
             Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
@@ -92,6 +93,10 @@ public class GitToolChooser {
         if (setSizeFromAPI(remoteName)) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         }
+    }
+
+    private String getCacheEntry(String remote) {
+        return "git-" + Util.getDigestOf(remote);
     }
 
     /**

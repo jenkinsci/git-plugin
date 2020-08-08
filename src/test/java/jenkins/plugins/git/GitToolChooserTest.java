@@ -41,7 +41,7 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithNoGitCache() throws Exception {
         GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
-        GitToolChooser repoSizeEstimator = new GitToolChooser(instance);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote());
         String tool = repoSizeEstimator.getGitTool();
 
         // The class should make recommendation because of APIs implementation even though
@@ -75,7 +75,7 @@ public class GitToolChooserTest {
         // Add a JGit tool to the Jenkins instance to let the estimator find and recommend "jgit"
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(source);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote());
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
@@ -87,7 +87,7 @@ public class GitToolChooserTest {
     recommend "git" as the optimal implementation from the heuristics
      */
     @Test
-    public void testSizeEstimationWithAPIForGit() {
+    public void testSizeEstimationWithAPIForGit() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         GitToolChooser sizeEstimator = new GitToolChooser(remote);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
@@ -98,7 +98,7 @@ public class GitToolChooserTest {
     recommend "jgit" as the optimal implementation from the heuristics
      */
     @Test
-    public void testSizeEstimationWithAPIForJGit() {
+    public void testSizeEstimationWithAPIForJGit() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
@@ -111,7 +111,7 @@ public class GitToolChooserTest {
     the estimator recommends no git implementation
      */
     @Test
-    public void testSizeEstimationWithBitbucketAPIs() {
+    public void testSizeEstimationWithBitbucketAPIs() throws Exception {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
         GitToolChooser sizeEstimator = new GitToolChooser(remote);
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
@@ -123,7 +123,7 @@ public class GitToolChooserTest {
     "INFO" message and returns no recommendation.
      */
     @Test
-    public void testSizeEstimationWithException() {
+    public void testSizeEstimationWithException() throws Exception {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
         GitToolChooser sizeEstimator = new GitToolChooser(remote);
 
