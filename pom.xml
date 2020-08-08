@@ -34,7 +34,7 @@
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <linkXRef>false</linkXRef>
-    <configuration-as-code.version>1.36</configuration-as-code.version>
+    <configuration-as-code.version>1.43</configuration-as-code.version>
     <slf4jVersion>1.7.26</slf4jVersion>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.failOnError>true</spotbugs.failOnError>
