@@ -1,6 +1,5 @@
 package jenkins.plugins.git;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
