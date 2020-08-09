@@ -1,13 +1,22 @@
 package jenkins.plugins.git;
 
-import hudson.model.TaskListener;
+import com.cloudbees.plugins.credentials.*;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.*;
 import hudson.plugins.git.GitTool;
 import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
 
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -15,6 +24,7 @@ import org.jvnet.hudson.test.TestExtension;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -34,14 +44,38 @@ public class GitToolChooserTest {
 
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
 
+    private CredentialsStore store = null;
+
+    @Before
+    public void enableSystemCredentialsProvider() {
+        SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
+                Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
+        for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
+            if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
+                store = s;
+                break;
+            }
+        }
+        assertThat("The system credentials provider is enabled", store, notNullValue());
+    }
+
     /*
     In the event of having no cache but extension APIs in the ExtensionList, the estimator should recommend a tool
     instead of recommending no git implementation.
      */
     @Test
     public void testSizeEstimationWithNoGitCache() throws Exception {
+        sampleRepo.init();
         GitSCMSource instance = new GitSCMSource("https://github.com/rishabhBudhouliya/git-plugin.git");
-        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote());
+
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote(), list.get(0), "github");
         String tool = repoSizeEstimator.getGitTool();
 
         // The class should make recommendation because of APIs implementation even though
@@ -75,7 +109,14 @@ public class GitToolChooserTest {
         // Add a JGit tool to the Jenkins instance to let the estimator find and recommend "jgit"
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote());
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote(), list.get(0), "github");
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
@@ -89,7 +130,14 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithAPIForGit() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -100,9 +148,16 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithAPIForJGit() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        buildAProject(sampleRepo, false);
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
         assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
@@ -113,7 +168,13 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithBitbucketAPIs() throws Exception {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+        buildAProject(sampleRepo, false);
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
@@ -125,7 +186,29 @@ public class GitToolChooserTest {
     @Test
     public void testSizeEstimationWithException() throws Exception {
         String remote = "https://bitbucket.com/rishabhBudhouliya/git-plugin.git";
-        GitToolChooser sizeEstimator = new GitToolChooser(remote);
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+        buildAProject(sampleRepo, false);
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
+
+        assertThat(sizeEstimator.getGitTool(), is("NONE"));
+    }
+
+    /*
+    In case of having no user credentials, the git plugin expects the `implementers` of the extension point to handle
+    and try querying for size of repo, if it throws an exception we catch it and recommend "NONE", i.e, no recommendation.
+     */
+    @Test
+    public void testSizeEstimationWithNoCredentials() throws Exception {
+        sampleRepo.init();
+
+        buildAProject(sampleRepo, true);
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -143,7 +226,7 @@ public class GitToolChooserTest {
         }
 
         @Override
-        public Long getSizeOfRepository(String remote) {
+        public Long getSizeOfRepository(String remote, Item context, String credentialsId) {
             // from remote, remove .git and https://github.com
             return (long) 500;
         }
@@ -162,7 +245,7 @@ public class GitToolChooserTest {
         }
 
         @Override
-        public Long getSizeOfRepository(String remote) {
+        public Long getSizeOfRepository(String remote, Item context, String credentialsId) {
             // from remote, remove .git and https://github.com
             return (long) 10000;
         }
@@ -181,10 +264,29 @@ public class GitToolChooserTest {
         }
 
         @Override
-        public Long getSizeOfRepository(String remote) throws IOException {
+        public Long getSizeOfRepository(String remote, Item context, String credentialsId) throws IOException {
             throw new IOException();
         }
     }
 
+
+    private void buildAProject(GitSampleRepoRule sampleRepo, boolean noCredentials) throws Exception {
+        WorkflowJob p = jenkins.jenkins.createProject(WorkflowJob.class, "p");
+        p.setDefinition(new CpsFlowDefinition(
+                "node {\n"
+                        + "  checkout(\n"
+                        + "    [$class: 'GitSCM', \n"
+                        + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
+                        + "  )"
+                        + "}", true));
+        WorkflowRun b = jenkins.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        if (!noCredentials) {
+            jenkins.waitForMessage("using credential github", b);
+        }
+    }
+
+    private StandardCredentials createCredential(CredentialsScope scope, String id) {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
+    }
 
 }

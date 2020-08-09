@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Util;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
@@ -41,7 +42,7 @@ public class GitToolChooser {
      * @throws IOException
      * @throws InterruptedException
      */
-    public GitToolChooser(String remoteName) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName, Item projectContext, String credentialsId) throws IOException, InterruptedException {
         boolean useCache = false;
 
         implementation = "NONE";
@@ -50,7 +51,7 @@ public class GitToolChooser {
         if (useCache) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         } else {
-            decideAndUseAPI(remoteName);
+            decideAndUseAPI(remoteName, projectContext, credentialsId);
         }
         determineGitTool(implementation);
     }
@@ -78,8 +79,8 @@ public class GitToolChooser {
         return useCache;
     }
 
-    private void decideAndUseAPI(String remoteName) {
-        if (setSizeFromAPI(remoteName)) {
+    private void decideAndUseAPI(String remoteName, Item context, String credentialsId) {
+        if (setSizeFromAPI(remoteName, context, credentialsId)) {
             implementation = determineSwitchOnSize(sizeOfRepo);
         }
     }
@@ -93,7 +94,7 @@ public class GitToolChooser {
      * @param repoUrl: The remote name derived from {@link GitSCMSource} object
      * @return boolean useAPI or not.
      */
-    private boolean setSizeFromAPI(String repoUrl) {
+    private boolean setSizeFromAPI(String repoUrl, Item context, String credentialsId) {
         List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
                 .stream()
                 .filter(r -> r.isApplicableTo(repoUrl))
@@ -102,7 +103,7 @@ public class GitToolChooser {
         if (acceptedRepository.size() > 0) {
             try {
                 for (RepositorySizeAPI repo: acceptedRepository) {
-                    long size = repo.getSizeOfRepository(repoUrl);
+                    long size = repo.getSizeOfRepository(repoUrl, context, credentialsId);
                     if (size != 0) { sizeOfRepo = size; }
                 }
             } catch (Exception e) {
@@ -164,7 +165,7 @@ public class GitToolChooser {
 
         public abstract boolean isApplicableTo(String remote);
 
-        public abstract Long getSizeOfRepository(String remote) throws Exception;
+        public abstract Long getSizeOfRepository(String remote, Item context, String credentialsId) throws Exception;
 
         public static ExtensionList<RepositorySizeAPI> all() {
             return Jenkins.get().getExtensionList(RepositorySizeAPI.class);
