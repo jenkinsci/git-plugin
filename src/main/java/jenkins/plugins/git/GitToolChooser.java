@@ -33,7 +33,7 @@ public class GitToolChooser {
      * Size to switch implementation in KiB
      */
     public static final int SIZE_TO_SWITCH = 5000;
-    public boolean JGIT_SUPPORTED = true;
+    public boolean JGIT_SUPPORTED = false;
 
     /**
      * Instantiate class using {@link AbstractGitSCMSource}. It looks for a cached .git directory first, calculates the
