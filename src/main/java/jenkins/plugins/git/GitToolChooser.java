@@ -97,7 +97,7 @@ public class GitToolChooser {
     private boolean setSizeFromAPI(String repoUrl, Item context, String credentialsId) {
         List<RepositorySizeAPI> acceptedRepository = Objects.requireNonNull(RepositorySizeAPI.all())
                 .stream()
-                .filter(r -> r.isApplicableTo(repoUrl))
+                .filter(r -> r.isApplicableTo(repoUrl, context, credentialsId))
                 .collect(Collectors.toList());
 
         if (acceptedRepository.size() > 0) {
@@ -163,7 +163,7 @@ public class GitToolChooser {
      */
     public static abstract class RepositorySizeAPI implements ExtensionPoint {
 
-        public abstract boolean isApplicableTo(String remote);
+        public abstract boolean isApplicableTo(String remote, Item context, String credentialsId);
 
         public abstract Long getSizeOfRepository(String remote, Item context, String credentialsId) throws Exception;
 

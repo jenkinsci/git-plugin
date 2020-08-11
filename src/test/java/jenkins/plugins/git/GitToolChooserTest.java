@@ -221,7 +221,7 @@ public class GitToolChooserTest {
     public static class TestExtensionGithub extends GitToolChooser.RepositorySizeAPI {
 
         @Override
-        public boolean isApplicableTo(String remote) {
+        public boolean isApplicableTo(String remote, Item context, String credentialsId) {
             return remote.contains("github");
         }
 
@@ -240,7 +240,7 @@ public class GitToolChooserTest {
     public static class TestExtensionGitlab extends GitToolChooser.RepositorySizeAPI {
 
         @Override
-        public boolean isApplicableTo(String remote) {
+        public boolean isApplicableTo(String remote, Item context, String credentialsId) {
             return remote.contains("gitlab");
         }
 
@@ -259,7 +259,7 @@ public class GitToolChooserTest {
     public static class TestExtensionBit extends GitToolChooser.RepositorySizeAPI {
 
         @Override
-        public boolean isApplicableTo(String remote) {
+        public boolean isApplicableTo(String remote, Item context, String credentialsId) {
             return remote.contains("bit");
         }
 
