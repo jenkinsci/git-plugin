@@ -67,7 +67,7 @@ public class GitToolChooser {
      */
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
-        String cacheEntry = getCacheEntry(remoteName);
+        String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
         if (cacheDir != null) {
             Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
@@ -141,6 +141,9 @@ public class GitToolChooser {
             return; // Recommend nothing (GitToolRecommendation = NONE)
         }
         final Jenkins jenkins = Jenkins.get();
+        if (gitImplementation.equals(JGitTool.MAGIC_EXENAME)) {
+
+        }
         GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
         if (tool != null) {
             if (!gitExe.equals(tool.getGitExe()) && !tool.getGitExe().contains(JGitTool.MAGIC_EXENAME)) {
@@ -158,10 +161,6 @@ public class GitToolChooser {
      */
     public String getGitTool() {
         return gitTool;
-    }
-
-    private String getCacheEntry(String remote) {
-        return "git-" + Util.getDigestOf(remote);
     }
 
     private String determineToolName(String gitExe, String recommendation) {
