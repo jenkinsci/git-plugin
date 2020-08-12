@@ -244,7 +244,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithLessThan5Mb() throws Exception {
-        String url = "https:github.com";
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
@@ -252,7 +252,7 @@ public class GitToolChooserTest {
         GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool.getGitExe());
 
         //According to size of repo, "jgit" should be recommended but it is not installed by the user
         //Hence, in this case GitToolChooser resolve gitExe as the user configured `home` value
@@ -262,7 +262,7 @@ public class GitToolChooserTest {
 
     @Test
     public void testGitToolChooserWithLessThan5Mb2() throws Exception {
-        String url = "https:github.com";
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
@@ -271,7 +271,7 @@ public class GitToolChooserTest {
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool.getGitExe());
         assertThat(gitToolChooser.getGitTool(), is("jgit"));
     }
 
@@ -280,7 +280,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithLessThan5Mb3() throws Exception {
-        String url = "https:github.com";
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
@@ -290,7 +290,7 @@ public class GitToolChooserTest {
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool.getGitExe());
         assertThat(gitToolChooser.getGitTool(), is("jgit"));
     }
 
@@ -299,7 +299,7 @@ public class GitToolChooserTest {
      */
     @Test
     public void testGitToolChooserWithLessThan5Mb4() throws Exception {
-        String url = "https:github.com";
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
@@ -307,7 +307,7 @@ public class GitToolChooserTest {
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(jGitApacheTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, jGitApacheTool.getGitExe());
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool.getGitExe());
         assertThat(gitToolChooser.getGitTool(), is("jgitapache"));
     }
 
