@@ -12,6 +12,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
 
+import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -21,8 +22,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -75,7 +79,10 @@ public class GitToolChooserTest {
 
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote(), list.get(0), "github");
+        //Since no installation is provided, the gitExe will be git
+        String gitExe = "git";
+
+        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote(), list.get(0), "github", gitExe);
         String tool = repoSizeEstimator.getGitTool();
 
         // The class should make recommendation because of APIs implementation even though
@@ -106,8 +113,11 @@ public class GitToolChooserTest {
         source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
         assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
 
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+
         // Add a JGit tool to the Jenkins instance to let the estimator find and recommend "jgit"
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
         store.save();
@@ -116,7 +126,7 @@ public class GitToolChooserTest {
 
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote(), list.get(0), "github");
+        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote(), list.get(0), "github", tool.getGitExe());
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
@@ -137,7 +147,10 @@ public class GitToolChooserTest {
 
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
+        // Assuming no tool is installed and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -152,12 +165,15 @@ public class GitToolChooserTest {
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
         store.save();
 
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(new JGitTool(Collections.<ToolProperty<?>>emptyList()));
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+
 
         buildAProject(sampleRepo, false);
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool.getGitExe());
         assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
@@ -174,7 +190,10 @@ public class GitToolChooserTest {
         buildAProject(sampleRepo, false);
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
+        // Assuming no tool is installed by user and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
@@ -192,7 +211,10 @@ public class GitToolChooserTest {
         buildAProject(sampleRepo, false);
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github");
+        // Assuming no tool is installed by user and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -208,11 +230,175 @@ public class GitToolChooserTest {
         buildAProject(sampleRepo, true);
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null);
+        // Assuming no tool is installed by user and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, gitExe);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
+    /*
+    Tests related to git tool resolution
+    Scenario 1: Size of repo is < 5 MiB, "jgit" should be recommended
+     */
+    @Test
+    public void testGitToolChooserWithLessThan5Mb() throws Exception {
+        String url = "https:github.com";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+
+        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+
+        //According to size of repo, "jgit" should be recommended but it is not installed by the user
+        //Hence, in this case GitToolChooser resolve gitExe as the user configured `home` value
+        assertThat(gitToolChooser.getGitTool(), is("/usr/bin/git"));
+
+    }
+
+    @Test
+    public void testGitToolChooserWithLessThan5Mb2() throws Exception {
+        String url = "https:github.com";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool);
+
+        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+        assertThat(gitToolChooser.getGitTool(), is("jgit"));
+    }
+
+    /*
+    According to the size of repo, GitToolChooser will recommend "jgit" even if "jgitapache" is present
+     */
+    @Test
+    public void testGitToolChooserWithLessThan5Mb3() throws Exception {
+        String url = "https:github.com";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
+
+        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, tool.getGitExe());
+        assertThat(gitToolChooser.getGitTool(), is("jgit"));
+    }
+
+    /*
+    According to the size of repo, GitToolChooser will recommend "jgitapache" since that is user's configured choice
+     */
+    @Test
+    public void testGitToolChooserWithLessThan5Mb4() throws Exception {
+        String url = "https:github.com";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(jGitApacheTool);
+
+        GitToolChooser gitToolChooser = new GitToolChooser(url, context, credentialsId, jGitApacheTool.getGitExe());
+        assertThat(gitToolChooser.getGitTool(), is("jgitapache"));
+    }
+
+    /*
+    Tests related to git tool resolution
+    Scenario 2: Size of repo is > 5 MiB, "git" should be recommended
+     */
+    @Test
+    public void testGitToolChooserWithGreaterThan5Mib() throws Exception {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Assuming no tool is installed and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
+        assertThat(sizeEstimator.getGitTool(), containsString("git"));
+    }
+
+    @Test
+    public void testGitToolChooserWithGreaterThan5Mib2() throws Exception {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool jGitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(jGitTool);
+
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Assuming no tool is installed and git is present in the machine
+        String gitExe = jGitTool.getGitExe();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
+        assertThat(sizeEstimator.getGitTool(), is("jgit"));
+    }
+
+    @Test
+    public void testGitToolChooserWithGreaterThan5Mib3() throws Exception {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Assuming no tool is installed and git is present in the machine
+        String gitExe = tool.getGitExe();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
+        assertThat(sizeEstimator.getGitTool(), is("/usr/bin/git"));
+    }
+
+    @Test
+    public void testGitToolChooserWithGreaterThan5Mib4() throws Exception {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        sampleRepo.init();
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        store.save();
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
+
+        buildAProject(sampleRepo, false);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Assuming no tool is installed and git is present in the machine
+        String gitExe = tool.getGitExe();
+
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
+        assertThat(sizeEstimator.getGitTool(), is("/usr/bin/git"));
+    }
     /*
     A test extension implemented to clone the behavior of a plugin extending the capability of providing the size of
     repo from a remote URL of "Github".

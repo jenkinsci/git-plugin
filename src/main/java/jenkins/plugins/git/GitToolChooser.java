@@ -12,6 +12,8 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.JGitApacheTool;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,18 +44,18 @@ public class GitToolChooser {
      * @throws IOException
      * @throws InterruptedException
      */
-    public GitToolChooser(String remoteName, Item projectContext, String credentialsId) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe) throws IOException, InterruptedException {
         boolean useCache = false;
 
         implementation = "NONE";
         useCache = decideAndUseCache(remoteName);
 
         if (useCache) {
-            implementation = determineSwitchOnSize(sizeOfRepo);
+            implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
         } else {
-            decideAndUseAPI(remoteName, projectContext, credentialsId);
+            decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
         }
-        determineGitTool(implementation);
+        determineGitTool(implementation, gitExe);
     }
 
     /**
@@ -79,14 +81,10 @@ public class GitToolChooser {
         return useCache;
     }
 
-    private void decideAndUseAPI(String remoteName, Item context, String credentialsId) {
+    private void decideAndUseAPI(String remoteName, Item context, String credentialsId, String gitExe) {
         if (setSizeFromAPI(remoteName, context, credentialsId)) {
-            implementation = determineSwitchOnSize(sizeOfRepo);
+            implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
         }
-    }
-
-    private String getCacheEntry(String remote) {
-        return "git-" + Util.getDigestOf(remote);
     }
 
     /**
@@ -121,12 +119,12 @@ public class GitToolChooser {
      * @param sizeOfRepo: Size of a repository (in KiBs)
      * @return a git implementation, "git" or "jgit"
      */
-    private String determineSwitchOnSize(Long sizeOfRepo) {
+    private String determineSwitchOnSize(Long sizeOfRepo, String gitExe) {
         if (sizeOfRepo != 0L) {
             if (sizeOfRepo >= SIZE_TO_SWITCH) {
-                return "git";
+                return determineToolName(gitExe, "git");
             } else {
-                return "jgit";
+                return determineToolName(gitExe, JGitTool.MAGIC_EXENAME);
             }
         }
         return "NONE";
@@ -137,7 +135,7 @@ public class GitToolChooser {
      * implementation doesn't exist.
      * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
      */
-    private void determineGitTool(String gitImplementation) {
+    private void determineGitTool(String gitImplementation, String gitExe) {
         if (gitImplementation.equals("NONE")) {
             gitTool = "NONE";
             return; // Recommend nothing (GitToolRecommendation = NONE)
@@ -145,6 +143,11 @@ public class GitToolChooser {
         final Jenkins jenkins = Jenkins.get();
         GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
         if (tool != null) {
+            if (!gitExe.equals(tool.getGitExe()) && !tool.getGitExe().contains(JGitTool.MAGIC_EXENAME)) {
+                // for cases where git home is expanded, like: /usr/bin/git
+                gitTool = gitExe;
+                return;
+            }
             gitTool = tool.getGitExe();
         }
     }
@@ -155,6 +158,22 @@ public class GitToolChooser {
      */
     public String getGitTool() {
         return gitTool;
+    }
+
+    private String getCacheEntry(String remote) {
+        return "git-" + Util.getDigestOf(remote);
+    }
+
+    private String determineToolName(String gitExe, String recommendation) {
+        if (gitExe.contains(recommendation) && !gitExe.equals(JGitTool.MAGIC_EXENAME) && !gitExe.equals(JGitApacheTool.MAGIC_EXENAME)) {
+            return gitExe;
+        }
+        if (!recommendation.equals(gitExe)) {
+            if (gitExe.equals(JGitApacheTool.MAGIC_EXENAME) && recommendation.equals(JGitTool.MAGIC_EXENAME)) {
+                return gitExe;
+            }
+        }
+        return recommendation;
     }
 
     /**
