@@ -25,8 +25,6 @@ import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -243,7 +241,7 @@ public class GitToolChooserTest {
     Scenario 1: Size of repo is < 5 MiB, "jgit" should be recommended
      */
     @Test
-    public void testGitToolChooserWithLessThan5Mb() throws Exception {
+    public void testGitToolChooserWithCustomGitTool() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -261,7 +259,7 @@ public class GitToolChooserTest {
     }
 
     @Test
-    public void testGitToolChooserWithLessThan5Mb2() throws Exception {
+    public void testGitToolChooserWithBothGitAndJGit() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -279,7 +277,7 @@ public class GitToolChooserTest {
     According to the size of repo, GitToolChooser will recommend "jgit" even if "jgitapache" is present
      */
     @Test
-    public void testGitToolChooserWithLessThan5Mb3() throws Exception {
+    public void testGitToolChooserWithAllTools() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -295,10 +293,29 @@ public class GitToolChooserTest {
     }
 
     /*
+    If the user has chosen `jgitapache` and the system contains "cli git" and "jgitapache", GitToolChooser should
+    recommend `jgitapache`
+     */
+    @Test
+    public void testGitToolChooserWithJGitApache() throws Exception {
+        String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        // With JGit, we don't ask the name and home of the tool
+        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jGitApacheTool);
+
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool.getGitExe());
+        assertThat(gitToolChooser.getGitTool(), is("jgitapache"));
+    }
+
+    /*
     According to the size of repo, GitToolChooser will recommend "jgitapache" since that is user's configured choice
      */
     @Test
-    public void testGitToolChooserWithLessThan5Mb4() throws Exception {
+    public void testGitToolChooserWithJGitApacheAndGit() throws Exception {
         String remote = "https://github.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -316,7 +333,7 @@ public class GitToolChooserTest {
     Scenario 2: Size of repo is > 5 MiB, "git" should be recommended
      */
     @Test
-    public void testGitToolChooserWithGreaterThan5Mib() throws Exception {
+    public void testGitToolChooserWithDefaultTool() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -333,7 +350,7 @@ public class GitToolChooserTest {
     }
 
     @Test
-    public void testGitToolChooserWithGreaterThan5Mib2() throws Exception {
+    public void testGitToolChooserWithOnlyJGit() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -355,7 +372,7 @@ public class GitToolChooserTest {
     }
 
     @Test
-    public void testGitToolChooserWithGreaterThan5Mib3() throws Exception {
+    public void testGitToolChooserWithCustomGitTool_2() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
@@ -377,7 +394,7 @@ public class GitToolChooserTest {
     }
 
     @Test
-    public void testGitToolChooserWithGreaterThan5Mib4() throws Exception {
+    public void testGitToolChooserWithAllTools_2() throws Exception {
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         sampleRepo.init();
         store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
