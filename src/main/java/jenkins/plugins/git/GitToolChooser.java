@@ -40,6 +40,9 @@ public class GitToolChooser {
      * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
      * size if it is found else checks if the extension point has been implemented and asks for the size.
      * @param remoteName the repository url
+     * @param projectContext the context where repository size is being estimated
+     * @param credentialsId credential used to access the repository or null if no credential is required
+     * @param gitExe name of the git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
      * @throws IOException on error
      * @throws InterruptedException on error
      */
