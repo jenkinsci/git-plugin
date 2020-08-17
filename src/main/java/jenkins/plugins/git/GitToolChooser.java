@@ -35,6 +35,7 @@ public class GitToolChooser {
      * Size to switch implementation in KiB
      */
     public static final int SIZE_TO_SWITCH = 5000;
+    public boolean JGIT_SUPPORTED = false;
 
     /**
      * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
@@ -46,8 +47,11 @@ public class GitToolChooser {
      * @throws IOException on error
      * @throws InterruptedException on error
      */
-    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe, Boolean useJGit) throws IOException, InterruptedException {
         boolean useCache = false;
+        if (useJGit != null) {
+            JGIT_SUPPORTED = useJGit;
+        }
 
         implementation = "NONE";
         useCache = decideAndUseCache(remoteName);
@@ -123,10 +127,10 @@ public class GitToolChooser {
      */
     private String determineSwitchOnSize(Long sizeOfRepo, String gitExe) {
         if (sizeOfRepo != 0L) {
-            if (sizeOfRepo >= SIZE_TO_SWITCH) {
-                return determineToolName(gitExe, "git");
-            } else {
+            if (sizeOfRepo < SIZE_TO_SWITCH && JGIT_SUPPORTED) {
                 return determineToolName(gitExe, JGitTool.MAGIC_EXENAME);
+            } else {
+                return determineToolName(gitExe, "git");
             }
         }
         return "NONE";
