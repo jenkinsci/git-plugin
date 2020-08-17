@@ -12,6 +12,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
 
+import org.apache.commons.lang.SystemUtils;
 import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -247,7 +248,7 @@ public class GitToolChooserTest {
         String credentialsId = null;
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool.getGitExe());
@@ -265,7 +266,7 @@ public class GitToolChooserTest {
         String credentialsId = null;
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool);
 
@@ -379,7 +380,7 @@ public class GitToolChooserTest {
         store.save();
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         buildAProject(sampleRepo, false);
@@ -390,7 +391,7 @@ public class GitToolChooserTest {
         String gitExe = tool.getGitExe();
 
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
-        assertThat(sizeEstimator.getGitTool(), is("/usr/bin/git"));
+        assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
 
     @Test
@@ -401,7 +402,7 @@ public class GitToolChooserTest {
         store.save();
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", "/usr/bin/git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
@@ -414,7 +415,7 @@ public class GitToolChooserTest {
         String gitExe = tool.getGitExe();
 
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe);
-        assertThat(sizeEstimator.getGitTool(), is("/usr/bin/git"));
+        assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
     /*
     A test extension implemented to clone the behavior of a plugin extending the capability of providing the size of
