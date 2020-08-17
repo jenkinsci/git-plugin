@@ -3,7 +3,6 @@ package jenkins.plugins.git;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import hudson.Util;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
@@ -41,8 +40,8 @@ public class GitToolChooser {
      * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
      * size if it is found else checks if the extension point has been implemented and asks for the size.
      * @param remoteName the repository url
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException on error
+     * @throws InterruptedException on error
      */
     public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe) throws IOException, InterruptedException {
         boolean useCache = false;
@@ -62,8 +61,8 @@ public class GitToolChooser {
      * Determine and estimate the size of a .git cached directory
      * @param remoteName: Use the repository url to access a cached Jenkins directory, we do not lock it.
      * @return useCache
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException on error
+     * @throws InterruptedException on error
      */
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
