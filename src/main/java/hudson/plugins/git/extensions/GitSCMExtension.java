@@ -24,11 +24,8 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.CloneCommand;
-import org.jenkinsci.plugins.gitclient.FetchCommand;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
+
+import org.jenkinsci.plugins.gitclient.*;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
@@ -231,6 +228,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      */
     public GitClient decorate(GitSCM scm, GitClient git) throws IOException, InterruptedException, GitException {
         return git;
+    }
+
+    /**
+     * Called when support of JGit for a particular or multiple extensions is to be determined
+     * @param scm GitSCM object
+     * @param unsupportedCommand UnsupportedCommand object
+     */
+    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand unsupportedCommand) {
+
     }
 
     /**
