@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -179,6 +180,16 @@ public class SubmoduleOption extends GitSCMExtension {
             SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
             combinator.createSubmoduleCombinations();
         }
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand cmd) {
+        cmd.threads(threads);
+        cmd.depth(depth);
+        cmd.shallow(shallow);
+        cmd.timeout(timeout);
+        cmd.ref(reference);
+        cmd.parentCredentials(parentCredentials);
     }
 
     /**
