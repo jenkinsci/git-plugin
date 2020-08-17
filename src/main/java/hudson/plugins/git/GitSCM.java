@@ -59,6 +59,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMMatrixUtil;
+import jenkins.plugins.git.GitToolChooser;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -68,13 +69,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.gitclient.ChangelogCommand;
-import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
-import org.jenkinsci.plugins.gitclient.CloneCommand;
-import org.jenkinsci.plugins.gitclient.FetchCommand;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -844,7 +839,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
-        Git git = Git.with(listener, environment).in(ws).using(gitExe);
+
+        UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
+        for (GitSCMExtension ext : extensions) {
+            ext.determineSupportForJGit(this, unsupportedCommand);
+        }
+
+        listener.getLogger().println("Using Performance Improvement");
+        GitToolChooser chooser = null;
+        for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+            String url = getParameterString(uc.getUrl(), environment);
+            chooser = new GitToolChooser(url, project, null, gitExe, unsupportedCommand.determineSupportForJGit());
+        }
+        listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
+        String updatedGitExe = chooser.getGitTool();
+
+        if (updatedGitExe.equals("NONE")){
+            updatedGitExe = gitExe;
+        }
+        Git git = Git.with(listener, environment).in(ws).using(updatedGitExe);
 
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
