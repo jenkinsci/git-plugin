@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
@@ -17,16 +18,8 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.init.Initializer;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Items;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Queue;
-import hudson.model.Run;
-import hudson.model.Saveable;
-import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -848,8 +841,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         listener.getLogger().println("Using Performance Improvement");
         GitToolChooser chooser = null;
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+            String ucCredentialsId = uc.getCredentialsId();
             String url = getParameterString(uc.getUrl(), environment);
-            chooser = new GitToolChooser(url, project, null, gitExe, unsupportedCommand.determineSupportForJGit());
+            chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
         }
         listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
         String updatedGitExe = chooser.getGitTool();
@@ -870,17 +864,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
-                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
-                        StandardUsernameCredentials.class,
-                        project,
-                        project instanceof Queue.Task
-                                ? ((Queue.Task) project).getDefaultAuthentication()
-                                : ACL.SYSTEM,
-                        URIRequirementBuilder.fromUri(url).build()
-                );
-                CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
-                CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
-                StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
+                StandardUsernameCredentials credentials = lookupScanCredentials(project, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
@@ -899,6 +883,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // TODO add default credentials
 
         return c;
+    }
+
+    private static StandardUsernameCredentials lookupScanCredentials(@CheckForNull Item project,
+                                                              @CheckForNull String url,
+                                                              @CheckForNull String ucCredentialsId) {
+        if (Util.fixEmpty(ucCredentialsId) == null) {
+            return null;
+        } else {
+            return CredentialsMatchers.firstOrNull(
+                    CredentialsProvider.lookupCredentials(
+                            StandardUsernameCredentials.class,
+                            project,
+                            project instanceof Queue.Task
+                                    ? ((Queue.Task) project).getDefaultAuthentication()
+                                    : ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(url).build()
+                    ),
+                    CredentialsMatchers.allOf(CredentialsMatchers.withId(ucCredentialsId), GitClient.CREDENTIALS_MATCHER)
+            );
+        }
+    }
+
+    private static CredentialsMatcher gitScanCredentialsMatcher() {
+        return CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
     }
 
     @NonNull
