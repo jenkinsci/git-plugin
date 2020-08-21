@@ -148,9 +148,6 @@ public class GitToolChooser {
             return; // Recommend nothing (GitToolRecommendation = NONE)
         }
         final Jenkins jenkins = Jenkins.get();
-        if (gitImplementation.equals(JGitTool.MAGIC_EXENAME)) {
-
-        }
         GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
         if (tool != null) {
             if (!gitExe.equals(tool.getGitExe()) && !tool.getGitExe().contains(JGitTool.MAGIC_EXENAME)) {
