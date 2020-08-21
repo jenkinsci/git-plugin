@@ -87,6 +87,9 @@ public class GitToolChooserTest {
         // The class should make recommendation because of APIs implementation even though
         // it can't find a .git cached directory
         assertThat(tool, is(not("NONE")));
+
+        // If size were reported as 0, should return NONE
+        assertThat(repoSizeEstimator.determineSwitchOnSize(0L, gitExe), is("NONE"));
     }
 
     /*
