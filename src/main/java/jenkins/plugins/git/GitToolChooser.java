@@ -112,7 +112,7 @@ public class GitToolChooser {
                     if (size != 0) { sizeOfRepo = size; }
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.INFO, "Not using performance improvement from REST API: " + e.getMessage());
+                LOGGER.log(Level.INFO, "Not using performance improvement from REST API: {0}", e.getMessage());
                 return false;
             }
             return sizeOfRepo != 0; // Check if the size of the repository is zero
