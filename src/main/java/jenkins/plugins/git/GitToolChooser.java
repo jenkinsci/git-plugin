@@ -44,6 +44,7 @@ public class GitToolChooser {
      * @param projectContext the context where repository size is being estimated
      * @param credentialsId credential used to access the repository or null if no credential is required
      * @param gitExe name of the git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
+     * @param useJGit if true the JGit is allowed as an implementation
      * @throws IOException on error
      * @throws InterruptedException on error
      */
