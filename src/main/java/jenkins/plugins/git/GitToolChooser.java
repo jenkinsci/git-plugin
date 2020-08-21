@@ -128,7 +128,10 @@ public class GitToolChooser {
      */
     String determineSwitchOnSize(Long sizeOfRepo, String gitExe) {
         if (sizeOfRepo != 0L) {
-            if (sizeOfRepo < SIZE_TO_SWITCH && JGIT_SUPPORTED) {
+            if (sizeOfRepo < SIZE_TO_SWITCH) {
+                if (!JGIT_SUPPORTED) {
+                    return "NONE";
+                }
                 return determineToolName(gitExe, JGitTool.MAGIC_EXENAME);
             } else {
                 return determineToolName(gitExe, "git");
