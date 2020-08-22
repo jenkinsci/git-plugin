@@ -436,6 +436,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isAllowSecondFetch());
     }
 
+    public boolean isDisableGitToolChooser() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isDisableGitToolChooser());
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -833,25 +838,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         String gitExe = getGitExe(n, listener);
 
-        UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
-        for (GitSCMExtension ext : extensions) {
-            ext.determineSupportForJGit(this, unsupportedCommand);
-        }
+        if (!isDisableGitToolChooser()) {
+            UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
+            for (GitSCMExtension ext : extensions) {
+                ext.determineSupportForJGit(this, unsupportedCommand);
+            }
+            GitToolChooser chooser = null;
+            for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+                String ucCredentialsId = uc.getCredentialsId();
+                String url = getParameterString(uc.getUrl(), environment);
+                chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
+            }
+            listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
+            String updatedGitExe = chooser.getGitTool();
 
-        listener.getLogger().println("Using Performance Improvement");
-        GitToolChooser chooser = null;
-        for (UserRemoteConfig uc : getUserRemoteConfigs()) {
-            String ucCredentialsId = uc.getCredentialsId();
-            String url = getParameterString(uc.getUrl(), environment);
-            chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
+            if (!updatedGitExe.equals("NONE")) {
+                gitExe = updatedGitExe;
+            }
         }
-        listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
-        String updatedGitExe = chooser.getGitTool();
-
-        if (updatedGitExe.equals("NONE")){
-            updatedGitExe = gitExe;
-        }
-        Git git = Git.with(listener, environment).in(ws).using(updatedGitExe);
+        Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
         for (GitSCMExtension ext : extensions) {
@@ -1558,6 +1563,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean showEntireCommitSummaryInChanges;
         private boolean hideCredentials;
         private boolean allowSecondFetch;
+        private boolean disableGitToolChooser;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1692,6 +1698,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public void setAllowSecondFetch(boolean allowSecondFetch) {
             this.allowSecondFetch = allowSecondFetch;
         }
+
+        public boolean isDisableGitToolChooser() { return disableGitToolChooser; }
+
+        public void setDisableGitToolChooser(boolean disableGitToolChooser) { this.disableGitToolChooser = disableGitToolChooser; }
 
         /**
          * Old configuration of git executable - exposed so that we can
