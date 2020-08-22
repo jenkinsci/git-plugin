@@ -34,8 +34,8 @@ public class GitToolChooser {
     /**
      * Size to switch implementation in KiB
      */
-    public static final int SIZE_TO_SWITCH = 5000;
-    public boolean JGIT_SUPPORTED = false;
+    private static final int SIZE_TO_SWITCH = 5000;
+    private boolean JGIT_SUPPORTED = false;
 
     /**
      * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
