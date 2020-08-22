@@ -1,6 +1,7 @@
 package hudson.plugins.git.extensions;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -235,7 +236,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * @param scm GitSCM object
      * @param unsupportedCommand UnsupportedCommand object
      */
-    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand unsupportedCommand) {
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand unsupportedCommand) {
 
     }
 

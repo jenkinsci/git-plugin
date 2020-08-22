@@ -25,6 +25,7 @@ import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -187,7 +188,7 @@ public class CloneOption extends GitSCMExtension {
     }
 
     @Override
-    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand cmd) {
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
         cmd.timeout(timeout);
         cmd.shallow(shallow);
         cmd.depth(depth);

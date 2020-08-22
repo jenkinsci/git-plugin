@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * git-lfs-pull after the checkout.
@@ -46,7 +47,7 @@ public class GitLFSPull extends GitSCMExtension {
     }
 
     @Override
-    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand cmd) {
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
         List<RemoteConfig> repos = scm.getRepositories();
         cmd.lfsRemote(repos.get(0).getName());
     }

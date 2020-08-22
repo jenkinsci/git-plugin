@@ -18,6 +18,7 @@ import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -183,7 +184,7 @@ public class SubmoduleOption extends GitSCMExtension {
     }
 
     @Override
-    public void determineSupportForJGit(GitSCM scm, UnsupportedCommand cmd) {
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
         cmd.threads(threads);
         cmd.depth(depth);
         cmd.shallow(shallow);
