@@ -675,9 +675,10 @@ image:/images/git-checkout-to-specific-local-branch.png[Checkout to specific loc
 Branch name::
 
   If given, checkout the revision to build as HEAD on the named branch.
-  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin. If a specific revision and not branch HEAD is checked out, then 'detached' will be returned as the local branch name.
+  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin. 
   In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
-
+  If a specific revision and not branch HEAD is checked out, then 'detached' will be returned as the local branch name.
+  
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
 
