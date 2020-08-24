@@ -153,11 +153,6 @@ public class GitToolChooser {
         final Jenkins jenkins = Jenkins.get();
         GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
         if (tool != null) {
-            if (!gitExe.equals(tool.getGitExe()) && !tool.getGitExe().contains(JGitTool.MAGIC_EXENAME)) {
-                // for cases where git home is expanded, like: /usr/bin/git
-                gitTool = gitExe;
-                return;
-            }
             gitTool = tool.getGitExe();
         }
     }
