@@ -1619,7 +1619,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         /**
-         * Global setting to be used in call to "git config user.name".
+         * Global setting to be used to set GIT_COMMITTER_NAME and GIT_AUTHOR_NAME.
          * @return user.name value
          */
         public String getGlobalConfigName() {
@@ -1627,7 +1627,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         /**
-         * Global setting to be used in call to "git config user.name".
+         * Global setting to be used to set GIT_COMMITTER_NAME and GIT_AUTHOR_NAME.
          * @param globalConfigName user.name value to be assigned
          */
         public void setGlobalConfigName(String globalConfigName) {
@@ -1635,7 +1635,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         /**
-         * Global setting to be used in call to "git config user.email".
+         * Global setting to be used to set GIT_COMMITTER_EMAIL and GIT_AUTHOR_EMAIL.
          * @return user.email value
          */
         public String getGlobalConfigEmail() {
@@ -1643,7 +1643,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         /**
-         * Global setting to be used in call to "git config user.email".
+         * Global setting to be used to set GIT_COMMITTER_EMAIL and GIT_AUTHOR_EMAIL.
          * @param globalConfigEmail user.email value to be assigned
          */
         public void setGlobalConfigEmail(String globalConfigEmail) {
