@@ -171,6 +171,13 @@ Hide credential identifier in job output::
 
   If checked, the console log will not show the credential identifier used to clone a repository.
 
+[[disable-performance-enhancements]]
+Disable GitToolChooser which tries to suggest an optimal git implementation::
+
+  If checked, the plugin will disable a feature which recommends a git implementation on the basis of the size of a repository.
+  This switch may be used in case of a bug in the performance improvement feature.
+  If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+
 [[preserve-second-fetch-during-checkout]]
 Preserve second fetch during initial checkout::
 

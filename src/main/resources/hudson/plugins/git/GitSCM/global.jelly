@@ -19,6 +19,9 @@
     <f:entry field="hideCredentials">
       <f:checkbox title="${%Hide credential usage in job output}" name="hideCredentials" checked="${descriptor.hideCredentials}"/>
     </f:entry>
+    <f:entry field="disableGitToolChooser">
+      <f:checkbox title="${%Disable performance enhancements}" name="disableGitToolChooser" checked="${descriptor.disableGitToolChooser}"/>
+    </f:entry>
     <f:entry field="allowSecondFetch">
       <f:checkbox title="${%Preserve second fetch during checkout}" name="allowSecondFetch" checked="${descriptor.allowSecondFetch}"/>
     </f:entry>

@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.collect.Iterables;
 
@@ -17,16 +18,8 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.init.Initializer;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Items;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Queue;
-import hudson.model.Run;
-import hudson.model.Saveable;
-import hudson.model.TaskListener;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
@@ -59,6 +52,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMMatrixUtil;
+import jenkins.plugins.git.GitToolChooser;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -68,13 +62,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.gitclient.ChangelogCommand;
-import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
-import org.jenkinsci.plugins.gitclient.CloneCommand;
-import org.jenkinsci.plugins.gitclient.FetchCommand;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -446,6 +434,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public boolean isAllowSecondFetch() {
         DescriptorImpl gitDescriptor = getDescriptor();
         return (gitDescriptor != null && gitDescriptor.isAllowSecondFetch());
+    }
+
+    public boolean isDisableGitToolChooser() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isDisableGitToolChooser());
     }
 
     @Whitelisted
@@ -844,6 +837,25 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
 
         String gitExe = getGitExe(n, listener);
+
+        if (!isDisableGitToolChooser()) {
+            UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
+            for (GitSCMExtension ext : extensions) {
+                ext.determineSupportForJGit(this, unsupportedCommand);
+            }
+            GitToolChooser chooser = null;
+            for (UserRemoteConfig uc : getUserRemoteConfigs()) {
+                String ucCredentialsId = uc.getCredentialsId();
+                String url = getParameterString(uc.getUrl(), environment);
+                chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
+            }
+            listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
+            String updatedGitExe = chooser.getGitTool();
+
+            if (!updatedGitExe.equals("NONE")) {
+                gitExe = updatedGitExe;
+            }
+        }
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
 
         GitClient c = git.getClient();
@@ -857,17 +869,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
-                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
-                        StandardUsernameCredentials.class,
-                        project,
-                        project instanceof Queue.Task
-                                ? ((Queue.Task) project).getDefaultAuthentication()
-                                : ACL.SYSTEM,
-                        URIRequirementBuilder.fromUri(url).build()
-                );
-                CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
-                CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
-                StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
+                StandardUsernameCredentials credentials = lookupScanCredentials(project, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
@@ -886,6 +888,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // TODO add default credentials
 
         return c;
+    }
+
+    private static StandardUsernameCredentials lookupScanCredentials(@CheckForNull Item project,
+                                                              @CheckForNull String url,
+                                                              @CheckForNull String ucCredentialsId) {
+        if (Util.fixEmpty(ucCredentialsId) == null) {
+            return null;
+        } else {
+            return CredentialsMatchers.firstOrNull(
+                    CredentialsProvider.lookupCredentials(
+                            StandardUsernameCredentials.class,
+                            project,
+                            project instanceof Queue.Task
+                                    ? ((Queue.Task) project).getDefaultAuthentication()
+                                    : ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(url).build()
+                    ),
+                    CredentialsMatchers.allOf(CredentialsMatchers.withId(ucCredentialsId), GitClient.CREDENTIALS_MATCHER)
+            );
+        }
+    }
+
+    private static CredentialsMatcher gitScanCredentialsMatcher() {
+        return CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
     }
 
     @NonNull
@@ -1537,6 +1563,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean showEntireCommitSummaryInChanges;
         private boolean hideCredentials;
         private boolean allowSecondFetch;
+        private boolean disableGitToolChooser;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1671,6 +1698,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public void setAllowSecondFetch(boolean allowSecondFetch) {
             this.allowSecondFetch = allowSecondFetch;
         }
+
+        public boolean isDisableGitToolChooser() { return disableGitToolChooser; }
+
+        public void setDisableGitToolChooser(boolean disableGitToolChooser) { this.disableGitToolChooser = disableGitToolChooser; }
 
         /**
          * Old configuration of git executable - exposed so that we can
