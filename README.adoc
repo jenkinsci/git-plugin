@@ -172,11 +172,16 @@ Hide credential identifier in job output::
   If checked, the console log will not show the credential identifier used to clone a repository.
 
 [[disable-performance-enhancements]]
-Disable GitToolChooser which tries to suggest an optimal git implementation::
+Disable performance enhancements::
 
-  If checked, the plugin will disable a feature which recommends a git implementation on the basis of the size of a repository.
-  This switch may be used in case of a bug in the performance improvement feature.
-  If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+  If JGit and command line git are both enabled on an agent, the git plugin uses a "git tool chooser" to choose a preferred git implementation.
+  The preferred git implementation depends on the size of the repository and the git plugin features requested by the job.
+  If the repository size is <strong>less than</strong> the JGit repository size threshold and the git features of the job are all implmented in JGit, then JGit is used.
+  If the repository size is <strong>greater than</strong> the JGit repository size threshold or the job requires git features that are not implemented in JGit, then command line git is used.
++
+If checked, the plugin will disable the feature that recommends a git implementation on the basis of the size of a repository.
+This switch may be used in case of a bug in the performance improvement feature.
+If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
 
 [[preserve-second-fetch-during-checkout]]
 Preserve second fetch during initial checkout::
