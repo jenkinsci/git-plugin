@@ -77,7 +77,7 @@ public class GitToolChooser {
         String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
         if (cacheDir != null) {
-            Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
+            Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("jgit");
             GitClient client = git.getClient();
             if (client.hasGitRepo()) {
                 sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
