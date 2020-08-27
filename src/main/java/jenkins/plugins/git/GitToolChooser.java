@@ -16,11 +16,17 @@ import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A class which allows Git Plugin to choose a git implementation by estimating the size of a repository from a distance
@@ -65,6 +71,71 @@ public class GitToolChooser {
         determineGitTool(implementation, gitExe);
     }
 
+    /* Git repository URLs frequently end with the ".git" suffix.
+     * However, many repositories (especially https) do not require the ".git" suffix.
+     *
+     * Add remoteURL with the ".git" suffix and without the ".git" suffix to the
+     * list of alternatives.
+     */
+    private void addSuffixVariants(@NonNull String remoteURL, @NonNull Set<String> alternatives) {
+        alternatives.add(remoteURL);
+        String suffix = ".git";
+        if (remoteURL.endsWith(suffix)) {
+            alternatives.add(remoteURL.substring(0, remoteURL.length() - suffix.length()));
+        } else {
+            alternatives.add(remoteURL + suffix);
+        }
+    }
+
+    /* Protocol patterns to extract hostname and path from typical repository URLs */
+    private static Pattern gitProtocolPattern = Pattern.compile("^git://([^/]+)/(.+)$");
+    private static Pattern httpProtocolPattern = Pattern.compile("^https?://([^/]+)/(.+)$");
+    private static Pattern sshAltProtocolPattern = Pattern.compile("^[\\w]+@(.+):(.+)$");
+    private static Pattern sshProtocolPattern = Pattern.compile("^ssh://[\\w]+@([^/]+)/(.+)$");
+
+    private static Pattern [] protocolPatterns = {
+        gitProtocolPattern,
+        httpProtocolPattern,
+        sshAltProtocolPattern,
+        sshProtocolPattern,
+    };
+
+    /* Return a list of alternate remote URL's based on permutations of remoteURL.
+     * Varies the protocol (https, git, ssh) and the suffix of the repository URL.
+     * Package protected for testing
+     */
+    /* package */ @NonNull Set<String> remoteAlternatives(String remoteURL) {
+        Set<String> alternatives = new LinkedHashSet<>(10); // Known to be a small list
+        if (remoteURL == null || remoteURL.isEmpty()) {
+            return alternatives;
+        }
+
+        // Must include original remote in case none of the protocol patterns match
+        // For example, file://srv/git/repo.git is matched by none of the patterns
+        addSuffixVariants(remoteURL, alternatives); // First preference to original URL
+
+        String[] matcherReplacements = {
+            "git://$1/$2",     // git protocol
+            "git@$1:$2",       // ssh protocol alternate URL
+            "https://$1/$2",   // https protocol
+            "ssh://git@$1/$2", // ssh protocol
+        };
+
+        /* For each matching protocol, form alternatives by iterating over replacements */
+        for (Pattern protocolPattern : protocolPatterns) {
+            Matcher protocolMatcher = protocolPattern.matcher(remoteURL);
+            if (protocolMatcher.matches()) {
+                for (String replacement : matcherReplacements) {
+                    String alternativeURL = protocolMatcher.replaceAll(replacement);
+                    addSuffixVariants(alternativeURL, alternatives);
+                }
+            }
+        }
+
+        LOGGER.log(Level.FINE, "Cache repo alternative URLs: {0}", alternatives);
+        return alternatives;
+    }
+
     /**
      * Determine and estimate the size of a .git cached directory
      * @param remoteName: Use the repository url to access a cached Jenkins directory, we do not lock it.
@@ -74,16 +145,32 @@ public class GitToolChooser {
      */
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
-        String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
-        File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
-        if (cacheDir != null) {
-            Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("jgit");
-            GitClient client = git.getClient();
-            if (client.hasGitRepo()) {
-                sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
-                sizeOfRepo = (sizeOfRepo/1000); // Conversion from Bytes to Kilo Bytes
-                useCache = true;
+        for (String repoUrl : remoteAlternatives(remoteName)) {
+            String cacheEntry = AbstractGitSCMSource.getCacheEntry(repoUrl);
+            File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
+            if (cacheDir != null) {
+                Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("jgit");
+                GitClient client = git.getClient();
+                if (client.hasGitRepo()) {
+                    sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
+                    sizeOfRepo = (sizeOfRepo/1000); // Conversion from Bytes to Kilo Bytes
+                    useCache = true;
+                    if (remoteName.equals(repoUrl)) {
+                        LOGGER.log(Level.FINE, "Remote URL {0} using cache {1} with size {2}",
+                                   new Object[]{remoteName, cacheDir, sizeOfRepo});
+                    } else {
+                        LOGGER.log(Level.FINE, "Remote URL {0} using cache {1} with size {2}, alternative URL {3}",
+                                   new Object[]{remoteName, cacheDir, sizeOfRepo, repoUrl});
+                    }
+                    break;
+                } else {
+                    // Log the surprise but continue looking for a cache
+                    LOGGER.log(Level.FINE, "Remote URL {0} cache {1} has no git dir", new Object[]{remoteName, cacheDir});
+                }
             }
+        }
+        if (!useCache) {
+            LOGGER.log(Level.FINE, "Remote URL {0} cache not found", remoteName);
         }
         return useCache;
     }

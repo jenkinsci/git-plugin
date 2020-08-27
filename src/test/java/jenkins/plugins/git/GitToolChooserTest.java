@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 import static org.hamcrest.io.FileMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,6 +53,8 @@ public class GitToolChooserTest {
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
 
     private CredentialsStore store = null;
+
+    private Random random = new Random();
 
     @Before
     public void enableSystemCredentialsProvider() {
@@ -136,6 +140,52 @@ public class GitToolChooserTest {
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
         assertThat(repoSizeEstimator.getGitTool(), containsString("jgit"));
+
+        /* Confirm that a remote with a different name still finds the git cache */
+        String permutedRemote = source.getRemote();
+        String suffix = ".git";
+        if (permutedRemote.endsWith(suffix)) {
+            permutedRemote = permutedRemote.substring(0, permutedRemote.length() - suffix.length()); // Remove trailing ".git" suffix
+        } else {
+            permutedRemote = permutedRemote + suffix; // Add trailing ".git" suffix
+        }
+        GitToolChooser permutedRepoSizeEstimator = new GitToolChooser(permutedRemote, list.get(0), "github", tool.getGitExe(), true);
+        assertThat("Alternative repository name should find the cache",
+                   permutedRepoSizeEstimator.getGitTool(), containsString("jgit"));
+    }
+
+    /* Test the remoteAlternatives permutation of git repo URLs */
+    @Test
+    @Issue("JENKINS-63539")
+    public void testRemoteAlternatives() throws Exception {
+        String gitExe = "git";
+
+        GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://github.com/git/git.git", null, null, gitExe, null);
+        assertThat(nullRemoteSizeEstimator.remoteAlternatives(null), is(empty()));
+
+        /* Borrow the nullRemoteSizer to also test determineSwitchOnSize a little more */
+        long sizeOfRepo = 1 + random.nextInt(4000);
+        assertThat(nullRemoteSizeEstimator.determineSwitchOnSize(sizeOfRepo, "any"), is("NONE"));
+
+        /* Each of these alternatives is expected to be interpreted as
+         * a valid alias for every other alternative in the list.
+         */
+        String[] remoteAlternatives = {
+            "git://github.com/jenkinsci/git-plugin",
+            "git://github.com/jenkinsci/git-plugin.git",
+            "git@github.com:jenkinsci/git-plugin",
+            "git@github.com:jenkinsci/git-plugin.git",
+            "https://github.com/jenkinsci/git-plugin",
+            "https://github.com/jenkinsci/git-plugin.git",
+            "ssh://git@github.com/jenkinsci/git-plugin",
+            "ssh://git@github.com/jenkinsci/git-plugin.git",
+        };
+
+        for (String remote : remoteAlternatives) {
+            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, gitExe, random.nextBoolean());
+            Set<String> alternatives = sizeEstimator.remoteAlternatives(remote);
+            assertThat("Remote: " + remote, alternatives, containsInAnyOrder(remoteAlternatives));
+        }
     }
 
     /*
