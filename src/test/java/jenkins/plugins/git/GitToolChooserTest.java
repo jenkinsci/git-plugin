@@ -21,14 +21,17 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.io.FileMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -420,6 +423,29 @@ public class GitToolChooserTest {
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe, true);
         assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
+
+    @Test
+    @Issue("JENKINS-63541")
+    public void getCacheDirCreatesNoDirectory() throws Exception {
+        // Generate a unique repository name and compute expected cache directory
+        String remoteName = "https://github.com/jenkinsci/git-plugin-" + java.util.UUID.randomUUID().toString() + ".git";
+        String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
+        File expectedCacheDir = new File(new File(jenkins.jenkins.getRootDir(), "caches"), cacheEntry);
+
+        // Directory should not exist
+        assertThat(expectedCacheDir, is(not(anExistingFileOrDirectory())));
+
+        // Getting the cache directory will not create an empty directory
+        File nullCacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
+        assertThat(nullCacheDir, is(nullValue()));
+        assertThat(expectedCacheDir, is(not(anExistingFileOrDirectory())));
+
+        // Getting the cache directory will create an empty directory
+        File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, true);
+        assertThat(cacheDir, is(anExistingDirectory()));
+        assertThat(expectedCacheDir, is(anExistingDirectory()));
+    }
+
     /*
     A test extension implemented to clone the behavior of a plugin extending the capability of providing the size of
     repo from a remote URL of "Github".

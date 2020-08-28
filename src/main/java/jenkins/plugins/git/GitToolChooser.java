@@ -75,7 +75,7 @@ public class GitToolChooser {
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
         String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
-        File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry);
+        File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
         if (cacheDir != null) {
             Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
             GitClient client = git.getClient();
