@@ -20,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -42,6 +43,9 @@ public class GitToolChooser {
      */
     private static final int SIZE_TO_SWITCH = 5000;
     private boolean JGIT_SUPPORTED = false;
+
+    /** Cache of repository sizes based on remoteURL. */
+    private static ConcurrentHashMap<String, Long> repositorySizeCache = new ConcurrentHashMap<>();
 
     /**
      * Instantiate class using the remote name. It looks for a cached .git directory first, calculates the
@@ -141,6 +145,24 @@ public class GitToolChooser {
         return alternatives;
     }
 
+    /** Cache the estimated repository size for variants of repository URL */
+    private void storeRepositorySize(String repoURL, long repoSize) {
+        for (String url : remoteAlternatives(repoURL)) {
+            if (repositorySizeCache.containsKey(url)) {
+                long oldSize = repositorySizeCache.get(url);
+                if (oldSize < repoSize) {
+                    LOGGER.log(Level.FINE, "Replacing old repo size {0} with new size {1} for repo {2}", new Object[]{oldSize, repoSize, url});
+                    repositorySizeCache.put(url, repoSize);
+                } else if (oldSize > repoSize) {
+                    LOGGER.log(Level.FINE, "Ignoring new size {1} in favor of old size {0} for repo {2}", new Object[]{oldSize, repoSize, url});
+                }
+            } else {
+                LOGGER.log(Level.FINE, "Caching repo size {0} for repo {1}", new Object[]{repoSize, url});
+                repositorySizeCache.put(url, repoSize);
+            }
+        }
+    }
+
     /**
      * Determine and estimate the size of a .git cached directory
      * @param remoteName: Use the repository url to access a cached Jenkins directory, we do not lock it.
@@ -151,6 +173,12 @@ public class GitToolChooser {
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
         for (String repoUrl : remoteAlternatives(remoteName)) {
+            if (repositorySizeCache.containsKey(repoUrl)) {
+                sizeOfRepo = repositorySizeCache.get(repoUrl);
+                useCache = true;
+                LOGGER.log(Level.FINER, "Found cached size estimate {0} for remote {1}", new Object[]{sizeOfRepo, repoUrl});
+                break;
+            }
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(repoUrl);
             File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
             if (cacheDir != null) {
@@ -165,6 +193,7 @@ public class GitToolChooser {
                                        new Object[]{sizeOfRepo, clientRepoSize, remoteName, cacheDir});
                         }
                         sizeOfRepo = clientRepoSize;
+                        storeRepositorySize(remoteName, sizeOfRepo);
                     }
                     useCache = true;
                     if (remoteName.equals(repoUrl)) {
@@ -207,7 +236,10 @@ public class GitToolChooser {
             try {
                 for (RepositorySizeAPI repo: acceptedRepository) {
                     long size = repo.getSizeOfRepository(repoUrl, context, credentialsId);
-                    if (size != 0) { sizeOfRepo = size; }
+                    if (size != 0) {
+                        sizeOfRepo = size;
+                        storeRepositorySize(repoUrl, size);
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.INFO, "Not using performance improvement from REST API: {0}", e.getMessage());
