@@ -186,6 +186,14 @@ public class GitToolChooserTest {
             Set<String> alternatives = sizeEstimator.remoteAlternatives(remote);
             assertThat("Remote: " + remote, alternatives, containsInAnyOrder(remoteAlternatives));
         }
+
+        /* Test remote that ends with '/' */
+        for (String remote : remoteAlternatives) {
+            remote = remote + "/";
+            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, gitExe, random.nextBoolean());
+            Set<String> alternatives = sizeEstimator.remoteAlternatives(remote);
+            assertThat("Remote+'/': " + remote, alternatives, containsInAnyOrder(remoteAlternatives));
+        }
     }
 
     /*

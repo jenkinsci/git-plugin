@@ -88,10 +88,10 @@ public class GitToolChooser {
     }
 
     /* Protocol patterns to extract hostname and path from typical repository URLs */
-    private static Pattern gitProtocolPattern = Pattern.compile("^git://([^/]+)/(.+)$");
-    private static Pattern httpProtocolPattern = Pattern.compile("^https?://([^/]+)/(.+)$");
-    private static Pattern sshAltProtocolPattern = Pattern.compile("^[\\w]+@(.+):(.+)$");
-    private static Pattern sshProtocolPattern = Pattern.compile("^ssh://[\\w]+@([^/]+)/(.+)$");
+    private static Pattern gitProtocolPattern = Pattern.compile("^git://([^/]+)/(.+?)/*$");
+    private static Pattern httpProtocolPattern = Pattern.compile("^https?://([^/]+)/(.+?)/*$");
+    private static Pattern sshAltProtocolPattern = Pattern.compile("^[\\w]+@(.+):(.+?)/*$");
+    private static Pattern sshProtocolPattern = Pattern.compile("^ssh://[\\w]+@([^/]+)/(.+?)/*$");
 
     /* Return a list of alternate remote URL's based on permutations of remoteURL.
      * Varies the protocol (https, git, ssh) and the suffix of the repository URL.
@@ -103,10 +103,6 @@ public class GitToolChooser {
             LOGGER.log(Level.FINE, "Null or empty remote URL not cached");
             return alternatives;
         }
-
-        // Must include original remote in case none of the protocol patterns match
-        // For example, file://srv/git/repo.git is matched by none of the patterns
-        addSuffixVariants(remoteURL, alternatives); // First preference to original URL
 
         Pattern [] protocolPatterns = {
             gitProtocolPattern,
@@ -123,6 +119,7 @@ public class GitToolChooser {
         };
 
         /* For each matching protocol, form alternatives by iterating over replacements */
+        boolean matched = false;
         for (Pattern protocolPattern : protocolPatterns) {
             Matcher protocolMatcher = protocolPattern.matcher(remoteURL);
             if (protocolMatcher.matches()) {
@@ -130,7 +127,14 @@ public class GitToolChooser {
                     String alternativeURL = protocolMatcher.replaceAll(replacement);
                     addSuffixVariants(alternativeURL, alternatives);
                 }
+                matched = true;
             }
+        }
+
+        // Must include original remote in case none of the protocol patterns match
+        // For example, file://srv/git/repo.git is matched by none of the patterns
+        if (!matched) {
+            addSuffixVariants(remoteURL, alternatives);
         }
 
         LOGGER.log(Level.FINE, "Cache repo alternative URLs: {0}", alternatives);
