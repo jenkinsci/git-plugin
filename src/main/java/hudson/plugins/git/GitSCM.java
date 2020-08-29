@@ -844,12 +844,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 ext.determineSupportForJGit(this, unsupportedCommand);
             }
             GitToolChooser chooser = null;
+            String url = "<unknown>";
             for (UserRemoteConfig uc : getUserRemoteConfigs()) {
                 String ucCredentialsId = uc.getCredentialsId();
-                String url = getParameterString(uc.getUrl(), environment);
+                url = getParameterString(uc.getUrl(), environment);
                 chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
             }
-            listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
+            listener.getLogger().println("The recommended git tool for " + url + " is: " + chooser.getGitTool());
             String updatedGitExe = chooser.getGitTool();
 
             if (!updatedGitExe.equals("NONE")) {
