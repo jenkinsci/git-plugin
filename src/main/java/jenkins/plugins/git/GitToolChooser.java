@@ -93,13 +93,6 @@ public class GitToolChooser {
     private static Pattern sshAltProtocolPattern = Pattern.compile("^[\\w]+@(.+):(.+)$");
     private static Pattern sshProtocolPattern = Pattern.compile("^ssh://[\\w]+@([^/]+)/(.+)$");
 
-    private static Pattern [] protocolPatterns = {
-        gitProtocolPattern,
-        httpProtocolPattern,
-        sshAltProtocolPattern,
-        sshProtocolPattern,
-    };
-
     /* Return a list of alternate remote URL's based on permutations of remoteURL.
      * Varies the protocol (https, git, ssh) and the suffix of the repository URL.
      * Package protected for testing
@@ -113,6 +106,13 @@ public class GitToolChooser {
         // Must include original remote in case none of the protocol patterns match
         // For example, file://srv/git/repo.git is matched by none of the patterns
         addSuffixVariants(remoteURL, alternatives); // First preference to original URL
+
+        Pattern [] protocolPatterns = {
+            gitProtocolPattern,
+            httpProtocolPattern,
+            sshAltProtocolPattern,
+            sshProtocolPattern,
+        };
 
         String[] matcherReplacements = {
             "git://$1/$2",     // git protocol
