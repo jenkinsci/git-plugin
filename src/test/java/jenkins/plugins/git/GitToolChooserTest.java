@@ -162,6 +162,7 @@ public class GitToolChooserTest {
 
         GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://github.com/git/git.git", null, null, gitExe, null);
         assertThat(nullRemoteSizeEstimator.remoteAlternatives(null), is(empty()));
+        assertThat(nullRemoteSizeEstimator.remoteAlternatives(""), is(empty()));
 
         /* Borrow the nullRemoteSizer to also test determineSwitchOnSize a little more */
         long sizeOfRepo = 1 + random.nextInt(4000);
