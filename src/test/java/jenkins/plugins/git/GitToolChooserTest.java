@@ -54,7 +54,7 @@ public class GitToolChooserTest {
 
     private CredentialsStore store = null;
 
-    private Random random = new Random();
+    private static Random random = new Random();
 
     @Before
     public void enableSystemCredentialsProvider() {
@@ -210,7 +210,7 @@ public class GitToolChooserTest {
     }
 
     /*
-    In the event of having an extension which returns the size of repository as 500 KiB, the estimator should
+    In the event of having an extension which returns the size of repository as less than 1000 KiB, the estimator should
     recommend "jgit" as the optimal implementation from the heuristics
      */
     @Test
@@ -510,8 +510,7 @@ public class GitToolChooserTest {
 
         @Override
         public Long getSizeOfRepository(String remote, Item context, String credentialsId) {
-            // from remote, remove .git and https://github.com
-            return (long) 500;
+            return (long) 100 + random.nextInt(800);
         }
     }
 
@@ -529,8 +528,7 @@ public class GitToolChooserTest {
 
         @Override
         public Long getSizeOfRepository(String remote, Item context, String credentialsId) {
-            // from remote, remove .git and https://github.com
-            return (long) 10000;
+            return (long) 10000 + random.nextInt(5000);
         }
     }
 
