@@ -98,7 +98,7 @@ public class GitToolChooser {
      * Package protected for testing
      */
     /* package */ @NonNull Set<String> remoteAlternatives(String remoteURL) {
-        Set<String> alternatives = new LinkedHashSet<>(10); // Known to be a small list
+        Set<String> alternatives = new LinkedHashSet<>();
         if (remoteURL == null || remoteURL.isEmpty()) {
             LOGGER.log(Level.FINE, "Null or empty remote URL not cached");
             return alternatives;
