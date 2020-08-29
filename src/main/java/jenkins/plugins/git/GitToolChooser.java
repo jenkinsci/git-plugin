@@ -153,17 +153,23 @@ public class GitToolChooser {
                 Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("jgit");
                 GitClient client = git.getClient();
                 if (client.hasGitRepo()) {
-                    sizeOfRepo = FileUtils.sizeOfDirectory(cacheDir);
-                    sizeOfRepo = (sizeOfRepo/1000); // Conversion from Bytes to Kilo Bytes
+                    long clientRepoSize = FileUtils.sizeOfDirectory(cacheDir) / 1024;
+                    if (clientRepoSize > sizeOfRepo) {
+                        /* Use the size of the largest cache */
+                        if (sizeOfRepo > 0) {
+                            LOGGER.log(Level.FINE, "Replacing prior size estimate {0} with new size estimate {1} for remote {2} from cache {3}",
+                                       new Object[]{sizeOfRepo, clientRepoSize, remoteName, cacheDir});
+                        }
+                        sizeOfRepo = clientRepoSize;
+                    }
                     useCache = true;
                     if (remoteName.equals(repoUrl)) {
-                        LOGGER.log(Level.FINE, "Remote URL {0} using cache {1} with size {2}",
+                        LOGGER.log(Level.FINE, "Remote URL {0} found cache {1} with size {2}",
                                    new Object[]{remoteName, cacheDir, sizeOfRepo});
                     } else {
-                        LOGGER.log(Level.FINE, "Remote URL {0} using cache {1} with size {2}, alternative URL {3}",
+                        LOGGER.log(Level.FINE, "Remote URL {0} found cache {1} with size {2}, alternative URL {3}",
                                    new Object[]{remoteName, cacheDir, sizeOfRepo, repoUrl});
                     }
-                    break;
                 } else {
                     // Log the surprise but continue looking for a cache
                     LOGGER.log(Level.FINE, "Remote URL {0} cache {1} has no git dir", new Object[]{remoteName, cacheDir});
