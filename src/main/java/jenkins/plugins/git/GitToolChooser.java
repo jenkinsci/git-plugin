@@ -31,6 +31,7 @@ public class GitToolChooser {
     private long sizeOfRepo = 0L;
     private String implementation;
     private String gitTool;
+    private TaskListener listener = TaskListener.NULL;
     /**
      * Size to switch implementation in KiB
      */
@@ -48,7 +49,7 @@ public class GitToolChooser {
      * @throws IOException on error
      * @throws InterruptedException on error
      */
-    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe, Boolean useJGit) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, GitTool gitExe, Boolean useJGit) throws IOException, InterruptedException {
         boolean useCache = false;
         if (useJGit != null) {
             JGIT_SUPPORTED = useJGit;
@@ -62,7 +63,11 @@ public class GitToolChooser {
         } else {
             decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
         }
-        determineGitTool(implementation, gitExe);
+        gitTool = implementation;
+    }
+
+    public void addListener(TaskListener listener) {
+        this.listener = listener;
     }
 
     /**
@@ -88,7 +93,7 @@ public class GitToolChooser {
         return useCache;
     }
 
-    private void decideAndUseAPI(String remoteName, Item context, String credentialsId, String gitExe) {
+    private void decideAndUseAPI(String remoteName, Item context, String credentialsId, GitTool gitExe) {
         if (setSizeFromAPI(remoteName, context, credentialsId)) {
             implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
         }
@@ -126,15 +131,23 @@ public class GitToolChooser {
      * @param sizeOfRepo: Size of a repository (in KiBs)
      * @return a git implementation, "git" or "jgit"
      */
-    String determineSwitchOnSize(Long sizeOfRepo, String gitExe) {
+    String determineSwitchOnSize(Long sizeOfRepo, GitTool tool) {
         if (sizeOfRepo != 0L) {
             if (sizeOfRepo < SIZE_TO_SWITCH) {
                 if (!JGIT_SUPPORTED) {
                     return "NONE";
                 }
-                return determineToolName(gitExe, JGitTool.MAGIC_EXENAME);
+                GitTool rTool = resolveGitToolForRecommendation(tool, JGitTool.MAGIC_EXENAME);
+                if (rTool == null) {
+                    return "NONE";
+                }
+                return rTool.getGitExe();
             } else {
-                return determineToolName(gitExe, "git");
+                GitTool rTool = resolveGitToolForRecommendation(tool, "git");
+                if (rTool == null) {
+                    return "NONE";
+                }
+                return rTool.getGitExe();
             }
         }
         return "NONE";
@@ -145,7 +158,7 @@ public class GitToolChooser {
      * implementation doesn't exist.
      * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
      */
-    private void determineGitTool(String gitImplementation, String gitExe) {
+    private void determineGitTool(String gitImplementation) {
         if (gitImplementation.equals("NONE")) {
             gitTool = "NONE";
             return; // Recommend nothing (GitToolRecommendation = NONE)
@@ -155,6 +168,11 @@ public class GitToolChooser {
         if (tool != null) {
             gitTool = tool.getGitExe();
         }
+    }
+
+    private GitTool getResolvedGitTool(String recommendation) {
+        final Jenkins jenkins = Jenkins.get();
+        return GitUtils.resolveGitTool(recommendation, jenkins, null, listener);
     }
 
     /**
@@ -175,6 +193,29 @@ public class GitToolChooser {
             }
         }
         return recommendation;
+    }
+
+    private GitTool resolveGitToolForRecommendation(GitTool userChoice, String recommendation) {
+        GitTool tool;
+        if (recommendation.equals(JGitTool.MAGIC_EXENAME)) {
+            if (userChoice.getGitExe().equals(JGitApacheTool.MAGIC_EXENAME)) {
+                recommendation = JGitApacheTool.MAGIC_EXENAME;
+            }
+            // check if jgit or jgitapache is enabled
+            tool = getResolvedGitTool(recommendation);
+            if (tool.getName().equals(recommendation)) {
+                return tool;
+            } else {
+                return null;
+            }
+        } else {
+            if (!userChoice.getName().equals(JGitTool.MAGIC_EXENAME) || !userChoice.getName().equals(JGitApacheTool.MAGIC_EXENAME)) {
+                if (userChoice.getGitExe().contains(recommendation)) {
+                    return userChoice;
+                }
+            }
+        }
+        return null;
     }
 
     /**

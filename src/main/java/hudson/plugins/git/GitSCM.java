@@ -838,6 +838,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         String gitExe = getGitExe(n, listener);
 
+        GitTool gitTool = getGitTool(n, null, listener);
+
         if (!isDisableGitToolChooser()) {
             UnsupportedCommand unsupportedCommand = new UnsupportedCommand();
             for (GitSCMExtension ext : extensions) {
@@ -847,7 +849,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             for (UserRemoteConfig uc : getUserRemoteConfigs()) {
                 String ucCredentialsId = uc.getCredentialsId();
                 String url = getParameterString(uc.getUrl(), environment);
-                chooser = new GitToolChooser(url, project, ucCredentialsId, gitExe, unsupportedCommand.determineSupportForJGit());
+                chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, unsupportedCommand.determineSupportForJGit());
             }
             listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
             String updatedGitExe = chooser.getGitTool();
@@ -998,6 +1000,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
         return tool.getGitExe();
+    }
+
+    public GitTool getGitTool(Node builtOn, EnvVars env, TaskListener listener) {
+        GitTool tool = GitUtils.resolveGitTool(gitTool, builtOn, env, listener);
+        if(tool == null) {
+            return null;
+        }
+        return tool;
     }
 
     /*package*/ static class BuildChooserContextImpl implements BuildChooserContext, Serializable {
