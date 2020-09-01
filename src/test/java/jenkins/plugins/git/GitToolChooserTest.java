@@ -302,6 +302,24 @@ public class GitToolChooserTest {
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
+    /* Do not throw null pointer excception if remote configuration is empty. */
+    @Test
+    @Issue("JENKINS-63572")
+    public void testSizeEstimationWithNoRemoteConfig() throws Exception {
+        sampleRepo.init();
+
+        failAProject(sampleRepo);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Assuming no tool is installed by user and git is present in the machine
+        String gitExe = "git";
+
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, gitExe, true);
+
+        assertThat(sizeEstimator.getGitTool(), is("NONE"));
+    }
+
     /*
     Tests related to git tool resolution
     Scenario 1: Size of repo is < 5 MiB, "jgit" should be recommended
@@ -577,6 +595,17 @@ public class GitToolChooserTest {
         if (!noCredentials) {
             jenkins.waitForMessage("using credential github", b);
         }
+    }
+
+    private void failAProject(GitSampleRepoRule sampleRepo) throws Exception {
+        WorkflowJob p = jenkins.jenkins.createProject(WorkflowJob.class, "intentionally-failing-job-without-remote-config");
+        p.setDefinition(new CpsFlowDefinition("node {\n"
+                                              + "  checkout(\n"
+                                              + "    [$class: 'GitSCM'] \n"
+                                              + "  )\n"
+                                              + "}", true));
+        WorkflowRun b = jenkins.assertBuildStatus(hudson.model.Result.FAILURE, p.scheduleBuild2(0));
+        jenkins.waitForMessage("Couldn't find any revision to build", b);
     }
 
     private StandardCredentials createCredential(CredentialsScope scope, String id) {
