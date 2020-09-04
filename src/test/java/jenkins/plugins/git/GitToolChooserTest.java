@@ -6,11 +6,10 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.FilePath;
 import hudson.model.*;
+import hudson.model.labels.LabelAtom;
 import hudson.plugins.git.GitTool;
-import hudson.tools.CommandInstaller;
-import hudson.tools.InstallSourceProperty;
-import hudson.tools.ToolInstallation;
-import hudson.tools.ToolProperty;
+import hudson.slaves.DumbSlave;
+import hudson.tools.*;
 import hudson.util.StreamTaskListener;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
@@ -69,6 +68,10 @@ public class GitToolChooserTest {
         assertThat("The system credentials provider is enabled", store, notNullValue());
     }
 
+    /*
+    This test checks the GitToolChooser in a scenario where repo size>5M, user's choice is `jgit`.
+    In the event of having no node-specific installations, GitToolChooser will choose to return the default installation.
+     */
     @Issue("JENKINS-63519")
     @Test
     public void testResolveGitTool() throws IOException, InterruptedException {
@@ -76,17 +79,81 @@ public class GitToolChooserTest {
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
-        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git");
+        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, JTool);
+
+        GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
+
+        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git"));
+    }
+
+    /*
+    This test checks the GitToolChooser in a scenario where repo size>5M, user's choice is `jgit`.
+    There is no specific agent(node=null). In this case agent = Jenkins.get().
+    In the event of running the GitToolChooser on the agent, it should correctly predict the git installation for
+    that specific agent.
+     */
+    @Issue("JENKINS-63519")
+    @Test
+    public void testResolveGitToolWithJenkins() throws IOException, InterruptedException {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git");
         GitTool t = new GitTool("myGit", SystemUtils.IS_OS_WINDOWS ? "default/git.exe" : "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(JTool, tool, t);
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, JTool, t);
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "default/git.exe/updated/git.exe" : "default/git/updated/git"));
+        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git"));
+    }
+
+    /*
+    This test checks the GitToolChooser in a scenario where repo size>5M, user's choice is `jgit`.
+    There is an agent labeled -> `agent-windows`
+    In the event of running the GitToolChooser on the agent, it should correctly predict the git installation for
+    that specific agent.
+     */
+    @Issue("JENKINS-63519")
+    @Test
+    public void testResolutionGitToolOnAgent() throws Exception {
+        String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
+        Item context = Mockito.mock(Item.class);
+        String credentialsId = null;
+
+        LabelAtom label = new LabelAtom("agent-windows");
+        DumbSlave agent = jenkins.createOnlineSlave(label);
+        agent.setMode(Node.Mode.NORMAL);
+        agent.setLabelString("agent-windows");
+
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", SystemUtils.IS_OS_WINDOWS ? "myGit/git.exe" : "myGit/git");
+        GitTool toolOnMaster = new GitTool("myGit", SystemUtils.IS_OS_WINDOWS ? "default/git.exe" : "default/git", Collections.singletonList(
+                new InstallSourceProperty(Collections.singletonList(inst))));
+
+        TestToolInstaller instonAgent = new TestToolInstaller("agent-windows", "echo Hello", SystemUtils.IS_OS_WINDOWS ? "my-git/git.exe" : "my-git/git");
+        GitTool toolOnAgent = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(instonAgent))));
+
+        GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(toolOnMaster, toolOnAgent, JTool);
+        agent.getNodeProperties().add(new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(
+                jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class), toolOnMaster.getName(), toolOnMaster.getHome())));
+
+        agent.getNodeProperties().add(new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(
+                jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class), toolOnAgent.getName(), toolOnAgent.getHome())));
+
+        agent.getNodeProperties().add(new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(
+                jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class), JTool.getName(), null)));
+
+        GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, agent, TaskListener.NULL,true);
+
+        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "my-git/git.exe" : "my-git/git"));
     }
 
     /*
@@ -527,11 +594,11 @@ public class GitToolChooserTest {
         }
     }
 
-    private static class HelloToolInstaller extends CommandInstaller {
+    private static class TestToolInstaller extends CommandInstaller {
 
         private boolean invoked;
 
-        public HelloToolInstaller(String label, String command, String toolHome) {
+        public TestToolInstaller(String label, String command, String toolHome) {
             super(label, command, toolHome);
         }
 

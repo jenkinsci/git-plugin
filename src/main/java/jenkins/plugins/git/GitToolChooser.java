@@ -183,7 +183,7 @@ public class GitToolChooser {
 
     public GitTool recommendGitToolOnAgent(GitTool userChoice) {
         List<GitTool> preferredToolList = new ArrayList<>();
-        GitTool correctTool = null;
+        GitTool correctTool = GitTool.getDefaultInstallation();
         String toolName = userChoice.getName();
         if (toolName.equals(JGitTool.MAGIC_EXENAME) || toolName.equals(JGitApacheTool.MAGIC_EXENAME)) {
             GitTool[] toolList = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
