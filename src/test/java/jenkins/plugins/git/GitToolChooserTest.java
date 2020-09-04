@@ -76,8 +76,8 @@ public class GitToolChooserTest {
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
-        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "updated/git");
-        GitTool t = new GitTool("myGit", "default/git", Collections.singletonList(
+        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git");
+        GitTool t = new GitTool("myGit", SystemUtils.IS_OS_WINDOWS ? "default/git.exe" : "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
@@ -86,7 +86,7 @@ public class GitToolChooserTest {
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool().contains("default/git/updated/git"), is(true));
+        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "default/git.exe/updated/git.exe" : "default/git/updated/git"));
     }
 
     /*
