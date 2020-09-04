@@ -32,7 +32,6 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,12 +81,12 @@ public class GitToolChooserTest {
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(JTool, tool, t);
 
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, t);
+        GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        GitToolChooser r = new GitToolChooser(remote, context, credentialsId, t, true);
-
-        System.out.println(r.getGitTool());
+        assertThat(r.getGitTool().contains("default/git/updated/git"), is(true));
     }
 
     /*
@@ -109,12 +108,12 @@ public class GitToolChooserTest {
         //Since no installation is provided, the gitExe will be git
         GitTool rTool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote(), list.get(0), "github", rTool, true);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(instance.getRemote(), list.get(0), "github", rTool, null, TaskListener.NULL, true);
         String tool = repoSizeEstimator.getGitTool();
 
-        // The class should make recommendation because of APIs implementation even though
-        // it can't find a .git cached directory
-        assertThat(tool, is(not("NONE")));
+        // The class get a size < 5M from APIs and wants to recommend `jgit` but will return NONE instead
+        // as `jgit` is not enabled by the user
+        assertThat(tool, is("NONE"));
 
         // If size were reported as 0, should return NONE
         assertThat(repoSizeEstimator.determineSwitchOnSize(0L, rTool), is("NONE"));
@@ -156,7 +155,7 @@ public class GitToolChooserTest {
 
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote(), list.get(0), "github", tool, true);
+        GitToolChooser repoSizeEstimator = new GitToolChooser(source.getRemote(), list.get(0), "github", tool, null,TaskListener.NULL,true);
         /*
         Since the size of repository is 21.785 KiBs, the estimator should suggest "jgit" as an implementation
          */
@@ -181,7 +180,7 @@ public class GitToolChooserTest {
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -204,7 +203,7 @@ public class GitToolChooserTest {
         buildAProject(sampleRepo, false);
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), containsString("jgit"));
     }
 
@@ -224,7 +223,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed by user and git is present in the machine
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool,true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool,null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
 
@@ -245,7 +244,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed by user and git is present in the machine
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool,null, TaskListener.NULL,true);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -264,7 +263,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed by user and git is present in the machine
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, tool, null, TaskListener.NULL,true);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -283,7 +282,7 @@ public class GitToolChooserTest {
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, true);
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, null, TaskListener.NULL,true);
 
         //According to size of repo, "jgit" should be recommended but it is not installed by the user
         //Hence, in this case GitToolChooser should return a NONE
@@ -302,7 +301,7 @@ public class GitToolChooserTest {
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, true);
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, null, TaskListener.NULL,true);
         assertThat(gitToolChooser.getGitTool(), is("jgit"));
     }
 
@@ -321,7 +320,7 @@ public class GitToolChooserTest {
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, true);
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool, null, TaskListener.NULL,true);
         assertThat(gitToolChooser.getGitTool(), is("jgit"));
     }
 
@@ -340,7 +339,7 @@ public class GitToolChooserTest {
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jGitApacheTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool, true);
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool, null, TaskListener.NULL,true);
         assertThat(gitToolChooser.getGitTool(), is("jgitapache"));
     }
 
@@ -357,7 +356,7 @@ public class GitToolChooserTest {
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(jGitApacheTool);
 
-        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool, true);
+        GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, jGitApacheTool, null, TaskListener.NULL,true);
         assertThat(gitToolChooser.getGitTool(), is("jgitapache"));
     }
 
@@ -378,7 +377,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed and git is present in the machine
         GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), containsString("git"));
     }
 
@@ -400,8 +399,8 @@ public class GitToolChooserTest {
         // Assuming no tool is installed and git is present in the machine
         String gitExe = jGitTool.getGitExe();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", jGitTool, true);
-        assertThat(sizeEstimator.getGitTool(), is("jgit"));
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", jGitTool, null, TaskListener.NULL,true);
+        assertThat(sizeEstimator.getGitTool(), is("NONE")); // Since git is not available and that should be the recommendation
     }
 
     @Test
@@ -422,7 +421,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed and git is present in the machine
         String gitExe = tool.getGitExe();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
 
@@ -446,7 +445,7 @@ public class GitToolChooserTest {
         // Assuming no tool is installed and git is present in the machine
         String gitExe = tool.getGitExe();
 
-        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", tool, null, TaskListener.NULL,true);
         assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
 
