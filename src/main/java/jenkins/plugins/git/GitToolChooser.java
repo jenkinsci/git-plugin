@@ -149,9 +149,6 @@ public class GitToolChooser {
                 return rTool.getGitExe();
             } else {
                 GitTool rTool = resolveGitToolForRecommendation(tool, "git");
-                if (rTool == null) {
-                    return "NONE";
-                }
                 return rTool.getGitExe();
             }
         }
