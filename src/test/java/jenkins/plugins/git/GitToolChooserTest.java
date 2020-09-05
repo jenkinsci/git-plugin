@@ -85,7 +85,7 @@ public class GitToolChooserTest {
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "updated/git.exe" : "updated/git"));
+        assertThat(r.getGitTool(), containsString(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
     }
 
     /*
