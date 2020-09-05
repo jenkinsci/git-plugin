@@ -467,7 +467,7 @@ public class GitToolChooserTest {
         String gitExe = jGitTool.getGitExe();
 
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", jGitTool, null, TaskListener.NULL,true);
-        assertThat(sizeEstimator.getGitTool(), is("NONE")); // Since git is not available and that should be the recommendation
+        assertThat(sizeEstimator.getGitTool(), is("jgit")); // Since git is not available, we suggest `jgit` which doesn't make any difference
     }
 
     @Test
