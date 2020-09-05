@@ -47,7 +47,9 @@ public class GitToolChooser {
      * @param remoteName the repository url
      * @param projectContext the context where repository size is being estimated
      * @param credentialsId credential used to access the repository or null if no credential is required
-     * @param gitExe name of the git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
+     * @param gitExe Git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
+     * @param n A Jenkins agent used to check validity of git installation
+     * @param listener TaskListener required by GitUtils.resolveGitTool()
      * @param useJGit if true the JGit is allowed as an implementation
      * @throws IOException on error
      * @throws InterruptedException on error
