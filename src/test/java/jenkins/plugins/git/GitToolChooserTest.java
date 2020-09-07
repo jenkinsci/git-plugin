@@ -583,7 +583,7 @@ public class GitToolChooserTest {
 
     private void buildAProject(GitSampleRepoRule sampleRepo, boolean noCredentials) throws Exception {
         WorkflowJob p = jenkins.jenkins.createProject(WorkflowJob.class, "p");
-        String userRemoteConfig = noCredentials ?
+        String remoteConfig = noCredentials ?
             "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n" :
             "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$, credentialsId: 'github']]]\n";
         p.setDefinition(new CpsFlowDefinition(
