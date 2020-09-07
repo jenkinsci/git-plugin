@@ -12,7 +12,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.scm.api.trait.SCMSourceTrait;
 
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -331,14 +331,15 @@ public class GitToolChooserTest {
         String credentialsId = null;
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         GitToolChooser gitToolChooser = new GitToolChooser(remote, context, credentialsId, tool.getGitExe(), true);
 
         //According to size of repo, "jgit" should be recommended but it is not installed by the user
         //Hence, in this case GitToolChooser resolve gitExe as the user configured `home` value
-        assertThat(gitToolChooser.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
+        String expectedGitTool = isWindows() ? "git.exe" : "git";
+        assertThat(gitToolChooser.getGitTool(), is(expectedGitTool));
 
     }
 
@@ -349,7 +350,7 @@ public class GitToolChooserTest {
         String credentialsId = null;
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool);
 
@@ -463,7 +464,7 @@ public class GitToolChooserTest {
         store.save();
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         buildAProject(sampleRepo, false);
@@ -474,7 +475,8 @@ public class GitToolChooserTest {
         String gitExe = tool.getGitExe();
 
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe, true);
-        assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
+        String expectedGitTool = isWindows() ? "git.exe" : "git";
+        assertThat(sizeEstimator.getGitTool(), is(expectedGitTool));
     }
 
     @Test
@@ -485,7 +487,7 @@ public class GitToolChooserTest {
         store.save();
 
         // With JGit, we don't ask the name and home of the tool
-        GitTool tool = new GitTool("my-git", SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         GitTool jGitApacheTool = new JGitApacheTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, jgitTool, jGitApacheTool);
@@ -498,7 +500,8 @@ public class GitToolChooserTest {
         String gitExe = tool.getGitExe();
 
         GitToolChooser sizeEstimator = new GitToolChooser(remote, list.get(0), "github", gitExe, true);
-        assertThat(sizeEstimator.getGitTool(), is(SystemUtils.IS_OS_WINDOWS ? "git.exe" : "git"));
+        String expectedGitTool = isWindows() ? "git.exe" : "git";
+        assertThat(sizeEstimator.getGitTool(), is(expectedGitTool));
     }
 
     @Test
@@ -583,14 +586,13 @@ public class GitToolChooserTest {
         String userRemoteConfig = noCredentials ?
             "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n" :
             "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$, credentialsId: 'github']]]\n";
-        
         p.setDefinition(new CpsFlowDefinition(
                 "node {\n"
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
-                        + userRemoteConfig
-                        + "  )"
-                        + "}", true));
+                        + remoteConfig
+                        + "  ])\n"
+                        + "}\n", true));
         WorkflowRun b = jenkins.assertBuildStatusSuccess(p.scheduleBuild2(0));
         if (!noCredentials) {
             jenkins.waitForMessage("using credential github", b);
@@ -612,4 +614,8 @@ public class GitToolChooserTest {
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
     }
 
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
+    }
 }
