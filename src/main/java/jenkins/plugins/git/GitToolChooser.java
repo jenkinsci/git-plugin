@@ -186,7 +186,7 @@ public class GitToolChooser {
                 sizeOfRepo = repositorySizeCache.get(repoUrl);
                 useCache = true;
                 LOGGER.log(Level.INFO,
-                           "Found cache for {0} with size {1}",
+                           "Found cache key for {0} with size {1}",
                            new Object[]{remoteName, sizeOfRepo});
                 break;
             }
