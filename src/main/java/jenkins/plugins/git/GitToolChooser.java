@@ -200,6 +200,11 @@ public class GitToolChooser {
         return correctTool;
     }
 
+    /**
+     * Provide a git tool considering the node specific installations
+     * @param recommendation: Tool name
+     * @return resolved git tool
+     */
     private GitTool getResolvedGitTool(String recommendation) {
         if (currentNode == null) {
             currentNode = Jenkins.get();
