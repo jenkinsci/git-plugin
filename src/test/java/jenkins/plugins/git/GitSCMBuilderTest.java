@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assume.assumeThat;
 
 public class GitSCMBuilderTest {
 
@@ -467,9 +466,10 @@ public class GitSCMBuilderTest {
     @Test
     public void withoutRefSpecs() throws Exception {
         instance.withRefSpecs(Collections.singletonList("+refs/heads/feature:refs/remotes/@{remote}/feature"));
-        assumeThat(instance.refSpecs(), not(contains(
-                "+refs/heads/*:refs/remotes/@{remote}/*"
-        )));
+        if (instance.refSpecs().contains("+refs/heads/*:refs/remotes/@{remote}/*")) {
+            return;
+        }
+
         instance.withoutRefSpecs();
         assertThat(instance.refSpecs(), contains("+refs/heads/*:refs/remotes/@{remote}/*"));
         GitSCM scm = instance.build();

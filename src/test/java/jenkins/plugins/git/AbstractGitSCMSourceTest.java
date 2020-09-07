@@ -68,7 +68,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.when;
 
 /**
@@ -942,7 +941,10 @@ public class AbstractGitSCMSourceTest {
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnNotFoundRetrieval() throws Exception {
         /* Older git versions have unexpected behaviors with prune */
-        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
+        if (!sampleRepo.gitVersionAtLeast(1, 9, 0)) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));
@@ -957,7 +959,10 @@ public class AbstractGitSCMSourceTest {
     @Test
     public void refLockAvoidedIfPruneTraitPresentOnTagRetrieval() throws Exception {
         /* Older git versions have unexpected behaviors with prune */
-        assumeTrue(sampleRepo.gitVersionAtLeast(1, 9, 0));
+        if (!sampleRepo.gitVersionAtLeast(1, 9, 0)) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         TaskListener listener = StreamTaskListener.fromStderr();
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits((Arrays.asList(new TagDiscoveryTrait(), new PruneStaleBranchTrait())));

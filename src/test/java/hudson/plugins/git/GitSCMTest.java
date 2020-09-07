@@ -65,7 +65,6 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
-import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -159,16 +158,15 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void manageShouldAccessGlobalConfig() {
+    public void manageShouldAccessGlobalConfig() throws Exception {
         final String USER = "user";
         final String MANAGER = "manager";
         Permission jenkinsManage;
-        try {
-            jenkinsManage = getJenkinsManage();
-        } catch (Exception e) {
-            Assume.assumeTrue("Jenkins baseline is too old for this test (requires Jenkins.MANAGE)", false);
+        if (rule.jenkins.get().VERSION.compareTo("2.222.1") < 0) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        jenkinsManage = getJenkinsManage();
         rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
         rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
                                                    // Read access
