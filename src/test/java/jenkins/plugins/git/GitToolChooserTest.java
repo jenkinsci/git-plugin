@@ -100,8 +100,8 @@ public class GitToolChooserTest {
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "updated/git.exe" : "updated/git");
-        GitTool t = new GitTool("myGit", isWindows() ? "default/git.exe" : "default/git", Collections.singletonList(
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "updated\\git.exe" : "updated/git");
+        GitTool t = new GitTool("myGit", isWindows() ? "default\\git.exe" : "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
         GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
@@ -110,7 +110,7 @@ public class GitToolChooserTest {
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(isWindows() ? "updated/git.exe" : "updated/git"));
+        assertThat(r.getGitTool(), containsString(isWindows() ? "updated\\git.exe" : "updated/git"));
     }
 
     /*
@@ -131,11 +131,11 @@ public class GitToolChooserTest {
         agent.setMode(Node.Mode.NORMAL);
         agent.setLabelString("agent-windows");
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "myGit/git.exe" : "myGit/git");
-        GitTool toolOnMaster = new GitTool("myGit", isWindows() ? "default/git.exe" : "default/git", Collections.singletonList(
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "myGit\\git.exe" : "myGit/git");
+        GitTool toolOnMaster = new GitTool("myGit", isWindows() ? "default\\git.exe" : "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
-        TestToolInstaller instonAgent = new TestToolInstaller("agent-windows", "echo Hello", isWindows() ? "my-git/git.exe" : "my-git/git");
+        TestToolInstaller instonAgent = new TestToolInstaller("agent-windows", "echo Hello", isWindows() ? "my-git\\git.exe" : "my-git/git");
         GitTool toolOnAgent = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(instonAgent))));
 
         GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
@@ -152,7 +152,7 @@ public class GitToolChooserTest {
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, agent, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(isWindows() ? "my-git/git.exe" : "my-git/git"));
+        assertThat(r.getGitTool(), containsString(isWindows() ? "my-git\\git.exe" : "my-git/git"));
     }
 
     /*
