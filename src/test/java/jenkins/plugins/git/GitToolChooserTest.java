@@ -69,6 +69,11 @@ public class GitToolChooserTest {
         assertThat("The system credentials provider is enabled", store, notNullValue());
     }
 
+    @Before
+    public void resetRepositorySizeCache() {
+        GitToolChooser.clearRepositorySizeCache();
+    }
+
     /*
     In the event of having no cache but extension APIs in the ExtensionList, the estimator should recommend a tool
     instead of recommending no git implementation.
