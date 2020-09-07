@@ -333,5 +333,12 @@ public class GitToolChooser {
         }
     }
 
+    /**
+     * Clear the cache of repository sizes.
+     */
+    public static void clearRepositorySizeCache() {
+        repositorySizeCache = new ConcurrentHashMap<>();
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitToolChooser.class.getName());
 }
