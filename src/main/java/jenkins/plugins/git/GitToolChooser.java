@@ -64,7 +64,9 @@ public class GitToolChooser {
             JGIT_SUPPORTED = useJGit;
         }
 
-        LOGGER.log(Level.INFO, "GitToolChooser constructor remote {0}, gitExe {1}, useJGit {2}", new Object[]{remoteName, gitExe, useJGit});
+        LOGGER.log(Level.INFO,
+                   "GitToolChooser constructor remote {0}, gitExe {1}, useJGit {2}, JGIT_SUPPORTED {3}",
+                   new Object[]{remoteName, gitExe, useJGit, JGIT_SUPPORTED});
 
         implementation = "NONE";
         useCache = decideAndUseCache(remoteName);
@@ -77,7 +79,9 @@ public class GitToolChooser {
             decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
         }
         determineGitTool(implementation, gitExe);
-        LOGGER.log(Level.INFO, "GitToolChooser constructor sizeOfRepo {0}, implementation {1}, gitTool {2}, JGIT_SUPPORTED", new Object[]{sizeOfRepo, implementation, gitTool, JGIT_SUPPORTED});
+        LOGGER.log(Level.INFO,
+                   "GitToolChooser constructor sizeOfRepo {0}, implementation {1}, gitTool {2}, JGIT_SUPPORTED {3}",
+                   new Object[]{sizeOfRepo, implementation, gitTool, JGIT_SUPPORTED});
     }
 
     /* Git repository URLs frequently end with the ".git" suffix.
