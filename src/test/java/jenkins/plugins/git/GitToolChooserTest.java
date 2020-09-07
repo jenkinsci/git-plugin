@@ -297,6 +297,14 @@ public class GitToolChooserTest {
         // Assuming no tool is installed by user and git is present in the machine
         String gitExe = "git";
 
+        String remoteName = sampleRepo.toString();
+        String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
+        File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
+        if (cacheDir != null) {
+            System.out.println("**** Unexpected cache directory at " + cacheDir.getAbsolutePath() + " for " + remoteName);
+            hudson.Util.deleteRecursive(cacheDir);
+        }
+
         GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, gitExe, true);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));

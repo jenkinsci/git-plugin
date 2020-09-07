@@ -185,7 +185,9 @@ public class GitToolChooser {
             if (repositorySizeCache.containsKey(repoUrl)) {
                 sizeOfRepo = repositorySizeCache.get(repoUrl);
                 useCache = true;
-                LOGGER.log(Level.FINER, "Found cached size estimate {0} for remote {1}", new Object[]{sizeOfRepo, repoUrl});
+                LOGGER.log(Level.INFO,
+                           "Found cache for {0} with size {1}",
+                           new Object[]{remoteName, sizeOfRepo});
                 break;
             }
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(repoUrl);
