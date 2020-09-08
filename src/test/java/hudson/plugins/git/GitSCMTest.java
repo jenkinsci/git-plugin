@@ -2807,7 +2807,6 @@ public class GitSCMTest extends AbstractGitTestCase {
      * Tests that builds have the correctly specified Custom SCM names, associated with each build.
      * @throws Exception on error
      */
-    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
     @Test
     public void testCustomSCMName() throws Exception {
         final String branchName = "master";
