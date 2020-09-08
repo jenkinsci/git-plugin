@@ -96,21 +96,25 @@ public class GitToolChooserTest {
     @Issue("JENKINS-63519")
     @Test
     public void testResolveGitToolWithJenkins() throws IOException, InterruptedException {
+        if (isWindows()) { // Runs on Unix only
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "updated\\git.exe" : "updated/git");
-        GitTool t = new GitTool("myGit", isWindows() ? "default\\git.exe" : "default/git", Collections.singletonList(
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", "updated/git");
+        GitTool t = new GitTool("myGit", "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
-        GitTool tool = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new GitTool("my-git", "git", Collections.<ToolProperty<?>>emptyList());
         GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, JTool, t);
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, null, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(isWindows() ? "updated\\git.exe" : "updated/git"));
+        assertThat(r.getGitTool(), containsString("updated/git"));
     }
 
     /*
@@ -122,6 +126,10 @@ public class GitToolChooserTest {
     @Issue("JENKINS-63519")
     @Test
     public void testResolutionGitToolOnAgent() throws Exception {
+        if (isWindows()) { // Runs on Unix only
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         String remote = "https://gitlab.com/rishabhBudhouliya/git-plugin.git";
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
@@ -131,12 +139,12 @@ public class GitToolChooserTest {
         agent.setMode(Node.Mode.NORMAL);
         agent.setLabelString("agent-windows");
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", isWindows() ? "myGit\\git.exe" : "myGit/git");
-        GitTool toolOnMaster = new GitTool("myGit", isWindows() ? "default\\git.exe" : "default/git", Collections.singletonList(
+        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", "myGit/git");
+        GitTool toolOnMaster = new GitTool("myGit", "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
-        TestToolInstaller instonAgent = new TestToolInstaller("agent-windows", "echo Hello", isWindows() ? "my-git\\git.exe" : "my-git/git");
-        GitTool toolOnAgent = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(instonAgent))));
+        TestToolInstaller instonAgent = new TestToolInstaller("agent-windows", "echo Hello", "my-git/git");
+        GitTool toolOnAgent = new GitTool("my-git", "git", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(instonAgent))));
 
         GitTool JTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
 
@@ -152,7 +160,7 @@ public class GitToolChooserTest {
 
         GitToolChooser r = new GitToolChooser(remote, context, credentialsId, JTool, agent, TaskListener.NULL,true);
 
-        assertThat(r.getGitTool(), containsString(isWindows() ? "my-git\\git.exe" : "my-git/git"));
+        assertThat(r.getGitTool(), containsString("my-git/git"));
     }
 
     /*
