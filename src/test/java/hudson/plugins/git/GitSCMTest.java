@@ -2844,24 +2844,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         commit("commitFile3", johnDoe, "Commit number 3");
         assertTrue("scm polling should detect commit 3, (commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit3 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name
-        final int buildNumber3 = notifyAndCheckScmName(
-            project, commit3, scmNameString3, 3, git, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-
-        commit("commitFile4", johnDoe, "Commit number 4");
-        assertTrue("scm polling should detect commit 4 (commit3=" + commit3 + ",commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit4 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name still set
-        final int buildNumber4 = notifyAndCheckScmName(
-            project, commit4, scmNameString3, 4, git, commit3, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-        checkNumberedBuildScmName(project, buildNumber3, scmNameString3, git);
     }
 
     /**
