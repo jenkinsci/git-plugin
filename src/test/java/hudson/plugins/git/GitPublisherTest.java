@@ -59,7 +59,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assume.assumeThat;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -671,8 +670,10 @@ public class GitPublisherTest extends AbstractGitProject {
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
         String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
-        assumeThat(envValue, notNullValue());
-        assumeThat(envValue, is(not(emptyString())));
+        if (envValue == null || envValue.isEmpty()) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
 
         FreeStyleProject project = setupSimpleProject("master");
 
