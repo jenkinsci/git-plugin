@@ -2804,49 +2804,6 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     /**
-     * Tests that builds have the correctly specified Custom SCM names, associated with each build.
-     * @throws Exception on error
-     */
-    @Test
-    public void testCustomSCMName() throws Exception {
-        final String branchName = "master";
-        final FreeStyleProject project = setupProject(branchName, false);
-        project.addTrigger(new SCMTrigger(""));
-        GitSCM git = (GitSCM) project.getScm();
-        setupJGit(git);
-
-        final String commitFile1 = "commitFile1";
-        final String scmNameString1 = "";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should not detect any more changes after build",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-        final ObjectId commit1 = testRepo.git.revListAll().get(0);
-
-        // Check unset build SCM Name carries
-        final int buildNumber1 = notifyAndCheckScmName(
-            project, commit1, scmNameString1, 1, git);
-
-        final String scmNameString2 = "ScmName2";
-        git.getExtensions().replace(new ScmName(scmNameString2));
-
-        commit("commitFile2", johnDoe, "Commit number 2");
-        assertTrue("scm polling should detect commit 2 (commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit2 = testRepo.git.revListAll().get(0);
-
-        // Check second set SCM Name
-        final int buildNumber2 = notifyAndCheckScmName(
-            project, commit2, scmNameString2, 2, git, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-
-        final String scmNameString3 = "ScmName3";
-        git.getExtensions().replace(new ScmName(scmNameString3));
-
-        commit("commitFile3", johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3, (commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-    }
-
-    /**
      * Method performs HTTP get on "notifyCommit" URL, passing it commit by SHA1
      * and tests for custom SCM name build data consistency.
      * @param project project to build
