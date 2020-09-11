@@ -17,6 +17,7 @@ import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +45,6 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -360,7 +360,10 @@ public class GitSCMSourceTest {
     @Issue("JENKINS-52754")
     @Test
     public void gitSCMSourceShouldResolveToolsForMaster() throws Exception {
-        Assume.assumeTrue("Runs on Unix only", !Launcher.isWindows());
+        if (isWindows()) { // Runs on Unix only
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         TaskListener log = StreamTaskListener.fromStdout();
         HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "git");
         GitTool t = new GitTool("myGit", null, Collections.singletonList(
@@ -686,5 +689,10 @@ public class GitSCMSourceTest {
         public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
             return SCMFile.Type.REGULAR_FILE.equals(probe.stat(path).getType());
         }
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
     }
 }
