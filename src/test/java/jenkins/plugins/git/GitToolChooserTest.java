@@ -545,6 +545,24 @@ public class GitToolChooserTest {
         assertThat(expectedCacheDir, is(anExistingDirectory()));
     }
 
+    /* Do not throw null pointer excception if remote configuration is empty. */
+    @Test
+    @Issue("JENKINS-63572")
+    public void testSizeEstimationWithNoRemoteConfig() throws Exception {
+        sampleRepo.init();
+
+        failAProject(sampleRepo);
+
+        List<TopLevelItem> list = jenkins.jenkins.getItems();
+
+        // Use JGit as the git tool for this NPE check
+        GitTool jgitTool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, jgitTool, null, TaskListener.NULL, true);
+
+        assertThat(sizeEstimator.getGitTool(), is("NONE"));
+    }
+
     /*
     A test extension implemented to clone the behavior of a plugin extending the capability of providing the size of
     repo from a remote URL of "Github".
@@ -635,6 +653,18 @@ public class GitToolChooserTest {
         if (!noCredentials) {
             jenkins.waitForMessage("using credential github", b);
         }
+    }
+
+    /* Attempt to perform a checkout without defining a remote repository. Expected to fail, but should not report NPE */
+    private void failAProject(GitSampleRepoRule sampleRepo) throws Exception {
+        WorkflowJob p = jenkins.jenkins.createProject(WorkflowJob.class, "intentionally-failing-job-without-remote-config");
+        p.setDefinition(new CpsFlowDefinition("node {\n"
+                                              + "  checkout(\n"
+                                              + "    [$class: 'GitSCM'] \n"
+                                              + "  )\n"
+                                              + "}", true));
+        WorkflowRun b = jenkins.assertBuildStatus(hudson.model.Result.FAILURE, p.scheduleBuild2(0));
+        jenkins.waitForMessage("Couldn't find any revision to build", b);
     }
 
     private StandardCredentials createCredential(CredentialsScope scope, String id) {
