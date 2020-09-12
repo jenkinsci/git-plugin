@@ -405,7 +405,6 @@ public class GitToolChooserTest {
         String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
         File cacheDir = AbstractGitSCMSource.getCacheDir(cacheEntry, false);
         if (cacheDir != null) {
-            System.out.println("**** Unexpected cache directory at " + cacheDir.getAbsolutePath() + " for " + remoteName);
             hudson.Util.deleteRecursive(cacheDir);
         }
 
