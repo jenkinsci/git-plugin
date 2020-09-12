@@ -252,7 +252,7 @@ public class GitToolChooserTest {
         } else {
             permutedRemote = permutedRemote + suffix; // Add trailing ".git" suffix
         }
-        GitToolChooser permutedRepoSizeEstimator = new GitToolChooser(permutedRemote, list.get(0), "github", tool.getGitExe(), true);
+        GitToolChooser permutedRepoSizeEstimator = new GitToolChooser(permutedRemote, list.get(0), "github", tool, null, TaskListener.NULL, true);
         assertThat("Alternative repository name should find the cache",
                    permutedRepoSizeEstimator.getGitTool(), containsString("jgit"));
     }
@@ -261,15 +261,15 @@ public class GitToolChooserTest {
     @Test
     @Issue("JENKINS-63539")
     public void testRemoteAlternatives() throws Exception {
-        String gitExe = "git";
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://github.com/git/git.git", null, null, gitExe, null);
+        GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://github.com/git/git.git", null, null, tool, null, TaskListener.NULL, true);
         assertThat(nullRemoteSizeEstimator.remoteAlternatives(null), is(empty()));
         assertThat(nullRemoteSizeEstimator.remoteAlternatives(""), is(empty()));
 
         /* Borrow the nullRemoteSizer to also test determineSwitchOnSize a little more */
         long sizeOfRepo = 1 + random.nextInt(4000);
-        assertThat(nullRemoteSizeEstimator.determineSwitchOnSize(sizeOfRepo, "any"), is("NONE"));
+        assertThat(nullRemoteSizeEstimator.determineSwitchOnSize(sizeOfRepo, tool), is("NONE"));
 
         /* Each of these alternatives is expected to be interpreted as
          * a valid alias for every other alternative in the list.
@@ -286,7 +286,7 @@ public class GitToolChooserTest {
         };
 
         for (String remote : remoteAlternatives) {
-            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, gitExe, random.nextBoolean());
+            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, tool, null, TaskListener.NULL, random.nextBoolean());
             Set<String> alternatives = sizeEstimator.remoteAlternatives(remote);
             assertThat("Remote: " + remote, alternatives, containsInAnyOrder(remoteAlternatives));
         }
@@ -294,7 +294,7 @@ public class GitToolChooserTest {
         /* Test remote that ends with '/' */
         for (String remote : remoteAlternatives) {
             remote = remote + "/";
-            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, gitExe, random.nextBoolean());
+            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, tool, null, TaskListener.NULL, random.nextBoolean());
             Set<String> alternatives = sizeEstimator.remoteAlternatives(remote);
             assertThat("Remote+'/': " + remote, alternatives, containsInAnyOrder(remoteAlternatives));
         }
@@ -408,7 +408,7 @@ public class GitToolChooserTest {
             hudson.Util.deleteRecursive(cacheDir);
         }
 
-        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, gitExe, true);
+        GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, tool, null, TaskListener.NULL, true);
 
         assertThat(sizeEstimator.getGitTool(), is("NONE"));
     }
@@ -424,7 +424,7 @@ public class GitToolChooserTest {
         List<TopLevelItem> list = jenkins.jenkins.getItems();
 
         // Assuming no tool is installed by user and git is present in the machine
-        String gitExe = "git";
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
 
         GitToolChooser sizeEstimator = new GitToolChooser(sampleRepo.toString(), list.get(0), null, tool, null, TaskListener.NULL,true);
 

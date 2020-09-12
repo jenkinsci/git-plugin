@@ -87,7 +87,6 @@ public class GitToolChooser {
             LOGGER.log(Level.INFO, "GitToolChooser not using cache in constructor");
             decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
         }
-        determineGitTool(implementation, gitExe);
         LOGGER.log(Level.INFO,
                    "GitToolChooser constructor sizeOfRepo {0}, implementation {1}, gitTool {2}, JGIT_SUPPORTED {3}",
                    new Object[]{sizeOfRepo, implementation, gitTool, JGIT_SUPPORTED});
