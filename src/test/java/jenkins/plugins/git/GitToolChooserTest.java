@@ -660,7 +660,7 @@ public class GitToolChooserTest {
         WorkflowJob p = jenkins.jenkins.createProject(WorkflowJob.class, "intentionally-failing-job-without-remote-config");
         p.setDefinition(new CpsFlowDefinition("node {\n"
                                               + "  checkout(\n"
-                                              + "    [$class: 'GitSCM'] \n"
+                                              + "    [$class: 'GitSCM']\n"
                                               + "  )\n"
                                               + "}", true));
         WorkflowRun b = jenkins.assertBuildStatus(hudson.model.Result.FAILURE, p.scheduleBuild2(0));
