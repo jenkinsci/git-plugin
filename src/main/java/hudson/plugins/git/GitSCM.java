@@ -851,11 +851,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String url = getParameterString(uc.getUrl(), environment);
                 chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,unsupportedCommand.determineSupportForJGit());
             }
-            listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
-            String updatedGitExe = chooser.getGitTool();
-
-            if (!updatedGitExe.equals("NONE")) {
-                gitExe = updatedGitExe;
+            if (chooser != null) {
+                listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
+                String updatedGitExe = chooser.getGitTool();
+                
+                if (!updatedGitExe.equals("NONE")) {
+                    gitExe = updatedGitExe;
+                }
             }
         }
         Git git = Git.with(listener, environment).in(ws).using(gitExe);
