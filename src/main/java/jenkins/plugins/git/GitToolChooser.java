@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Item;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
@@ -16,6 +17,7 @@ import org.jenkinsci.plugins.gitclient.JGitTool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -31,6 +33,8 @@ public class GitToolChooser {
     private long sizeOfRepo = 0L;
     private String implementation;
     private String gitTool;
+    private TaskListener listener;
+    private Node currentNode;
     /**
      * Size to switch implementation in KiB
      */
@@ -43,17 +47,21 @@ public class GitToolChooser {
      * @param remoteName the repository url
      * @param projectContext the context where repository size is being estimated
      * @param credentialsId credential used to access the repository or null if no credential is required
-     * @param gitExe name of the git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
+     * @param gitExe Git tool ('git', 'jgit', 'jgitapache') to be used as the default tool
+     * @param n A Jenkins agent used to check validity of git installation
+     * @param listener TaskListener required by GitUtils.resolveGitTool()
      * @param useJGit if true the JGit is allowed as an implementation
      * @throws IOException on error
      * @throws InterruptedException on error
      */
-    public GitToolChooser(String remoteName, Item projectContext, String credentialsId, String gitExe, Boolean useJGit) throws IOException, InterruptedException {
+    public GitToolChooser(String remoteName, Item projectContext, String credentialsId,
+                          GitTool gitExe, Node n, TaskListener listener, Boolean useJGit) throws IOException, InterruptedException {
         boolean useCache = false;
         if (useJGit != null) {
             JGIT_SUPPORTED = useJGit;
         }
-
+        currentNode = n;
+        this.listener = listener;
         implementation = "NONE";
         useCache = decideAndUseCache(remoteName);
 
@@ -62,7 +70,11 @@ public class GitToolChooser {
         } else {
             decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
         }
-        determineGitTool(implementation, gitExe);
+        gitTool = implementation;
+    }
+
+    public void addListener(TaskListener listener) {
+        this.listener = listener;
     }
 
     /**
@@ -88,7 +100,7 @@ public class GitToolChooser {
         return useCache;
     }
 
-    private void decideAndUseAPI(String remoteName, Item context, String credentialsId, String gitExe) {
+    private void decideAndUseAPI(String remoteName, Item context, String credentialsId, GitTool gitExe) {
         if (setSizeFromAPI(remoteName, context, credentialsId)) {
             implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
         }
@@ -126,35 +138,78 @@ public class GitToolChooser {
      * @param sizeOfRepo: Size of a repository (in KiBs)
      * @return a git implementation, "git" or "jgit"
      */
-    String determineSwitchOnSize(Long sizeOfRepo, String gitExe) {
+    String determineSwitchOnSize(Long sizeOfRepo, GitTool tool) {
         if (sizeOfRepo != 0L) {
             if (sizeOfRepo < SIZE_TO_SWITCH) {
                 if (!JGIT_SUPPORTED) {
                     return "NONE";
                 }
-                return determineToolName(gitExe, JGitTool.MAGIC_EXENAME);
+                GitTool rTool = resolveGitToolForRecommendation(tool, JGitTool.MAGIC_EXENAME);
+                if (rTool == null) {
+                    return "NONE";
+                }
+                return rTool.getGitExe();
             } else {
-                return determineToolName(gitExe, "git");
+                GitTool rTool = resolveGitToolForRecommendation(tool, "git");
+                return rTool.getGitExe();
             }
         }
         return "NONE";
     }
 
+    private GitTool resolveGitToolForRecommendation(GitTool userChoice, String recommendation) {
+        GitTool tool;
+        if (recommendation.equals(JGitTool.MAGIC_EXENAME)) {
+            if (userChoice.getGitExe().equals(JGitApacheTool.MAGIC_EXENAME)) {
+                recommendation = JGitApacheTool.MAGIC_EXENAME;
+            }
+            // check if jgit or jgitapache is enabled
+            tool = getResolvedGitTool(recommendation);
+            if (tool.getName().equals(recommendation)) {
+                return tool;
+            } else {
+                return null;
+            }
+        } else {
+            if (!userChoice.getName().equals(JGitTool.MAGIC_EXENAME) && !userChoice.getName().equals(JGitApacheTool.MAGIC_EXENAME)) {
+                return userChoice;
+            }
+            else {
+                return recommendGitToolOnAgent(userChoice);
+            }
+        }
+    }
+
+    public GitTool recommendGitToolOnAgent(GitTool userChoice) {
+        List<GitTool> preferredToolList = new ArrayList<>();
+        GitTool correctTool = GitTool.getDefaultInstallation();
+        String toolName = userChoice.getName();
+        if (toolName.equals(JGitTool.MAGIC_EXENAME) || toolName.equals(JGitApacheTool.MAGIC_EXENAME)) {
+            GitTool[] toolList = Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallations();
+            for (GitTool tool : toolList) {
+                if (!tool.getProperties().isEmpty()) {
+                    preferredToolList.add(tool);
+                }
+            }
+            for (GitTool tool: preferredToolList) {
+                if (tool.getName().equals(getResolvedGitTool(tool.getName()).getName())) {
+                    correctTool = getResolvedGitTool(tool.getName());
+                }
+            }
+        }
+        return correctTool;
+    }
+
     /**
-     * For a given recommended git implementation, validate if the installation exists and provide no suggestion if
-     * implementation doesn't exist.
-     * @param gitImplementation: The recommended git implementation, "git" or "jgit" on the basis of the heuristics.
+     * Provide a git tool considering the node specific installations
+     * @param recommendation: Tool name
+     * @return resolved git tool
      */
-    private void determineGitTool(String gitImplementation, String gitExe) {
-        if (gitImplementation.equals("NONE")) {
-            gitTool = "NONE";
-            return; // Recommend nothing (GitToolRecommendation = NONE)
+    private GitTool getResolvedGitTool(String recommendation) {
+        if (currentNode == null) {
+            currentNode = Jenkins.get();
         }
-        final Jenkins jenkins = Jenkins.get();
-        GitTool tool = GitUtils.resolveGitTool(gitImplementation, jenkins, null, TaskListener.NULL);
-        if (tool != null) {
-            gitTool = tool.getGitExe();
-        }
+        return GitUtils.resolveGitTool(recommendation, currentNode, null, listener);
     }
 
     /**
@@ -163,18 +218,6 @@ public class GitToolChooser {
      */
     public String getGitTool() {
         return gitTool;
-    }
-
-    private String determineToolName(String gitExe, String recommendation) {
-        if (gitExe.contains(recommendation) && !gitExe.equals(JGitTool.MAGIC_EXENAME) && !gitExe.equals(JGitApacheTool.MAGIC_EXENAME)) {
-            return gitExe;
-        }
-        if (!recommendation.equals(gitExe)) {
-            if (gitExe.equals(JGitApacheTool.MAGIC_EXENAME) && recommendation.equals(JGitTool.MAGIC_EXENAME)) {
-                return gitExe;
-            }
-        }
-        return recommendation;
     }
 
     /**
