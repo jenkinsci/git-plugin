@@ -100,7 +100,7 @@ public class DefaultBuildChooser extends BuildChooser {
                     fqbn = "refs/remotes/" + repository + "/" + branchSpec;
                     verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                     possibleQualifiedBranches.add(fqbn);
-                    
+
                     //Try branchSpec as it is - e.g. "refs/tags/mytag"
                     fqbn = branchSpec;
                 }
