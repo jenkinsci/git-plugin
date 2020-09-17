@@ -1316,7 +1316,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
             printCommitMessageToLog(listener, git, revToBuild);
-        } catch (ArithmeticException | GitException ge) {
+        } catch (IOException | ArithmeticException | GitException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-62710 reports a JGit arithmetic exception on an older Java 8 system.
