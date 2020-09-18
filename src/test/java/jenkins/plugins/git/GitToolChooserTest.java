@@ -300,6 +300,36 @@ public class GitToolChooserTest {
         }
     }
 
+    /* Test conversion of any remote alternative of git repo URLs to a standard URL */
+    @Test
+    public void testConvertToCanonicalURL() throws Exception {
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+
+        String[] remoteAlternatives = {
+                "git://github.com/jenkinsci/git-plugin",
+                "git://github.com/jenkinsci/git-plugin.git",
+                "git@github.com:jenkinsci/git-plugin",
+                "git@github.com:jenkinsci/git-plugin.git",
+                "https://github.com/jenkinsci/git-plugin",
+                "https://github.com/jenkinsci/git-plugin.git",
+                "ssh://git@github.com/jenkinsci/git-plugin",
+                "ssh://git@github.com/jenkinsci/git-plugin.git",
+        };
+
+        String actualNormalizedURL = "https://github.com/jenkinsci/git-plugin.git";
+
+        for (String remote : remoteAlternatives) {
+            GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, tool, null, TaskListener.NULL, random.nextBoolean());
+            String expectedNormalizedURL = sizeEstimator.convertToCanonicalURL(remote);
+            assertThat("Remote: " + remote, expectedNormalizedURL, is(actualNormalizedURL));
+        }
+
+        /* Check behavior in case of any other format of git repo URL*/
+        String otherRemote = "file://srv/git/repo";
+        GitToolChooser sizeEstimator = new GitToolChooser(otherRemote, null, null, tool, null, TaskListener.NULL, random.nextBoolean());
+        assertThat("Remote: " + otherRemote, sizeEstimator.convertToCanonicalURL(otherRemote), is(otherRemote + ".git"));
+    }
+
     /*
     In the event of having an extension which returns the size of repository as 10000 KiB, the estimator should
     recommend "git" as the optimal implementation from the heuristics
