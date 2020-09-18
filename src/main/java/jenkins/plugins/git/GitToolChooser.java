@@ -88,7 +88,7 @@ public class GitToolChooser {
     private boolean decideAndUseCache(String remoteName) throws IOException, InterruptedException {
         boolean useCache = false;
         if (setSizeFromInternalCache(remoteName)) {
-            LOGGER.log(Level.INFO,
+            LOGGER.log(Level.FINE,
                     "Found cache key for {0} with size {1}",
                     new Object[]{remoteName, sizeOfRepo});
             useCache = true;
@@ -123,9 +123,9 @@ public class GitToolChooser {
                     LOGGER.log(Level.FINE, "Remote URL {0} cache {1} has no git dir", new Object[]{remoteName, cacheDir});
                 }
             }
+        }
         if (!useCache) {
             LOGGER.log(Level.FINE, "Remote URL {0} cache not found", remoteName);
-        }
         }
         return useCache;
     }
@@ -157,7 +157,7 @@ public class GitToolChooser {
      *
      * Add remoteURL with the ".git" suffix if not present
      */
-    private String addSuffixVariant(@NonNull String canonicalURL) {
+    private String addSuffix(@NonNull String canonicalURL) {
         String suffix = ".git";
         if (!canonicalURL.endsWith(suffix)) {
             canonicalURL = canonicalURL + suffix;
@@ -182,14 +182,14 @@ public class GitToolChooser {
         }
 
         Pattern [] protocolPatterns = {
-                gitProtocolPattern,
                 sshAltProtocolPattern,
                 sshProtocolPattern,
+                gitProtocolPattern,
         };
 
         String matcherReplacement = "https://$1/$2";
         /* For each matching protocol, convert alternatives to canonical form by https replacement */
-        remoteURL = addSuffixVariant(remoteURL);
+        remoteURL = addSuffix(remoteURL);
         String canonicalURL = remoteURL;
         if (httpProtocolPattern.matcher(remoteURL).matches()) {
             canonicalURL = remoteURL;
@@ -198,6 +198,7 @@ public class GitToolChooser {
                 Matcher protocolMatcher = protocolPattern.matcher(remoteURL);
                 if (protocolMatcher.matches()) {
                     canonicalURL = protocolMatcher.replaceAll(matcherReplacement);
+                    break;
                 }
             }
         }
