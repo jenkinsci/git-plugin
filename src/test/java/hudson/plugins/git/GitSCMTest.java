@@ -1716,6 +1716,13 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setHideCredentials(true);
         assertTrue("Hide credentials not set", scm.isHideCredentials());
 
+        /* Exit test early if running on Windows and path will be too long */
+        /* Known limitation of git for Windows 2.28.0 and earlier */
+        /* Needs a longpath fix in git for Windows */
+        String currentDirectoryPath = new File(".").getCanonicalPath();
+        if (isWindows() && currentDirectoryPath.length() > 95) {
+            return;
+        }
 
         descriptor.setHideCredentials(false);
         final String commitFile1 = "commitFile1";
