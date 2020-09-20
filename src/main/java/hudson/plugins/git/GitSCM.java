@@ -707,7 +707,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.get(), null);
+            GitClient git = createClient(listener, environment, project, Jenkins.get(), null, null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -783,7 +783,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, node, workingDirectory);
+        GitClient git = createClient(listener, environment, project, node, workingDirectory, null);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -824,17 +824,22 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace, UnsupportedCommand cmd) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws);
+        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, cmd);
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, UnsupportedCommand cmd) throws IOException, InterruptedException {
+
+        if (cmd == null) {
+            /* UnsupportedCommand supports JGit by default */
+            cmd = new UnsupportedCommand();
+        }
 
         String gitExe = getGitExe(n, listener);
 
@@ -849,7 +854,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             for (UserRemoteConfig uc : getUserRemoteConfigs()) {
                 String ucCredentialsId = uc.getCredentialsId();
                 String url = getParameterString(uc.getUrl(), environment);
-                chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,unsupportedCommand.determineSupportForJGit());
+                /* GitPublisher doesn't support JGit, it should not be suggested */
+                if (!cmd.determineSupportForJGit()) {
+                    chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,false);
+                } else {
+                    chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener, unsupportedCommand.determineSupportForJGit());
+                }
             }
             if (chooser != null) {
                 listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
@@ -1246,7 +1256,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
-        GitClient git = createClient(listener, environment, build, workspace);
+        GitClient git = createClient(listener, environment, build, workspace, null);
 
         if (launcher instanceof Launcher.DecoratedLauncher) {
             // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we will actually have a RemoteGitImpl which is opaque.

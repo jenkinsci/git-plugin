@@ -39,9 +39,11 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jvnet.hudson.test.Issue;
 
@@ -123,6 +125,56 @@ public class GitPublisherTest extends AbstractGitProject {
 
         // twice for MatrixRun, which is to be ignored, then once for matrix completion
         assertEquals(3,run.get());
+    }
+
+    @Test
+    public void GitPublisherFailWithJGit() throws Exception {
+        final AtomicInteger run = new AtomicInteger(); // count the number of times the perform is called
+
+        commitNewFile("a");
+
+        List<UserRemoteConfig> repoList = new ArrayList<>();
+        repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
+
+        GitTool toolGit = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList()); //testGitDir.getAbsolutePath()
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, toolGit);
+
+        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        mp.setAxes(new AxisList(new Axis("VAR","a","b")));
+        mp.setScm(new GitSCM(repoList,
+                Collections.singletonList(new BranchSpec("")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, tool.getName(), Collections.<GitSCMExtension>emptyList()));
+        mp.getPublishersList().add(new GitPublisher(
+                Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
+                Collections.<BranchToPush>emptyList(),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false) {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                run.incrementAndGet();
+                try {
+                    return super.perform(build, launcher, listener);
+                } finally {
+                    // until the 3rd one (which is the last one), we shouldn't create a tag
+                    if (run.get()<3)
+                        assertFalse(existsTag("foo"));
+                }
+            }
+
+            @Override
+            public BuildStepDescriptor getDescriptor() {
+                return (BuildStepDescriptor)Jenkins.get().getDescriptorOrDie(GitPublisher.class); // fake
+            }
+
+            private Object writeReplace() { return new NullSCM(); }
+        });
+
+        MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
+
+        /* Since jgit doesn't support the GitPublisher, this should be false instead of true */
+        assertTrue(existsTag("foo"));
     }
 
     @Test

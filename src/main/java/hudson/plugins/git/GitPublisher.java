@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.*;
 
 import javax.servlet.ServletException;
@@ -178,7 +179,9 @@ public class GitPublisher extends Recorder implements Serializable {
         else {
             EnvVars environment = build.getEnvironment(listener);
 
-            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace());
+            UnsupportedCommand cmd = new UnsupportedCommand();
+            cmd.gitPublisher(true);
+            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
 
             URIish remoteURI;
 
