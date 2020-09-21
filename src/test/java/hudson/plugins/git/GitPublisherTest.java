@@ -136,9 +136,8 @@ public class GitPublisherTest extends AbstractGitProject {
         List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
 
-        GitTool toolGit = new GitTool("my-git", isWindows() ? "git.exe" : "git", Collections.<ToolProperty<?>>emptyList());
         GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList()); //testGitDir.getAbsolutePath()
-        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool, toolGit);
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
@@ -174,7 +173,7 @@ public class GitPublisherTest extends AbstractGitProject {
         MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
 
         /* Since jgit doesn't support the GitPublisher, this should be false instead of true */
-        assertTrue(existsTag("foo"));
+        assertFalse(existsTag("foo"));
     }
 
     @Test
