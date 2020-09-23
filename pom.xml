@@ -101,7 +101,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.5.1-SNAPSHOT</version>
+      <version>3.5.1-rc2571.b85fc89d5173</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
