@@ -707,7 +707,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.get(), null, null);
+            GitClient git = createClient(listener, environment, project, Jenkins.get(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -783,7 +783,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, node, workingDirectory, null);
+        GitClient git = createClient(listener, environment, project, node, workingDirectory);
 
         if (git.hasGitRepo()) {
             // Repo is there - do a fetch
@@ -824,6 +824,28 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
+    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+        FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
+        /* ws will be null if the node which ran the build is offline */
+        if (ws != null) {
+            ws.mkdirs(); // ensure it exists
+        }
+        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, null);
+    }
+
+    /**
+     * Allows {@link Publisher} to access a configured {@link GitClient} object supported with the UnsupportedCommand
+     * to perform additional git operations.
+     * @param listener build log
+     * @param environment environment variables to be used
+     * @param build run context for the returned GitClient
+     * @param workspace client workspace
+     * @param cmd UnsupportedCommand sent by GitPublisher
+     * @return git client for additional git operations
+     * @throws IOException on input or output error
+     * @throws InterruptedException when interrupted
+     */
+    @NonNull
     public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace, UnsupportedCommand cmd) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
@@ -831,6 +853,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             ws.mkdirs(); // ensure it exists
         }
         return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, cmd);
+
+    }
+
+    @NonNull
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
+        return createClient(listener, environment, project, n, ws, null);
     }
 
     @NonNull
@@ -1256,7 +1284,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         EnvVars environment = build.getEnvironment(listener);
-        GitClient git = createClient(listener, environment, build, workspace, null);
+        GitClient git = createClient(listener, environment, build, workspace);
 
         if (launcher instanceof Launcher.DecoratedLauncher) {
             // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we will actually have a RemoteGitImpl which is opaque.
