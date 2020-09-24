@@ -79,6 +79,13 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         this(revision, false);
     }   
 
+    public RevisionParameterAction(Revision revision, boolean combineCommits, URIish repoURL) {
+        this.revision = revision;
+        this.commit = revision.getSha1String();
+        this.combineCommits = combineCommits;
+        this.repoURL = repoURL;
+    }
+
     public RevisionParameterAction(Revision revision, boolean combineCommits) {
     	this.revision = revision;
     	this.commit = revision.getSha1String();

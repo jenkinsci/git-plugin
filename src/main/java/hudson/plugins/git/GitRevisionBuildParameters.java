@@ -33,6 +33,7 @@ import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.eclipse.jgit.transport.URIish;
+import java.net.URISyntaxException;
 
 /**
  * Build parameter in the parameterized build trigger to pass the Git commit to the downstream build
