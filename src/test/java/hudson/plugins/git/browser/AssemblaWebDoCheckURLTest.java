@@ -47,7 +47,8 @@ public class AssemblaWebDoCheckURLTest {
     public void testDomainLevelChecksOnRepoUrl() throws Exception {
         // Invalid URL, missing '/' character - Earlier it would open connection for such mistakes but now check resolves it beforehand.
         String url = "https:/assembla.com";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("Invalid URL"));
     }
 
     @Test
@@ -60,7 +61,8 @@ public class AssemblaWebDoCheckURLTest {
     @Test
     public void testPathLevelChecksOnRepoUrlInvalidPathSyntax() throws Exception {
         // Invalid hostname in URL
-        String url = "https://assembla.comspaces/git-plugin/git/source";
+        String hostname = "assembla.comspaces";
+        String url = "https://" + hostname + "/git-plugin/git/source";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(), is("Invalid URL"));
     }
 
@@ -73,9 +75,9 @@ public class AssemblaWebDoCheckURLTest {
     @Test
     public void testPathLevelChecksOnRepoUrlUnableToConnect() throws Exception {
         // Syntax issue related specific to Assembla
-        String url = "https://app.assembla.com/space/git-plugin/git/source";
+        String url = "https://app.assembla.com/space/git-plugin/git/source/";
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
-                is("Unable to connect https://app.assembla.com/space/git-plugin/git/source/"));
+                is("Exception reading from Assembla URL " + url + " : ERROR: Unable to connect " + url));
     }
 
     @Test
@@ -100,5 +102,38 @@ public class AssemblaWebDoCheckURLTest {
         String url = urls[random.nextInt(urls.length)]; // Don't abuse a single web site with tests
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
                 is("Invalid URL"));
+    }
+
+    @Test
+    public void testInitialChecksOnRepoUrlWithEmptyPath() throws Exception {
+        String url = "https://www.assembla.com";
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
+    }
+
+    @Test
+    public void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesLocalNet() throws Exception {
+        String hostname = "assembla.example.localnet";
+        String url = "https://" + hostname + "/space/git-plugin/git/source";
+        FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
+    }
+
+    @Test
+    public void testDomainLevelChecksOnRepoUrlAllowDNSLocalHostnamesHome() throws Exception {
+        String hostname = "assembla.example.home";
+        String url = "https://" + hostname + "/space/git-plugin/git/source";
+        FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
+    }
+
+    @Test
+    public void testDomainLevelChecksOnRepoUrlCorpDomainMustBeValid() throws Exception {
+        String hostname = "assembla.myorg.corp";
+        String url = "https://" + hostname + "/space/git-plugin/git/source";
+        FormValidation validation = assemblaWebDescriptor.doCheckRepoUrl(project, url);
+        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
+                is("Exception reading from Assembla URL " + url + " : ERROR: " + hostname));
     }
 }
