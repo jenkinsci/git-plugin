@@ -80,7 +80,7 @@ public class Gitiles extends GitRepositoryBrowser {
             if(initialChecksAndReturnOk(project, cleanUrl)){
                 return FormValidation.ok();
             }
-            if (!checkURIFormat(cleanUrl)) {
+            if (!validateUrl(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {

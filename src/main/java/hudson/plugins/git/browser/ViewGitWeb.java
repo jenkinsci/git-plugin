@@ -100,7 +100,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
             // Connect to URL and check content only if we have admin permission
             if (initialChecksAndReturnOk(project, cleanUrl))
                 return FormValidation.ok();
-            if (!checkURIFormat(cleanUrl)) {
+            if (!validateUrl(cleanUrl)) {
                 return FormValidation.error(Messages.invalidUrl());
             }
             return new URLCheck() {
