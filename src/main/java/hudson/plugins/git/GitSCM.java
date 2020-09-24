@@ -146,6 +146,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
     public static final String GIT_COMMIT = "GIT_COMMIT";
+    public static final String GIT_COMMIT_SHORT = "GIT_COMMIT_SHORT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
 
@@ -1282,6 +1283,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
+        environment.put(GIT_COMMIT_SHORT, revToBuild.revision.getSha1().abbreviate(7).name());
         Branch localBranch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         String localBranchName = getParamLocalBranch(build, listener);
         if (localBranch != null && localBranch.getName() != null) { // null for a detached HEAD
@@ -1478,8 +1480,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             String sha1 = Util.fixEmpty(rev.getSha1String());
+            String shortsha1 = Util.fixEmpty(rev.getSha1().abbreviate(7).name());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
+                env.put(GIT_COMMIT_SHORT, shortsha1);
             }
         }
 
