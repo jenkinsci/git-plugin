@@ -71,7 +71,14 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 			return null;
 		}
 
-		return new RevisionParameterAction(lastBuiltRevision, getCombineQueuedCommits());
+		// This code is required when using option Pass-through Git Commit that was built and if the build is cloning two different repo
+		URIish repoURL = null;
+		try {
+			repoURL = new URIish(data.remoteUrls.iterator().next());
+			return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits(), repoURL);
+		} catch (URISyntaxException e) {
+			return new RevisionParameterAction(data.getLastBuiltRevision(), getCombineQueuedCommits());
+		}
 	}
 
 	public boolean getCombineQueuedCommits() {
