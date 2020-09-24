@@ -25,7 +25,7 @@
               <j:if test="${cslink==null}">
                 ${cs.id}
               </j:if>
-              by <a href="${rootURL}/${cs.author.url}/">${cs.author}</a>
+              by <a href="${rootURL}/${cs.author.url}/">${cs.author.displayName}</a>
             </strong>
             <j:if test="${cs.branch!=null}">
               <j:whitespace trim="false"> in ${cs.branch}</j:whitespace>
