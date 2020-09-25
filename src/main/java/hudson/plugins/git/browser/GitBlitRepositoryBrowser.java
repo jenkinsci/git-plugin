@@ -93,7 +93,7 @@ public class GitBlitRepositoryBrowser extends GitRepositoryBrowser {
             {
                 return FormValidation.ok();
             }
-            if (!checkURIFormat(cleanUrl))
+            if (!validateUrl(cleanUrl))
             {
                 return FormValidation.error(Messages.invalidUrl());
             }
