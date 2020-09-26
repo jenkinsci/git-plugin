@@ -834,8 +834,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Allows {@link Publisher} to access a configured {@link GitClient} object supported with the UnsupportedCommand
-     * to perform additional git operations.
+     * Allows {@link Publisher} and other post build actions to access a configured {@link GitClient}.
+     * The post build action can use the {@code postBuildUnsupportedCommand} argument to control the
+     * selection of a git tool by {@link GitToolChooser}.
      * @param listener build log
      * @param environment environment variables to be used
      * @param build run context for the returned GitClient
