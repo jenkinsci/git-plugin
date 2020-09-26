@@ -841,19 +841,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @param environment environment variables to be used
      * @param build run context for the returned GitClient
      * @param workspace client workspace
-     * @param cmd UnsupportedCommand sent by GitPublisher
+     * @param postBuildUnsupportedCommand passed by caller to control choice of git tool by GitTooChooser
      * @return git client for additional git operations
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace, UnsupportedCommand cmd) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, cmd);
+        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
 
     }
 
@@ -863,11 +863,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, UnsupportedCommand cmd) throws IOException, InterruptedException {
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
 
-        if (cmd == null) {
+        if (postBuildUnsupportedCommand == null) {
             /* UnsupportedCommand supports JGit by default */
-            cmd = new UnsupportedCommand();
+            postBuildUnsupportedCommand = new UnsupportedCommand();
         }
 
         String gitExe = getGitExe(n, listener);
@@ -883,12 +883,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             for (UserRemoteConfig uc : getUserRemoteConfigs()) {
                 String ucCredentialsId = uc.getCredentialsId();
                 String url = getParameterString(uc.getUrl(), environment);
-                /* GitPublisher doesn't support JGit, it should not be suggested */
-                if (!cmd.determineSupportForJGit()) {
-                    chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,false);
-                } else {
-                    chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener, unsupportedCommand.determineSupportForJGit());
-                }
+                /* If any of the extensions do not support JGit, it should not be suggested */
+                /* If the post build action does not support JGit, it should not be suggested */
+                chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,
+                                             unsupportedCommand.determineSupportForJGit() && postBuildUnsupportedCommand.determineSupportForJGit());
             }
             if (chooser != null) {
                 listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
