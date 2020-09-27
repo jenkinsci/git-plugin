@@ -39,9 +39,11 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jvnet.hudson.test.Issue;
 
@@ -50,16 +52,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
+import jenkins.plugins.git.GitToolChooser;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assume.assumeThat;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -124,6 +132,107 @@ public class GitPublisherTest extends AbstractGitProject {
 
         // twice for MatrixRun, which is to be ignored, then once for matrix completion
         assertEquals(3,run.get());
+    }
+
+    @Test
+    public void GitPublisherFreestylePushBranchWithJGit() throws Exception {
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // Store a cache size for the repository so that git tool chooser will choose JGit
+        Random random = new Random();
+        GitToolChooser.putRepositorySizeCache(testGitDir.getAbsolutePath(), 37 + random.nextInt(900));
+
+        GitSCM scm = new GitSCM(
+                remoteConfigs(),
+                Collections.singletonList(new BranchSpec("*")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
+        scm.getExtensions().add(new LocalBranch("integration"));
+        project.setScm(scm);
+
+        project.getPublishersList().add(new GitPublisher(
+                Collections.<TagToPush>emptyList(),
+                Collections.singletonList(new BranchToPush("origin", "integration")),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false));
+
+        // create initial commit and then run the build against it:
+        commitNewFile("commitFileBase");
+        testGitClient.branch("integration");
+        build(project, Result.SUCCESS, "commitFileBase");
+
+        testGitClient.checkout(null, "topic1");
+        final String commitFile1 = "commitFile1";
+        commitNewFile(commitFile1);
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        /* Confirm that JGit was used and that the branch push message was logged */
+        assertThat(build1.getLog(50),
+                   hasItems("The recommended git tool is: jgit", // JGit recommended by git tool chooser
+                            "Pushing HEAD to branch integration at repo origin"));
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+
+        /* Confirm the branch was pushed */
+        String sha1 = getHeadRevision(build1, "integration");
+        assertEquals(sha1, testGitClient.revParse(Constants.HEAD).name());
+    }
+
+    @Test
+    public void GitPublisherFailWithJGit() throws Exception {
+        final AtomicInteger run = new AtomicInteger(); // count the number of times the perform is called
+
+        commitNewFile("a");
+
+        List<UserRemoteConfig> repoList = new ArrayList<>();
+        repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
+
+        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList()); //testGitDir.getAbsolutePath()
+        jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+
+        MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
+        mp.setAxes(new AxisList(new Axis("VAR","a","b")));
+        mp.setScm(new GitSCM(repoList,
+                Collections.singletonList(new BranchSpec("")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, tool.getName(), Collections.<GitSCMExtension>emptyList()));
+        mp.getPublishersList().add(new GitPublisher(
+                Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
+                Collections.<BranchToPush>emptyList(),
+                Collections.<NoteToPush>emptyList(),
+                true, true, false) {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                run.incrementAndGet();
+                try {
+                    return super.perform(build, launcher, listener);
+                } finally {
+                    // until the 3rd one (which is the last one), we shouldn't create a tag
+                    if (run.get()<3)
+                        assertFalse(existsTag("foo"));
+                }
+            }
+
+            @Override
+            public BuildStepDescriptor getDescriptor() {
+                return (BuildStepDescriptor)Jenkins.get().getDescriptorOrDie(GitPublisher.class); // fake
+            }
+
+            private Object writeReplace() { return new NullSCM(); }
+        });
+
+        MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
+
+        /* I don't understand why the log reports pushing tag to repo origin but the tag is not pushed */
+        assertThat(b.getLog(50),
+                   hasItems("remote: Counting objects",
+                            "Pushing tag foo to repo origin"));
+        /* JGit implementation includes PushCommand, but it fails to push the tag */
+        assertFalse(existsTag("foo"));
     }
 
     @Test
@@ -671,8 +780,10 @@ public class GitPublisherTest extends AbstractGitProject {
     public void testMergeAndPushWithSystemEnvVar() throws Exception {
         String envName = isWindows() ? "COMPUTERNAME" : "LOGNAME";
         String envValue = System.getenv().get(envName);
-        assumeThat(envValue, notNullValue());
-        assumeThat(envValue, is(not(emptyString())));
+        if (envValue == null || envValue.isEmpty()) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
 
         FreeStyleProject project = setupSimpleProject("master");
 

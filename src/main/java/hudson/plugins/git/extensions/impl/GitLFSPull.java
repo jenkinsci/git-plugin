@@ -32,10 +32,12 @@ import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * git-lfs-pull after the checkout.
@@ -94,6 +96,12 @@ public class GitLFSPull extends GitSCMExtension {
                 cmd.lfsCredentials(credentials);
             }
         }
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
+        List<RemoteConfig> repos = scm.getRepositories();
+        cmd.lfsRemote(repos.get(0).getName());
     }
 
     /**

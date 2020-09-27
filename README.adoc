@@ -171,6 +171,18 @@ Hide credential identifier in job output::
 
   If checked, the console log will not show the credential identifier used to clone a repository.
 
+[[disable-performance-enhancements]]
+Disable performance enhancements::
+
+  If JGit and command line git are both enabled on an agent, the git plugin uses a "git tool chooser" to choose a preferred git implementation.
+  The preferred git implementation depends on the size of the repository and the git plugin features requested by the job.
+  If the repository size is *less than* the JGit repository size threshold and the git features of the job are all implmented in JGit, then JGit is used.
+  If the repository size is *greater than* the JGit repository size threshold or the job requires git features that are not implemented in JGit, then command line git is used.
++
+If checked, the plugin will disable the feature that recommends a git implementation on the basis of the size of a repository.
+This switch may be used in case of a bug in the performance improvement feature.
+If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+
 [[preserve-second-fetch-during-checkout]]
 Preserve second fetch during initial checkout::
 
@@ -675,9 +687,10 @@ image:/images/git-checkout-to-specific-local-branch.png[Checkout to specific loc
 Branch name::
 
   If given, checkout the revision to build as HEAD on the named branch.
-  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
+  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin. 
   In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
-
+  If a specific revision and not branch HEAD is checked out, then 'detached' will be used as the local branch name.
+  
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
 
@@ -949,12 +962,12 @@ image:/images/git-custom-user-name-e-mail-address.png[Custom user name/e-mail ad
 user.name::
 
   Defines the user name value which git will assign to new commits made in the workspace.
-  If given, `git config user.name` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_NAME` and `GIT_AUTHOR_NAME` are set for builds and override values from the global settings.
 
 user.email::
 
   Defines the user email value which git will assign to new commits made in the workspace.
-  If given, `git config user.email` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_EMAIL` and `GIT_AUTHOR_EMAIL` are set for builds and override values from the global settings.
 
 [#deprecated-extensions]
 === Deprecated Extensions

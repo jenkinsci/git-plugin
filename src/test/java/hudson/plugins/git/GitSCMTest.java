@@ -65,7 +65,6 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
-import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -159,16 +158,15 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void manageShouldAccessGlobalConfig() {
+    public void manageShouldAccessGlobalConfig() throws Exception {
         final String USER = "user";
         final String MANAGER = "manager";
         Permission jenkinsManage;
-        try {
-            jenkinsManage = getJenkinsManage();
-        } catch (Exception e) {
-            Assume.assumeTrue("Jenkins baseline is too old for this test (requires Jenkins.MANAGE)", false);
+        if (rule.jenkins.get().VERSION.compareTo("2.222.1") < 0) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
             return;
         }
+        jenkinsManage = getJenkinsManage();
         rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
         rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
                                                    // Read access
@@ -1718,6 +1716,13 @@ public class GitSCMTest extends AbstractGitTestCase {
         descriptor.setHideCredentials(true);
         assertTrue("Hide credentials not set", scm.isHideCredentials());
 
+        /* Exit test early if running on Windows and path will be too long */
+        /* Known limitation of git for Windows 2.28.0 and earlier */
+        /* Needs a longpath fix in git for Windows */
+        String currentDirectoryPath = new File(".").getCanonicalPath();
+        if (isWindows() && currentDirectoryPath.length() > 95) {
+            return;
+        }
 
         descriptor.setHideCredentials(false);
         final String commitFile1 = "commitFile1";
@@ -2803,68 +2808,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals(environment.get("MY_BRANCH"), "master");
         assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
-    }
-
-    /**
-     * Tests that builds have the correctly specified Custom SCM names, associated with each build.
-     * @throws Exception on error
-     */
-    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
-    @Test
-    public void testCustomSCMName() throws Exception {
-        final String branchName = "master";
-        final FreeStyleProject project = setupProject(branchName, false);
-        project.addTrigger(new SCMTrigger(""));
-        GitSCM git = (GitSCM) project.getScm();
-        setupJGit(git);
-
-        final String commitFile1 = "commitFile1";
-        final String scmNameString1 = "";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should not detect any more changes after build",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-        final ObjectId commit1 = testRepo.git.revListAll().get(0);
-
-        // Check unset build SCM Name carries
-        final int buildNumber1 = notifyAndCheckScmName(
-            project, commit1, scmNameString1, 1, git);
-
-        final String scmNameString2 = "ScmName2";
-        git.getExtensions().replace(new ScmName(scmNameString2));
-
-        commit("commitFile2", johnDoe, "Commit number 2");
-        assertTrue("scm polling should detect commit 2 (commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit2 = testRepo.git.revListAll().get(0);
-
-        // Check second set SCM Name
-        final int buildNumber2 = notifyAndCheckScmName(
-            project, commit2, scmNameString2, 2, git, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-
-        final String scmNameString3 = "ScmName3";
-        git.getExtensions().replace(new ScmName(scmNameString3));
-
-        commit("commitFile3", johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3, (commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit3 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name
-        final int buildNumber3 = notifyAndCheckScmName(
-            project, commit3, scmNameString3, 3, git, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-
-        commit("commitFile4", johnDoe, "Commit number 4");
-        assertTrue("scm polling should detect commit 4 (commit3=" + commit3 + ",commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit4 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name still set
-        final int buildNumber4 = notifyAndCheckScmName(
-            project, commit4, scmNameString3, 4, git, commit3, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-        checkNumberedBuildScmName(project, buildNumber3, scmNameString3, git);
     }
 
     /**
