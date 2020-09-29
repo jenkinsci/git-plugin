@@ -8,6 +8,7 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
 
+import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -17,6 +18,8 @@ import java.net.IDN;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
@@ -133,9 +136,15 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return false;
     }
 
-    protected static boolean checkURIFormat(String url) throws URISyntaxException {
+    /* Browser URL validation of remote/local urls */
+    protected static boolean validateUrl(String url) throws URISyntaxException {
+        /* Any TLDs defined by IANA not included in the generic list can be added to this item list */
+        DomainValidator.Item item = new DomainValidator.Item(DomainValidator.ArrayType.GENERIC_PLUS, new String[] { "corp", "home", "local", "localnet" });
+        List<DomainValidator.Item> itemList = new ArrayList<>();
+        itemList.add(item);
+        DomainValidator domainValidator = DomainValidator.getInstance(true, itemList);
         String[] schemes = {"http", "https"};
-        UrlValidator urlValidator = new UrlValidator(schemes);
+        UrlValidator urlValidator = new UrlValidator(schemes, null, UrlValidator.ALLOW_LOCAL_URLS, domainValidator);
         return urlValidator.isValid(url);
     }
 

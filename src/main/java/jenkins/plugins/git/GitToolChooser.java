@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * A class which allows Git Plugin to choose a git implementation by estimating the size of a repository from a distance
@@ -419,5 +421,22 @@ public class GitToolChooser {
     public static void clearRepositorySizeCache() {
         repositorySizeCache = new ConcurrentHashMap<>();
     }
+
+    /**
+     * Insert an entry into the cache of repository sizes.
+     * For testing only - not to be used outside the git plugin.
+     *
+     * @param repoURL repository URL to be added as a cache key
+     * @param repoSize repository size in kilobytes
+     */
+    @Restricted(NoExternalUse.class)
+    public static void putRepositorySizeCache(String repoURL, long repoSize) {
+        /* Half-baked conversion to canonical URL for test use */
+        if (!repoURL.endsWith(".git")) {
+            repoURL = repoURL + ".git";
+        }
+        repositorySizeCache.put(repoURL, repoSize);
+    }
+
     private static final Logger LOGGER = Logger.getLogger(GitToolChooser.class.getName());
 }
