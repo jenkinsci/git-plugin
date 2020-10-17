@@ -22,6 +22,7 @@ unclassified:
                   - cloneOption:
                       depth: 2
                       honorRefspec: true
+                      recursive: true
                       noTags: false
                       reference: "/my/path/2"
                       shallow: true

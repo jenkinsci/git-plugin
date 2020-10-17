@@ -8,7 +8,9 @@ f.entry(field:"noTags") {
 f.entry(field:"honorRefspec") {
     f.checkbox(title:_("Honor refspec on initial clone"))
 }
-
+f.entry(field:"recursive") {
+    f.checkbox(title:_("Clone with submodules"))
+}
 f.entry(title:_("Path of the reference repo to use during clone"), field:"reference") {
     f.textbox()
 }

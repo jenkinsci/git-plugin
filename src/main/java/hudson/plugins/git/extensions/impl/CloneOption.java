@@ -37,6 +37,7 @@ public class CloneOption extends GitSCMExtension {
     private final Integer timeout;
     private Integer depth;
     private boolean honorRefspec;
+    private boolean recursive;
 
     public CloneOption(boolean shallow, String reference, Integer timeout) {
         this(shallow, false, reference, timeout);
@@ -49,6 +50,7 @@ public class CloneOption extends GitSCMExtension {
         this.reference = reference;
         this.timeout = timeout;
         this.honorRefspec = false;
+        this.recursive = true;
     }
 
     @Whitelisted
@@ -80,6 +82,11 @@ public class CloneOption extends GitSCMExtension {
     @DataBoundSetter
     public void setHonorRefspec(boolean honorRefspec) {
         this.honorRefspec = honorRefspec;
+    }
+
+    @DataBoundSetter
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
     }
 
     /**
@@ -153,6 +160,9 @@ public class CloneOption extends GitSCMExtension {
             cmd.refspecs(refspecs);
         }
         cmd.timeout(timeout);
+        if (recursive) {
+            cmd.recursive();
+        }
 
         Node node = GitUtils.workspaceToNode(git.getWorkTree());
         EnvVars env = build.getEnvironment(listener);
@@ -221,6 +231,7 @@ public class CloneOption extends GitSCMExtension {
                 && noTags == that.noTags
                 && Objects.equals(depth, that.depth)
                 && honorRefspec == that.honorRefspec
+                && recursive == that.recursive
                 && Objects.equals(reference, that.reference)
                 && Objects.equals(timeout, that.timeout);
     }
@@ -230,7 +241,7 @@ public class CloneOption extends GitSCMExtension {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(shallow, noTags, depth, honorRefspec, reference, timeout);
+        return Objects.hash(shallow, noTags, depth, honorRefspec, recursive, reference, timeout);
     }
 
     /**
@@ -245,6 +256,7 @@ public class CloneOption extends GitSCMExtension {
                 ", timeout=" + timeout +
                 ", depth=" + depth +
                 ", honorRefspec=" + honorRefspec +
+                ", recursive=" + recursive +
                 '}';
     }
 

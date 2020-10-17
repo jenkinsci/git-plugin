@@ -21,6 +21,7 @@
       <timeout>3</timeout>
       <depth>3</depth>
       <honorRefspec>true</honorRefspec>
+      <recursive>true</recursive>
     </hudson.plugins.git.extensions.impl.CloneOption>
     <hudson.plugins.git.extensions.impl.SubmoduleOption>
       <disableSubmodules>true</disableSubmodules>
