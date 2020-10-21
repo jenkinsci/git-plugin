@@ -70,13 +70,18 @@ public class GitToolChooser {
         currentNode = n;
         this.listener = listener;
         implementation = "NONE";
-        useCache = decideAndUseCache(remoteName);
 
-        if (useCache) {
-            implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
-        } else {
-            decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
+        // Skip expensive checks if there is only one available implementation to choose from
+        if (JGIT_SUPPORTED) {
+            useCache = decideAndUseCache(remoteName);
+
+            if (useCache) {
+                implementation = determineSwitchOnSize(sizeOfRepo, gitExe);
+            } else {
+                decideAndUseAPI(remoteName, projectContext, credentialsId, gitExe);
+            }
         }
+
         gitTool = implementation;
     }
 
