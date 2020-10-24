@@ -21,8 +21,11 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -48,10 +51,12 @@ public class CloneOption extends GitSCMExtension {
         this.honorRefspec = false;
     }
 
+    @Whitelisted
     public boolean isShallow() {
         return shallow;
     }
 
+    @Whitelisted
     public boolean isNoTags() {
         return noTags;
     }
@@ -94,14 +99,17 @@ public class CloneOption extends GitSCMExtension {
      *
      * @return true if initial clone will honor the user defined refspec
      */
+    @Whitelisted
     public boolean isHonorRefspec() {
         return honorRefspec;
     }
 
+    @Whitelisted
     public String getReference() {
         return reference;
     }
 
+    @Whitelisted
     public Integer getTimeout() {
         return timeout;
     }
@@ -111,6 +119,7 @@ public class CloneOption extends GitSCMExtension {
         this.depth = depth;
     }
 
+    @Whitelisted
     public Integer getDepth() {
         return depth;
     }
@@ -161,6 +170,7 @@ public class CloneOption extends GitSCMExtension {
      * {@inheritDoc}
      */
     @Override
+    @Deprecated // Deprecate because the super implementation is deprecated
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
@@ -175,6 +185,13 @@ public class CloneOption extends GitSCMExtension {
          * here on initial clone
          */
         cmd.timeout(timeout);
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
+        cmd.timeout(timeout);
+        cmd.shallow(shallow);
+        cmd.depth(depth);
     }
 
     /**

@@ -299,7 +299,9 @@ public abstract class AbstractGitTestCase {
         return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
                 public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                     try {
-                        ObjectId oid = Git.with(null, null).in(f).getClient().getRepository().resolve("refs/heads/" + branch);
+                        @SuppressWarnings("deprecation") // Local repository reference
+                        org.eclipse.jgit.lib.Repository repo = Git.with(null, null).in(f).getClient().getRepository();
+                        ObjectId oid = repo.resolve("refs/heads/" + branch);
                         return oid.name();
                     } catch (GitException e) {
                         throw new RuntimeException(e);

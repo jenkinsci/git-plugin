@@ -7,6 +7,7 @@ import hudson.plugins.git.Messages;
 import hudson.plugins.git.extensions.FakeGitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import java.util.Objects;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -28,6 +29,7 @@ public class LocalBranch extends FakeGitSCMExtension {
     }
 
     @CheckForNull
+    @Whitelisted
     public String getLocalBranch() {
         return localBranch;
     }

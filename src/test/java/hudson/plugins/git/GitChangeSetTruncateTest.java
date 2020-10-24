@@ -23,8 +23,8 @@ import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -127,8 +127,11 @@ public class GitChangeSetTruncateTest {
         String initialImpl = random.nextBoolean() ? "git" : "jgit";
         GitClient gitClient = Git.with(TaskListener.NULL, new EnvVars()).in(repoRoot).using(initialImpl).getClient();
         gitClient.init_().workspace(repoRoot.getAbsolutePath()).execute();
-        new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
-        new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@example.com");
+        String[] expectedResult = {""};
+        CliGitCommand gitCmd = new CliGitCommand(gitClient, "config", "user.name", "ChangeSet Truncation Test");
+        assertThat(gitCmd.run(), is(expectedResult));
+        gitCmd = new CliGitCommand(gitClient, "config", "user.email", "ChangeSetTruncation@mail.example.com");
+        assertThat(gitCmd.run(), is(expectedResult));
     }
 
     private ObjectId commitOneFile(GitClient gitClient, final String commitSummary) throws Exception {

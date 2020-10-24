@@ -7,23 +7,27 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
+import hudson.model.View;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
 import hudson.triggers.SCMTrigger;
+import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.jgit.transport.URIish;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +70,44 @@ public class GitStatusTest extends AbstractGitProject {
     public void resetAllowNotifyCommitParameters() throws Exception {
         GitStatus.setAllowNotifyCommitParameters(false);
         GitStatus.setSafeParametersForTest(null);
+    }
+
+    @After
+    public void waitForAllJobsToComplete() throws Exception {
+        // Put JenkinsRule into shutdown state, trying to reduce Windows cleanup exceptions
+        if (jenkins != null && jenkins.jenkins != null) {
+            jenkins.jenkins.doQuietDown();
+        }
+        // JenkinsRule cleanup throws exceptions during tearDown.
+        // Reduce exceptions by a random delay from 0.5 to 0.9 seconds.
+        // Adding roughly 0.7 seconds to these JenkinsRule tests is a small price
+        // for fewer exceptions and for better Windows job cleanup.
+        java.util.Random random = new java.util.Random();
+        Thread.sleep(500L + random.nextInt(400));
+        /* Windows job cleanup fails to delete build logs in some of these tests.
+         * Wait for the jobs to complete before exiting the test so that the
+         * build logs will not be active when the cleanup process tries to
+         * delete them.
+         */
+        if (!isWindows() || jenkins == null || jenkins.jenkins == null) {
+            return;
+        }
+        View allView = jenkins.jenkins.getView("All");
+        if (allView == null) {
+            return;
+        }
+        RunList<Run> runList = allView.getBuilds();
+        if (runList == null) {
+            return;
+        }
+        runList.forEach((Run run) -> {
+            try {
+                Logger.getLogger(GitStatusTest.class.getName()).log(Level.INFO, "Waiting for {0}", run);
+                jenkins.waitForCompletion(run);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GitStatusTest.class.getName()).log(Level.SEVERE, "Interrupted waiting for GitStatusTest job", ex);
+            }
+        });
     }
 
     @WithoutJenkins
@@ -534,7 +576,10 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
-        assumeTrue(runUnreliableTests()); // Test cleanup is unreliable in some cases
+        if (!runUnreliableTests()) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -560,9 +605,9 @@ public class GitStatusTest extends AbstractGitProject {
                 : new Shell("echo $A $B $C");
         project.getBuildersList().add(script);
 
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
-        jenkins.assertLogContains("aaa aaaccc ccc", build);
+        jenkins.waitForMessage("aaa aaaccc ccc", build);
 
         String extraValue = "An-extra-value";
         when(requestWithParameter.getParameterMap()).thenReturn(setupParameterMap(extraValue));

@@ -17,6 +17,7 @@ import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolInstallation;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +45,6 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,7 +66,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -91,6 +91,7 @@ public class GitSCMSourceTest {
     }
 
     @Test
+    @Deprecated
     public void testSourceOwnerTriggeredByDoNotifyCommit() throws Exception {
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
@@ -114,7 +115,22 @@ public class GitSCMSourceTest {
         return owner;
     }
 
-    private interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {
+    /* Intentionally made public to prevent Java 11 mocking failure
+     * due to class loading of a non-public interface in a different
+     * class loader than the mocking framework. Since this is a test,
+     * it seems quite safe to make the interface slightly more visible
+     * than private.
+     *
+     * The message from mockito is:
+     *
+     * The type is not public and its mock class is loaded by a different class loader.
+     * This can have multiple reasons:
+     *  - You are mocking a class with additional interfaces of another class loader
+     *  - Mockito is loaded by a different class loader than the mocked type (e.g. with OSGi)
+     *  - The thread's context class loader is different than the mock's class loader
+     *
+     */
+    public interface GitSCMSourceOwner extends TopLevelItem, SCMSourceOwner {
     }
 
     @TestExtension
@@ -344,7 +360,10 @@ public class GitSCMSourceTest {
     @Issue("JENKINS-52754")
     @Test
     public void gitSCMSourceShouldResolveToolsForMaster() throws Exception {
-        Assume.assumeTrue("Runs on Unix only", !Launcher.isWindows());
+        if (isWindows()) { // Runs on Unix only
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         TaskListener log = StreamTaskListener.fromStdout();
         HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "git");
         GitTool t = new GitTool("myGit", null, Collections.singletonList(
@@ -670,5 +689,10 @@ public class GitSCMSourceTest {
         public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
             return SCMFile.Type.REGULAR_FILE.equals(probe.stat(path).getType());
         }
+    }
+
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
     }
 }

@@ -1,0 +1,10 @@
+<p>
+  If checked, the initial checkout step will not avoid the second fetch.
+  Git plugin versions prior to git plugin 4.4 would perform two fetch operations during the initial repository checkout.
+  Git plugin 4.4 removes the second fetch operation in most cases.
+  Enabling this option will restore the second fetch operation.
+</p>
+<p>
+  This setting is only needed if there is a bug in the redundant fetch removal logic.
+  If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+</p>

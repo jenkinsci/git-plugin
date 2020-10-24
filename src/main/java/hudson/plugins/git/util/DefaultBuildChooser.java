@@ -69,12 +69,12 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
-        Collection<Revision> revisions = new HashSet<>();
+        Collection<Revision> revisions = new LinkedHashSet<>();
 
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
 
-            // <tt>BRANCH</tt> is recognized as a shorthand of <tt>*/BRANCH</tt>
+            // <code>BRANCH</code> is recognized as a shorthand of <code>*/BRANCH</code>
             // so check all remotes to fully qualify this branch spec
             for (RemoteConfig config : gitSCM.getRepositories()) {
                 String repository = config.getName();
@@ -96,14 +96,14 @@ public class DefaultBuildChooser extends BuildChooser {
                 } else if(branchSpec.startsWith("refs/heads/")) {
                     fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
                 } else {
+                    //Check if exact branch name <branchSpec> exists
+                    fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    possibleQualifiedBranches.add(fqbn);
+
                     //Try branchSpec as it is - e.g. "refs/tags/mytag"
                     fqbn = branchSpec;
                 }
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                possibleQualifiedBranches.add(fqbn);
-
-                //Check if exact branch name <branchSpec> exists
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec;
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
             }
@@ -140,42 +140,11 @@ public class DefaultBuildChooser extends BuildChooser {
             Revision revision = new Revision(sha1);
             revision.getBranches().add(new Branch(singleBranch, sha1));
             return Collections.singletonList(revision);
-            /*
-            // calculate the revisions that are new compared to the last build
-            List<Revision> candidateRevs = new ArrayList<Revision>();
-            List<ObjectId> allRevs = git.revListAll(); // index 0 contains the newest revision
-            if (data != null && allRevs != null) {
-                Revision lastBuiltRev = data.getLastBuiltRevision();
-                if (lastBuiltRev == null) {
-                    return Collections.singletonList(objectId2Revision(singleBranch, sha1));
-                }
-                int indexOfLastBuildRev = allRevs.indexOf(lastBuiltRev.getSha1());
-                if (indexOfLastBuildRev == -1) {
-                    // mhmmm ... can happen when branches are switched.
-                    return Collections.singletonList(objectId2Revision(singleBranch, sha1));
-                }
-                List<ObjectId> newRevisionsSinceLastBuild = allRevs.subList(0, indexOfLastBuildRev);
-                // translate list of ObjectIds into list of Revisions
-                for (ObjectId objectId : newRevisionsSinceLastBuild) {
-                    candidateRevs.add(objectId2Revision(singleBranch, objectId));
-                }
-            }
-            if (candidateRevs.isEmpty()) {
-                return Collections.singletonList(objectId2Revision(singleBranch, sha1));
-            }
-            return candidateRevs;
-            */
         } catch (GitException e) {
             // branch does not exist, there is nothing to build
             verbose(listener, "Failed to rev-parse: {0}", singleBranch);
             return emptyList();
         }
-    }
-
-    private Revision objectId2Revision(String singleBranch, ObjectId sha1) {
-        Revision revision = new Revision(sha1);
-        revision.getBranches().add(new Branch(singleBranch, sha1));
-        return revision;
     }
 
     /**

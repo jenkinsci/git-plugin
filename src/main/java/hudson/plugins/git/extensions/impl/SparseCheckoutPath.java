@@ -1,10 +1,13 @@
 package hudson.plugins.git.extensions.impl;
 
 import com.google.common.base.Function;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -14,6 +17,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     private static final long serialVersionUID = -6177158367915899356L;
 
+    @SuppressFBWarnings(value="SE_TRANSIENT_FIELD_NOT_RESTORED", justification="Default value is OK in deserialization")
     public static final transient SparseCheckoutPathToPath SPARSE_CHECKOUT_PATH_TO_PATH = new SparseCheckoutPathToPath();
 
     private final String path;
@@ -23,6 +27,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
         this.path = path;
     }
 
+    @Whitelisted
     public String getPath() {
         return path;
     }
@@ -52,7 +57,7 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
     }
 
     private static class SparseCheckoutPathToPath implements Function<SparseCheckoutPath, String>, Serializable {
-        public String apply(SparseCheckoutPath sparseCheckoutPath) {
+        public String apply(@NonNull SparseCheckoutPath sparseCheckoutPath) {
             return sparseCheckoutPath.getPath();
         }
     }

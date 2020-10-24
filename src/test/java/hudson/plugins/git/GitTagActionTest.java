@@ -30,9 +30,10 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -253,7 +254,11 @@ public class GitTagActionTest {
 
     @Test
     public void testDoPost() throws Exception {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
+
         JenkinsRule.WebClient browser = r.createWebClient();
 
         // Don't need all cases until at least one case works fully
@@ -289,52 +294,76 @@ public class GitTagActionTest {
 
     @Test
     public void testGetDescriptor() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         Descriptor<GitTagAction> descriptor = noTagAction.getDescriptor();
         assertThat(descriptor.getDisplayName(), is("Tag"));
     }
 
     // @Test
     public void testIsTagged() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertTrue(tagTwoAction.isTagged());
     }
 
     @Test
     public void testIsNotTagged() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertFalse(noTagAction.isTagged());
     }
 
     @Test
     public void testGetDisplayNameNoTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(noTagAction.getDisplayName(), is("No Tags"));
     }
 
     // Not working yet
     // @Test
     public void testGetDisplayNameOneTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(tagOneAction.getDisplayName(), is("One Tag"));
     }
 
     // Not working yet
     // @Test
     public void testGetDisplayNameTwoTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(tagTwoAction.getDisplayName(), is("Multiple Tags"));
     }
 
     @Test
     public void testGetIconFileName() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(noTagAction.getIconFileName(), is("save.gif"));
     }
 
     @Test
     public void testGetTagsNoTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         Collection<List<String>> valueList = noTagAction.getTags().values();
         for (List<String> value : valueList) {
             assertThat(value, is(empty()));
@@ -343,7 +372,10 @@ public class GitTagActionTest {
 
     @Test
     public void testGetTagsOneTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         Collection<List<String>> valueList = tagOneAction.getTags().values();
         for (List<String> value : valueList) {
             assertThat(value, is(empty()));
@@ -352,7 +384,10 @@ public class GitTagActionTest {
 
     @Test
     public void testGetTagsTwoTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         Collection<List<String>> valueList = tagTwoAction.getTags().values();
         for (List<String> value : valueList) {
             assertThat(value, is(empty()));
@@ -361,19 +396,28 @@ public class GitTagActionTest {
 
     @Test
     public void testGetTagInfo() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(noTagAction.getTagInfo(), is(empty()));
     }
 
     @Test
     public void testGetTooltipNoTagAction() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(noTagAction.getTooltip(), is(nullValue()));
     }
 
     @Test
     public void testGetPermission() {
-        assumeTrue(!isWindows()); // Test is unreliable on Windows, too low value to investigate further
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         assertThat(noTagAction.getPermission(), is(GitSCM.TAG));
         assertThat(tagOneAction.getPermission(), is(GitSCM.TAG));
     }

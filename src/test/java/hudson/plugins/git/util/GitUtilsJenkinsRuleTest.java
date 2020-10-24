@@ -34,8 +34,8 @@ import hudson.slaves.DumbSlave;
 import hudson.util.StreamTaskListener;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;

@@ -30,8 +30,8 @@ import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Exposes {@link CleanBeforeCheckout} as a {@link SCMSourceTrait}.

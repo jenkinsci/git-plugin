@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.RelativePath;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -17,6 +18,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 /**
  * This is a portion of {@link GitSCM} for the stuff that's used to be in {@link GitSCM}
@@ -178,6 +180,7 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     private transient BuildChooser buildChooser;
 
 
+    @Whitelisted
     abstract DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions();
 
     @Override
@@ -270,12 +273,14 @@ public abstract class GitSCMBackwardCompatibility extends SCM implements Seriali
     }
 
     @Deprecated
+    @SuppressFBWarnings(value="PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification="Not willing to change behavior of deprecated methods")
     public String[] getExcludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
         return pr!=null ? pr.getExcludedRegionsNormalized() : null;
     }
 
     @Deprecated
+    @SuppressFBWarnings(value="PZLA_PREFER_ZERO_LENGTH_ARRAYS", justification="Not willing to change behavior of deprecated methods")
     public String[] getIncludedRegionsNormalized() {
         PathRestriction pr = getExtensions().get(PathRestriction.class);
         return pr!=null ? pr.getIncludedRegionsNormalized() : null;

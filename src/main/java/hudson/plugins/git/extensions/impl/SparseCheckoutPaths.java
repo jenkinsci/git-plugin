@@ -11,7 +11,10 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -19,13 +22,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class SparseCheckoutPaths extends GitSCMExtension {
-    private List<SparseCheckoutPath> sparseCheckoutPaths;
+    private final List<SparseCheckoutPath> sparseCheckoutPaths;
 
     @DataBoundConstructor
     public SparseCheckoutPaths(List<SparseCheckoutPath> sparseCheckoutPaths) {
         this.sparseCheckoutPaths = sparseCheckoutPaths == null ? Collections.<SparseCheckoutPath>emptyList() : sparseCheckoutPaths;
     }
 
+    @Whitelisted
     public List<SparseCheckoutPath> getSparseCheckoutPaths() {
         return sparseCheckoutPaths;
     }
@@ -34,12 +38,16 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         if (! sparseCheckoutPaths.isEmpty()) {
             listener.getLogger().println("Using no checkout clone with sparse checkout.");
-            cmd.noCheckout();
         }
     }
 
     @Override
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, SparseCheckoutPath.SPARSE_CHECKOUT_PATH_TO_PATH));
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
         cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, SparseCheckoutPath.SPARSE_CHECKOUT_PATH_TO_PATH));
     }
 

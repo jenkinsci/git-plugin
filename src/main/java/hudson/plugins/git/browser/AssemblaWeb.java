@@ -1,23 +1,28 @@
 package hudson.plugins.git.browser;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
+import hudson.plugins.git.Messages;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
-import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -82,30 +87,33 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
     @Extension
     public static class AssemblaWebDescriptor extends Descriptor<RepositoryBrowser<?>> {
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "AssemblaWeb";
         }
 
         @Override
-        public AssemblaWeb newInstance(StaplerRequest req, @Nonnull JSONObject jsonObject) throws FormException {
+        public AssemblaWeb newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             assert req != null; //see inherited javadoc
             return req.bindJSON(AssemblaWeb.class, jsonObject);
         }
 
         @RequirePOST
-        public FormValidation doCheckUrl(@QueryParameter(fixEmpty = true) final String url)
-                throws IOException, ServletException {
-            if (url == null) // nothing entered yet
+        public FormValidation doCheckRepoUrl(@AncestorInPath Item project, @QueryParameter(fixEmpty = true) final String repoUrl)
+                throws IOException, ServletException, URISyntaxException {
+
+            String cleanUrl = Util.fixEmptyAndTrim(repoUrl);
+            if (initialChecksAndReturnOk(project, cleanUrl))
             {
                 return FormValidation.ok();
             }
-            // Connect to URL and check content only if we have admin permission
-            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
-                return FormValidation.ok();
+            // Connect to URL and check content only if we have permission
+            if (!checkURIFormatAndHostName(cleanUrl, "assembla")) {
+                return FormValidation.error(Messages.invalidUrl());
+            }
             return new URLCheck() {
                 protected FormValidation check() throws IOException, ServletException {
-                    String v = url;
+                    String v = cleanUrl;
                     if (!v.endsWith("/")) {
                         v += '/';
                     }
@@ -114,13 +122,19 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                         if (findText(open(new URL(v)), "Assembla")) {
                             return FormValidation.ok();
                         } else {
-                            return FormValidation.error("This is a valid URL but it doesn't look like Assembla");
+                            return FormValidation.error("This is a valid URL but it does not look like Assembla");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        return FormValidation.error("Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
                     }
                 }
             }.check();
+        }
+
+        private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
+            URI uri = new URI(url);
+            hostNameFragment = hostNameFragment + ".";
+            return validateUrl(uri.toString()) && uri.getHost().contains(hostNameFragment);
         }
     }
 }

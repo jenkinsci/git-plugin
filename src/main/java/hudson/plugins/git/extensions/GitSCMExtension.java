@@ -1,6 +1,7 @@
 package hudson.plugins.git.extensions;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -24,11 +25,8 @@ import hudson.scm.SCMRevisionState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import org.jenkinsci.plugins.gitclient.CheckoutCommand;
-import org.jenkinsci.plugins.gitclient.CloneCommand;
-import org.jenkinsci.plugins.gitclient.FetchCommand;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
+
+import org.jenkinsci.plugins.gitclient.*;
 
 /**
  * Extension point to tweak the behaviour of {@link GitSCM}.
@@ -234,6 +232,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     }
 
     /**
+     * Called when support of JGit for a particular or multiple extensions is to be determined
+     * @param scm GitSCM object
+     * @param unsupportedCommand UnsupportedCommand object
+     */
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand unsupportedCommand) {
+
+    }
+
+    /**
      * Called before a {@link CloneCommand} is executed to allow extensions to alter its behaviour.
      * @param scm GitSCM object
      * @param build run context
@@ -350,6 +357,15 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      */
     public GitClientType getRequiredClient() {
         return GitClientType.ANY;
+    }
+
+    /**
+     *
+     * @return <code>true</code> to disable the scheduling of another build to catch up
+     * when multiple revisions are detected
+     */
+    public boolean enableMultipleRevisionDetection() {
+        return true;
     }
 
     @Override

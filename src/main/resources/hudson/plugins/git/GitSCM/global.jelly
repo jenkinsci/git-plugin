@@ -9,12 +9,21 @@
       <f:textbox />
     </f:entry>
     <f:optionalBlock title="${%Create new accounts based on author/committer's email}" field="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}" inline="true">
-      <f:entry title="${%Use existing account with same email if found}" field="useExistingAccountWithSameEmail">
-        <f:checkbox name="useExistingAccountWithSameEmail" checked="${descriptor.useExistingAccountWithSameEmail}" />
+      <f:entry field="useExistingAccountWithSameEmail">
+        <f:checkbox title="${%Use existing account with same email if found}" name="useExistingAccountWithSameEmail" checked="${descriptor.useExistingAccountWithSameEmail}" />
       </f:entry>
     </f:optionalBlock>
-    <f:entry title="${%Show the entire commit summary in changes}" field="showEntireCommitSummaryInChanges">
-      <f:checkbox name="showEntireCommitSummaryInChanges" checked="${descriptor.showEntireCommitSummaryInChanges}"/>
+    <f:entry field="showEntireCommitSummaryInChanges">
+      <f:checkbox title="${%Show the entire commit summary in changes}" name="showEntireCommitSummaryInChanges" checked="${descriptor.showEntireCommitSummaryInChanges}"/>
+    </f:entry>
+    <f:entry field="hideCredentials">
+      <f:checkbox title="${%Hide credential usage in job output}" name="hideCredentials" checked="${descriptor.hideCredentials}"/>
+    </f:entry>
+    <f:entry field="disableGitToolChooser">
+      <f:checkbox title="${%Disable performance enhancements}" name="disableGitToolChooser" checked="${descriptor.disableGitToolChooser}"/>
+    </f:entry>
+    <f:entry field="allowSecondFetch">
+      <f:checkbox title="${%Preserve second fetch during checkout}" name="allowSecondFetch" checked="${descriptor.allowSecondFetch}"/>
     </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
@@ -26,4 +35,3 @@
     -->
   </f:section>
 </j:jelly>
-

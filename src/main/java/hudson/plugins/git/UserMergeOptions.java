@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.describable.CustomDescribableModel;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -70,6 +71,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * Repository name, such as 'origin' that designates which repository the branch lives in.
      * @return repository name
      */
+    @Whitelisted
     public String getMergeRemote() {
         return mergeRemote;
     }
@@ -84,6 +86,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * Normally a branch name like 'master'.
      * @return branch name from which merge will be performed
      */
+    @Whitelisted
     public String getMergeTarget() {
         return mergeTarget;
     }

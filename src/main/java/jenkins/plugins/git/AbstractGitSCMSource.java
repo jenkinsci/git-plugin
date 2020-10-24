@@ -517,7 +517,12 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                 continue;
                             }
                             count++;
-                            if (request.process((GitTagSCMHead) revision.getHead(),
+                            SCMHead scmHead = revision.getHead();
+                            if (!(scmHead instanceof GitTagSCMHead)) {
+                                continue;
+                            }
+                            GitTagSCMHead gitTagHead = (GitTagSCMHead) scmHead;
+                            if (request.process(gitTagHead,
                                     new SCMSourceRequest.RevisionLambda<GitTagSCMHead, GitTagSCMRevision>() {
                                         @NonNull
                                         @Override
@@ -573,7 +578,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     remoteReferences = Collections.emptyMap();
                 }
                 fetch.execute();
-                try (Repository repository = client.getRepository();
+                try (@SuppressWarnings("deprecation") // Local repository reference
+                     Repository repository = client.getRepository();
                      RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
 
@@ -951,7 +957,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   @Override
                                   public SCMRevision run(GitClient client, String remoteName) throws IOException,
                                           InterruptedException {
-                                      try (final Repository repository = client.getRepository();
+                                      try (@SuppressWarnings("deprecation") // Local repo reference
+                                           final Repository repository = client.getRepository();
                                            RevWalk walk = new RevWalk(repository)) {
                                           ObjectId ref = client.revParse(tagRef);
                                           RevCommit commit = walk.parseCommit(ref);
@@ -1212,15 +1219,23 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected static File getCacheDir(String cacheEntry) {
+        return getCacheDir(cacheEntry, true);
+    }
+
+    protected static File getCacheDir(String cacheEntry, boolean createDirectory) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
         if (!cacheDir.isDirectory()) {
-            boolean ok = cacheDir.mkdirs();
-            if (!ok) {
-                LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+            if (createDirectory) {
+                boolean ok = cacheDir.mkdirs();
+                if (!ok) {
+                    LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+                }
+            } else {
+                cacheDir = null;
             }
         }
         return cacheDir;
@@ -1604,18 +1619,18 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         @Override
         public SCMProbeStat stat(@NonNull String path) throws IOException {
             try {
-                SCMFileSystem fileSystem;
+                SCMFileSystem fileSystemForStat;
                 synchronized (this) {
                     if (this.fileSystem == null) {
                         this.fileSystem = telescope.build(remote, credentials, revision.getHead(), revision);
                     }
-                    fileSystem = this.fileSystem;
+                    fileSystemForStat = this.fileSystem;
                 }
-                if (fileSystem == null) {
+                if (fileSystemForStat == null) {
                     throw new IOException("Cannot connect to " + remote + " as "
                             + (credentials == null ? "anonymous" : CredentialsNameProvider.name(credentials)));
                 }
-                return SCMProbeStat.fromType(fileSystem.child(path).getType());
+                return SCMProbeStat.fromType(fileSystemForStat.child(path).getType());
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
@@ -1650,16 +1665,16 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     return lastModified;
                 }
             }
-            long lastModified;
+            long lastModifiedTimeStamp;
             try {
-                lastModified = telescope.getTimestamp(remote, credentials, revision.getHead());
+                lastModifiedTimeStamp = telescope.getTimestamp(remote, credentials, revision.getHead());
             } catch (IOException | InterruptedException e) {
                 return -1L;
             }
             synchronized (this) {
-                this.lastModified = lastModified;
+                this.lastModified = lastModifiedTimeStamp;
             }
-            return lastModified;
+            return lastModifiedTimeStamp;
         }
     }
 }

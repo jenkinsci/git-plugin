@@ -1,0 +1,15 @@
+<p>
+  The Jenkins git plugin provides multiple implementations of git.
+  <a href="https://git-scm.com/">Command line git</a> is the original implementation and the reference implementation for all git plugin features.
+  <a href="https://www.eclipse.org/jgit/">JGit</a> is a pure Java implementation of a subset of the features of command line git using the Eclipse Foundation's JGit project.
+  JGit provides many of the features of command line git without requiring installation of command line git.
+</p>
+<p>
+  If JGit and command line git are both enabled on an agent, the git plugin uses a "git tool chooser" to choose a preferred git implementation.
+  The preferred git implementation depends on the size of the repository and the git plugin features requested by the job.
+  If the repository size is <strong>less than</strong> the JGit repository size threshold and the git features of the job are all implmented in JGit, then JGit is used.
+  If the repository size is <strong>greater than</strong> the JGit repository size threshold or the job requires git features that are not implemented in JGit, then command line git is used.
+</p>
+<p>
+  When the git tool chooser is disabled by clicking this checkbox, the git implementation specified in the job is used without considering repository size or implemented features.
+</p>

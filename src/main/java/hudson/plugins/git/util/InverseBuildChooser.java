@@ -13,11 +13,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Git build chooser which will select all branches <b>except</b> for those which match the
+ * Git build chooser which will select all branches <strong>except</strong> for those which match the
  * configured branch specifiers.
  * <p>
  * e.g. If {@code &#x2a;&#x2a;/master} and {@code &#x2a;&#x2a;/release-&#x2a;} are configured as
- * "Branches to build" then any branches matching those patterns <b>will not</b> be built, unless
+ * "Branches to build" then any branches matching those patterns <strong>will not</strong> be built, unless
  * another branch points to the same revision.
  * <p>
  * This is useful, for example, when you have jobs building your {@code master} and various

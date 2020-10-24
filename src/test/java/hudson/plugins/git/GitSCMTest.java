@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -41,11 +42,17 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCMRevisionState;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
+import hudson.security.Permission;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.triggers.SCMTrigger;
+import hudson.util.LogTaskListener;
+import hudson.util.ReflectionUtils;
+import hudson.util.RingBufferLogHandler;
 import hudson.util.StreamTaskListener;
 
 import jenkins.security.MasterToSlaveCallable;
@@ -61,6 +68,7 @@ import org.jenkinsci.plugins.gitclient.*;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.TestExtension;
 
 import java.io.File;
@@ -68,16 +76,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.eclipse.jgit.transport.RemoteConfig;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -136,6 +155,45 @@ public class GitSCMTest extends AbstractGitTestCase {
         CredentialsScope scope = CredentialsScope.GLOBAL;
         String id = "username-" + username + "-password-" + password;
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Test
+    public void manageShouldAccessGlobalConfig() throws Exception {
+        final String USER = "user";
+        final String MANAGER = "manager";
+        Permission jenkinsManage;
+        if (rule.jenkins.get().VERSION.compareTo("2.222.1") < 0) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
+        jenkinsManage = getJenkinsManage();
+        rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
+        rule.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
+                                                   // Read access
+                                                   .grant(Jenkins.READ).everywhere().to(USER)
+
+                                                   // Read and Manage
+                                                   .grant(Jenkins.READ).everywhere().to(MANAGER)
+                                                   .grant(jenkinsManage).everywhere().to(MANAGER)
+        );
+
+        try (ACLContext c = ACL.as(User.getById(USER, true))) {
+            Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
+            assertThat("Global configuration should not be accessible to READ users", descriptors, is(empty()));
+        }
+        try (ACLContext c = ACL.as(User.getById(MANAGER, true))) {
+            Collection<Descriptor> descriptors = Functions.getSortedDescriptorsForGlobalConfigUnclassified();
+            Optional<Descriptor> found =
+                    descriptors.stream().filter(descriptor -> descriptor instanceof GitSCM.DescriptorImpl).findFirst();
+            assertTrue("Global configuration should be accessible to MANAGE users", found.isPresent());
+        }
+    }
+
+    // TODO: remove when Jenkins core baseline is 2.222+
+    private Permission getJenkinsManage() throws NoSuchMethodException, IllegalAccessException,
+                                                 InvocationTargetException {
+        // Jenkins.MANAGE is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
+        return (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
     }
 
     @Test
@@ -272,12 +330,259 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit in master");
         // create branch and make initial commit
-        git.branch("foo");
-        git.checkout().branch("foo");
+        git.checkout().ref("master").branch("foo").execute();
         commit(commitFile1, johnDoe, "Commit in foo");
 
         build(projectWithMaster, Result.FAILURE);
         build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
+
+    /**
+     * This test confirms the behaviour of avoiding the second fetch in GitSCM checkout()
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetch() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/*:refs/remotes/*", null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsSkipped(build, "+refs/heads/*:refs/remotes/origin/*");
+    }
+
+    /**
+     * After avoiding the second fetch call in retrieveChanges(), this test verifies there is no data loss by fetching a repository
+     * (git init + git fetch) with a narrow refspec but without CloneOption of honorRefspec = true on initial clone
+     * First fetch -> wide refspec
+     * Second fetch -> narrow refspec (avoided)
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetchWithoutHonorRefSpec() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "+refs/heads/foo:refs/remotes/foo", null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+        // Add another branch 'foo'
+        git.checkout().ref("master").branch("foo").execute();
+        commit(commitFile1, johnDoe, "Commit in foo");
+
+        // Build will be success because the initial clone disregards refspec and fetches all branches
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+        FilePath childFile = returnFile(build);
+
+        if (childFile != null) {
+            // assert that no data is lost by avoidance of second fetch
+            assertThat("master branch was not fetched", childFile.readToString(), containsString("master"));
+            assertThat("foo branch was not fetched", childFile.readToString(), containsString("foo"));
+        }
+
+        String wideRefSpec = "+refs/heads/*:refs/remotes/origin/*";
+        assertRedundantFetchIsSkipped(build, wideRefSpec);
+
+        assertThat(build.getResult(), is(Result.SUCCESS));
+    }
+
+    /**
+     * After avoiding the second fetch call in retrieveChanges(), this test verifies there is no data loss by fetching a
+     * repository(git init + git fetch) with a narrow refspec with CloneOption of honorRefspec = true on initial clone
+     * First fetch -> narrow refspec (since refspec is honored on initial clone)
+     * Second fetch -> narrow refspec (avoided)
+     **/
+    @Test
+    @Issue("JENKINS-56404")
+    public void testAvoidRedundantFetchWithHonorRefSpec() throws Exception {
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        String refSpec = "+refs/heads/foo:refs/remotes/foo";
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refSpec, null));
+
+        /* With honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+        cloneOptionMaster.setHonorRefspec(true);
+        ((GitSCM)projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        final String commitFile1SHA1a = commit(commitFile1, johnDoe, "Commit in master");
+        // Add another branch 'foo'
+        git.checkout().ref("master").branch("foo").execute();
+        final String commitFile1SHA1b = commit(commitFile1, johnDoe, "Commit in foo");
+
+        // Build will be failure because the initial clone regards refspec and fetches branch 'foo' only.
+        FreeStyleBuild build = build(projectWithMaster, Result.FAILURE);
+
+        FilePath childFile = returnFile(build);
+        assertNotNull(childFile);
+        // assert that no data is lost by avoidance of second fetch
+        final String fetchHeadContents = childFile.readToString();
+        final List<String> buildLog = build.getLog(50);
+        assertThat("master branch was fetched: " + buildLog, fetchHeadContents, not(containsString("branch 'master'")));
+        assertThat("foo branch was not fetched: " + buildLog, fetchHeadContents, containsString("branch 'foo'"));
+        assertThat("master branch SHA1 '" + commitFile1SHA1a + "' fetched " + buildLog, fetchHeadContents, not(containsString(commitFile1SHA1a)));
+        assertThat("foo branch SHA1 '" + commitFile1SHA1b + "' was not fetched " + buildLog, fetchHeadContents, containsString(commitFile1SHA1b));
+        assertRedundantFetchIsSkipped(build, refSpec);
+
+        assertThat(build.getResult(), is(Result.FAILURE));
+    }
+
+    @Test
+    @Issue("JENKINS-49757")
+    public void testAvoidRedundantFetchWithNullRefspec() throws Exception {
+        String nullRefspec = null;
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", nullRefspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsSkipped(build, "+refs/heads/*:refs/remotes/origin/*");
+    }
+
+    /*
+     * When initial clone does not honor the refspec and a custom refspec is used
+     * that is not part of the default refspec, then the second fetch is not
+     * redundant and must not be fetched.
+     *
+     * This example uses the format to reference GitHub pull request 553. Other
+     * formats would apply as well, but the case is illustrated well enough by
+     * using the GitHub pull request as an example of this type of problem.
+     */
+    @Test
+    @Issue("JENKINS-49757")
+    public void testRetainRedundantFetch() throws Exception {
+        String refspec = "+refs/heads/*:refs/remotes/origin/* +refs/pull/553/head:refs/remotes/origin/pull/553";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        /* Create a ref for the fake pull in the source repository */
+        String[] expectedResult = {""};
+        CliGitCommand gitCmd = new CliGitCommand(testRepo.git, "update-ref", "refs/pull/553/head", "HEAD");
+        assertThat(gitCmd.run(), is(expectedResult));
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsUsed(build, refspec);
+    }
+
+    /*
+    * When "Preserve second fetch during checkout" is checked in during configuring Jenkins,
+    * the second fetch should be retained
+    */
+    @Test
+    @Issue("JENKINS-49757")
+    public void testRetainRedundantFetchIfSecondFetchIsAllowed() throws Exception {
+        String refspec = "+refs/heads/*:refs/remotes/*";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", refspec, null));
+
+        /* Without honor refspec on initial clone */
+        FreeStyleProject projectWithMaster = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+
+        GitSCM scm = (GitSCM) projectWithMaster.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertThat("Redundant fetch is skipped by default", scm.isAllowSecondFetch(), is(false));
+        descriptor.setAllowSecondFetch(true);
+        assertThat("Redundant fetch should be allowed", scm.isAllowSecondFetch(), is(true));
+
+        if (random.nextBoolean()) {
+            /* Randomly enable shallow clone, should not alter test assertions */
+            CloneOption cloneOptionMaster = new CloneOption(false, null, null);
+            cloneOptionMaster.setDepth(1);
+            ((GitSCM) projectWithMaster.getScm()).getExtensions().add(cloneOptionMaster);
+        }
+
+        // create initial commit
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit in master");
+
+        FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
+
+        assertRedundantFetchIsUsed(build, refspec);
+    }
+
+    // Checks if the second fetch is being avoided
+    private void assertRedundantFetchIsSkipped(FreeStyleBuild build, String refSpec) throws IOException {
+        assertRedundantFetchCount(build, refSpec, 1);
+    }
+
+    // Checks if the second fetch is being called
+    private void assertRedundantFetchIsUsed(FreeStyleBuild build, String refSpec) throws IOException {
+        assertRedundantFetchCount(build, refSpec, 2);
+    }
+
+    // Checks if the second fetch is being avoided
+    private void assertRedundantFetchCount(FreeStyleBuild build, String refSpec, int expectedFetchCount) throws IOException {
+        List<String> values = build.getLog(Integer.MAX_VALUE);
+
+        //String fetchArg = " > git fetch --tags --force --progress -- " + testRepo.gitDir.getAbsolutePath() + argRefSpec + " # timeout=10";
+        Pattern fetchPattern = Pattern.compile(".* git.* fetch .*");
+        List<String> fetchCommands = values.stream().filter(fetchPattern.asPredicate()).collect(Collectors.toList());
+
+        // After the fix, git fetch is called exactly once
+        assertThat("Fetch commands were: " + fetchCommands, fetchCommands, hasSize(expectedFetchCount));
+    }
+
+    // Returns the file FETCH_HEAD found in .git
+    private FilePath returnFile(FreeStyleBuild build) throws IOException, InterruptedException {
+        List<FilePath> files = build.getProject().getWorkspace().list();
+        FilePath resultFile = null;
+        for (FilePath s : files) {
+            if(s.getName().equals(".git")) {
+                resultFile = s.child("FETCH_HEAD");
+            }
+        }
+        return resultFile;
     }
 
     /**
@@ -300,12 +605,57 @@ public class GitSCMTest extends AbstractGitTestCase {
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit in master");
         // create branch and make initial commit
-        git.branch("foo");
-        git.checkout().branch("foo");
+        git.checkout().ref("master").branch("foo").execute();
         commit(commitFile1, johnDoe, "Commit in foo");
 
         build(projectWithMaster, Result.SUCCESS); /* If clone refspec had been honored, this would fail */
         build(projectWithFoo, Result.SUCCESS, commitFile1);
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddFirstRepositoryWithNullRepoURL() throws Exception{
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL")));
+        // After JENKINS-38608 fix
+        assertThat("Build log did not report empty string in job definition",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 1 is an empty string in job definition. Checkout requires a valid repository URL"));
+    }
+
+    /**
+     * An empty remote repo URL failed the job as expected but provided
+     * a poor diagnostic message. The fix for JENKINS-38608 improves
+     * the error message to be clear and helpful. This test checks for
+     * that error message when the second URL is empty.
+     * @throws Exception on error
+     */
+    @Test
+    @Issue("JENKINS-38608")
+    public void testAddSecondRepositoryWithNullRepoURL() throws Exception{
+        String repoURL = "https://example.com/non-empty/repo/url";
+        List<UserRemoteConfig> repos = new ArrayList<>();
+        repos.add(new UserRemoteConfig(repoURL, null, null, null));
+        repos.add(new UserRemoteConfig(null, null, null, null));
+        FreeStyleProject project = setupProject(repos, Collections.singletonList(new BranchSpec("master")), null, false, null);
+        FreeStyleBuild build = build(project, Result.FAILURE);
+        // Before JENKINS-38608 fix
+        assertThat("Build log reports 'Null value not allowed'",
+                   build.getLog(175), not(hasItem("Null value not allowed as an environment variable: GIT_URL_2")));
+        // After JENKINS-38608 fix
+        assertThat("Build log did not report empty string in job definition for URL 2",
+                   build.getLog(175), hasItem("FATAL: Git repository URL 2 is an empty string in job definition. Checkout requires a valid repository URL"));
     }
 
     @Test
@@ -733,36 +1083,36 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
+    private int findLogLineStartsWith(List<String> buildLog, String initialString) {
+        int logLine = 0;
+        for (String logString : buildLog) {
+            if (logString.startsWith(initialString)) {
+                return logLine;
+            }
+            logLine++;
+        }
+        return -1;
+    }
+
     @Test
     public void testCleanBeforeCheckout() throws Exception {
     	FreeStyleProject p = setupProject("master", false, null, null, "Jane Doe", null);
         ((GitSCM)p.getScm()).getExtensions().add(new CleanBeforeCheckout());
-        final String commitFile1 = "commitFile1";
-        final String commitFile2 = "commitFile2";
-        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
-        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
-        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
-        final String branch1 = "Branch1";
-        final String branch2 = "Branch2";
-        List<BranchSpec> branches = new ArrayList<>();
-        branches.add(new BranchSpec("master"));
-        branches.add(new BranchSpec(branch1));
-        branches.add(new BranchSpec(branch2));
-        git.branch(branch1);
-        git.checkout(branch1);
-        p.poll(listener).hasChanges();
-        assertTrue(firstBuild.getLog().contains("Cleaning"));
-        assertTrue(firstBuild.getLog().indexOf("Cleaning") > firstBuild.getLog().indexOf("Cloning")); //clean should be after clone
-        assertTrue(firstBuild.getLog().indexOf("Cleaning") < firstBuild.getLog().indexOf("Checking out")); //clean before checkout
-        assertTrue(firstBuild.getWorkspace().child(commitFile1).exists());
-        git.checkout(branch1);
-        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
-        p.poll(listener).hasChanges();
-        assertTrue(secondBuild.getLog().contains("Cleaning"));
-        assertTrue(secondBuild.getLog().indexOf("Cleaning") < secondBuild.getLog().indexOf("Fetching upstream changes")); 
-        assertTrue(secondBuild.getWorkspace().child(commitFile2).exists());
 
-        
+        /* First build should not clean, since initial clone is always clean */
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, janeDoe, "Commit number 1");
+        final FreeStyleBuild firstBuild = build(p, Result.SUCCESS, commitFile1);
+        assertThat(firstBuild.getLog(50), not(hasItem("Cleaning workspace")));
+        /* Second build should clean, since first build might have modified the workspace */
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, johnDoe, janeDoe, "Commit number 2");
+        final FreeStyleBuild secondBuild = build(p, Result.SUCCESS, commitFile2);
+        List<String> secondLog = secondBuild.getLog(50);
+        assertThat(secondLog, hasItem("Cleaning workspace"));
+        int cleaningLogLine = findLogLineStartsWith(secondLog, "Cleaning workspace");
+        int fetchingLogLine = findLogLineStartsWith(secondLog, "Fetching upstream changes from ");
+        assertThat("Cleaning should happen before fetch", cleaningLogLine, is(lessThan(fetchingLogLine)));
     }
 
     @Issue("JENKINS-8342")
@@ -1068,19 +1418,19 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
         assertEquals("origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-        rule.assertLogContains(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
+        rule.waitForMessage(getEnvVars(project).get(GitSCM.GIT_BRANCH), build1);
 
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_COMMIT), build1);
 
         final String commitFile2 = "commitFile2";
         commit(commitFile2, johnDoe, "Commit number 2");
         FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_COMMIT), build1);
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
-        rule.assertLogContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
+        rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
     }
 
     @Issue("HUDSON-7411")
@@ -1352,6 +1702,44 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    public void testHideCredentials() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        store.addCredentials(Domain.global(), createCredential(CredentialsScope.GLOBAL, "github"));
+        // setup global config
+        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
+        project.setScm(new GitSCM(remoteConfigs,
+                Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
+
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        assertFalse("Wrong initial value for hide credentials", scm.isHideCredentials());
+        descriptor.setHideCredentials(true);
+        assertTrue("Hide credentials not set", scm.isHideCredentials());
+
+        /* Exit test early if running on Windows and path will be too long */
+        /* Known limitation of git for Windows 2.28.0 and earlier */
+        /* Needs a longpath fix in git for Windows */
+        String currentDirectoryPath = new File(".").getCanonicalPath();
+        if (isWindows() && currentDirectoryPath.length() > 95) {
+            return;
+        }
+
+        descriptor.setHideCredentials(false);
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS);
+        List<String> logLines = project.getLastBuild().getLog(100);
+        assertThat(logLines, hasItem("using credential github"));
+
+        descriptor.setHideCredentials(true);
+        build(project, Result.SUCCESS);
+        logLines = project.getLastBuild().getLog(100);
+        assertThat(logLines, not(hasItem("using credential github")));
+
+    }
+
+
+    @Test
     public void testEmailCommitter() throws Exception {
         FreeStyleProject project = setupSimpleProject("master");
 
@@ -1389,6 +1777,40 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals("", jeffDoe.getName(), culprit.getFullName());
 
         rule.assertBuildStatusSuccess(build);
+    }
+    
+    @Issue("JENKINS-59868")
+    @Test
+    public void testNonExistentWorkingDirectoryPoll() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // create initial commit and then run the build against it
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        project.setScm(new GitSCM(
+                ((GitSCM)project.getScm()).getUserRemoteConfigs(),
+                Collections.singletonList(new BranchSpec("master")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null,
+                // configure GitSCM with the DisableRemotePoll extension to ensure that polling use the workspace
+                Collections.singletonList(new DisableRemotePoll())));
+        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
+
+        // Empty the workspace directory
+        build1.getWorkspace().deleteRecursive();
+
+        // Setup a recorder for polling logs
+        RingBufferLogHandler pollLogHandler = new RingBufferLogHandler(10);
+        Logger pollLogger = Logger.getLogger(GitSCMTest.class.getName());
+        pollLogger.addHandler(pollLogHandler);
+        TaskListener taskListener = new LogTaskListener(pollLogger, Level.INFO);
+
+        // Make sure that polling returns BUILD_NOW and properly log the reason
+        FilePath filePath = build1.getWorkspace();
+        assertThat(project.getScm().compareRemoteRevisionWith(project, new Launcher.LocalLauncher(taskListener), 
+                filePath, taskListener, null), is(PollingResult.BUILD_NOW));
+        assertTrue(pollLogHandler.getView().stream().anyMatch(m -> 
+                m.getMessage().contains("[poll] Working Directory does not exist")));
     }
 
     // Disabled - consistently fails, needs more analysis
@@ -2051,11 +2473,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         commit(commitFile2, janeDoe, "Commit number 2");
 
         // create lock file to simulate lock collision
-        File lock = new File(build1.getWorkspace().toString(), ".git/index.lock");
+        File lock = new File(build1.getWorkspace().getRemote(), ".git/index.lock");
         try {
             FileUtils.touch(lock);
             final FreeStyleBuild build2 = build(project, Result.FAILURE);
-            rule.assertLogContains("java.io.IOException: Could not checkout", build2);
+            rule.waitForMessage("java.io.IOException: Could not checkout", build2);
         } finally {
             lock.delete();
         }
@@ -2271,7 +2693,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         
         final StringParameterValue branchParam = new StringParameterValue("MY_BRANCH", "manualbranch");
         final Action[] actions = {new ParametersAction(branchParam)};
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, build);
 
         assertFalse("No changes to git since last build", project.poll(listener).hasChanges());
@@ -2294,6 +2716,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             this.m_forwardingAction = new ParametersAction(params);
         }
 
+        @Deprecated
         public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
             this.m_forwardingAction.buildEnvVars(ab, ev);
         }
@@ -2337,7 +2760,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 		project.setScm(scm);
 		commit("commitFile1", johnDoe, "Commit number 1");
 
-		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+		FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
 		first_build.getWorkspace().deleteContents();
@@ -2377,7 +2800,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         // SECURITY-170 - have to use ParametersDefinitionProperty
         project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("MY_BRANCH", "master")));
 
-        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserCause(), actions).get();
+        FreeStyleBuild first_build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
         rule.assertBuildStatus(Result.SUCCESS, first_build);
 
         Launcher launcher = workspace.createLauncher(listener);
@@ -2385,68 +2808,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         assertEquals(environment.get("MY_BRANCH"), "master");
         assertNotSame("Environment path should not be broken path", environment.get("PATH"), brokenPath);
-    }
-
-    /**
-     * Tests that builds have the correctly specified Custom SCM names, associated with each build.
-     * @throws Exception on error
-     */
-    @Ignore("Intermittent failures on stable-3.10 branch and master branch, not on stable-3.9")
-    @Test
-    public void testCustomSCMName() throws Exception {
-        final String branchName = "master";
-        final FreeStyleProject project = setupProject(branchName, false);
-        project.addTrigger(new SCMTrigger(""));
-        GitSCM git = (GitSCM) project.getScm();
-        setupJGit(git);
-
-        final String commitFile1 = "commitFile1";
-        final String scmNameString1 = "";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        assertTrue("scm polling should not detect any more changes after build",
-                project.poll(listener).hasChanges());
-        build(project, Result.SUCCESS, commitFile1);
-        final ObjectId commit1 = testRepo.git.revListAll().get(0);
-
-        // Check unset build SCM Name carries
-        final int buildNumber1 = notifyAndCheckScmName(
-            project, commit1, scmNameString1, 1, git);
-
-        final String scmNameString2 = "ScmName2";
-        git.getExtensions().replace(new ScmName(scmNameString2));
-
-        commit("commitFile2", johnDoe, "Commit number 2");
-        assertTrue("scm polling should detect commit 2 (commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit2 = testRepo.git.revListAll().get(0);
-
-        // Check second set SCM Name
-        final int buildNumber2 = notifyAndCheckScmName(
-            project, commit2, scmNameString2, 2, git, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-
-        final String scmNameString3 = "ScmName3";
-        git.getExtensions().replace(new ScmName(scmNameString3));
-
-        commit("commitFile3", johnDoe, "Commit number 3");
-        assertTrue("scm polling should detect commit 3, (commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit3 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name
-        final int buildNumber3 = notifyAndCheckScmName(
-            project, commit3, scmNameString3, 3, git, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-
-        commit("commitFile4", johnDoe, "Commit number 4");
-        assertTrue("scm polling should detect commit 4 (commit3=" + commit3 + ",commit2=" + commit2 + ",commit1=" + commit1 + ")", project.poll(listener).hasChanges());
-        final ObjectId commit4 = testRepo.git.revListAll().get(0);
-
-        // Check third set SCM Name still set
-        final int buildNumber4 = notifyAndCheckScmName(
-            project, commit4, scmNameString3, 4, git, commit3, commit2, commit1);
-        checkNumberedBuildScmName(project, buildNumber1, scmNameString1, git);
-        checkNumberedBuildScmName(project, buildNumber2, scmNameString2, git);
-        checkNumberedBuildScmName(project, buildNumber3, scmNameString3, git);
     }
 
     /**
@@ -2522,6 +2883,7 @@ public class GitSCMTest extends AbstractGitTestCase {
      * in the build data, but no branch name.
      */
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testNoNullPointerExceptionWithNullBranch() throws Exception {
         ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2557,6 +2919,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchStarStar() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2598,6 +2961,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // Testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNull() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2639,6 +3003,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
+    @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
 
@@ -2759,7 +3124,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         final URL notifyUrl = new URL(notificationPath);
         String notifyContent = null;
         try (final InputStream is = notifyUrl.openStream()) {
-            notifyContent = IOUtils.toString(is);
+            notifyContent = IOUtils.toString(is, "UTF-8");
         }
         assertThat(notifyContent, containsString("No Git consumers using SCM API plugin for: " + testRepo.gitDir.toString()));
 
@@ -2806,5 +3171,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
         return java.io.File.pathSeparatorChar==';';
+    }
+
+    private StandardCredentials createCredential(CredentialsScope scope, String id) {
+        return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, "username", "password");
     }
 }
