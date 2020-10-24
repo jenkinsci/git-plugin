@@ -1,0 +1,13 @@
+---
+ath:
+  athRevision: "dad333092159cb368efc2f9869572f0a05d255ac"
+  jenkins: "2.122"
+  tests:
+    - "GitPluginTest"
+    - "GitUserContentTest"
+    - "MultipleScmsPluginTest"
+    - "WorkflowPluginTest#hello_world_from_git"
+    - "WorkflowPluginTest#testSharedLibraryFromGithub"
+pct:
+  plugins:
+    - "git"
