@@ -1159,15 +1159,9 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
-This script is used to remove the static list of BuildsByBranch that is uselessly stored for each build by the Git Plugin.
+This script is used to remove the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
-* This is a workaround for the problem described here:
-https://issues.jenkins-ci.org/browse/JENKINS-19022
-* Updated to handle Matrix Project types.
-* Updated to better support SCM Polling
-* Updated to handle Projects inside Folders.
-* Updated to handle Pipeline job types (just call getJobNames() to find
-everything)
+This is a workaround for link:https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022]
 
 [source,groovy]
 ----
