@@ -185,15 +185,8 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>multiple-scms</artifactId>
-      <version>0.6</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- intentionally staying with promoted-builds 3.2 on advice of Oleg Nenashev -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>3.2</version>
+      <version>3.7</version>
       <optional>true</optional>
     </dependency>
     <dependency>
