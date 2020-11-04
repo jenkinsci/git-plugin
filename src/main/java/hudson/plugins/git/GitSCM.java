@@ -441,6 +441,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isDisableGitToolChooser());
     }
 
+    public boolean isAddGitTagAction() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor != null && gitDescriptor.isAddGitTagAction());
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -1363,10 +1368,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
         if (!buildDataAlreadyPresent) {
-            if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
+            if (build.getActions(AbstractScmTagAction.class).isEmpty() && isAddGitTagAction()) {
                 // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
                 // so only one of the actions is addressable by users
+                LOGGER.log(Level.FINE, "Adding GitTagAction to build " + build.number);
                 build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
+            } else {
+                LOGGER.log(Level.FINE, "Not adding GitTagAction to build " + build.number);
             }
 
             if (changelogFile != null) {
@@ -1610,6 +1618,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean hideCredentials;
         private boolean allowSecondFetch;
         private boolean disableGitToolChooser;
+        private boolean addGitTagAction;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1748,6 +1757,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public boolean isDisableGitToolChooser() { return disableGitToolChooser; }
 
         public void setDisableGitToolChooser(boolean disableGitToolChooser) { this.disableGitToolChooser = disableGitToolChooser; }
+
+        public boolean isAddGitTagAction() { return addGitTagAction; }
+
+        public void setAddGitTagAction(boolean addGitTagAction) { this.addGitTagAction = addGitTagAction; }
 
         /**
          * Old configuration of git executable - exposed so that we can

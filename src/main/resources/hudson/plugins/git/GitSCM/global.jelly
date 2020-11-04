@@ -25,6 +25,9 @@
     <f:entry field="allowSecondFetch">
       <f:checkbox title="${%Preserve second fetch during checkout}" name="allowSecondFetch" checked="${descriptor.allowSecondFetch}"/>
     </f:entry>
+    <f:entry field="addGitTagAction">
+      <f:checkbox title="${%Add git tag action to jobs}" name="addGitTagAction" checked="${descriptor.addGitTagAction}"/>
+    </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
         <select>

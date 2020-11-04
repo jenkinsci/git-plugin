@@ -193,6 +193,19 @@ Preserve second fetch during initial checkout::
   This setting is only needed if there is a bug in the redundant fetch removal logic.
   If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
 
+[[do-not-add-git-tag-action-to-jobs]]
+Add git tag action to jobs::
+
+  If checked, the git tag action will be added to any builds that happen *after* the box is checked.
+  Prior to git plugin 4.5.0, the git tag action was always added.
+  Git plugin 4.5.0 and later will not add the git tag action to new builds unless the administrator enables it.
++
+The git tag action allows a user to apply a tag to the git repository in the workspace based on the git commit used in the build applying the tag.
+The git plugin does *not* push the applied tag to any other location.
+If the workspace is removed, the tag that was applied is lost.
+Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
+Applying a git tag in an agent workspace doesn't have many practical uses.
+
 [#repository-browser]
 === Repository Browser
 

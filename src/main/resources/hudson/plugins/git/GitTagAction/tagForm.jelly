@@ -37,6 +37,104 @@ THE SOFTWARE.
         </j:forEach>
       </ul>
     </d:tag>
+    <d:tag name="blockWrapper">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <table class="middle-align">
+            <d:invokeBody/>
+          </table>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="row">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div class="tr">
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <tr>
+            <d:invokeBody/>
+          </tr>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="heading">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <th>
+            <d:invokeBody/>
+          </th>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="td">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <td>
+            <d:invokeBody/>
+          </td>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="td-colspan-3">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <td colspan="3">
+            <d:invokeBody/>
+          </td>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="td-width-100">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div class="td">
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <td>
+            <d:invokeBody/>
+          </td>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
+    <d:tag name="td-nowrap">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <td style="white-space:nowrap;">
+            <d:invokeBody/>
+          </td>
+        </j:otherwise>
+      </j:choose>
+    </d:tag>
   </d:taglib>
 
   <j:set var="descriptor" value="${it.descriptor}" />
