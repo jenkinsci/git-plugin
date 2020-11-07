@@ -28,7 +28,7 @@ THE SOFTWARE.
 
   This belongs to a build view.
 -->
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
   <d:taglib uri="local">
     <d:tag name="listTags">
       <ul>
@@ -137,8 +137,6 @@ THE SOFTWARE.
     </d:tag>
   </d:taglib>
 
-  <j:set var="descriptor" value="${it.descriptor}" />
-
   <l:layout norefresh="true" xmlns:local="local">
     <st:include it="${it.run}" page="sidepanel.jelly" />
     <l:main-panel>
@@ -170,37 +168,37 @@ THE SOFTWARE.
         <j:if test="${it.isTagged()}">
           <h2>${%Create more tags}</h2>
         </j:if>
-        <form action="submit" method="post" enctype="multipart/form-data" name="tag">
-          <table class="middle-align">
-            <tr>
-              <th />
-              <th>${%Branch}</th>
-              <th>${%Tag}</th>
-            </tr>
+        <f:form action="submit" method="post" enctype="multipart/form-data" name="tag">
+          <local:blockWrapper>
+            <local:row>
+              <local:heading></local:heading>
+              <local:heading>${%Branch}</local:heading>
+              <local:heading>${%Tag}</local:heading>
+            </local:row>
             <j:forEach var="m" items="${tags.keySet()}" varStatus="loop">
-              <tr>
-                <td><j:if test="${tags.size()!=1}">
+              <local:row>
+                <local:td><j:if test="${tags.size()!=1}">
                   <input type="checkbox" name="tag${loop.index}" checked="true"
                          id="tag${loop.index}" onchange="updateRow(this,${loop.index})" />
-                </j:if></td>
-                <td style="white-space:nowrap;"><label for="tag${loop.index}">
+                </j:if></local:td>
+                <local:td-nowrap><label for="tag${loop.index}">
                   ${m}
-                </label></td>
-                <td width="100%">
+                </label></local:td-nowrap>
+                <local:td-width-100>
                   <input type="text" name="name${loop.index}"
                          value="${it.makeTagURL(m)}" style="width:100%" id="name${loop.index}" />
-                </td>
-              </tr>
+                </local:td-width-100>
+              </local:row>
             </j:forEach>
-            <tr>
-              <td colspan="3">
+            <local:row>
+              <local:td-colspan-3>
                 ${%Commit comment:}
                 <textarea name="comment" rows="1" class="setting-input"><st:out
                  value="Tagged from ${it.run}"/></textarea>
                 <div class="textarea-handle"/>
-              </td>
-            </tr>
-          </table>
+              </local:td-colspan-3>
+            </local:row>
+          </local:blockWrapper>
           <f:submit value="${%Tag}" />
           <script>
             <!-- update the visual feedback depending on the checkbox state -->
@@ -209,7 +207,7 @@ THE SOFTWARE.
               $("name"+i).disabled = !e.checked;
             }
           </script>
-        </form>
+        </f:form>
       </j:if>
     </l:main-panel>
   </l:layout>
