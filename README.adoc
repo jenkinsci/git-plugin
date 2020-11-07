@@ -167,7 +167,7 @@ Show the entire commit summary in changes::
   Administrators that want to restore the old behavior may disable this setting.
 
 [[hide-credentials]]
-Hide credential identifier in job output::
+Hide credential usage in job output::
 
   If checked, the console log will not show the credential identifier used to clone a repository.
 
