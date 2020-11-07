@@ -844,7 +844,8 @@ Excluded Users::
   Using this behavior prevents the faster `git ls-remote` polling mechanism.
   It forces polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension.
 
-  Each exclusion uses literal pattern matching, and must be separated by a new line.
+  Each exclusion uses exact string comparison and must be separated by a new line.
+  User names are only excluded if they exactly match one of the names in this list.
 
 [#polling-ignores-commits-in-certain-paths]
 ==== Polling ignores commits in certain paths
