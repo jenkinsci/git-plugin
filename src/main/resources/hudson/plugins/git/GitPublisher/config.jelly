@@ -1,19 +1,19 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
   <d:taglib uri="local">
-  <d:tag name="blockWrapper">
-        <j:choose>
-            <j:when test="${divBasedFormLayout}">
-                <div>
-                    <d:invokeBody/>
-                </div>
-            </j:when>
-            <j:otherwise>
-                <table style="width:100%">
-                    <d:invokeBody/>
-                </table>
-            </j:otherwise>
-        </j:choose>
+    <d:tag name="blockWrapper">
+      <j:choose>
+        <j:when test="${divBasedFormLayout}">
+          <div>
+            <d:invokeBody/>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <table style="width:100%">
+            <d:invokeBody/>
+          </table>
+        </j:otherwise>
+      </j:choose>
     </d:tag>
   </d:taglib>
 
@@ -33,7 +33,7 @@
              description="${%Tags to push to remote repositories}">
       <f:repeatable field="tagsToPush"
                     add="${%Add Tag}">
-        <local:blockWrapper width="100%">
+        <local:blockWrapper>
           <br/>
           <f:entry field="tagName"
                    title="${%Tag to push}">
@@ -65,7 +65,7 @@
              description="${%Branches to push to remote repositories}">
       <f:repeatable field="branchesToPush"
                     add="${%Add Branch}">
-        <local:blockWrapper width="100%">
+        <local:blockWrapper>
           <br/>
           <f:entry field="branchName"
                    title="${%Branch to push}">
@@ -90,7 +90,7 @@
     
       <f:repeatable field="notesToPush"  add="${%Add Note}">
       
-        <local:blockWrapper width="100%">
+        <local:blockWrapper>
           <br/>
           <f:entry title="${%Note to push}"    field="noteMsg" >
             <f:textarea checkUrl="'descriptorByName/GitPublisher/checkNoteMsg?value='+escape(this.value)" />

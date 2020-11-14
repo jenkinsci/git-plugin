@@ -19,6 +19,7 @@ public class GitSCMJCasCCompatibilityTest extends RoundTripAbstractTest {
         assertTrue("Hide credentials setting not honored", gitSCM.isHideCredentials());
         assertFalse("Use existing account setting not honored", gitSCM.isUseExistingAccountWithSameEmail());
         assertTrue("Create account based on email setting not honored", gitSCM.isCreateAccountBasedOnEmail());
+        assertTrue("Add git tag action setting not honored", gitSCM.isAddGitTagAction());
     }
 
     @Override

@@ -21,6 +21,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -84,6 +86,7 @@ public class GitTagActionTest {
     private static final String INITIAL_COMMIT_MESSAGE = "init" + TAG_SUFFIX + "-" + random.nextInt(10000);
     private static final String ADDED_COMMIT_MESSAGE_BASE = "added" + TAG_SUFFIX;
     private static String sampleRepoHead = null;
+    private static DescriptorImpl gitSCMDescriptor = null;
 
     @BeforeClass
     public static void deleteMatchingTags() throws Exception {
@@ -125,6 +128,10 @@ public class GitTagActionTest {
         p = r.createFreeStyleProject();
         p.setScm(scm);
 
+        /* Add git tag action to builds for this test */
+        gitSCMDescriptor = (DescriptorImpl) scm.getDescriptor();
+        gitSCMDescriptor.setAddGitTagAction(true);
+
         /* Run with no tag action defined */
         noTagAction = createTagAction(null);
 
@@ -141,6 +148,14 @@ public class GitTagActionTest {
         waitForTagCreation(tagTwoAction, "v2");
 
         assertThat(getMatchingTagNames(), hasItems(getTagValue("v1"), getTagValue("v2")));
+    }
+
+    @AfterClass
+    public static void disableAddGitTagAction() {
+        /* Do not add git tag action to builds for other tests */
+        if (gitSCMDescriptor != null) {
+            gitSCMDescriptor.setAddGitTagAction(false);
+        }
     }
 
     private static String getTagName(String message) {

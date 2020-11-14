@@ -68,8 +68,11 @@ import org.jenkinsci.plugins.gitclient.*;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.TestExtension;
+
+import static org.jvnet.hudson.test.LoggerRule.recorded;
 
 import java.io.File;
 import java.io.IOException;
@@ -120,6 +123,9 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Rule
     public GitSampleRepoRule secondRepo = new GitSampleRepoRule();
 
+    @Rule
+    public LoggerRule logRule = new LoggerRule();
+
     private CredentialsStore store = null;
 
     @BeforeClass
@@ -155,6 +161,49 @@ public class GitSCMTest extends AbstractGitTestCase {
         CredentialsScope scope = CredentialsScope.GLOBAL;
         String id = "username-" + username + "-password-" + password;
         return new UsernamePasswordCredentialsImpl(scope, id, "desc: " + id, username, password);
+    }
+
+    @Test
+    public void testAddGitTagAction() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
+        project.setScm(new GitSCM(remoteConfigs,
+                Collections.singletonList(new BranchSpec("master")), false, null, null, null, null));
+
+        GitSCM scm = (GitSCM) project.getScm();
+        final DescriptorImpl descriptor = (DescriptorImpl) scm.getDescriptor();
+        boolean originalValue = scm.isAddGitTagAction();
+        assertFalse("Wrong initial value for hide tag action", originalValue);
+        descriptor.setAddGitTagAction(true);
+        assertTrue("Hide tag action not set", scm.isAddGitTagAction());
+        descriptor.setAddGitTagAction(false);
+        assertFalse("Wrong final value for hide tag action", scm.isAddGitTagAction());
+        descriptor.setAddGitTagAction(originalValue); // restore original value of addGitTagAction
+
+        /* Exit test early if running on Windows and path will be too long */
+        /* Known limitation of git for Windows 2.28.0 and earlier */
+        /* Needs a longpath fix in git for Windows */
+        String currentDirectoryPath = new File(".").getCanonicalPath();
+        if (isWindows() && currentDirectoryPath.length() > 95) {
+            return;
+        }
+
+        logRule.record(GitSCM.class, Level.FINE).capture(20);
+
+        // Build 1 will not add a tag action
+        commit("commitFileWithoutGitTagAction", johnDoe, "Commit 1 without git tag action");
+        build(project, Result.SUCCESS);
+        assertThat(logRule, recorded(containsString("Not adding GitTagAction to build 1")));
+
+        // Build 2 will add a tag action
+        descriptor.setAddGitTagAction(true);
+        build(project, Result.SUCCESS);
+        assertThat(logRule, recorded(containsString("Adding GitTagAction to build 2")));
+
+        // Build 3 will not add a tag action
+        descriptor.setAddGitTagAction(false);
+        build(project, Result.SUCCESS);
+        assertThat(logRule, recorded(containsString("Not adding GitTagAction to build 3")));
     }
 
     @Test
