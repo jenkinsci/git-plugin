@@ -153,7 +153,9 @@ public class GitTagActionTest {
     @AfterClass
     public static void disableAddGitTagAction() {
         /* Do not add git tag action to builds for other tests */
-        gitSCMDescriptor.setAddGitTagAction(false);
+        if (gitSCMDescriptor != null) {
+            gitSCMDescriptor.setAddGitTagAction(false);
+        }
     }
 
     private static String getTagName(String message) {
