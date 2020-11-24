@@ -43,8 +43,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     protected GitTagAction(Run build, FilePath workspace, Revision revision) {
         super(build);
         this.ws = workspace.getRemote();
-        for (Branch b : revision.getBranches()) {
-            tags.put(b.getName(), new ArrayList<>());
+        if (revision.getBranches() != null) {
+            for (Branch b : revision.getBranches()) {
+                tags.put(b.getName(), new ArrayList<>());
+            }
         }
     }
 

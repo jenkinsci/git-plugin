@@ -65,6 +65,8 @@ public class GitTagActionTest {
 
     private static final Random random = new Random();
 
+    private static final String NO_BRANCHES = "tagRevision-with-no-branches";
+
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
 
@@ -148,6 +150,10 @@ public class GitTagActionTest {
         waitForTagCreation(tagTwoAction, "v2");
 
         assertThat(getMatchingTagNames(), hasItems(getTagValue("v1"), getTagValue("v2")));
+
+        /* Create tag action with special message that tells tag action to create a null list of branches */
+        /* JENKINS-64279 reports a null pointer exception in this case */
+        GitTagAction tagNullBranchesAction = createTagAction(NO_BRANCHES);
     }
 
     @AfterClass
@@ -232,7 +238,11 @@ public class GitTagActionTest {
         assertTrue("master branch not found, last branch name was " + lastBranchName, foundMasterBranch);
 
         /* Create the GitTagAction */
-        GitTagAction tagAction = new GitTagAction(tagRun, workspace, tagRevision);
+        GitTagAction tagAction;
+        if (NO_BRANCHES.equals(message)) {
+            tagRevision.setBranches(null);
+        }
+        tagAction = new GitTagAction(tagRun, workspace, tagRevision);
 
         /* Schedule tag creation if message is not null */
         if (message != null) {
