@@ -258,17 +258,10 @@
       <version>${configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Exclude JTH dependency commons-net - otherwise it is included in hpi file as a transient dependency -->
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-net</groupId>
-          <artifactId>commons-net</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>commons-validator</groupId>
