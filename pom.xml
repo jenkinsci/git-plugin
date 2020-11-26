@@ -236,7 +236,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <exclusions>
+      <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>jsr305</artifactId>
@@ -267,7 +267,7 @@
       <groupId>commons-validator</groupId>
       <artifactId>commons-validator</artifactId>
       <version>1.7</version>
-      <exclusions>
+      <exclusions> <!-- rely on components from Jenkins war file -->
         <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
           <groupId>commons-digester</groupId>
           <artifactId>commons-digester</artifactId>
