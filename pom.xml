@@ -257,12 +257,6 @@
       <artifactId>test-harness</artifactId>
       <version>${configuration-as-code.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jsoup</groupId>
-          <artifactId>jsoup</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!-- Exclude JTH dependency commons-net - otherwise it is included in hpi file as a transient dependency -->
     <dependency>
