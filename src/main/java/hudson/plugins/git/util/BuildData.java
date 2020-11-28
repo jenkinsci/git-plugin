@@ -84,6 +84,22 @@ public class BuildData implements Action, Serializable, Cloneable {
         }
     }
 
+    public BuildData(String scmName, Collection<UserRemoteConfig> remoteConfigs, String displayPrefix) {
+        this(scmName,remoteConfigs);
+        this.displayPrefix = displayPrefix;
+    }
+
+    private final static String DEFAULT_DISPLAY_PREFIX = "Git Build Data";
+    private String displayPrefix = DEFAULT_DISPLAY_PREFIX;
+    @Exported
+    public String getDisplayPrefix() {
+        return displayPrefix;
+    }
+
+    public void setDisplayPrefix(String displayPrefix) {
+        this.displayPrefix = fixNull(displayPrefix);
+    }
+
     /**
      * Returns the build data display name, optionally with SCM name.
      * This string needs to be relatively short because it is
@@ -95,8 +111,8 @@ public class BuildData implements Action, Serializable, Cloneable {
      */
     public String getDisplayName() {
         if (scmName != null && !scmName.isEmpty())
-            return "Git Build Data:" + scmName;
-        return "Git Build Data";
+            return displayPrefix+":" + scmName;
+        return displayPrefix;
     }
 
     public String getIconFileName() {

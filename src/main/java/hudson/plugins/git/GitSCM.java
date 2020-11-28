@@ -446,6 +446,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isAddGitTagAction());
     }
 
+    public String getDisplayPrefix() {
+        DescriptorImpl gitDescriptor = getDescriptor();
+        return (gitDescriptor == null ? "" : gitDescriptor.getDisplayPrefix());
+    }
+
     @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
@@ -964,7 +969,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private BuildData fixNull(BuildData bd) {
         ScmName sn = getExtensions().get(ScmName.class);
         String scmName = sn == null ? null : sn.getName();
-        return bd != null ? bd : new BuildData(scmName, getUserRemoteConfigs());
+        return bd != null ? bd : new BuildData(scmName, getUserRemoteConfigs(),getDisplayPrefix());
     }
 
     /**
@@ -1619,6 +1624,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private boolean allowSecondFetch;
         private boolean disableGitToolChooser;
         private boolean addGitTagAction;
+        private String displayPrefix;
 
         public DescriptorImpl() {
             super(GitSCM.class, GitRepositoryBrowser.class);
@@ -1761,6 +1767,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         public boolean isAddGitTagAction() { return addGitTagAction; }
 
         public void setAddGitTagAction(boolean addGitTagAction) { this.addGitTagAction = addGitTagAction; }
+
+        public String getDisplayPrefix() { return displayPrefix; }
+
+        public void setDisplayPrefix(String displayPrefix) { this.displayPrefix = displayPrefix; }
 
         /**
          * Old configuration of git executable - exposed so that we can
@@ -1957,7 +1967,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         ScmName sn = getExtensions().get(ScmName.class);
         String scmName = sn == null ? null : sn.getName();
         if (base==null)
-            return new BuildData(scmName, getUserRemoteConfigs());
+            return new BuildData(scmName, getUserRemoteConfigs(),getDisplayPrefix());
         else {
            BuildData buildData = base.clone();
            buildData.setScmName(scmName);

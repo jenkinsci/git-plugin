@@ -28,6 +28,9 @@
     <f:entry field="addGitTagAction">
       <f:checkbox title="${%Add git tag action to jobs}" name="addGitTagAction" checked="${descriptor.addGitTagAction}"/>
     </f:entry>
+    <f:entry title="${%Build data display prefix}" field="displayPrefix">
+      <f:textbox />
+    </f:entry>
     <!--
     <f:entry title="${%Default git client implementation}" field="defaultClientType">
         <select>
