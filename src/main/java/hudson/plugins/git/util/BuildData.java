@@ -90,7 +90,9 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     private final static String DEFAULT_DISPLAY_PREFIX = "Git Build Data";
-    private String displayPrefix = DEFAULT_DISPLAY_PREFIX;
+
+    private transient String displayPrefix = DEFAULT_DISPLAY_PREFIX;
+
     @Exported
     public String getDisplayPrefix() {
         return displayPrefix;
