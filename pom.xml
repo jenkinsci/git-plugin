@@ -261,25 +261,6 @@
       <artifactId>jenkins-test-harness</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>commons-validator</groupId>
-      <artifactId>commons-validator</artifactId>
-      <version>1.7</version>
-      <exclusions> <!-- rely on components from Jenkins war file -->
-        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
-          <groupId>commons-digester</groupId>
-          <artifactId>commons-digester</artifactId>
-        </exclusion>
-        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
-          <groupId>commons-beanutils</groupId>
-          <artifactId>commons-beanutils</artifactId>
-        </exclusion>
-        <exclusion> <!-- Jenkins 2.204.1 provides commons-collections, no need to bundle it -->
-          <groupId>commons-collections</groupId>
-          <artifactId>commons-collections</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
 
   <dependencyManagement>
