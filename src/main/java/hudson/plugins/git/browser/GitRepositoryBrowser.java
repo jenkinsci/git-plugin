@@ -8,22 +8,25 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.RepositoryBrowser;
 
-import org.apache.commons.validator.routines.DomainValidator;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.IDN;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
     private /* mostly final */ String url;
+    private static final Logger LOGGER = Logger.getLogger(GitRepositoryBrowser.class.getName());
 
     @Deprecated
     protected GitRepositoryBrowser() {
@@ -136,16 +139,33 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return false;
     }
 
+    /* Top level domains that should always be considered valid */
+    private static final Pattern SUFFIXES = Pattern.compile(".*[.](corp|home|local|localnet)$");
+
     /* Browser URL validation of remote/local urls */
     protected static boolean validateUrl(String url) throws URISyntaxException {
-        /* Any TLDs defined by IANA not included in the generic list can be added to this item list */
-        DomainValidator.Item item = new DomainValidator.Item(DomainValidator.ArrayType.GENERIC_PLUS, new String[] { "corp", "home", "local", "localnet" });
-        List<DomainValidator.Item> itemList = new ArrayList<>();
-        itemList.add(item);
-        DomainValidator domainValidator = DomainValidator.getInstance(true, itemList);
-        String[] schemes = {"http", "https"};
-        UrlValidator urlValidator = new UrlValidator(schemes, null, UrlValidator.ALLOW_LOCAL_URLS, domainValidator);
-        return urlValidator.isValid(url);
+        try {
+            URL urlToValidate = new URL(url);
+            String hostname = urlToValidate.getHost();
+            if (hostname == null) {
+                LOGGER.log(Level.FINE, "Invalid hostname validating URL {0}", url);
+                return false;
+            }
+            if (SUFFIXES.matcher(hostname).matches()) {
+                return true;
+            }
+            if (InetAddress.getByName(hostname) == null) {
+                LOGGER.log(Level.FINE, "Host unknown validating URL {0}", url);
+                return false;
+            }
+        } catch (MalformedURLException ex) {
+            LOGGER.log(Level.FINE, "Malformed URL exception validating URL " + url, ex);
+            return false;
+        } catch (UnknownHostException ex) {
+            LOGGER.log(Level.FINE, "Unknown host exception validating URL " + url, ex);
+            return false;
+        }
+        return true;
     }
 
     private static final long serialVersionUID = 1L;

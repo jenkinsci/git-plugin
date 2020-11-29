@@ -56,7 +56,6 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.1.4</version>
         <dependencies>
           <dependency>
             <groupId>com.github.spotbugs</groupId>
@@ -213,7 +212,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-multibranch</artifactId>
-      <version>2.22</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -262,25 +260,6 @@
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-validator</groupId>
-      <artifactId>commons-validator</artifactId>
-      <version>1.7</version>
-      <exclusions> <!-- rely on components from Jenkins war file -->
-        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-digester mandates -->
-          <groupId>commons-digester</groupId>
-          <artifactId>commons-digester</artifactId>
-        </exclusion>
-        <exclusion> <!-- Jenkins 2.204.1 provides a newer version than commons-validator mandates -->
-          <groupId>commons-beanutils</groupId>
-          <artifactId>commons-beanutils</artifactId>
-        </exclusion>
-        <exclusion> <!-- Jenkins 2.204.1 provides commons-collections, no need to bundle it -->
-          <groupId>commons-collections</groupId>
-          <artifactId>commons-collections</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
   </dependencies>
 
