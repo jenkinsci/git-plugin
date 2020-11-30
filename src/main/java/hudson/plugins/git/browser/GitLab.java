@@ -31,7 +31,7 @@ public class GitLab extends GitRepositoryBrowser {
     private Double version;
 
     private static double valueOfVersion(String version) throws NumberFormatException {
-        double tmpVersion = Double.valueOf(version);
+        double tmpVersion = Double.parseDouble(version);
         if (Double.isNaN(tmpVersion)) {
             throw new NumberFormatException("Version cannot be NaN (not a number)");
         }
