@@ -371,7 +371,7 @@ public class GitPublisher extends Recorder implements Serializable {
      * instantiated but tagsToPush will be null rather than empty.
      * @return This.
      */
-    private Object readResolve() {
+    protected Object readResolve() {
         // Default unspecified to v0
         if(configVersion == null)
             this.configVersion = 0L;
