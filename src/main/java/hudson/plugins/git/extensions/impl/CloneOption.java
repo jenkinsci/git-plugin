@@ -14,6 +14,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
@@ -26,6 +27,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -139,6 +141,14 @@ public class CloneOption extends GitSCMExtension {
             listener.getLogger().println("Avoid fetching tags");
             cmd.tags(false);
         }
+
+        Node node = GitUtils.workspaceToNode(git.getWorkTree());
+        EnvVars env = build.getEnvironment(listener);
+        Computer comp = node.toComputer();
+        if (comp != null) {
+            env.putAll(comp.getEnvironment());
+        }
+
         if (honorRefspec) {
             listener.getLogger().println("Honoring refspec on initial clone");
             // Read refspec configuration from the first configured repository.
@@ -149,21 +159,27 @@ public class CloneOption extends GitSCMExtension {
             // Git plugin does not support multiple independent repositories
             // in a single job definition.
             RemoteConfig rc = scm.getRepositories().get(0);
-            List<RefSpec> refspecs = rc.getFetchRefSpecs();
-            cmd.refspecs(refspecs);
+            cmd.refspecs(getRefSpecs(rc, env));
         }
         cmd.timeout(timeout);
 
-        Node node = GitUtils.workspaceToNode(git.getWorkTree());
-        EnvVars env = build.getEnvironment(listener);
-        Computer comp = node.toComputer();
-        if (comp != null) {
-            env.putAll(comp.getEnvironment());
-        }
         for (NodeProperty nodeProperty: node.getNodeProperties()) {
             nodeProperty.buildEnvVars(env, listener);
         }
         cmd.reference(env.expand(reference));
+    }
+
+    @NonNull
+    private static String getParameterString(@CheckForNull String original, @NonNull EnvVars env) {
+        return env.expand(original);
+    }
+
+    private static List<RefSpec> getRefSpecs(RemoteConfig repo, EnvVars env) {
+        List<RefSpec> refSpecs = new ArrayList<>();
+        for (RefSpec refSpec : repo.getFetchRefSpecs()) {
+            refSpecs.add(new RefSpec(getParameterString(refSpec.toString(), env)));
+        }
+        return refSpecs;
     }
 
     /**
