@@ -169,7 +169,6 @@ public class CloneOption extends GitSCMExtension {
         cmd.reference(env.expand(reference));
     }
 
-    @NonNull
     private static String getParameterString(@CheckForNull String original, @NonNull EnvVars env) {
         return env.expand(original);
     }

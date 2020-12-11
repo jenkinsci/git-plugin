@@ -1,8 +1,14 @@
 package hudson.plugins.git.extensions.impl;
 
-import hudson.model.*;
-import hudson.plugins.git.*;
-
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
+import hudson.model.StringParameterDefinition;
+import hudson.plugins.git.AbstractGitTestCase;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Test;
@@ -113,8 +119,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 repos,
                 Collections.singletonList(new BranchSpec(branchName)),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, JGitTool.MAGIC_EXENAME,
+                false, Collections.emptyList(),
+                null, random.nextBoolean() ? JGitTool.MAGIC_EXENAME : null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
         project.save();
