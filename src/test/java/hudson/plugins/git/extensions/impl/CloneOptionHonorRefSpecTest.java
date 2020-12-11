@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -137,6 +138,6 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     }
 
     private static boolean isWindows() {
-        return false;
+        return File.pathSeparatorChar == ';';
     }
 }
