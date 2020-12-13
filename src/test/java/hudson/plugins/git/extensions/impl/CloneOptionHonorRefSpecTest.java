@@ -1,5 +1,6 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
@@ -9,14 +10,16 @@ import hudson.plugins.git.AbstractGitTestCase;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.tasks.BatchFile;
+import hudson.tasks.Builder;
+import hudson.tasks.Shell;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,23 +35,12 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     private final Boolean honorRefSpec;
 
     private static final Random random = new Random();
+    private FreeStyleProject project;
+    private String refSpecExpectedValue;
 
     public CloneOptionHonorRefSpecTest(String refSpecName, Boolean honorRefSpec) {
         this.refSpecName = refSpecName;
         this.honorRefSpec = honorRefSpec;
-    }
-
-    private static String getExpectedValue(String reference, FreeStyleProject project) {
-        if (reference.equals("JOB_BASE_NAME") || reference.equals("JOB_NAME")) {
-            return project.getName();
-        }
-        if (reference.equals("USER") || reference.equals("USERNAME")) {
-            return System.getProperty("user.name", "java-user.name-property-not-found");
-        }
-        if (reference.equals("USER_SELECTED_BRANCH_NAME")) {
-            return "user_branch";
-        }
-        return "not-master"; // fake value for other variables
     }
 
     @Parameterized.Parameters(name = "{0}-{1}")
@@ -66,7 +58,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         }
 
         /* Variable set by the operating system */
-        String refSpecName = isWindows() ? "USERNAME" : "USER";
+        String refSpecName = Functions.isWindows() ? "USERNAME" : "USER";
         Object[] combination = {refSpecName, !honorRefSpec};
         values.add(combination);
 
@@ -76,6 +68,39 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         values.add(combination);
 
         return values;
+    }
+
+    private static Builder createEnvEchoBuilder(String envVarName) {
+        if (Functions.isWindows()) {
+            return new BatchFile(String.format("echo %s=%%%s%%", envVarName, envVarName));
+        }
+        return new Shell(String.format("echo \"%s=${%s}\"", envVarName, envVarName));
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+
+        // Setup job beforehand to get expected value of the environment variable
+        project = createFreeStyleProject();
+        project.addProperty(new ParametersDefinitionProperty(
+                new StringParameterDefinition("USER_SELECTED_BRANCH_NAME", "user_branch")
+        ));
+        project.getBuildersList().add(createEnvEchoBuilder(refSpecName));
+
+        final FreeStyleBuild b = project.scheduleBuild2(0).get();
+        rule.assertBuildStatus(Result.SUCCESS, b);
+
+        List<String> logs = b.getLog(50);
+        for (String line : logs) {
+            if (line.startsWith(refSpecName + '=')) {
+                refSpecExpectedValue = line.split("=")[1];
+            }
+        }
+
+        if (refSpecExpectedValue == null) {
+            throw new Exception("Could not obtain ENV_VAR expected value");
+        }
     }
 
     /**
@@ -88,15 +113,6 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     @Test
     @Issue("JENKINS-56063")
     public void testRefSpecWithExpandedVariables() throws Exception {
-
-        FreeStyleProject project = createFreeStyleProject();
-        project.addProperty(new ParametersDefinitionProperty(
-                new StringParameterDefinition("USER_SELECTED_BRANCH_NAME", "user_branch")
-        ));
-        project.save();
-
-        String refSpecExpectedValue = getExpectedValue(refSpecName, project);
-
         // create initial commit
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit in master branch");
@@ -122,7 +138,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
                 Collections.singletonList(new BranchSpec(branchName)),
                 false, Collections.emptyList(),
                 null, random.nextBoolean() ? JGitTool.MAGIC_EXENAME : null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
         project.save();
 
@@ -132,12 +148,9 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         ((GitSCM) project.getScm()).getExtensions().add(cloneOption);
 
         FreeStyleBuild b = build(project, Result.SUCCESS, commitFile1);
+
         /* Check that unexpanded refspec name is not in the log */
         List<String> buildLog = b.getLog(50);
         assertThat(buildLog, not(hasItem(containsString("${" + refSpecName + "}"))));
-    }
-
-    private static boolean isWindows() {
-        return File.pathSeparatorChar == ';';
     }
 }

@@ -160,6 +160,10 @@ public class CloneOption extends GitSCMExtension {
             // in a single job definition.
             RemoteConfig rc = scm.getRepositories().get(0);
             cmd.refspecs(getRefSpecs(rc, env));
+
+            // TODO: Debug output
+            listener.getLogger().println(String.join(";", env.keySet()));
+            listener.getLogger().println(String.join(";", env.values()));
         }
         cmd.timeout(timeout);
 
