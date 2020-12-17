@@ -16,6 +16,7 @@ import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -143,11 +144,6 @@ public class CloneOption extends GitSCMExtension {
         }
 
         Node node = GitUtils.workspaceToNode(git.getWorkTree());
-        EnvVars env = build.getEnvironment(listener);
-        Computer comp = node.toComputer();
-        if (comp != null) {
-            env.putAll(comp.getEnvironment());
-        }
 
         if (honorRefspec) {
             listener.getLogger().println("Honoring refspec on initial clone");
@@ -158,15 +154,17 @@ public class CloneOption extends GitSCMExtension {
             // configuration is treated as authoritative.
             // Git plugin does not support multiple independent repositories
             // in a single job definition.
+            EnvVars buildEnv = build.getEnvironment(listener);
             RemoteConfig rc = scm.getRepositories().get(0);
-            cmd.refspecs(getRefSpecs(rc, env));
-
-            // TODO: Debug output
-            listener.getLogger().println(String.join(";", env.keySet()));
-            listener.getLogger().println(String.join(";", env.values()));
+            cmd.refspecs(getRefSpecs(rc, buildEnv));
         }
         cmd.timeout(timeout);
 
+        EnvVars env = build.getEnvironment(listener);
+        Computer comp = node.toComputer();
+        if (comp != null) {
+            env.putAll(comp.getEnvironment());
+        }
         for (NodeProperty nodeProperty: node.getNodeProperties()) {
             nodeProperty.buildEnvVars(env, listener);
         }

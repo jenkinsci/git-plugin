@@ -512,12 +512,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Expand Parameters in the supplied remote repository with the parameter values provided in the given environment variables }
+     * Expand Parameters in the supplied remote repository with the parameter values provided in the given environment variables
      * @param env Environment variables with parameter values
      * @param remoteRepository Remote repository with parameters
      * @return remote repository with expanded parameters
      */
-    public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository){
+    public RemoteConfig getParamExpandedRepo(EnvVars env, RemoteConfig remoteRepository) {
         List<RefSpec> refSpecs = getRefSpecs(remoteRepository, env);
     	return newRemoteConfig(
                 getParameterString(remoteRepository.getName(), env),

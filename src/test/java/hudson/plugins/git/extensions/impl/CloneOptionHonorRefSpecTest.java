@@ -46,26 +46,20 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     @Parameterized.Parameters(name = "{0}-{1}")
     public static Collection permuteRefSpecVariable() {
         List<Object[]> values = new ArrayList<>();
-        /* Should behave same with honor refspec enabled or disabled */
+        // Should behave same with honor refspec enabled or disabled
         boolean honorRefSpec = random.nextBoolean();
 
-        /* Variables set by Jenkins */
-        String[] allowed = {"JOB_BASE_NAME", "JOB_NAME"};
-        for (String refSpecName : allowed) {
-            Object[] combination = {refSpecName, honorRefSpec};
+        String[] keys = {
+                "JOB_NAME", // Variable set by Jenkins
+                (Functions.isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
+                "USER_SELECTED_BRANCH_NAME" // Parametrised build param
+        };
+
+        for (String refSpecName : keys) {
+            Object[] combination = {refSpecName, true};
             values.add(combination);
             honorRefSpec = !honorRefSpec;
         }
-
-        /* Variable set by the operating system */
-        String refSpecName = Functions.isWindows() ? "USERNAME" : "USER";
-        Object[] combination = {refSpecName, !honorRefSpec};
-        values.add(combination);
-
-        /* Parametrised build */
-        refSpecName = "USER_SELECTED_BRANCH_NAME";
-        combination = new Object[]{refSpecName, !honorRefSpec};
-        values.add(combination);
 
         return values;
     }
@@ -99,7 +93,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         }
 
         if (refSpecExpectedValue == null) {
-            throw new Exception("Could not obtain ENV_VAR expected value");
+            throw new Exception("Could not obtain env var expected value");
         }
     }
 
@@ -113,11 +107,11 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     @Test
     @Issue("JENKINS-56063")
     public void testRefSpecWithExpandedVariables() throws Exception {
-        // create initial commit
+        // Create initial commit
         final String commitFile1 = "commitFile1";
         commit(commitFile1, johnDoe, "Commit in master branch");
 
-        // create branch and make initial commit
+        // Create branch and make initial commit
         git.checkout().ref("master").branch(refSpecExpectedValue).execute();
         commit(commitFile1, johnDoe, "Commit in '" + refSpecExpectedValue + "' branch");
 
@@ -140,16 +134,15 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
                 null, random.nextBoolean() ? JGitTool.MAGIC_EXENAME : null,
                 Collections.emptyList());
         project.setScm(scm);
-        project.save();
 
-        /* Same result expected whether refspec honored or not */
+        // Same result expected whether refspec honored or not
         CloneOption cloneOption = new CloneOption(false, null, null);
         cloneOption.setHonorRefspec(honorRefSpec);
-        ((GitSCM) project.getScm()).getExtensions().add(cloneOption);
+        scm.getExtensions().add(cloneOption);
 
         FreeStyleBuild b = build(project, Result.SUCCESS, commitFile1);
 
-        /* Check that unexpanded refspec name is not in the log */
+        // Check that unexpanded refspec name is not in the log
         List<String> buildLog = b.getLog(50);
         assertThat(buildLog, not(hasItem(containsString("${" + refSpecName + "}"))));
     }
