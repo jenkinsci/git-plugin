@@ -1,6 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
@@ -20,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,7 +51,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
         String[] keys = {
                 "JOB_NAME", // Variable set by Jenkins
-                (Functions.isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
+                (isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
                 "USER_SELECTED_BRANCH_NAME" // Parametrised build param
         };
 
@@ -65,7 +65,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
     }
 
     private static Builder createEnvEchoBuilder(String envVarName) {
-        if (Functions.isWindows()) {
+        if (isWindows()) {
             return new BatchFile(String.format("echo %s=%%%s%%", envVarName, envVarName));
         }
         return new Shell(String.format("echo \"%s=${%s}\"", envVarName, envVarName));
@@ -145,5 +145,9 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         // Check that unexpanded refspec name is not in the log
         List<String> buildLog = b.getLog(50);
         assertThat(buildLog, not(hasItem(containsString("${" + refSpecName + "}"))));
+    }
+
+    private static boolean isWindows() {
+        return File.pathSeparatorChar == ';';
     }
 }
