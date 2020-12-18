@@ -12,6 +12,14 @@ Before submitting your change, please assure that you've added tests which verif
 There have been many developers involved in the git plugin and there are many, many users who depend on the git plugin.
 Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers as executable descriptions of plugin behavior.
 
+Compile and test the git plugin with the command:
+
+* `mvn clean verify`
+
+Compile the git plugin without running tests using the command:
+
+* `mvn clean -DskipTests verify`
+
 Code coverage reporting is available as a maven target.
 Please try to improve code coverage with tests when you submit.
 
