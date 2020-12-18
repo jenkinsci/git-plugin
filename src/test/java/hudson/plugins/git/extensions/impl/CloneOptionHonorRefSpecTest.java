@@ -32,22 +32,18 @@ import static org.hamcrest.Matchers.*;
 public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
     private final String refSpecName;
-    private final Boolean honorRefSpec;
 
     private static final Random random = new Random();
     private FreeStyleProject project;
     private String refSpecExpectedValue;
 
-    public CloneOptionHonorRefSpecTest(String refSpecName, Boolean honorRefSpec) {
+    public CloneOptionHonorRefSpecTest(String refSpecName) {
         this.refSpecName = refSpecName;
-        this.honorRefSpec = honorRefSpec;
     }
 
-    @Parameterized.Parameters(name = "{0}-{1}")
+    @Parameterized.Parameters(name = "{0}")
     public static Collection permuteRefSpecVariable() {
         List<Object[]> values = new ArrayList<>();
-        // Should behave same with honor refspec enabled or disabled
-        boolean honorRefSpec = random.nextBoolean();
 
         String[] keys = {
                 "JOB_NAME", // Variable set by Jenkins
@@ -56,9 +52,8 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         };
 
         for (String refSpecName : keys) {
-            Object[] combination = {refSpecName, true};
+            Object[] combination = {refSpecName};
             values.add(combination);
-            honorRefSpec = !honorRefSpec;
         }
 
         return values;
@@ -137,7 +132,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
         // Same result expected whether refspec honored or not
         CloneOption cloneOption = new CloneOption(false, null, null);
-        cloneOption.setHonorRefspec(honorRefSpec);
+        cloneOption.setHonorRefspec(true);
         scm.getExtensions().add(cloneOption);
 
         FreeStyleBuild b = build(project, Result.SUCCESS, commitFile1);
