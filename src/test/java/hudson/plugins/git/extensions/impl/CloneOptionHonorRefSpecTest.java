@@ -1,6 +1,5 @@
 package hudson.plugins.git.extensions.impl;
 
-import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
@@ -20,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.Issue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,46 +32,42 @@ import static org.hamcrest.Matchers.*;
 public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
     private final String refSpecName;
-    private final Boolean honorRefSpec;
 
     private static final Random random = new Random();
     private FreeStyleProject project;
     private String refSpecExpectedValue;
 
-    public CloneOptionHonorRefSpecTest(String refSpecName, Boolean honorRefSpec) {
+    public CloneOptionHonorRefSpecTest(String refSpecName) {
         this.refSpecName = refSpecName;
-        this.honorRefSpec = honorRefSpec;
     }
 
-    @Parameterized.Parameters(name = "{0}-{1}")
+    @Parameterized.Parameters(name = "{0}")
     public static Collection permuteRefSpecVariable() {
         List<Object[]> values = new ArrayList<>();
-        // Should behave same with honor refspec enabled or disabled
-        boolean honorRefSpec = random.nextBoolean();
 
         String[] keys = {
                 "JOB_NAME", // Variable set by Jenkins
-                (Functions.isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
+                (isWindows() ? "USERNAME" : "USER"), // Variable set by the operating system
                 "USER_SELECTED_BRANCH_NAME" // Parametrised build param
         };
 
         for (String refSpecName : keys) {
-            Object[] combination = {refSpecName, true};
+            Object[] combination = {refSpecName};
             values.add(combination);
-            honorRefSpec = !honorRefSpec;
         }
 
         return values;
     }
 
     private static Builder createEnvEchoBuilder(String envVarName) {
-        if (Functions.isWindows()) {
+        if (isWindows()) {
             return new BatchFile(String.format("echo %s=%%%s%%", envVarName, envVarName));
         }
         return new Shell(String.format("echo \"%s=${%s}\"", envVarName, envVarName));
     }
 
     @Before
+    @Override
     public void setUp() throws Exception {
         super.setUp();
 
@@ -137,7 +133,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
 
         // Same result expected whether refspec honored or not
         CloneOption cloneOption = new CloneOption(false, null, null);
-        cloneOption.setHonorRefspec(honorRefSpec);
+        cloneOption.setHonorRefspec(true);
         scm.getExtensions().add(cloneOption);
 
         FreeStyleBuild b = build(project, Result.SUCCESS, commitFile1);
@@ -145,5 +141,9 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         // Check that unexpanded refspec name is not in the log
         List<String> buildLog = b.getLog(50);
         assertThat(buildLog, not(hasItem(containsString("${" + refSpecName + "}"))));
+    }
+
+    private static boolean isWindows() {
+        return File.pathSeparatorChar == ';';
     }
 }

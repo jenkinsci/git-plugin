@@ -16,7 +16,6 @@ import hudson.slaves.NodeProperty;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -134,7 +133,10 @@ public class CloneOption extends GitSCMExtension {
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
-            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            int usedDepth = 1;
+            if (depth != null && depth > 0) {
+                usedDepth = depth;
+            }
             listener.getLogger().println("Using shallow clone with depth " + usedDepth);
             cmd.depth(usedDepth);
         }
@@ -191,7 +193,10 @@ public class CloneOption extends GitSCMExtension {
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
-            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            int usedDepth = 1;
+            if (depth != null && depth > 0) {
+                usedDepth = depth;
+            }
             listener.getLogger().println("Using shallow fetch with depth " + usedDepth);
             cmd.depth(usedDepth);
         }
