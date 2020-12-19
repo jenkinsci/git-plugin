@@ -195,7 +195,8 @@ public class GitSCMSourceTraitsTest {
                         Matchers.allOf(
                                 instanceOf(MessageExclusionTrait.class),
                                 hasProperty("extension",
-                                        hasProperty("excludedMessage", is("does not work"))
+                                        hasProperty("excludedMessage", is("does not work")))
+                                )
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(CleanBeforeCheckoutTrait.class),
                                 hasProperty("extension",
