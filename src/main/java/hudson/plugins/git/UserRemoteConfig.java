@@ -104,8 +104,11 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             if (project == null) {
-                /* Construct a fake project */
-                project = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+                /* Construct a fake project, suppress the deprecation warning because the
+                 * replacement for the deprecated API isn't accessible in this context. */
+                @SuppressWarnings("deprecation")
+                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+                project = fakeProject;
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()

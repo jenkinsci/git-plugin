@@ -28,7 +28,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -577,7 +576,10 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
-        assumeTrue(runUnreliableTests()); // Test cleanup is unreliable in some cases
+        if (!runUnreliableTests()) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }
@@ -603,7 +605,7 @@ public class GitStatusTest extends AbstractGitProject {
                 : new Shell("echo $A $B $C");
         project.getBuildersList().add(script);
 
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserCause()).get();
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 
         jenkins.waitForMessage("aaa aaaccc ccc", build);
 

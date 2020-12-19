@@ -66,7 +66,8 @@ public class CliGitCommand {
         launcher = new Launcher.LocalLauncher(listener);
         env = new EnvVars();
         if (client != null) {
-            try (Repository repo = client.getRepository()) {
+            try (@SuppressWarnings("deprecation") // Local repository reference
+                 Repository repo = client.getRepository()) {
                 dir = repo.getWorkTree();
             }
         } else {

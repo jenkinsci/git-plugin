@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.DataBoundConstructor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Add options to the checkout command.
@@ -47,6 +49,11 @@ public class CheckoutOption extends FakeGitSCMExtension {
      */
     @Override
     public void decorateCheckoutCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CheckoutCommand cmd) throws IOException, InterruptedException, GitException {
+        cmd.timeout(timeout);
+    }
+
+    @Override
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
         cmd.timeout(timeout);
     }
 

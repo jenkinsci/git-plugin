@@ -26,27 +26,6 @@ import org.mockito.Mockito;
 @RunWith(Enclosed.class)
 public class PathRestrictionTest {
 
-    @Ignore("Not a test")
-    public static class FakePathGitChangeSet extends GitChangeSet {
-
-        private Collection<String> paths;
-
-        public FakePathGitChangeSet(Collection<String> paths) {
-            super(Collections.emptyList(), false);
-            this.paths = paths;
-        }
-
-        @Override
-        public Collection<String> getAffectedPaths() {
-            return paths;
-        }
-
-        @Override
-        public String getCommitId() {
-            return "fake123";
-        }
-    }
-
     public abstract static class PathRestrictionExtensionTest extends GitSCMExtensionTest {
 
         protected FreeStyleProject project;
@@ -187,5 +166,25 @@ public class PathRestrictionTest {
             commit = new FakePathGitChangeSet(new HashSet<>(Arrays.asList("a/really/long/path/file.txt")));
             assertTrue(getExtension().isRevExcluded((hudson.plugins.git.GitSCM) project.getScm(), repo.git, commit, listener, mockBuildData));
         }
+    }
+}
+
+class FakePathGitChangeSet extends GitChangeSet {
+
+    private Collection<String> paths;
+
+    public FakePathGitChangeSet(Collection<String> paths) {
+        super(Collections.emptyList(), false);
+        this.paths = paths;
+    }
+
+    @Override
+    public Collection<String> getAffectedPaths() {
+        return paths;
+    }
+
+    @Override
+    public String getCommitId() {
+        return "fake123";
     }
 }

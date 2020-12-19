@@ -259,6 +259,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             return source instanceof GitSCM
                     && ((GitSCM) source).getUserRemoteConfigs().size() == 1
                     && ((GitSCM) source).getBranches().size() == 1
+                    && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
                     && (
                         ((GitSCM) source).getBranches().get(0).getName().matches(
                             "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
@@ -267,7 +268,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                             "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
                         )
                     );
-            // we only support where the branch spec is obvious
+            // we only support where the branch spec is obvious and not a wildcard
         }
 
         @Override

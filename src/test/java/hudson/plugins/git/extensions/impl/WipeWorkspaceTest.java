@@ -7,6 +7,7 @@ import hudson.model.Result;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
+import java.util.List;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
 public class WipeWorkspaceTest extends GitSCMExtensionTest {
@@ -43,8 +45,8 @@ public class WipeWorkspaceTest extends GitSCMExtensionTest {
         git.commit("First commit");
         FreeStyleBuild build = build(projectWithMaster, Result.SUCCESS);
 
-        String buildLog = build.getLog();
-        assertThat("Workspace not cleaned before checkout",true, is(buildLog.contains("Wiping out workspace first.")));
+        List<String> buildLog = build.getLog(175);
+        assertThat(buildLog, hasItem("Wiping out workspace first."));
     }
 
     @Test

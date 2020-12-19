@@ -21,11 +21,17 @@ public class GitLabConfigurator extends BaseConfigurator<GitLab> {
     @Override
     protected GitLab instance(Mapping mapping, ConfigurationContext context) throws ConfiguratorException {
         if (mapping == null) {
-            return new GitLab("", "");
+            return new GitLab("");
         }
         final String url = (mapping.get("repoUrl") != null ? mapping.getScalarValue("repoUrl") : "");
         final String version = (mapping.get("version") != null ? mapping.getScalarValue("version") : "");
-        return new GitLab(url, version);
+        if (version.isEmpty()) {
+            return new GitLab(url);
+        }
+        // Only use the deprecated constructor for a non-empty version
+        @SuppressWarnings("deprecation")
+        GitLab gitlab = new GitLab(url, version);
+        return gitlab;
     }
 
     @CheckForNull

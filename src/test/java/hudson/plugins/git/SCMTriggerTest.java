@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -304,7 +305,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     {
         Properties properties = new Properties();
         Pattern pattern = Pattern.compile("([a-f0-9]{40})\\s*(.*)");
-        for(Object lineO : FileUtils.readLines(file)) {
+        for(Object lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
             String line = ((String)lineO).trim();
             Matcher matcher = pattern.matcher(line);
             if(matcher.matches()) {

@@ -578,7 +578,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     remoteReferences = Collections.emptyMap();
                 }
                 fetch.execute();
-                try (Repository repository = client.getRepository();
+                try (@SuppressWarnings("deprecation") // Local repository reference
+                     Repository repository = client.getRepository();
                      RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
 
@@ -956,7 +957,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   @Override
                                   public SCMRevision run(GitClient client, String remoteName) throws IOException,
                                           InterruptedException {
-                                      try (final Repository repository = client.getRepository();
+                                      try (@SuppressWarnings("deprecation") // Local repo reference
+                                           final Repository repository = client.getRepository();
                                            RevWalk walk = new RevWalk(repository)) {
                                           ObjectId ref = client.revParse(tagRef);
                                           RevCommit commit = walk.parseCommit(ref);
@@ -1217,15 +1219,23 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected static File getCacheDir(String cacheEntry) {
+        return getCacheDir(cacheEntry, true);
+    }
+
+    protected static File getCacheDir(String cacheEntry, boolean createDirectory) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
         if (!cacheDir.isDirectory()) {
-            boolean ok = cacheDir.mkdirs();
-            if (!ok) {
-                LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+            if (createDirectory) {
+                boolean ok = cacheDir.mkdirs();
+                if (!ok) {
+                    LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+                }
+            } else {
+                cacheDir = null;
             }
         }
         return cacheDir;
