@@ -200,7 +200,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         this(id, remote, credentialsId, null, null, includes, excludes, ignoreOnPushNotifications);
     }
 
-    private Object readResolve() throws ObjectStreamException {
+    protected Object readResolve() throws ObjectStreamException {
         if (traits == null) {
             List<SCMSourceTrait> traits = new ArrayList<>();
             traits.add(new BranchDiscoveryTrait());
