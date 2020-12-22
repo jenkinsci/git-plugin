@@ -185,7 +185,14 @@ public class SubmoduleOption extends GitSCMExtension {
 
     @Override
     public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
-        cmd.threads(threads);
+        /* Prevent JGit with ANY use of SubmoduleOption by always setting a value
+         * for threads.  See JENKINS-64382.
+         */
+        if (threads == null) {
+            cmd.threads(1);
+        } else {
+            cmd.threads(threads);
+        }
         cmd.depth(depth);
         cmd.shallow(shallow);
         cmd.timeout(timeout);
