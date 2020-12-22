@@ -1,26 +1,29 @@
 package hudson.plugins.git.extensions.impl;
 
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
-import nl.jqno.equalsverifier.EqualsVerifier;
-import nl.jqno.equalsverifier.Warning;
-import org.jenkinsci.plugins.gitclient.*;
-
-import org.junit.Test;
+import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
 
 import java.io.IOException;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import org.jvnet.hudson.test.Issue;
+import org.mockito.Mockito;
+
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.jvnet.hudson.test.Issue;
-
-import hudson.model.Run;
-import hudson.plugins.git.GitException;
-import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
-import hudson.plugins.git.util.Build;
 import static org.junit.Assert.assertThrows;
-import org.junit.Before;
-
-import org.mockito.Mockito;
 
 public class SubmoduleOptionTest {
 
@@ -242,9 +245,41 @@ public class SubmoduleOptionTest {
     }
 
     @Test
+    @Issue("JENKINS-64382")
     public void testDetermineSupportForJGit() {
-        GitSCM scm = null;
+        /* JGit was incorrectly used when submodule option was added with no items checked. */
+        GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
+        scm.getExtensions().add(submoduleOption);
         UnsupportedCommand cmd = new UnsupportedCommand();
         submoduleOption.determineSupportForJGit(scm, cmd);
+        assertThat(cmd.determineSupportForJGit(), is(false));
+    }
+
+    @Test
+    @Issue("JENKINS-64382")
+    public void testDetermineSupportForJGitRecursiveSubmodules() {
+        /* JGit was incorrectly used when submodule option was added with only recursive submodule checked. */
+        GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
+        submoduleOption = new SubmoduleOption(DISABLE_SUBMODULES_FALSE,
+                true,
+                TRACKING_SUBMODULES_FALSE,
+                SUBMODULES_REFERENCE_REPOSITORY,
+                SUBMODULES_TIMEOUT,
+                USE_PARENT_CREDENTIALS_FALSE);
+        scm.getExtensions().add(submoduleOption);
+        UnsupportedCommand cmd = new UnsupportedCommand();
+        submoduleOption.determineSupportForJGit(scm, cmd);
+        assertThat(cmd.determineSupportForJGit(), is(false));
+    }
+
+    @Test
+    public void testDetermineSupportForJGitThreads() {
+        GitSCM scm = new GitSCM("https://github.com/jenkinsci/git-plugin");
+        Integer threads = randomSmallNonNegativeIntegerOrNull();
+        submoduleOption.setThreads(threads);
+        scm.getExtensions().add(submoduleOption);
+        UnsupportedCommand cmd = new UnsupportedCommand();
+        submoduleOption.determineSupportForJGit(scm, cmd);
+        assertThat(cmd.determineSupportForJGit(), is(false));
     }
 }
