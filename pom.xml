@@ -17,7 +17,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>4.5.1</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
@@ -294,7 +294,7 @@
     <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
-    <tag>${scmTag}</tag>
+    <tag>git-4.5.1</tag>
   </scm>
 
   <pluginRepositories>
