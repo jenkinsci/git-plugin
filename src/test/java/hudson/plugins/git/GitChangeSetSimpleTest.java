@@ -15,7 +15,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 

@@ -49,13 +49,12 @@ import java.util.Collections;
 import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Rule;
 

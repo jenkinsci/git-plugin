@@ -3,12 +3,17 @@ package hudson.plugins.git;
 import hudson.model.User;
 import hudson.tasks.Mailer;
 import hudson.tasks.Mailer.UserProperty;
-import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class GitChangeSetTest {
 
@@ -49,6 +54,7 @@ public class GitChangeSetTest {
         assertNull(User.get(email, false));
 
         User existingUser = User.get(existingUserId, true);
+        assertThat(existingUser, is(not(nullValue())));
         existingUser.setFullName(existingUserFullName);
         existingUser.addProperty(new Mailer.UserProperty(email));
 

@@ -20,7 +20,6 @@ import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -154,6 +153,7 @@ public class GitTagActionTest {
         /* Create tag action with special message that tells tag action to create a null list of branches */
         /* JENKINS-64279 reports a null pointer exception in this case */
         GitTagAction tagNullBranchesAction = createTagAction(NO_BRANCHES);
+        assertThat(tagNullBranchesAction, is(not(nullValue())));
     }
 
     @AfterClass

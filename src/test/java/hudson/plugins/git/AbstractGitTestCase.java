@@ -35,7 +35,6 @@ import hudson.util.StreamTaskListener;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
 
