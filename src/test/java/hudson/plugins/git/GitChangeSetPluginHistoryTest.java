@@ -38,8 +38,6 @@ public class GitChangeSetPluginHistoryTest {
     private static final long FIRST_COMMIT_TIMESTAMP = 1198029565000L;
     private static final long NOW = System.currentTimeMillis();
 
-    private final GitClient git;
-    private final boolean authorOrCommitter;
     private final ObjectId sha1;
 
     private final GitChangeSet changeSet;
@@ -68,8 +66,6 @@ public class GitChangeSetPluginHistoryTest {
     };
 
     public GitChangeSetPluginHistoryTest(GitClient git, boolean authorOrCommitter, String sha1String) throws IOException, InterruptedException {
-        this.git = git;
-        this.authorOrCommitter = authorOrCommitter;
         this.sha1 = ObjectId.fromString(sha1String);
         StringWriter stringWriter = new StringWriter();
         git.changelog().includes(sha1).max(1).to(stringWriter).execute();

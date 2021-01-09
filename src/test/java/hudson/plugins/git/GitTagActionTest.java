@@ -20,7 +20,6 @@ import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
@@ -154,6 +153,7 @@ public class GitTagActionTest {
         /* Create tag action with special message that tells tag action to create a null list of branches */
         /* JENKINS-64279 reports a null pointer exception in this case */
         GitTagAction tagNullBranchesAction = createTagAction(NO_BRANCHES);
+        assertThat(tagNullBranchesAction, is(not(nullValue())));
     }
 
     @AfterClass
@@ -286,35 +286,10 @@ public class GitTagActionTest {
 
         JenkinsRule.WebClient browser = r.createWebClient();
 
-        // Don't need all cases until at least one case works fully
-        // HtmlPage tagPage = browser.getPage(p, "/1/tagBuild");
-        // HtmlForm form = tagPage.getFormByName("tag");
-        // form.getInputByName("name0").setValueAttribute("tag-build-1");
-        // HtmlPage submitted = r.submit(form);
-
-        // Flaw in the test causes this assertion to fail
-        // assertThat(submitted.asText(), not(containsString("Clear error to retry")));
-
-        // Don't need all cases until at least one case works fully
-        // HtmlPage tagPage2 = browser.getPage(p, "/2/tagBuild");
-        // HtmlForm form2 = tagPage2.getFormByName("tag");
-        // form2.getInputByName("name0").setValueAttribute("tag-build-2");
-        // HtmlPage submitted2 = r.submit(form2);
-
-        // Flaw in the test causes this assertion to fail
-        // assertThat(submitted2.asText(), not(containsString("Clear error to retry")));
-
         HtmlPage tagPage3 = browser.getPage(p, "/3/tagBuild");
         HtmlForm form3 = tagPage3.getFormByName("tag");
         form3.getInputByName("name0").setValueAttribute("tag-build-3");
         HtmlPage submitted3 = r.submit(form3);
-
-        // Flaw in the test causes this assertion to fail
-        // assertThat(submitted3.asText(), not(containsString("Clear error to retry")));
-
-        // Flaw in the test causes this assertion to fail
-        // waitForTagCreation(tagTwoAction);
-        // assertThat(getMatchingTagNames(), hasItems("tag-build-1", "tag-build-2", "tag-build-3"));
     }
 
     @Test
@@ -325,15 +300,6 @@ public class GitTagActionTest {
         }
         Descriptor<GitTagAction> descriptor = noTagAction.getDescriptor();
         assertThat(descriptor.getDisplayName(), is("Tag"));
-    }
-
-    // @Test
-    public void testIsTagged() {
-        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
-            /* Do not distract warnings system by using assumeThat to skip tests */
-            return;
-        }
-        assertTrue(tagTwoAction.isTagged());
     }
 
     @Test
@@ -352,26 +318,6 @@ public class GitTagActionTest {
             return;
         }
         assertThat(noTagAction.getDisplayName(), is("No Tags"));
-    }
-
-    // Not working yet
-    // @Test
-    public void testGetDisplayNameOneTagAction() {
-        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
-            /* Do not distract warnings system by using assumeThat to skip tests */
-            return;
-        }
-        assertThat(tagOneAction.getDisplayName(), is("One Tag"));
-    }
-
-    // Not working yet
-    // @Test
-    public void testGetDisplayNameTwoTagAction() {
-        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
-            /* Do not distract warnings system by using assumeThat to skip tests */
-            return;
-        }
-        assertThat(tagTwoAction.getDisplayName(), is("Multiple Tags"));
     }
 
     @Test
