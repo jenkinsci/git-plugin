@@ -131,8 +131,7 @@ public class Build implements Serializable, Cloneable {
     }
 
     public boolean isFor(String sha1) {
-        if (revision!=null      && revision.getSha1String().startsWith(sha1))  return true;
-        return false;
+        return revision != null && revision.getSha1String().startsWith(sha1);
     }
 
     public Object readResolve() throws IOException {
