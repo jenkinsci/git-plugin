@@ -56,7 +56,6 @@ public class BuildTest {
     @Test
     public void testToString() {
         assertThat(build.toString(), is("Build #" + BUILD_NUMBER + " of Revision " + revision.getSha1String() + " ()"));
-
     }
 
     @Test
