@@ -35,7 +35,6 @@
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <linkXRef>false</linkXRef>
-    <slf4jVersion>1.7.26</slf4jVersion>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.failOnError>true</spotbugs.failOnError>
     <spotbugs.threshold>Medium</spotbugs.threshold>
