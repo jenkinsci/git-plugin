@@ -19,9 +19,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
@@ -86,6 +91,20 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws URISyntaxException on URI syntax error
      */
     public abstract URL getFileLink(GitChangeSet.Path path) throws IOException, URISyntaxException;
+
+    /**
+     * Determines the link to the given change set ID (SHA).
+     *
+     * @return the URL to the change set or {@code null} if this repository browser doesn't have any meaningful URL for
+     *         a change set
+     */
+    @CheckForNull
+    public URL getChangeSetLink(String commitId) throws IOException {
+        if (!StringUtils.isBlank(commitId)) {
+            return getChangeSetLink(new CommitChangeSet(commitId));
+        }
+        return null;
+    }
 
     /**
      * Determines whether a URL should be normalized
@@ -166,6 +185,24 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
             return false;
         }
         return true;
+    }
+
+    /**
+     * Used to obtain a repository link to a Git commit ID (SHA hash).
+     */
+    private static class CommitChangeSet extends GitChangeSet {
+        private final String id;
+
+        CommitChangeSet(final String id) {
+            super(Collections.emptyList(), false);
+
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return id;
+        }
     }
 
     private static final long serialVersionUID = 1L;
