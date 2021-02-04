@@ -31,6 +31,26 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
+== Pipelines
+
+The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
+The "Pipeline Syntax" helper guides the user to select checkout options.
+The 90 second video clip linked below introduces the Pipeline Syntax helper and shows how it is used to generate statements for the Jenkins Pipeline.
+
+image:images/pipeline-syntax.png[link=https://youtu.be/ai1kf4ihZUo]
+
+////
+
+=== Organization Folders and Multibranch Pipelines
+
+The git plugin also includes a multibranch provider for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/[Multibranch Pipelines] and for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/#organization-folders[Organization Folders].
+
+The 5 minute video clip below introduces Multibranch Pipelines and Organization Folders.
+
+image:https://img.youtube.com/vi/ai1kf4ihZUo/maxresdefault.jpg[link=https://youtu.be/ai1kf4ihZUo]
+
+////
+
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
 
