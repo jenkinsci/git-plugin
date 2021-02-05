@@ -35,7 +35,7 @@ Prior release notes are recorded in the git plugin repository link:CHANGELOG.ado
 
 The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
 The "Pipeline Syntax" helper guides the user to select checkout options.
-The 90 second video clip linked below introduces the Pipeline Syntax helper and shows how it is used to generate statements for the Jenkins Pipeline.
+The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] linked below introduces the Pipeline Syntax helper and shows how it is used to generate statements for the Jenkins Pipeline.
 
 image:images/pipeline-syntax.png[link=https://youtu.be/ai1kf4ihZUo]
 
