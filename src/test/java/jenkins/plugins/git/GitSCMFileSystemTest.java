@@ -26,6 +26,8 @@
 package jenkins.plugins.git;
 
 import hudson.EnvVars;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -33,8 +35,10 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.GitException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import jenkins.scm.api.SCMFile;
@@ -52,6 +56,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -65,6 +70,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
@@ -182,6 +188,140 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
+    }
+
+    @Issue("JENKINS-60630")
+    @Test
+    public void envVarBranchFromLastBuild() throws Exception {
+        EnvVars env = new EnvVars();
+        env.put("BRANCH_SOURCE", "bug/envBranch");
+
+        FreeStyleProject project = r.createFreeStyleProject();
+        FreeStyleProject projectSpy = Mockito.spy(project);
+        FreeStyleBuild buildSpy = Mockito.spy(new FreeStyleBuild(project));
+        Mockito.when(buildSpy.isBuilding()).thenReturn(true);
+        Mockito.when(buildSpy.getEnvironment(any())).thenReturn(env);
+        Mockito.when(projectSpy.getLastBuild()).thenReturn(buildSpy);
+        
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "bug/envBranch");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/${BRANCH_SOURCE}")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
+    }
+
+    @Issue("JENKINS-60630")
+    @Test
+    public void firstEnvVarBranchEmpty() throws Exception {
+        EnvVars env = new EnvVars();
+        env.put("BRANCH_TARGET", "bug/envBranch");
+
+        FreeStyleProject project = r.createFreeStyleProject();
+        FreeStyleProject projectSpy = Mockito.spy(project);
+        FreeStyleBuild buildSpy = Mockito.spy(new FreeStyleBuild(project));
+        Mockito.when(buildSpy.isBuilding()).thenReturn(true);
+        Mockito.when(buildSpy.getEnvironment(any())).thenReturn(env);
+        Mockito.when(projectSpy.getLastBuild()).thenReturn(buildSpy);
+
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "bug/envBranch");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
+        branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
+    }
+
+    @Issue("JENKINS-60630")
+    @Test
+    public void firstEnvVarBranchValid() throws Exception {
+        EnvVars env = new EnvVars();
+        env.put("BRANCH_SOURCE", "bug/envBranch");
+
+        FreeStyleProject project = r.createFreeStyleProject();
+        FreeStyleProject projectSpy = Mockito.spy(project);
+        FreeStyleBuild buildSpy = Mockito.spy(new FreeStyleBuild(project));
+        Mockito.when(buildSpy.isBuilding()).thenReturn(true);
+        Mockito.when(buildSpy.getEnvironment(any())).thenReturn(env);
+        Mockito.when(projectSpy.getLastBuild()).thenReturn(buildSpy);
+
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "bug/envBranch");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
+        branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
+    }
+
+    @Issue("JENKINS-60630")
+    @Test
+    public void firstEnvVarBranchNotFoundSecondBranchValid() throws Exception {
+        EnvVars env = new EnvVars();
+        env.put("BRANCH_SOURCE", "bug/deletedBranch");
+        env.put("BRANCH_TARGET", "bug/envBranch");
+
+        FreeStyleProject project = r.createFreeStyleProject();
+        FreeStyleProject projectSpy = Mockito.spy(project);
+        FreeStyleBuild buildSpy = Mockito.spy(new FreeStyleBuild(project));
+        Mockito.when(buildSpy.isBuilding()).thenReturn(true);
+        Mockito.when(buildSpy.getEnvironment(any())).thenReturn(env);
+        Mockito.when(projectSpy.getLastBuild()).thenReturn(buildSpy);
+
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "bug/envBranch");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        List<BranchSpec> branches = new ArrayList<BranchSpec>();
+        branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
+        branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());

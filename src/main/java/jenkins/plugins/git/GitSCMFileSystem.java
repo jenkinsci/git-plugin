@@ -35,6 +35,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
@@ -252,19 +254,29 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            return source instanceof GitSCM
-                    && ((GitSCM) source).getUserRemoteConfigs().size() == 1
-                    && ((GitSCM) source).getBranches().size() == 1
-                    && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
-                    && (
-                        ((GitSCM) source).getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+            if (source instanceof GitSCM && ((GitSCM) source).getBranches().size() > 0) {
+                for (BranchSpec branchSpec : ((GitSCM) source).getBranches()) {
+                    String branch = branchSpec.getName();
+
+                    // we only support where the branch spec is obvious and not a wildcard
+                    if (!(
+                        !branch.equals("*") // JENKINS-57587
+                        && (
+                            branch.matches(
+                                "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                            )
+                            || branch.matches(
+                                "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                            )
                         )
-                        || ((GitSCM) source).getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
-                        )
-                    );
-            // we only support where the branch spec is obvious and not a wildcard
+                    )) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
         }
 
         @Override
@@ -293,7 +305,6 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
-            BranchSpec branchSpec = gitSCM.getBranches().get(0);
             String remote = config.getUrl();
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             if (remote == null) {
@@ -343,26 +354,53 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                String prefix = Constants.R_HEADS; 
-                if(branchSpec.getName().startsWith(Constants.R_TAGS)){
-                    prefix = Constants.R_TAGS; 
-                }
-                String headName;
+                // Initialize to master before overriding
+                // It will always be overridden since at least once branch must be provided
+                String headName = "master";
+                String prefix = Constants.R_HEADS;
                 if (rev != null) {
                     headName = rev.getHead().getName();
+                    client.fetch_().prune(true).from(remoteURI, Arrays.asList(new RefSpec(
+                        "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headName))).execute();
                 } else {
-                    if (branchSpec.getName().startsWith(prefix)){
-                        headName = branchSpec.getName().substring(prefix.length()); 
-                    } else if (branchSpec.getName().startsWith("*/")) {
-                        headName = branchSpec.getName().substring(2);
-                    } else {
-                        headName = branchSpec.getName();
+                    EnvVars env = new EnvVars();
+                    if (owner instanceof Job
+                        && ((Job<?,?>) owner).getLastBuild() != null
+                        && ((Job<?,?>) owner).getLastBuild().isBuilding()
+                    ) {
+                        Run<?,?> run = ((Job<?,?>) owner).getLastBuild();
+                        env = run.getEnvironment(listener);
+                    }
+
+                    for (BranchSpec branchSpec : gitSCM.getBranches()) {
+                        if (branchSpec.getName().startsWith(Constants.R_HEADS)){
+                            prefix = Constants.R_HEADS;
+                            headName = branchSpec.getName().substring(prefix.length()); 
+                        } else if (branchSpec.getName().startsWith(Constants.R_TAGS)){
+                            prefix = Constants.R_TAGS;
+                            headName = branchSpec.getName().substring(prefix.length());
+                        } else if (branchSpec.getName().startsWith("*/")) {
+                            headName = branchSpec.getName().substring(2);
+                        } else {
+                            headName = branchSpec.getName();
+                        }
+                        headName = env.expand(headName);
+                        headName = headName.replaceAll("\\$\\{[^\\}]+\\}", "");
+
+                        // If the EnvVar expaned branch name is not empty, then break
+                        if (!headName.equals("")) {
+                            try {
+                                client.fetch_().prune(true).from(remoteURI, Arrays.asList(new RefSpec(
+                                    "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                            + headName))).execute();
+                                break;
+                            } catch(Exception exc) {
+                                continue;
+                            }
+                        }
                     }
                 }
-                client.fetch_().prune(true).from(remoteURI, Arrays
-                        .asList(new RefSpec(
-                                "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headName))).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" +headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
