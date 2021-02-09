@@ -254,7 +254,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            if (source instanceof GitSCM && ((GitSCM) source).getBranches().size() > 0) {
+            if (source instanceof GitSCM) {
                 for (BranchSpec branchSpec : ((GitSCM) source).getBranches()) {
                     String branch = branchSpec.getName();
 

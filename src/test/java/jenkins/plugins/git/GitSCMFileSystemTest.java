@@ -335,6 +335,26 @@ public class GitSCMFileSystemTest {
         assertThat(file.contentAsString(), is("modified"));
     }
 
+    @Test
+    public void branchSpecRefHeads() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/heads/dev")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        assertThat(fs, notNullValue());
+        SCMFile root = fs.getRoot();
+        assertThat(root, notNullValue());
+        assertTrue(root.isRoot());
+        Iterable<SCMFile> children = root.children();
+        Iterator<SCMFile> iterator = children.iterator();
+        assertThat(iterator.hasNext(), is(true));
+        SCMFile file = iterator.next();
+        assertThat(iterator.hasNext(), is(false));
+        assertThat(file.getName(), is("file"));
+        assertThat(file.contentAsString(), is("modified"));
+    }
+
     @Issue("JENKINS-57587")
     @Test
     public void wildcardBranchNameCausesNPE() throws Exception {
