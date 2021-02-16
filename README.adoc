@@ -33,17 +33,13 @@ The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] linked below introdu
 
 image:images/pipeline-syntax.png[link=https://youtu.be/ai1kf4ihZUo]
 
-////
-
-=== Organization Folders and Multibranch Pipelines
+=== Multibranch Pipelines
 
 The git plugin also includes a multibranch provider for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/[Multibranch Pipelines] and for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/#organization-folders[Organization Folders].
 
-The 5 minute video clip below introduces Multibranch Pipelines and Organization Folders.
+The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Multibranch Pipelines.
 
-image:https://img.youtube.com/vi/ai1kf4ihZUo/maxresdefault.jpg[link=https://youtu.be/ai1kf4ihZUo]
-
-////
+image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
