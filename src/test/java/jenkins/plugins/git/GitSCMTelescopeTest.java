@@ -145,7 +145,6 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         BranchSpec masterBranchSpec = new BranchSpec("master");
         List<BranchSpec> branchSpecList = new ArrayList<>();
         branchSpecList.add(masterBranchSpec);
-        boolean doGenerateSubmoduleConfigurations = false;
         GitRepositoryBrowser browser = new GitWeb(repoUrl);
         String gitTool = "Default";
         List<GitSCMExtension> extensions = null;
