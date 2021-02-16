@@ -39,6 +39,10 @@ The git plugin also includes a multibranch provider for Jenkins link:https://www
 
 The 30 minute video clip below introduces Multibranch Pipelines.
 
+image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
+
+Alternate
+
 image:https://img.youtube.com/vi/B_2FXWI6CWg/maxresdefault.jpg[link=https://youtu.be/B_2FXWI6CWg]
 
 [#configuration]
