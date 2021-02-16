@@ -522,7 +522,6 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         return new GitSCM(
                 asRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head().getName())),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 browser(), gitTool(),
                 extensions);
     }

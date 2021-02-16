@@ -406,7 +406,6 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);
@@ -460,7 +459,6 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
                 Collections.singletonList(new BranchSpec(branch)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);

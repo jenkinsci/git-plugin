@@ -71,7 +71,6 @@ public abstract class GitSCMExtensionTest {
 		GitSCM scm = new GitSCM(
 				repo.remoteConfigs(),
 				branches,
-				false, Collections.<SubmoduleConfig>emptyList(),
 				null, null,
 				Collections.<GitSCMExtension>emptyList());
 		scm.getExtensions().add(extension);

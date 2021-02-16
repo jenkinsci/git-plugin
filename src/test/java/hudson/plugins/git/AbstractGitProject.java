@@ -72,8 +72,8 @@ public class AbstractGitProject extends AbstractGitRepository {
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        GitSCM scm = new GitSCM(remoteConfigs(), branches, false,
-                Collections.<SubmoduleConfig>emptyList(), null, null,
+        GitSCM scm = new GitSCM(remoteConfigs(), branches,
+                null, null,
                 Collections.<GitSCMExtension>singletonList(new DisableRemotePoll()));
         project.setScm(scm);
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
@@ -145,7 +145,6 @@ public class AbstractGitProject extends AbstractGitRepository {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 branches,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
@@ -183,7 +182,6 @@ public class AbstractGitProject extends AbstractGitRepository {
         GitSCM scm = new GitSCM(
                 repos,
                 branchSpecs,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
         if (disableRemotePoll) {
