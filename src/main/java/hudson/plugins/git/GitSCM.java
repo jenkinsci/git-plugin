@@ -2037,7 +2037,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             revShow.add("commit "); // sentinel value
 
-            int start=0, idx=0;
+            int idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
                     boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
@@ -2046,18 +2046,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
-                        if (excludeThisCommit!=null)
-                            break;
+                        if(excludeThisCommit!=null)
+                            return excludeThisCommit;
                     }
-                    if (excludeThisCommit==null || !excludeThisCommit)
-                        return false;    // this sequence of commits have one commit that we want to build
-                    start = idx;
                 }
-
                 idx++;
             }
-
-            assert start==revShow.size()-1;
 
             // every commit got excluded
             return true;
