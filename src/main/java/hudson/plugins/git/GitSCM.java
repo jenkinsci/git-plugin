@@ -2037,7 +2037,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             revShow.add("commit "); // sentinel value
 
-            int idx=0;
+            int start=0 ,idx=0;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
                     boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
@@ -2049,6 +2049,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         if(excludeThisCommit!=null)
                             return excludeThisCommit;
                     }
+                    start = idx;
                 }
                 idx++;
             }
