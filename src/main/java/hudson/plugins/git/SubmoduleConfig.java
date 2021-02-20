@@ -1,15 +1,11 @@
 package hudson.plugins.git;
 
-import com.google.common.base.Joiner;
-import org.apache.commons.collections.CollectionUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.util.Arrays;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.regex.Pattern;
 
 /**
  * Deprecated data class used in a submodule configuration experiment.

@@ -3,7 +3,6 @@ package hudson.plugins.git.browser;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import org.jenkinsci.plugins.gitclient.JGitTool;

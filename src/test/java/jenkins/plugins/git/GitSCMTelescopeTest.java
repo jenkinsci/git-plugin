@@ -31,7 +31,6 @@ import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GitWeb;
