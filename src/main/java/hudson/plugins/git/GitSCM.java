@@ -2047,7 +2047,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
-                        if(excludeThisCommit!=null && excludeThisCommit)
+                        if(excludeThisCommit!=null || excludeThisCommit)
                             excludeThisRev=true;
                             break;
                     }
