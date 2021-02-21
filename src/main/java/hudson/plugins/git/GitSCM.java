@@ -2033,12 +2033,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             } else {
                 revShow  = git.showRevision(r.getSha1());
-            }
+           }
 
             revShow.add("commit "); // sentinel value
 
-            int start=0 ,idx=0;
-            Boolean excludeThisRev=false;
+            int start=0, idx=0;
+            boolean excludeThisRev=false;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
                     boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
@@ -2047,14 +2047,19 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
-                        if(excludeThisCommit!=null || excludeThisCommit)
-                            excludeThisRev=true;
+                        if (excludeThisCommit==null)
+                            continue;
+                        if (excludeThisCommit)
+                            excludeThisRev = true;
                             break;
                     }
                     start = idx;
                 }
+
                 idx++;
             }
+
+            assert start==revShow.size()-1;
 
             // every commit got excluded
             return excludeThisRev;
