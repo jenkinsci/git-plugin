@@ -2033,7 +2033,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 }
             } else {
                 revShow  = git.showRevision(r.getSha1());
-           }
+            }
 
             revShow.add("commit "); // sentinel value
 
@@ -2049,8 +2049,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
                         if (excludeThisCommit==null)
                             continue;
-                        if (excludeThisCommit)
-                            excludeThisRev = true;
+                        else
+                            excludeThisRev = excludeThisCommit;
                             break;
                     }
                     start = idx;
