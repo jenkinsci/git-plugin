@@ -2038,6 +2038,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             revShow.add("commit "); // sentinel value
 
             int start=0 ,idx=0;
+            Boolean excludeThisRev=false;
             for (String line : revShow) {
                 if (line.startsWith("commit ") && idx!=0) {
                     boolean showEntireCommitSummary = GitChangeSet.isShowEntireCommitSummaryInChanges() || !(git instanceof CliGitAPIImpl);
@@ -2046,8 +2047,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     Boolean excludeThisCommit=null;
                     for (GitSCMExtension ext : extensions) {
                         excludeThisCommit = ext.isRevExcluded(this, git, change, listener, buildData);
-                        if(excludeThisCommit!=null)
-                            return excludeThisCommit;
+                        if(excludeThisCommit!=null && excludeThisCommit)
+                            excludeThisRev=true;
+                            break;
                     }
                     start = idx;
                 }
@@ -2055,7 +2057,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             }
 
             // every commit got excluded
-            return true;
+            return excludeThisRev;
         } catch (GitException e) {
             e.printStackTrace(listener.error("Failed to determine if we want to exclude " + r.getSha1String()));
             return false;   // for historical reason this is not considered a fatal error.
