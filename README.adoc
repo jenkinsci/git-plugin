@@ -112,6 +112,12 @@ https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
 
+When the remote repository is accessed with the **HTTP or HTTPS protocols**, the plugin requires a **username / password credential**.
+Other credential types will not work with HTTP or HTTPS protocols.
+
+When the remote repository is accessed with the **ssh protocol**, the plugin requires an **ssh private key credential**.
+Other credential types will not work with the ssh protocol.
+
 [#push-notification-from-repository]
 === [[GitPlugin-Pushnotificationfromrepository]]Push Notification From Repository
 
@@ -720,10 +726,10 @@ image:/images/git-checkout-to-specific-local-branch.png[Checkout to specific loc
 Branch name::
 
   If given, checkout the revision to build as HEAD on the named branch.
-  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin. 
+  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
   In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
   If a specific revision and not branch HEAD is checked out, then 'detached' will be used as the local branch name.
-  
+
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
 
@@ -1253,7 +1259,7 @@ allItems = []
 for (name in jobNames) {
   allItems += hudsonInstance.getItemByFullName(name)
 }
- 
+
 // Iterate over all jobs and find the ones that have a hudson.plugins.git.util.BuildData
 // as an action.
 //
