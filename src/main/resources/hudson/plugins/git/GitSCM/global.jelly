@@ -29,13 +29,5 @@
     <f:entry field="addGitTagAction">
       <f:checkbox title="${%Add git tag action to jobs}" name="addGitTagAction" checked="${descriptor.addGitTagAction}"/>
     </f:entry>
-    <!--
-    <f:entry title="${%Default git client implementation}" field="defaultClientType">
-        <select>
-            <f:option value="JGIT" selected="${descriptor.defaultClientType == 'JGIT'}">${%JGit}</f:option>
-            <f:option value="GITCLI" selected="${descriptor.defaultClientType == 'GITCLI'}">${%command line Git}</f:option>
-        </select>
-    </f:entry>
-    -->
   </f:section>
 </j:jelly>
