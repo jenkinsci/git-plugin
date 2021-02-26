@@ -148,6 +148,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final String GIT_CEILING_DIRECTORIES = "GIT_CEILING_DIRECTORIES";
 
     /**
      * All the configured extensions attached to this.
@@ -1324,6 +1325,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         environment.put(GIT_COMMIT, revToBuild.revision.getSha1String());
+        if (launcher.isUnix()) {
+            String homeValue = environment.get("HOME");
+            environment.put(GIT_CEILING_DIRECTORIES, homeValue + "/jobs");
+        } else {
+            String homeValue = environment.get("HOMEPATH");
+            environment.put(GIT_CEILING_DIRECTORIES, homeValue + "\\jobs");
+        }
         Branch localBranch = Iterables.getFirst(revToBuild.revision.getBranches(),null);
         String localBranchName = getParamLocalBranch(build, listener);
         if (localBranch != null && localBranch.getName() != null) { // null for a detached HEAD
