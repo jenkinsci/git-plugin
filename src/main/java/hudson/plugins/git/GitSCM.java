@@ -1977,7 +1977,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
             // We need to get the latest recorded build data. It may happens that the build has more than one
             // checkout of the same repo
-            List<BuildData> buildDataListReverted = reversedView(buildDataList); 
+            // Not used yet to let the test fail and then we see how it works 
+            // List<BuildData> buildDataListReverted = reversedView(buildDataList); 
+            List<BuildData> buildDataListReverted = buildDataList;
             for (BuildData bd : buildDataListReverted) {
                 if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
