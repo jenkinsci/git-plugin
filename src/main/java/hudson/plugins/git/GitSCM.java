@@ -79,6 +79,7 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1974,7 +1975,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData buildData = null;
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
-            for (BuildData bd : buildDataList) {
+            // We need to get the latest recorded build data. It may happens that the build has more than one
+            // checkout of the same repo
+            List<BuildData> buildDataListReverted = reversedView(buildDataList); 
+            for (BuildData bd : buildDataListReverted) {
                 if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
                     break;
@@ -1987,6 +1991,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         return buildData;
+    }
+
+    /**
+     * Gets a reversed view of an unmodifiable list without using increasing space or time. 
+     * @param list The list to revert.
+     * @param <T> The type of the elements of the list.
+     * @return The list <i>reverted</i>.
+     */
+    private <T> List<T> reversedView(final List<T> list) {
+        return new AbstractList<T>() {
+            @Override
+            public T get(int index) {
+                return list.get(list.size() - 1 - index);
+            }
+            
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
     }
 
     /**
