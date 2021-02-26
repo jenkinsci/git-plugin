@@ -218,7 +218,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("checkout", "-b", "bug/envBranch");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/${BRANCH_SOURCE}")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/${BRANCH_SOURCE}")), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -252,7 +252,7 @@ public class GitSCMFileSystemTest {
         List<BranchSpec> branches = new ArrayList<BranchSpec>();
         branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
         branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
-        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -286,7 +286,7 @@ public class GitSCMFileSystemTest {
         List<BranchSpec> branches = new ArrayList<BranchSpec>();
         branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
         branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
-        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -321,7 +321,7 @@ public class GitSCMFileSystemTest {
         List<BranchSpec> branches = new ArrayList<BranchSpec>();
         branches.add(new BranchSpec("*/${BRANCH_SOURCE}"));
         branches.add(new BranchSpec("*/${BRANCH_TARGET}"));
-        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(projectSpy, new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), branches, null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -341,7 +341,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/heads/dev")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/heads/dev")), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
