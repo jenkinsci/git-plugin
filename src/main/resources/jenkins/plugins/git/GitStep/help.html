@@ -3,7 +3,7 @@
     Git step. It performs a clone from the specified repository.
     </p>
     <p>
-    Use the <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the git step.
+    Use the <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the git step.
     More advanced checkout operations require the <code>checkout</code> step rather than the <code>git</code> step.
     Examples of the <code>git</code> step include:
     <ul>
@@ -30,7 +30,7 @@ checkout([$class: 'GitSCM', branches: [[name: '*/master']],
     <strong>NOTE:</strong> The <code>checkout</code> step is the <strong>preferred SCM checkout method</strong>.
     It provides significantly more functionality than the <code>git</code> step.
     </p>
-    <p>Use the <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the checkout step.
+    <p>Use the <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> to generate a sample pipeline script for the checkout step.
     </p>
     <p>
     The <code>checkout</code> step can be used in many cases where the <code>git</code> step cannot be used.
@@ -57,7 +57,7 @@ checkout([$class: 'GitSCM', branches: [[name: '*/master']],
     <strong><a id="git-step-with-defaults">Example: Git step with defaults</a></strong>
     <p>
     Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
-    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git 'https://github.com/jenkinsci/git-plugin'
 </pre>
@@ -78,7 +78,7 @@ git 'https://github.com/jenkinsci/git-plugin'
     <p>
     Remote branch names, SHA-1 hashes, and tag names <strong>are supported</strong> by the general purpose <code>checkout</code> step.
     </p>
-    <p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    <p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git branch: 'stable-2.204',
     url: 'https://github.com/jenkinsci/jenkins.git'
@@ -90,7 +90,7 @@ git branch: 'stable-2.204',
     Checkout from the git client plugin source repository using ssh protocol, private key credentials, and the master branch.
     The credential must be a private key credential if the remote git repository is accessed with the ssh protocol.
     The credential must be a username / password credential if the remote git repository is accessed with http or https protocol.
-    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git credentialsId: 'my-private-key-credential-id',
     url: 'git@github.com:jenkinsci/git-client-plugin.git'
@@ -103,7 +103,7 @@ git credentialsId: 'my-private-key-credential-id',
     If changelog is <code>false</code>, then the changelog will not be computed for this job.
     If changelog is <code>true</code> or is not set, then the changelog will be computed.
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#changelogs">workflow scm step documentation</a> for more changelog details.
-    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git changelog: false,
     url: 'https://github.com/jenkinsci/credentials-plugin.git'
@@ -116,7 +116,7 @@ git changelog: false,
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
     If poll is <code>true</code> or is not set, then the remote repository will be polled for changes.
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#polling">workflow scm step documentation</a> for more polling details.
-    </p><p>The <a href="https://jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">Pipeline Snippet Generator</a> generates this example:
+    </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Snippet Generator</a> generates this example:
 <pre>
 git poll: false,
     url: 'git://github.com/jenkinsci/platformlabeler-plugin.git'
