@@ -63,6 +63,9 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2347,6 +2350,44 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertEquals(browser.getRepoUrl(), "https://github.com/jenkinsci/model-ant-project.git/");
     }
 
+    /**
+     * Test a pipeline getting the value from several checkout steps gets the latest data everytime.
+     * @throws Exception If anything wrong happens
+     */
+    @Issue("JENKINS-53346")
+    @Test
+    public void testCheckoutReturnsLatestValues() throws Exception {
+        WorkflowJob p = rule.jenkins.createProject(WorkflowJob.class, "pipeline-checkout-3-tags");
+        p.setDefinition(new CpsFlowDefinition(
+            "node {\n" +
+            "    def checkout1 = checkout([$class: 'GitSCM', branches: [[name: 'git-1.1']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
+            "    echo \"checkout1: ${checkout1}\"\n" +
+            "    def checkout2 = checkout([$class: 'GitSCM', branches: [[name: 'git-2.0.2']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
+            "    echo \"checkout2: ${checkout2}\"\n" +
+            "    def checkout3 = checkout([$class: 'GitSCM', branches: [[name: 'git-3.0.0']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
+            "    echo \"checkout3: ${checkout3}\"\n" +
+            "}", true));
+        WorkflowRun b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        
+        String log = b.getLog();
+        // The getLineStratingBy is to ease reading the test failure, to avoid Hamcrest shows all the log
+        assertThat(getLineStartsWith(log, "checkout1:"), containsString("checkout1: [GIT_BRANCH:git-1.1, GIT_COMMIT:82db9509c068f60c41d7a4572c0114cc6d23cd0d, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(getLineStartsWith(log, "checkout2:"), containsString("checkout2: [GIT_BRANCH:git-2.0.2, GIT_COMMIT:377a0fdbfbf07f70a3e9a566d749b2a185909c33, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(getLineStartsWith(log, "checkout3:"), containsString("checkout3: [GIT_BRANCH:git-3.0.0, GIT_COMMIT:858dee578b79ac6683419faa57a281ccb9d347aa, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+    }
+
+    private String getLineStartsWith(String text, String startOfLine) {
+        try (Scanner scanner = new Scanner(text)) {
+            while(scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.startsWith(startOfLine)) {
+                    return line;
+                }
+            }
+        }
+        return "";
+    }
+    
     @Test
     public void testPleaseDontContinueAnyway() throws Exception {
         // create an empty repository with some commits
