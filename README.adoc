@@ -830,6 +830,8 @@ If this option is selected, the git commit's "Author" value is used instead.
 [#tagging-extensions]
 === Tagging Extensions
 
+Tagging extensions allow the plugin to apply tags in the current workspace.
+
 [#create-a-tag-for-every-build]
 ==== Create a tag for every build
 
