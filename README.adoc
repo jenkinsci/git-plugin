@@ -28,7 +28,7 @@ Prior release notes are recorded in the git plugin repository link:CHANGELOG.ado
 == Pipelines
 
 The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
-The link:https://www.jenkins.io/doc/book/pipeline/getting-started/#snippet-generator["Pipeline Syntax" snippet generator] guides the user to select checkout options.
+The link:https://www.jenkins.io/redirect/pipeline-snippet-generator["Pipeline Syntax" snippet generator] guides the user to select checkout options.
 
 The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax snippet generator and shows how it is used to generate steps for the Jenkins Pipeline.
 
@@ -829,6 +829,8 @@ If this option is selected, the git commit's "Author" value is used instead.
 
 [#tagging-extensions]
 === Tagging Extensions
+
+Tagging extensions allow the plugin to apply tags in the current workspace.
 
 [#create-a-tag-for-every-build]
 ==== Create a tag for every build
