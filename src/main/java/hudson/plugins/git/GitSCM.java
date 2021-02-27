@@ -1975,11 +1975,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData buildData = null;
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
-            // We need to get the latest recorded build data. It may happens that the build has more than one
-            // checkout of the same repo
-            // Not used yet to let the test fail and then we see how it works 
-            // List<BuildData> buildDataListReverted = reversedView(buildDataList); 
-            List<BuildData> buildDataListReverted = buildDataList;
+            // We need to get the latest recorded build data. It may happen
+            // that the build has more than one checkout of the same repo.
+            List<BuildData> buildDataListReverted = reversedView(buildDataList);
             for (BuildData bd : buildDataListReverted) {
                 if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
@@ -1996,7 +1994,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     /**
-     * Gets a reversed view of an unmodifiable list without using increasing space or time. 
+     * Gets a reversed view of an unmodifiable list without using increasing space or time.
      * @param list The list to revert.
      * @param <T> The type of the elements of the list.
      * @return The list <i>reverted</i>.
@@ -2007,7 +2005,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             public T get(int index) {
                 return list.get(list.size() - 1 - index);
             }
-            
+
             @Override
             public int size() {
                 return list.size();
