@@ -8,11 +8,12 @@
     <f:entry title="${%Global Config user.email Value}" field="globalConfigEmail">
       <f:textbox />
     </f:entry>
-    <f:optionalBlock title="${%Create new accounts based on author/committer's email}" field="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}" inline="true">
-      <f:entry field="useExistingAccountWithSameEmail">
-        <f:checkbox title="${%Use existing account with same email if found}" name="useExistingAccountWithSameEmail" checked="${descriptor.useExistingAccountWithSameEmail}" />
-      </f:entry>
-    </f:optionalBlock>
+    <f:entry field="createAccountBasedOnEmail">
+      <f:checkbox title="${%Create new accounts based on author/committer's email}" name="createAccountBasedOnEmail" checked="${descriptor.createAccountBasedOnEmail}"/>
+    </f:entry>
+    <f:entry field="useExistingAccountWithSameEmail">
+      <f:checkbox title="${%Use existing account with same email if found}" name="useExistingAccountWithSameEmail" checked="${descriptor.useExistingAccountWithSameEmail}"/>
+    </f:entry>
     <f:entry field="showEntireCommitSummaryInChanges">
       <f:checkbox title="${%Show the entire commit summary in changes}" name="showEntireCommitSummaryInChanges" checked="${descriptor.showEntireCommitSummaryInChanges}"/>
     </f:entry>
@@ -28,13 +29,5 @@
     <f:entry field="addGitTagAction">
       <f:checkbox title="${%Add git tag action to jobs}" name="addGitTagAction" checked="${descriptor.addGitTagAction}"/>
     </f:entry>
-    <!--
-    <f:entry title="${%Default git client implementation}" field="defaultClientType">
-        <select>
-            <f:option value="JGIT" selected="${descriptor.defaultClientType == 'JGIT'}">${%JGit}</f:option>
-            <f:option value="GITCLI" selected="${descriptor.defaultClientType == 'GITCLI'}">${%command line Git}</f:option>
-        </select>
-    </f:entry>
-    -->
   </f:section>
 </j:jelly>
