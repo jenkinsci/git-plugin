@@ -84,11 +84,6 @@
       <email>rsandell@cloudbees.com</email>
       <url>http://rsandell.com</url>
     </developer>
-    <developer>
-      <id>fcojfernandez</id>
-      <name>Francisco J. Fernández</name>
-      <email>fjfernandez@cloudbees.com</email>
-    </developer>
   </developers>
 
   <dependencies>
