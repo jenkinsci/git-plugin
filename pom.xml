@@ -84,6 +84,11 @@
       <email>rsandell@cloudbees.com</email>
       <url>http://rsandell.com</url>
     </developer>
+    <developer>
+      <id>mramonleon</id>
+      <name>M Ramon Leon</name>
+      <email>rleon@cloudbees.com</email>
+    </developer>
   </developers>
 
   <dependencies>
