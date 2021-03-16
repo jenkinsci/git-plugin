@@ -89,6 +89,13 @@
       <name>M Ramon Leon</name>
       <email>rleon@cloudbees.com</email>
     </developer>
+    <developer>
+      <id>olamy</id>
+      <name>Olivier Lamy</name>
+      <email>olamy@apache.org</email>
+      <timezone>Australia/Brisbane</timezone>
+      <url>https://about.me/olamy</url>
+    </developer>
   </developers>
 
   <dependencies>
