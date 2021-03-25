@@ -37,6 +37,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
+
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -425,6 +427,27 @@ public class GitSCMFileSystemTest {
     public void filesystem_supports_descriptor() throws Exception {
         SCMSourceDescriptor descriptor = r.jenkins.getDescriptorByType(GitSCMSource.DescriptorImpl.class);
         assertTrue(SCMFileSystem.supports(descriptor));
+    }
+
+    @Issue("JENKINS-64406")
+    @Test
+    public void expand_environment_variables_lightweight_checkout() throws Exception {
+        setEnvironmentVariables();
+        sampleRepo.init();
+        GitSCM scm = new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null),
+                Collections.singletonList(new BranchSpec("${repoBranchName}")), // Jenkins 64406
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        boolean fs = GitSCMFileSystem.supports(scm);
+        System.out.println("Success " + scm.getBranches().get(0).getName());
+        assertTrue("Branch variable not expanded" + scm.getBranches().get(0).getName(), fs);
+    }
+
+    private void setEnvironmentVariables() {
+        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+        EnvVars envVars = prop.getEnvVars();
+        envVars.put("repoBranchName", "Jenkinsfile");
+        r.jenkins.getGlobalNodeProperties().add(prop);
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

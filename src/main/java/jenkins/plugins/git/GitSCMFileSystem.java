@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
@@ -53,10 +54,13 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -252,19 +256,31 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            return source instanceof GitSCM
-                    && ((GitSCM) source).getUserRemoteConfigs().size() == 1
-                    && ((GitSCM) source).getBranches().size() == 1
-                    && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
-                    && (
-                        ((GitSCM) source).getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
-                        )
-                        || ((GitSCM) source).getBranches().get(0).getName().matches(
-                            "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
-                        )
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
+            if (source instanceof GitSCM) {
+                try {
+                    Node n = (Node) Jenkins.get();
+                    String branchName = ((GitSCM) source).getBranches().get(0).getName();
+                    EnvVars env = new EnvVars(EnvVars.masterEnvVars);
+                    env.putAllNonNull((Objects.requireNonNull(n.toComputer())).buildEnvironment(listener));
+                    ((GitSCM) source).getBranches().get(0).setName(env.expand(branchName)); // JENKINS-64406
+                    return ((GitSCM) source).getUserRemoteConfigs().size() == 1
+                            && ((GitSCM) source).getBranches().size() == 1
+                            && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
+                            && (
+                            ((GitSCM) source).getBranches().get(0).getName().matches(
+                                    "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                            )
+                                    || ((GitSCM) source).getBranches().get(0).getName().matches(
+                                    "^((\\Q" + Constants.R_TAGS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
+                            )
                     );
-            // we only support where the branch spec is obvious and not a wildcard
+                    // we only support where the branch spec is obvious and not a wildcard
+                } catch (IOException | InterruptedException | NullPointerException e) {
+                    e.printStackTrace(listener.error("Unable to build environment variables"));
+                }
+            }
+            return false;
         }
 
         @Override
