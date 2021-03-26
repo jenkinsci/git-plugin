@@ -257,16 +257,17 @@ public class GitSCMFileSystem extends SCMFileSystem {
         @Override
         public boolean supports(SCM source) {
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
-            if (source instanceof GitSCM) {
+            if (source instanceof GitSCM
+                    && ((GitSCM) source).getUserRemoteConfigs().size() == 1
+                    && ((GitSCM) source).getBranches().size() == 1
+            ) {
                 try {
                     Node n = (Node) Jenkins.get();
                     String branchName = ((GitSCM) source).getBranches().get(0).getName();
                     EnvVars env = new EnvVars(EnvVars.masterEnvVars);
                     env.putAllNonNull((Objects.requireNonNull(n.toComputer())).buildEnvironment(listener));
                     ((GitSCM) source).getBranches().get(0).setName(env.expand(branchName)); // JENKINS-64406
-                    return ((GitSCM) source).getUserRemoteConfigs().size() == 1
-                            && ((GitSCM) source).getBranches().size() == 1
-                            && !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
+                    return !((GitSCM) source).getBranches().get(0).getName().equals("*") // JENKINS-57587
                             && (
                             ((GitSCM) source).getBranches().get(0).getName().matches(
                                     "^((\\Q" + Constants.R_HEADS + "\\E.*)|([^/]+)|(\\*/[^/*]+(/[^/*]+)*))$"
