@@ -150,6 +150,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final String GIT_URL = "GIT_URL";
 
     /**
      * All the configured extensions attached to this.
@@ -1537,12 +1538,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             repoCount++;
         }
 
-        if (userRemoteConfigs.size()==1){
-            env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
-        } else {
+        if (userRemoteConfigs.size()>0) {
+            env.put(GIT_URL, userRemoteConfigs.get(0).getUrl());
+        }
+        if (userRemoteConfigs.size()>1) {
             int count=1;
-            for(UserRemoteConfig config:userRemoteConfigs)   {
-                env.put("GIT_URL_"+count, config.getUrl());
+            for (UserRemoteConfig config:userRemoteConfigs) {
+                env.put(GIT_URL+"_"+count, config.getUrl());
                 count++;
             }
         }

@@ -98,6 +98,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import org.junit.After;
@@ -3107,6 +3108,90 @@ public class GitSCMTest extends AbstractGitTestCase {
        verify(buildData, times(1)).getLastBuiltRevision();
        verify(buildData, times(1)).hasBeenReferenced(anyString());
        verify(build, times(1)).getActions(BuildData.class);
+    }
+
+    @Test
+    public void testBuildEnvironmentVariablesSingleRemote() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+        List<Branch> branchList = new ArrayList<>();
+        Branch branch = new Branch("origin/master", sha1);
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        /* BuildData mock that will use the Revision */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<>();
+        buildDataList.add(buildData);
+
+        /* Run mock which returns the buildDataList */
+        Run<?, ?> build = Mockito.mock(Run.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+        FreeStyleProject project = setupSimpleProject("*/*");
+        GitSCM scm = (GitSCM) project.getScm();
+
+        Map<String, String> env = new HashMap<String, String>();
+        scm.buildEnvironment(build, env);
+
+        assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));
+        assertEquals("GIT_LOCAL_BRANCH is invalid", null, env.get("GIT_LOCAL_BRANCH"));
+        assertEquals("GIT_COMMIT is invalid", sha1.getName(), env.get("GIT_COMMIT"));
+        assertEquals("GIT_URL is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL"));
+        assertNull("GIT_URL_1 should not have been set", env.get("GIT_URL_1"));
+    }
+
+    @Test
+    public void testBuildEnvironmentVariablesMultipleRemotes() throws Exception {
+        ObjectId sha1 = ObjectId.fromString("2cec153f34767f7638378735dc2b907ed251a67d");
+
+        List<Branch> branchList = new ArrayList<>();
+        Branch branch = new Branch("origin/master", sha1);
+        branchList.add(branch);
+
+        Revision revision = new Revision(sha1, branchList);
+
+        /* BuildData mock that will use the Revision */
+        BuildData buildData = Mockito.mock(BuildData.class);
+        Mockito.when(buildData.getLastBuiltRevision()).thenReturn(revision);
+        Mockito.when(buildData.hasBeenReferenced(anyString())).thenReturn(true);
+
+        /* List of build data that will be returned by the mocked BuildData */
+        List<BuildData> buildDataList = new ArrayList<>();
+        buildDataList.add(buildData);
+
+        /* Run mock which returns the buildDataList */
+        Run<?, ?> build = Mockito.mock(Run.class);
+        Mockito.when(build.getActions(BuildData.class)).thenReturn(buildDataList);
+
+        FreeStyleProject project = setupSimpleProject("*/*");
+        /* Update project so we have two remote configs */
+        List<UserRemoteConfig> userRemoteConfigs = new ArrayList<>();
+        userRemoteConfigs.add(new UserRemoteConfig(testRepo.gitDir.getAbsolutePath(), "origin", "", null));
+        final String upstreamRepoUrl = "/upstream/url";
+        userRemoteConfigs.add(new UserRemoteConfig(upstreamRepoUrl, "upstream", "", null));
+        GitSCM scm = new GitSCM(
+                userRemoteConfigs,
+                Collections.singletonList(new BranchSpec(branch.getName())),
+                null, null,
+                Collections.<GitSCMExtension>emptyList());
+        project.setScm(scm);
+
+        Map<String, String> env = new HashMap<String, String>();
+        scm.buildEnvironment(build, env);
+
+        assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));
+        assertEquals("GIT_LOCAL_BRANCH is invalid", null, env.get("GIT_LOCAL_BRANCH"));
+        assertEquals("GIT_COMMIT is invalid", sha1.getName(), env.get("GIT_COMMIT"));
+        assertEquals("GIT_URL is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL"));
+        assertEquals("GIT_URL_1 is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL_1"));
+        assertEquals("GIT_URL_2 is invalid", upstreamRepoUrl, env.get("GIT_URL_2"));
+        assertNull("GIT_URL_3 should not have been set", env.get("GIT_URL_3"));
     }
 
     @Issue("JENKINS-38241")
