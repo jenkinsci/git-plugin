@@ -789,7 +789,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         GitClient git = createClient(listener, environment, project, node, workingDirectory);
 
-        if (git.hasGitRepo()) {
+        if (git.hasGitRepo(false)) {
             // Repo is there - do a fetch
             listener.getLogger().println("Fetching changes from the remote Git repositories");
 
@@ -1205,7 +1205,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
-        if (git.hasGitRepo()) {
+        if (git.hasGitRepo(false)) {
             // It's an update
             if (repos.size() == 1)
                 log.println("Fetching changes from the remote Git repository");

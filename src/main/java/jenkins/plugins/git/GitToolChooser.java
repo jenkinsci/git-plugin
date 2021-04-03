@@ -102,7 +102,7 @@ public class GitToolChooser {
             if (cacheDir != null) {
                 Git git = Git.with(TaskListener.NULL, new EnvVars(EnvVars.masterEnvVars)).in(cacheDir).using("git");
                 GitClient client = git.getClient();
-                if (client.hasGitRepo()) {
+                if (client.hasGitRepo(false)) {
                     long clientRepoSize = FileUtils.sizeOfDirectory(cacheDir) / 1024; // Conversion from Bytes to Kilo Bytes
                     if (clientRepoSize > sizeOfRepo) {
                         if (sizeOfRepo > 0) {
