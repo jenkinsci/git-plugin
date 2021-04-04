@@ -348,7 +348,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
-            if (!client.hasGitRepo()) {
+            if (!client.hasGitRepo(false)) {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
             }

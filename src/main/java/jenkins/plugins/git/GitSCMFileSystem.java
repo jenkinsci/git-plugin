@@ -329,7 +329,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     CredentialsProvider.track(owner, credential);
                 }
 
-                if (!client.hasGitRepo()) {
+                if (!client.hasGitRepo(false)) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
@@ -391,7 +391,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
                 GitClient client = git.getClient();
                 client.addDefaultCredentials(gitSCMSource.getCredentials());
-                if (!client.hasGitRepo()) {
+                if (!client.hasGitRepo(false)) {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
