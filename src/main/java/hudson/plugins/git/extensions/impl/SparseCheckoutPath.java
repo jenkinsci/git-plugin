@@ -21,7 +21,8 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
 
     private static final long serialVersionUID = -6177158367915899356L;
 
-    @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Default value is OK in deserialization")
+    @SuppressFBWarnings(value="SE_TRANSIENT_FIELD_NOT_RESTORED", justification="Default value is OK in deserialization")
+    public static final transient SparseCheckoutPathToPath SPARSE_CHECKOUT_PATH_TO_PATH = new SparseCheckoutPathToPath(null);
 
     private final String path;
 
@@ -59,10 +60,6 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
         return path;
     }
 
-    public Descriptor<SparseCheckoutPath> getDescriptor() {
-        return Jenkins.get().getDescriptor(getClass());
-    }
-
     public static class SparseCheckoutPathToPath implements Function<SparseCheckoutPath, String>, Serializable {
         @Nullable
         private EnvVars envVars;
@@ -89,11 +86,14 @@ public class SparseCheckoutPath extends AbstractDescribableImpl<SparseCheckoutPa
         }
     }
 
+    public Descriptor<SparseCheckoutPath> getDescriptor()
+    {
+        return Jenkins.get().getDescriptor(getClass());
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<SparseCheckoutPath> {
         @Override
-        public String getDisplayName() {
-            return "Path";
-        }
+        public String getDisplayName() { return "Path"; }
     }
 }

@@ -37,7 +37,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
 
     @Override
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
-        if (!sparseCheckoutPaths.isEmpty()) {
+        if (! sparseCheckoutPaths.isEmpty()) {
             listener.getLogger().println("Using no checkout clone with sparse checkout.");
         }
     }
@@ -49,7 +49,15 @@ public class SparseCheckoutPaths extends GitSCMExtension {
 
     @Override
     public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
-        cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, new SparseCheckoutPathToPath(null)));
+        cmd.sparseCheckoutPaths(Lists.transform(sparseCheckoutPaths, SparseCheckoutPath.SPARSE_CHECKOUT_PATH_TO_PATH));
+    }
+
+    @Extension
+    public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Sparse Checkout paths";
+        }
     }
 
     /**
@@ -85,13 +93,5 @@ public class SparseCheckoutPaths extends GitSCMExtension {
         return "SparseCheckoutPaths{" +
                 "sparseCheckoutPaths=" + sparseCheckoutPaths +
                 '}';
-    }
-
-    @Extension
-    public static class DescriptorImpl extends GitSCMExtensionDescriptor {
-        @Override
-        public String getDisplayName() {
-            return "Sparse Checkout paths";
-        }
     }
 }
