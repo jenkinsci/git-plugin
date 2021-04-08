@@ -32,7 +32,6 @@ public class TFS2013GitRepositoryBrowserTest {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
         

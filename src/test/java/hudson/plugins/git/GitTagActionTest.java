@@ -121,7 +121,6 @@ public class GitTagActionTest {
         GitSCM scm = new GitSCM(
                 remotes,
                 Collections.singletonList(new BranchSpec("origin/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null,
                 chooseGitImplementation(), // Both git implementations should work, choose randomly
                 Collections.<GitSCMExtension>emptyList());

@@ -1174,7 +1174,7 @@ behavior.
 * Support for Gerrit plugin.
 * Support for different build choosers.
 
-== Version 0.7.3
+== Version 0.7.3 (May 26, 2009)
 
 * Fixed https://issues.jenkins-ci.org/browse/JENKINS-2931[JENKINS-2931], git tag freezing job execution (jbq)
 * Improve log messages (jbq)
@@ -1182,7 +1182,7 @@ behavior.
 (jbq)
 * Fixed https://issues.jenkins-ci.org/browse/JENKINS-2762[JENKINS-2762], fail to clone a repository on Windows (jbq)
 
-== Version 0.5
+== Version 0.5 (Dec 10, 2008)
 
 * Fix git plugin which was very broken when running on a remote server
 (magnayn)
@@ -1207,11 +1207,11 @@ tag reference (jbq)
 * Avoid infinite loops when git doesn't contains tags (david_calavera)
 * Don't do a log of the entire branch if it's never been built (magnayn)
 
-== Version 0.3
+== Version 0.3 (May 12, 2008)
 
 * Add support for pre-build branch merges
 
-== Version 0.2
+== Version 0.2 (Apr 22, 2008)
 
 * Improve handling of git repositories (use local tags to identify up to
 date versions rather than the wc HEAD)
@@ -1220,7 +1220,7 @@ examined for changes and built
 * Includes a publisher which can be used to push build success/failure
 tags back up to the upstream repository
 
-== Version 0.1
+== Version 0.1 (Apr 11, 2008)
 
 * Initial Release
 * Allow extension to require workspace for polling (https://issues.jenkins-ci.org/browse/JENKINS-19001[JENKINS-19001])

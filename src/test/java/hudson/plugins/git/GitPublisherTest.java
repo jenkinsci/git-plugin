@@ -148,7 +148,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
@@ -198,7 +197,6 @@ public class GitPublisherTest extends AbstractGitProject {
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, tool.getName(), Collections.<GitSCMExtension>emptyList()));
         mp.getPublishersList().add(new GitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
@@ -242,7 +240,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
@@ -279,7 +276,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF)));
@@ -364,7 +360,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
@@ -453,7 +448,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF_ONLY)));
@@ -549,7 +543,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteRepositories,
                 Collections.singletonList(new BranchSpec("origin/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -589,7 +582,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -684,7 +676,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, new ArrayList<>());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
@@ -719,7 +710,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
@@ -803,7 +793,6 @@ public class GitPublisherTest extends AbstractGitProject {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, scmExtensions);
         project.setScm(scm);
 
