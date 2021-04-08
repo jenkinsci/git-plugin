@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+@Deprecated
 public class SubmoduleCombinatorTest {
 
     private SubmoduleCombinator combinator = null;
@@ -44,7 +45,8 @@ public class SubmoduleCombinatorTest {
         Map<IndexEntry, Revision> item = new HashMap<>();
         List<IndexEntry> entries = new ArrayList<>();
         assertTrue(entries.add(new IndexEntry("mode", "type", "object", "file")));
-        assertEquals(-1, combinator.difference(item, entries));
+        /* Deprecated - no differences even when differences exist */
+        assertEquals(0, combinator.difference(item, entries));
     }
 
     @Test
@@ -71,6 +73,7 @@ public class SubmoduleCombinatorTest {
         Revision revision = new Revision(sha2);
         IndexEntry indexEntry2 = new IndexEntry("mode-2", "type-2", sha2.getName(), fileName);
         assertNull("items[indexEntry2] had existing value", items.put(indexEntry2, revision));
-        assertEquals("entries and items[entries] wrong diff count", 1, combinator.difference(items, entries));
+        /* Deprecated - no differences even when differences exist */
+        assertEquals("entries and items[entries] wrong diff count", 0, combinator.difference(items, entries));
     }
 }

@@ -6,7 +6,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Messages;
-import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
@@ -164,22 +163,6 @@ public class SubmoduleOption extends GitSCMExtension {
             // Re-throw as an IOException in order to allow generic retry
             // logic to kick in properly.
             throw new IOException("Could not perform submodule update", e);
-        }
-
-        if (scm.isDoGenerateSubmoduleConfigurations()) {
-            /*
-                Kohsuke Note:
-
-                I could be wrong, but this feels like a totally wrong place to do this.
-                AFAICT, SubmoduleCombinator runs a lot of git-checkout and git-commit to
-                create new commits and branches. At the end of this, the working tree is
-                significantly altered, and HEAD no longer points to 'revToBuild'.
-
-                Custom BuildChooser is probably the right place to do this kind of stuff,
-                or maybe we can add a separate callback for GitSCMExtension.
-             */
-            SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
-            combinator.createSubmoduleCombinations();
         }
     }
 
