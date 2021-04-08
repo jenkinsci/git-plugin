@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git.extensions.impl;
 
+import hudson.EnvVars;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -40,9 +41,12 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SparseCheckoutPathsTest {
 
@@ -119,6 +123,24 @@ public class SparseCheckoutPathsTest {
         GitClient git = null;
         MyCheckoutCommand cmd = new MyCheckoutCommand();
         sparseCheckoutPaths.decorateCheckoutCommand(scm, build, git, listener, cmd);
+        assertThat(cmd.getSparsePathNames(), hasItems(SRC_DIR_NAME));
+    }
+
+    @Test
+    public void testDecorateCheckoutCommandExpandsEnvVariable() throws Exception {
+        GitSCM scm = null;
+        GitClient git = null;
+        Run<?, ?> build = mock(Run.class);
+        EnvVars envVars = new EnvVars();
+        envVars.put("SPARSE_CHECKOUT_DIRECTORY", SRC_DIR_NAME);
+        when(build.getEnvironment(listener)).thenReturn(envVars);
+
+        MyCheckoutCommand cmd = new MyCheckoutCommand();
+        List<SparseCheckoutPath> sparseCheckoutPathList = new ArrayList<>();
+        sparseCheckoutPathList.add(new SparseCheckoutPath("${SPARSE_CHECKOUT_DIRECTORY}"));
+        SparseCheckoutPaths sparseCheckoutPaths = new SparseCheckoutPaths(sparseCheckoutPathList);
+        sparseCheckoutPaths.decorateCheckoutCommand(scm, build, git, listener, cmd);
+
         assertThat(cmd.getSparsePathNames(), hasItems(SRC_DIR_NAME));
     }
 
