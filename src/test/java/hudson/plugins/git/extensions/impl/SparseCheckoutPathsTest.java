@@ -119,7 +119,8 @@ public class SparseCheckoutPathsTest {
     @Test
     public void testDecorateCheckoutCommand() throws Exception {
         GitSCM scm = null;
-        Run build = null;
+        Run<?, ?> build = mock(Run.class);
+        when(build.getEnvironment(listener)).thenReturn(new EnvVars());
         GitClient git = null;
         MyCheckoutCommand cmd = new MyCheckoutCommand();
         sparseCheckoutPaths.decorateCheckoutCommand(scm, build, git, listener, cmd);
