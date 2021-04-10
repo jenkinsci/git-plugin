@@ -83,9 +83,7 @@ public class PruneStaleTagPipelineTest {
                 + "  node {\n"
                 + "    checkout([$class: 'GitSCM',"
                 + "             branches: [[name: '*/master']],"
-                + "             doGenerateSubmoduleConfigurations: false,"
                 + "             extensions: [pruneTags(true)],"
-                + "             submoduleCfg: [],"
                 + "             userRemoteConfigs: [[url: '" + remoteURL + "']]"
                 + "    ])"
                 + "  }\n", true));

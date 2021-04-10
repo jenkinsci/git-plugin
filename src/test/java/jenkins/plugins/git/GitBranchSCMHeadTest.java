@@ -1,7 +1,6 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.model.Queue;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;

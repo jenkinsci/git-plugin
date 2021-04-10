@@ -35,7 +35,6 @@ import hudson.util.StreamTaskListener;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -188,7 +187,6 @@ public abstract class AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                 createRemoteRepositories(credential),
                 branches,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         if (credential != null) {
@@ -225,7 +223,6 @@ public abstract class AbstractGitTestCase {
         GitSCM scm = new GitSCM(
                     repos,
                     branchSpecs,
-                    false, Collections.<SubmoduleConfig>emptyList(),
                     null, JGitTool.MAGIC_EXENAME,
                     Collections.<GitSCMExtension>emptyList());
         if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
