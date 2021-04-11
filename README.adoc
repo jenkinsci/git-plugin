@@ -864,9 +864,9 @@ When this extension is enabled, the polling is performed from a cloned copy of t
 
 If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
-By default, the plugin polls by executing a polling process or thread on the Jenkins master.
+By default, the plugin polls by executing a polling process or thread on the Jenkins controller.
 If the Jenkins controller does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
-In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins master.
+In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins controller.
 
 [#polling-ignores-commits-from-certain-users]
 ==== Polling ignores commits from certain users
@@ -1163,7 +1163,7 @@ Tag message::
 
   If the option is selected to create a tag or update a tag, then this message will be associated with the tag that is created.
   The message will expand references to link:https://jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables[Jenkins environment variables].
-  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on master` if build 1 of the job runs on the master.
+  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on special-agent` if build 1 of the job runs on an agent named 'special-agent'.
 
 Create new tag::
 
