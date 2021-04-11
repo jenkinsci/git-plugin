@@ -444,7 +444,7 @@ service
 "@"
 * Add support for gogs self-hosted git service
 * Use environment from executing node rather than using environment
-from master
+from controller
 * Move pipeline GitStep from pipeline plugin to git plugin
 (https://issues.jenkins-ci.org/browse/JENKINS-35247[JENKINS-35247]); *note* that if you have the _Pipeline: SCM Step_ plugin
 installed, you must update it as well
@@ -461,7 +461,7 @@ service
 "@"
 * Add support for gogs self-hosted git service
 * Use environment from executing node rather than using environment
-from master
+from controller
 * Move pipeline GitStep from pipeline plugin to git plugin
 (https://issues.jenkins-ci.org/browse/JENKINS-35247[JENKINS-35247])
 
@@ -659,7 +659,7 @@ from earlier Jenkins versions
 Item/CONFIGURE has not been granted (SECURITY-158)
 *  Save current build in BuildData prior to rescheduling
 (https://issues.jenkins-ci.org/browse/JENKINS-21464[JENKINS-21464])
-*  Fix GitPublisher null pointer exception when previous slave is
+*  Fix GitPublisher null pointer exception when previous agent is
 missing
 *  Expand variables in branch spec for remote polling (https://issues.jenkins-ci.org/browse/JENKINS-20427[JENKINS-20427],
 https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
@@ -671,7 +671,7 @@ https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
 Item/CONFIGURE has not been granted (SECURITY-158)
 *  Save current build in BuildData prior to rescheduling
 (https://issues.jenkins-ci.org/browse/JENKINS-21464[JENKINS-21464])
-*  Fix GitPublisher null pointer exception when previous slave is
+*  Fix GitPublisher null pointer exception when previous agent is
 missing
 *  Expand variables in branch spec for remote polling (https://issues.jenkins-ci.org/browse/JENKINS-20427[JENKINS-20427],
 https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
@@ -828,7 +828,7 @@ GitLab URLs
 * Force UTF-8 encoding to read changelog file (https://issues.jenkins-ci.org/browse/JENKINS-6203[JENKINS-6203])
 * Retry build if SCM retry is configured
 (https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-14575[JENKINS-14575])
-* Allow merge results to push from slave nodes, not just from master
+* Allow merge results to push from agent nodes, not just from controller
 node (https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-16941[JENKINS-16941])
 
 == Version 1.3.0 (March 12, 2013)
@@ -918,7 +918,7 @@ when parsing changelog (needed for openID / SSO integration)
 https://issues.jenkins-ci.org/browse/JENKINS-14480[JENKINS-14480]
 * Add support for variable expansion on branch spec (not just job
 parameters) https://issues.jenkins-ci.org/browse/JENKINS-8563[JENKINS-8563]
-* Use master environment, not last build node, for fast remote polling
+* Use controller environment, not last build node, for fast remote polling
 https://issues.jenkins-ci.org/browse/JENKINS-14321[JENKINS-14321]
 * run reset --hard on clean to take care of any local artifact
 * normalize maven repository ID https://issues.jenkins-ci.org/browse/JENKINS-14443[JENKINS-14443]
@@ -1100,7 +1100,7 @@ the configuration build (https://issues.jenkins-ci.org/browse/JENKINS-5005[JENKI
 
 * Improved logging for failures with git fetch.
 * Made sure .gitmodules is closed properly. (https://issues.jenkins-ci.org/browse/JENKINS-7659[JENKINS-7659])
-* Fixed issue with polling failing if the master has 0 executors.
+* Fixed issue with polling failing if the controller has 0 executors.
 (https://issues.jenkins-ci.org/browse/JENKINS-7547[JENKINS-7547])
 * Modified Git publisher to run as late as possible in the post-build
 plugin order. (https://issues.jenkins-ci.org/browse/JENKINS-7877[JENKINS-7877])
@@ -1198,7 +1198,7 @@ element (jbq)
 * Fix handling of the "branch" configuration parameter (jbq)
 * Improve tag handling, use show-ref instead of rev-parse to resolve the
 tag reference (jbq)
-* Fix https://issues.jenkins-ci.org/browse/JENKINS-2675[JENKINS-2675], Git fails on remote slaves (jbq)
+* Fix https://issues.jenkins-ci.org/browse/JENKINS-2675[JENKINS-2675], Git fails on remote agents (jbq)
 
 == Version 0.4 (never released)
 
