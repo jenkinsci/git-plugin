@@ -312,6 +312,20 @@ URL::
   Root URL serving this Bitbucket repository.
   For example, `\https://bitbucket.example.com/username/my-project`
 
+[bitbucketserver-repository-browser]
+==== bitbucketserver
+
+image:/images/git-repository-browser-bitbucketserver.png[Bitbucket Server Repository Browser]
+
+Repository browser for git repositories hosted by an on-premises Bitbucket Server installation.
+Options include:
+
+[[bitbucketserver-url]]
+URL::
+
+  Root URL serving this Bitbucket repository.
+  For example, `\https://bitbucket-server:7990/username/my-project`
+
 [#cgit-repository-browser]
 ==== cgit
 
