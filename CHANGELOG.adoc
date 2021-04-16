@@ -827,9 +827,9 @@ GitLab URLs
 * Avoid spaces in tag name, rejected by JGit (https://issues.jenkins.io/browse/JENKINS-17195[JENKINS-17195])
 * Force UTF-8 encoding to read changelog file (https://issues.jenkins.io/browse/JENKINS-6203[JENKINS-6203])
 * Retry build if SCM retry is configured
-(https://issues.jenkins.io/browse/https://issues.jenkins.io/browse/JENKINS-14575[JENKINS-14575])
+(https://issues.jenkins.io/browse/JENKINS-14575[JENKINS-14575])
 * Allow merge results to push from agents, not just from the controller
-node (https://issues.jenkins.io/browse/https://issues.jenkins.io/browse/JENKINS-16941[JENKINS-16941])
+node (https://issues.jenkins.io/browse/JENKINS-16941[JENKINS-16941])
 
 == Version 1.3.0 (March 12, 2013)
 
