@@ -864,9 +864,9 @@ When this extension is enabled, the polling is performed from a cloned copy of t
 
 If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
-By default, the plugin polls by executing a polling process or thread on the Jenkins master.
+By default, the plugin polls by executing a polling process or thread on the Jenkins controller.
 If the Jenkins controller does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
-In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins master.
+In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins controller.
 
 [#polling-ignores-commits-from-certain-users]
 ==== Polling ignores commits from certain users
@@ -1103,8 +1103,8 @@ Some git plugin settings can only be controlled from command line properties set
 [#default-timeout]
 === Default Timeout
 
-The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286]).
-The property should be set on the controller and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins.io/browse/JENKINS-11286[JENKINS-11286]).
+The property should be set on the controller and on all agents to have effect (see https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
 Command line git is the reference git implementation in the git plugin and the git client plugin.
@@ -1163,7 +1163,7 @@ Tag message::
 
   If the option is selected to create a tag or update a tag, then this message will be associated with the tag that is created.
   The message will expand references to link:https://jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables[Jenkins environment variables].
-  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on master` if build 1 of the job runs on the master.
+  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on special-agent` if build 1 of the job runs on an agent named 'special-agent'.
 
 Create new tag::
 
@@ -1236,7 +1236,7 @@ If that reference repository is used in the submodule options link:#submodule-re
 == Bug Reports
 
 Report issues and enhancements in the
-https://issues.jenkins-ci.org[Jenkins issue tracker].
+https://issues.jenkins.io[Jenkins issue tracker].
 
 [#contributing-to-the-plugin]
 == Contributing to the Plugin
@@ -1248,7 +1248,7 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 This script is used to remove the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
-This is a workaround for link:https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022]
+This is a workaround for link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]
 
 [source,groovy]
 ----
