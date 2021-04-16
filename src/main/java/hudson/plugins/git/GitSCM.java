@@ -147,6 +147,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
+    public static final String GIT_COMMIT_TITLE = "GIT_COMMIT_TITLE";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -1356,7 +1357,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
-            printCommitMessageToLog(listener, git, revToBuild);
+
+            String shortMessage = getCommitMessage(listener, git, revToBuild);
+            listener.getLogger().println("Commit message: \"" + shortMessage + "\"");
+            environment.put(GIT_COMMIT_TITLE, shortMessage);
+
         } catch (IOException | ArithmeticException | GitException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
@@ -1387,15 +1392,30 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private void printCommitMessageToLog(TaskListener listener, GitClient git, final Build revToBuild)
-            throws IOException {
+    /**
+     *  Get the short message from the last commit
+     *
+     * @param listener
+     *      Used for writing to build console
+     * @param git
+     *      Used for invoking Git
+     * @param revToBuild
+     *      Points to the revision we'll be building. This includes all the branches we've merged.
+     *
+     * @return Short message for the commit
+     * @throws IOException
+     */
+    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild) throws IOException {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
-            listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
+            return commit.getShortMessage();
         } catch (InterruptedException | MissingObjectException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
+        return "";
     }
+
+    /**
 
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}.
