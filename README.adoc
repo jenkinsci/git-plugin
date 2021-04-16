@@ -1103,8 +1103,8 @@ Some git plugin settings can only be controlled from command line properties set
 [#default-timeout]
 === Default Timeout
 
-The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286]).
-The property should be set on the controller and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins.io/browse/JENKINS-11286[JENKINS-11286]).
+The property should be set on the controller and on all agents to have effect (see https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
 Command line git is the reference git implementation in the git plugin and the git client plugin.
@@ -1236,7 +1236,7 @@ If that reference repository is used in the submodule options link:#submodule-re
 == Bug Reports
 
 Report issues and enhancements in the
-https://issues.jenkins-ci.org[Jenkins issue tracker].
+https://issues.jenkins.io[Jenkins issue tracker].
 
 [#contributing-to-the-plugin]
 == Contributing to the Plugin
@@ -1248,7 +1248,7 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 This script is used to remove the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
-This is a workaround for link:https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022]
+This is a workaround for link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]
 
 [source,groovy]
 ----
