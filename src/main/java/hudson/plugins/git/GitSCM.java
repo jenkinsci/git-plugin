@@ -896,7 +896,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (chooser != null) {
                 listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
                 String updatedGitExe = chooser.getGitTool();
-                
+
                 if (!updatedGitExe.equals("NONE")) {
                     gitExe = updatedGitExe;
                 }
@@ -1357,11 +1357,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
-
             String shortMessage = getCommitMessage(listener, git, revToBuild);
             listener.getLogger().println("Commit message: \"" + shortMessage + "\"");
             environment.put(GIT_COMMIT_TITLE, shortMessage);
-
         } catch (IOException | ArithmeticException | GitException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
@@ -1392,20 +1390,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    /**
-     *  Get the short message from the last commit
-     *
-     * @param listener
-     *      Used for writing to build console
-     * @param git
-     *      Used for invoking Git
-     * @param revToBuild
-     *      Points to the revision we'll be building. This includes all the branches we've merged.
-     *
-     * @return Short message for the commit
-     * @throws IOException
-     */
-    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild) throws IOException {
+    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild)
+            throws IOException {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             return commit.getShortMessage();
@@ -1414,8 +1400,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         return "";
     }
-
-    /**
 
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}.

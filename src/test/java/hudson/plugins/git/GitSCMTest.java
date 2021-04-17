@@ -2517,8 +2517,6 @@ public class GitSCMTest extends AbstractGitTestCase {
        assertEquals("GIT_CHECKOUT_DIR", "checkoutDir", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
     }
 
-
-
     /*
      * Verifies that GIT_CHECKOUT_DIR is not set if RelativeTargetDirectory extension
      * is not configured.
@@ -3071,28 +3069,6 @@ public class GitSCMTest extends AbstractGitTestCase {
        verify(build, times(1)).getActions(BuildData.class);
     }
 
-
-    @Test
-    public void testCommitMessageIsEnvVar() throws Exception {
-        String title = "test commit";
-        sampleRepo.init();
-        sampleRepo.write("file", "v1");
-        sampleRepo.git("commit", "--all", "--message", title);
-        FreeStyleProject p = setupSimpleProject("master");
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        build(p, Result.SUCCESS, commitFile1);
-        Run<?,?> run = rule.buildAndAssertSuccess(p);
-        TaskListener mockListener = Mockito.mock(TaskListener.class);
-        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
-
-        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
-                new FilePath(run.getRootDir()).child("tmp-" + "master"),
-                mockListener, null, SCMRevisionState.NONE);
-
-        assertEquals("Commit message should be an env var", title, getEnvVars(p).get(GitSCM.GIT_COMMIT_TITLE));
-    }
-
     @Test
     @Deprecated // testing deprecated buildEnvVars
     public void testBuildEnvVarsLocalBranchNotSet() throws Exception {
@@ -3237,6 +3213,22 @@ public class GitSCMTest extends AbstractGitTestCase {
         verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
         List<String> values = logCaptor.getAllValues();
         assertThat(values, hasItem("Commit message: \"test commit\""));
+    }
+
+    @Test
+    public void testCommitMessageIsEnvVar() throws Exception {
+        String title = "test commit";
+        sampleRepo.init();
+        sampleRepo.write("file", "v1");
+        sampleRepo.git("commit", "--all", "--message", title);
+        FreeStyleProject p = setupSimpleProject("master");
+        Run<?,?> run = Mockito.mock(Run.class);
+        EnvVars envVars = new EnvVars();
+        Mockito.when(run.getEnvironment(listener)).thenReturn(envVars);
+
+        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
+                workspace, listener, null, SCMRevisionState.NONE);
+        assertEquals("Commit message should be an env var", title, envVars.get(GitSCM.GIT_COMMIT_TITLE));
     }
 
     /**
