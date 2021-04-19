@@ -49,7 +49,7 @@ public class GitUtils implements Serializable {
      * Resolves Git Tool by name.
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param builtOn Node for which the tool should be resolved
-     *                Can be {@link Jenkins#getInstance()} when running on master
+     *                Can be {@link Jenkins#getInstance()} when running on controller
      * @param env Additional environment variables
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
