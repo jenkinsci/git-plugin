@@ -3202,17 +3202,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         sampleRepo.git("commit", "--all", "--message=test commit");
         FreeStyleProject p = setupSimpleProject("master");
         Run<?,?> run = rule.buildAndAssertSuccess(p);
-        TaskListener mockListener = Mockito.mock(TaskListener.class);
-        Mockito.when(mockListener.getLogger()).thenReturn(Mockito.spy(StreamTaskListener.fromStdout().getLogger()));
-
-        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
-                new FilePath(run.getRootDir()).child("tmp-" + "master"),
-                mockListener, null, SCMRevisionState.NONE);
-
-        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockListener.getLogger(), atLeastOnce()).println(logCaptor.capture());
-        List<String> values = logCaptor.getAllValues();
-        assertThat(values, hasItem("Commit message: \"test commit\""));
+        rule.waitForMessage("Commit message: \"test commit\"", run);
     }
 
     @Test
