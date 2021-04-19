@@ -186,7 +186,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 // set by variable, can't validate
                 return FormValidation.ok();
 
-            // get git executable on master
+            // get git executable on controller
             EnvVars environment;
             Jenkins jenkins = Jenkins.get();
             if (item instanceof Job) {
