@@ -3212,13 +3212,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         sampleRepo.write("file", "v1");
         sampleRepo.git("commit", "--all", "--message", title);
         FreeStyleProject p = setupSimpleProject("master");
-        Run<?,?> run = Mockito.mock(Run.class);
-        EnvVars envVars = new EnvVars();
-        Mockito.when(run.getEnvironment(listener)).thenReturn(envVars);
-
-        p.getScm().checkout(run, new Launcher.LocalLauncher(listener),
-                workspace, listener, null, SCMRevisionState.NONE);
-        assertEquals("Commit message should be an env var", title, envVars.get(GitSCM.GIT_COMMIT_TITLE));
+        Run<?,?> run = rule.buildAndAssertSuccess(p);
+        assertEquals("Commit message should be an env var", title, getEnvVars(p).get(GitSCM.GIT_COMMIT_TITLE));
     }
 
     /**

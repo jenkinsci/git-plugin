@@ -140,6 +140,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean doGenerateSubmoduleConfigurations = false;
 
     @CheckForNull
+    private String commitMessage;
+    @CheckForNull
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
@@ -1357,9 +1359,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
-            String shortMessage = getCommitMessage(listener, git, revToBuild);
-            listener.getLogger().println("Commit message: \"" + shortMessage + "\"");
-            environment.put(GIT_COMMIT_TITLE, shortMessage);
+            commitMessage = getCommitMessage(listener, git, revToBuild);
+            listener.getLogger().println("Commit message: \"" + commitMessage + "\"");
+            if(commitMessage != null && !commitMessage.isEmpty()) {
+                environment.put(GIT_COMMIT_TITLE, commitMessage);
+            }
         } catch (IOException | ArithmeticException | GitException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
@@ -1528,6 +1532,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String sha1 = Util.fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
+            }
+
+            if (commitMessage != null && !commitMessage.isEmpty()) {
+                env.put(GIT_COMMIT_TITLE, commitMessage);
             }
         }
 
