@@ -2381,9 +2381,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         
         String log = b.getLog();
         // The getLineStratingBy is to ease reading the test failure, to avoid Hamcrest shows all the log
-        assertThat(getLineStartsWith(log, "checkout1:"), containsString("checkout1: [GIT_BRANCH:git-1.1, GIT_COMMIT:82db9509c068f60c41d7a4572c0114cc6d23cd0d, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
-        assertThat(getLineStartsWith(log, "checkout2:"), containsString("checkout2: [GIT_BRANCH:git-2.0.2, GIT_COMMIT:377a0fdbfbf07f70a3e9a566d749b2a185909c33, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
-        assertThat(getLineStartsWith(log, "checkout3:"), containsString("checkout3: [GIT_BRANCH:git-3.0.0, GIT_COMMIT:858dee578b79ac6683419faa57a281ccb9d347aa, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(getLineStartsWith(log, "checkout1:"), containsString("checkout1: [GIT_BRANCH:git-1.1, GIT_COMMIT:82db9509c068f60c41d7a4572c0114cc6d23cd0d, GIT_COMMIT_TITLE:[maven-release-plugin] prepare release git-1.1, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(getLineStartsWith(log, "checkout2:"), containsString("checkout2: [GIT_BRANCH:git-2.0.2, GIT_COMMIT:377a0fdbfbf07f70a3e9a566d749b2a185909c33, GIT_COMMIT_TITLE:[maven-release-plugin] prepare release git-2.0.2, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
+        assertThat(getLineStartsWith(log, "checkout3:"), containsString("checkout3: [GIT_BRANCH:git-3.0.0, GIT_COMMIT:858dee578b79ac6683419faa57a281ccb9d347aa, GIT_COMMIT_TITLE:[maven-release-plugin] prepare release git-3.0.0, GIT_URL:https://github.com/jenkinsci/git-plugin.git]"));
     }
 
     private String getLineStartsWith(String text, String startOfLine) {
