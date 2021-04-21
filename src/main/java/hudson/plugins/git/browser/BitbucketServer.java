@@ -69,7 +69,7 @@ public class BitbucketServer extends GitRepositoryBrowser {
         return encodeURL(new URL(url, url.getPath() + "browse/" + pathAsString));
     }
 
-    @Extension
+    @Extension @Symbol("bitbucketServer")
     public static class BitbucketServerDescriptor extends Descriptor<RepositoryBrowser<?>> {
         @NonNull
         public String getDisplayName() {
