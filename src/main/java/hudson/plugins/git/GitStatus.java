@@ -1,5 +1,6 @@
 package hudson.plugins.git;
 
+import com.google.common.annotations.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -14,6 +15,7 @@ import hudson.security.ACLContext;
 import hudson.triggers.SCMTrigger;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
@@ -64,7 +66,8 @@ public class GitStatus implements UnprotectedRootAction {
     private List<ParameterValue> lastBuildParameters = null;
     private static List<ParameterValue> lastStaticBuildParameters = null;
 
-    private static void clearLastStaticBuildParameters() {
+    @VisibleForTesting
+    static void clearLastStaticBuildParameters() {
         lastStaticBuildParameters = null;
     }
 
@@ -340,6 +343,8 @@ public class GitStatus implements UnprotectedRootAction {
                     if (scmTriggerItem == null) {
                         continue;
                     }
+                    Map<String, String> environment = getEnvironment(project);
+
                     SCMS: for (SCM scm : scmTriggerItem.getSCMs()) {
                         if (!(scm instanceof GitSCM)) {
                             continue;
@@ -352,7 +357,8 @@ public class GitStatus implements UnprotectedRootAction {
                                     branchMatches = false;
                             URIish matchedURL = null;
                             for (URIish remoteURL : repository.getURIs()) {
-                                if (looselyMatches(uri, remoteURL)) {
+                                URIish expandedURL = expandURIish(remoteURL, environment);
+                                if (looselyMatches(uri, expandedURL)) {
                                     repositoryMatches = true;
                                     matchedURL = remoteURL;
                                     break;
@@ -452,6 +458,36 @@ public class GitStatus implements UnprotectedRootAction {
 
                 lastStaticBuildParameters = allBuildParameters;
                 return result;
+            }
+        }
+
+        private Map<String, String> getEnvironment(Item project) {
+            Map<String, String> environment = new HashMap<>();
+            try {
+                if (project instanceof Job) {
+                    Job job = (Job) project;
+                    environment.putAll(job.getEnvironment(null, TaskListener.NULL));
+                    for (ParameterValue defaultParamValue : getDefaultParametersValues(job)) {
+                        String valueAsString = Objects.toString(defaultParamValue.getValue(), null);
+                        if (valueAsString != null)
+                            environment.putIfAbsent(defaultParamValue.getName(), valueAsString);
+                    }
+                }
+                return environment;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        private static URIish expandURIish(URIish remoteURL, Map<String, String> environment)  {
+            String expanded = Util.replaceMacro(remoteURL.toPrivateString(), environment);
+            try {
+                return new URIish(expanded);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
         }
 

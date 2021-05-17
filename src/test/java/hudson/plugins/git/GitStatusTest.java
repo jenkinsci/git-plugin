@@ -1,5 +1,13 @@
 package hudson.plugins.git;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import hudson.EnvVars;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -9,6 +17,7 @@ import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
+import hudson.model.TaskListener;
 import hudson.model.View;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
@@ -19,30 +28,31 @@ import hudson.util.RunList;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jgit.transport.URIish;
-import org.mockito.Mockito;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.*;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.WithoutJenkins;
-
-import javax.servlet.http.HttpServletRequest;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.mockito.Mockito;
 
 @RunWith(Theories.class)
 public class GitStatusTest extends AbstractGitProject {
@@ -131,6 +141,7 @@ public class GitStatusTest extends AbstractGitProject {
     @WithoutJenkins
     @Test
     public void testToString() {
+        GitStatus.clearLastStaticBuildParameters();
         assertEquals("URL: ", this.gitStatus.toString());
     }
 
@@ -401,7 +412,13 @@ public class GitStatusTest extends AbstractGitProject {
         return trigger;
     }
 
-    private void setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
+    private FreeStyleProject createProjectWithTrigger(String url, String branchString, boolean ignoreNotifyCommit) throws Exception {
+        SCMTrigger trigger = Mockito.mock(SCMTrigger.class);
+        Mockito.doReturn(ignoreNotifyCommit).when(trigger).isIgnorePostCommitHooks();
+        return setupProject(url, branchString, trigger);
+    }
+
+    private FreeStyleProject setupProject(String url, String branchString, SCMTrigger trigger) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
@@ -410,6 +427,7 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);
+        return project;
     }
 
     @WithoutJenkins
@@ -665,4 +683,21 @@ public class GitStatusTest extends AbstractGitProject {
 
         assertEquals("URL: a Branches: master", this.gitStatus.toString());
     }
+
+    @Test
+    @Issue("JENKINS-21886")
+    public void testDoNotifyCommitWithParametersInRepoUrl() throws Exception {
+        String repoUrlWithParams = "a${JOB_NAME}b${PARAM}c";
+        StringParameterDefinition stringParam = new StringParameterDefinition("PARAM", "test");
+        FreeStyleProject project = createProjectWithTrigger(repoUrlWithParams, "arbitrary", false);
+        project.addProperty(new ParametersDefinitionProperty(stringParam));
+        EnvVars environment = project.getEnvironment(null, TaskListener.NULL);
+        environment.put(stringParam.getName(), stringParam.getDefaultValue());
+        String expandedRepoUrl = environment.expand(repoUrlWithParams);
+
+        this.gitStatus.doNotifyCommit(requestWithNoParameter, expandedRepoUrl, null, null);
+
+        Mockito.verify(project.getTrigger(SCMTrigger.class)).run();
+    }
+
 }
