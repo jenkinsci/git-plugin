@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -44,6 +44,6 @@ public class ModernScmTest {
     @Issue("JENKINS-58964")
     public void gitIsModernScm() {
         SCMSourceRetriever.DescriptorImpl descriptor = ExtensionList.lookupSingleton(SCMSourceRetriever.DescriptorImpl.class);
-        assertThat(descriptor.getSCMDescriptors(), contains(instanceOf(GitSCMSource.DescriptorImpl.class)));
+        assertThat(descriptor.getSCMDescriptors(), hasItem(instanceOf(GitSCMSource.DescriptorImpl.class)));
     }
 }
