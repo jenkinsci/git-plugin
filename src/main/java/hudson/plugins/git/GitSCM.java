@@ -1626,20 +1626,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         @NonNull
-        // TODO: Add @Override when Jenkins core baseline is 2.222+
+        @Override
         public Permission getRequiredGlobalConfigPagePermission() {
-            return getJenkinsManageOrAdmin();
-        }
-
-        // TODO: remove when Jenkins core baseline is 2.222+
-        Permission getJenkinsManageOrAdmin() {
-            Permission manage;
-            try { // Manage is available starting from Jenkins 2.222 (https://jenkins.io/changelog/#v2.222). See JEP-223 for more info
-                manage = (Permission) ReflectionUtils.getPublicProperty(Jenkins.get(), "MANAGE");
-            } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
-                manage = Jenkins.ADMINISTER;
-            }
-            return manage;
+            return Jenkins.MANAGE;
         }
 
         public boolean isShowEntireCommitSummaryInChanges() {
