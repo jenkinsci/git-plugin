@@ -53,7 +53,7 @@ public class GitUtils implements Serializable {
      * @param env Additional environment variables
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool,
@@ -88,14 +88,14 @@ public class GitUtils implements Serializable {
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool, @NonNull TaskListener listener) {
         return resolveGitTool(gitTool, null, null, listener);
     }
 
-    public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
+    public static Node workspaceToNode(FilePath workspace) {
         Jenkins j = Jenkins.get();
         if (workspace != null && workspace.isRemote()) {
             for (Computer c : j.getComputers()) {
