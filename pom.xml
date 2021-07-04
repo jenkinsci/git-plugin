@@ -274,23 +274,12 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-      <dependency><!-- If caffeine is needed, use version 2.9.1.
-                       Resolves an upper bounds dependency message.
-                       Does not include caffeine in the hpi file. -->
-        <groupId>com.github.ben-manes.caffeine</groupId>
-        <artifactId>caffeine</artifactId>
-        <version>2.9.1</version>
-        <exclusions>
-          <!--  do not bring in the annotations -->
-          <exclusion>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>checker-qual</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-          </exclusion>
-        </exclusions>
+      <dependency>
+        <!-- Resolve Java 11 upper bounds error, remove when no longer needed -->
+        <groupId>jakarta.activation</groupId>
+        <artifactId>jakarta.activation-api</artifactId>
+        <version>1.2.2</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
