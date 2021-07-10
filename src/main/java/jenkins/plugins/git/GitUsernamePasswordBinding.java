@@ -135,7 +135,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
               //Hard Coded platform dependent newLine
             if (this.unixNodeType) {
                 gitEcho = workspace.createTempFile("auth", ".sh");
-                // [#!/usr/bin/evn sh] to be used if required, could have some corner cases
+                // [#!/usr/bin/env sh] to be used if required, could have some corner cases
                 gitEcho.write("case $1 in\n"
                         + "        Username*) echo " + this.userVariable
                         + "                ;;\n"
