@@ -30,6 +30,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Speculatively merge the selected commit with another branch before the build to answer the "what happens
  * if I were to integrate this feature branch back to the master?" question.
@@ -43,12 +45,14 @@ public class PreBuildMerge extends GitSCMExtension {
     private final UserMergeOptions options;
 
     @DataBoundConstructor
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public PreBuildMerge(UserMergeOptions options) {
         if (options==null)  throw new IllegalStateException();
         this.options = options;
     }
 
     @Whitelisted
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public UserMergeOptions getOptions() {
         return options;
     }
