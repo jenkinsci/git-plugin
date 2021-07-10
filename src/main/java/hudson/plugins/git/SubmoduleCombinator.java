@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class SubmoduleCombinator {
     @SuppressFBWarnings(value="URF_UNREAD_FIELD", justification="Deprecated, retained for compatibility")
     Collection<SubmoduleConfig> submoduleConfig;
   
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Deprecated, retained for compatibility")
     public SubmoduleCombinator(GitClient git, TaskListener listener, Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;

@@ -26,6 +26,7 @@
 package jenkins.plugins.git.traits;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.trait.SCMBuilder;
@@ -49,6 +50,7 @@ public abstract class GitSCMExtensionTrait<E extends GitSCMExtension> extends SC
      *
      * @param extension the extension.
      */
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitSCMExtensionTrait(@NonNull E extension) {
         this.extension = extension;
     }
@@ -59,6 +61,7 @@ public abstract class GitSCMExtensionTrait<E extends GitSCMExtension> extends SC
      * @return the extension.
      */
     @NonNull
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public E getExtension() {
         return extension;
     }
