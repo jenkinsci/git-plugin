@@ -1266,7 +1266,7 @@ The issue can be especially challenging when a job retains a very large number o
 
 Multiple attempts to resolve the core issue without breaking compatibility have been unsuccessful.
 A workaround is provided below that will remove the git build data from the build records.
-The workaround is a system groovy script that needs to be run from the Jenkins Administrator's Script Console (as in `https://jenkins.example.com/script` ).
+The workaround is a system groovy script that needs to be run from the Jenkins Administrator's Script Console (as in https\://jenkins.example.com/script ).
 Administrator permission is required to run system groovy scripts.
 
 This script removes the static list of BuildsByBranch that is stored for each build by the Git Plugin.
