@@ -10,6 +10,7 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.Extension;
+import hudson.plugins.git.GitTool;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
@@ -65,6 +66,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
+            setUnixNodeType(isCurrentNodeOSUnix(launcher));
             setRunEnvironmentVariables(filePath, taskListener);
             GenerateGitScript gitScript = new GenerateGitScript(
                                                   credentials.getUsername(),
