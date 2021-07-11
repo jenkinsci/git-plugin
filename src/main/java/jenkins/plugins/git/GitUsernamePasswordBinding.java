@@ -166,7 +166,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         @NonNull
         @Override
         public String getDisplayName() {
-            return Messages.GitUsernamePasswordBind_DisplayName();
+            return Messages.GitUsernamePasswordBinding_DisplayName();
         }
 
         @Override
