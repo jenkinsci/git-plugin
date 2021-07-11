@@ -25,7 +25,7 @@ public interface GitCredentialBindings {
         return launcher.isUnix();
     }
 
-    default String getGitTool(Run<?, ?> run, String gitToolName,
+    default GitTool getCliGitTool(Run<?, ?> run, String gitToolName,
                               TaskListener listener) throws IOException, InterruptedException {
 
         Executor buildExecutor = run.getExecutor();
@@ -33,10 +33,13 @@ public interface GitCredentialBindings {
             Node currentNode = buildExecutor.getOwner().getNode();
             //Check node is not null
             if (currentNode != null) {
-                GitTool t = GitUtils.resolveGitTool(gitToolName,currentNode,new EnvVars(),listener);
-                //Check if tool of type GitTool
-                if(t != null && t.getDescriptor().getInstallations()[0].getClass().equals(GitTool.class)) {
-                    return t.getGitExe();
+                GitTool nameSpecificGitTool = GitUtils.resolveGitTool(gitToolName,currentNode,new EnvVars(),listener);
+                if(nameSpecificGitTool != null) {
+                    GitTool typeSpecificGitTool = nameSpecificGitTool.getDescriptor().getInstallation(gitToolName);
+                    //Check if tool is of type GitTool
+                    if (typeSpecificGitTool != null && typeSpecificGitTool.getClass().equals(GitTool.class)) {
+                        return nameSpecificGitTool;
+                    }
                 }
             }
         }

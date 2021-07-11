@@ -33,8 +33,8 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     final static private String GIT_PASSWORD_KEY = "GIT_PASSWORD";
     final private String gitToolName;
     final private Map<String, String> credMap = new LinkedHashMap<>();
-    private String gitToolExe = null;
-    private boolean unixNodeType;
+    private GitTool cliGitTool = null;
+    private transient boolean unixNodeType;
 
     @DataBoundConstructor
     public GitUsernamePasswordBinding(String gitToolName, String credentialsId) {
@@ -62,9 +62,8 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             throws IOException, InterruptedException {
         StandardUsernamePasswordCredentials credentials = getCredentials(run);
         setKeyBindings(credentials);
-        gitToolExe = getGitTool(run, this.gitToolName, taskListener);
-        setUnixNodeType(isCurrentNodeOSUnix(launcher));
-        if (gitToolExe != null && filePath != null) {
+        cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
+        if (cliGitTool != null && filePath != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             setRunEnvironmentVariables(filePath, taskListener);
             GenerateGitScript gitScript = new GenerateGitScript(
@@ -97,7 +96,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
 
     @Override
     public void setRunEnvironmentVariables(@NonNull FilePath filePath, @NonNull TaskListener listener) throws IOException, InterruptedException {
-        if (unixNodeType && ((CliGitAPIImpl) getGitClientInstance(gitToolExe,null,
+        if (unixNodeType && ((CliGitAPIImpl) getGitClientInstance(cliGitTool.getGitExe(),null,
                                                  new EnvVars(), listener)).
                                                  isCliGitVerAtLeast(2,3,0,0))
         {
