@@ -143,7 +143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
-    private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
+    private Collection<SubmoduleConfig> submoduleCfg = Collections.unmodifiableList(Collections.<SubmoduleConfig>emptyList());
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
@@ -160,6 +160,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Whitelisted
     @Deprecated
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Non-modifiable deprecated collection")
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -200,6 +201,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @DataBoundConstructor
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Modify access is assumed for userRemoteConfigs")
     public GitSCM(
             List<UserRemoteConfig> userRemoteConfigs,
             List<BranchSpec> branches,
@@ -231,6 +233,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @since 2.0
      */
     @Whitelisted
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
     }
@@ -545,6 +548,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Whitelisted
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
@@ -1888,6 +1892,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Exported
     @Whitelisted
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<BranchSpec> getBranches() {
         return branches;
     }

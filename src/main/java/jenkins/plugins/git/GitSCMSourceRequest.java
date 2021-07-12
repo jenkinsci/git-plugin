@@ -27,6 +27,7 @@ package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import java.util.Collections;
@@ -95,6 +96,7 @@ public class GitSCMSourceRequest extends SCMSourceRequest {
      * @return the list of {@link RefSpec} instances to use.
      */
     @NonNull
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public final List<RefSpec> refSpecs() {
         return refSpecs;
     }
