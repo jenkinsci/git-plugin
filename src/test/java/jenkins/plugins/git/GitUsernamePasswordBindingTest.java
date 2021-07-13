@@ -23,6 +23,9 @@ import org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,6 +141,50 @@ public class GitUsernamePasswordBindingTest {
         assertThat(binding.variables(b), hasItem("GIT_PASSWORD"));
         //Assert setKeyBindings method
         String fileContents = b.getWorkspace().child("auth.txt").readToString().trim();
+        assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
+        //Assert Git specific env variables
+        if(isCliGitTool()){
+            if(isWindows()){
+                assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
+            }else if(g.gitVersionAtLeast(2,3,0)){
+                assertThat(fileContents, containsString("GIT_TERMINAL_PROMPT=false"));
+            }
+        }
+    }
+
+    @Test
+    public void test_EnvironmentVariables_PipelineJob() throws Exception {
+        WorkflowJob project = r.createProject(WorkflowJob.class);
+        if(isCliGitTool()){
+            project.setDefinition(new CpsFlowDefinition(""
+                    + "node {\n"
+                    + "withCredentials([GitUsernamePassword(credentialsId: '"+ credentialID +"', gitToolName: '"+ gitToolInstance.getName() +"')]) {"
+                    + "    if (isUnix()) {\n"
+                    + "      sh 'env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt; env | grep GIT_TERMINAL_PROMPT >> auth.txt;'\n"
+                    + "    } else {\n"
+                    + "      bat 'set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt'\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}",true));
+        }else {
+            project.setDefinition(new CpsFlowDefinition(""
+                    + "node {\n"
+                    + "withCredentials([GitUsernamePassword(credentialsId: '"+ credentialID +"', gitToolName: '"+ gitToolInstance.getName() +"')]) {"
+                    + "    if (isUnix()) {\n"
+                    + "      sh 'env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt;'\n"
+                    + "    } else {\n"
+                    + "      bat 'set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt'\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "}",true));
+        }
+        WorkflowRun b = project.scheduleBuild2(0).waitForStart();
+        r.waitForCompletion(b);
+        r.assertBuildStatusSuccess(b);
+        r.assertLogNotContains(this.password, b);
+        //Assert setKeyBindings method
+        String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
         assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
         //Assert Git specific env variables
