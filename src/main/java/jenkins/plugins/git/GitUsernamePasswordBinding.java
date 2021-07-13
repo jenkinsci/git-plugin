@@ -11,6 +11,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.Extension;
 import hudson.plugins.git.GitTool;
+import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
@@ -20,6 +21,7 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -168,6 +170,14 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         @Override
         public String getDisplayName() {
             return Messages.GitUsernamePasswordBinding_DisplayName();
+        }
+
+        public FormValidation doCheckGitToolName(@QueryParameter String value) {
+            if (value.isEmpty()) {
+                return FormValidation.error("Please enter a valid git tool name");
+            } else {
+                return FormValidation.ok();
+            }
         }
 
         @Override
