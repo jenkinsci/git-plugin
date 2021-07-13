@@ -53,6 +53,7 @@ public class GitUsernamePasswordBindingTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 {"randomName", "special%%_342@**", new GitTool("git", "git", null)},
+                {"r-Name", "default=@#(*^!", new GitTool("Default", "git", null)},
                 {"a", "here's-a-quote", new JGitTool()},
                 {"b", "He said \"Hello\", then left.", new JGitApacheTool()},
                 {"many-words-in-a-user-name-because-we-can", "&Ampersand&", new JGitApacheTool()},
