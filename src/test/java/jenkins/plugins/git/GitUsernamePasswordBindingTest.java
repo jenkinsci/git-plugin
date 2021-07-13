@@ -227,7 +227,7 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_getGitClientInstance() throws IOException, InterruptedException {
-        if(StringUtils.equalsAnyIgnoreCase(gitToolInstance.getName(),"git","Default")) {
+        if(isCliGitTool()) {
             assertThat(gitCredBind.getGitClientInstance(gitToolInstance.getGitExe(), rootFilePath,
                     new EnvVars(), TaskListener.NULL), instanceOf(CliGitAPIImpl.class));
         }else {
