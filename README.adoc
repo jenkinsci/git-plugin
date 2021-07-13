@@ -77,8 +77,8 @@ Credentials::
 
 Name::
 
-  Git uses a shortname to simplify user references to the URL of the remote repository.
-  The default shortname is `origin`.
+  Git uses a short name to simplify user references to the URL of the remote repository.
+  The default short name is `origin`.
   Other values may be assigned and then used throughout the job definition to refer to the remote repository.
 
 Refspec::
@@ -121,7 +121,7 @@ Other credential types will not work with the ssh protocol.
 [#push-notification-from-repository]
 === [[GitPlugin-Pushnotificationfromrepository]]Push Notification From Repository
 
-To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changs to the repository.
+To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changes to the repository.
 Refer to webhook documentation for your repository:
 
 * link:https://plugins.jenkins.io/github#GitHubPlugin-GitHubhooktriggerforGITScmpolling[GitHub]
@@ -202,7 +202,7 @@ Disable performance enhancements::
 
   If JGit and command line git are both enabled on an agent, the git plugin uses a "git tool chooser" to choose a preferred git implementation.
   The preferred git implementation depends on the size of the repository and the git plugin features requested by the job.
-  If the repository size is *less than* the JGit repository size threshold and the git features of the job are all implmented in JGit, then JGit is used.
+  If the repository size is *less than* the JGit repository size threshold and the git features of the job are all implemented in JGit, then JGit is used.
   If the repository size is *greater than* the JGit repository size threshold or the job requires git features that are not implemented in JGit, then command line git is used.
 +
 If checked, the plugin will disable the feature that recommends a git implementation on the basis of the size of a repository.
@@ -858,7 +858,7 @@ You can combine this with Git publisher to push the tags to the remote repositor
 === Build Initiation Extensions
 
 The git plugin can start builds based on many different conditions.
-The build inititation extensions control the conditions that start a build.
+The build initiation extensions control the conditions that start a build.
 They can ignore notifications of a change or force a deeper evaluation of the commits when polling
 
 [#dont-trigger-a-build-on-commit-notifications]
@@ -1210,9 +1210,9 @@ Branch to push::
 
 Target remote name::
 
-  The shortname of the remote that will receive the latest commits from the agent workspace.
+  The short name of the remote that will receive the latest commits from the agent workspace.
   Usually this is `origin`.
-  It needs to be a shortname that is defined in the agent workspace, either through the initial checkout or through later configuration.
+  It needs to be a short name that is defined in the agent workspace, either through the initial checkout or through later configuration.
 
 Rebase before push::
 
@@ -1260,9 +1260,16 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
-This script is used to remove the static list of BuildsByBranch that is stored for each build by the Git Plugin.
+The git plugin has an issue (link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]) that sometimes causes excessive memory use and disc use in the build history of a job.
+The problem occurs because in some cases the git plugin copies the git build data from previous builds to the most recent build, even though the git build data from the previous build is not used in the most recent build.
+The issue can be especially challenging when a job retains a very large number of historical builds or when a job builds a wide range of commits during its history.
 
-This is a workaround for link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]
+Multiple attempts to resolve the core issue without breaking compatibility have been unsuccessful.
+A workaround is provided below that will remove the git build data from the build records.
+The workaround is a system groovy script that needs to be run from the Jenkins Administrator's Script Console (as in \https://jenkins.example.com/script ).
+Administrator permission is required to run system groovy scripts.
+
+This script removes the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
 [source,groovy]
 ----

@@ -58,7 +58,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.2.3</version>
+            <version>4.3.0</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -166,7 +166,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.6.1</version>
+      <version>3.7</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
