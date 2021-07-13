@@ -198,6 +198,34 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Test
+    public void test_getCliGitTool_using_FreeStyleProject() throws Exception {
+        FreeStyleProject prj = r.createFreeStyleProject();
+        prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
+                singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(),credentialID))));
+        if (isWindows()) {
+            prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt"));
+        } else {
+            prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt;"));
+        }
+        r.configRoundtrip((Item) prj);
+        SecretBuildWrapper wrapper = prj.getBuildWrappersList().get(SecretBuildWrapper.class);
+        assertThat(wrapper, is(notNullValue()));
+        List<? extends MultiBinding<?>> bindings = wrapper.getBindings();
+        assertThat(bindings.size(), is(1));
+        MultiBinding<?> binding = bindings.get(0);
+        FreeStyleBuild run = prj.scheduleBuild2(0).waitForStart();
+        if(isCliGitTool()) {
+            assertThat(((GitUsernamePasswordBinding) binding).getCliGitTool(run, ((GitUsernamePasswordBinding) binding).getGitToolName(), TaskListener.NULL),
+                    is(notNullValue()));
+        }else{
+            assertThat(((GitUsernamePasswordBinding) binding).getCliGitTool(r.buildAndAssertSuccess(prj), ((GitUsernamePasswordBinding) binding).getGitToolName(), TaskListener.NULL),
+                    is(nullValue()));
+        }
+        r.waitForCompletion(run);
+        r.assertBuildStatusSuccess(run);
+    }
+
+    @Test
     public void test_getGitClientInstance() throws IOException, InterruptedException {
         if(StringUtils.equalsAnyIgnoreCase(gitToolInstance.getName(),"git","Default")) {
             assertThat(gitCredBind.getGitClientInstance(gitToolInstance.getGitExe(), rootFilePath,
