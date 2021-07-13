@@ -94,8 +94,6 @@ public class GitUsernamePasswordBindingTest {
         //File init
         rootDir = tempFolder.getRoot();
         rootFilePath = new FilePath(rootDir.getAbsoluteFile());
-        gitRootRepo = tempFolder.newFolder();
-        assertThat(gitRootRepo, is(notNullValue()));
 
         //Credential init
         credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credentialID, "Git Username and Password Binding Test", this.username, this.password);
@@ -105,10 +103,7 @@ public class GitUsernamePasswordBindingTest {
         gitCredBind = new GitUsernamePasswordBinding(gitToolInstance.getName(),credentials.getId());
         assertThat(gitCredBind.type(), is(StandardUsernamePasswordCredentials.class));
 
-        //Git
-        Git git = Git.with(TaskListener.NULL, new EnvVars()).in(gitRootRepo).using(gitToolInstance.getGitExe());
-
-        //Git Tool
+        //Setting Git Tool
         Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).getDefaultInstallers().clear();
         Jenkins.get().getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(gitToolInstance);
     }
