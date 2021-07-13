@@ -79,7 +79,6 @@ public class GitUsernamePasswordBindingTest {
 
     private File rootDir = null;
     private FilePath rootFilePath = null;
-    private File gitRootRepo = null;
     private UsernamePasswordCredentialsImpl credentials = null;
     private GitUsernamePasswordBinding gitCredBind = null;
 
@@ -174,5 +173,9 @@ public class GitUsernamePasswordBindingTest {
      */
     private static boolean isWindows() {
         return File.pathSeparatorChar == ';';
+    }
+
+    private boolean isCliGitTool(){
+        return gitToolInstance.getClass().equals(GitTool.class);
     }
 }
