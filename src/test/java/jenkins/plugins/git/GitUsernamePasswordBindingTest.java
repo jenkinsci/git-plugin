@@ -8,23 +8,19 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.EnvVars;
 import hudson.FilePath;
 
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.JobProperty;
-import hudson.model.JobPropertyDescriptor;
+import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
-import hudson.model.Item;
-import hudson.model.FreeStyleBuild;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.Before;
@@ -41,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -109,47 +104,50 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Test
-    public void test_GenerateGitScript_write() throws IOException, InterruptedException {
-        GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(this.username, this.password, credentials.getId(),!isWindows());
-        assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
-        FilePath tempScriptFile = tempGenScript.write(credentials, rootFilePath);
-        if (!isWindows()) {
-            assertThat(tempScriptFile.mode(), is(0500));
-            assertThat("File extension not sh", FilenameUtils.getExtension(tempScriptFile.getName()), is("sh"));
-        } else {
-            assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
-        }
-        assertThat(tempScriptFile.readToString(), containsString(this.username));
-        assertThat(tempScriptFile.readToString(), containsString(this.password));
-    }
-
-    //This test will pass as long as setKeyBindings(@NonNull StandardCredentials credentials) method
-    //is executed before git tool type check, for all git tool implementations
-    @Test
-    public void test_FreeStyleProject() throws Exception {
+    public void test_EnvironmentVariables_FreeStyleProject() throws Exception {
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
                 singletonList(new GitUsernamePasswordBinding(gitToolInstance.getName(),credentialID))));
-        if (isWindows()) {
-            prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt"));
-        } else {
-            prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt"));
+        if(isCliGitTool()){
+            if (isWindows()) {
+                prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt"));
+            } else {
+                prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt; env | grep GIT_TERMINAL_PROMPT >> auth.txt;"));
+            }
+        }else{
+            if (isWindows()) {
+                prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt"));
+            } else {
+                prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt;"));
+            }
         }
-        Map<JobPropertyDescriptor, JobProperty<? super FreeStyleProject>> p = prj.getProperties();
         r.configRoundtrip((Item) prj);
+
         SecretBuildWrapper wrapper = prj.getBuildWrappersList().get(SecretBuildWrapper.class);
         assertThat(wrapper, is(notNullValue()));
         List<? extends MultiBinding<?>> bindings = wrapper.getBindings();
         assertThat(bindings.size(), is(1));
         MultiBinding<?> binding = bindings.get(0);
         assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(gitToolInstance.getName()));
+
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
+        r.assertLogNotContains(this.password, b);
+
+        //Assert Keys
         assertThat(binding.variables(b), hasItem("GIT_USERNAME"));
         assertThat(binding.variables(b), hasItem("GIT_PASSWORD"));
-        r.assertLogNotContains(this.password, b);
+        //Assert setKeyBindings method
         String fileContents = b.getWorkspace().child("auth.txt").readToString().trim();
         assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
+        //Assert Git specific env variables
+        if(isCliGitTool()){
+            if(isWindows()){
+                assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
+            }else if(g.gitVersionAtLeast(2,3,0)){
+                assertThat(fileContents, containsString("GIT_TERMINAL_PROMPT=false"));
+            }
+        }
     }
 
     @Test
