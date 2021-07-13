@@ -143,7 +143,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
-    private Collection<SubmoduleConfig> submoduleCfg = Collections.unmodifiableList(Collections.<SubmoduleConfig>emptyList());
+    private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
@@ -160,7 +160,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     @Whitelisted
     @Deprecated
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Non-modifiable deprecated collection")
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Unread deprecated collection")
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
