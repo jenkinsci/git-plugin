@@ -65,6 +65,9 @@ public class GitUsernamePasswordBindingTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
+    @Rule
+    public GitSampleRepoRule g = new GitSampleRepoRule();
+
     private final String username;
 
     private final String password;
