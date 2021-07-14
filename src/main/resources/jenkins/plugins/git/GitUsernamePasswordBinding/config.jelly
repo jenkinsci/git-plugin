@@ -6,6 +6,6 @@
             <c:select expressionAllowed="${expressionAllowed}"/>
         </f:entry>
     <f:entry title="${%Git Tool Name}" field="gitToolName">
-        <f:textbox default="${%Default}" />
+        <f:select />
     </f:entry>
 </j:jelly>

@@ -10,8 +10,10 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.Extension;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
-import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
@@ -21,12 +23,12 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -172,12 +174,15 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             return Messages.GitUsernamePasswordBinding_DisplayName();
         }
 
-        public FormValidation doCheckGitToolName(@QueryParameter String value) {
-            if (value.isEmpty()) {
-                return FormValidation.error("Please enter a valid git tool name");
-            } else {
-                return FormValidation.ok();
-            }
+        public ListBoxModel doFillGitToolNameItems() {
+            ListBoxModel items = new ListBoxModel();
+             List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
+             for (GitTool t : toolList){
+                 if(t.getClass().equals(GitTool.class)){
+                     items.add(t.getName());
+                 }
+             }
+             return items;
         }
 
         @Override
