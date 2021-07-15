@@ -39,7 +39,6 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     final static private String GIT_USERNAME_KEY = "GIT_USERNAME";
     final static private String GIT_PASSWORD_KEY = "GIT_PASSWORD";
     final private String gitToolName;
-    private GitTool cliGitTool = null;
     private transient boolean unixNodeType;
 
     @DataBoundConstructor
@@ -70,7 +69,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         final Map<String, String> publicValues = new LinkedHashMap<>();
         StandardUsernamePasswordCredentials credentials = getCredentials(run);
         setCredentialPairBindings(credentials,secretValues,publicValues);
-        cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
+        GitTool cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
