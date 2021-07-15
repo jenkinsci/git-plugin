@@ -39,7 +39,6 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     final static private String GIT_USERNAME_KEY = "GIT_USERNAME";
     final static private String GIT_PASSWORD_KEY = "GIT_PASSWORD";
     final private String gitToolName;
-    final private Map<String, String> credMap = new LinkedHashMap<>();
     private GitTool cliGitTool = null;
     private transient boolean unixNodeType;
 
@@ -67,8 +66,10 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     public MultiEnvironment bind(@NonNull Run<?, ?> run, FilePath filePath,
                                  Launcher launcher, @NonNull TaskListener taskListener)
             throws IOException, InterruptedException {
+        final Map<String, String> secretValues = new LinkedHashMap<>();
+        final Map<String, String> publicValues = new LinkedHashMap<>();
         StandardUsernamePasswordCredentials credentials = getCredentials(run);
-        setKeyBindings(credentials);
+        setCredentialPairBindings(credentials,secretValues,publicValues);
         cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
@@ -80,11 +81,11 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
                                                   credentials.getId(),
                                                   this.unixNodeType);
             FilePath gitTempFile = gitScript.write(credentials, unbindTempDir.getDirPath());
-            credMap.put("GIT_ASKPASS", gitTempFile.getRemote());
-            return new MultiEnvironment(credMap, unbindTempDir.getUnbinder());
+            secretValues.put("GIT_ASKPASS", gitTempFile.getRemote());
+            return new MultiEnvironment(secretValues, publicValues, unbindTempDir.getUnbinder());
         } else {
             taskListener.getLogger().println("JGit and JGitApache type Git tools are not supported by this binding");
-            return new MultiEnvironment(credMap);
+            return new MultiEnvironment(secretValues,publicValues);
         }
     }
 
@@ -97,9 +98,14 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     }
 
     @Override
-    public void setKeyBindings(@NonNull StandardCredentials credentials) {
-        credMap.put(GIT_USERNAME_KEY, ((StandardUsernamePasswordCredentials) credentials).getUsername());
-        credMap.put(GIT_PASSWORD_KEY, ((StandardUsernamePasswordCredentials) credentials).getPassword().getPlainText());
+    public void setCredentialPairBindings(@NonNull StandardCredentials credentials,Map<String,String> publicValues, Map<String,String> secretValues) {
+        StandardUsernamePasswordCredentials usernamePasswordCredentials = (StandardUsernamePasswordCredentials) credentials;
+        if(usernamePasswordCredentials.isUsernameSecret()){
+            secretValues.put(GIT_USERNAME_KEY, usernamePasswordCredentials.getUsername());
+        }else{
+            publicValues.put(GIT_USERNAME_KEY, usernamePasswordCredentials.getUsername());
+        }
+        secretValues.put(GIT_PASSWORD_KEY, usernamePasswordCredentials.getPassword().getPlainText());
     }
 
     @Override

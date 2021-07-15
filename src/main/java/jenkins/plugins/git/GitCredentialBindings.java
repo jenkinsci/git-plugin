@@ -10,11 +10,19 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public interface GitCredentialBindings {
 
-    void setKeyBindings(@NonNull StandardCredentials credentials);
+    /**
+     * Sets secret or public pair value(s)
+     * @param credentials The credentials {@link com.cloudbees.plugins.credentials.common.StandardCredentials}. Cannot be null
+     * @param secretValues The values{@link java.util.Map} to be hidden in build logs
+     * @param publicValues The values{@link java.util.Map} to be visible in build logs
+     **/
+    void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String,String> secretValues, Map<String,String> publicValues);
 
     void setRunEnvironmentVariables(@NonNull FilePath filePath, @NonNull TaskListener listener) throws IOException, InterruptedException;
 
