@@ -32,13 +32,32 @@ public interface GitCredentialBindings {
      **/
     void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException;
 
+    /**
+     * Performed operations on a git repository. Using Git implementations JGit/JGit Apache/Cli Git
+     * @param gitExe The path {@link java.lang.String} to git executable {@link org.jenkinsci.plugins.gitclient.Git#using(String)}
+     * @param repository The path {@link java.lang.String} to working directory {@link org.jenkinsci.plugins.gitclient.Git#in(File)}
+     * @param env The environment values {@link hudson.EnvVars}
+     * @param listener The task listener.
+     * @return a GitClient implementation {@link org.jenkinsci.plugins.gitclient.GitClient}
+     **/
     GitClient getGitClientInstance(String gitExe, FilePath repository,
                                    EnvVars env, TaskListener listener) throws IOException, InterruptedException;
-
+    /**
+     * Checks the OS environment of the node/controller
+     * @param launcher The launcher.Cannot be null
+     * @return false if current node/controller is not running in windows environment
+     **/
     default boolean isCurrentNodeOSUnix(@NonNull Launcher launcher){
         return launcher.isUnix();
     }
 
+    /**
+     * Ensures that the gitTool available is of type cli git/GitTool.class {@link hudson.plugins.git.GitTool}.
+     * @param run The build {@link hudson.model.Run}. Cannot be null
+     * @param gitToolName The name of the git tool {@link java.lang.String}
+     * @param listener The task listener. Cannot be null.
+     * @return A git tool of type GitTool.class {@link hudson.plugins.git.GitTool} or null
+     **/
     default GitTool getCliGitTool(Run<?, ?> run, String gitToolName,
                               TaskListener listener) throws IOException, InterruptedException {
 
