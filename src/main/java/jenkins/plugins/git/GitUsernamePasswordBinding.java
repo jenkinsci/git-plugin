@@ -117,9 +117,9 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     public void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException {
         if (unixNodeType && ((CliGitAPIImpl) git).isCliGitVerAtLeast(2,3,0,0))
         {
-            credMap.put("GIT_TERMINAL_PROMPT", "false");
+            publicValues.put("GIT_TERMINAL_PROMPT", "false");
         } else {
-            credMap.put("GCM_INTERACTIVE", "false");
+            publicValues.put("GCM_INTERACTIVE", "false");
         }
     }
 
