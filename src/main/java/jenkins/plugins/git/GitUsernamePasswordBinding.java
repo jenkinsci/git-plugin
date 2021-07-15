@@ -74,7 +74,8 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         if (cliGitTool != null && filePath != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
-            setRunEnvironmentVariables(filePath, taskListener);
+            setGitEnvironmentVariables(getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(),
+                                                            new EnvVars(), taskListener), publicValues);
             GenerateGitScript gitScript = new GenerateGitScript(
                                                   credentials.getUsername(),
                                                   credentials.getPassword().getPlainText(),
@@ -108,11 +109,13 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         secretValues.put(GIT_PASSWORD_KEY, usernamePasswordCredentials.getPassword().getPlainText());
     }
 
+    /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> publicValues) throws IOException, InterruptedException {
+        setGitEnvironmentVariables(git,null,publicValues);
+    }
+
     @Override
-    public void setRunEnvironmentVariables(@NonNull FilePath filePath, @NonNull TaskListener listener) throws IOException, InterruptedException {
-        if (unixNodeType && ((CliGitAPIImpl) getGitClientInstance(cliGitTool.getGitExe(),null,
-                                                 new EnvVars(), listener)).
-                                                 isCliGitVerAtLeast(2,3,0,0))
+    public void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException {
+        if (unixNodeType && ((CliGitAPIImpl) git).isCliGitVerAtLeast(2,3,0,0))
         {
             credMap.put("GIT_TERMINAL_PROMPT", "false");
         } else {

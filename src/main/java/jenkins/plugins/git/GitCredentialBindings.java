@@ -24,7 +24,13 @@ public interface GitCredentialBindings {
      **/
     void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String,String> secretValues, Map<String,String> publicValues);
 
-    void setRunEnvironmentVariables(@NonNull FilePath filePath, @NonNull TaskListener listener) throws IOException, InterruptedException;
+    /**
+     * Set Git specific environment variable
+     * @param git GitClient {@link org.jenkinsci.plugins.gitclient.GitClient}. Cannot be null.
+     * @param secretValues The values{@link java.util.Map} to be hidden in build logs
+     * @param publicValues The values{@link java.util.Map} to be visible in build logs
+     **/
+    void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException;
 
     GitClient getGitClientInstance(String gitExe, FilePath repository,
                                    EnvVars env, TaskListener listener) throws IOException, InterruptedException;
