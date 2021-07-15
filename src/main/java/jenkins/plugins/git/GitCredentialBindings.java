@@ -67,11 +67,13 @@ public interface GitCredentialBindings {
             //Check node is not null
             if (currentNode != null) {
                 GitTool nameSpecificGitTool = GitUtils.resolveGitTool(gitToolName,currentNode,new EnvVars(),listener);
-                if(nameSpecificGitTool != null) {
-                    GitTool typeSpecificGitTool = nameSpecificGitTool.getDescriptor().getInstallation(gitToolName);
-                    //Check if tool is of type GitTool
-                    if (typeSpecificGitTool != null && typeSpecificGitTool.getClass().equals(GitTool.class)) {
-                        return nameSpecificGitTool;
+                if(nameSpecificGitTool != null){
+                    GitTool typeSpecificGitTool = nameSpecificGitTool.getDescriptor().getInstallation(nameSpecificGitTool.getName());
+                    if(typeSpecificGitTool != null) {
+                        boolean check = typeSpecificGitTool.getClass().equals(GitTool.class);
+                        if (check) {
+                            return nameSpecificGitTool;
+                        }
                     }
                 }
             }
