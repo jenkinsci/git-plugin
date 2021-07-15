@@ -139,6 +139,7 @@ public class GitUsernamePasswordBindingTest {
         }
 
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
+        r.assertLogNotContains(this.username, b);
         r.assertLogNotContains(this.password, b);
 
         //Assert Keys
@@ -187,6 +188,7 @@ public class GitUsernamePasswordBindingTest {
         WorkflowRun b = project.scheduleBuild2(0).waitForStart();
         r.waitForCompletion(b);
         r.assertBuildStatusSuccess(b);
+        r.assertLogNotContains(this.username, b);
         r.assertLogNotContains(this.password, b);
         //Assert setKeyBindings method
         String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
