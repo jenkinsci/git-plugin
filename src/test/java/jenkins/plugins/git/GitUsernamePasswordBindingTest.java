@@ -44,6 +44,7 @@ import java.util.Collection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(Parameterized.class)
 public class GitUsernamePasswordBindingTest {
@@ -52,8 +53,8 @@ public class GitUsernamePasswordBindingTest {
         return Arrays.asList(new Object[][]{
                 {"randomName", "special%%_342@**", new GitTool("git", "git", null)},
                 {"r-Name", "default=@#(*^!", new GitTool("Default", "git", null)},
-                {"a", "here's-a-quote", new JGitTool()},
-                {"b", "He said \"Hello\", then left.", new JGitApacheTool()},
+                {"adwesw-unique", "here's-a-quote", new JGitTool()},
+                {"bceas-unique", "He said \"Hello\", then left.", new JGitApacheTool()},
                 {"many-words-in-a-user-name-because-we-can", "&Ampersand&", new JGitApacheTool()},
         });
     }
@@ -131,7 +132,11 @@ public class GitUsernamePasswordBindingTest {
         List<? extends MultiBinding<?>> bindings = wrapper.getBindings();
         assertThat(bindings.size(), is(1));
         MultiBinding<?> binding = bindings.get(0);
-        assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(gitToolInstance.getName()));
+        if(isCliGitTool()) {
+            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(gitToolInstance.getName()));
+        }else {
+            assertThat(((GitUsernamePasswordBinding) binding).getGitToolName(), equalTo(""));
+        }
 
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
         r.assertLogNotContains(this.password, b);
@@ -218,7 +223,7 @@ public class GitUsernamePasswordBindingTest {
             assertThat(((GitUsernamePasswordBinding) binding).getCliGitTool(run, ((GitUsernamePasswordBinding) binding).getGitToolName(), TaskListener.NULL),
                     is(notNullValue()));
         } else {
-            assertThat(((GitUsernamePasswordBinding) binding).getCliGitTool(r.buildAndAssertSuccess(prj), ((GitUsernamePasswordBinding) binding).getGitToolName(), TaskListener.NULL),
+            assertThat(((GitUsernamePasswordBinding) binding).getCliGitTool(run, ((GitUsernamePasswordBinding) binding).getGitToolName(), TaskListener.NULL),
                     is(nullValue()));
         }
         r.waitForCompletion(run);
