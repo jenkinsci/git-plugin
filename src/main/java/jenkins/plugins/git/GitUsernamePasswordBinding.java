@@ -184,14 +184,6 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             return Messages.GitUsernamePasswordBinding_DisplayName();
         }
 
-        public FormValidation doCheckGitToolName(@QueryParameter String toolName){
-            if(toolName == null){
-                return FormValidation.warning("Default Git Tool(Git/JGit) will be used");
-            }else {
-                return FormValidation.ok();
-            }
-        }
-
         public ListBoxModel doFillGitToolNameItems() {
             ListBoxModel items = new ListBoxModel();
              List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
