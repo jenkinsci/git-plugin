@@ -586,6 +586,25 @@ Project Name in ViewGit::
   ViewGit project name.
   For example, `my-project`
 
+[#git-bindings]
+== Git Bindings
+
+The git plugin provides one binding to support authenticated git opreations over *HTTP* or * HTTPS* protocol, namely `Git Username and Password`.
+The git plugin depeneds on the Credential Binding Plugin to support these bindings.
+
+To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
+
+Incase of a FreeStyle project the steps are as follows:
+
+. Check the box _Use secret text(s) or file(s)_, add Git Username and Password binding.
+
+. Choose the required credentials and Git tool name.
+
+image:images/git-credentials-usernamepassword-binding-freestyle-project.png[Git-Username-and Password-Binding-Freestyle-project]
+
+NOTE: By default, two variable bindings, `GIT_USERNAME` and `GIT_PASSWORD`, bind with user’s credential i.e. username and password respectively, in a Pipeline jobs.
+The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
+
 [#extensions]
 == Extensions
 
