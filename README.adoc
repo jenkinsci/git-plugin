@@ -51,6 +51,48 @@ The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Mul
 
 image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 
+[#credential-binding]
+=== Git Credentials Binding
+
+The git plugin provides `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *SSH* protocols using command line git in a Pipeline job.
+
+The git credential bindings are accessible through the `withCredentials` step of the link:https://plugins.jenkins.io/credentials-binding/[Credentials Binding] plugin.
+The binding retrieves credentials from the link:https://plugins.jenkins.io/credentials/[Credentials] plugin.
+
+==== Git Username and Password Binding
+
+This binding provides authentication support over *HTTP* protocol using command line git in a Pipeline job.
+
+Procedure::
+
+. Click the Pipeline Syntax _Snippet Generator_ and choose the `withCredentials` step, add Git Username and Password binding.
+. Choose the required credentials and Git tool name, specific to the generated Pipeline snippet.
+
+image:images/git-credentials-usernamepassword-binding-pipline-job.png[Git-Username-and Password-Binding-Pipeline-Job]
+
+NOTE: By default, two variable bindings, `GIT_USERNAME` and `GIT_PASSWORD`, bind with user’s credential i.e. username and password respectively, in a Pipeline jobs.
+The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
+
+.Shell example
+```groovy
+withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  sh 'git fetch --all'
+}
+```
+
+.Batch example
+```groovy
+withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  bat 'git submodule update --init --recursive'
+}
+```
+
+.Powershell example
+```groovy
+withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  powershell 'git push'
+}
+```
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
 
