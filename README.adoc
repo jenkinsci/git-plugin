@@ -54,9 +54,9 @@ image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 [#credential-binding]
 === Git Credentials Binding
 
-The git plugin provides `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *SSH* protocols using command line git in a Pipeline job.
+The git plugin provides `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *HTTPS* protocols using command line git in a Pipeline job.
 
-The git credential bindings are accessible through the `withCredentials` step of the link:https://plugins.jenkins.io/credentials-binding/[Credentials Binding] plugin.
+The git credential bindings are accessible through the link:https://www.jenkins.io/doc/pipeline/steps/credentials-binding/#withcredentials-bind-credentials-to-variables[`withCredentials`] step of the link:https://plugins.jenkins.io/credentials-binding/[Credentials Binding] plugin.
 The binding retrieves credentials from the link:https://plugins.jenkins.io/credentials/[Credentials] plugin.
 
 ==== Git Username and Password Binding
@@ -70,7 +70,7 @@ Procedure::
 
 image:images/git-credentials-usernamepassword-binding-pipline-job.png[Git-Username-and Password-Binding-Pipeline-Job]
 
-NOTE: By default, two variable bindings, `GIT_USERNAME` and `GIT_PASSWORD`, bind with user’s credential i.e. username and password respectively, in a Pipeline jobs.
+Two variable bindings are used, `GIT_USERNAME` and `GIT_PASSWORD`, to pass the username and password to `sh`, `bat`, and `powershell` steps inside the `withCredentials` block of a Pipeline job.
 The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
 
 .Shell example
@@ -594,7 +594,7 @@ The git plugin depeneds on the Credential Binding Plugin to support these bindin
 
 To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
 
-Incase of a FreeStyle project the steps are as follows:
+Freestyle projects can use git credential binding with the following steps:
 
 . Check the box _Use secret text(s) or file(s)_, add Git Username and Password binding.
 
@@ -602,7 +602,7 @@ Incase of a FreeStyle project the steps are as follows:
 
 image:images/git-credentials-usernamepassword-binding-freestyle-project.png[Git-Username-and Password-Binding-Freestyle-project]
 
-NOTE: By default, two variable bindings, `GIT_USERNAME` and `GIT_PASSWORD`, bind with user’s credential i.e. username and password respectively, in a Pipeline jobs.
+Two variable bindings are used, `GIT_USERNAME` and `GIT_PASSWORD`, to pass the username and password to shell, batch, and powershell steps in a Freestyle job.
 The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
 
 [#extensions]
