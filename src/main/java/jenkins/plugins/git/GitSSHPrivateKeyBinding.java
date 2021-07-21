@@ -62,7 +62,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         SSHUserPrivateKey credentials = getCredentials(run);
         setCredentialPairBindings(credentials,secretValues,publicValues);
         GitTool cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
-        if(cliGitTool != null && filePath != null){
+        if (cliGitTool != null && filePath != null && launcher != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
             setGitEnvironmentVariables(getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(),
