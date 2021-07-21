@@ -142,23 +142,24 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         @Override
         protected FilePath write(SSHUserPrivateKey credentials, FilePath workspace) throws IOException, InterruptedException {
             FilePath tempFile;
-            if(Functions.isWindows()){
-                tempFile = workspace.createTempFile("gitSSHScript",".bat");
+            if (unixNodeType) {
+                tempFile = workspace.createTempFile("gitSSHScript", ".sh");
+                tempFile.write(
+                        "ssh -i "
+                                + getPrivateKeyFile(credentials, workspace).getRemote()
+                                + " -o StrictHostKeyChecking=no $@", null);
+                tempFile.chmod(0500);
+            } else {
+                tempFile = workspace.createTempFile("gitSSHScript", ".bat");
                 tempFile.write("@echo off\r\n"
                         + "\""
                         + this.sshExePath
                         + "\""
                         + " -i "
                         + "\""
-                        + SSHKeyUtils.getDecodedPrivateKey(credentials,workspace).getRemote()
+                        + getPrivateKeyFile(credentials, workspace).getRemote()
                         + "\""
-                        + " -o StrictHostKeyChecking=no" , null);
-            }else {
-                tempFile = workspace.createTempFile("gitSSHScript",".sh");
-                tempFile.write("ssh -i "
-                        + SSHKeyUtils.getDecodedPrivateKey(credentials,workspace).getRemote()
-                        +" -o StrictHostKeyChecking=no $@",null);
-                tempFile.chmod(0500);
+                        + " -o StrictHostKeyChecking=no", null);
             }
             return tempFile;
         }
