@@ -136,12 +136,12 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
     protected final class SSHScriptFile extends AbstractOnDiskBinding<SSHUserPrivateKey> {
 
         private final String sshExePath;
+        private final boolean unixNodeType;
 
-        protected GenerateSSHScript(SSHUserPrivateKey credentials,String sshExePath) {
-            super(SSHKeyUtils.getPrivateKey(credentials)+":"+SSHKeyUtils.getPassphrase(credentials), credentials.getId());
-            this.privateKeyVariable = SSHKeyUtils.getPrivateKey(credentials);
-            this.passphraseVariable = SSHKeyUtils.getPassphrase(credentials);
+        protected SSHScriptFile(SSHUserPrivateKey credentials, String sshExePath, boolean unixNodeType) {
+            super(SSHKeyUtils.getPrivateKey(credentials) + ":" + SSHKeyUtils.getPassphrase(credentials), credentials.getId());
             this.sshExePath = sshExePath;
+            this.unixNodeType = unixNodeType;
         }
 
         @Override
