@@ -46,7 +46,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         //Variables could be added if needed
     }
 
-    public String getGitToolName(){
+    public String getGitToolName() {
         return this.gitToolName;
     }
 
@@ -60,7 +60,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         final Map<String, String> secretValues = new LinkedHashMap<>();
         final Map<String, String> publicValues = new LinkedHashMap<>();
         SSHUserPrivateKey credentials = getCredentials(run);
-        setCredentialPairBindings(credentials,secretValues,publicValues);
+        setCredentialPairBindings(credentials, secretValues, publicValues);
         GitTool cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null && launcher != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
@@ -74,7 +74,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
     }
 
     @Override
-    public Set<String> variables(@NonNull  Run<?,?> run) {
+    public Set<String> variables(@NonNull Run<?, ?> run) {
         Set<String> keys = new LinkedHashSet<>();
         keys.add(PRIVATE_KEY);
         keys.add(PASSPHRASE);
@@ -84,9 +84,9 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
     @Override
     public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
         SSHUserPrivateKey sshUserPrivateKey = (SSHUserPrivateKey) credentials;
-        if(sshUserPrivateKey.isUsernameSecret()){
+        if (sshUserPrivateKey.isUsernameSecret()) {
             secretValues.put(PRIVATE_KEY, sshUserPrivateKey.getUsername());
-        }else{
+        } else {
             publicValues.put(PRIVATE_KEY, sshUserPrivateKey.getUsername());
         }
         secretValues.put(PASSPHRASE, Secret.toString(((SSHUserPrivateKey) credentials).getPassphrase()));
