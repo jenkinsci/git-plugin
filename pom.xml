@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.19</version>
+    <version>4.20</version>
     <relativePath />
   </parent>
 
@@ -25,7 +25,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.7.3</revision>
+    <revision>4.8.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -64,13 +64,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
 
   <developers>
     <developer>
@@ -244,6 +237,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
+      <version>4.3.0</version>
       <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -296,10 +290,17 @@
     <tag>${scmTag}</tag>
   </scm>
 
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
   <pluginRepositories>
      <pluginRepository>
        <id>repo.jenkins-ci.org</id>
        <url>https://repo.jenkins-ci.org/public/</url>
      </pluginRepository>
   </pluginRepositories>
+
 </project>

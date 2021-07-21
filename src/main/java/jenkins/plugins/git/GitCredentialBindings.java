@@ -36,7 +36,7 @@ public interface GitCredentialBindings {
     void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> secretValues, Map<String,String> publicValues) throws IOException, InterruptedException;
 
     /**
-     * Performed operations on a git repository. Using Git implementations JGit/JGit Apache/Cli Git
+     * Use GitClient to perform git operations in a repository. Using Git implementations JGit/JGit Apache/Cli Git
      * @param gitExe The path {@link java.lang.String} to git executable {@link org.jenkinsci.plugins.gitclient.Git#using(String)}
      * @param repository The path {@link java.lang.String} to working directory {@link org.jenkinsci.plugins.gitclient.Git#in(File)}
      * @param env The environment values {@link hudson.EnvVars}
@@ -62,7 +62,7 @@ public interface GitCredentialBindings {
      * @return A git tool of type GitTool.class {@link hudson.plugins.git.GitTool} or null
      **/
     default GitTool getCliGitTool(Run<?, ?> run, String gitToolName,
-                                  TaskListener listener) throws IOException, InterruptedException {
+                              TaskListener listener) throws IOException, InterruptedException {
 
         Executor buildExecutor = run.getExecutor();
         if (buildExecutor != null) {
