@@ -179,6 +179,17 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
             return Messages.GitSSHPrivateKeyBinding_DisplayName();
         }
 
+        public ListBoxModel doFillGitToolNameItems() {
+            ListBoxModel items = new ListBoxModel();
+            List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
+            for (GitTool t : toolList){
+                if(t.getClass().equals(GitTool.class)){
+                    items.add(t.getName());
+                }
+            }
+            return items;
+        }
+
         @Override
         protected Class<SSHUserPrivateKey> type() {
             return SSHUserPrivateKey.class;
