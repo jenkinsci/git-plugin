@@ -99,8 +99,8 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         secretValues.put(PASSPHRASE, Secret.toString(((SSHUserPrivateKey) credentials).getPassphrase()));
     }
 
-    /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String,String> publicValues) throws IOException, InterruptedException {
-        setGitEnvironmentVariables(git,null,publicValues);
+    /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String, String> publicValues) throws IOException, InterruptedException {
+        setGitEnvironmentVariables(git, null, publicValues);
     }
 
     @Override
