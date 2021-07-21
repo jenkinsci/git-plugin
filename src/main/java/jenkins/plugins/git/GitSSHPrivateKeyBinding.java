@@ -128,8 +128,8 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     protected static final class GenerateSSHScript extends AbstractOnDiskBinding<SSHUserPrivateKey> {
 
-        private final String privateKeyVariable;
-        private final String passphraseVariable;
+    protected final class SSHScriptFile extends AbstractOnDiskBinding<SSHUserPrivateKey> {
+
         private final String sshExePath;
 
         protected GenerateSSHScript(SSHUserPrivateKey credentials,String sshExePath) {
