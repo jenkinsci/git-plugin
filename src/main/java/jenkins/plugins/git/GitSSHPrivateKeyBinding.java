@@ -90,8 +90,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     @Override
     public void setGitEnvironmentVariables(@NonNull GitClient git, Map<String, String> secretValues, Map<String, String> publicValues) throws IOException, InterruptedException {
-        if (unixNodeType && ((CliGitAPIImpl) git).isCliGitVerAtLeast(2,3,0,0))
-        {
+        if (unixNodeType && isGitVersionAtLeast(git, 2, 3, 0, 0)) {
             publicValues.put("GIT_TERMINAL_PROMPT", "false");
         } else {
             publicValues.put("GCM_INTERACTIVE", "false");
@@ -109,22 +108,9 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return SSHUserPrivateKey.class;
     }
 
-//    private void putGitSSHEnvironmentVariable(SSHUserPrivateKey credentials, FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
-//        if(((CliGitAPIImpl) getGitClientInstance(listener)).isAtLeastVersion(2,3,0,0)){
-//            if(Functions.isWindows()){
-//                credMap.put("GIT_SSH_COMMAND","\"" + getSSHExePath(listener) + "\" -i " + "\"" +
-//                        SSHKeyUtils.getDecodedPrivateKey(credentials,workspace).getRemote() + "\" -o StrictHostKeyChecking=no");
-//            }
-//            else {
-//                credMap.put("GIT_SSH_COMMAND","ssh -i "+ "\"" +
-//                        SSHKeyUtils.getDecodedPrivateKey(credentials,workspace).getRemote() + "\" -o StrictHostKeyChecking=no $@");
-//            }
-//        }else {
-//            GenerateSSHScript sshScript = new GenerateSSHScript(credentials,getSSHExePath(listener));
-//            FilePath tempScript = sshScript.write(credentials,workspace);
-//            credMap.put("GIT_SSH",tempScript.getRemote());
-//        }
-//    }
+    private boolean isGitVersionAtLeast(GitClient git, int major, int minor, int rev, int bugfix) {
+        return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
+    }
 
     protected static final class GenerateSSHScript extends AbstractOnDiskBinding<SSHUserPrivateKey> {
 
