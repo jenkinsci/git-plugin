@@ -3,11 +3,17 @@ package jenkins.plugins.git;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.*;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import hudson.Extension;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
@@ -19,11 +25,13 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 
 public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> implements GitCredentialBindings, SSHKeyUtils {
     final static private String PRIVATE_KEY = "PRIVATE_KEY";
