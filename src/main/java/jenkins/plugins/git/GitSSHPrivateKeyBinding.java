@@ -120,7 +120,18 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
     }
 
-    protected static final class GenerateSSHScript extends AbstractOnDiskBinding<SSHUserPrivateKey> {
+    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir) throws IOException, InterruptedException {
+        if (unixNodeType) {
+            return "ssh -i "
+                    + "\""
+                    + getPrivateKeyFile(credentials, tempDir).getRemote()
+                    + "\" "
+                    + "-o StrictHostKeyChecking=no $@";
+        } else {
+            //TODO Using getSSHExePath
+            return null;
+        }
+    }
 
     protected final class SSHScriptFile extends AbstractOnDiskBinding<SSHUserPrivateKey> {
 
