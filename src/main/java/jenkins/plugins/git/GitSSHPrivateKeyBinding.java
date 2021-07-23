@@ -91,13 +91,9 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     @Override
     public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
-        SSHUserPrivateKey sshUserPrivateKey = (SSHUserPrivateKey) credentials;
-        if (sshUserPrivateKey.isUsernameSecret()) {
-            secretValues.put(PRIVATE_KEY, sshUserPrivateKey.getUsername());
-        } else {
-            publicValues.put(PRIVATE_KEY, sshUserPrivateKey.getUsername());
-        }
-        secretValues.put(PASSPHRASE, Secret.toString(((SSHUserPrivateKey) credentials).getPassphrase()));
+        SSHUserPrivateKey sshUserCredentials = (SSHUserPrivateKey) credentials;
+        secretValues.put(PRIVATE_KEY, SSHKeyUtils.getPrivateKey(sshUserCredentials));
+        secretValues.put(PASSPHRASE, SSHKeyUtils.getPassphrase(sshUserCredentials));
     }
 
     /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String, String> publicValues) throws IOException, InterruptedException {
