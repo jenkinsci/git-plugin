@@ -33,7 +33,7 @@ public interface SSHKeyUtils {
         final String privateKeyValue = getPrivateKey(credentials);
         final String passphraseValue = getPassphrase(credentials);
         try {
-            if (isPrivateKeyEncrypted(privateKeyValue)) {
+            if (isPrivateKeyEncrypted(passphraseValue)) {
                 if (OpenSSHKeyFormatImpl.isOpenSSHFormat(privateKeyValue)) {
                     OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, passphraseValue);
                     tempKeyFile.write(openSSHKeyFormat.getDecodedPrivateKey(), null);
