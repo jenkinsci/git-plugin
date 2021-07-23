@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import hudson.FilePath;
 import hudson.util.Secret;
 import jenkins.bouncycastle.api.PEMEncodable;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
@@ -23,10 +24,8 @@ public interface SSHKeyUtils {
         return passphrase.isEmpty() ? false : true;
     }
 
-    //TODO Use getSSHExecutable method
     default String getSSHExePathInWin(GitClient git) throws IOException, InterruptedException {
-//      return ((CliGitAPIImpl) git).getSSHExecutable());
-        return "ssh";
+        return ((CliGitAPIImpl) git).getSSHExecutable().getAbsolutePath();
     }
 
     default FilePath getPrivateKeyFile(SSHUserPrivateKey credentials, FilePath workspace) throws InterruptedException, IOException {
