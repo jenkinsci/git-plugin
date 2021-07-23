@@ -165,7 +165,7 @@ public class GitUsernamePasswordBindingTest {
         if (isCliGitTool()) {
             project.setDefinition(new CpsFlowDefinition(""
                     + "node {\n"
-                    + "withCredentials([GitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
+                    + "  withCredentials([gitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
                     + "    if (isUnix()) {\n"
                     + "      sh 'env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt'\n"
                     + "    } else {\n"
@@ -176,7 +176,7 @@ public class GitUsernamePasswordBindingTest {
         } else {
             project.setDefinition(new CpsFlowDefinition(""
                     + "node {\n"
-                    + "withCredentials([GitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
+                    + "  withCredentials([gitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
                     + "    if (isUnix()) {\n"
                     + "      sh 'env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt'\n"
                     + "    } else {\n"

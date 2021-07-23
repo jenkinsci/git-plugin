@@ -174,7 +174,8 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         }
     }
 
-    @Symbol("GitUsernamePassword")
+    // Mistakenly defined GitUsernamePassword in first release, prefer gitUsernamePassword as symbol
+    @Symbol({"gitUsernamePassword", "GitUsernamePassword"})
     @Extension
     public static final class DescriptorImpl extends BindingDescriptor<StandardUsernamePasswordCredentials> {
 
