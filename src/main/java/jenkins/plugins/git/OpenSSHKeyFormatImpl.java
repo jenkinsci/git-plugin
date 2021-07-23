@@ -3,8 +3,8 @@ package jenkins.plugins.git;
 import com.hierynomus.sshj.userauth.keyprovider.OpenSSHKeyV1KeyFile;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemWriter;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,9 +29,11 @@ public class OpenSSHKeyFormatImpl {
         openSSHProtectedKey.init(privateKey, "", new AcquirePassphrase(passphrase.toCharArray()));
         byte[] content = openSSHProtectedKey.getPrivate().getEncoded();
         StringWriter sw = new StringWriter();
-        PemWriter pemWriter = new PemWriter(sw);
+        JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
         PemObject pemObject = new PemObject("PRIVATE KEY", content);
         pemWriter.writeObject(pemObject);
+        pemWriter.flush();
+        pemWriter.close();
         return sw.toString();
     }
 
