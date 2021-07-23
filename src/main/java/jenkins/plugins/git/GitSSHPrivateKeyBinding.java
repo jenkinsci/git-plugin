@@ -127,7 +127,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
     }
 
-    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir) throws IOException, InterruptedException {
+    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir,String sshExePath) throws IOException, InterruptedException {
         if (unixNodeType) {
             return "ssh -i "
                     + "\""
@@ -135,8 +135,12 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
                     + "\" "
                     + "-o StrictHostKeyChecking=no $@";
         } else {
-            //TODO Using getSSHExePath
-            return null;
+            return  "\"" + sshExePath + "\""
+                    + " -i "
+                    + "\""
+                    + getPrivateKeyFile(credentials, tempDir).getRemote()
+                    + "\""
+                    + " -o StrictHostKeyChecking=no";
         }
     }
 
