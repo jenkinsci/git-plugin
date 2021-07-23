@@ -65,12 +65,13 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         if (cliGitTool != null && filePath != null && launcher != null) {
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             final GitClient git = getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(), new EnvVars(), taskListener);
+            final String sshExePath = getSSHExePathInWin(git);
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
             setGitEnvironmentVariables(git, publicValues);
             if (isGitVersionAtLeast(git, 2, 3, 0, 0)) {
-                secretValues.put("GIT_SSH_COMMAND", getSSHCmd(credentials, unbindTempDir.getDirPath()));
+                secretValues.put("GIT_SSH_COMMAND", getSSHCmd(credentials, unbindTempDir.getDirPath(), sshExePath));
             } else {
-                SSHScriptFile sshScript = new SSHScriptFile(credentials, getSSHExePathInWin(git), unixNodeType);
+                SSHScriptFile sshScript = new SSHScriptFile(credentials, sshExePath, unixNodeType);
                 secretValues.put("GIT_SSH", sshScript.write(credentials, unbindTempDir.getDirPath()).getRemote());
             }
             return new MultiEnvironment(secretValues, publicValues, unbindTempDir.getUnbinder());
