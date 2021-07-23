@@ -30,7 +30,7 @@ public interface SSHKeyUtils {
 
     default FilePath getPrivateKeyFile(SSHUserPrivateKey credentials, FilePath workspace) throws InterruptedException, IOException {
         FilePath tempKeyFile = workspace.createTempFile("private", ".key");
-        final String privateKeyValue = getPassphrase(credentials);
+        final String privateKeyValue = getPrivateKey(credentials);
         final String passphraseValue = getPassphrase(credentials);
         try {
             if (isPrivateKeyEncrypted(privateKeyValue)) {
