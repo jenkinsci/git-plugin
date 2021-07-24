@@ -2,6 +2,7 @@ package hudson.plugins.git.extensions.impl;
 
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -31,6 +32,7 @@ public class SparseCheckoutPaths extends GitSCMExtension {
     }
 
     @Whitelisted
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<SparseCheckoutPath> getSparseCheckoutPaths() {
         return sparseCheckoutPaths;
     }

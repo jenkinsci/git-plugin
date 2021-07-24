@@ -5,7 +5,17 @@
 	<t:summary icon="/plugin/git/icons/git-48x48.png">
 
 	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
-        <j:if test="${!empty(it.scmName)}"> from <strong>SCM:</strong> ${it.scmName}</j:if>
+	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
+	<j:if test="${!empty(it.remoteUrls)}">
+		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
+			<j:if test="${remoteUrl.startsWith('http')}">
+				<br/><strong>${%Repository}</strong>: <a href="${remoteUrl}">${remoteUrl}</a>
+			</j:if>
+			<j:if test="${!remoteUrl.startsWith('http')}">
+				<br/><strong>${%Repository}</strong>: ${remoteUrl}
+			</j:if>
+		</j:forEach>
+	</j:if>
         <ul>
         <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
           <j:if test="${branch!=''}">

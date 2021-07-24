@@ -3,7 +3,6 @@ package hudson.plugins.git.extensions.impl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitSCM;
@@ -139,7 +138,7 @@ public class PathRestriction extends GitSCMExtension {
              // If every affected path is excluded, return true.
             listener.getLogger().println("Ignored commit " + commit.getCommitId()
                     + ": Found only excluded paths: "
-                    + Util.join(excludedPaths, ", "));
+                    + String.join(", ", excludedPaths));
             return true;
         }
 

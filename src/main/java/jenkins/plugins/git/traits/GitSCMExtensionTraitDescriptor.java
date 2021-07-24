@@ -38,6 +38,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.trait.SCMBuilder;
@@ -188,6 +189,7 @@ public abstract class GitSCMExtensionTraitDescriptor extends SCMSourceTraitDescr
      *
      * @return the type of {@link GitSCMExtension} that the {@link GitSCMExtensionTrait} wraps.
      */
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public Class<? extends GitSCMExtension> getExtensionClass() {
         return extension;
     }
