@@ -177,10 +177,11 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ObjectId lastBuildRevisionSha1 = lastBuild.revision.getSha1();
                 if (lastBuildRevisionSha1 != null) {
                     if (lastBuildRevisionSha1.equals(sha1)) {
-                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1 matches sha1:" + sha1.getName() + ", returning lastBuild");
+                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
                         return lastBuild;
                     } else {
-                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1: " + lastBuildRevisionSha1.getName() + " does not match sha1:" + sha1.getName() + ", checking lastBuild.marked");
+                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1: {0} does not match sha1:{1}, checking lastBuild.marked",
+                                new Object[]{lastBuildRevisionSha1.getName(), sha1.getName()});
                     }
                 } else {
                     LOGGER.log(Level.FINEST, "lastBuild.revision.getSha1() is null, checking lastBuild.marked");
@@ -192,10 +193,11 @@ public class BuildData implements Action, Serializable, Cloneable {
                 ObjectId lastBuildMarkedSha1 = lastBuild.marked.getSha1();
                 if (lastBuildMarkedSha1 != null) {
                     if (lastBuildMarkedSha1.equals(sha1)) {
-                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1 matches sha1:" + sha1.getName() + ", returning lastBuild");
+                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
                         return lastBuild;
                     } else {
-                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1:" + lastBuildMarkedSha1.getName() + " does not match sha1:" + sha1.getName());
+                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1: {0} does not match sha1:{1}",
+                                new Object[]{lastBuildMarkedSha1.getName(), sha1.getName()});
                     }
                 } else {
                     LOGGER.log(Level.FINEST, "lastBuild.marked.getSha1() is null");
