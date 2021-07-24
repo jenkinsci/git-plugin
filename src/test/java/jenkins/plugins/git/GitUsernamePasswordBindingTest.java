@@ -116,13 +116,13 @@ public class GitUsernamePasswordBindingTest {
             if (isWindows()) {
                 prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt"));
             } else {
-                prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt; env | grep GIT_TERMINAL_PROMPT >> auth.txt;"));
+                prj.getBuildersList().add(new Shell("env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt"));
             }
         } else {
             if (isWindows()) {
                 prj.getBuildersList().add(new BatchFile("set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt"));
             } else {
-                prj.getBuildersList().add(new Shell("env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt;"));
+                prj.getBuildersList().add(new Shell("env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt"));
             }
         }
         r.configRoundtrip((Item) prj);
@@ -167,7 +167,7 @@ public class GitUsernamePasswordBindingTest {
                     + "node {\n"
                     + "withCredentials([GitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
                     + "    if (isUnix()) {\n"
-                    + "      sh 'env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt; env | grep GIT_TERMINAL_PROMPT >> auth.txt;'\n"
+                    + "      sh 'env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt'\n"
                     + "    } else {\n"
                     + "      bat 'set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt'\n"
                     + "    }\n"
@@ -178,7 +178,7 @@ public class GitUsernamePasswordBindingTest {
                     + "node {\n"
                     + "withCredentials([GitUsernamePassword(credentialsId: '" + credentialID + "', gitToolName: '" + gitToolInstance.getName() + "')]) {"
                     + "    if (isUnix()) {\n"
-                    + "      sh 'env | grep GIT_USERNAME > auth.txt; env | grep GIT_PASSWORD >> auth.txt;'\n"
+                    + "      sh 'env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt'\n"
                     + "    } else {\n"
                     + "      bat 'set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt'\n"
                     + "    }\n"
