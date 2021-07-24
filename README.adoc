@@ -75,21 +75,21 @@ The variable bindings are available even if the `JGit` or `JGit with Apache HTTP
 
 .Shell example
 ```groovy
-withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
   sh 'git fetch --all'
 }
 ```
 
 .Batch example
 ```groovy
-withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
   bat 'git submodule update --init --recursive'
 }
 ```
 
 .Powershell example
 ```groovy
-withCredentials([GitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
   powershell 'git push'
 }
 ```
