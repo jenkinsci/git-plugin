@@ -93,16 +93,19 @@ public class BuildData implements Action, Serializable, Cloneable {
      *
      * @return build data display name
      */
+    @Override
     public String getDisplayName() {
         if (scmName != null && !scmName.isEmpty())
             return "Git Build Data:" + scmName;
         return "Git Build Data";
     }
 
+    @Override
     public String getIconFileName() {
         return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-32x32.png";
     }
 
+    @Override
     public String getUrlName() {
         return index == null ? "git" : "git-"+index;
     }
