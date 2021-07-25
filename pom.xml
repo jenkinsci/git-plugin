@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.19</version>
+    <version>4.19</version> <!-- Needs to be fixed before merge -->
     <relativePath />
   </parent>
 
@@ -166,7 +166,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
-      <version>1.25</version>
     </dependency>
     <!-- BouncyCastle API Plugin -->
     <dependency>
