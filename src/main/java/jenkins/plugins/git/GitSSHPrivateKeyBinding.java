@@ -66,8 +66,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
             final UnbindableDir unbindTempDir = UnbindableDir.create(filePath);
             final GitClient git = getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(), new EnvVars(), taskListener);
-            final String sshExePath = getSSHExePathInWin(git);
-            setUnixNodeType(isCurrentNodeOSUnix(launcher));
+            final String sshExePath = getSSHPath(git);
             setGitEnvironmentVariables(git, publicValues);
             if (isGitVersionAtLeast(git, 2, 3, 0, 0)) {
                 secretValues.put("GIT_SSH_COMMAND", getSSHCmd(credentials, unbindTempDir.getDirPath(), sshExePath));
@@ -125,9 +124,18 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
     }
 
+    private String getSSHPath(GitClient git) throws IOException, InterruptedException {
+        if(unixNodeType){
+            return "ssh";
+        }else {
+            return getSSHExePathInWin(git);
+        }
+    }
+
     private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir,String sshExePath) throws IOException, InterruptedException {
         if (unixNodeType) {
-            return "ssh -i "
+            return sshExePath +
+                    " -i "
                     + "\""
                     + getPrivateKeyFile(credentials, tempDir).getRemote()
                     + "\" "
