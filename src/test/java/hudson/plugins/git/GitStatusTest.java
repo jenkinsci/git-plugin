@@ -28,7 +28,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -407,7 +406,6 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);
@@ -461,7 +459,6 @@ public class GitStatusTest extends AbstractGitProject {
         GitSCM git = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
                 Collections.singletonList(new BranchSpec(branch)),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(git);
@@ -577,7 +574,10 @@ public class GitStatusTest extends AbstractGitProject {
     }
 
     private void doNotifyCommitWithDefaultParameter(final boolean allowed, String safeParameters) throws Exception {
-        assumeTrue(runUnreliableTests()); // Test cleanup is unreliable in some cases
+        if (!runUnreliableTests()) {
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         if (allowed) {
             GitStatus.setAllowNotifyCommitParameters(true);
         }

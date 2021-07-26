@@ -32,7 +32,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitSCMExtension;
@@ -522,7 +521,6 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         return new GitSCM(
                 asRemoteConfigs(),
                 Collections.singletonList(new BranchSpec(head().getName())),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 browser(), gitTool(),
                 extensions);
     }

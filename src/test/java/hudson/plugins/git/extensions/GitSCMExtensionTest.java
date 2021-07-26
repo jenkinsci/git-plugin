@@ -3,7 +3,6 @@ package hudson.plugins.git.extensions;
 import hudson.model.*;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.TestGitRepo;
 import hudson.util.StreamTaskListener;
 import org.junit.Before;
@@ -71,7 +70,6 @@ public abstract class GitSCMExtensionTest {
 		GitSCM scm = new GitSCM(
 				repo.remoteConfigs(),
 				branches,
-				false, Collections.<SubmoduleConfig>emptyList(),
 				null, null,
 				Collections.<GitSCMExtension>emptyList());
 		scm.getExtensions().add(extension);

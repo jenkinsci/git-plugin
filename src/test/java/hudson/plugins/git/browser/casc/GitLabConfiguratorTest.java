@@ -3,13 +3,11 @@ package hudson.plugins.git.browser.casc;
 import hudson.plugins.git.browser.GitLab;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.model.Mapping;
-import org.junit.Rule;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 

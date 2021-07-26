@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * @author Nicolas de Loof
  */
@@ -43,8 +45,10 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     protected GitTagAction(Run build, FilePath workspace, Revision revision) {
         super(build);
         this.ws = workspace.getRemote();
-        for (Branch b : revision.getBranches()) {
-            tags.put(b.getName(), new ArrayList<>());
+        if (revision.getBranches() != null) {
+            for (Branch b : revision.getBranches()) {
+                tags.put(b.getName(), new ArrayList<>());
+            }
         }
     }
 
@@ -186,6 +190,7 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     public final class TagWorkerThread extends TaskThread {
         private final Map<String, String> tagSet;
 
+        @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
         public TagWorkerThread(Map<String, String> tagSet,String ignoredComment) {
             super(GitTagAction.this, ListenerAndText.forMemory(null));
             this.tagSet = tagSet;

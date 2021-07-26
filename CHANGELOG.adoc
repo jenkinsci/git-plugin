@@ -9,13 +9,13 @@
 * Require Jenkins 2.121.1 or newer
 * Fix upgrade compatibility error for mergeStrategy 'default' of
 pre-build merge in pipeline jobs
-(https://issues.jenkins-ci.org/browse/JENKINS-51638[JENKINS-51638])
+(https://issues.jenkins.io/browse/JENKINS-51638[JENKINS-51638])
 
 == Version 3.9.4 (April 24, 2019)
 
 * https://jenkins.io/security/advisory/2019-01-28/[Security advisory] Fix object not
 found exception scanning multibranch pipeline
-repo (https://issues.jenkins-ci.org/browse/JENKINS-50394[JENKINS-50394])
+repo (https://issues.jenkins.io/browse/JENKINS-50394[JENKINS-50394])
 
 == Version 4.0.0-rc (January 30, 2019)
 
@@ -23,30 +23,30 @@ repo (https://issues.jenkins-ci.org/browse/JENKINS-50394[JENKINS-50394])
 * Require Jenkins 2.60
 * Make matrix project dependency optional
 * Add shallow cloning for submodules
-(https://issues.jenkins-ci.org/browse/JENKINS-21248[JENKINS-21248])
+(https://issues.jenkins.io/browse/JENKINS-21248[JENKINS-21248])
 * Add option to search for users by e-mail address
-(https://issues.jenkins-ci.org/browse/JENKINS-9016[JENKINS-9016])
+(https://issues.jenkins.io/browse/JENKINS-9016[JENKINS-9016])
 * Add parallel update for submodules
-(https://issues.jenkins-ci.org/browse/JENKINS-44720[JENKINS-44720])
+(https://issues.jenkins.io/browse/JENKINS-44720[JENKINS-44720])
 * Stop bloating build.xml files with BuildData
-(https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022])
+(https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022])
 * Fix notifyCommit for branch names that contain '/' characters
-(https://issues.jenkins-ci.org/browse/JENKINS-29603[JENKINS-29603],
-https://issues.jenkins-ci.org/browse/JENKINS-32174[JENKINS-32174])
+(https://issues.jenkins.io/browse/JENKINS-29603[JENKINS-29603],
+https://issues.jenkins.io/browse/JENKINS-32174[JENKINS-32174])
 * Fix empty "depth" parameter handling for shallow cloning
-(https://issues.jenkins-ci.org/browse/JENKINS-53050[JENKINS-53050])
+(https://issues.jenkins.io/browse/JENKINS-53050[JENKINS-53050])
 * Ignore exceptions when generating commit message as informational
 message in build log
-(https://issues.jenkins-ci.org/browse/JENKINS-53725[JENKINS-53725])
+(https://issues.jenkins.io/browse/JENKINS-53725[JENKINS-53725])
 * Fix snippet generator gitlab version class cast exception
-(https://issues.jenkins-ci.org/browse/JENKINS-46650[JENKINS-46650])
+(https://issues.jenkins.io/browse/JENKINS-46650[JENKINS-46650])
 * Fix git tool references on agent
-(https://issues.jenkins-ci.org/browse/JENKINS-55827[JENKINS-55827])
+(https://issues.jenkins.io/browse/JENKINS-55827[JENKINS-55827])
 
 == Version 3.9.3 (January 30, 2019)
 
 * https://jenkins.io/security/advisory/2019-01-28/[Fix local tool reference was ignored]
-(https://issues.jenkins-ci.org/browse/JENKINS-55827[JENKINS-55827]),
+(https://issues.jenkins.io/browse/JENKINS-55827[JENKINS-55827]),
 regression in 3.9.2
 
 == Version 3.9.2 (January 28, 2019)
@@ -64,25 +64,25 @@ issue]
 * Require Jenkins 1.642.3 instead of 1.625.3 (workflow dependency
 update)
 * Test automation improvements
-(https://issues.jenkins-ci.org/browse/JENKINS-50621[JENKINS-50621],
-https://issues.jenkins-ci.org/browse/JENKINS-50540[JENKINS-50540],
-https://issues.jenkins-ci.org/browse/JENKINS-50777[JENKINS-50777])
+(https://issues.jenkins.io/browse/JENKINS-50621[JENKINS-50621],
+https://issues.jenkins.io/browse/JENKINS-50540[JENKINS-50540],
+https://issues.jenkins.io/browse/JENKINS-50777[JENKINS-50777])
 * Support SHA1 references in Pipeline shared libraries
-(https://issues.jenkins-ci.org/browse/JENKINS-48061[JENKINS-48061])
+(https://issues.jenkins.io/browse/JENKINS-48061[JENKINS-48061])
 * Added a new trait enabling discovery of custom refs
-(https://issues.jenkins-ci.org/browse/JENKINS-48061[JENKINS-48061])
+(https://issues.jenkins.io/browse/JENKINS-48061[JENKINS-48061])
 * Don't require a workspace for polling in Freestyle projects that
 use ChangeLogToBranch extension
 * Don't require a workspace for polling in Freestyle projects that
 use author in changelog extension
-(https://issues.jenkins-ci.org/browse/JENKINS-50683[JENKINS-50683] and
+(https://issues.jenkins.io/browse/JENKINS-50683[JENKINS-50683] and
 https://groups.google.com/d/msg/jenkinsci-dev/irft9lJIYVk/xnhNnrWcjJgJ[google groups discussion])
 * Correct the Pipeline data binding for merge strategy in
 UserMergeOptions
-(https://issues.jenkins-ci.org/browse/JENKINS-34070[JENKINS-34070])
+(https://issues.jenkins.io/browse/JENKINS-34070[JENKINS-34070])
 * Retain repository browser URL when saved from Pipeline job
 definition page
-(https://issues.jenkins-ci.org/browse/JENKINS-36451[JENKINS-36451])
+(https://issues.jenkins.io/browse/JENKINS-36451[JENKINS-36451])
 
 == Version 3.8.0 (February 26, 2018)
 
@@ -92,39 +92,39 @@ definition page
 == Version 3.7.0 (December 21, 2017)
 
 * Fix checkout performance regression due to many rev-parse calls
-(https://issues.jenkins-ci.org/browse/JENKINS-45447[JENKINS-45447])
+(https://issues.jenkins.io/browse/JENKINS-45447[JENKINS-45447])
 * Add Bitbucket and Gitlab browser guessing (in addition to existing
 GitHub browser guessing)
 (https://github.com/jenkinsci/git-plugin/pull/562[PR#562])
 * Validate Fisheye git browser URL during input
-(https://issues.jenkins-ci.org/browse/JENKINS-48064[JENKINS-48064])
+(https://issues.jenkins.io/browse/JENKINS-48064[JENKINS-48064])
 * Allow retry by throwing IOException if submodule update fails
-(https://issues.jenkins-ci.org/browse/JENKINS-32481[JENKINS-32481])
+(https://issues.jenkins.io/browse/JENKINS-32481[JENKINS-32481])
 * Don't pass empty username to User.get()
-(https://issues.jenkins-ci.org/browse/JENKINS-48589[JENKINS-48589])
+(https://issues.jenkins.io/browse/JENKINS-48589[JENKINS-48589])
 
 == Version 3.6.4 (November 5, 2017)
 
 * Add support for tagged pipeline shared libraries lost in 3.6.3
-(https://issues.jenkins-ci.org/browse/JENKINS-47824[JENKINS-47824])
+(https://issues.jenkins.io/browse/JENKINS-47824[JENKINS-47824])
 
 == Version 3.6.3 (October 26, 2017)
 
 * Fix ssh based branch indexing failure with default credentials
-(https://issues.jenkins-ci.org/browse/JENKINS-47629[JENKINS-47629],
-https://issues.jenkins-ci.org/browse/JENKINS-47659[JENKINS-47659],
-https://issues.jenkins-ci.org/browse/JENKINS-47680[JENKINS-47680])
+(https://issues.jenkins.io/browse/JENKINS-47629[JENKINS-47629],
+https://issues.jenkins.io/browse/JENKINS-47659[JENKINS-47659],
+https://issues.jenkins.io/browse/JENKINS-47680[JENKINS-47680])
 
 == Version 3.6.2 (October 23, 2017)
 
 * Fix visibility of enum required to implement new API for
-https://issues.jenkins-ci.org/browse/JENKINS-47526[JENKINS-47526]
+https://issues.jenkins.io/browse/JENKINS-47526[JENKINS-47526]
 
 == Version 3.6.1 (October 23, 2017)
 
 * A merge conflict in PreBuildMerge will corrupt BuildData history in
 previous builds
-(https://issues.jenkins-ci.org/browse/JENKINS-44037[JENKINS-44037])
+(https://issues.jenkins.io/browse/JENKINS-44037[JENKINS-44037])
 * Allow up to 4 second time offset in Windows file systems
 (https://github.com/jenkinsci/git-plugin/pull/536[PR#536])
 * Improve test coverage
@@ -142,51 +142,51 @@ enabled in all the right situations but as a result of the wrong test)
 (https://github.com/jenkinsci/git-plugin/pull/522[PR#522])
 * Provide an API to allow avoiding local repository cache for
 GitSCMSource
-(https://issues.jenkins-ci.org/browse/JENKINS-47526[JENKINS-47526])
+(https://issues.jenkins.io/browse/JENKINS-47526[JENKINS-47526])
 * Change the UI for Advanced Clone Behaviours to avoid confusing
 "negative" fetch tags label
-(https://issues.jenkins-ci.org/browse/JENKINS-45822[JENKINS-45822])
+(https://issues.jenkins.io/browse/JENKINS-45822[JENKINS-45822])
 
 == Version 3.6.0 (October 2, 2017)
 
 * Allow traits to support tag discovery
-(https://issues.jenkins-ci.org/browse/JENKINS-46207[JENKINS-46207])
+(https://issues.jenkins.io/browse/JENKINS-46207[JENKINS-46207])
 * Don't exceed response header length
-(https://issues.jenkins-ci.org/browse/JENKINS-46929[JENKINS-46929])
+(https://issues.jenkins.io/browse/JENKINS-46929[JENKINS-46929])
 * Don't fail build if diagnostic print of commit message fails
-(https://issues.jenkins-ci.org/browse/JENKINS-45729[JENKINS-45729])
+(https://issues.jenkins.io/browse/JENKINS-45729[JENKINS-45729])
 
 == Version 3.5.1 (August 5, 2017)
 
 * Extend API for Blue Ocean pipeline editing support in git
 * Extend API to allow PreBuildMerge trait through a new plugin
 * Don't ignore branches with '/' in GitSCMFileSystem
-(https://issues.jenkins-ci.org/browse/JENKINS-42817[JENKINS-42817])
+(https://issues.jenkins.io/browse/JENKINS-42817[JENKINS-42817])
 * Show folder scoped credentials in modern SCM
-(https://issues.jenkins-ci.org/browse/JENKINS-44271[JENKINS-44271])
+(https://issues.jenkins.io/browse/JENKINS-44271[JENKINS-44271])
 
 == Version 3.5.0 (July 28, 2017)
 
 * Upgrade to version 2.5.0
 * Switch GitSCMSource indexing based on ls-remote to correctly
 determine orphaned branches
-(https://issues.jenkins-ci.org/browse/JENKINS-44751[JENKINS-44751])
+(https://issues.jenkins.io/browse/JENKINS-44751[JENKINS-44751])
 * (Internal, not user visible) Provide an extension for downstream
 SCMSource plugins to use for PR merging that disables shallow clones
 when doing a PR-merge
-(https://issues.jenkins-ci.org/browse/JENKINS-45771[JENKINS-45771])
+(https://issues.jenkins.io/browse/JENKINS-45771[JENKINS-45771])
 
 == Version 3.4.1 (July 18, 2017)
 
 * Fix credentials field being incorrectly marked as transient
-(https://issues.jenkins-ci.org/browse/JENKINS-45598[JENKINS-45598])
+(https://issues.jenkins.io/browse/JENKINS-45598[JENKINS-45598])
 
 == Version 3.4.0 (July 17, 2017)
 
 * Refactor the Git Branch Source UI / UX to simplify configuration
 and enable configuration options to be shared with dependent plugins
 such as GitHub Branch Source and Bitbucket Branch Source
-(https://issues.jenkins-ci.org/browse/JENKINS-43507[JENKINS-43507]).
+(https://issues.jenkins.io/browse/JENKINS-43507[JENKINS-43507]).
 Please consult the linked ticket for full details. The high-level
 changes are: +
 ** There were a number of behaviours that are valid when used from a
@@ -216,62 +216,62 @@ also need to add the "Specify ref specs" behaviour.
 == Version 3.3.1 (June 23, 2017)
 
 * Print first line of commit message in console log
-(https://issues.jenkins-ci.org/browse/JENKINS-38241[JENKINS-38241],
-https://issues.jenkins-ci.org/browse/JENKINS-38827[JENKINS-38827])
+(https://issues.jenkins.io/browse/JENKINS-38241[JENKINS-38241],
+https://issues.jenkins.io/browse/JENKINS-38827[JENKINS-38827])
 * Allow scm steps to return revision
-(https://issues.jenkins-ci.org/browse/JENKINS-26100[JENKINS-26100],
-https://issues.jenkins-ci.org/browse/JENKINS-38827[JENKINS-38827)])
+(https://issues.jenkins.io/browse/JENKINS-26100[JENKINS-26100],
+https://issues.jenkins.io/browse/JENKINS-38827[JENKINS-38827)])
 * Don't require crumb for POST to /git/notifyCommit even when CSRF is
 enabled
-(https://issues.jenkins-ci.org/browse/JENKINS-34350[JENKINS-34350])
+(https://issues.jenkins.io/browse/JENKINS-34350[JENKINS-34350])
 * Fix credentials tracking null pointer exception in pipeline library
-use (https://issues.jenkins-ci.org/browse/JENKINS-44640[JENKINS-44640])
+use (https://issues.jenkins.io/browse/JENKINS-44640[JENKINS-44640])
 * Fix credentials tracking null pointer exception in git parameters
-use (https://issues.jenkins-ci.org/browse/JENKINS-44087[JENKINS-44087])
+use (https://issues.jenkins.io/browse/JENKINS-44087[JENKINS-44087])
 
 == Version 3.3.0 (April 21, 2017)
 
 * Track credentials use so that credentials show the jobs which use
-them (https://issues.jenkins-ci.org/browse/JENKINS-38827[JENKINS-38827])
+them (https://issues.jenkins.io/browse/JENKINS-38827[JENKINS-38827])
 * Add a "Branches" list view column
-(https://issues.jenkins-ci.org/browse/JENKINS-37331[JENKINS-37331])
+(https://issues.jenkins.io/browse/JENKINS-37331[JENKINS-37331])
 * Add some Italian localization
 * Fix null pointer exception when pipeline definition includes a
 branch with no repository
-(https://issues.jenkins-ci.org/browse/JENKINS-43630[JENKINS-43630])
+(https://issues.jenkins.io/browse/JENKINS-43630[JENKINS-43630])
 
 == Version 3.2.0 (March 28, 2017)
 
-* Add reporting API for default remote branch (https://issues.jenkins-ci.org/browse/JENKINS-40834[JENKINS-40834])
+* Add reporting API for default remote branch (https://issues.jenkins.io/browse/JENKINS-40834[JENKINS-40834])
 * Remove extra git tag actions from build results sidebar
-(https://issues.jenkins-ci.org/browse/JENKINS-35475[JENKINS-35475])
+(https://issues.jenkins.io/browse/JENKINS-35475[JENKINS-35475])
 
 == Version 3.1.0 (March 4, 2017)
 
 * Add command line git https://git-lfs.github.com/[large file support (LFS)]
-(https://issues.jenkins-ci.org/browse/JENKINS-30318[JENKINS-30318],
-https://issues.jenkins-ci.org/browse/JENKINS-35687[JENKINS-35687],
-https://issues.jenkins-ci.org/browse/JENKINS-38708[JENKINS-38708],
-https://issues.jenkins-ci.org/browse/JENKINS-40174[JENKINS-40174])
-* Allow custom remote and refspec for GitSCMSource (https://issues.jenkins-ci.org/browse/JENKINS-40908[JENKINS-40908])
-* Add help for GitSCMSource (https://issues.jenkins-ci.org/browse/JENKINS-42204[JENKINS-42204])
-* Add help for multiple refspecs (https://issues.jenkins-ci.org/browse/JENKINS-42050[JENKINS-42050])
-* Log a warning if buildsByBranchName is too large (https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022])
-* Avoid incorrect triggers when processing events (https://issues.jenkins-ci.org/browse/JENKINS-42236[JENKINS-42236])
+(https://issues.jenkins.io/browse/JENKINS-30318[JENKINS-30318],
+https://issues.jenkins.io/browse/JENKINS-35687[JENKINS-35687],
+https://issues.jenkins.io/browse/JENKINS-38708[JENKINS-38708],
+https://issues.jenkins.io/browse/JENKINS-40174[JENKINS-40174])
+* Allow custom remote and refspec for GitSCMSource (https://issues.jenkins.io/browse/JENKINS-40908[JENKINS-40908])
+* Add help for GitSCMSource (https://issues.jenkins.io/browse/JENKINS-42204[JENKINS-42204])
+* Add help for multiple refspecs (https://issues.jenkins.io/browse/JENKINS-42050[JENKINS-42050])
+* Log a warning if buildsByBranchName is too large (https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022])
+* Avoid incorrect triggers when processing events (https://issues.jenkins.io/browse/JENKINS-42236[JENKINS-42236])
 
 == Version 3.0.5 (February 9, 2017)
 
 * Please read https://jenkins.io/blog/2017/01/17/scm-api-2/[this Blog Post] before upgrading
 * Upgrade SCM API dependency to 2.0.3
 * Expose event origin to listeners
-(https://issues.jenkins-ci.org/browse/JENKINS-41812[JENKINS-41812])
+(https://issues.jenkins.io/browse/JENKINS-41812[JENKINS-41812])
 
 == Version 2.6.5 (February 9, 2017)
 
 * Please read https://jenkins.io/blog/2017/01/17/scm-api-2/[this Blog Post] before upgrading
 * Upgrade SCM API dependency to 2.0.3
 * Expose event origin to listeners
-(https://issues.jenkins-ci.org/browse/JENKINS-41812[JENKINS-41812])
+(https://issues.jenkins.io/browse/JENKINS-41812[JENKINS-41812])
 
 == Version 3.0.4 (February 2, 2017)
 
@@ -304,49 +304,49 @@ been published to the update center
 (https://github.com/jenkinsci/git-plugin/pull/467[PR #467])
 * Add API to allow plugins to configure the SCM browser after
 instantiation
-(https://issues.jenkins-ci.org/browse/JENKINS-39837[JENKINS-39837])
+(https://issues.jenkins.io/browse/JENKINS-39837[JENKINS-39837])
 * Updated Japanese translations
 * Upgrade to SCM API 2.0.x APIs
-(https://issues.jenkins-ci.org/browse/JENKINS-39355[JENKINS-39355])
+(https://issues.jenkins.io/browse/JENKINS-39355[JENKINS-39355])
 * Fix help text (https://github.com/jenkinsci/git-plugin/pull/451[PR#451])
 
 == Version 2.6.2 (January 16, 2017)
 
 * Please read https://jenkins.io/blog/2017/01/17/scm-api-2/[this Blog Post] before upgrading
 * Allow the SCM browser to be configured after SCM instance created
-(https://issues.jenkins-ci.org/browse/JENKINS-39837[JENKINS-39837])
+(https://issues.jenkins.io/browse/JENKINS-39837[JENKINS-39837])
 * Fixed translations
 * Fixed copyright
 * Updated Japanese translation
 * Upgrade to SCM API 2.0.x APIs
-(https://issues.jenkins-ci.org/browse/JENKINS-39355[JENKINS-39355])
+(https://issues.jenkins.io/browse/JENKINS-39355[JENKINS-39355])
 * API to get author or committer email without having to call
 getAuthor()
 
 == Version 3.0.2-beta-1 (December 16, 2016)
 
 * Update to SCM-API 2.0.1 APIs
-(https://issues.jenkins-ci.org/browse/JENKINS-39355[JENKINS-39355])
+(https://issues.jenkins.io/browse/JENKINS-39355[JENKINS-39355])
 * Add implementation of SCMFileSystem
-(https://issues.jenkins-ci.org/browse/JENKINS-40382[JENKINS-40382])
+(https://issues.jenkins.io/browse/JENKINS-40382[JENKINS-40382])
 * Fix help text for excluded regions regex
 (https://github.com/jenkinsci/git-plugin/pull/451[PR#451])
 
 == Version 2.6.2-beta-1 (December 16, 2016)
 
 * Update to SCM-API 2.0.1 APIs
-(https://issues.jenkins-ci.org/browse/JENKINS-39355[JENKINS-39355])
+(https://issues.jenkins.io/browse/JENKINS-39355[JENKINS-39355])
 * Add implementation of SCMFileSystem
-(https://issues.jenkins-ci.org/browse/JENKINS-40382[JENKINS-40382])
+(https://issues.jenkins.io/browse/JENKINS-40382[JENKINS-40382])
 
 == Version 3.0.1 (November 18, 2016)
 
 * Allow retrieval of a single revision (for improved pipeline support)
-(https://issues.jenkins-ci.org/browse/JENKINS-31155[JENKINS-31155])
+(https://issues.jenkins.io/browse/JENKINS-31155[JENKINS-31155])
 * Avoid null pointer exception in prebuild use of build data
-(https://issues.jenkins-ci.org/browse/JENKINS-34369[JENKINS-34369])
+(https://issues.jenkins.io/browse/JENKINS-34369[JENKINS-34369])
 * Allow git credentials references from global configuration screens
-(https://issues.jenkins-ci.org/browse/JENKINS-38048[JENKINS-38048])
+(https://issues.jenkins.io/browse/JENKINS-38048[JENKINS-38048])
 * Use correct specific version in workflow pipeline on subsequent
 builds
 (https://github.com/jenkinsci/git-plugin/commit/e15a431a62781c6081c57354a33a7e148a4452a1[e15a43])
@@ -354,11 +354,11 @@ builds
 == Version 2.6.1 (November 9, 2016)
 
 * Allow retrieval of a single revision (for improved pipeline support)
-(https://issues.jenkins-ci.org/browse/JENKINS-31155[JENKINS-31155])
+(https://issues.jenkins.io/browse/JENKINS-31155[JENKINS-31155])
 * Avoid null pointer exception in prebuild use of build data
-(https://issues.jenkins-ci.org/browse/JENKINS-34369[JENKINS-34369])
+(https://issues.jenkins.io/browse/JENKINS-34369[JENKINS-34369])
 * Allow git credentials references from global configuration screens
-(https://issues.jenkins-ci.org/browse/JENKINS-38048[JENKINS-38048])
+(https://issues.jenkins.io/browse/JENKINS-38048[JENKINS-38048])
 * Use correct specific version in workflow pipeline on subsequent
 builds
 (https://github.com/jenkinsci/git-plugin/commit/e15a431a62781c6081c57354a33a7e148a4452a1[e15a43])
@@ -366,37 +366,37 @@ builds
 == Version 3.0.0 (September 10, 2016)
 
 * Add submodule authentication using same credentials as parent
-repository (https://issues.jenkins-ci.org/browse/JENKINS-20941[JENKINS-20941])
+repository (https://issues.jenkins.io/browse/JENKINS-20941[JENKINS-20941])
 * Require JDK 7 and Jenkins 1.625 as minimum Jenkins version
 
 == Version 2.6.0 (September 2, 2016)
 
 * Add command line git support to multi-branch pipeline jobs
-(https://issues.jenkins-ci.org/browse/JENKINS-33983[JENKINS-33983],
-https://issues.jenkins-ci.org/browse/JENKINS-35565[JENKINS-35565],
-https://issues.jenkins-ci.org/browse/JENKINS-35567[JENKINS-35567],
-https://issues.jenkins-ci.org/browse/JENKINS-36958[JENKINS-36958],
-https://issues.jenkins-ci.org/browse/JENKINS-37297[JENKINS-37297])
+(https://issues.jenkins.io/browse/JENKINS-33983[JENKINS-33983],
+https://issues.jenkins.io/browse/JENKINS-35565[JENKINS-35565],
+https://issues.jenkins.io/browse/JENKINS-35567[JENKINS-35567],
+https://issues.jenkins.io/browse/JENKINS-36958[JENKINS-36958],
+https://issues.jenkins.io/browse/JENKINS-37297[JENKINS-37297])
 * Remove deleted branches from multi-branch cache when using command
-line git (https://issues.jenkins-ci.org/browse/JENKINS-37727[JENKINS-37727])
+line git (https://issues.jenkins.io/browse/JENKINS-37727[JENKINS-37727])
 * Create multi-branch cache parent directories if needed
-(https://issues.jenkins-ci.org/browse/JENKINS-37482[JENKINS-37482])
-* Use credentials API 2.1 (https://issues.jenkins-ci.org/browse/JENKINS-35525[JENKINS-35525])
+(https://issues.jenkins.io/browse/JENKINS-37482[JENKINS-37482])
+* Use credentials API 2.1 (https://issues.jenkins.io/browse/JENKINS-35525[JENKINS-35525])
 
 == Version 2.5.3 (July 30, 2016)
 
 * Prepare to coexist with git client plugin 2.0 when it changes from
 JGit 3 to JGit 4
 (https://github.com/jenkinsci/git-plugin/commit/71946a2896d3adcd1171ac59b7c45bacaf7a9c56[commit])
-* Fix gogs repository browser configuration (https://issues.jenkins-ci.org/browse/JENKINS-37066[JENKINS-37066])
+* Fix gogs repository browser configuration (https://issues.jenkins.io/browse/JENKINS-37066[JENKINS-37066])
 * Optionally "honor refspec on initial clone" rather than always
-honoring refspec on initial clone (https://issues.jenkins-ci.org/browse/JENKINS-36507[JENKINS-36507])
-* Don't ignore the checkout timeout value (https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547])
+honoring refspec on initial clone (https://issues.jenkins.io/browse/JENKINS-36507[JENKINS-36507])
+* Don't ignore the checkout timeout value (https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547])
 
 == Version 3.0.0-beta2 (July 6, 2016)
 
 * Fix compatibility break introduced by git plugin 2.5.1 release
-(https://issues.jenkins-ci.org/browse/JENKINS-36419[JENKINS-36419])
+(https://issues.jenkins.io/browse/JENKINS-36419[JENKINS-36419])
 * Add many more git options to multi-branch project plugin and
 literate plugin (plugins which use GitSCMSource)
 * Improved help for regex branch specifiers and branch name matching
@@ -404,17 +404,17 @@ literate plugin (plugins which use GitSCMSource)
 * Use Jenkins common controls for numeric entry in fields which are
 limited to numbers (like shallow clone depth). Blocks the user from
 inserting alphabetic characters into a field which should take numbers
-* Honor refspec on initial fetch (https://issues.jenkins-ci.org/browse/JENKINS-31393[JENKINS-31393]) (note, some users may
+* Honor refspec on initial fetch (https://issues.jenkins.io/browse/JENKINS-31393[JENKINS-31393]) (note, some users may
 depend on the old, poor behavior that the plugin fetched all refspecs
 even though the user had specified a narrower refspec. Those users can
 delete their refspec or modify it to be as wide as they need)
 * Disallow deletion of the last repository entry in git configuration
-(https://issues.jenkins-ci.org/browse/JENKINS-33956[JENKINS-33956])
+(https://issues.jenkins.io/browse/JENKINS-33956[JENKINS-33956])
 
 == Version 2.5.2 (July 4, 2016)
 
 * Fix compatibility break introduced by git plugin 2.5.1 release
-(https://issues.jenkins-ci.org/browse/JENKINS-36419[JENKINS-36419])
+(https://issues.jenkins.io/browse/JENKINS-36419[JENKINS-36419])
 
 == Version 2.5.1 (July 2, 2016)
 
@@ -425,28 +425,28 @@ literate plugin (plugins which use GitSCMSource)
 * Use Jenkins common controls for numeric entry in fields which are
 limited to numbers (like shallow clone depth). Blocks the user from
 inserting alphabetic characters into a field which should take numbers
-* Honor refspec on initial fetch (https://issues.jenkins-ci.org/browse/JENKINS-31393[JENKINS-31393]) (note, some users may
+* Honor refspec on initial fetch (https://issues.jenkins.io/browse/JENKINS-31393[JENKINS-31393]) (note, some users may
 depend on the old, poor behavior that the plugin fetched all refspecs
 even though the user had specified a narrower refspec. Those users can
 delete their refspec or modify it to be as wide as they need)
 * Disallow deletion of the last repository entry in git configuration
-(https://issues.jenkins-ci.org/browse/JENKINS-33956[JENKINS-33956])
+(https://issues.jenkins.io/browse/JENKINS-33956[JENKINS-33956])
 
 == Version 2.5.0 (June 19, 2016) - Submodule authentication has moved into git 3.0.0-beta
 
 * Reject parameters passed through unauthenticated notifyCommit calls
 (SECURITY-275)
 * Don't generate error when two repos defined and specific SHA1 is
-built (https://issues.jenkins-ci.org/browse/JENKINS-26268[JENKINS-26268])
+built (https://issues.jenkins.io/browse/JENKINS-26268[JENKINS-26268])
 * Fix stack trace generated when AssemblaWeb used as git hosting
 service
 * Fix array index violation when e-mail address is single character
 "@"
 * Add support for gogs self-hosted git service
 * Use environment from executing node rather than using environment
-from master
+from controller
 * Move pipeline GitStep from pipeline plugin to git plugin
-(https://issues.jenkins-ci.org/browse/JENKINS-35247[JENKINS-35247]); *note* that if you have the _Pipeline: SCM Step_ plugin
+(https://issues.jenkins.io/browse/JENKINS-35247[JENKINS-35247]); *note* that if you have the _Pipeline: SCM Step_ plugin
 installed, you must update it as well
 
 == Version 3.0.0-beta1 (June 15, 2016)
@@ -454,16 +454,16 @@ installed, you must update it as well
 * Continuation of git plugin 2.5.0-beta series (2.5.0 release number
 used for SECURITY-275 fix)
 * Don't generate error when two repos defined and specific SHA1 is
-built (https://issues.jenkins-ci.org/browse/JENKINS-26268[JENKINS-26268])
+built (https://issues.jenkins.io/browse/JENKINS-26268[JENKINS-26268])
 * Fix stack trace generated when AssemblaWeb used as git hosting
 service
 * Fix array index violation when e-mail address is single character
 "@"
 * Add support for gogs self-hosted git service
 * Use environment from executing node rather than using environment
-from master
+from controller
 * Move pipeline GitStep from pipeline plugin to git plugin
-(https://issues.jenkins-ci.org/browse/JENKINS-35247[JENKINS-35247])
+(https://issues.jenkins.io/browse/JENKINS-35247[JENKINS-35247])
 
 == Version 2.5.0-beta5 (April 19, 2016)
 
@@ -473,95 +473,95 @@ from master
 == Version 2.4.4 (March 24, 2016)
 
 * Fix git plugin 2.4.3 data loss when saving job definition
-(https://issues.jenkins-ci.org/browse/JENKINS-33695[JENKINS-33695] and https://issues.jenkins-ci.org/browse/JENKINS-33564[JENKINS-33564])
+(https://issues.jenkins.io/browse/JENKINS-33695[JENKINS-33695] and https://issues.jenkins.io/browse/JENKINS-33564[JENKINS-33564])
 * Restore BuildData.equals lost in git plugin 2.4.2 revert mistake
-(https://issues.jenkins-ci.org/browse/JENKINS-29326[JENKINS-29326])
+(https://issues.jenkins.io/browse/JENKINS-29326[JENKINS-29326])
 
 == Version 2.4.3 (March 19, 2016)
 
 * Optionally derive local branch name from remote branch name
-(https://issues.jenkins-ci.org/browse/JENKINS-33202[JENKINS-33202])
-* Allow shallow clone depth to be specified (https://issues.jenkins-ci.org/browse/JENKINS-24728[JENKINS-24728])
+(https://issues.jenkins.io/browse/JENKINS-33202[JENKINS-33202])
+* Allow shallow clone depth to be specified (https://issues.jenkins.io/browse/JENKINS-24728[JENKINS-24728])
 * Allow publishing from shallow clone if git version supports it
-(https://issues.jenkins-ci.org/browse/JENKINS-31108[JENKINS-31108])
+(https://issues.jenkins.io/browse/JENKINS-31108[JENKINS-31108])
 * Allow GitHub browser guesser to work even if multiple refspecs
-defined for same URL (https://issues.jenkins-ci.org/browse/JENKINS-33409[JENKINS-33409])
+defined for same URL (https://issues.jenkins.io/browse/JENKINS-33409[JENKINS-33409])
 * Clarify Team Foundation Server browser name (remove 2013 specific
 string)
-* Reduce memory use in difference calculation (https://issues.jenkins-ci.org/browse/JENKINS-31326[JENKINS-31326])
+* Reduce memory use in difference calculation (https://issues.jenkins.io/browse/JENKINS-31326[JENKINS-31326])
 * Resolve several findbugs warnings
 
 == Version 2.4.2 (February 1, 2016)
 
 * Show changelog even if prune stale branches is enabled
-(https://issues.jenkins-ci.org/browse/JENKINS-29482[JENKINS-29482])
+(https://issues.jenkins.io/browse/JENKINS-29482[JENKINS-29482])
 * Set GIT_PREVIOUS_SUCCESSFUL_COMMIT even if prune stale branches is
-enabled (https://issues.jenkins-ci.org/browse/JENKINS-32218[JENKINS-32218])
+enabled (https://issues.jenkins.io/browse/JENKINS-32218[JENKINS-32218])
 
 == Version 2.4.1 (December 26, 2015)
 
-* Allow clone to optionally not fetch tags (https://issues.jenkins-ci.org/browse/JENKINS-14572[JENKINS-14572])
-* Allow submodules to use a reference repo (https://issues.jenkins-ci.org/browse/JENKINS-18666[JENKINS-18666])
+* Allow clone to optionally not fetch tags (https://issues.jenkins.io/browse/JENKINS-14572[JENKINS-14572])
+* Allow submodules to use a reference repo (https://issues.jenkins.io/browse/JENKINS-18666[JENKINS-18666])
 * Use OR instead of AND when combining multiple refspecs
-(https://issues.jenkins-ci.org/browse/JENKINS-29796[JENKINS-29796])
-* Remove dead branches from BuildData (https://issues.jenkins-ci.org/browse/JENKINS-29482[JENKINS-29482])
-* Fix Java 6 date parsing error (https://issues.jenkins-ci.org/browse/JENKINS-29857[JENKINS-29857])
-* Set changeset time correctly (https://issues.jenkins-ci.org/browse/JENKINS-30073[JENKINS-30073])
-* Include parent SHA1 in RhodeCode diff URL (https://issues.jenkins-ci.org/browse/JENKINS-17117[JENKINS-17117])
-* Don't set GIT_COMMIT to an empty value (https://issues.jenkins-ci.org/browse/JENKINS-27180[JENKINS-27180])
-* Fix AssemblaWeb diff link (https://issues.jenkins-ci.org/browse/JENKINS-29731[JENKINS-29731])
-* Attempt fix for multi-scm sporadic failures (https://issues.jenkins-ci.org/browse/JENKINS-26587[JENKINS-26587])
+(https://issues.jenkins.io/browse/JENKINS-29796[JENKINS-29796])
+* Remove dead branches from BuildData (https://issues.jenkins.io/browse/JENKINS-29482[JENKINS-29482])
+* Fix Java 6 date parsing error (https://issues.jenkins.io/browse/JENKINS-29857[JENKINS-29857])
+* Set changeset time correctly (https://issues.jenkins.io/browse/JENKINS-30073[JENKINS-30073])
+* Include parent SHA1 in RhodeCode diff URL (https://issues.jenkins.io/browse/JENKINS-17117[JENKINS-17117])
+* Don't set GIT_COMMIT to an empty value (https://issues.jenkins.io/browse/JENKINS-27180[JENKINS-27180])
+* Fix AssemblaWeb diff link (https://issues.jenkins.io/browse/JENKINS-29731[JENKINS-29731])
+* Attempt fix for multi-scm sporadic failures (https://issues.jenkins.io/browse/JENKINS-26587[JENKINS-26587])
 
 == Version 2.5.0-beta3 (November 12, 2015)
 
 * Still more work on submodule authentication support by allowing
-submodules to use parent credentials (https://issues.jenkins-ci.org/browse/JENKINS-20941[JENKINS-20941])
+submodules to use parent credentials (https://issues.jenkins.io/browse/JENKINS-20941[JENKINS-20941])
 
 == Version 2.5.0-beta2 (November 8, 2015)
 
 * More work on submodule authentication support by allowing submodules
-to use parent credentials (https://issues.jenkins-ci.org/browse/JENKINS-20941[JENKINS-20941])
+to use parent credentials (https://issues.jenkins.io/browse/JENKINS-20941[JENKINS-20941])
 
 == Version 2.5.0-beta1 (November 4, 2015)
 
 * Submodule authentication support by allowing submodules to use
-parent credentials (https://issues.jenkins-ci.org/browse/JENKINS-20941[JENKINS-20941])
+parent credentials (https://issues.jenkins.io/browse/JENKINS-20941[JENKINS-20941])
 
 == Version 2.4.0 (July 18, 2015)
 
-* Branch spec help text improved (https://issues.jenkins-ci.org/browse/JENKINS-27115[JENKINS-27115])
-* Allow additional notifyCommit arguments (https://issues.jenkins-ci.org/browse/JENKINS-27902[JENKINS-27902])
+* Branch spec help text improved (https://issues.jenkins.io/browse/JENKINS-27115[JENKINS-27115])
+* Allow additional notifyCommit arguments (https://issues.jenkins.io/browse/JENKINS-27902[JENKINS-27902])
 * Parameterized branch name handling improvements (Pull requests 226,
-308, 309, https://issues.jenkins-ci.org/browse/JENKINS-27327[JENKINS-27327], https://issues.jenkins-ci.org/browse/JENKINS-27351[JENKINS-27351], https://issues.jenkins-ci.org/browse/JENKINS-27352[JENKINS-27352])
+308, 309, https://issues.jenkins.io/browse/JENKINS-27327[JENKINS-27327], https://issues.jenkins.io/browse/JENKINS-27351[JENKINS-27351], https://issues.jenkins.io/browse/JENKINS-27352[JENKINS-27352])
 * Display error message in log when fetch fails (regression fix)
-(https://issues.jenkins-ci.org/browse/JENKINS-26225[JENKINS-26225], https://issues.jenkins-ci.org/browse/JENKINS-27567[JENKINS-27567], https://issues.jenkins-ci.org/browse/JENKINS-27886[JENKINS-27886], https://issues.jenkins-ci.org/browse/JENKINS-28134[JENKINS-28134])
+(https://issues.jenkins.io/browse/JENKINS-26225[JENKINS-26225], https://issues.jenkins.io/browse/JENKINS-27567[JENKINS-27567], https://issues.jenkins.io/browse/JENKINS-27886[JENKINS-27886], https://issues.jenkins.io/browse/JENKINS-28134[JENKINS-28134])
 * Fix IllegalStateException when using notifyCommit URL
-(https://issues.jenkins-ci.org/browse/JENKINS-26582[JENKINS-26582])
+(https://issues.jenkins.io/browse/JENKINS-26582[JENKINS-26582])
 * Allow branch specification regex which does not include '*'
-(https://issues.jenkins-ci.org/browse/JENKINS-26842[JENKINS-26842])
+(https://issues.jenkins.io/browse/JENKINS-26842[JENKINS-26842])
 * Detect changes correctly when polling
-(https://issues.jenkins-ci.org/browse/JENKINS-27093[JENKINS-27093],
-https://issues.jenkins-ci.org/browse/JENKINS-27332[JENKINS-27332],
-https://issues.jenkins-ci.org/browse/JENKINS-27769[JENKINS-27769])
-* Fix GitHub Webhook handling (https://issues.jenkins-ci.org/browse/JENKINS-27282[JENKINS-27282])
-* Fix polling with a parameterized branch name (https://issues.jenkins-ci.org/browse/JENKINS-27349[JENKINS-27349])
+(https://issues.jenkins.io/browse/JENKINS-27093[JENKINS-27093],
+https://issues.jenkins.io/browse/JENKINS-27332[JENKINS-27332],
+https://issues.jenkins.io/browse/JENKINS-27769[JENKINS-27769])
+* Fix GitHub Webhook handling (https://issues.jenkins.io/browse/JENKINS-27282[JENKINS-27282])
+* Fix polling with a parameterized branch name (https://issues.jenkins.io/browse/JENKINS-27349[JENKINS-27349])
 * Don't throw exception when changelog entry is missing parent
-(https://issues.jenkins-ci.org/browse/JENKINS-28260[JENKINS-28260],
-https://issues.jenkins-ci.org/browse/JENKINS-28290[JENKINS-28290],
-https://issues.jenkins-ci.org/browse/JENKINS-28291[JENKINS-28291])
+(https://issues.jenkins.io/browse/JENKINS-28260[JENKINS-28260],
+https://issues.jenkins.io/browse/JENKINS-28290[JENKINS-28290],
+https://issues.jenkins.io/browse/JENKINS-28291[JENKINS-28291])
 * Don't throw exception when saving GitLab browser config
-(https://issues.jenkins-ci.org/browse/JENKINS-28792[JENKINS-28792])
-* Rebuild happened on each poll, even with no changes (https://issues.jenkins-ci.org/browse/JENKINS-29066[JENKINS-29066])
-* Remote class loading issue work-around (https://issues.jenkins-ci.org/browse/JENKINS-21520[JENKINS-21520])
+(https://issues.jenkins.io/browse/JENKINS-28792[JENKINS-28792])
+* Rebuild happened on each poll, even with no changes (https://issues.jenkins.io/browse/JENKINS-29066[JENKINS-29066])
+* Remote class loading issue work-around (https://issues.jenkins.io/browse/JENKINS-21520[JENKINS-21520])
 
 == Version 2.3.5 (February 18, 2015)
 
 * Support Microsoft Team Foundation Server 2013 as a git repository
 browser
 * Support more merge modes (fast forward, no fast forward, fast
-forward only (https://issues.jenkins-ci.org/browse/JENKINS-12402[JENKINS-12402])
+forward only (https://issues.jenkins.io/browse/JENKINS-12402[JENKINS-12402])
 * Handle regular expression branch name correctly even if it does not
-contain asterisk (https://issues.jenkins-ci.org/browse/JENKINS-26842[JENKINS-26842])
+contain asterisk (https://issues.jenkins.io/browse/JENKINS-26842[JENKINS-26842])
 * Log the error stack trace if fetch fails (temporary diagnostic aid)
 
 == Version 2.3.4 (January 8, 2015)
@@ -576,14 +576,14 @@ contain asterisk (https://issues.jenkins-ci.org/browse/JENKINS-26842[JENKINS-268
 
 * Use git client plugin 1.15.0
 * Escape HTML generated into jelly pages with escape="true"
-* Expand environment variables in GitPublisher again (https://issues.jenkins-ci.org/browse/JENKINS-24786[JENKINS-24786])
+* Expand environment variables in GitPublisher again (https://issues.jenkins.io/browse/JENKINS-24786[JENKINS-24786])
 
 == Version 2.2.11 (January 6, 2015)
 
 * Update to JGit 3.6.1
 * Use git client plugin 1.15.0
 * Escape HTML generated into jelly pages with escape="true"
-* Fix multiple builds can be triggered for same commit (https://issues.jenkins-ci.org/browse/JENKINS-25639[JENKINS-25639])
+* Fix multiple builds can be triggered for same commit (https://issues.jenkins.io/browse/JENKINS-25639[JENKINS-25639])
 
 == Version 2.3.2 (December 19, 2014)
 
@@ -595,7 +595,7 @@ contain asterisk (https://issues.jenkins-ci.org/browse/JENKINS-26842[JENKINS-268
 * Use git client plugin 1.13.0
 (http://git-blame.blogspot.com.es/2014/12/git-1856-195-205-214-and-221-and.html[CVE-2014-9390])
 * Do not continuously build when polling multiple repositories
-(https://issues.jenkins-ci.org/browse/JENKINS-25639[JENKINS-25639])
+(https://issues.jenkins.io/browse/JENKINS-25639[JENKINS-25639])
 
 == Version 2.3.1 (November 29, 2014)
 
@@ -604,65 +604,65 @@ ancestor SHA1
 * Update to git-client-plugin 1.12.0 (includes JGit 3.5.2)
 * Allow polling to ignore detected changes based on commit content
 * Do not continuously build when polling multiple repositories
-(https://issues.jenkins-ci.org/browse/JENKINS-25639[JENKINS-25639])
+(https://issues.jenkins.io/browse/JENKINS-25639[JENKINS-25639])
 * Expand parameters on repository url before associate one url to one
-credential (https://issues.jenkins-ci.org/browse/JENKINS-23675[JENKINS-23675])
-* Expand parameters on branch spec for remote polling (https://issues.jenkins-ci.org/browse/JENKINS-20427[JENKINS-20427],
-https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
-* Fix Gitiles file link for various Gitiles versions (https://issues.jenkins-ci.org/browse/JENKINS-25568[JENKINS-25568])
-* Fixed notifyCommit builddata (https://issues.jenkins-ci.org/browse/JENKINS-24133[JENKINS-24133])
+credential (https://issues.jenkins.io/browse/JENKINS-23675[JENKINS-23675])
+* Expand parameters on branch spec for remote polling (https://issues.jenkins.io/browse/JENKINS-20427[JENKINS-20427],
+https://issues.jenkins.io/browse/JENKINS-14276[JENKINS-14276])
+* Fix Gitiles file link for various Gitiles versions (https://issues.jenkins.io/browse/JENKINS-25568[JENKINS-25568])
+* Fixed notifyCommit builddata (https://issues.jenkins.io/browse/JENKINS-24133[JENKINS-24133])
 * Improve notifyCommit message to reduce user confusion
 
 == Version 2.2.9 (November 23, 2014)
 
 * Added behavior: "Polling ignores commits with certain messages"
 * GIT_BRANCH set to detached when sha1 parameter set in notifyCommit
-URL (https://issues.jenkins-ci.org/browse/JENKINS-24133[JENKINS-24133])
+URL (https://issues.jenkins.io/browse/JENKINS-24133[JENKINS-24133])
 
 == Version 2.2.8 (November 12, 2014)
 
-*  Add submodule update timeout as an option (https://issues.jenkins-ci.org/browse/JENKINS-22400[JENKINS-22400])
-*  Update Gitlab support for newer Gitlab versions (https://issues.jenkins-ci.org/browse/JENKINS-25568[JENKINS-25568])
-*  No exception if changeset author can't be found (https://issues.jenkins-ci.org/browse/JENKINS-16737[JENKINS-16737] and
-https://issues.jenkins-ci.org/browse/JENKINS-10434[JENKINS-10434])
-*  Annotate builddata earlier to reduce race conditions (https://issues.jenkins-ci.org/browse/JENKINS-23641[JENKINS-23641])
-*  Pass marked revision to decorate revision (https://issues.jenkins-ci.org/browse/JENKINS-25191[JENKINS-25191])
+*  Add submodule update timeout as an option (https://issues.jenkins.io/browse/JENKINS-22400[JENKINS-22400])
+*  Update Gitlab support for newer Gitlab versions (https://issues.jenkins.io/browse/JENKINS-25568[JENKINS-25568])
+*  No exception if changeset author can't be found (https://issues.jenkins.io/browse/JENKINS-16737[JENKINS-16737] and
+https://issues.jenkins.io/browse/JENKINS-10434[JENKINS-10434])
+*  Annotate builddata earlier to reduce race conditions (https://issues.jenkins.io/browse/JENKINS-23641[JENKINS-23641])
+*  Pass marked revision to decorate revision (https://issues.jenkins.io/browse/JENKINS-25191[JENKINS-25191])
 *  Avoid null pointer exception when last repo or branch deleted
-(https://issues.jenkins-ci.org/browse/JENKINS-25313[JENKINS-25313])
+(https://issues.jenkins.io/browse/JENKINS-25313[JENKINS-25313])
 *  Allow retry by throwing a different exception during certain fetch
-failures (https://issues.jenkins-ci.org/browse/JENKINS-20531[JENKINS-20531])
+failures (https://issues.jenkins.io/browse/JENKINS-20531[JENKINS-20531])
 *  Do not require a workspace when polling multiple repositories
-(https://issues.jenkins-ci.org/browse/JENKINS-25414[JENKINS-25414])
+(https://issues.jenkins.io/browse/JENKINS-25414[JENKINS-25414])
 
 == Version 2.3 (November 10, 2014)
 
 *  Released for Jenkins 1.568 and later, update center will exclude
 from earlier Jenkins versions
 *  Do not require a workspace when polling multiple repositories
-(https://issues.jenkins-ci.org/browse/JENKINS-25414[JENKINS-25414])
+(https://issues.jenkins.io/browse/JENKINS-25414[JENKINS-25414])
 
 == Version 2.3-beta-4 (October 29, 2014)
 
 *  Update to JGit 3.5.1
-*  Allow retry if fetch fails (https://issues.jenkins-ci.org/browse/JENKINS-20531[JENKINS-20531])
+*  Allow retry if fetch fails (https://issues.jenkins.io/browse/JENKINS-20531[JENKINS-20531])
 *  Don't NPE if all repos and all branches removed from job definition
-(https://issues.jenkins-ci.org/browse/JENKINS-25313[JENKINS-25313])
-*  Correctly record built revision even on failed merge (https://issues.jenkins-ci.org/browse/JENKINS-25191[JENKINS-25191])
+(https://issues.jenkins.io/browse/JENKINS-25313[JENKINS-25313])
+*  Correctly record built revision even on failed merge (https://issues.jenkins.io/browse/JENKINS-25191[JENKINS-25191])
 *  Record build data sooner for better concurrency and safety
-(https://issues.jenkins-ci.org/browse/JENKINS-23641[JENKINS-23641])
+(https://issues.jenkins.io/browse/JENKINS-23641[JENKINS-23641])
 *  Do not throw exception if author can't be found in change set
-(https://issues.jenkins-ci.org/browse/JENKINS-16737[JENKINS-16737], https://issues.jenkins-ci.org/browse/JENKINS-10434[JENKINS-10434])
+(https://issues.jenkins.io/browse/JENKINS-16737[JENKINS-16737], https://issues.jenkins.io/browse/JENKINS-10434[JENKINS-10434])
 
 == Version 2.2.7 (October 8, 2014)
 
 *  Honor project specific Item/CONFIGURE permission even if overall
 Item/CONFIGURE has not been granted (SECURITY-158)
 *  Save current build in BuildData prior to rescheduling
-(https://issues.jenkins-ci.org/browse/JENKINS-21464[JENKINS-21464])
-*  Fix GitPublisher null pointer exception when previous slave is
+(https://issues.jenkins.io/browse/JENKINS-21464[JENKINS-21464])
+*  Fix GitPublisher null pointer exception when previous agent is
 missing
-*  Expand variables in branch spec for remote polling (https://issues.jenkins-ci.org/browse/JENKINS-20427[JENKINS-20427],
-https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
+*  Expand variables in branch spec for remote polling (https://issues.jenkins.io/browse/JENKINS-20427[JENKINS-20427],
+https://issues.jenkins.io/browse/JENKINS-14276[JENKINS-14276])
 *  Add GIT_PREVIOUS_SUCCESSFUL_COMMIT environment variable
 
 == Version 2.3-beta-3 (October 8, 2014)
@@ -670,52 +670,52 @@ https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
 *  Honor project specific Item/CONFIGURE permission even if overall
 Item/CONFIGURE has not been granted (SECURITY-158)
 *  Save current build in BuildData prior to rescheduling
-(https://issues.jenkins-ci.org/browse/JENKINS-21464[JENKINS-21464])
-*  Fix GitPublisher null pointer exception when previous slave is
+(https://issues.jenkins.io/browse/JENKINS-21464[JENKINS-21464])
+*  Fix GitPublisher null pointer exception when previous agent is
 missing
-*  Expand variables in branch spec for remote polling (https://issues.jenkins-ci.org/browse/JENKINS-20427[JENKINS-20427],
-https://issues.jenkins-ci.org/browse/JENKINS-14276[JENKINS-14276])
+*  Expand variables in branch spec for remote polling (https://issues.jenkins.io/browse/JENKINS-20427[JENKINS-20427],
+https://issues.jenkins.io/browse/JENKINS-14276[JENKINS-14276])
 *  Add GIT_PREVIOUS_SUCCESSFUL_COMMIT environment variable
 
 == Version 2.2.6 (September 20, 2014)
 
-*  Add optional "force" to push from publisher (https://issues.jenkins-ci.org/browse/JENKINS-24082[JENKINS-24082])
-*  Support gitlist as a repository browser (https://issues.jenkins-ci.org/browse/JENKINS-19029[JENKINS-19029])
+*  Add optional "force" to push from publisher (https://issues.jenkins.io/browse/JENKINS-24082[JENKINS-24082])
+*  Support gitlist as a repository browser (https://issues.jenkins.io/browse/JENKINS-19029[JENKINS-19029])
 *  Print the remote HEAD SHA1 in poll results to ease diagnostics
 *  Add help describing the regex syntax allowed for "Branches to build"
 *  Improve environment support which caused git polling to fail with
-"ssh not found" (https://issues.jenkins-ci.org/browse/JENKINS-24516[JENKINS-24516], https://issues.jenkins-ci.org/browse/JENKINS-24467[JENKINS-24467])
-*  Pass a listener to calls to getEnvironment (https://issues.jenkins-ci.org/browse/JENKINS-24772[JENKINS-24772])
+"ssh not found" (https://issues.jenkins.io/browse/JENKINS-24516[JENKINS-24516], https://issues.jenkins.io/browse/JENKINS-24467[JENKINS-24467])
+*  Pass a listener to calls to getEnvironment (https://issues.jenkins.io/browse/JENKINS-24772[JENKINS-24772])
 
 == Version 2.3-beta-2 (September 3, 2014)
 
 * Print remote head when fetching a SHA1
-*  Assembla browser breaks config page (https://issues.jenkins-ci.org/browse/JENKINS-24261[JENKINS-24261])
-*  Recent changes is always empty in merge job (https://issues.jenkins-ci.org/browse/JENKINS-20392[JENKINS-20392])
+*  Assembla browser breaks config page (https://issues.jenkins.io/browse/JENKINS-24261[JENKINS-24261])
+*  Recent changes is always empty in merge job (https://issues.jenkins.io/browse/JENKINS-20392[JENKINS-20392])
 *  Polling incorrectly detects changes when refspec contains variable
-(https://issues.jenkins-ci.org/browse/JENKINS-22009[JENKINS-22009])
-*  Matrix project fails pre-merge (https://issues.jenkins-ci.org/browse/JENKINS-23179[JENKINS-23179])
+(https://issues.jenkins.io/browse/JENKINS-22009[JENKINS-22009])
+*  Matrix project fails pre-merge (https://issues.jenkins.io/browse/JENKINS-23179[JENKINS-23179])
 *  Add "Change log compare to branch" option to improve "Recent
 changes" for certain use cases
 *  Add Assembla as supported source code and change browser support
 *  Add Gitiles as supported source code and change browser support
 (android project git browser)
-*  Return correct date/time to REST query of build date (https://issues.jenkins-ci.org/browse/JENKINS-23791[JENKINS-23791])
+*  Return correct date/time to REST query of build date (https://issues.jenkins.io/browse/JENKINS-23791[JENKINS-23791])
 *  Add timeout option to checkout (for slow file systems and large
-repos) (https://issues.jenkins-ci.org/browse/JENKINS-22400[JENKINS-22400])
+repos) (https://issues.jenkins.io/browse/JENKINS-22400[JENKINS-22400])
 *  Expand parameters on repository url before evaluating credentials
-(https://issues.jenkins-ci.org/browse/JENKINS-23675[JENKINS-23675])
+(https://issues.jenkins.io/browse/JENKINS-23675[JENKINS-23675])
 *  Update to git-client-plugin 1.10.1.0 and JGit 3.4.1
 *  Update other dependencies (ssh-credentials, credentials,
 httpcomponents, joda-time)
 
 == Version 2.2.5 (August 15, 2014)
 
-* Assembla browser breaks config page (https://issues.jenkins-ci.org/browse/JENKINS-24261[JENKINS-24261])
-* Recent changes is always empty in merge job (https://issues.jenkins-ci.org/browse/JENKINS-20392[JENKINS-20392])
+* Assembla browser breaks config page (https://issues.jenkins.io/browse/JENKINS-24261[JENKINS-24261])
+* Recent changes is always empty in merge job (https://issues.jenkins.io/browse/JENKINS-20392[JENKINS-20392])
 * Polling incorrectly detects changes when refspec contains variable
-(https://issues.jenkins-ci.org/browse/JENKINS-22009[JENKINS-22009])
-* Matrix project fails pre-merge (https://issues.jenkins-ci.org/browse/JENKINS-23179[JENKINS-23179])
+(https://issues.jenkins.io/browse/JENKINS-22009[JENKINS-22009])
+* Matrix project fails pre-merge (https://issues.jenkins.io/browse/JENKINS-23179[JENKINS-23179])
 
 == Version 2.2.4 (August 2, 2014)
 
@@ -725,59 +725,59 @@ changes" for certain use cases
 * Add Gitiles as supported source code and change browser support
 (android project git browser)
 * Return correct date/time to REST query of build date
-(https://issues.jenkins-ci.org/browse/JENKINS-23791[JENKINS-23791])
+(https://issues.jenkins.io/browse/JENKINS-23791[JENKINS-23791])
 
 == Version 2.2.3 (July 31, 2014)
 
 * Add timeout option to checkout (for slow file systems and large
-repos) (https://issues.jenkins-ci.org/browse/JENKINS-22400[JENKINS-22400])
+repos) (https://issues.jenkins.io/browse/JENKINS-22400[JENKINS-22400])
 * Expand parameters on repository url before evaluating credentials
-(https://issues.jenkins-ci.org/browse/JENKINS-23675[JENKINS-23675])
+(https://issues.jenkins.io/browse/JENKINS-23675[JENKINS-23675])
 * Update to git-client-plugin 1.10.1.0 and JGit 3.4.1
 * Update other dependencies (ssh-credentials, credentials,
 httpcomponents, joda-time)
 
 == Version 2.3-beta-1 (June 16, 2014)
 
-* Adapting to SCM API changes in Jenkins 1.568+. (https://issues.jenkins-ci.org/browse/JENKINS-23365[JENKINS-23365])
+* Adapting to SCM API changes in Jenkins 1.568+. (https://issues.jenkins.io/browse/JENKINS-23365[JENKINS-23365])
 * Fixed advanced branch spec behaviour in getCandidateRevisions
 * includes/excludes branches specified using wildcard, and separated
 by white spaces.
 * Update to git-client-plugin 1.9.0 and JGit 3.4.0
-* Option to set submodules update timeout (https://issues.jenkins-ci.org/browse/JENKINS-22400[JENKINS-22400])
+* Option to set submodules update timeout (https://issues.jenkins.io/browse/JENKINS-22400[JENKINS-22400])
 
 == Version 2.2.2 (June 24, 2014)
 
-* Remote API export problem finally fixed (https://issues.jenkins-ci.org/browse/JENKINS-9843[JENKINS-9843])
+* Remote API export problem finally fixed (https://issues.jenkins.io/browse/JENKINS-9843[JENKINS-9843])
 
 == Version 2.2.1 (April 12, 2014)
 
-* Allow clean before checkout (https://issues.jenkins-ci.org/browse/JENKINS-22510[JENKINS-22510])
+* Allow clean before checkout (https://issues.jenkins.io/browse/JENKINS-22510[JENKINS-22510])
 * Do not append trailing slash to most repository browser URL's
-(https://issues.jenkins-ci.org/browse/JENKINS-22342[JENKINS-22342])
+(https://issues.jenkins.io/browse/JENKINS-22342[JENKINS-22342])
 * Fix null pointer exception in git polling with inverse build chooser
-(https://issues.jenkins-ci.org/browse/JENKINS-22053[JENKINS-22053])
+(https://issues.jenkins.io/browse/JENKINS-22053[JENKINS-22053])
 
 == Version 2.2.0 (April 4, 2014)
 
 * Add optional submodule remote tracking if git version newer than
-1.8.2 (https://issues.jenkins-ci.org/browse/JENKINS-19468[JENKINS-19468])
+1.8.2 (https://issues.jenkins.io/browse/JENKINS-19468[JENKINS-19468])
 * Update to JGit 3.3.1
 * Fix javadoc warnings
 
 == Version 2.1.0 (March 31, 2014)
 
 * Support sparse checkout if git version newer than 1.8.2
-(https://issues.jenkins-ci.org/browse/JENKINS-21809[JENKINS-21809])
+(https://issues.jenkins.io/browse/JENKINS-21809[JENKINS-21809])
 * Improve performance when many branches are in the repository
-(https://issues.jenkins-ci.org/browse/JENKINS-5724[JENKINS-5724])
+(https://issues.jenkins.io/browse/JENKINS-5724[JENKINS-5724])
 * Retain git browser URL when saving job configuration
-(https://issues.jenkins-ci.org/browse/JENKINS-22064[JENKINS-22064])
-* Resolve tags which contain slashes (https://issues.jenkins-ci.org/browse/JENKINS-21952[JENKINS-21952])
+(https://issues.jenkins.io/browse/JENKINS-22064[JENKINS-22064])
+* Resolve tags which contain slashes (https://issues.jenkins.io/browse/JENKINS-21952[JENKINS-21952])
 
 == Version 2.0.4 (March 6, 2014)
 
-* Allow extension to require workspace for polling (https://issues.jenkins-ci.org/browse/JENKINS-19001[JENKINS-19001])
+* Allow extension to require workspace for polling (https://issues.jenkins.io/browse/JENKINS-19001[JENKINS-19001])
 * ??? (tbd)
 
 == Version 2.0.3 (February 21, 2014)
@@ -791,17 +791,17 @@ to http://javadoc.jenkins-ci.org/hudson/triggers/SCMTrigger.html#isIgnorePostCom
 * Locks are considered a retryable failure
 * notifyCommit now accept a sha1 - make commit hook design simpler and
 more efficient (no poll required)
-* Extend branch specifier (https://issues.jenkins-ci.org/browse/JENKINS-17417[JENKINS-17417]) and git repository URL
-* Better support for branches with "/" in name (https://issues.jenkins-ci.org/browse/JENKINS-14026[JENKINS-14026])
-* Improve backward compatibility (https://issues.jenkins-ci.org/browse/JENKINS-20861[JENKINS-20861])
+* Extend branch specifier (https://issues.jenkins.io/browse/JENKINS-17417[JENKINS-17417]) and git repository URL
+* Better support for branches with "/" in name (https://issues.jenkins.io/browse/JENKINS-14026[JENKINS-14026])
+* Improve backward compatibility (https://issues.jenkins.io/browse/JENKINS-20861[JENKINS-20861])
 
 == Version 2.0.1 (January 8, 2014)
 
 * Use git-credentials-store so http credentials don't appear in
-workspace (https://issues.jenkins-ci.org/browse/JENKINS-20318[JENKINS-20318])
-* Prune branch during fetch (https://issues.jenkins-ci.org/browse/JENKINS-20258[JENKINS-20258])
-* Fix migration for 1.x skiptag option (https://issues.jenkins-ci.org/browse/JENKINS-20561[JENKINS-20561])
-* Enforce Refsepc configuration after clone (https://issues.jenkins-ci.org/browse/JENKINS-20502[JENKINS-20502])
+workspace (https://issues.jenkins.io/browse/JENKINS-20318[JENKINS-20318])
+* Prune branch during fetch (https://issues.jenkins.io/browse/JENKINS-20258[JENKINS-20258])
+* Fix migration for 1.x skiptag option (https://issues.jenkins.io/browse/JENKINS-20561[JENKINS-20561])
+* Enforce Refsepc configuration after clone (https://issues.jenkins.io/browse/JENKINS-20502[JENKINS-20502])
 
 == Version 2.0 (October 22, 2013)
 
@@ -817,31 +817,31 @@ based on credentials plugin
 * Extension point for other plugin to receive commit notifications
 * Support promoted builds plugin (passing GitRevisionParameter)
 * Do not re-use last build's environment for remote polling
-(https://issues.jenkins-ci.org/browse/JENKINS-14321[JENKINS-14321])
-* Fixed variable expansion during polling (https://issues.jenkins-ci.org/browse/JENKINS-7411[JENKINS-7411])
+(https://issues.jenkins.io/browse/JENKINS-14321[JENKINS-14321])
+* Fixed variable expansion during polling (https://issues.jenkins.io/browse/JENKINS-7411[JENKINS-7411])
 * Added Phabricator and Kiln Harmony repository browsers, fixed
 GitLab URLs
 
 == Version 1.4.0 (May 13, 2013)
 
-* Avoid spaces in tag name, rejected by JGit (https://issues.jenkins-ci.org/browse/JENKINS-17195[JENKINS-17195])
-* Force UTF-8 encoding to read changelog file (https://issues.jenkins-ci.org/browse/JENKINS-6203[JENKINS-6203])
+* Avoid spaces in tag name, rejected by JGit (https://issues.jenkins.io/browse/JENKINS-17195[JENKINS-17195])
+* Force UTF-8 encoding to read changelog file (https://issues.jenkins.io/browse/JENKINS-6203[JENKINS-6203])
 * Retry build if SCM retry is configured
-(https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-14575[JENKINS-14575])
-* Allow merge results to push from slave nodes, not just from master
-node (https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-16941[JENKINS-16941])
+(https://issues.jenkins.io/browse/JENKINS-14575[JENKINS-14575])
+* Allow merge results to push from agents, not just from the controller
+node (https://issues.jenkins.io/browse/JENKINS-16941[JENKINS-16941])
 
 == Version 1.3.0 (March 12, 2013)
 
 * Fix a regression fetching from multiple remote repositories
-(https://issues.jenkins-ci.org/browse/JENKINS-16914[JENKINS-16914])
+(https://issues.jenkins.io/browse/JENKINS-16914[JENKINS-16914])
 * Fix stackoverflow recursive invocation error caused by
-MailAddressResolver (https://issues.jenkins-ci.org/browse/JENKINS-16849[JENKINS-16849])
-* Fix invalid id computing merge changelog (https://issues.jenkins-ci.org/browse/JENKINS-16888[JENKINS-16888])
-* Fix lock on repository files (https://issues.jenkins-ci.org/browse/JENKINS-12188[JENKINS-12188])
-* Use default git installation if none matches (https://issues.jenkins-ci.org/browse/JENKINS-17013[JENKINS-17013]).
+MailAddressResolver (https://issues.jenkins.io/browse/JENKINS-16849[JENKINS-16849])
+* Fix invalid id computing merge changelog (https://issues.jenkins.io/browse/JENKINS-16888[JENKINS-16888])
+* Fix lock on repository files (https://issues.jenkins.io/browse/JENKINS-12188[JENKINS-12188])
+* Use default git installation if none matches (https://issues.jenkins.io/browse/JENKINS-17013[JENKINS-17013]).
 * Expand _reference_ parameter when set with variables
-* Expose GIT_URL environment variable (https://issues.jenkins-ci.org/browse/JENKINS-16684[JENKINS-16684])
+* Expose GIT_URL environment variable (https://issues.jenkins.io/browse/JENKINS-16684[JENKINS-16684])
 * Branch can be set by a regexp, starting with a colon (pull request
 #138)
 
@@ -854,18 +854,18 @@ cloudbees validated-merge plugins.
 == Version 1.1.29 (February 17, 2013)
 
 * fix a regression that breaks jenkins remoting
-* restore BuildChooser API signature, that introduced https://issues.jenkins-ci.org/browse/JENKINS-16851[JENKINS-16851]
+* restore BuildChooser API signature, that introduced https://issues.jenkins.io/browse/JENKINS-16851[JENKINS-16851]
 
 == Version 1.1.27 (February 17, 2013)
 
 * add version field to support new GitLab URL-scheme
 * Trim branch name - a valid branch name does not begin or end with
-whitespace. (https://issues.jenkins-ci.org/browse/JENKINS-15235[JENKINS-15235])
+whitespace. (https://issues.jenkins.io/browse/JENKINS-15235[JENKINS-15235])
 * set changeSet.kind to "git"
 * Avoid some calls to "git show"
-* Fix checking for an email address (https://issues.jenkins-ci.org/browse/JENKINS-16453[JENKINS-16453])
+* Fix checking for an email address (https://issues.jenkins.io/browse/JENKINS-16453[JENKINS-16453])
 * update Git logo icon
-* Pass combineCommits to action (https://issues.jenkins-ci.org/browse/JENKINS-15160[JENKINS-15160])
+* Pass combineCommits to action (https://issues.jenkins.io/browse/JENKINS-15160[JENKINS-15160])
 * expose previous built commit from same branch as GIT_PREVIOUS_COMMIT
 * re-schedule project when multiple candidate revisions are left
 * expand parameters in the remote branch name of merge options
@@ -883,22 +883,22 @@ handle git client stuff only
 
 == Version 1.1.26 (November 13, 2012)
 
-* git polling mechanism can have build in infinite loop (https://issues.jenkins-ci.org/browse/JENKINS-15803[JENKINS-15803])
+* git polling mechanism can have build in infinite loop (https://issues.jenkins.io/browse/JENKINS-15803[JENKINS-15803])
 
 == Version 1.1.25 (October 13, 2012)
 
 * Do "git reset" when we do "git clean" on git submodules
 (https://github.com/jenkinsci/git-plugin/pull/100[pull #100])
-* NullPointerException during tag publishing (https://issues.jenkins-ci.org/browse/JENKINS-15391[JENKINS-15391])
-* Adds http://rhodecode.org/[RhodeCode] support (https://issues.jenkins-ci.org/browse/JENKINS-15420[JENKINS-15420])
+* NullPointerException during tag publishing (https://issues.jenkins.io/browse/JENKINS-15391[JENKINS-15391])
+* Adds http://rhodecode.org/[RhodeCode] support (https://issues.jenkins.io/browse/JENKINS-15420[JENKINS-15420])
 * Improved the `+BuildChooser+` extension point for other plugins.
 
 == Version 1.1.24 (September 27, 2012)
 
 * Shorten build data display name
-https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-15048[JENKINS-15048][issue #15048]
+https://issues.jenkins.io/browse/https://issues.jenkins.io/browse/JENKINS-15048[JENKINS-15048][issue #15048]
 * Use correct refspec when fetching submodules
-https://issues.jenkins-ci.org/browse/https://issues.jenkins-ci.org/browse/JENKINS-8149[JENKINS-8149][issue #8149]
+https://issues.jenkins.io/browse/https://issues.jenkins.io/browse/JENKINS-8149[JENKINS-8149][issue #8149]
 * Allow a message to be associated with a tag created by the plugin
 
 == Version 1.1.23 (September 3, 2012)
@@ -915,36 +915,36 @@ when parsing changelog (needed for openID / SSO integration)
 == Version 1.1.22 (August 8, 2012)
 
 * Fix regression for fully qualified branch name (REPOSITORY/BRANCH)
-https://issues.jenkins-ci.org/browse/JENKINS-14480[JENKINS-14480]
+https://issues.jenkins.io/browse/JENKINS-14480[JENKINS-14480]
 * Add support for variable expansion on branch spec (not just job
-parameters) https://issues.jenkins-ci.org/browse/JENKINS-8563[JENKINS-8563]
-* Use master environment, not last build node, for fast remote polling
-https://issues.jenkins-ci.org/browse/JENKINS-14321[JENKINS-14321]
+parameters) https://issues.jenkins.io/browse/JENKINS-8563[JENKINS-8563]
+* Use controller environment, not last build node, for fast remote polling
+https://issues.jenkins.io/browse/JENKINS-14321[JENKINS-14321]
 * run reset --hard on clean to take care of any local artifact
-* normalize maven repository ID https://issues.jenkins-ci.org/browse/JENKINS-14443[JENKINS-14443]
+* normalize maven repository ID https://issues.jenkins.io/browse/JENKINS-14443[JENKINS-14443]
 
 == Version 1.1.21 (July 10, 2012)
 
-* Fixed support for "/" in branches names (https://issues.jenkins-ci.org/browse/JENKINS-14026[JENKINS-14026])
+* Fixed support for "/" in branches names (https://issues.jenkins.io/browse/JENKINS-14026[JENKINS-14026])
 * Fixed issue on windows+msysgit to escape "^" on git command line
-(https://issues.jenkins-ci.org/browse/JENKINS-13007[JENKINS-13007])
+(https://issues.jenkins.io/browse/JENKINS-13007[JENKINS-13007])
 
 == Version 1.1.20 (June 25, 2012)
 
-* Fixed NPE (https://issues.jenkins-ci.org/browse/JENKINS-10880[JENKINS-10880])
-* Fixed a git-rev-parse problem on Windows (https://issues.jenkins-ci.org/browse/JENKINS-13007[JENKINS-13007])
-* Use 'git whatchanged' instead of 'git show' (https://issues.jenkins-ci.org/browse/JENKINS-13580[JENKINS-13580])
+* Fixed NPE (https://issues.jenkins.io/browse/JENKINS-10880[JENKINS-10880])
+* Fixed a git-rev-parse problem on Windows (https://issues.jenkins.io/browse/JENKINS-13007[JENKINS-13007])
+* Use 'git whatchanged' instead of 'git show' (https://issues.jenkins.io/browse/JENKINS-13580[JENKINS-13580])
 * Added git note support
 
 == Version 1.1.19 (June 8, 2012)
 
-* restore GitAPI constructor for backward compatibility (https://issues.jenkins-ci.org/browse/JENKINS-12025[JENKINS-12025])
-* CGit browser support (https://issues.jenkins-ci.org/browse/JENKINS-6963[JENKINS-6963]).
-* Handle special meaning of some characters on Windows (https://issues.jenkins-ci.org/browse/JENKINS-13007[JENKINS-13007])
+* restore GitAPI constructor for backward compatibility (https://issues.jenkins.io/browse/JENKINS-12025[JENKINS-12025])
+* CGit browser support (https://issues.jenkins.io/browse/JENKINS-6963[JENKINS-6963]).
+* Handle special meaning of some characters on Windows (https://issues.jenkins.io/browse/JENKINS-13007[JENKINS-13007])
 * fixed java.lang.NoSuchMethodError: java/lang/String.isEmpty()
-(https://issues.jenkins-ci.org/browse/JENKINS-13993[JENKINS-13993]).
-* Git icon(git-48x48.png) missing in job page. (https://issues.jenkins-ci.org/browse/JENKINS-13413[JENKINS-13413]).
-* Git "Tag to push" should trim whitespace (https://issues.jenkins-ci.org/browse/JENKINS-13550[JENKINS-13550]).
+(https://issues.jenkins.io/browse/JENKINS-13993[JENKINS-13993]).
+* Git icon(git-48x48.png) missing in job page. (https://issues.jenkins.io/browse/JENKINS-13413[JENKINS-13413]).
+* Git "Tag to push" should trim whitespace (https://issues.jenkins.io/browse/JENKINS-13550[JENKINS-13550]).
 
 == Version 1.1.18 (April 27, 2012)
 
@@ -953,7 +953,7 @@ to better work with a repository with multiple access protocols.
 
 == Version 1.1.17 (April 9, 2012)
 
-* Fixed NPE in `+compareRemoteRevisionWith+` (https://issues.jenkins-ci.org/browse/JENKINS-10880[JENKINS-10880])
+* Fixed NPE in `+compareRemoteRevisionWith+` (https://issues.jenkins.io/browse/JENKINS-10880[JENKINS-10880])
 * Improved the caching of static resources
 * `+notifyCommit+` endpoint now accept a comma delimited list of
 affected branches. Only the build(s) that match those branches will be
@@ -967,13 +967,13 @@ SHA1 will work)
 * Perform environment variable expansion on the checkout directory.
 * Support GitLab scm browser
 * Support BitBucket.org scm browser
-* option to set includes regions (https://issues.jenkins-ci.org/browse/JENKINS-11749[JENKINS-11749])
-* fix regression to deserialize build history (https://issues.jenkins-ci.org/browse/JENKINS-12369[JENKINS-12369])
+* option to set includes regions (https://issues.jenkins.io/browse/JENKINS-11749[JENKINS-11749])
+* fix regression to deserialize build history (https://issues.jenkins.io/browse/JENKINS-12369[JENKINS-12369])
 
 == Version 1.1.15 (December 27, 2011)
 
 * Fixed a bug where the push notification didn't work with
-read-protected projects. (https://issues.jenkins-ci.org/browse/JENKINS-12022[JENKINS-12022])
+read-protected projects. (https://issues.jenkins.io/browse/JENKINS-12022[JENKINS-12022])
 * Improved the handling of disabled projects in the push notification.
 
 == Version 1.1.14 (November 30, 2011)
@@ -984,13 +984,13 @@ post])
 
 == Version 1.1.13 (November 24, 2011)
 
-* option to ignore submodules completely (https://issues.jenkins-ci.org/browse/JENKINS-6658[JENKINS-6658])
-* support FishEye scm browser (https://issues.jenkins-ci.org/browse/JENKINS-7849[JENKINS-7849])
+* option to ignore submodules completely (https://issues.jenkins.io/browse/JENKINS-6658[JENKINS-6658])
+* support FishEye scm browser (https://issues.jenkins.io/browse/JENKINS-7849[JENKINS-7849])
 * inverse choosing strategy to select all branches except for those
 specified (https://github.com/jenkinsci/git-plugin/pull/45[pull request
 #45])
 * option to clone from a reference repository
-* fix databinding bug (https://issues.jenkins-ci.org/browse/JENKINS-9914[JENKINS-9914])
+* fix databinding bug (https://issues.jenkins.io/browse/JENKINS-9914[JENKINS-9914])
 * action to tag a build, similar to subversion plugin feature
 
 == Version 1.1.12 (August 5, 2011)
@@ -998,43 +998,43 @@ specified (https://github.com/jenkinsci/git-plugin/pull/45[pull request
 * When choosing the branch to build, Jenkins will pick up the oldest
 branch to induce fairness in the scheduling. (it looks at the timestamp
 of the tip of the branch.)
-* Git now polls without needing a workspace (https://issues.jenkins-ci.org/browse/JENKINS-10131[JENKINS-10131])
-* Fixed the "no remote from branch name" problem (https://issues.jenkins-ci.org/browse/JENKINS-10060[JENKINS-10060])
+* Git now polls without needing a workspace (https://issues.jenkins.io/browse/JENKINS-10131[JENKINS-10131])
+* Fixed the "no remote from branch name" problem (https://issues.jenkins.io/browse/JENKINS-10060[JENKINS-10060])
 
 == Version 1.1.11 (July 22, 2011)
 
 * Add support for generating links to Gitorious repositories.
 (https://github.com/jenkinsci/git-plugin/pull/38[PR#38])
-* Fixed DefaultBuildChooser logic (https://issues.jenkins-ci.org/browse/JENKINS-10408[JENKINS-10408])
+* Fixed DefaultBuildChooser logic (https://issues.jenkins.io/browse/JENKINS-10408[JENKINS-10408])
 
 == Version 1.1.10 (July 15, 2011)
 
-* Merge options persist properly now. (https://issues.jenkins-ci.org/browse/JENKINS-10270[JENKINS-10270])
-* Fixed NPE in PreBuildMergeOptions when using REST API. (https://issues.jenkins-ci.org/browse/JENKINS-9843[JENKINS-9843])
-* Global config name/email handle whitespace properly. (https://issues.jenkins-ci.org/browse/JENKINS-10272[JENKINS-10272],
-https://issues.jenkins-ci.org/browse/JENKINS-9566[JENKINS-9566])
-* Improved memory handling of "git whatchanged". (https://issues.jenkins-ci.org/browse/JENKINS-8365[JENKINS-8365])
+* Merge options persist properly now. (https://issues.jenkins.io/browse/JENKINS-10270[JENKINS-10270])
+* Fixed NPE in PreBuildMergeOptions when using REST API. (https://issues.jenkins.io/browse/JENKINS-9843[JENKINS-9843])
+* Global config name/email handle whitespace properly. (https://issues.jenkins.io/browse/JENKINS-10272[JENKINS-10272],
+https://issues.jenkins.io/browse/JENKINS-9566[JENKINS-9566])
+* Improved memory handling of "git whatchanged". (https://issues.jenkins.io/browse/JENKINS-8365[JENKINS-8365])
 * Excluded regions should now work with multiple commit changesets.
-(https://issues.jenkins-ci.org/browse/JENKINS-8342[JENKINS-8342])
-* ViewGit support added. (https://issues.jenkins-ci.org/browse/JENKINS-5163[JENKINS-5163])
-* Fixed NPE when validating remote for publisher. (https://issues.jenkins-ci.org/browse/JENKINS-9971[JENKINS-9971])
-* Tool selection persists now. (https://issues.jenkins-ci.org/browse/JENKINS-9765[JENKINS-9765])
+(https://issues.jenkins.io/browse/JENKINS-8342[JENKINS-8342])
+* ViewGit support added. (https://issues.jenkins.io/browse/JENKINS-5163[JENKINS-5163])
+* Fixed NPE when validating remote for publisher. (https://issues.jenkins.io/browse/JENKINS-9971[JENKINS-9971])
+* Tool selection persists now. (https://issues.jenkins.io/browse/JENKINS-9765[JENKINS-9765])
 * Remote branch pruning now happens after fetch, to make sure all
-remotes are defined. (https://issues.jenkins-ci.org/browse/JENKINS-10348[JENKINS-10348])
+remotes are defined. (https://issues.jenkins.io/browse/JENKINS-10348[JENKINS-10348])
 
 == Version 1.1.9 (May 16, 2011)
 
 * Don't strip off interesting stuff from branch names in token macro
-(https://issues.jenkins-ci.org/browse/JENKINS-9510[JENKINS-9510])
+(https://issues.jenkins.io/browse/JENKINS-9510[JENKINS-9510])
 * Changes to serialization to support working with the MultiSCM plugin
 and general cleanliness.
 (https://github.com/jenkinsci/git-plugin/pull/22[PR#22])
 * Check to be sure remote actually exists in local repo before running
-"git remote prune" against it. (https://issues.jenkins-ci.org/browse/JENKINS-9661[JENKINS-9661])
+"git remote prune" against it. (https://issues.jenkins.io/browse/JENKINS-9661[JENKINS-9661])
 * Eliminate a problem with NPEs on git config user.name/user.email usage
-on upgrades. (https://issues.jenkins-ci.org/browse/JENKINS-9702[JENKINS-9702])
+on upgrades. (https://issues.jenkins.io/browse/JENKINS-9702[JENKINS-9702])
 * Add a check for git executable version as 1.7 or greater before using
---progress on git clone calls. (https://issues.jenkins-ci.org/browse/JENKINS-9635[JENKINS-9635])
+--progress on git clone calls. (https://issues.jenkins.io/browse/JENKINS-9635[JENKINS-9635])
 
 == Version 1.1.8 (May 6, 2011)
 
@@ -1045,28 +1045,28 @@ release, thereby breaking things.
 == Version 1.1.7 (May 4, 2011)
 
 * GIT_COMMIT environment variable now available in builds.
-(https://issues.jenkins-ci.org/browse/JENKINS-9253[JENKINS-9253])
+(https://issues.jenkins.io/browse/JENKINS-9253[JENKINS-9253])
 * Improved wording of error message when no revision is found to build.
-(https://issues.jenkins-ci.org/browse/JENKINS-9339[JENKINS-9339])
-* Added "--progress" to git clone call. (https://issues.jenkins-ci.org/browse/JENKINS-9168[JENKINS-9168])
-* Underlying error actually shown when git fetch fails. (https://issues.jenkins-ci.org/browse/JENKINS-9052[JENKINS-9052])
+(https://issues.jenkins.io/browse/JENKINS-9339[JENKINS-9339])
+* Added "--progress" to git clone call. (https://issues.jenkins.io/browse/JENKINS-9168[JENKINS-9168])
+* Underlying error actually shown when git fetch fails. (https://issues.jenkins.io/browse/JENKINS-9052[JENKINS-9052])
 * git config options for user.name and user.email now save properly.
-(https://issues.jenkins-ci.org/browse/JENKINS-9071[JENKINS-9071])
+(https://issues.jenkins.io/browse/JENKINS-9071[JENKINS-9071])
 * Properly handle empty string for branch when branch is parameterized.
-(https://issues.jenkins-ci.org/browse/JENKINS-8656[JENKINS-8656])
+(https://issues.jenkins.io/browse/JENKINS-8656[JENKINS-8656])
 * If no Jenkins user is found for a commit's user.name value, strip the
 username from "\username@domain.com" from the user.email value and use
-that instead. (https://issues.jenkins-ci.org/browse/JENKINS-9016[JENKINS-9016])
+that instead. (https://issues.jenkins.io/browse/JENKINS-9016[JENKINS-9016])
 
 == Version 1.1.6 (March 8, 2011)
 
 * Fix for warning stacktrace if parameterized trigger plugin was not
 installed.
 * No longer try to generate complete history as changelog if previous
-build's SHA1 no longer exists in repository. (https://issues.jenkins-ci.org/browse/JENKINS-8853[JENKINS-8853])
+build's SHA1 no longer exists in repository. (https://issues.jenkins.io/browse/JENKINS-8853[JENKINS-8853])
 * Fixed bug causing "Firstname \Lastname@domain.com" to be used as email
-address for users. (https://issues.jenkins-ci.org/browse/JENKINS-7156[JENKINS-7156])
-* Passwords should now be properly used in https URLs. (https://issues.jenkins-ci.org/browse/JENKINS-3807[JENKINS-3807])
+address for users. (https://issues.jenkins.io/browse/JENKINS-7156[JENKINS-7156])
+* Passwords should now be properly used in https URLs. (https://issues.jenkins.io/browse/JENKINS-3807[JENKINS-3807])
 * Exposed a few token macros
 
 == Version 1.1.5 (February 14, 2011)
@@ -1074,9 +1074,9 @@ address for users. (https://issues.jenkins-ci.org/browse/JENKINS-7156[JENKINS-71
 * Added an extension for to allow Git SHA1 of the current build to be
 passed to downstream builds (so that they can act on the exact same
 commit.)
-* Allowed optional disabling of internal tagging (https://issues.jenkins-ci.org/browse/JENKINS-5676[JENKINS-5676])
+* Allowed optional disabling of internal tagging (https://issues.jenkins.io/browse/JENKINS-5676[JENKINS-5676])
 * If specified, use configured values for user.email and user.name
-(https://issues.jenkins-ci.org/browse/JENKINS-2754[JENKINS-2754])
+(https://issues.jenkins.io/browse/JENKINS-2754[JENKINS-2754])
 * Removed obsolete/unused wipe out workspace option and defunct Gerrit
 build chooser.
 * Rebranded to Jenkins!
@@ -1084,8 +1084,8 @@ build chooser.
 == Version 1.1.4 (December 4, 2010)
 
 * For Matrix projects, push only at the end of the whole thing, not at
-the configuration build (https://issues.jenkins-ci.org/browse/JENKINS-5005[JENKINS-5005]).
-* Switching between browsers does not function properly (https://issues.jenkins-ci.org/browse/JENKINS-8210[JENKINS-8210]).
+the configuration build (https://issues.jenkins.io/browse/JENKINS-5005[JENKINS-5005]).
+* Switching between browsers does not function properly (https://issues.jenkins.io/browse/JENKINS-8210[JENKINS-8210]).
 * Implement support for http://www.redmine.org/[Redmine] as browser.
 
 == Version 1.1.3 (November 8, 2010)
@@ -1094,70 +1094,70 @@ the configuration build (https://issues.jenkins-ci.org/browse/JENKINS-5005[JENKI
 
 == Version 1.1.2 (November 8, 2010)
 
-* Fixed major bug in polling (https://issues.jenkins-ci.org/browse/JENKINS-8032[JENKINS-8032])
+* Fixed major bug in polling (https://issues.jenkins.io/browse/JENKINS-8032[JENKINS-8032])
 
 == Version 1.1.1 (November 5, 2010)
 
 * Improved logging for failures with git fetch.
-* Made sure .gitmodules is closed properly. (https://issues.jenkins-ci.org/browse/JENKINS-7659[JENKINS-7659])
-* Fixed issue with polling failing if the master has 0 executors.
-(https://issues.jenkins-ci.org/browse/JENKINS-7547[JENKINS-7547])
+* Made sure .gitmodules is closed properly. (https://issues.jenkins.io/browse/JENKINS-7659[JENKINS-7659])
+* Fixed issue with polling failing if the conitroller has 0 executors.
+(https://issues.jenkins.io/browse/JENKINS-7547[JENKINS-7547])
 * Modified Git publisher to run as late as possible in the post-build
-plugin order. (https://issues.jenkins-ci.org/browse/JENKINS-7877[JENKINS-7877])
+plugin order. (https://issues.jenkins.io/browse/JENKINS-7877[JENKINS-7877])
 * Added optional call to "git remote prune" to prune obsolete local
-branches before build. (https://issues.jenkins-ci.org/browse/JENKINS-7831[JENKINS-7831])
+branches before build. (https://issues.jenkins.io/browse/JENKINS-7831[JENKINS-7831])
 
 == Version 1.1 (September 21, 2010)
 
 * Added ability for GitPublisher to only push if build succeeds.
-(https://issues.jenkins-ci.org/browse/JENKINS-7176[JENKINS-7176])
+(https://issues.jenkins.io/browse/JENKINS-7176[JENKINS-7176])
 * Fixed major bug with submodule behavior - making sure we don't try to
-fetch submodules until we've finished the initial clone. (https://issues.jenkins-ci.org/browse/JENKINS-7258[JENKINS-7258])
+fetch submodules until we've finished the initial clone. (https://issues.jenkins.io/browse/JENKINS-7258[JENKINS-7258])
 * "Clean after checkout" wasn't invoked when pre-build merges were
-enabled. (https://issues.jenkins-ci.org/browse/JENKINS-7276[JENKINS-7276])
+enabled. (https://issues.jenkins.io/browse/JENKINS-7276[JENKINS-7276])
 * Form validation was missing for the GitPublisher tag and branch names,
 and an empty value was allowed for GitPublisher target repositories,
-leading to confusion. (https://issues.jenkins-ci.org/browse/JENKINS-7277[JENKINS-7277])
+leading to confusion. (https://issues.jenkins.io/browse/JENKINS-7277[JENKINS-7277])
 * "Clean before build" will now run in submodules as well as root.
-(https://issues.jenkins-ci.org/browse/JENKINS-7376[JENKINS-7376])
+(https://issues.jenkins.io/browse/JENKINS-7376[JENKINS-7376])
 * When polling, Hudson-configured environment variables were not being
-used. (https://issues.jenkins-ci.org/browse/JENKINS-7411[JENKINS-7411])
+used. (https://issues.jenkins.io/browse/JENKINS-7411[JENKINS-7411])
 * Modifications to BuildData to deal with Hudson no longer serializing
-null keys. (https://issues.jenkins-ci.org/browse/JENKINS-7446[JENKINS-7446])
-* Support for --recursive option to submodule commands. (https://issues.jenkins-ci.org/browse/JENKINS-6258[JENKINS-6258])
+null keys. (https://issues.jenkins.io/browse/JENKINS-7446[JENKINS-7446])
+* Support for --recursive option to submodule commands. (https://issues.jenkins.io/browse/JENKINS-6258[JENKINS-6258])
 
 == Version 1.0.1 (August 9, 2010)
 
-* Fixed submodules support - was broken by https://issues.jenkins-ci.org/browse/JENKINS-6902[JENKINS-6902] fix.
-(https://issues.jenkins-ci.org/browse/JENKINS-7141[JENKINS-7141])
+* Fixed submodules support - was broken by https://issues.jenkins.io/browse/JENKINS-6902[JENKINS-6902] fix.
+(https://issues.jenkins.io/browse/JENKINS-7141[JENKINS-7141])
 * Switched "Recent Changes" list for a project to count changes per
-build, rather than using revision as if it were a number. (https://issues.jenkins-ci.org/browse/JENKINS-7154[JENKINS-7154])
-* Stopped putting problematic slash at end of GitWeb URL. (https://issues.jenkins-ci.org/browse/JENKINS-7020[JENKINS-7020])
+build, rather than using revision as if it were a number. (https://issues.jenkins.io/browse/JENKINS-7154[JENKINS-7154])
+* Stopped putting problematic slash at end of GitWeb URL. (https://issues.jenkins.io/browse/JENKINS-7020[JENKINS-7020])
 
 == Version 1.0 (July 29, 2010)
 
 * Added support for Github as a repository browser.
 * Added support for optionally putting source in a subdirectory of the
-workspace (https://issues.jenkins-ci.org/browse/JENKINS-6357[JENKINS-6357])
-* If all repository fetches fail, fail the build. (https://issues.jenkins-ci.org/browse/JENKINS-6902[JENKINS-6902])
-* Improved logging of git command execution errors (https://issues.jenkins-ci.org/browse/JENKINS-6330[JENKINS-6330])
+workspace (https://issues.jenkins.io/browse/JENKINS-6357[JENKINS-6357])
+* If all repository fetches fail, fail the build. (https://issues.jenkins.io/browse/JENKINS-6902[JENKINS-6902])
+* Improved logging of git command execution errors (https://issues.jenkins.io/browse/JENKINS-6330[JENKINS-6330])
 * Basic support for excluded regions and excluded users in polling added
-(https://issues.jenkins-ci.org/browse/JENKINS-4556[JENKINS-4556])
+(https://issues.jenkins.io/browse/JENKINS-4556[JENKINS-4556])
 * Support for optionally checking out to a local branch, rather than
-detached HEAD (https://issues.jenkins-ci.org/browse/JENKINS-6856[JENKINS-6856])
+detached HEAD (https://issues.jenkins.io/browse/JENKINS-6856[JENKINS-6856])
 * Revamped GitPublisher to allow for pushing tags to remotes and pushing
 to remote branches, as well as existing push of merge results.
-(https://issues.jenkins-ci.org/browse/JENKINS-5371[JENKINS-5371])
+(https://issues.jenkins.io/browse/JENKINS-5371[JENKINS-5371])
 
 == Version 0.9.2 (June 22, 2010)
 
 * Fixed major bug in BuildChooser default selection and serialization
-(https://issues.jenkins-ci.org/browse/JENKINS-6827[JENKINS-6827])
+(https://issues.jenkins.io/browse/JENKINS-6827[JENKINS-6827])
 
 == Version 0.9.1 (June 22, 2010)
 
 * Dramatic improvement in changelog generation, thanks to a switch to
-use "git whatchanged" (https://issues.jenkins-ci.org/browse/JENKINS-6781[JENKINS-6781])
+use "git whatchanged" (https://issues.jenkins.io/browse/JENKINS-6781[JENKINS-6781])
 
 == Version 0.9 (June 17, 2010)
 
@@ -1174,22 +1174,22 @@ behavior.
 * Support for Gerrit plugin.
 * Support for different build choosers.
 
-== Version 0.7.3
+== Version 0.7.3 (May 26, 2009)
 
-* Fixed https://issues.jenkins-ci.org/browse/JENKINS-2931[JENKINS-2931], git tag freezing job execution (jbq)
+* Fixed https://issues.jenkins.io/browse/JENKINS-2931[JENKINS-2931], git tag freezing job execution (jbq)
 * Improve log messages (jbq)
 * Use build listener to report messages when pushing tags to origin
 (jbq)
-* Fixed https://issues.jenkins-ci.org/browse/JENKINS-2762[JENKINS-2762], fail to clone a repository on Windows (jbq)
+* Fixed https://issues.jenkins.io/browse/JENKINS-2762[JENKINS-2762], fail to clone a repository on Windows (jbq)
 
-== Version 0.5
+== Version 0.5 (Dec 10, 2008)
 
 * Fix git plugin which was very broken when running on a remote server
 (magnayn)
 * Fix NPE in GitChangeLogParser upon project's first build (jbq)
 * Change workspace to a FilePath in GitAPI (jbq)
 * Use git rev-list once instead of invoking git rev-parse indefinitely
-to find last build, see https://issues.jenkins-ci.org/browse/JENKINS-2469[JENKINS-2469]: GIT plugin very slow (jbq)
+to find last build, see https://issues.jenkins.io/browse/JENKINS-2469[JENKINS-2469]: GIT plugin very slow (jbq)
 * Handle null-value of the repositories field to ensure
 backwards-compatibility with version 0.3, +
 ie when the project configuration is missing the <repositories/> XML
@@ -1198,7 +1198,7 @@ element (jbq)
 * Fix handling of the "branch" configuration parameter (jbq)
 * Improve tag handling, use show-ref instead of rev-parse to resolve the
 tag reference (jbq)
-* Fix https://issues.jenkins-ci.org/browse/JENKINS-2675[JENKINS-2675], Git fails on remote slaves (jbq)
+* Fix https://issues.jenkins.io/browse/JENKINS-2675[JENKINS-2675], Git fails on remote agents (jbq)
 
 == Version 0.4 (never released)
 
@@ -1207,11 +1207,11 @@ tag reference (jbq)
 * Avoid infinite loops when git doesn't contains tags (david_calavera)
 * Don't do a log of the entire branch if it's never been built (magnayn)
 
-== Version 0.3
+== Version 0.3 (May 12, 2008)
 
 * Add support for pre-build branch merges
 
-== Version 0.2
+== Version 0.2 (Apr 22, 2008)
 
 * Improve handling of git repositories (use local tags to identify up to
 date versions rather than the wc HEAD)
@@ -1220,7 +1220,7 @@ examined for changes and built
 * Includes a publisher which can be used to push build success/failure
 tags back up to the upstream repository
 
-== Version 0.1
+== Version 0.1 (Apr 11, 2008)
 
 * Initial Release
-* Allow extension to require workspace for polling (https://issues.jenkins-ci.org/browse/JENKINS-19001[JENKINS-19001])
+* Allow extension to require workspace for polling (https://issues.jenkins.io/browse/JENKINS-19001[JENKINS-19001])

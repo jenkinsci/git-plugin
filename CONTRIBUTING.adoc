@@ -12,6 +12,14 @@ Before submitting your change, please assure that you've added tests which verif
 There have been many developers involved in the git plugin and there are many, many users who depend on the git plugin.
 Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers as executable descriptions of plugin behavior.
 
+Compile and test the git plugin with the command:
+
+* `mvn clean verify`
+
+Compile the git plugin without running tests using the command:
+
+* `mvn clean -DskipTests verify`
+
 Code coverage reporting is available as a maven target.
 Please try to improve code coverage with tests when you submit.
 
@@ -53,7 +61,7 @@ Steps to test a pull request build are:
 == Reviewing Bug Reports
 
 Git plugin bug reports are assigned to one of the maintainers by default.
-link:https://issues.jenkins-ci.org/issues/?jql=project%20%3D%20JENKINS%20AND%20status%20in%20(Open)%20AND%20component%20%3D%20git-plugin%20and%20assignee%20in%20(rsandell%2Cmarkewaite%2Cfcojfernandez)[Open bug reports] assigned to a maintainer are assumed to have not been reviewed.
+link:https://issues.jenkins.io/issues/?jql=project%20%3D%20JENKINS%20AND%20status%20in%20(Open)%20AND%20component%20%3D%20git-plugin%20and%20assignee%20in%20(rsandell%2Cmarkewaite%2Cfcojfernandez)[Open bug reports] assigned to a maintainer are assumed to have not been reviewed.
 When a maintainer completes review of an issue, they include a comment on the bug report and set the 'Assignee' to 'Unassigned'.
 
 Others are welcome to review bug reports, comment on the results of the review, and set the 'Assignee' to 'Unassigned'.

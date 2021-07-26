@@ -1,0 +1,12 @@
+<p>
+  If checked, the git tag action will be added to any builds that happen <strong>after</strong> the box is checked.
+  Prior to git plugin 4.5.0, the git tag action was always added.
+  Git plugin 4.5.0 and later will not add the git tag action to new builds unless the administrator enables it.
+</p>
+<p>
+  The git tag action allows a user to apply a tag to the git repository in the workspace based on the git commit used in the build applying the tag.
+  The git plugin does <strong>not</strong> push the applied tag to any other location.
+  If the workspace is removed, the tag that was applied is lost.
+  Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
+  Applying a git tag in an agent workspace doesn't have many practical uses.
+</p>

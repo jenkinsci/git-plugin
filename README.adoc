@@ -3,12 +3,6 @@
 :toc: macro
 :toc-title:
 
-link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/[image:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/master/badge/icon[Build]]
-link:https://github.com/jenkinsci/git-plugin/graphs/contributors[image:https://img.shields.io/github/contributors/jenkinsci/git-plugin.svg?color=blue[Contributors]]
-link:https://plugins.jenkins.io/git[image:https://img.shields.io/jenkins/plugin/i/git.svg?color=blue&label=installations[Jenkins Plugin Installs]]
-link:https://github.com/jenkinsci/git-plugin/releases/latest[image:https://img.shields.io/github/release/jenkinsci/git-plugin.svg?label=changelog[GitHub release]]
-link:https://gitter.im/jenkinsci/git-plugin[image:https://badges.gitter.im/jenkinsci/git-plugin.svg[Gitter]]
-
 [#introduction]
 == Introduction
 
@@ -31,6 +25,74 @@ toc::[]
 Release notes are recorded in https://github.com/jenkinsci/git-plugin/releases[GitHub Releases] since July 1, 2019 (git plugin 3.10.1 and later).
 Prior release notes are recorded in the git plugin repository link:CHANGELOG.adoc#changelog-moved-to-github-releases[change log].
 
+== Pipelines
+
+The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
+The link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] guides the user to select checkout options.
+
+The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax Snippet Generator and shows how it is used to generate steps for the Jenkins Pipeline.
+
+image:images/pipeline-syntax.png[link=https://youtu.be/ai1kf4ihZUo]
+
+=== Multibranch Pipelines
+
+The git plugin includes a multibranch provider for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/[Multibranch Pipelines] and for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/#organization-folders[Organization Folders].
+The git plugin multibranch provider is a "base implementation" that uses command line git.
+Users should prefer the multibranch implementation for their git provider when one is available.
+Multibranch implementations for specific git providers can use REST API calls to improve the Jenkins experience and add additional capabilities.
+Multibranch implementations are available for
+link:https://docs.cloudbees.com/docs/cloudbees-ci/latest/cloud-admin-guide/github-branch-source-plugin[GitHub],
+link:https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc[Bitbucket],
+link:https://plugins.jenkins.io/gitlab-branch-source/[GitLab],
+link:https://plugins.jenkins.io/gitea/[Gitea], and
+link:https://plugins.jenkins.io/tuleap-git-branch-source/[Tuleap].
+
+The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Multibranch Pipelines.
+
+image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
+
+[#credential-binding]
+=== Git Credentials Binding
+
+The git plugin provides `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *HTTPS* protocols using command line git in a Pipeline job.
+
+The git credential bindings are accessible through the link:https://www.jenkins.io/doc/pipeline/steps/credentials-binding/#withcredentials-bind-credentials-to-variables[`withCredentials`] step of the link:https://plugins.jenkins.io/credentials-binding/[Credentials Binding] plugin.
+The binding retrieves credentials from the link:https://plugins.jenkins.io/credentials/[Credentials] plugin.
+
+==== Git Username and Password Binding
+
+This binding provides authentication support over *HTTP* protocol using command line git in a Pipeline job.
+
+Procedure::
+
+. Click the Pipeline Syntax _Snippet Generator_ and choose the `withCredentials` step, add Git Username and Password binding.
+. Choose the required credentials and Git tool name, specific to the generated Pipeline snippet.
+
+image:images/git-credentials-usernamepassword-binding-pipline-job.png[Git-Username-and Password-Binding-Pipeline-Job]
+
+Two variable bindings are used, `GIT_USERNAME` and `GIT_PASSWORD`, to pass the username and password to `sh`, `bat`, and `powershell` steps inside the `withCredentials` block of a Pipeline job.
+The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
+
+.Shell example
+```groovy
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  sh 'git fetch --all'
+}
+```
+
+.Batch example
+```groovy
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  bat 'git submodule update --init --recursive'
+}
+```
+
+.Powershell example
+```groovy
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+  powershell 'git push'
+}
+```
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
 
@@ -57,8 +119,8 @@ Credentials::
 
 Name::
 
-  Git uses a shortname to simplify user references to the URL of the remote repository.
-  The default shortname is `origin`.
+  Git uses a short name to simplify user references to the URL of the remote repository.
+  The default short name is `origin`.
   Other values may be assigned and then used throughout the job definition to refer to the remote repository.
 
 Refspec::
@@ -92,10 +154,16 @@ https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
 
+When the remote repository is accessed with the **HTTP or HTTPS protocols**, the plugin requires a **username / password credential**.
+Other credential types will not work with HTTP or HTTPS protocols.
+
+When the remote repository is accessed with the **ssh protocol**, the plugin requires an **ssh private key credential**.
+Other credential types will not work with the ssh protocol.
+
 [#push-notification-from-repository]
 === [[GitPlugin-Pushnotificationfromrepository]]Push Notification From Repository
 
-To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changs to the repository.
+To minimize the delay between a push and a build, configure the remote repository to use a Webhook to notify Jenkins of changes to the repository.
 Refer to webhook documentation for your repository:
 
 * link:https://plugins.jenkins.io/github#GitHubPlugin-GitHubhooktriggerforGITScmpolling[GitHub]
@@ -165,6 +233,46 @@ Show the entire commit summary in changes::
   The `changes` page for each job would truncate the change summary prior to git plugin 4.0.
   With the release of git plugin 4.0, the default was changed to show the complete change summary.
   Administrators that want to restore the old behavior may disable this setting.
+
+[[hide-credentials]]
+Hide credential usage in job output::
+
+  If checked, the console log will not show the credential identifier used to clone a repository.
+
+[[disable-performance-enhancements]]
+Disable performance enhancements::
+
+  If JGit and command line git are both enabled on an agent, the git plugin uses a "git tool chooser" to choose a preferred git implementation.
+  The preferred git implementation depends on the size of the repository and the git plugin features requested by the job.
+  If the repository size is *less than* the JGit repository size threshold and the git features of the job are all implemented in JGit, then JGit is used.
+  If the repository size is *greater than* the JGit repository size threshold or the job requires git features that are not implemented in JGit, then command line git is used.
++
+If checked, the plugin will disable the feature that recommends a git implementation on the basis of the size of a repository.
+This switch may be used in case of a bug in the performance improvement feature.
+If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+
+[[preserve-second-fetch-during-checkout]]
+Preserve second fetch during initial checkout::
+
+  If checked, the initial checkout step will not avoid the second fetch.
+  Git plugin versions prior to git plugin 4.4 would perform two fetch operations during the initial repository checkout.
+  Git plugin 4.4 removes the second fetch operation in most cases.
+  Enabling this option will restore the second fetch operation.
+  This setting is only needed if there is a bug in the redundant fetch removal logic.
+  If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+
+[[do-not-add-git-tag-action-to-jobs]]
+Add git tag action to jobs::
+
+  If checked, the git tag action will be added to any builds that happen *after* the box is checked.
+  Prior to git plugin 4.5.0, the git tag action was always added.
+  Git plugin 4.5.0 and later will not add the git tag action to new builds unless the administrator enables it.
++
+The git tag action allows a user to apply a tag to the git repository in the workspace based on the git commit used in the build applying the tag.
+The git plugin does *not* push the applied tag to any other location.
+If the workspace is removed, the tag that was applied is lost.
+Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
+Applying a git tag in an agent workspace doesn't have many practical uses.
 
 [#repository-browser]
 === Repository Browser
@@ -245,6 +353,20 @@ URL::
 
   Root URL serving this Bitbucket repository.
   For example, `\https://bitbucket.example.com/username/my-project`
+
+[bitbucketserver-repository-browser]
+==== bitbucketserver
+
+image:/images/git-repository-browser-bitbucketserver.png[Bitbucket Server Repository Browser]
+
+Repository browser for git repositories hosted by an on-premises Bitbucket Server installation.
+Options include:
+
+[[bitbucketserver-url]]
+URL::
+
+  Root URL serving this Bitbucket repository.
+  For example, `\https://bitbucket-server:7990/username/my-project`
 
 [#cgit-repository-browser]
 ==== cgit
@@ -464,6 +586,25 @@ Project Name in ViewGit::
   ViewGit project name.
   For example, `my-project`
 
+[#git-bindings]
+== Git Bindings
+
+The git plugin provides one binding to support authenticated git opreations over *HTTP* or * HTTPS* protocol, namely `Git Username and Password`.
+The git plugin depeneds on the Credential Binding Plugin to support these bindings.
+
+To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
+
+Freestyle projects can use git credential binding with the following steps:
+
+. Check the box _Use secret text(s) or file(s)_, add Git Username and Password binding.
+
+. Choose the required credentials and Git tool name.
+
+image:images/git-credentials-usernamepassword-binding-freestyle-project.png[Git-Username-and Password-Binding-Freestyle-project]
+
+Two variable bindings are used, `GIT_USERNAME` and `GIT_PASSWORD`, to pass the username and password to shell, batch, and powershell steps in a Freestyle job.
+The variable bindings are available even if the `JGit` or `JGit with Apache HTTP Client` git implementation is being used.
+
 [#extensions]
 == Extensions
 
@@ -662,6 +803,7 @@ Branch name::
   If given, checkout the revision to build as HEAD on the named branch.
   If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
   In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
+  If a specific revision and not branch HEAD is checked out, then 'detached' will be used as the local branch name.
 
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
@@ -728,7 +870,7 @@ Path::
 image:/images/git-lfs-pull-after-checkout.png[Git LFS pull after checkout]
 
 Enable https://git-lfs.github.com/[git large file support] for the workspace by pulling large files after the checkout completes.
-Requires that the master and each agent performing an LFS checkout have installed `git lfs`.
+Requires that the controller and each agent performing an LFS checkout have installed `git lfs`.
 
 [#changelog-extensions]
 === Changelog Extensions
@@ -763,6 +905,8 @@ If this option is selected, the git commit's "Author" value is used instead.
 [#tagging-extensions]
 === Tagging Extensions
 
+Tagging extensions allow the plugin to apply tags in the current workspace.
+
 [#create-a-tag-for-every-build]
 ==== Create a tag for every build
 
@@ -775,7 +919,7 @@ You can combine this with Git publisher to push the tags to the remote repositor
 === Build Initiation Extensions
 
 The git plugin can start builds based on many different conditions.
-The build inititation extensions control the conditions that start a build.
+The build initiation extensions control the conditions that start a build.
 They can ignore notifications of a change or force a deeper evaluation of the commits when polling
 
 [#dont-trigger-a-build-on-commit-notifications]
@@ -795,9 +939,9 @@ When this extension is enabled, the polling is performed from a cloned copy of t
 
 If this option is selected, polling will use a workspace instead of using `ls-remote`.
 
-By default, the plugin polls by executing a polling process or thread on the Jenkins master.
-If the Jenkins master does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
-In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins master.
+By default, the plugin polls by executing a polling process or thread on the Jenkins controller.
+If the Jenkins controller does not have a git installation, the administrator may <<enabling-jgit,enable JGit>> to use a pure Java git implementation for polling.
+In addition, the administrator may need to <<GitPlugin-WhyNotJGit,disable command line git>> to prevent use of command line git on the Jenkins controller.
 
 [#polling-ignores-commits-from-certain-users]
 ==== Polling ignores commits from certain users
@@ -816,7 +960,8 @@ Excluded Users::
   Using this behavior prevents the faster `git ls-remote` polling mechanism.
   It forces polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension.
 
-  Each exclusion uses literal pattern matching, and must be separated by a new line.
+  Each exclusion uses exact string comparison and must be separated by a new line.
+  User names are only excluded if they exactly match one of the names in this list.
 
 [#polling-ignores-commits-in-certain-paths]
 ==== Polling ignores commits in certain paths
@@ -934,12 +1079,12 @@ image:/images/git-custom-user-name-e-mail-address.png[Custom user name/e-mail ad
 user.name::
 
   Defines the user name value which git will assign to new commits made in the workspace.
-  If given, `git config user.name` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_NAME` and `GIT_AUTHOR_NAME` are set for builds and override values from the global settings.
 
 user.email::
 
   Defines the user email value which git will assign to new commits made in the workspace.
-  If given, `git config user.email` is called before builds and overrides values from the global settings.
+  If given, the environment variables `GIT_COMMITTER_EMAIL` and `GIT_AUTHOR_EMAIL` are set for builds and override values from the global settings.
 
 [#deprecated-extensions]
 === Deprecated Extensions
@@ -950,6 +1095,51 @@ user.email::
 Unique name for this SCM.
 Was needed when using Git within the Multi SCM plugin.
 Pipeline is the robust and feature-rich way to checkout from multiple repositories in a single job.
+
+[#submodule-combinator---removed]
+==== Submodule Combinator - *Removed*
+
+An experiment was created many years ago that attempted to create combinations of submodules within the Jenkins job.
+The experiment was never available to Freestyle projects or other legacy projects like multi-configuration projects.
+It was visible in Pipeline, configuration as code, and JobDSL.
+
+The implementation of the experiment has been removed.
+Dependabot and other configuration tools are better suited to evaluate submodule combinations.
+
+There are no known uses of the submodule combinator and no open Jira issues reported against the submodule combinator.
+Those who were using submodule combinator should remain with git plugin versions prior to 4.6.0.
+
+The submodule combinator ignores any user provided value of the following arguments to git's `checkout scm`:
+
+doGenerateSubmoduleConfigurations::
+
+  A boolean that is now always set to `false`.
+  Submodule configurations are no longer evaluated by the git plugin.
+
+submoduleCfg::
+
+  A list of submodule names and branches that is now always empty.
+  Submodule configurations are no longer evaluated by the git plugin.
+
+Previous Pipeline syntax looked like this:
+
+```groovy
+checkout([$class: 'GitSCM',
+          branches: [[name: 'master']],
+          doGenerateSubmoduleConfigurations: false,
+          extensions: [],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+```
+
+Current Pipeline Syntax looks like this:
+
+```groovy
+checkout([$class: 'GitSCM',
+          branches: [[name: 'master']],
+          extensions: [],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin']]])
+```
 
 [#environment-variables]
 == Environment Variables
@@ -988,8 +1178,8 @@ Some git plugin settings can only be controlled from command line properties set
 [#default-timeout]
 === Default Timeout
 
-The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins-ci.org/browse/JENKINS-11286[JENKINS-11286]).
-The property should be set on the master and on all agents to have effect (see https://issues.jenkins-ci.org/browse/JENKINS-22547[JENKINS-22547]).
+The default git timeout value (in minutes) can be overridden by the `org.jenkinsci.plugins.gitclient.Git.timeOut` property (see https://issues.jenkins.io/browse/JENKINS-11286[JENKINS-11286]).
+The property should be set on the controller and on all agents to have effect (see https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
 Command line git is the reference git implementation in the git plugin and the git client plugin.
@@ -1048,7 +1238,7 @@ Tag message::
 
   If the option is selected to create a tag or update a tag, then this message will be associated with the tag that is created.
   The message will expand references to link:https://jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables[Jenkins environment variables].
-  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on master` if build 1 of the job runs on the master.
+  For example, the message `Build $BUILD_NUMBER tagged on $NODE_NAME` will use the message `Build 1 tagged on special-agent` if build 1 of the job runs on an agent named 'special-agent'.
 
 Create new tag::
 
@@ -1081,9 +1271,9 @@ Branch to push::
 
 Target remote name::
 
-  The shortname of the remote that will receive the latest commits from the agent workspace.
+  The short name of the remote that will receive the latest commits from the agent workspace.
   Usually this is `origin`.
-  It needs to be a shortname that is defined in the agent workspace, either through the initial checkout or through later configuration.
+  It needs to be a short name that is defined in the agent workspace, either through the initial checkout or through later configuration.
 
 Rebase before push::
 
@@ -1121,7 +1311,7 @@ If that reference repository is used in the submodule options link:#submodule-re
 == Bug Reports
 
 Report issues and enhancements in the
-https://issues.jenkins-ci.org[Jenkins issue tracker].
+https://issues.jenkins.io[Jenkins issue tracker].
 
 [#contributing-to-the-plugin]
 == Contributing to the Plugin
@@ -1131,15 +1321,16 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
-This script is used to remove the static list of BuildsByBranch that is uselessly stored for each build by the Git Plugin.
+The git plugin has an issue (link:https://issues.jenkins.io/browse/JENKINS-19022[JENKINS-19022]) that sometimes causes excessive memory use and disc use in the build history of a job.
+The problem occurs because in some cases the git plugin copies the git build data from previous builds to the most recent build, even though the git build data from the previous build is not used in the most recent build.
+The issue can be especially challenging when a job retains a very large number of historical builds or when a job builds a wide range of commits during its history.
 
-* This is a workaround for the problem described here:
-https://issues.jenkins-ci.org/browse/JENKINS-19022
-* Updated to handle Matrix Project types.
-* Updated to better support SCM Polling
-* Updated to handle Projects inside Folders.
-* Updated to handle Pipeline job types (just call getJobNames() to find
-everything)
+Multiple attempts to resolve the core issue without breaking compatibility have been unsuccessful.
+A workaround is provided below that will remove the git build data from the build records.
+The workaround is a system groovy script that needs to be run from the Jenkins Administrator's Script Console (as in \https://jenkins.example.com/script ).
+Administrator permission is required to run system groovy scripts.
+
+This script removes the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
 [source,groovy]
 ----
@@ -1152,7 +1343,7 @@ allItems = []
 for (name in jobNames) {
   allItems += hudsonInstance.getItemByFullName(name)
 }
- 
+
 // Iterate over all jobs and find the ones that have a hudson.plugins.git.util.BuildData
 // as an action.
 //

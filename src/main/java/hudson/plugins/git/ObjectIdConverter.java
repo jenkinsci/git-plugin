@@ -4,6 +4,7 @@ import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.core.util.Base64Encoder;
+import com.thoughtworks.xstream.io.ExtendedHierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.eclipse.jgit.lib.ObjectId;
@@ -44,7 +45,7 @@ public class ObjectIdConverter implements Converter {
     protected boolean isLegacyNode(HierarchicalStreamReader reader,
             UnmarshallingContext context) {
         return reader.hasMoreChildren()
-                && "byte-array".equals(reader.peekNextChild());
+                && "byte-array".equals(((ExtendedHierarchicalStreamReader) reader).peekNextChild());
     }
 
     /**

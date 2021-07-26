@@ -1,5 +1,10 @@
 unclassified:
   gitSCM:
+    allowSecondFetch: true
     createAccountBasedOnEmail: true
     globalConfigEmail: "me@mail.com"
     globalConfigName: "user_name"
+    hideCredentials: true
+    addGitTagAction: true
+    showEntireCommitSummaryInChanges: true
+    useExistingAccountWithSameEmail: false

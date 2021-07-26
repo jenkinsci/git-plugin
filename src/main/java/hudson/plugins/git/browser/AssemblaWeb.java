@@ -12,7 +12,6 @@ import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.URLCheck;
 import net.sf.json.JSONObject;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -126,7 +125,7 @@ public class AssemblaWeb extends GitRepositoryBrowser {
                             return FormValidation.error("This is a valid URL but it does not look like Assembla");
                         }
                     } catch (IOException e) {
-                        return handleIOException(v, e);
+                        return FormValidation.error("Exception reading from Assembla URL " + cleanUrl + " : " + handleIOException(v, e));
                     }
                 }
             }.check();
@@ -134,10 +133,9 @@ public class AssemblaWeb extends GitRepositoryBrowser {
 
         private boolean checkURIFormatAndHostName(String url, String hostNameFragment) throws URISyntaxException {
             URI uri = new URI(url);
-            String[] schemes = {"http", "https"};
-            UrlValidator urlValidator = new UrlValidator(schemes);
             hostNameFragment = hostNameFragment + ".";
-            return urlValidator.isValid(uri.toString()) && uri.getHost().contains(hostNameFragment);
+            String uriHost = uri.getHost();
+            return uriHost != null && validateUrl(uri.toString()) && uriHost.contains(hostNameFragment);
         }
     }
 }

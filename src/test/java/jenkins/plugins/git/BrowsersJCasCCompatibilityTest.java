@@ -2,6 +2,7 @@ package jenkins.plugins.git;
 
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.AssemblaWeb;
+import hudson.plugins.git.browser.BitbucketServer;
 import hudson.plugins.git.browser.BitbucketWeb;
 import hudson.plugins.git.browser.CGit;
 import hudson.plugins.git.browser.FisheyeGitRepositoryBrowser;
@@ -65,6 +66,10 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                 allOf(
                         instanceOf(LibraryConfiguration.class),
                         hasProperty("name", equalTo("withBitbucket"))
+                ),
+                allOf(
+                        instanceOf(LibraryConfiguration.class),
+                        hasProperty("name", equalTo("withBitbucketServer"))
                 ),
                 allOf(
                         instanceOf(LibraryConfiguration.class),
@@ -163,6 +168,11 @@ public class BrowsersJCasCCompatibilityTest extends RoundTripAbstractTest {
                         instanceOf(BitbucketWeb.class),
                         hasProperty("repoUrl", equalTo("http://url.bitbucket"))
                 ),
+                // bitbucketserver
+                allOf(
+                		instanceOf(BitbucketServer.class),
+                		hasProperty("repoUrl", equalTo("http://url.bitbucketserver"))
+                		),
                 // cgit
                 allOf(
                         instanceOf(CGit.class),

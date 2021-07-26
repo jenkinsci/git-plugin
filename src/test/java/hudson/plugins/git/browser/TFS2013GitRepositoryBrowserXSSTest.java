@@ -3,7 +3,6 @@ package hudson.plugins.git.browser;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -29,7 +28,6 @@ public class TFS2013GitRepositoryBrowserXSSTest {
         GitSCM scm = new GitSCM(
                 Collections.singletonList(new UserRemoteConfig("http://tfs/tfs/project/_git/repo", null, null, null)),
                 new ArrayList<>(),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
         scm.setBrowser(new TFS2013GitRepositoryBrowser("<img src=x onerror=alert(232)>"));

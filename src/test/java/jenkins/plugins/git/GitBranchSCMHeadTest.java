@@ -1,7 +1,6 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.model.Queue;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -19,7 +18,6 @@ import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeFalse;
 
 public class GitBranchSCMHeadTest {
 
@@ -27,7 +25,7 @@ public class GitBranchSCMHeadTest {
     public JenkinsRule j = new JenkinsRule() {
         @Override
         public void before() throws Throwable {
-            if (!Functions.isWindows() && "testMigrationNoBuildStorm".equals(this.getTestDescription().getMethodName())) {
+            if (!isWindows() && "testMigrationNoBuildStorm".equals(this.getTestDescription().getMethodName())) {
                 URL res = getClass().getResource("/jenkins/plugins/git/GitBranchSCMHeadTest/testMigrationNoBuildStorm_repositories.zip");
                 final File path = new File("/tmp/JENKINS-48061");
                 if (path.exists()) {
@@ -58,7 +56,10 @@ public class GitBranchSCMHeadTest {
     @LocalData
     @Deprecated // getBuilds.size()
     public void testMigrationNoBuildStorm() throws Exception {
-        assumeFalse(Functions.isWindows());
+        if (isWindows()) { // Test is unreliable on Windows, too low value to investigate further
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         final WorkflowMultiBranchProject job = j.jenkins.getItemByFullName("job", WorkflowMultiBranchProject.class);
         assertEquals(4, job.getItems().size());
         WorkflowJob master = job.getItem("master");
@@ -82,4 +83,8 @@ public class GitBranchSCMHeadTest {
         assertEquals(0, v4.getBuilds().size());
     }
 
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return File.pathSeparatorChar==';';
+    }
 }

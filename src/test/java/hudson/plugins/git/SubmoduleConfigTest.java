@@ -32,8 +32,8 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
+@Deprecated
 public class SubmoduleConfigTest {
 
     private SubmoduleConfig config = new SubmoduleConfig();
@@ -89,15 +89,15 @@ public class SubmoduleConfigTest {
     public void testSetSubmoduleName() {
         String name = "name-of-submodule";
         config.setSubmoduleName(name);
-        assertThat(config.getSubmoduleName(), is(name));
+        assertThat(config.getSubmoduleName(), is(nullValue()));
         name = "another-submodule";
         config.setSubmoduleName(name);
-        assertThat(config.getSubmoduleName(), is(name));
+        assertThat(config.getSubmoduleName(), is(nullValue()));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testGetBranches() {
-        config.getBranches();
+        assertThat(config.getBranches(), is(arrayWithSize(0)));
     }
 
     public void testGetBranchesFromArray() {
@@ -111,36 +111,36 @@ public class SubmoduleConfigTest {
     @Test
     public void testSetBranches() {
         config.setBranches(branchNames);
-        assertThat(config.getBranches(), is(branchNames));
+        assertThat(config.getBranches(), is(arrayWithSize(0)));
         String[] newBranchNames = Arrays.copyOf(branchNames, branchNames.length);
         newBranchNames[0] = "new-master";
         config.setBranches(newBranchNames);
-        assertThat(config.getBranches(), is(newBranchNames));
+        assertThat(config.getBranches(), is(arrayWithSize(0)));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testGetBranchesStringNPE() {
-        config.getBranchesString();
+    @Test
+    public void testGetBranchesStringEmpty() {
+        assertThat(config.getBranchesString(), is(""));
     }
 
     @Test
     public void testGetBranchesString() {
         config.setBranches(branchNames);
-        assertThat(config.getBranchesString(), is("master,comma,chameleon,develop"));
+        assertThat(config.getBranchesString(), is(""));
     }
 
     @Test
     public void testGetBranchesStringFromList() {
-        assertThat(configWithBranchList.getBranchesString(), is("master,masterAlias,develop"));
+        assertThat(configWithBranchList.getBranchesString(), is(""));
         configWithBranchList.setBranches(branchNames);
-        assertThat(configWithBranchList.getBranchesString(), is("master,comma,chameleon,develop"));
+        assertThat(configWithBranchList.getBranchesString(), is(""));
     }
 
     @Test
     public void testGetBranchesStringFromArray() {
-        assertThat(configWithBranchArray.getBranchesString(), is("master,comma,chameleon,develop"));
+        assertThat(configWithBranchArray.getBranchesString(), is(""));
         configWithBranchArray.setBranches(branchNames);
-        assertThat(configWithBranchArray.getBranchesString(), is("master,comma,chameleon,develop"));
+        assertThat(configWithBranchArray.getBranchesString(), is(""));
     }
 
     @Test
@@ -157,39 +157,39 @@ public class SubmoduleConfigTest {
         assertFalse(configWithBranchArray.revisionMatchesInterest(emptyRevision));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testRevisionMatchesInterestNPE() {
-        config.revisionMatchesInterest(multipleBranchesRevision);
+        assertFalse(config.revisionMatchesInterest(multipleBranchesRevision));
     }
 
     @Test
     public void testRevisionMatchesInterestMasterOnly() {
         String[] masterOnly = {"master"};
         config.setBranches(masterOnly);
-        assertTrue(config.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(config.revisionMatchesInterest(multipleBranchesRevision));
 
         assertFalse(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
         configWithBranchList.setBranches(masterOnly);
-        assertTrue(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
 
         assertFalse(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
         configWithBranchArray.setBranches(masterOnly);
-        assertTrue(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
     }
 
     @Test
     public void testRevisionMatchesInterestAlias() {
         String[] aliasName = {"masterAlias"};
         config.setBranches(aliasName);
-        assertTrue(config.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(config.revisionMatchesInterest(multipleBranchesRevision));
 
         assertFalse(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
         configWithBranchList.setBranches(aliasName);
-        assertTrue(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(configWithBranchList.revisionMatchesInterest(multipleBranchesRevision));
 
         assertFalse(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
         configWithBranchArray.setBranches(aliasName);
-        assertTrue(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
+        assertFalse(configWithBranchArray.revisionMatchesInterest(multipleBranchesRevision));
     }
 
     @Test
@@ -205,7 +205,7 @@ public class SubmoduleConfigTest {
     public void testBranchMatchesInterest() {
         String[] masterOnly = {"master"};
         config.setBranches(masterOnly);
-        assertTrue(config.branchMatchesInterest(masterBranch));
+        assertFalse(config.branchMatchesInterest(masterBranch));
         assertFalse(config.branchMatchesInterest(masterAliasBranch));
         assertFalse(config.branchMatchesInterest(developBranch));
 
@@ -213,7 +213,7 @@ public class SubmoduleConfigTest {
         assertFalse(configWithBranchList.branchMatchesInterest(masterAliasBranch));
         assertFalse(configWithBranchList.branchMatchesInterest(developBranch));
         configWithBranchList.setBranches(masterOnly);
-        assertTrue(configWithBranchList.branchMatchesInterest(masterBranch));
+        assertFalse(configWithBranchList.branchMatchesInterest(masterBranch));
         assertFalse(configWithBranchList.branchMatchesInterest(masterAliasBranch));
         assertFalse(configWithBranchList.branchMatchesInterest(developBranch));
     }
@@ -222,7 +222,7 @@ public class SubmoduleConfigTest {
     public void testBranchMatchesInterestWithRegex() {
         String[] masterOnlyRegex = {"m.st.r"};
         config.setBranches(masterOnlyRegex);
-        assertTrue(config.branchMatchesInterest(masterBranch));
+        assertFalse(config.branchMatchesInterest(masterBranch));
         assertFalse(config.branchMatchesInterest(masterAliasBranch));
         assertFalse(config.branchMatchesInterest(developBranch));
     }

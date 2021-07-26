@@ -31,7 +31,6 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Exposes {@link CleanBeforeCheckout} as a {@link SCMSourceTrait}.

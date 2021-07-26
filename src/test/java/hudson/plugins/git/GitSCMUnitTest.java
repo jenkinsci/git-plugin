@@ -56,18 +56,21 @@ public class GitSCMUnitTest {
     }
 
     @Test
+    @Deprecated
     public void testGetSubmoduleCfg() {
         Collection<SubmoduleConfig> emptySubmoduleConfigList = new ArrayList<>();
         assertThat(gitSCM.getSubmoduleCfg(), is(emptySubmoduleConfigList));
     }
 
     @Test
+    @Deprecated
     public void testSetSubmoduleCfg() {
+        Collection<SubmoduleConfig> emptySubmoduleConfigList = new ArrayList<>();
         Collection<SubmoduleConfig> submoduleConfigList = new ArrayList<>();
         SubmoduleConfig config = new SubmoduleConfig();
         submoduleConfigList.add(config);
         gitSCM.setSubmoduleCfg(submoduleConfigList);
-        assertThat(gitSCM.getSubmoduleCfg(), is(submoduleConfigList));
+        assertThat(gitSCM.getSubmoduleCfg(), is(emptySubmoduleConfigList));
     }
 
     @Test
@@ -219,7 +222,6 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
@@ -229,7 +231,6 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("origin/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
@@ -239,7 +240,6 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("*/master")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
@@ -249,7 +249,6 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master*")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertTrue(bigGitSCM.requiresWorkspaceForPolling());
     }
@@ -262,7 +261,6 @@ public class GitSCMUnitTest {
         branches.add(new BranchSpec("origin/master"));
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 branches,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertTrue(bigGitSCM.requiresWorkspaceForPolling());
     }
@@ -274,7 +272,6 @@ public class GitSCMUnitTest {
         env.put("A", "");
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("${A}")),
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling(env));
     }
@@ -285,17 +282,18 @@ public class GitSCMUnitTest {
     }
 
     @Test
+    @Deprecated
     public void testIsDoGenerateSubmoduleConfigurations() {
         assertFalse(gitSCM.isDoGenerateSubmoduleConfigurations());
     }
 
     @Test
+    @Deprecated
     public void testIsDoGenerateSubmoduleConfigurationsTrue() {
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
-                true, Collections.<SubmoduleConfig>emptyList(),
                 null, null, Collections.<GitSCMExtension>emptyList());
-        assertTrue(bigGitSCM.isDoGenerateSubmoduleConfigurations());
+        assertFalse(bigGitSCM.isDoGenerateSubmoduleConfigurations());
     }
 
     @Test
@@ -325,5 +323,19 @@ public class GitSCMUnitTest {
         PreBuildMergeOptions mergeOptions = gitSCM.getMergeOptions();
         assertThat(mergeOptions.getRemoteBranchName(), is(expectedMergeOptions.getRemoteBranchName()));
         assertThat(mergeOptions.getMergeTarget(), is(expectedMergeOptions.getMergeTarget()));
+    }
+
+    @Test
+    @Deprecated
+    public void testGetDoGenerateSubmoduleConfigurations() {
+        assertFalse(gitSCM.getDoGenerateSubmoduleConfigurations());
+    }
+
+    @Test
+    @Deprecated
+    public void testSetDoGenerateSubmoduleConfigurations() {
+        gitSCM.setDoGenerateSubmoduleConfigurations(true);
+        /* Confirms the passed value `true` is ignored */
+        assertFalse(gitSCM.getDoGenerateSubmoduleConfigurations());
     }
 }

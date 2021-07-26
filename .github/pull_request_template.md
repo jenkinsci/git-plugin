@@ -1,4 +1,4 @@
-## [JENKINS-xxxxx](https://issues.jenkins-ci.org/browse/JENKINS-xxxxx) - summarize pull request in one line
+## [JENKINS-xxxxx](https://issues.jenkins.io/browse/JENKINS-xxxxx) - summarize pull request in one line
 
 Describe the big picture of your changes here to explain to the maintainers why we should accept this pull request.
 If it fixes a bug or resolves a feature request, include a link to the issue.
@@ -14,6 +14,8 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] I have added documentation as necessary
 - [ ] No Javadoc warnings were introduced with my changes
 - [ ] No spotbugs warnings were introduced with my changes
+- [ ] Documentation in README has been updated as necessary
+- [ ] Online help has been added and reviewed for any new or modified fields
 - [ ] I have interactively tested my changes
 - [ ] Any dependent changes have been merged and published in upstream modules (like git-client-plugin)
 

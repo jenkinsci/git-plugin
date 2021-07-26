@@ -6,7 +6,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Messages;
-import hudson.plugins.git.SubmoduleCombinator;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.BuildData;
@@ -14,9 +13,11 @@ import java.io.IOException;
 import java.util.Objects;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.SubmoduleUpdateCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Further tweak the behaviour of git-submodule.
@@ -163,22 +164,23 @@ public class SubmoduleOption extends GitSCMExtension {
             // logic to kick in properly.
             throw new IOException("Could not perform submodule update", e);
         }
+    }
 
-        if (scm.isDoGenerateSubmoduleConfigurations()) {
-            /*
-                Kohsuke Note:
-
-                I could be wrong, but this feels like a totally wrong place to do this.
-                AFAICT, SubmoduleCombinator runs a lot of git-checkout and git-commit to
-                create new commits and branches. At the end of this, the working tree is
-                significantly altered, and HEAD no longer points to 'revToBuild'.
-
-                Custom BuildChooser is probably the right place to do this kind of stuff,
-                or maybe we can add a separate callback for GitSCMExtension.
-             */
-            SubmoduleCombinator combinator = new SubmoduleCombinator(git, listener, scm.getSubmoduleCfg());
-            combinator.createSubmoduleCombinations();
+    @Override
+    public void determineSupportForJGit(GitSCM scm, @NonNull UnsupportedCommand cmd) {
+        /* Prevent JGit with ANY use of SubmoduleOption by always setting a value
+         * for threads.  See JENKINS-64382.
+         */
+        if (threads == null) {
+            cmd.threads(1);
+        } else {
+            cmd.threads(threads);
         }
+        cmd.depth(depth);
+        cmd.shallow(shallow);
+        cmd.timeout(timeout);
+        cmd.ref(reference);
+        cmd.parentCredentials(parentCredentials);
     }
 
     /**

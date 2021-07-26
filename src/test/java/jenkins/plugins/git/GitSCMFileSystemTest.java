@@ -29,7 +29,6 @@ import hudson.EnvVars;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.GitException;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +37,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
-import jenkins.plugins.git.CliGitCommand;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -48,7 +46,6 @@ import jenkins.scm.api.SCMSourceDescriptor;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -63,6 +60,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -183,7 +181,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.git("checkout", "-b", "bug/JENKINS-42817");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         SCMFile root = fs.getRoot();
         assertThat(root, notNullValue());
@@ -197,17 +195,44 @@ public class GitSCMFileSystemTest {
         assertThat(file.contentAsString(), is("modified"));
     }
 
+    @Issue("JENKINS-57587")
+    @Test
+    public void wildcardBranchNameCausesNPE() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("file", "contents-for-npe-when-branch-name-is-asterisk");
+        sampleRepo.git("commit", "--all", "--message=npe-when-branch-name-is-asterisk");
+        /* Non-existent branch names like 'not-a-branch', will fail
+         * the build early with a message that the remote ref cannot
+         * be found.  Branch names that are valid portions of a
+         * refspec like '*' do not fail the build early but generate a
+         * null pointer exception when trying to resolve the branch
+         * name in the GitSCMFileSystem constructor.
+         */
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(),
+                                            new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null),
+                                                       Collections.singletonList(new BranchSpec("*")), // JENKINS-57587 issue here
+                                                       null, null,
+                                                       Collections.<GitSCMExtension>emptyList()));
+        assertThat("Wildcard branch name '*' resolved to a specific checkout unexpectedly", fs, is(nullValue()));
+    }
+
     @Test
     @Deprecated // Testing deprecated GitSCMSource constructor
     public void lastModified_Smokes() throws Exception {
-        Assume.assumeTrue("Windows file system last modify dates not trustworthy", !isWindows());
+        if (isWindows()) { // Windows file system last modify dates not trustworthy
+            /* Do not distract warnings system by using assumeThat to skip tests */
+            return;
+        }
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         SCMSource source = new GitSCMSource(null, sampleRepo.toString(), "", "*", "", true);
         SCMRevision revision = source.fetch(new GitBranchSCMHead("dev"), null);
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
-        final long fileSystemAllowedOffset = 1500;
+        long fileSystemAllowedOffset = 1500;
+        if ("OpenBSD".equals(System.getProperty("os.name"))) {
+            fileSystemAllowedOffset = 2 * fileSystemAllowedOffset;
+        }
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
         long currentTime = System.currentTimeMillis();
         long lastModified = fs.lastModified();
@@ -369,7 +394,7 @@ public class GitSCMFileSystemTest {
         sampleRepo.write("dir/subdir/file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         sampleRepo.git("tag", "v1.0");
-        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), false, Collections.<SubmoduleConfig>emptyList(), null, null, Collections.<GitSCMExtension>emptyList()));
+        SCMFileSystem fs = SCMFileSystem.of(r.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo.toString(), null), Collections.singletonList(new BranchSpec("refs/tags/v1.0")), null, null, Collections.<GitSCMExtension>emptyList()));
         assertThat(fs, notNullValue());
         assertThat(fs.getRoot(), notNullValue());
         Iterable<SCMFile> children = fs.getRoot().children();

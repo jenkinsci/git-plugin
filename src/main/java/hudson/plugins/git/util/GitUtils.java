@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class GitUtils implements Serializable {
     
@@ -40,6 +41,7 @@ public class GitUtils implements Serializable {
     @NonNull
     TaskListener listener;
 
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitUtils(@NonNull TaskListener listener, @NonNull GitClient git) {
         this.git = git;
         this.listener = listener;
@@ -49,11 +51,11 @@ public class GitUtils implements Serializable {
      * Resolves Git Tool by name.
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param builtOn Node for which the tool should be resolved
-     *                Can be {@link Jenkins#getInstance()} when running on master
+     *                Can be {@link Jenkins#getInstance()} when running on controller
      * @param env Additional environment variables
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool,
@@ -88,14 +90,14 @@ public class GitUtils implements Serializable {
      * @param gitTool Tool name. If {@code null}, default tool will be used (if exists)
      * @param listener Event listener
      * @return Tool installation or {@code null} if it cannot be resolved
-     * @since TODO
+     * @since 4.0.0
      */
     @CheckForNull
     public static GitTool resolveGitTool(@CheckForNull String gitTool, @NonNull TaskListener listener) {
         return resolveGitTool(gitTool, null, null, listener);
     }
 
-    public static Node workspaceToNode(FilePath workspace) { // TODO https://trello.com/c/doFFMdUm/46-filepath-getcomputer
+    public static Node workspaceToNode(FilePath workspace) {
         Jenkins j = Jenkins.get();
         if (workspace != null && workspace.isRemote()) {
             for (Computer c : j.getComputers()) {

@@ -69,7 +69,7 @@ public class DefaultBuildChooser extends BuildChooser {
             }
         }
 
-        Collection<Revision> revisions = new HashSet<>();
+        Collection<Revision> revisions = new LinkedHashSet<>();
 
         // if it doesn't contain '/' then it could be an unqualified branch
         if (!branchSpec.contains("/")) {
@@ -96,14 +96,14 @@ public class DefaultBuildChooser extends BuildChooser {
                 } else if(branchSpec.startsWith("refs/heads/")) {
                     fqbn = "refs/remotes/" + repository + "/" + branchSpec.substring("refs/heads/".length());
                 } else {
+                    //Check if exact branch name <branchSpec> exists
+                    fqbn = "refs/remotes/" + repository + "/" + branchSpec;
+                    verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
+                    possibleQualifiedBranches.add(fqbn);
+
                     //Try branchSpec as it is - e.g. "refs/tags/mytag"
                     fqbn = branchSpec;
                 }
-                verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
-                possibleQualifiedBranches.add(fqbn);
-
-                //Check if exact branch name <branchSpec> exists
-                fqbn = "refs/remotes/" + repository + "/" + branchSpec;
                 verbose(listener, "Qualifying {0} as a branch in repository {1} -> {2}", branchSpec, repository, fqbn);
                 possibleQualifiedBranches.add(fqbn);
             }

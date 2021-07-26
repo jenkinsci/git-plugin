@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.PushCommand;
+import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 import org.kohsuke.stapler.*;
 
 import javax.servlet.ServletException;
@@ -33,6 +34,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class GitPublisher extends Recorder implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -54,6 +57,7 @@ public class GitPublisher extends Recorder implements Serializable {
     private List<NoteToPush> notesToPush;
     
     @DataBoundConstructor
+    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitPublisher(List<TagToPush> tagsToPush,
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
@@ -102,6 +106,7 @@ public class GitPublisher extends Recorder implements Serializable {
         return !notesToPush.isEmpty();
     }
     
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
             tagsToPush = new ArrayList<>();
@@ -110,6 +115,7 @@ public class GitPublisher extends Recorder implements Serializable {
         return tagsToPush;
     }
 
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<BranchToPush> getBranchesToPush() {
         if (branchesToPush == null) {
             branchesToPush = new ArrayList<>();
@@ -118,6 +124,7 @@ public class GitPublisher extends Recorder implements Serializable {
         return branchesToPush;
     }
     
+    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<NoteToPush> getNotesToPush() {
         if (notesToPush == null) {
             notesToPush = new ArrayList<>();
@@ -178,7 +185,9 @@ public class GitPublisher extends Recorder implements Serializable {
         else {
             EnvVars environment = build.getEnvironment(listener);
 
-            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace());
+            UnsupportedCommand cmd = new UnsupportedCommand();
+            cmd.gitPublisher(true);
+            final GitClient git  = gitSCM.createClient(listener, environment, build, build.getWorkspace(), cmd);
 
             URIish remoteURI;
 
@@ -368,7 +377,7 @@ public class GitPublisher extends Recorder implements Serializable {
      * instantiated but tagsToPush will be null rather than empty.
      * @return This.
      */
-    private Object readResolve() {
+    protected Object readResolve() {
         // Default unspecified to v0
         if(configVersion == null)
             this.configVersion = 0L;

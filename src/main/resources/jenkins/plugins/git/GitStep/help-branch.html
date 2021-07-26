@@ -1,11 +1,13 @@
 <div>
     <p>
-    Branch to be checked out in the workspace.  Default is the remote repository's default branch (typically '<code>master</code>').
+    Branch to be checked out in the workspace.
+    Default is '<code>master</code>'.
     </p>
     <p>
-    Note that this must be a local branch name like 'master' or 'develop' or a tag name.
+    Note that this must be a local branch name like 'master' or 'develop'.
     Remote branch names like 'origin/master' and 'origin/develop' are <strong>not supported</strong> as the branch argument.
+    Tag names are <strong>not supported</strong> as the branch argument.
     SHA-1 hashes are <strong>not supported</strong> as the branch argument.
-    Remote branch names and SHA-1 hashes are supported by the general purpose <code>checkout</code> step.
+    Remote branch names, tag names, and SHA-1 hashes are supported by the general purpose <code>checkout</code> step.
     </p>
 </div>

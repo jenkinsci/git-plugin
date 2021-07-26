@@ -49,13 +49,12 @@ import java.util.Collections;
 import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Rule;
 
@@ -73,8 +72,8 @@ public class AbstractGitProject extends AbstractGitRepository {
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        GitSCM scm = new GitSCM(remoteConfigs(), branches, false,
-                Collections.<SubmoduleConfig>emptyList(), null, null,
+        GitSCM scm = new GitSCM(remoteConfigs(), branches,
+                null, null,
                 Collections.<GitSCMExtension>singletonList(new DisableRemotePoll()));
         project.setScm(scm);
         project.getBuildersList().add(new CaptureEnvironmentBuilder());
@@ -146,7 +145,6 @@ public class AbstractGitProject extends AbstractGitRepository {
         GitSCM scm = new GitSCM(
                 remoteConfigs(),
                 branches,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, null,
                 Collections.<GitSCMExtension>emptyList());
         scm.getExtensions().add(new DisableRemotePoll()); // don't work on a file:// repository
@@ -184,7 +182,6 @@ public class AbstractGitProject extends AbstractGitRepository {
         GitSCM scm = new GitSCM(
                 repos,
                 branchSpecs,
-                false, Collections.<SubmoduleConfig>emptyList(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
         if (disableRemotePoll) {
@@ -239,6 +236,7 @@ public class AbstractGitProject extends AbstractGitRepository {
 
     protected String getHeadRevision(AbstractBuild build, final String branch) throws IOException, InterruptedException {
         return build.getWorkspace().act(new MasterToSlaveFileCallable<String>() {
+            @Override
             public String invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 try (@SuppressWarnings("deprecation") // Local repository reference
                      Repository repo = Git.with(null, null).in(f).getClient().getRepository()) {

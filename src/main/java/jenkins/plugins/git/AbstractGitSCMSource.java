@@ -348,7 +348,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             GitClient client = git.getClient();
             client.addDefaultCredentials(getCredentials());
-            if (!client.hasGitRepo()) {
+            if (!client.hasGitRepo(false)) {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
             }
@@ -1219,15 +1219,23 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     }
 
     protected static File getCacheDir(String cacheEntry) {
+        return getCacheDir(cacheEntry, true);
+    }
+
+    protected static File getCacheDir(String cacheEntry, boolean createDirectory) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins == null) {
             return null;
         }
         File cacheDir = new File(new File(jenkins.getRootDir(), "caches"), cacheEntry);
         if (!cacheDir.isDirectory()) {
-            boolean ok = cacheDir.mkdirs();
-            if (!ok) {
-                LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+            if (createDirectory) {
+                boolean ok = cacheDir.mkdirs();
+                if (!ok) {
+                    LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
+                }
+            } else {
+                cacheDir = null;
             }
         }
         return cacheDir;
