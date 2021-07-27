@@ -589,7 +589,7 @@ Project Name in ViewGit::
 [#git-bindings]
 == Git Bindings
 
-The git plugin provides one binding to support authenticated git opreations over *HTTP* or * HTTPS* protocol, namely `Git Username and Password`.
+The git plugin provides one binding to support authenticated git operations over *HTTP* or *HTTPS* protocol, namely `Git Username and Password`.
 The git plugin depeneds on the Credential Binding Plugin to support these bindings.
 
 To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
