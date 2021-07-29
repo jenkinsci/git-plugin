@@ -590,12 +590,12 @@ Project Name in ViewGit::
   For example, `my-project`
 
 [#git-bindings]
-== Git Bindings
+== Git Credential Binding
 
 The git plugin provides one binding to support authenticated git operations over *HTTP* or *HTTPS* protocol, namely `Git Username and Password`.
-The git plugin depeneds on the Credential Binding Plugin to support these bindings.
+The git plugin depends on the Credential Binding Plugin to support these bindings.
 
-To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
+To access the `Git Username and Password` binding in a Pipeline job, visit <<credential-binding>>
 
 Freestyle projects can use git credential binding with the following steps:
 
