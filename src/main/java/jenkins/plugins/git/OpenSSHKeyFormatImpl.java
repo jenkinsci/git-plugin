@@ -6,8 +6,15 @@ import net.schmizz.sshj.userauth.password.Resource;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.io.pem.PemObject;
 
+import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 public class OpenSSHKeyFormatImpl {
 
@@ -29,6 +36,22 @@ public class OpenSSHKeyFormatImpl {
         return decoder.decode(data);
     }
 
+    private KeyPair getOpenSSHKeyPair(SessionContext session, NamedResource resourceKey,
+                                      String beginMarker, String endMarker,
+                                      FilePasswordProvider passwordProvider,
+                                      byte[] bytes, Map<String, String> headers )
+            throws IOException, GeneralSecurityException, SizeLimitExceededException {
+        OpenSSHKeyPairResourceParser openSSHParser = new OpenSSHKeyPairResourceParser();
+        Collection<KeyPair> keyPairs = openSSHParser.extractKeyPairs(session,resourceKey,beginMarker,
+                                                                     endMarker, passwordProvider,
+                                                                     bytes, headers);
+        if(keyPairs.size() > 1){
+            throw new SizeLimitExceededException("Expected KeyPair size to be 1");
+        }else {
+            return Collections.unmodifiableCollection(keyPairs).iterator().next();
+        }
+    }
+
     public static boolean isOpenSSHFormat(String privateKey) {
         final String HEADER = "-----BEGIN OPENSSH PRIVATE KEY-----";
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
@@ -47,22 +70,17 @@ public class OpenSSHKeyFormatImpl {
         return sw.toString();
     }
 
-    private final static class AcquirePassphrase implements PasswordFinder {
+    private final static class AcquirePassphrase implements FilePasswordProvider {
 
-        char[] p;
+        String passphrase;
 
-        AcquirePassphrase(char[] passphrase) {
-            this.p = passphrase;
+        AcquirePassphrase(String passphrase) {
+            this.passphrase = passphrase;
         }
 
         @Override
-        public char[] reqPassword(Resource<?> resource) {
-            return p;
-        }
-
-        @Override
-        public boolean shouldRetry(Resource<?> resource) {
-            return false;
+        public String getPassword(SessionContext session, NamedResource resourceKey, int retryIndex) throws IOException {
+            return this.passphrase;
         }
     }
 }
