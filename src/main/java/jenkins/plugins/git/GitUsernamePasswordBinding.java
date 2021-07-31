@@ -15,6 +15,7 @@ import hudson.plugins.git.GitTool;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
@@ -185,6 +186,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             return Messages.GitUsernamePasswordBinding_DisplayName();
         }
 
+        @RequirePOST
         public ListBoxModel doFillGitToolNameItems() {
             ListBoxModel items = new ListBoxModel();
              List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
