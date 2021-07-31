@@ -19,6 +19,16 @@ public class OpenSSHKeyFormatImpl {
         this.passphrase = passphrase;
     }
 
+    private byte[] getEncData(String privateKey){
+        String data = privateKey
+                .replace("\n","")
+                .replace(" ","")
+                .replace("-----BEGINOPENSSHPRIVATEKEY-----","")
+                .replace("-----BEGINOPENSSHPRIVATEKEY-----","");
+        Base64.Decoder decoder = Base64.getDecoder();
+        return decoder.decode(data);
+    }
+
     public static boolean isOpenSSHFormat(String privateKey) {
         final String HEADER = "-----BEGIN OPENSSH PRIVATE KEY-----";
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
