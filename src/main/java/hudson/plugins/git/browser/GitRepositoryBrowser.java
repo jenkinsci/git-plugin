@@ -1,16 +1,5 @@
 package hudson.plugins.git.browser;
 
-import hudson.EnvVars;
-import hudson.model.Item;
-import hudson.model.Job;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitChangeSet;
-import hudson.plugins.git.GitChangeSet.Path;
-import hudson.scm.RepositoryBrowser;
-
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.net.IDN;
 import java.net.InetAddress;
@@ -25,9 +14,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+import hudson.EnvVars;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitChangeSet;
+import hudson.plugins.git.GitChangeSet.Path;
+import hudson.scm.RepositoryBrowser;
 
 public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSet> {
 
@@ -38,7 +37,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     protected GitRepositoryBrowser() {
     }
 
-    protected GitRepositoryBrowser(String repourl) {
+    protected GitRepositoryBrowser(final String repourl) {
         this.url = repourl;
     }
 
@@ -80,7 +79,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @throws IOException on input or output error
      */
     public abstract URL getDiffLink(GitChangeSet.Path path) throws IOException;
-    
+
     /**
      * Determines the link to a single file under Git.
      * This page should display all the past revisions of this file, etc.
@@ -100,7 +99,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      *         a change set
      */
     @CheckForNull
-    public URL getChangeSetLink(String commitId) throws IOException {
+    public URL getChangeSetLink(final String commitId) throws IOException {
         if (!StringUtils.isBlank(commitId)) {
             return getChangeSetLink(new CommitChangeSet(commitId));
         }
@@ -116,7 +115,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     protected boolean getNormalizeUrl() {
 		return true;
 	}
-    
+
     /**
      * Calculate the index of the given path in a
      * sorted list of affected files
@@ -125,7 +124,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
      * @return The index in the lexicographical sorted filelist
      * @throws IOException on input or output error
      */
-    protected int getIndexOfPath(Path path) throws IOException {
+    protected int getIndexOfPath(final Path path) throws IOException {
     	final String pathAsString = path.getPath();
     	final GitChangeSet changeSet = path.getChangeSet();
     	int i = 0;
@@ -137,7 +136,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         return i;
     }
 
-    public static URL encodeURL(URL url) throws IOException {
+    public static URL encodeURL(final URL url) throws IOException {
         try {
             return new URI(url.getProtocol(), url.getUserInfo(), IDN.toASCII(url.getHost()), url.getPort(), url.getPath(), url.getQuery(), url.getRef()).toURL();
         } catch (URISyntaxException e) {
@@ -145,25 +144,22 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
         }
     }
 
-    protected static boolean initialChecksAndReturnOk(Item project, String cleanUrl){
+    protected static boolean initialChecksAndReturnOk(final Item project, final String cleanUrl){
         if (cleanUrl == null) {
             return true;
         }
         if (project == null || !project.hasPermission(Item.CONFIGURE)) {
             return true;
         }
-        if (cleanUrl.contains("$")) {
-            // set by variable, can't validate
-            return true;
-        }
-        return false;
+        // set by variable, can't validate
+        return cleanUrl.contains("$");
     }
 
     /* Top level domains that should always be considered valid */
     private static final Pattern SUFFIXES = Pattern.compile(".*[.](corp|home|local|localnet)$");
 
     /* Browser URL validation of remote/local urls */
-    protected static boolean validateUrl(String url) throws URISyntaxException {
+    protected static boolean validateUrl(final String url) throws URISyntaxException {
         try {
             URL urlToValidate = new URL(url);
             String hostname = urlToValidate.getHost();
