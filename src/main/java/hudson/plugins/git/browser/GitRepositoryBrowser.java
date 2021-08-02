@@ -153,7 +153,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
             return true;
         }
         if (cleanUrl.contains("$")) {
-        // set by variable, can't validate
+            // set by variable, can't validate
             return true;
         }
         return false;
