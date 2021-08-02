@@ -79,6 +79,9 @@
           <f:entry field="rebaseBeforePush">
             <f:checkbox title="${%Rebase before push}" />
           </f:entry>
+          <f:entry field="includeTags">
+            <f:checkbox title="${%Include tags in the push}" />
+          </f:entry>
         </local:blockWrapper>
         <div align="right">
           <input type="button" value="${%Delete Branch}" class="repeatable-delete" style="margin-left: 1em;" />

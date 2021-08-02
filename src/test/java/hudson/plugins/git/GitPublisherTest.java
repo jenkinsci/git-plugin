@@ -23,13 +23,28 @@
  */
 package hudson.plugins.git;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
+import hudson.model.StringParameterDefinition;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitPublisher.BranchToPush;
 import hudson.plugins.git.GitPublisher.NoteToPush;
 import hudson.plugins.git.GitPublisher.TagToPush;
@@ -41,12 +56,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.jenkinsci.plugins.gitclient.JGitTool;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.jvnet.hudson.test.Issue;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,23 +64,20 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitToolChooser;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import org.jenkinsci.plugins.gitclient.JGitTool;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * Tests for {@link GitPublisher}
@@ -572,6 +578,53 @@ public class GitPublisherTest extends AbstractGitProject {
         assertEquals(expectedCommit, testTargetRepo.git.revParse("master"));
         assertTrue(existsTagInRepo(testTargetRepo.git, tag_name));
 
+    }
+
+    @Issue("JENKINS-25389")
+    @Test
+    public void testIncludeTagsInBranchPush() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+
+        // create second (bare) test repository as target
+        TaskListener listener = StreamTaskListener.fromStderr();
+        TestGitRepo testTargetRepo = new TestGitRepo("target", tmpFolder.newFolder("include_tags"), listener);
+        testTargetRepo.git.init_().workspace(testTargetRepo.gitDir.getAbsolutePath()).bare(true).execute();
+        testTargetRepo.commit("lostTargetFile", new PersonIdent("John Doe", "john@example.com"), "Initial Target Commit");
+
+        // add second test repository as remote repository with environment variables
+        List<UserRemoteConfig> remoteRepositories = remoteConfigs();
+        remoteRepositories.add(new UserRemoteConfig(testTargetRepo.gitDir.getAbsolutePath(), "target", "", null));
+
+        GitSCM scm = new GitSCM(
+                remoteRepositories,
+                Collections.singletonList(new BranchSpec("master")),
+                null, null,
+                Collections.emptyList());
+        project.setScm(scm);
+
+        BranchToPush branchToPush = new BranchToPush("target", "master");
+        branchToPush.setIncludeTags(true);
+
+        project.getPublishersList().add(new GitPublisher(
+                Collections.emptyList(),
+                Collections.singletonList(branchToPush),
+                Collections.emptyList(),
+                true, true, true));
+
+        project.save();
+
+        String commitFile = "commitFile";
+        commitNewFile(commitFile);
+        String tagName = "foo";
+        testGitClient.tag(tagName, "Comment");
+        ObjectId expectedCommit = testGitClient.revParse("master");
+        assertFalse(existsTagInRepo(testTargetRepo.git, tagName));
+
+        build(project, Result.SUCCESS, commitFile);
+
+        // check if everything reached target repository
+        assertEquals(expectedCommit, testTargetRepo.git.revParse("master"));
+        assertTrue(existsTagInRepo(testTargetRepo.git, tagName));
     }
 
     @Issue("JENKINS-24082")

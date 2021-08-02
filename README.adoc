@@ -1290,6 +1290,10 @@ The commits in the local workspace have been evaluated by the job.
 The most recent commits from the remote repository have not been evaluated by the job.
 Users may find that the risk of pushing an untested configuration is less than the risk of delaying the visibility of the changes which have been evaluated by the job.
 
+Include tags::
+
+  Push all tags to the selected remote (same as --tags option of git-push).
+
 [#combining-repositories]
 == Combining repositories
 

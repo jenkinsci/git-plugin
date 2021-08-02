@@ -318,7 +318,7 @@ public class GitPublisher extends Recorder implements Serializable {
 
                         listener.getLogger().println("Pushing HEAD to branch " + branchName + " at repo "
                                                      + targetRepo);
-                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName).force(forcePush);
+                        PushCommand push = git.push().to(remoteURI).ref("HEAD:" + branchName).tags(b.includeTags).force(forcePush);
                         push.execute();
                     } catch (GitException e) {
                         e.printStackTrace(listener.error("Failed to push branch " + branchName + " to " + targetRepo));
@@ -498,6 +498,7 @@ public class GitPublisher extends Recorder implements Serializable {
     public static final class BranchToPush extends PushConfig {
         private String branchName;
         private boolean rebaseBeforePush;
+        private boolean includeTags;
 
         public String getBranchName() {
             return branchName;
@@ -516,6 +517,15 @@ public class GitPublisher extends Recorder implements Serializable {
 
         public boolean getRebaseBeforePush() {
             return rebaseBeforePush;
+        }
+
+        @DataBoundSetter
+        public void setIncludeTags(boolean includeTags){
+            this.includeTags = includeTags;
+        }
+
+        public boolean getIncludeTags(){
+            return includeTags;
         }
 
         @Extension
