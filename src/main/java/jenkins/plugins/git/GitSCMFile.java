@@ -27,7 +27,6 @@ package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -172,7 +171,7 @@ public class GitSCMFile extends SCMFile {
                     }
                     ObjectId objectId = tw.getObjectId(0);
                     ObjectLoader loader = repository.open(objectId);
-                    return new ByteArrayInputStream(loader.getBytes());
+                    return loader.openStream();
                 }
             }
         });

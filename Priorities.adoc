@@ -22,7 +22,7 @@ When others provide additional help on an item, it tends to raise the priority o
 [[bug-reports]]
 == Bug Reports
 
-Report issues and enhancements in the https://issues.jenkins-ci.org[Jenkins issue tracker].
+Report issues and enhancements in the https://issues.jenkins.io[Jenkins issue tracker].
 link:CONTRIBUTING.adoc#bug-triage[Review bug reports] and provide comments to submitters.
 
 [[contributing-to-the-plugin]]
