@@ -37,10 +37,9 @@ public class OpenSSHKeyFormatImpl {
 
     private byte[] getEncData(String privateKey){
         String data = privateKey
-                .replace("\n","")
-                .replace(" ","")
-                .replace("-----BEGINOPENSSHPRIVATEKEY-----","")
-                .replace("-----BEGINOPENSSHPRIVATEKEY-----","");
+                .replace(DASH_MARKER+BEGIN_MARKER+DASH_MARKER,"")
+                .replace(DASH_MARKER+END_MARKER+DASH_MARKER,"")
+                .replaceAll("\\s","");
         Base64.Decoder decoder = Base64.getDecoder();
         return decoder.decode(data);
     }
