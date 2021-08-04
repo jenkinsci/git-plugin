@@ -47,7 +47,7 @@ public interface SSHKeyUtils {
             return tempKeyFile;
         } catch (UnrecoverableKeyException e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
 }
