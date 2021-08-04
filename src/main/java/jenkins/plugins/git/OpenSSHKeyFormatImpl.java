@@ -1,14 +1,20 @@
 package jenkins.plugins.git;
 
-import com.hierynomus.sshj.userauth.keyprovider.OpenSSHKeyV1KeyFile;
-import net.schmizz.sshj.userauth.password.PasswordFinder;
-import net.schmizz.sshj.userauth.password.Resource;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.bouncycastle.util.io.pem.PemObject;
+import hudson.FilePath;
+import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
+import io.jenkins.cli.shaded.org.apache.sshd.common.NamedResource;
+import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.FilePasswordProvider;
+import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.writer.openssh.OpenSSHKeyPairResourceWriter;
+import io.jenkins.cli.shaded.org.apache.sshd.common.session.SessionContext;
+import io.jenkins.cli.shaded.org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
 
 import javax.naming.SizeLimitExceededException;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.InputStream;
+import java.io.FileOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Base64;
@@ -42,17 +48,36 @@ public class OpenSSHKeyFormatImpl {
     private KeyPair getOpenSSHKeyPair(SessionContext session, NamedResource resourceKey,
                                       String beginMarker, String endMarker,
                                       FilePasswordProvider passwordProvider,
-                                      byte[] bytes, Map<String, String> headers )
+                                      InputStream stream, Map<String, String> headers )
             throws IOException, GeneralSecurityException, SizeLimitExceededException {
         OpenSSHKeyPairResourceParser openSSHParser = new OpenSSHKeyPairResourceParser();
         Collection<KeyPair> keyPairs = openSSHParser.extractKeyPairs(session,resourceKey,beginMarker,
                                                                      endMarker, passwordProvider,
-                                                                     bytes, headers);
+                                                                     stream, headers);
         if(keyPairs.size() > 1){
             throw new SizeLimitExceededException("Expected KeyPair size to be 1");
         }else {
             return Collections.unmodifiableCollection(keyPairs).iterator().next();
         }
+    }
+
+    private File writePrivateKeyOpenSSHFormatted(File tempFile) {
+        OpenSSHKeyPairResourceWriter privateKeyWriter = new OpenSSHKeyPairResourceWriter();
+        SecureByteArrayOutputStream privateKeyBuffer = new SecureByteArrayOutputStream();
+        ByteArrayInputStream stream = new ByteArrayInputStream(getEncData(this.privateKey));
+        KeyPair sshKeyPair = null;
+        try {
+            sshKeyPair = getOpenSSHKeyPair(null,null,"","",
+                    new AcquirePassphrase(this.passphrase),
+                    stream,null);
+            privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
+            FileOutputStream privateKeyFileStream = new FileOutputStream(tempFile);
+            privateKeyBuffer.writeTo(privateKeyFileStream);
+            privateKeyFileStream.close();
+        } catch (IOException | SizeLimitExceededException | GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+        return tempFile;
     }
 
     public static boolean isOpenSSHFormat(String privateKey) {
