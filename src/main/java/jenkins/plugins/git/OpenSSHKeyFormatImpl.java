@@ -20,6 +20,9 @@ public class OpenSSHKeyFormatImpl {
 
     private final String privateKey;
     private final String passphrase;
+    private static final String BEGIN_MARKER = OpenSSHKeyPairResourceParser.BEGIN_MARKER;
+    private static final String END_MARKER = OpenSSHKeyPairResourceParser.END_MARKER;
+    private static final String DASH_MARKER = "-----";
 
     public OpenSSHKeyFormatImpl(final String privateKey, final String passphrase) {
         this.privateKey = privateKey;
