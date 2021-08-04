@@ -56,7 +56,7 @@ public class OpenSSHKeyFormatImpl {
     }
 
     public static boolean isOpenSSHFormat(String privateKey) {
-        final String HEADER = "-----BEGIN OPENSSH PRIVATE KEY-----";
+        final String HEADER = DASH_MARKER+BEGIN_MARKER+DASH_MARKER;
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
     }
 
