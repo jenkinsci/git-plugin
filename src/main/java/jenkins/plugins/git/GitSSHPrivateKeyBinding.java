@@ -11,7 +11,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import hudson.Extension;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
@@ -192,7 +191,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         }
     }
 
-    @Symbol("GitSSHPrivateKey")
+    @Symbol("gitSSHPrivateKey")
     @Extension
     public static final class DescriptorImpl extends BindingDescriptor<SSHUserPrivateKey> {
 
