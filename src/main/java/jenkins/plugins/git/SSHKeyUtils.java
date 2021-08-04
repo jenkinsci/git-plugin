@@ -43,7 +43,7 @@ public interface SSHKeyUtils {
             } else {
                 tempKeyFile.write(privateKeyValue, null);
             }
-            tempKeyFile.chmod(0500);
+            tempKeyFile.chmod(0400);
             return tempKeyFile;
         } catch (UnrecoverableKeyException e) {
             e.printStackTrace();
