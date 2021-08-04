@@ -84,17 +84,10 @@ public class OpenSSHKeyFormatImpl {
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
     }
 
-    public String getDecodedPrivateKey() throws IOException {
-        OpenSSHKeyV1KeyFile openSSHProtectedKey = new OpenSSHKeyV1KeyFile();
-        openSSHProtectedKey.init(privateKey, "", new AcquirePassphrase(passphrase.toCharArray()));
-        byte[] content = openSSHProtectedKey.getPrivate().getEncoded();
-        StringWriter sw = new StringWriter();
-        JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
-        PemObject pemObject = new PemObject("PRIVATE KEY", content);
-        pemWriter.writeObject(pemObject);
-        pemWriter.flush();
-        pemWriter.close();
-        return sw.toString();
+    public FilePath getOpenSSHKeyFile(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
+        File tempFile = new File(tempKeyFile.toURI());
+        writePrivateKeyOpenSSHFormatted(tempFile);
+        return new FilePath(tempFile);
     }
 
     private final static class AcquirePassphrase implements FilePasswordProvider {
