@@ -133,12 +133,12 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir,String sshExePath) throws IOException, InterruptedException {
         if (unixNodeType) {
-            return sshExePath +
+            return
+                    sshExePath
+                    +
                     " -i "
-                    + "\""
                     + getPrivateKeyFile(credentials, tempDir).getRemote()
-                    + "\" "
-                    + "-o StrictHostKeyChecking=no $@";
+                    + " -o StrictHostKeyChecking=no";
         } else {
             return  "\"" + sshExePath + "\""
                     + " -i "
