@@ -75,21 +75,24 @@ The variable bindings are available even if the `JGit` or `JGit with Apache HTTP
 
 .Shell example
 ```groovy
-withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
+                 gitToolName: 'git-tool')]) {
   sh 'git fetch --all'
 }
 ```
 
 .Batch example
 ```groovy
-withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
+                 gitToolName: 'git-tool')]) {
   bat 'git submodule update --init --recursive'
 }
 ```
 
 .Powershell example
 ```groovy
-withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id', gitToolName: 'git-tool')]) {
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
+                 gitToolName: 'git-tool')]) {
   powershell 'git push'
 }
 ```
@@ -587,12 +590,12 @@ Project Name in ViewGit::
   For example, `my-project`
 
 [#git-bindings]
-== Git Bindings
+== Git Credential Binding
 
-The git plugin provides one binding to support authenticated git opreations over *HTTP* or * HTTPS* protocol, namely `Git Username and Password`.
-The git plugin depeneds on the Credential Binding Plugin to support these bindings.
+The git plugin provides one binding to support authenticated git operations over *HTTP* or *HTTPS* protocol, namely `Git Username and Password`.
+The git plugin depends on the Credential Binding Plugin to support these bindings.
 
-To access the `Git Username and Password` binding in a pipeline job, visit <<credential-binding>>
+To access the `Git Username and Password` binding in a Pipeline job, visit <<credential-binding>>
 
 Freestyle projects can use git credential binding with the following steps:
 

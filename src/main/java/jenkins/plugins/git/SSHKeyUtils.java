@@ -7,8 +7,9 @@ import jenkins.bouncycastle.api.PEMEncodable;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
+import javax.naming.SizeLimitExceededException;
 import java.io.IOException;
-import java.security.UnrecoverableKeyException;
+import java.security.GeneralSecurityException;
 
 public interface SSHKeyUtils {
 
@@ -30,24 +31,24 @@ public interface SSHKeyUtils {
 
     default FilePath getPrivateKeyFile(SSHUserPrivateKey credentials, FilePath workspace) throws InterruptedException, IOException {
         FilePath tempKeyFile = workspace.createTempFile("private", ".key");
-        final String privateKeyValue = getPrivateKey(credentials);
-        final String passphraseValue = getPassphrase(credentials);
+        final String privateKeyValue = SSHKeyUtils.getPrivateKey(credentials);
+        final String passphraseValue = SSHKeyUtils.getPassphrase(credentials);
         try {
             if (isPrivateKeyEncrypted(passphraseValue)) {
                 if (OpenSSHKeyFormatImpl.isOpenSSHFormat(privateKeyValue)) {
                     OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, passphraseValue);
-                    tempKeyFile.write(openSSHKeyFormat.getDecodedPrivateKey(), null);
+                    openSSHKeyFormat.getOpenSSHKeyFile(tempKeyFile);
                 } else {
                     tempKeyFile.write(PEMEncodable.decode(privateKeyValue, passphraseValue.toCharArray()).encode(), null);
                 }
             } else {
                 tempKeyFile.write(privateKeyValue, null);
             }
-            tempKeyFile.chmod(0500);
+            tempKeyFile.chmod(0400);
             return tempKeyFile;
-        } catch (UnrecoverableKeyException e) {
+        } catch (IOException | InterruptedException | GeneralSecurityException | SizeLimitExceededException e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
 }

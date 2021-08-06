@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.19</version> <!-- Needs to be fixed before merge -->
+    <version>4.24</version>
     <relativePath />
   </parent>
 
@@ -30,7 +30,7 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
-    <jenkins.version>2.263.1</jenkins.version>
+    <jenkins.version>2.289.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
@@ -167,6 +167,17 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
     </dependency>
+    <!-- BouncyCastle API Plugin -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>bouncycastle-api</artifactId>
+    </dependency>
+    <!-- Apache Mina SSHD Core-->
+    <dependency>
+      <groupId>org.apache.sshd</groupId>
+      <artifactId>sshd-core</artifactId>
+      <version>2.7.0</version>
+    </dependency>
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
@@ -268,7 +279,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.263.x</artifactId>
-        <version>887.vae9c8ac09ff7</version>
+        <version>918.vae501d2cdc99</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
