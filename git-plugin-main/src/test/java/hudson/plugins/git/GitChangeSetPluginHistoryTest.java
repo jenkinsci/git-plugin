@@ -116,7 +116,8 @@ public class GitChangeSetPluginHistoryTest {
         for (final String implementation : implementations) {
             EnvVars envVars = new EnvVars();
             TaskListener listener = StreamTaskListener.fromStdout();
-            GitClient git = Git.with(listener, envVars).in(new FilePath(new File("."))).using(implementation).getClient();
+            File repoGitDir = (new File(".git")).exists() ? new File(".") : new File("..");
+            GitClient git = Git.with(listener, envVars).in(new FilePath(repoGitDir)).using(implementation).getClient();
             boolean honorExclusions = implementation.equals("git") && !sampleRepo.gitVersionAtLeast(1, 7, 10);
             List<ObjectId> allNonMergeChanges = getNonMergeChanges(honorExclusions);
             int count = allNonMergeChanges.size() / 10; /* 10% of all changes */
