@@ -91,7 +91,7 @@ public class GitSCMFileSystemTest {
      */
     @BeforeClass
     public static void confirmTagsAvailable() throws Exception {
-        File gitDir = new File(".");
+        File gitDir = (new File(".git")).exists() ? new File(".") : new File("..");
         GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("jgit").getClient();
 
         String[] tags = { GIT_2_6_0_TAG, GIT_2_6_1_TAG };
