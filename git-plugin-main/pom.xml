@@ -17,8 +17,8 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
+  <version>${revision}${changelist}</version>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
   <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
@@ -92,6 +92,21 @@
   </developers>
 
   <dependencies>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-plugin-shaded-artifactId</artifactId>
+      <version>2.7.0-1</version>
+      <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
+        <exclusion>
+          <groupId>org.apache.sshd</groupId>
+          <artifactId>sshd-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
@@ -173,11 +188,11 @@
       <artifactId>bouncycastle-api</artifactId>
     </dependency>
     <!-- Apache Mina SSHD Core-->
-    <dependency>
-      <groupId>org.apache.sshd</groupId>
-      <artifactId>sshd-core</artifactId>
-      <version>2.7.0</version>
-    </dependency>
+    <!-- <dependency> -->
+    <!--   <groupId>org.apache.sshd</groupId> -->
+    <!--   <artifactId>sshd-core</artifactId> -->
+    <!--   <version>2.7.0</version> -->
+    <!-- </dependency> -->
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>

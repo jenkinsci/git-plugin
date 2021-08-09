@@ -1,12 +1,12 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
-import io.jenkins.cli.shaded.org.apache.sshd.common.NamedResource;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.FilePasswordProvider;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.writer.openssh.OpenSSHKeyPairResourceWriter;
-import io.jenkins.cli.shaded.org.apache.sshd.common.session.SessionContext;
-import io.jenkins.cli.shaded.org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.NamedResource;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.config.keys.FilePasswordProvider;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.config.keys.writer.openssh.OpenSSHKeyPairResourceWriter;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.session.SessionContext;
+import io.jenkins.plugins.git.shaded.org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
 
 import javax.naming.SizeLimitExceededException;
 

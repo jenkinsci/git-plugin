@@ -16,10 +16,11 @@
     </license>
   </licenses>
 
-  <artifactId>git</artifactId>
-  <version>${revision}${changelist}</version>
-  <packaging>hpi</packaging>
-  <name>Jenkins Git plugin</name>
+  <groupId>org.jenkins-ci.plugins</groupId>
+  <artifactId>git-plugin-parent</artifactId>
+  <version>1.2.3</version>
+  <packaging>pom</packaging>
+  <name>Jenkins git plugin parent pom</name>
   <description>Integrates Jenkins with Git SCM</description>
   <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
   <inceptionYear>2007</inceptionYear>
@@ -40,30 +41,10 @@
     <spotbugs.threshold>Medium</spotbugs.threshold>
   </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.2</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failOnViolation>true</failOnViolation>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs</artifactId>
-            <version>4.3.0</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
-  </build>
+  <modules>
+    <module>git-plugin-main</module>
+    <module>git-plugin-shaded</module>
+  </modules>
 
   <developers>
     <developer>
@@ -166,17 +147,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
-    </dependency>
-    <!-- BouncyCastle API Plugin -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>bouncycastle-api</artifactId>
-    </dependency>
-    <!-- Apache Mina SSHD Core-->
-    <dependency>
-      <groupId>org.apache.sshd</groupId>
-      <artifactId>sshd-core</artifactId>
-      <version>2.7.0</version>
     </dependency>
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>

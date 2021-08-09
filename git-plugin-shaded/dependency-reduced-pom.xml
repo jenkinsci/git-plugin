@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>plugin</artifactId>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <version>4.24</version>
+    <relativePath>pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>git-plugin-shaded-artifactId</artifactId>
+  <name>Jenkins git plugin shaded artifacts</name>
+  <version>2.7.0-1</version>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer />
+                <transformer />
+              </transformers>
+              <createSourcesJar>true</createSourcesJar>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.sshd:*</include>
+                  <include>org.apache.httpcomponents:*</include>
+                  <include>com.google.code.gson:gson</include>
+                </includes>
+              </artifactSet>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.sshd</pattern>
+                  <shadedPattern>io.jenkins.plugins.git.shaded.org.apache.sshd</shadedPattern>
+                </relocation>
+              </relocations>
+              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.30</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>1.7.30</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  <properties>
+    <java.level>8</java.level>
+    <jenkins.version>2.289.1</jenkins.version>
+  </properties>
+</project>
+
