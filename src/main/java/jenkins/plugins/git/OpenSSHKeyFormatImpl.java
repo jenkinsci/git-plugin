@@ -84,7 +84,7 @@ public class OpenSSHKeyFormatImpl {
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
     }
 
-    public FilePath getOpenSSHKeyFile(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
+    public FilePath writeDecryptedOpenSSHKey(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
         File tempFile = new File(tempKeyFile.toURI());
         writePrivateKeyOpenSSHFormatted(tempFile);
         return new FilePath(tempFile);
