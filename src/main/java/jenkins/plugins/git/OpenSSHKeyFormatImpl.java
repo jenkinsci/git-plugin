@@ -1,12 +1,12 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
-import io.jenkins.cli.shaded.org.apache.sshd.common.NamedResource;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.FilePasswordProvider;
-import io.jenkins.cli.shaded.org.apache.sshd.common.config.keys.writer.openssh.OpenSSHKeyPairResourceWriter;
-import io.jenkins.cli.shaded.org.apache.sshd.common.session.SessionContext;
-import io.jenkins.cli.shaded.org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
+import org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
+import org.apache.sshd.common.NamedResource;
+import org.apache.sshd.common.config.keys.FilePasswordProvider;
+import org.apache.sshd.common.config.keys.writer.openssh.OpenSSHKeyPairResourceWriter;
+import org.apache.sshd.common.session.SessionContext;
+import org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
 
 import javax.naming.SizeLimitExceededException;
 
