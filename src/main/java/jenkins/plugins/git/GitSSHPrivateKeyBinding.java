@@ -91,7 +91,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
     @Override
     public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
         SSHUserPrivateKey sshUserCredentials = (SSHUserPrivateKey) credentials;
-        secretValues.put(PRIVATE_KEY, SSHKeyUtils.getPrivateKey(sshUserCredentials));
+        secretValues.put(PRIVATE_KEY, SSHKeyUtils.getSinglePrivateKey(sshUserCredentials));
         secretValues.put(PASSPHRASE, SSHKeyUtils.getPassphrase(sshUserCredentials));
     }
 
@@ -154,7 +154,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         private final boolean unixNodeType;
 
         protected SSHScriptFile(SSHUserPrivateKey credentials, String sshExePath, boolean unixNodeType) {
-            super(SSHKeyUtils.getPrivateKey(credentials) + ":" + SSHKeyUtils.getPassphrase(credentials), credentials.getId());
+            super(SSHKeyUtils.getSinglePrivateKey(credentials) + ":" + SSHKeyUtils.getPassphrase(credentials), credentials.getId());
             this.sshExePath = sshExePath;
             this.unixNodeType = unixNodeType;
         }
