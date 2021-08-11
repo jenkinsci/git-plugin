@@ -124,23 +124,22 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
     }
 
     private String getSSHPath(GitClient git) throws IOException, InterruptedException {
-        if(unixNodeType){
+        if (unixNodeType) {
             return "ssh";
-        }else {
+        } else {
             return getSSHExePathInWin(git);
         }
     }
 
-    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir,String sshExePath) throws IOException, InterruptedException {
+    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir, String sshExePath) throws IOException, InterruptedException {
         if (unixNodeType) {
             return
                     sshExePath
-                    +
-                    " -i "
-                    + getPrivateKeyFile(credentials, tempDir).getRemote()
-                    + " -o StrictHostKeyChecking=no";
+                            + " -i "
+                            + getPrivateKeyFile(credentials, tempDir).getRemote()
+                            + " -o StrictHostKeyChecking=no";
         } else {
-            return  "\"" + sshExePath + "\""
+            return "\"" + sshExePath + "\""
                     + " -i "
                     + "\""
                     + getPrivateKeyFile(credentials, tempDir).getRemote()
@@ -204,8 +203,8 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         public ListBoxModel doFillGitToolNameItems() {
             ListBoxModel items = new ListBoxModel();
             List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
-            for (GitTool t : toolList){
-                if(t.getClass().equals(GitTool.class)){
+            for (GitTool t : toolList) {
+                if (t.getClass().equals(GitTool.class)) {
                     items.add(t.getName());
                 }
             }
