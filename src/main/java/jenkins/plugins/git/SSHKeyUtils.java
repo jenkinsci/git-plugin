@@ -1,6 +1,7 @@
 package jenkins.plugins.git;
 
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.util.Secret;
 import jenkins.bouncycastle.api.PEMEncodable;
@@ -13,23 +14,23 @@ import java.security.GeneralSecurityException;
 
 public interface SSHKeyUtils {
 
-    static String getPrivateKey(SSHUserPrivateKey credentials) {
+    static String getSinglePrivateKey(@NonNull SSHUserPrivateKey credentials) {
         return credentials.getPrivateKeys().get(0);
     }
 
-    static String getPassphrase(SSHUserPrivateKey credentials) {
+    static String getPassphrase(@NonNull SSHUserPrivateKey credentials) {
         return Secret.toString(credentials.getPassphrase());
     }
 
-    static boolean isPrivateKeyEncrypted(String passphrase) {
+    static boolean isPrivateKeyEncrypted(@NonNull String passphrase) {
         return passphrase.isEmpty() ? false : true;
     }
 
-    default String getSSHExePathInWin(GitClient git) throws IOException, InterruptedException {
+    default String getSSHExePathInWin(@NonNull GitClient git) throws IOException, InterruptedException {
         return ((CliGitAPIImpl) git).getSSHExecutable().getAbsolutePath();
     }
 
-    default FilePath getPrivateKeyFile(SSHUserPrivateKey credentials, FilePath workspace) throws InterruptedException, IOException {
+    default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) throws InterruptedException, IOException {
         FilePath tempKeyFile = workspace.createTempFile("private", ".key");
         final String privateKeyValue = SSHKeyUtils.getPrivateKey(credentials);
         final String passphraseValue = SSHKeyUtils.getPassphrase(credentials);
