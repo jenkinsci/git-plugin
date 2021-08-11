@@ -32,13 +32,13 @@ public interface SSHKeyUtils {
 
     default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) throws InterruptedException, IOException {
         FilePath tempKeyFile = workspace.createTempFile("private", ".key");
-        final String privateKeyValue = SSHKeyUtils.getPrivateKey(credentials);
+        final String privateKeyValue = SSHKeyUtils.getSinglePrivateKey(credentials);
         final String passphraseValue = SSHKeyUtils.getPassphrase(credentials);
         try {
             if (isPrivateKeyEncrypted(passphraseValue)) {
-                if (OpenSSHKeyFormatImpl.isOpenSSHFormat(privateKeyValue)) {
+                if (OpenSSHKeyFormatImpl.isOpenSSHFormatted(privateKeyValue)) {
                     OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, passphraseValue);
-                    openSSHKeyFormat.getOpenSSHKeyFile(tempKeyFile);
+                    openSSHKeyFormat.writeDecryptedOpenSSHKey(tempKeyFile);
                 } else {
                     tempKeyFile.write(PEMEncodable.decode(privateKeyValue, passphraseValue.toCharArray()).encode(), null);
                 }
