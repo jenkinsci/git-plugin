@@ -57,7 +57,7 @@ public class SSHKeyUtilsTest {
 
     private SSHUserPrivateKey credentials = null;
     private BasicSSHUserPrivateKey.DirectEntryPrivateKeySource privateKeySource = null;
-    private File workspace = temporaryFolder.newFolder();
+    private File workspace = null;
 
 
     public SSHKeyUtilsTest(String privateKey, String passphrase) throws IOException {
@@ -80,6 +80,9 @@ public class SSHKeyUtilsTest {
 
     @Before
     public void basicSetup() throws IOException {
+        //Create Folder
+        workspace = temporaryFolder.newFolder();
+
         //Private Key
         privateKeySource = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(privateKey);
 
