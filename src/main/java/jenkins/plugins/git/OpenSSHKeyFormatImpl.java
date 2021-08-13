@@ -60,7 +60,7 @@ public class OpenSSHKeyFormatImpl {
         }
     }
 
-    private File writePrivateKeyOpenSSHFormatted(File tempFile) {
+    private FilePath writePrivateKeyOpenSSHFormatted(FilePath tempFile) {
         OpenSSHKeyPairResourceWriter privateKeyWriter = new OpenSSHKeyPairResourceWriter();
         SecureByteArrayOutputStream privateKeyBuffer = new SecureByteArrayOutputStream();
         ByteArrayInputStream stream = new ByteArrayInputStream(getEncData(this.privateKey));
@@ -70,10 +70,8 @@ public class OpenSSHKeyFormatImpl {
                     new AcquirePassphrase(this.passphrase),
                     stream,null);
             privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
-            FileOutputStream privateKeyFileStream = new FileOutputStream(tempFile);
-            privateKeyBuffer.writeTo(privateKeyFileStream);
-            privateKeyFileStream.close();
-        } catch (IOException | SizeLimitExceededException | GeneralSecurityException e) {
+            tempFile.write(privateKeyBuffer.toString(),null);
+        } catch (IOException | SizeLimitExceededException | GeneralSecurityException | InterruptedException e) {
             e.printStackTrace();
         }
         return tempFile;
@@ -85,9 +83,7 @@ public class OpenSSHKeyFormatImpl {
     }
 
     public FilePath writeDecryptedOpenSSHKey(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
-        File tempFile = new File(tempKeyFile.toURI());
-        writePrivateKeyOpenSSHFormatted(tempFile);
-        return new FilePath(tempFile);
+        return writePrivateKeyOpenSSHFormatted(tempKeyFile);
     }
 
     private final static class AcquirePassphrase implements FilePasswordProvider {
