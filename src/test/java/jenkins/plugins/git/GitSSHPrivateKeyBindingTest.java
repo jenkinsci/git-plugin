@@ -153,7 +153,7 @@ public class GitSSHPrivateKeyBindingTest {
 
         String pipeline = ""
                 + "node {\n"
-                + "  withCredentials([gitSSHPrivateKey(credentialsId: '" + credentialID + "'" + gitToolNameArg + ")]) {\n"
+                + "  withCredentials([gitSshPrivateKey(credentialsId: '" + credentialID + "'" + gitToolNameArg + ")]) {\n"
                 + "    if (isUnix()) {\n"
                 + "      sh '" + shellCheck() + "'\n"
                 + "    } else {\n"
