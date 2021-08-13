@@ -190,7 +190,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         }
     }
 
-    @Symbol("gitSSHPrivateKey")
+    @Symbol("gitSshPrivateKey")
     @Extension
     public static final class DescriptorImpl extends BindingDescriptor<SSHUserPrivateKey> {
 
