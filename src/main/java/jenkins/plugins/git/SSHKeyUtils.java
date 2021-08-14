@@ -30,11 +30,11 @@ public interface SSHKeyUtils {
         return ((CliGitAPIImpl) git).getSSHExecutable().getAbsolutePath();
     }
 
-    default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) throws InterruptedException, IOException {
-        FilePath tempKeyFile = workspace.createTempFile("private", ".key");
+    default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) {
         final String privateKeyValue = SSHKeyUtils.getSinglePrivateKey(credentials);
         final String passphraseValue = SSHKeyUtils.getPassphrase(credentials);
         try {
+            FilePath tempKeyFile = workspace.createTempFile("private", ".key");
             if (isPrivateKeyEncrypted(passphraseValue)) {
                 if (OpenSSHKeyFormatImpl.isOpenSSHFormatted(privateKeyValue)) {
                     OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, passphraseValue);
