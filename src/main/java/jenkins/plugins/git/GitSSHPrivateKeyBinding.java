@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -199,6 +200,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
             return Messages.GitSSHPrivateKeyBinding_DisplayName();
         }
 
+        @RequirePOST
         public ListBoxModel doFillGitToolNameItems() {
             ListBoxModel items = new ListBoxModel();
             List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
