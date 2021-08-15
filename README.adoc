@@ -54,7 +54,10 @@ image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 [#credential-binding]
 === Git Credentials Binding
 
-The git plugin provides `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *HTTPS* protocols using command line git in a Pipeline job.
+The git plugin provides two credential bindings
+
+* `Git Username and Password` binding that allows authenticated git operations over *HTTP* and *HTTPS* protocols using command line git in a Pipeline job.
+* `Git SSH Private Key` binding that allows authenticated git operations over *SSH* protocol using command line git for sh, bat, powershell in a Pipeline job.
 
 The git credential bindings are accessible through the link:https://www.jenkins.io/doc/pipeline/steps/credentials-binding/#withcredentials-bind-credentials-to-variables[`withCredentials`] step of the link:https://plugins.jenkins.io/credentials-binding/[Credentials Binding] plugin.
 The binding retrieves credentials from the link:https://plugins.jenkins.io/credentials/[Credentials] plugin.
@@ -96,6 +99,45 @@ withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
   powershell 'git push'
 }
 ```
+
+==== Git SSH Private Key
+
+The binding provides *SSH* protocol support for git operation which requires authentication.
+
+Procedure::
+
+. Click the Pipeline Syntax _Snippet Generator_ and choose the `withCredentials` step, add Git SSH Private Key binding.
+. Choose the required credentials and Git tool name, specific to the generated Pipeline snippet.
+
+image:TODO
+
+Unlike `Git Username and Password` binding, variable bindings are not provided in `Git SSH Private Key` binding.
+
+
+.Shell example
+```groovy
+withCredentials([gitSshPrivateKey(credentialsId: 'my-credentials-id',
+                 gitToolName: 'git-tool')]) {
+  sh 'git fetch --all'
+}
+```
+
+.Batch example
+```groovy
+withCredentials([gitSshPrivateKey(credentialsId: 'my-credentials-id',
+                 gitToolName: 'git-tool')]) {
+  bat 'git submodule update --init --recursive'
+}
+```
+
+.Powershell example
+```groovy
+withCredentials([gitSshPrivateKey(credentialsId: 'my-credentials-id',
+                gitToolName: 'git-tool')]) {
+    powershell 'git push'
+}
+```
+
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
 
