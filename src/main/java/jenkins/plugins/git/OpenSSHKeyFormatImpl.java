@@ -60,20 +60,16 @@ public class OpenSSHKeyFormatImpl {
         }
     }
 
-    private FilePath writePrivateKeyOpenSSHFormatted(FilePath tempFile) {
+    private FilePath writePrivateKeyOpenSSHFormatted(FilePath tempFile) throws SizeLimitExceededException, GeneralSecurityException, IOException, InterruptedException {
         OpenSSHKeyPairResourceWriter privateKeyWriter = new OpenSSHKeyPairResourceWriter();
         SecureByteArrayOutputStream privateKeyBuffer = new SecureByteArrayOutputStream();
         ByteArrayInputStream stream = new ByteArrayInputStream(getEncData(this.privateKey));
         KeyPair sshKeyPair = null;
-        try {
-            sshKeyPair = getOpenSSHKeyPair(null,null,"","",
+        sshKeyPair = getOpenSSHKeyPair(null,null,"","",
                     new AcquirePassphrase(this.passphrase),
                     stream,null);
-            privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
-            tempFile.write(privateKeyBuffer.toString(),null);
-        } catch (IOException | SizeLimitExceededException | GeneralSecurityException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
+        tempFile.write(privateKeyBuffer.toString(),null);
         return tempFile;
     }
 
