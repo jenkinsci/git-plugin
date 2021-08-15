@@ -109,7 +109,7 @@ Procedure::
 . Click the Pipeline Syntax _Snippet Generator_ and choose the `withCredentials` step, add Git SSH Private Key binding.
 . Choose the required credentials and Git tool name, specific to the generated Pipeline snippet.
 
-image:TODO
+image:images/git-credentials-binding-git-ssh-private-key-pipeline-job.png[Git-SSH-Private-Key-Binding]
 
 Unlike `Git Username and Password` binding, variable bindings are not provided in `Git SSH Private Key` binding.
 
@@ -660,7 +660,7 @@ Git SSH Private Key::
 
 . Choose the required credentials and Git tool name.
 
-image:TODO
+image:images/git-credentials-binding-git-ssh-private-key-freestyle-job.png[Git-SSH-Private-Key-Freestyle-Job]
 
 Variable bindings are not provided in this binding.
 [#extensions]
