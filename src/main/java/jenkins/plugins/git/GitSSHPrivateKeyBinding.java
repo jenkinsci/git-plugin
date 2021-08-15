@@ -26,15 +26,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 
 public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> implements GitCredentialBindings, SSHKeyUtils {
-    final static private String PRIVATE_KEY = "PRIVATE_KEY";
-    final static private String PASSPHRASE = "PASSPHRASE";
     final private String gitToolName;
     private transient boolean unixNodeType;
 
@@ -59,7 +57,6 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         final Map<String, String> secretValues = new LinkedHashMap<>();
         final Map<String, String> publicValues = new LinkedHashMap<>();
         SSHUserPrivateKey credentials = getCredentials(run);
-        setCredentialPairBindings(credentials, secretValues, publicValues);
         GitTool cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null && launcher != null) {
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
@@ -82,21 +79,16 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     @Override
     public Set<String> variables(@NonNull Run<?, ?> run) {
-        Set<String> keys = new LinkedHashSet<>();
-        keys.add(PRIVATE_KEY);
-        keys.add(PASSPHRASE);
-        return keys;
-    }
-
-    @Override
-    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
-        SSHUserPrivateKey sshUserCredentials = (SSHUserPrivateKey) credentials;
-        secretValues.put(PRIVATE_KEY, SSHKeyUtils.getSinglePrivateKey(sshUserCredentials));
-        secretValues.put(PASSPHRASE, SSHKeyUtils.getPassphrase(sshUserCredentials));
+        return Collections.emptySet();
     }
 
     /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String, String> publicValues) throws IOException, InterruptedException {
         setGitEnvironmentVariables(git, null, publicValues);
+    }
+
+    @Override
+    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
+        //Private Key credentials not required to bind with environment variables
     }
 
     @Override
