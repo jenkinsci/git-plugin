@@ -106,8 +106,8 @@ public class GitSSHPrivateKeyBindingTest {
 
     private String batchCheck(boolean includeCliCheck) {
         return includeCliCheck
-                ? "set | findstr PRIVATE_KEY > sshAuth.txt & set | findstr PASSPHRASE >> sshAuth.txt & set | findstr GCM_INTERACTIVE >> sshAuth.txt"
-                : "set | findstr PRIVATE_KEY > sshAuth.txt & set | findstr PASSPHRASE >> sshAuth.txt";
+                ? "set | findstr GCM_INTERACTIVE >> sshAuth.txt"
+                : "set > sshAuth.txt";
     }
 
     private String shellCheck() {
