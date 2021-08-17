@@ -111,7 +111,7 @@ public class GitSSHPrivateKeyBindingTest {
     }
 
     private String shellCheck() {
-        return "env | grep -zE \"GIT_TERMINAL_PROMPT\" > sshAuth.txt";
+        return "env | grep -zE \"GIT_TERMINAL_PROMPT|\" > sshAuth.txt";
     }
 
     @Test
