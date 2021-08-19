@@ -78,7 +78,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
                                      CloneCommand cmd) throws IOException, InterruptedException, GitException {
         // we are doing a merge, so cannot permit a shallow clone
-        cmd.shallow(false);
+        cmd.shallow(true);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd)
             throws IOException, InterruptedException, GitException {
         // we are doing a merge, so cannot permit a shallow clone
-        cmd.shallow(false);
+        cmd.shallow(true);
     }
 
     @Override
