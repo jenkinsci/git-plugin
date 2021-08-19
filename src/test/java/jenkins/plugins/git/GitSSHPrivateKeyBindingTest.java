@@ -27,7 +27,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,12 +106,12 @@ public class GitSSHPrivateKeyBindingTest {
 
     private String batchCheck(boolean includeCliCheck) {
         return includeCliCheck
-                ? "set | findstr PRIVATE_KEY > sshAuth.txt & set | findstr PASSPHRASE >> sshAuth.txt & set | findstr GCM_INTERACTIVE >> sshAuth.txt"
-                : "set | findstr PRIVATE_KEY > sshAuth.txt & set | findstr PASSPHRASE >> sshAuth.txt";
+                ? "set | findstr GCM_INTERACTIVE >> sshAuth.txt"
+                : "set > sshAuth.txt";
     }
 
     private String shellCheck() {
-        return "env | grep -zE \"PRIVATE_KEY|PASSPHRASE|GIT_TERMINAL_PROMPT\" > sshAuth.txt";
+        return "env | grep -zE \"GIT_TERMINAL_PROMPT|\" > sshAuth.txt";
     }
 
     @Test
