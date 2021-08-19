@@ -120,7 +120,9 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         if (unixNodeType) {
             return "ssh";
         } else {
-            return getSSHExePathInWin(git);
+            //Use getSSHExePathInWin(GitClient git), when support for finding ssh executable is provided for agents.
+            //ssh, will work only if OpenSSH is installed on the system being used to execute the build
+            return "ssh";
         }
     }
 
