@@ -1635,6 +1635,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return Jenkins.MANAGE;
         }
 
+        /**
+         * Package protected method that was added for temporary use
+         * with the Manage permission until the plugin required a
+         * Jenkins core version that has Manage permission available.
+         * Unfortunately, because it is package protected, it is part
+         * of the class signature and needs to be retained for
+         * compatibility.  Method was removed in git plugin 4.8.0 and
+         * the removal seems to have exposed a bug elsewhere that is
+         * reported as https://issues.jenkins.io/browse/JENKINS-66296 ,
+         * Restoring this method seems to resolve that issue.
+         */
+        Permission getJenkinsManageOrAdmin() {
+            return Jenkins.MANAGE;
+        }
+
         public boolean isShowEntireCommitSummaryInChanges() {
             return showEntireCommitSummaryInChanges;
         }

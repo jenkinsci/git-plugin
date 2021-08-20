@@ -140,7 +140,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.7</version>
+      <version>3.7.1</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -217,7 +217,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.0</version>
       <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -249,7 +249,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.263.x</artifactId>
-        <version>923.v08bdc07cd40f</version>
+        <version>924.vda78166e6655</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
