@@ -116,7 +116,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
     }
 
-    private String getSSHPath(GitClient git) throws IOException, InterruptedException {
+    private String getSSHPath(GitClient git) {
         if (unixNodeType) {
             return "ssh";
         } else {
