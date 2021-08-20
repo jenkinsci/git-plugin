@@ -148,7 +148,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         private final boolean unixNodeType;
 
         protected SSHScriptFile(SSHUserPrivateKey credentials, String sshExePath, boolean unixNodeType) {
-            super(SSHKeyUtils.getSinglePrivateKey(credentials) + ":" + SSHKeyUtils.getPassphrase(credentials), credentials.getId());
+            super(SSHKeyUtils.getSinglePrivateKey(credentials) + ":" + SSHKeyUtils.getPassphraseAsString(credentials), credentials.getId());
             this.sshExePath = sshExePath;
             this.unixNodeType = unixNodeType;
         }

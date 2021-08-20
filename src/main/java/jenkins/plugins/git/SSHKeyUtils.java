@@ -18,7 +18,21 @@ public interface SSHKeyUtils {
         return credentials.getPrivateKeys().get(0);
     }
 
-    static String getPassphrase(@NonNull SSHUserPrivateKey credentials) {
+    /**
+     * Get passphrase as a Secret{@link hudson.util.Secret}
+     * @param credentials Credentials{@link com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey}. Can't be null
+     * @return Passphrase of type secret{@link hudson.util.Secret}
+     **/
+    static Secret getPassphraseAsSecret(@NonNull SSHUserPrivateKey credentials) {
+        return credentials.getPassphrase();
+    }
+
+    /**
+     * Get passphrase as a String{@link java.lang.String}
+     * @param credentials Credentials{@link com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey}. Can't be null
+     * @return Passphrase of type string{@link java.lang.String}
+     **/
+    static String getPassphraseAsString(@NonNull SSHUserPrivateKey credentials) {
         return Secret.toString(credentials.getPassphrase());
     }
 
@@ -32,12 +46,12 @@ public interface SSHKeyUtils {
 
     default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) {
         final String privateKeyValue = SSHKeyUtils.getSinglePrivateKey(credentials);
-        final String passphraseValue = SSHKeyUtils.getPassphrase(credentials);
+        final String passphraseValue = SSHKeyUtils.getPassphraseAsString(credentials);
         try {
             FilePath tempKeyFile = workspace.createTempFile("private", ".key");
             if (isPrivateKeyEncrypted(passphraseValue)) {
                 if (OpenSSHKeyFormatImpl.isOpenSSHFormatted(privateKeyValue)) {
-                    OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, passphraseValue);
+                    OpenSSHKeyFormatImpl openSSHKeyFormat = new OpenSSHKeyFormatImpl(privateKeyValue, SSHKeyUtils.getPassphraseAsSecret(credentials));
                     openSSHKeyFormat.writeDecryptedOpenSSHKey(tempKeyFile);
                 } else {
                     tempKeyFile.write(PEMEncodable.decode(privateKeyValue, passphraseValue.toCharArray()).encode(), null);

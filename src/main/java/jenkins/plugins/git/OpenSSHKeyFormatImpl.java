@@ -1,6 +1,7 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
+import hudson.util.Secret;
 import org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
 import org.apache.sshd.common.NamedResource;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
@@ -11,10 +12,8 @@ import org.apache.sshd.common.util.io.SecureByteArrayOutputStream;
 import javax.naming.SizeLimitExceededException;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FileOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Base64;
@@ -25,12 +24,12 @@ import java.util.Map;
 public class OpenSSHKeyFormatImpl {
 
     private final String privateKey;
-    private final String passphrase;
+    private final Secret passphrase;
     private static final String BEGIN_MARKER = OpenSSHKeyPairResourceParser.BEGIN_MARKER;
     private static final String END_MARKER = OpenSSHKeyPairResourceParser.END_MARKER;
     private static final String DASH_MARKER = "-----";
 
-    public OpenSSHKeyFormatImpl(final String privateKey, final String passphrase) {
+    public OpenSSHKeyFormatImpl(final String privateKey, final Secret passphrase) {
         this.privateKey = privateKey;
         this.passphrase = passphrase;
     }
@@ -84,15 +83,15 @@ public class OpenSSHKeyFormatImpl {
 
     private final static class AcquirePassphrase implements FilePasswordProvider {
 
-        String passphrase;
+        Secret passphrase;
 
-        AcquirePassphrase(String passphrase) {
+        AcquirePassphrase(Secret passphrase) {
             this.passphrase = passphrase;
         }
 
         @Override
         public String getPassword(SessionContext session, NamedResource resourceKey, int retryIndex) throws IOException {
-            return this.passphrase;
+            return this.passphrase.getPlainText();
         }
     }
 }

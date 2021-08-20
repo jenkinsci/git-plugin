@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import hudson.plugins.git.GitTool;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -96,8 +97,10 @@ public class SSHKeyUtilsTest {
     public void test_SSHKeyUtils_StaticMethods(){
         String tempKey = SSHKeyUtils.getSinglePrivateKey(credentials);
         assertThat(tempKey, equalTo(this.privateKey));
-        String tempPassphrase = SSHKeyUtils.getPassphrase(credentials);
-        assertThat(tempPassphrase, equalTo(this.privatekeyPassphrase));
+        String tempPassphraseString = SSHKeyUtils.getPassphraseAsString(credentials);
+        assertThat(tempPassphraseString, equalTo(this.privatekeyPassphrase));
+        Secret tempPassphraseSecret = SSHKeyUtils.getPassphraseAsSecret(credentials);
+        assertThat(tempPassphraseSecret, equalTo(this.credentials.getPassphrase()));
         boolean flag = SSHKeyUtils.isPrivateKeyEncrypted(this.privatekeyPassphrase);
         assertThat(flag, not(this.privatekeyPassphrase.isEmpty()));
     }
