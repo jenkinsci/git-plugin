@@ -14,6 +14,12 @@ import java.security.GeneralSecurityException;
 
 public interface SSHKeyUtils {
 
+    /**
+     * Get a single private key
+     * @param credentials Credentials{@link com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey}. Can't be null
+     * @return Private key at index 0
+     * @exception IndexOutOfBoundsException thrown when no private key if found/available
+     **/
     static String getSinglePrivateKey(@NonNull SSHUserPrivateKey credentials) {
         return credentials.getPrivateKeys().get(0);
     }
@@ -36,14 +42,32 @@ public interface SSHKeyUtils {
         return Secret.toString(credentials.getPassphrase());
     }
 
+    /**
+     * Check if private key is encrypted by using the passphrase
+     * @param passphrase Passphrase{@link java.lang.String}. Can't be null
+     * @return True if passphrase is not an empty string value
+     **/
     static boolean isPrivateKeyEncrypted(@NonNull String passphrase) {
         return passphrase.isEmpty() ? false : true;
     }
 
+    /**
+     * Get SSH executable absolute path{@link java.lang.String} on a Windows system
+     * @param git Git Client{@link org.jenkinsci.plugins.gitclient.GitClient}. Can't be null
+     * @return SSH executable absolute path{@link java.lang.String}
+     * @exception InterruptedException If no ssh executable path is found
+     **/
     default String getSSHExePathInWin(@NonNull GitClient git) throws IOException, InterruptedException {
         return ((CliGitAPIImpl) git).getSSHExecutable().getAbsolutePath();
     }
 
+    /**
+     * Get a file{@link hudson.FilePath} stored on the file-system used during the build, with private key written in it.
+     * The private key if encrypted will be decrypted first and then written in the file{@link hudson.FilePath}.
+     * @param credentials Credentials{@link com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey}. Can't be null
+     * @param workspace Work directory{@link hudson.FilePath} for storing private key file
+     * @return Private Key file
+     **/
     default FilePath getPrivateKeyFile(@NonNull SSHUserPrivateKey credentials, @NonNull FilePath workspace) {
         final String privateKeyValue = SSHKeyUtils.getSinglePrivateKey(credentials);
         final String passphraseValue = SSHKeyUtils.getPassphraseAsString(credentials);
