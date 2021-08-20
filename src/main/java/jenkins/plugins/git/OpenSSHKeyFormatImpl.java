@@ -72,11 +72,21 @@ public class OpenSSHKeyFormatImpl {
         return tempFile;
     }
 
+    /**
+     * Check the format of private key using HEADERS
+     * @param privateKey The private key{@link java.lang.String}
+     * @return true is the privater key is in OpenSSH format
+     **/
     public static boolean isOpenSSHFormatted(String privateKey) {
         final String HEADER = DASH_MARKER+BEGIN_MARKER+DASH_MARKER;
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
     }
 
+    /**
+     * Decrypts the passphrase protected OpenSSH formatted private key
+     * @param tempKeyFile Decrypted private key file{@link hudson.FilePath} on agents/controller file-system
+     * @return Decrypted private key file{@link hudson.FilePath} OpenSSH Formatted
+     **/
     public FilePath writeDecryptedOpenSSHKey(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
         return writePrivateKeyOpenSSHFormatted(tempKeyFile);
     }
