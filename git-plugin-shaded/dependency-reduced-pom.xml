@@ -47,6 +47,18 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -62,8 +74,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.level>8</java.level>
     <jenkins.version>2.289.1</jenkins.version>
+    <java.level>8</java.level>
   </properties>
 </project>
 
