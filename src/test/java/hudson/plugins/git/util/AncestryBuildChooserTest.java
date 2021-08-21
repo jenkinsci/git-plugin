@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
@@ -28,9 +29,6 @@ import java.util.Date;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import static org.junit.Assert.*;
@@ -156,11 +154,10 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
         Collection<Revision> candidateRevisions = gitSCM.getBuildChooser().getCandidateRevisions(true, "**-days-old-branch", git, listener, buildData, context);
         
         // transform revision candidates to sha1 strings
-        List<String> candidateSha1s = Lists.newArrayList(Iterables.transform(candidateRevisions, new Function<Revision, String>() {
-            public String apply(Revision rev) {
-                return rev.getSha1String();
-            }
-        }));
+        List<String> candidateSha1s =
+                candidateRevisions.stream()
+                        .map(Revision::getSha1String)
+                        .collect(Collectors.toList());
         
         return candidateSha1s;
     }
