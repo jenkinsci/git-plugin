@@ -26,7 +26,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.8.2</revision>
+    <revision>4.8.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -148,6 +148,17 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
     </dependency>
+    <!-- BouncyCastle API Plugin -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>bouncycastle-api</artifactId>
+    </dependency>
+    <!-- SSHD Plugin -->
+    <dependency>
+      <groupId>org.jenkins-ci.modules</groupId>
+      <artifactId>sshd</artifactId>
+      <version>3.1.0</version>
+    </dependency>
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>parameterized-trigger</artifactId>
@@ -248,8 +259,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.263.x</artifactId>
-        <version>924.vda78166e6655</version>
+        <artifactId>bom-2.289.x</artifactId>
+        <version>923.v08bdc07cd40f</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>

@@ -1,6 +1,7 @@
 package jenkins.plugins.git;
 
 import hudson.FilePath;
+import hudson.util.Secret;
 import io.jenkins.plugins.git.shaded.org.apache.sshd.common.config.keys.loader.openssh.OpenSSHKeyPairResourceParser;
 import io.jenkins.plugins.git.shaded.org.apache.sshd.common.NamedResource;
 import io.jenkins.plugins.git.shaded.org.apache.sshd.common.config.keys.FilePasswordProvider;
@@ -11,10 +12,8 @@ import io.jenkins.plugins.git.shaded.org.apache.sshd.common.util.io.SecureByteAr
 import javax.naming.SizeLimitExceededException;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FileOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Base64;
@@ -25,12 +24,12 @@ import java.util.Map;
 public class OpenSSHKeyFormatImpl {
 
     private final String privateKey;
-    private final String passphrase;
+    private final Secret passphrase;
     private static final String BEGIN_MARKER = OpenSSHKeyPairResourceParser.BEGIN_MARKER;
     private static final String END_MARKER = OpenSSHKeyPairResourceParser.END_MARKER;
     private static final String DASH_MARKER = "-----";
 
-    public OpenSSHKeyFormatImpl(final String privateKey, final String passphrase) {
+    public OpenSSHKeyFormatImpl(final String privateKey, final Secret passphrase) {
         this.privateKey = privateKey;
         this.passphrase = passphrase;
     }
@@ -60,47 +59,49 @@ public class OpenSSHKeyFormatImpl {
         }
     }
 
-    private File writePrivateKeyOpenSSHFormatted(File tempFile) {
+    private FilePath writePrivateKeyOpenSSHFormatted(FilePath tempFile) throws SizeLimitExceededException, GeneralSecurityException, IOException, InterruptedException {
         OpenSSHKeyPairResourceWriter privateKeyWriter = new OpenSSHKeyPairResourceWriter();
         SecureByteArrayOutputStream privateKeyBuffer = new SecureByteArrayOutputStream();
         ByteArrayInputStream stream = new ByteArrayInputStream(getEncData(this.privateKey));
         KeyPair sshKeyPair = null;
-        try {
-            sshKeyPair = getOpenSSHKeyPair(null,null,"","",
+        sshKeyPair = getOpenSSHKeyPair(null,null,"","",
                     new AcquirePassphrase(this.passphrase),
                     stream,null);
-            privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
-            FileOutputStream privateKeyFileStream = new FileOutputStream(tempFile);
-            privateKeyBuffer.writeTo(privateKeyFileStream);
-            privateKeyFileStream.close();
-        } catch (IOException | SizeLimitExceededException | GeneralSecurityException e) {
-            e.printStackTrace();
-        }
+        privateKeyWriter.writePrivateKey(sshKeyPair, "", null, privateKeyBuffer);
+        tempFile.write(privateKeyBuffer.toString(),null);
         return tempFile;
     }
 
-    public static boolean isOpenSSHFormat(String privateKey) {
+    /**
+     * Check the format of private key using HEADERS
+     * @param privateKey The private key{@link java.lang.String}
+     * @return true is the privater key is in OpenSSH format
+     **/
+    public static boolean isOpenSSHFormatted(String privateKey) {
         final String HEADER = DASH_MARKER+BEGIN_MARKER+DASH_MARKER;
         return privateKey.regionMatches(false, 0, HEADER, 0, HEADER.length());
     }
 
-    public FilePath getOpenSSHKeyFile(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
-        File tempFile = new File(tempKeyFile.toURI());
-        writePrivateKeyOpenSSHFormatted(tempFile);
-        return new FilePath(tempFile);
+    /**
+     * Decrypts the passphrase protected OpenSSH formatted private key
+     * @param tempKeyFile Decrypted private key file{@link hudson.FilePath} on agents/controller file-system
+     * @return Decrypted private key file{@link hudson.FilePath} OpenSSH Formatted
+     **/
+    public FilePath writeDecryptedOpenSSHKey(FilePath tempKeyFile) throws IOException, InterruptedException, GeneralSecurityException, SizeLimitExceededException {
+        return writePrivateKeyOpenSSHFormatted(tempKeyFile);
     }
 
     private final static class AcquirePassphrase implements FilePasswordProvider {
 
-        String passphrase;
+        Secret passphrase;
 
-        AcquirePassphrase(String passphrase) {
+        AcquirePassphrase(Secret passphrase) {
             this.passphrase = passphrase;
         }
 
         @Override
         public String getPassword(SessionContext session, NamedResource resourceKey, int retryIndex) throws IOException {
-            return this.passphrase;
+            return this.passphrase.getPlainText();
         }
     }
 }

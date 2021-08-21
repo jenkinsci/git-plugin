@@ -22,19 +22,18 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 
 public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> implements GitCredentialBindings, SSHKeyUtils {
-    final static private String PRIVATE_KEY = "PRIVATE_KEY";
-    final static private String PASSPHRASE = "PASSPHRASE";
     final private String gitToolName;
     private transient boolean unixNodeType;
 
@@ -59,7 +58,6 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         final Map<String, String> secretValues = new LinkedHashMap<>();
         final Map<String, String> publicValues = new LinkedHashMap<>();
         SSHUserPrivateKey credentials = getCredentials(run);
-        setCredentialPairBindings(credentials, secretValues, publicValues);
         GitTool cliGitTool = getCliGitTool(run, this.gitToolName, taskListener);
         if (cliGitTool != null && filePath != null && launcher != null) {
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
@@ -82,21 +80,16 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
 
     @Override
     public Set<String> variables(@NonNull Run<?, ?> run) {
-        Set<String> keys = new LinkedHashSet<>();
-        keys.add(PRIVATE_KEY);
-        keys.add(PASSPHRASE);
-        return keys;
-    }
-
-    @Override
-    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
-        SSHUserPrivateKey sshUserCredentials = (SSHUserPrivateKey) credentials;
-        secretValues.put(PRIVATE_KEY, SSHKeyUtils.getPrivateKey(sshUserCredentials));
-        secretValues.put(PASSPHRASE, SSHKeyUtils.getPassphrase(sshUserCredentials));
+        return Collections.emptySet();
     }
 
     /*package*/void setGitEnvironmentVariables(@NonNull GitClient git, Map<String, String> publicValues) throws IOException, InterruptedException {
         setGitEnvironmentVariables(git, null, publicValues);
+    }
+
+    @Override
+    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String, String> secretValues, Map<String, String> publicValues) {
+        //Private Key credentials not required to bind with environment variables
     }
 
     @Override
@@ -123,24 +116,24 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         return ((CliGitAPIImpl) git).isCliGitVerAtLeast(major, minor, rev, bugfix);
     }
 
-    private String getSSHPath(GitClient git) throws IOException, InterruptedException {
-        if(unixNodeType){
+    private String getSSHPath(GitClient git) {
+        if (unixNodeType) {
             return "ssh";
-        }else {
-            return getSSHExePathInWin(git);
+        } else {
+            //Use getSSHExePathInWin(GitClient git), when support for finding ssh executable is provided for agents.
+            //ssh, will work only if OpenSSH is installed on the system being used to execute the build
+            return "ssh";
         }
     }
 
-    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir,String sshExePath) throws IOException, InterruptedException {
+    private String getSSHCmd(SSHUserPrivateKey credentials, FilePath tempDir, String sshExePath) {
         if (unixNodeType) {
-            return
-                    sshExePath
-                    +
-                    " -i "
+            return sshExePath
+                    + " -i "
                     + getPrivateKeyFile(credentials, tempDir).getRemote()
                     + " -o StrictHostKeyChecking=no";
         } else {
-            return  "\"" + sshExePath + "\""
+            return "\"" + sshExePath + "\""
                     + " -i "
                     + "\""
                     + getPrivateKeyFile(credentials, tempDir).getRemote()
@@ -155,7 +148,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         private final boolean unixNodeType;
 
         protected SSHScriptFile(SSHUserPrivateKey credentials, String sshExePath, boolean unixNodeType) {
-            super(SSHKeyUtils.getPrivateKey(credentials) + ":" + SSHKeyUtils.getPassphrase(credentials), credentials.getId());
+            super(SSHKeyUtils.getSinglePrivateKey(credentials) + ":" + SSHKeyUtils.getPassphraseAsString(credentials), credentials.getId());
             this.sshExePath = sshExePath;
             this.unixNodeType = unixNodeType;
         }
@@ -191,7 +184,7 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
         }
     }
 
-    @Symbol("gitSSHPrivateKey")
+    @Symbol("gitSshPrivateKey")
     @Extension
     public static final class DescriptorImpl extends BindingDescriptor<SSHUserPrivateKey> {
 
@@ -201,11 +194,12 @@ public class GitSSHPrivateKeyBinding extends MultiBinding<SSHUserPrivateKey> imp
             return Messages.GitSSHPrivateKeyBinding_DisplayName();
         }
 
+        @RequirePOST
         public ListBoxModel doFillGitToolNameItems() {
             ListBoxModel items = new ListBoxModel();
             List<GitTool> toolList = Jenkins.get().getDescriptorByType(GitSCM.DescriptorImpl.class).getGitTools();
-            for (GitTool t : toolList){
-                if(t.getClass().equals(GitTool.class)){
+            for (GitTool t : toolList) {
+                if (t.getClass().equals(GitTool.class)) {
                     items.add(t.getName());
                 }
             }
