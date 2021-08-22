@@ -10,10 +10,6 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Functions;
@@ -1725,12 +1721,8 @@ public class GitSCMTest extends AbstractGitTestCase {
     // eg: "jane doe and john doe should be the culprits", culprits, [johnDoe, janeDoe])
     static public void assertCulprits(String assertMsg, Set<User> actual, PersonIdent[] expected)
     {
-        Collection<String> fullNames = Collections2.transform(actual, new Function<User,String>() {
-            public String apply(User u)
-            {
-                return u.getFullName();
-            }
-        });
+        List<String> fullNames =
+                actual.stream().map(User::getFullName).collect(Collectors.toList());
 
         for(PersonIdent p : expected)
         {
@@ -2560,7 +2552,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
-        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("toto")));
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
 
         // run build first to create workspace
         final String commitFile1 = "toto/commitFile1";
@@ -2581,7 +2573,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
-        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
         final String commitFile1 = "toto/commitFile1";
@@ -2616,7 +2608,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child("toto").exists());
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-        ((GitSCM) project.getScm()).getExtensions().add(new SparseCheckoutPaths(Lists.newArrayList(new SparseCheckoutPath("titi"))));
+        ((GitSCM) project.getScm()).getExtensions().add(new SparseCheckoutPaths(Collections.singletonList(new SparseCheckoutPath("titi"))));
 
         final FreeStyleBuild build2 = build(project, Result.SUCCESS);
         assertTrue(build2.getWorkspace().child("titi").exists());
@@ -2631,7 +2623,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
-        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
 
         // run build first to create workspace
         final String commitFile1 = "toto/commitFile1";
@@ -2661,7 +2653,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             /* Older git versions have unexpected behaviors with sparse checkout */
             return;
         }
-        FreeStyleProject project = setupProject("master", Lists.newArrayList(new SparseCheckoutPath("titi")));
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
         project.setAssignedLabel(rule.createSlave().getSelfLabel());
 
         // run build first to create workspace
