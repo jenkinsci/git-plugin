@@ -208,6 +208,11 @@ public class GitUsernamePasswordBindingTest {
     }
 
     @Test
+    public void test_isCurrentNodeOSUnix(){
+        assertThat(gitCredBind.isCurrentNodeOSUnix(r.createLocalLauncher()), not(equalTo(isWindows())));
+    }
+
+    @Test
     public void test_getCliGitTool_using_FreeStyleProject() throws Exception {
         FreeStyleProject prj = r.createFreeStyleProject();
         prj.getBuildWrappersList().add(new SecretBuildWrapper(Collections.<MultiBinding<?>>
