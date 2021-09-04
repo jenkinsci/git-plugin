@@ -139,7 +139,9 @@ public class GitUsernamePasswordBindingTest {
         }
 
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
-        r.assertLogNotContains(this.username, b);
+        if(credentials.isUsernameSecret()) {
+            r.assertLogNotContains(this.username, b);
+        }
         r.assertLogNotContains(this.password, b);
 
         //Assert Keys
@@ -147,7 +149,9 @@ public class GitUsernamePasswordBindingTest {
         assertThat(binding.variables(b), hasItem("GIT_PASSWORD"));
         //Assert setKeyBindings method
         String fileContents = b.getWorkspace().child("auth.txt").readToString().trim();
-        assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        if(credentials.isUsernameSecret()) {
+            assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
         //Assert Git specific env variables
         if (isCliGitTool()) {
@@ -183,11 +187,15 @@ public class GitUsernamePasswordBindingTest {
         WorkflowRun b = project.scheduleBuild2(0).waitForStart();
         r.waitForCompletion(b);
         r.assertBuildStatusSuccess(b);
-        r.assertLogNotContains(this.username, b);
+        if(credentials.isUsernameSecret()) {
+            r.assertLogNotContains(this.username, b);
+        }
         r.assertLogNotContains(this.password, b);
         //Assert setKeyBindings method
         String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
-        assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        if(credentials.isUsernameSecret()) {
+            assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
         // Assert Git version specific env variables
         if (isCliGitTool()) {
