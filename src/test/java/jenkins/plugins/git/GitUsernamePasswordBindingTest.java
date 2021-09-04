@@ -92,7 +92,6 @@ public class GitUsernamePasswordBindingTest {
 
     @Before
     public void basicSetup() throws IOException {
-        Jenkins.get();
         //File init
         rootDir = tempFolder.getRoot();
         rootFilePath = new FilePath(rootDir.getAbsoluteFile());
