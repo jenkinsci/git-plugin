@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(Parameterized.class)
 public class GitUsernamePasswordBindingTest {
-    @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolName {2}: GitToolInstance {3}")
+    @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolInstance {2}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 {"randomName", "special%%_342@**", new GitTool("git", "git", null)},
