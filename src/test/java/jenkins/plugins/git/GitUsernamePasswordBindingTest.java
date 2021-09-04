@@ -147,13 +147,13 @@ public class GitUsernamePasswordBindingTest {
         //Assert Keys
         assertThat(binding.variables(b), hasItem("GIT_USERNAME"));
         assertThat(binding.variables(b), hasItem("GIT_PASSWORD"));
-        //Assert setKeyBindings method
+        //Assert credential values
         String fileContents = b.getWorkspace().child("auth.txt").readToString().trim();
         if(credentials.isUsernameSecret()) {
             assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
         }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
-        //Assert Git specific env variables
+        //Assert Git specific env variables based on its version
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
@@ -191,13 +191,13 @@ public class GitUsernamePasswordBindingTest {
             r.assertLogNotContains(this.username, b);
         }
         r.assertLogNotContains(this.password, b);
-        //Assert setKeyBindings method
+        //Assert credential values
         String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
         if(credentials.isUsernameSecret()) {
             assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
         }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
-        // Assert Git version specific env variables
+        // Assert Git specific env variables based on its version
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
