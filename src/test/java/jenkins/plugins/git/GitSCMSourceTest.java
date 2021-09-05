@@ -364,7 +364,7 @@ public class GitSCMSourceTest {
             return;
         }
         TaskListener log = StreamTaskListener.fromStdout();
-        HelloToolInstaller inst = new HelloToolInstaller("master", "echo Hello", "git");
+        HelloToolInstaller inst = new HelloToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "git");
         GitTool t = new GitTool("myGit", null, Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
         t.getDescriptor().setInstallations(t);
