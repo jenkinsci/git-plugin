@@ -92,7 +92,7 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Git.class})
 // Need to ignore some packages due to Powermockito issue with JDK 11 https://github.com/powermock/powermock/issues/864
-@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.management.*", "javax.net.ssl.*", "javax.xml.*", "org.xml.*" })
+@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.management.*", "javax.net.ssl.*", "javax.xml.*", "org.xml.*", "javax.crypto.*" })
 public class AbstractGitSCMSourceTest {
 
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
