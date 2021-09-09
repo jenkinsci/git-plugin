@@ -1,5 +1,13 @@
 package jenkins.plugins.git;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -53,12 +61,20 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -67,11 +83,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link AbstractGitSCMSource}
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Git.class})
+// Need to ignore some packages due to Powermockito issue with JDK 11 https://github.com/powermock/powermock/issues/864
+@PowerMockIgnore({ "javax.xml.*" })
 public class AbstractGitSCMSourceTest {
 
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
@@ -242,29 +263,50 @@ public class AbstractGitSCMSourceTest {
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
     }
 
-    @Issue("JENKINS-45953")
+    @Issue("JENKINS-64803")
     @Test
-    public void retrieveRevisions() throws Exception {
+    public void retrieveTags_folderScopedCredentials() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
         sampleRepo.git("tag", "lightweight");
-        sampleRepo.write("file", "modified2");
-        sampleRepo.git("commit", "--all", "--message=dev2");
-        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
-        sampleRepo.write("file", "modified3");
-        sampleRepo.git("commit", "--all", "--message=dev3");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
-        assertThat(source.fetchRevisions(listener, null), hasSize(0));
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master"));
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("annotated", "lightweight"));
-        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
-        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
+        
+        // Spy on GitClient methods
+        Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
+        GitClient gitClient = Mockito.spy(git.getClient());
+        PowerMockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS);
+        when(Git.with(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(git);
+        doReturn(gitClient).when(git).getClient();
+
+        // Create a Folder and add a folder credentials
+        Folder f = r.jenkins.createProject(Folder.class, "test");
+        Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
+        CredentialsStore folderStore = null;
+        for (CredentialsStore s : stores) {
+            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
+                folderStore = s;
+                break;
+            }
+        }
+        assert folderStore != null;
+        String fCredentialsId = "fcreds";
+        StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, 
+            fCredentialsId, "fcreds", "user", "password");
+        folderStore.addCredentials(Domain.global(), fCredentials);
+        folderStore.save();
+        WorkflowJob p = f.createProject(WorkflowJob.class, "wjob");
+
+        source.setTraits(new ArrayList<>());
+        source.setCredentialsId(fCredentialsId);
+
+        SCMRevision rev = source.fetch("lightweight", listener, p);
+        assertThat(rev, notNullValue());
+        assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
+        Mockito.verify(gitClient, Mockito.times(0)).addDefaultCredentials(null);
+        Mockito.verify(gitClient, Mockito.atLeastOnce()).addDefaultCredentials(fCredentials);
     }
 
     @Issue("JENKINS-47824")
