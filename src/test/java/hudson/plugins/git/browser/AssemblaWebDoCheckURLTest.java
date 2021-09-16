@@ -81,13 +81,6 @@ public class AssemblaWebDoCheckURLTest {
     }
 
     @Test
-    public void testPathLevelChecksOnRepoUrl() throws Exception {
-        // Any path related errors will not be caught except syntax issues
-        String url = "https://app.assembla.com/spaces/";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
-    }
-
-    @Test
     public void testPathLevelChecksOnRepoUrlSupersetOfAssembla() throws Exception {
         java.util.Random random = new java.util.Random();
         String [] urls = {
@@ -102,12 +95,6 @@ public class AssemblaWebDoCheckURLTest {
         String url = urls[random.nextInt(urls.length)]; // Don't abuse a single web site with tests
         assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url).getLocalizedMessage(),
                 is("Invalid URL"));
-    }
-
-    @Test
-    public void testInitialChecksOnRepoUrlWithEmptyPath() throws Exception {
-        String url = "https://www.assembla.com";
-        assertThat(assemblaWebDescriptor.doCheckRepoUrl(project, url), is(FormValidation.ok()));
     }
 
     @Test
