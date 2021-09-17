@@ -2286,7 +2286,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testConfigRoundtripExtensionsPreserved() throws Exception {
         FreeStyleProject p = createFreeStyleProject();
-        final String url = "git://github.com/jenkinsci/git-plugin.git";
+        final String url = "https://github.com/jenkinsci/git-plugin.git";
         GitRepositoryBrowser browser = new GithubWeb(url);
         GitSCM scm = new GitSCM(createRepoList(url),
                 Collections.singletonList(new BranchSpec("*/master")),
@@ -2337,7 +2337,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         GitSCM oldGit = (GitSCM) p.getScm();
         assertEquals(Collections.emptyList(), oldGit.getExtensions().toList());
         assertEquals(0, oldGit.getSubmoduleCfg().size());
-        assertEquals("git git://github.com/jenkinsci/model-ant-project.git", oldGit.getKey());
+        assertEquals("git https://github.com/jenkinsci/model-ant-project.git", oldGit.getKey());
         assertThat(oldGit.getEffectiveBrowser(), instanceOf(GithubWeb.class));
         GithubWeb browser = (GithubWeb) oldGit.getEffectiveBrowser();
         assertEquals(browser.getRepoUrl(), "https://github.com/jenkinsci/model-ant-project.git/");
