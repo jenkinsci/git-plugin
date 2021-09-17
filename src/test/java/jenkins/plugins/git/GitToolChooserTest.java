@@ -113,7 +113,7 @@ public class GitToolChooserTest {
         Item context = Mockito.mock(Item.class);
         String credentialsId = null;
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", "updated/git");
+        TestToolInstaller inst = new TestToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "updated/git");
         GitTool t = new GitTool("myGit", "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 
@@ -148,7 +148,7 @@ public class GitToolChooserTest {
         agent.setMode(Node.Mode.NORMAL);
         agent.setLabelString("agent-windows");
 
-        TestToolInstaller inst = new TestToolInstaller("master", "echo Hello", "myGit/git");
+        TestToolInstaller inst = new TestToolInstaller(jenkins.jenkins.getSelfLabel().getName(), "echo Hello", "myGit/git");
         GitTool toolOnMaster = new GitTool("myGit", "default/git", Collections.singletonList(
                 new InstallSourceProperty(Collections.singletonList(inst))));
 

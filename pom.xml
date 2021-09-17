@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.24</version>
+    <version>4.25</version>
     <relativePath />
   </parent>
 
@@ -58,7 +58,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.4.0</version>
+            <version>4.4.1</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -236,7 +236,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>4.4.0</version>
+      <version>4.4.1</version>
       <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -268,7 +268,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.289.x</artifactId>
-        <version>924.vda78166e6655</version>
+        <version>950.v396cb834de1e</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
