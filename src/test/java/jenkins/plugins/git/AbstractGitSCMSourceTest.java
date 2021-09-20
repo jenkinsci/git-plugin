@@ -255,6 +255,31 @@ public class AbstractGitSCMSourceTest {
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
     }
 
+    @Issue("JENKINS-45953")
+    @Test
+    public void retrieveRevisions() throws Exception {
+        sampleRepo.init();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "lightweight");
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        sampleRepo.git("tag", "-a", "annotated", "-m", "annotated");
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=dev3");
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(new ArrayList<>());
+        TaskListener listener = StreamTaskListener.fromStderr();
+        assertThat(source.fetchRevisions(listener, null), hasSize(0));
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master"));
+        source.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("annotated", "lightweight"));
+        source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
+        assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
+    }
+
     @Issue("JENKINS-64803")
     @Test
     public void retrieveTags_folderScopedCredentials() throws Exception {
