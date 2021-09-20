@@ -79,7 +79,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -312,17 +320,17 @@ public class AbstractGitSCMSourceTest {
         source.setTraits(new ArrayList<>());
         source.setCredentialsId(fCredentialsId);
 
-        Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
-        GitClient gitClient = Mockito.spy(git.getClient());
+        Git git = mock(Git.class, CALLS_REAL_METHODS);
+        GitClient gitClient = spy(git.getClient());
         // Spy on GitClient methods
-        try (MockedStatic<Git> gitMock = Mockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS)) {
-            gitMock.when(() -> Git.with(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(git);
+        try (MockedStatic<Git> gitMock = mockStatic(Git.class, CALLS_REAL_METHODS)) {
+            gitMock.when(() -> Git.with(any(), any())).thenReturn(git);
             doReturn(gitClient).when(git).getClient();
             SCMRevision rev = source.fetch("lightweight", listener, p);
             assertThat(rev, notNullValue());
             assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
-            Mockito.verify(gitClient, Mockito.times(0)).addDefaultCredentials(null);
-            Mockito.verify(gitClient, Mockito.atLeastOnce()).addDefaultCredentials(fCredentials);
+            verify(gitClient, times(0)).addDefaultCredentials(null);
+            verify(gitClient, atLeastOnce()).addDefaultCredentials(fCredentials);
         }
     }
 
