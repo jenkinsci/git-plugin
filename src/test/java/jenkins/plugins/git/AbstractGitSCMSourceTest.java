@@ -66,15 +66,11 @@ import org.jenkinsci.plugins.gitclient.TestJGitAPIImpl;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.ArgumentMatchers;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -89,10 +85,6 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link AbstractGitSCMSource}
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Git.class})
-// Need to ignore some packages due to Powermockito issue with JDK 11 https://github.com/powermock/powermock/issues/864
-@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.management.*", "javax.net.ssl.*", "javax.xml.*", "org.xml.*", "javax.crypto.*" })
 public class AbstractGitSCMSourceTest {
 
     static final String GitBranchSCMHead_DEV_MASTER = "[GitBranchSCMHead{name='dev', ref='refs/heads/dev'}, GitBranchSCMHead{name='master', ref='refs/heads/master'}]";
@@ -274,13 +266,6 @@ public class AbstractGitSCMSourceTest {
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         TaskListener listener = StreamTaskListener.fromStderr();
         
-        // Spy on GitClient methods
-        Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
-        GitClient gitClient = Mockito.spy(git.getClient());
-        PowerMockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS);
-        when(Git.with(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(git);
-        doReturn(gitClient).when(git).getClient();
-
         // Create a Folder and add a folder credentials
         Folder f = r.jenkins.createProject(Folder.class, "test");
         Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
@@ -293,7 +278,7 @@ public class AbstractGitSCMSourceTest {
         }
         assert folderStore != null;
         String fCredentialsId = "fcreds";
-        StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, 
+        StandardCredentials fCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
             fCredentialsId, "fcreds", "user", "password");
         folderStore.addCredentials(Domain.global(), fCredentials);
         folderStore.save();
@@ -302,11 +287,18 @@ public class AbstractGitSCMSourceTest {
         source.setTraits(new ArrayList<>());
         source.setCredentialsId(fCredentialsId);
 
-        SCMRevision rev = source.fetch("lightweight", listener, p);
-        assertThat(rev, notNullValue());
-        assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
-        Mockito.verify(gitClient, Mockito.times(0)).addDefaultCredentials(null);
-        Mockito.verify(gitClient, Mockito.atLeastOnce()).addDefaultCredentials(fCredentials);
+        Git git = Mockito.mock(Git.class, Mockito.CALLS_REAL_METHODS);
+        GitClient gitClient = Mockito.spy(git.getClient());
+        // Spy on GitClient methods
+        try (MockedStatic<Git> gitMock = Mockito.mockStatic(Git.class, Mockito.CALLS_REAL_METHODS)) {
+            gitMock.when(() -> Git.with(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(git);
+            doReturn(gitClient).when(git).getClient();
+            SCMRevision rev = source.fetch("lightweight", listener, p);
+            assertThat(rev, notNullValue());
+            assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
+            Mockito.verify(gitClient, Mockito.times(0)).addDefaultCredentials(null);
+            Mockito.verify(gitClient, Mockito.atLeastOnce()).addDefaultCredentials(fCredentials);
+        }
     }
 
     @Issue("JENKINS-47824")
