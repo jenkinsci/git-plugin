@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.jgit.transport.URIish;
+import org.kohsuke.stapler.HttpResponses;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -664,5 +665,20 @@ public class GitStatusTest extends AbstractGitProject {
         }
 
         assertEquals("URL: a Branches: master", this.gitStatus.toString());
+    }
+
+    @Test
+    @Issue("SECURITY-2499")
+    public void testDoNotifyCommitWithWrongSha1Content() throws Exception {
+        setupProjectWithTrigger("a", "master", false);
+
+        String content = "<img src=onerror=alert(1)>";
+
+        HttpResponse rsp = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", content);
+
+        HttpResponses.HttpResponseException responseException = ((HttpResponses.HttpResponseException) rsp);
+        assertEquals(IllegalArgumentException.class, responseException.getCause().getClass());
+        assertEquals("Illegal SHA1", responseException.getCause().getMessage());
+
     }
 }
