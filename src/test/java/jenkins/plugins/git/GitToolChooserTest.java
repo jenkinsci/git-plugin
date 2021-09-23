@@ -263,7 +263,7 @@ public class GitToolChooserTest {
     public void testRemoteAlternatives() throws Exception {
         GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
 
-        GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://github.com/git/git.git", null, null, tool, null, TaskListener.NULL, true);
+        GitToolChooser nullRemoteSizeEstimator = new GitToolChooser("git://example.com/git/git.git", null, null, tool, null, TaskListener.NULL, true);
         assertThat(nullRemoteSizeEstimator.remoteAlternatives(null), is(empty()));
         assertThat(nullRemoteSizeEstimator.remoteAlternatives(""), is(empty()));
 
@@ -275,14 +275,14 @@ public class GitToolChooserTest {
          * a valid alias for every other alternative in the list.
          */
         String[] remoteAlternatives = {
-                "git://github.com/jenkinsci/git-plugin",
-                "git://github.com/jenkinsci/git-plugin.git",
-                "git@github.com:jenkinsci/git-plugin",
-                "git@github.com:jenkinsci/git-plugin.git",
-                "https://github.com/jenkinsci/git-plugin",
-                "https://github.com/jenkinsci/git-plugin.git",
-                "ssh://git@github.com/jenkinsci/git-plugin",
-                "ssh://git@github.com/jenkinsci/git-plugin.git",
+                "git://example.com/jenkinsci/git-plugin",
+                "git://example.com/jenkinsci/git-plugin.git",
+                "git@example.com:jenkinsci/git-plugin",
+                "git@example.com:jenkinsci/git-plugin.git",
+                "https://example.com/jenkinsci/git-plugin",
+                "https://example.com/jenkinsci/git-plugin.git",
+                "ssh://git@example.com/jenkinsci/git-plugin",
+                "ssh://git@example.com/jenkinsci/git-plugin.git",
         };
 
         for (String remote : remoteAlternatives) {
@@ -306,17 +306,17 @@ public class GitToolChooserTest {
         GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
 
         String[] remoteAlternatives = {
-                "git://github.com/jenkinsci/git-plugin",
-                "git://github.com/jenkinsci/git-plugin.git",
-                "git@github.com:jenkinsci/git-plugin",
-                "git@github.com:jenkinsci/git-plugin.git",
-                "https://github.com/jenkinsci/git-plugin",
-                "https://github.com/jenkinsci/git-plugin.git",
-                "ssh://git@github.com/jenkinsci/git-plugin",
-                "ssh://git@github.com/jenkinsci/git-plugin.git",
+                "git://example.com/jenkinsci/git-plugin",
+                "git://example.com/jenkinsci/git-plugin.git",
+                "git@example.com:jenkinsci/git-plugin",
+                "git@example.com:jenkinsci/git-plugin.git",
+                "https://example.com/jenkinsci/git-plugin",
+                "https://example.com/jenkinsci/git-plugin.git",
+                "ssh://git@example.com/jenkinsci/git-plugin",
+                "ssh://git@example.com/jenkinsci/git-plugin.git",
         };
 
-        String actualNormalizedURL = "https://github.com/jenkinsci/git-plugin.git";
+        String actualNormalizedURL = "https://example.com/jenkinsci/git-plugin.git";
 
         for (String remote : remoteAlternatives) {
             GitToolChooser sizeEstimator = new GitToolChooser(remote, null, null, tool, null, TaskListener.NULL, random.nextBoolean());
