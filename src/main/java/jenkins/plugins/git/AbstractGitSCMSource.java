@@ -345,7 +345,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                                                                  @NonNull C context,
                                                                                                  @NonNull TaskListener listener,
                                                                                                  boolean prune,
-                                                                                                 boolean delayFetch) 
+                                                                                                 boolean delayFetch)
             throws IOException, InterruptedException {
         return doRetrieve(retriever, context, listener, prune, getOwner(), delayFetch);
     }

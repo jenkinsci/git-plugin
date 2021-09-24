@@ -298,7 +298,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "lightweight");
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         TaskListener listener = StreamTaskListener.fromStderr();
-        
+
         // Create a Folder and add a folder credentials
         Folder f = r.jenkins.createProject(Folder.class, "test");
         Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
