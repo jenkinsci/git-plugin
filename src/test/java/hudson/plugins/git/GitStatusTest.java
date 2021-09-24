@@ -416,21 +416,21 @@ public class GitStatusTest extends AbstractGitProject {
     @Test
     public void testLooselyMatches() throws URISyntaxException {
         String[] equivalentRepoURLs = new String[]{
-            "https://github.com/jenkinsci/git-plugin",
-            "https://github.com/jenkinsci/git-plugin/",
-            "https://github.com/jenkinsci/git-plugin.git",
-            "https://github.com/jenkinsci/git-plugin.git/",
-            "https://someone@github.com/jenkinsci/git-plugin.git",
-            "https://someone:somepassword@github.com/jenkinsci/git-plugin/",
-            "git://github.com/jenkinsci/git-plugin",
-            "git://github.com/jenkinsci/git-plugin/",
-            "git://github.com/jenkinsci/git-plugin.git",
-            "git://github.com/jenkinsci/git-plugin.git/",
-            "ssh://git@github.com/jenkinsci/git-plugin",
-            "ssh://github.com/jenkinsci/git-plugin.git",
-            "git@github.com:jenkinsci/git-plugin/",
-            "git@github.com:jenkinsci/git-plugin.git",
-            "git@github.com:jenkinsci/git-plugin.git/"
+            "https://example.com/jenkinsci/git-plugin",
+            "https://example.com/jenkinsci/git-plugin/",
+            "https://example.com/jenkinsci/git-plugin.git",
+            "https://example.com/jenkinsci/git-plugin.git/",
+            "https://someone@example.com/jenkinsci/git-plugin.git",
+            "https://someone:somepassword@example.com/jenkinsci/git-plugin/",
+            "git://example.com/jenkinsci/git-plugin",
+            "git://example.com/jenkinsci/git-plugin/",
+            "git://example.com/jenkinsci/git-plugin.git",
+            "git://example.com/jenkinsci/git-plugin.git/",
+            "ssh://git@example.com/jenkinsci/git-plugin",
+            "ssh://example.com/jenkinsci/git-plugin.git",
+            "git@example.com:jenkinsci/git-plugin/",
+            "git@example.com:jenkinsci/git-plugin.git",
+            "git@example.com:jenkinsci/git-plugin.git/"
         };
         List<URIish> uris = new ArrayList<>();
         for (String testURL : equivalentRepoURLs) {
@@ -442,7 +442,7 @@ public class GitStatusTest extends AbstractGitProject {
          */
         URIish badURLTrailingSlashes = new URIish(equivalentRepoURLs[0] + "///");
         /* Different hostname should always fail match check */
-        URIish badURLHostname = new URIish(equivalentRepoURLs[0].replace("github.com", "bitbucket.org"));
+        URIish badURLHostname = new URIish(equivalentRepoURLs[0].replace("example.com", "bitbucket.org"));
 
         for (URIish lhs : uris) {
             assertFalse(lhs + " matches trailing slashes " + badURLTrailingSlashes, GitStatus.looselyMatches(lhs, badURLTrailingSlashes));

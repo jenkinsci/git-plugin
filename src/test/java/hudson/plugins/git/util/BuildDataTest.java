@@ -65,7 +65,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetIconFileName() {
-        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-32x32.png"));
+        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-icon.svg"));
     }
 
     @Test
@@ -299,7 +299,7 @@ public class BuildDataTest {
         assertEquals("Objects with same saved build not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Add remote URL makes objects unequal
-        final String remoteUrl2 = "git://github.com/jenkinsci/git-plugin.git";
+        final String remoteUrl2 = "git@github.com:jenkinsci/git-plugin.git";
         data1.addRemoteUrl(remoteUrl2);
         assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
         assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
@@ -506,7 +506,7 @@ public class BuildDataTest {
         assertTrue("Objects with same saved build not similar (2)", dataClone.similarTo(data2));
 
         // Add remote URL makes objects dissimilar
-        final String remoteUrl = "git://github.com/jenkinsci/git-client-plugin.git";
+        final String remoteUrl = "https://github.com/jenkinsci/git-client-plugin.git";
         dataClone.addRemoteUrl(remoteUrl);
         assertFalse("Distinct objects shouldn't be similar (1)", data.similarTo(dataClone));
         assertFalse("Distinct objects shouldn't be similar (2)", dataClone.similarTo(data));
