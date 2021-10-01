@@ -10,7 +10,6 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -90,10 +89,10 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     }
     
     private Set<String> stringifyBranches(Set<Branch> original) {
-        Set<String> result = new TreeSet<>(); 
-        
-        for (Iterator<Branch> iter = original.iterator(); iter.hasNext(); ) {
-            result.add(iter.next().getSHA1String());
+        Set<String> result = new TreeSet<>();
+
+        for (Branch branch : original) {
+            result.add(branch.getSHA1String());
         }
         
         return result;
