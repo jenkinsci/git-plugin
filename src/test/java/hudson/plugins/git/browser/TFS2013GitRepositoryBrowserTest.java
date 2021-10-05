@@ -16,6 +16,7 @@ import java.util.Collections;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +39,7 @@ public class TFS2013GitRepositoryBrowserTest {
 
         when(project.getScm()).thenReturn(scm);
         when(build.getProject()).thenReturn(project);
+        when(build.getParent()).thenReturn(project);
 
         sample.changeSet.setParent(ChangeLogSet.createEmpty((Run) build));
     }
