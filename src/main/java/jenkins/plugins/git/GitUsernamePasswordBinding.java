@@ -12,7 +12,6 @@ import hudson.model.TaskListener;
 import hudson.Extension;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.GitTool;
-import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -25,7 +24,6 @@ import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

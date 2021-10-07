@@ -249,7 +249,7 @@ public class DefaultBuildChooser extends BuildChooser {
         // this ensures the fairness in scheduling.
         final List<Revision> in = revs;
         return utils.git.withRepository((Repository repo, VirtualChannel channel) -> {
-            Collections.sort(in,new CommitTimeComparator(repo));
+            in.sort(new CommitTimeComparator(repo));
             return in;
         });
     }
