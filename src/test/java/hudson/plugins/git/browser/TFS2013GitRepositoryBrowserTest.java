@@ -16,7 +16,6 @@ import java.util.Collections;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,18 +23,18 @@ public class TFS2013GitRepositoryBrowserTest {
 
     private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
+    
     @BeforeClass
-    public static void testSetUp() {
-
+    public static void setUp() {
         GitSCM scm = new GitSCM(
-            Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
-            new ArrayList<>(),
-            null, JGitTool.MAGIC_EXENAME,
-            Collections.<GitSCMExtension>emptyList());
-
+                Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
+                new ArrayList<>(),
+                null, JGitTool.MAGIC_EXENAME,
+                Collections.<GitSCMExtension>emptyList());
+        
         AbstractProject project = mock(AbstractProject.class);
         AbstractBuild build = mock(AbstractBuild.class);
-
+        
         when(project.getScm()).thenReturn(scm);
         when(build.getProject()).thenReturn(project);
         when(build.getParent()).thenReturn(project);
