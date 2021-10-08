@@ -24,7 +24,6 @@ public class TFS2013GitRepositoryBrowserTest {
 
     private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
-    
     @BeforeClass
     public static void testSetUp() {
 
