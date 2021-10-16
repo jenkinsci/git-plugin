@@ -10,6 +10,7 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,8 +29,6 @@ import java.util.Date;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import static org.junit.Assert.*;
 import org.junit.Before;
 
@@ -101,7 +100,8 @@ public class AncestryBuildChooserTest extends AbstractGitRepository {
     private String getLastCommitSha1(Set<String> prevBranches) throws Exception {
         Set<String> newBranches = stringifyBranches(testGitClient.getBranches());
         
-        SetView<String> difference = Sets.difference(newBranches, prevBranches);
+        Set<String> difference = new HashSet<>(newBranches);
+        difference.removeAll(prevBranches);
         
         assertEquals(1, difference.size());
         
