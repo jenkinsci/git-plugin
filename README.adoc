@@ -1313,8 +1313,7 @@ If that reference repository is used in the submodule options link:#submodule-re
 [#bug-reports]
 == Bug Reports
 
-Report issues and enhancements in the
-https://issues.jenkins.io[Jenkins issue tracker].
+Report issues and enhancements in the link:https://www.jenkins.io/participate/report-issue/redirect/#15543[Jenkins issue tracker].
 
 [#contributing-to-the-plugin]
 == Contributing to the Plugin
