@@ -1426,7 +1426,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
             listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
-        } catch (InterruptedException | MissingObjectException e) {
+        } catch (MissingObjectException e) {
+            listener.getLogger().println("Commit '" + e.getObjectId() + "' not found - no commit message to print");
+        } catch (InterruptedException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
     }
