@@ -25,7 +25,6 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -89,7 +88,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     }
 
     @Override
-    public Set<String> variables(@Nonnull Run<?, ?> build) {
+    public Set<String> variables(@NonNull Run<?, ?> build) {
         Set<String> keys = new LinkedHashSet<>();
         keys.add(GIT_USERNAME_KEY);
         keys.add(GIT_PASSWORD_KEY);
