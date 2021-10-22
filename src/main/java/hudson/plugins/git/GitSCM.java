@@ -137,6 +137,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean doGenerateSubmoduleConfigurations = false;
 
     @CheckForNull
+    private String commitMessage;
+    @CheckForNull
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
@@ -144,6 +146,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
+    public static final String GIT_COMMIT_TITLE = "GIT_COMMIT_TITLE";
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
@@ -896,7 +899,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             if (chooser != null) {
                 listener.getLogger().println("The recommended git tool is: " + chooser.getGitTool());
                 String updatedGitExe = chooser.getGitTool();
-                
+
                 if (!updatedGitExe.equals("NONE")) {
                     gitExe = updatedGitExe;
                 }
@@ -1357,7 +1360,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // Needs to be after the checkout so that revToBuild is in the workspace
         try {
-            printCommitMessageToLog(listener, git, revToBuild);
+            commitMessage = getCommitMessage(listener, git, revToBuild);
+            listener.getLogger().println("Commit message: \"" + commitMessage + "\"");
+            if(commitMessage != null && !commitMessage.isEmpty()) {
+                environment.put(GIT_COMMIT_TITLE, commitMessage);
+            }
         } catch (IOException | ArithmeticException | GitException ge) {
             // JENKINS-45729 reports a git exception when revToBuild cannot be found in the workspace.
             // JENKINS-46628 reports a git exception when revToBuild cannot be found in the workspace.
@@ -1388,14 +1395,15 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private void printCommitMessageToLog(TaskListener listener, GitClient git, final Build revToBuild)
+    private String getCommitMessage(TaskListener listener, GitClient git, final Build revToBuild)
             throws IOException {
         try {
             RevCommit commit = git.withRepository(new RevCommitRepositoryCallback(revToBuild));
-            listener.getLogger().println("Commit message: \"" + commit.getShortMessage() + "\"");
+            return commit.getShortMessage();
         } catch (InterruptedException | MissingObjectException e) {
             e.printStackTrace(listener.error("Unable to retrieve commit message"));
         }
+        return "";
     }
 
     /**
@@ -1525,6 +1533,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String sha1 = Util.fixEmpty(rev.getSha1String());
             if (sha1 != null && !sha1.isEmpty()) {
                 env.put(GIT_COMMIT, sha1);
+            }
+
+            if (commitMessage != null && !commitMessage.isEmpty()) {
+                env.put(GIT_COMMIT_TITLE, commitMessage);
             }
         }
 
