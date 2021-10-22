@@ -326,15 +326,37 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                                                                                  @NonNull C context,
                                                                                                  @NonNull TaskListener listener,
                                                                                                  boolean prune)
-            throws IOException, InterruptedException {
-        return doRetrieve(retriever, context, listener, prune, false);
+        throws IOException, InterruptedException {
+        return doRetrieve(retriever, context, listener, prune, getOwner(), false);
     }
 
     @NonNull
     private <T, C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest> T doRetrieve(Retriever<T> retriever,
                                                                                                  @NonNull C context,
                                                                                                  @NonNull TaskListener listener,
-                                                                                                 boolean prune, boolean delayFetch)
+                                                                                                 boolean prune,
+                                                                                                 @CheckForNull Item retrieveContext)
+            throws IOException, InterruptedException {
+        return doRetrieve(retriever, context, listener, prune, retrieveContext, false);
+    }
+
+    @NonNull
+    private <T, C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest> T doRetrieve(Retriever<T> retriever,
+                                                                                                 @NonNull C context,
+                                                                                                 @NonNull TaskListener listener,
+                                                                                                 boolean prune,
+                                                                                                 boolean delayFetch)
+            throws IOException, InterruptedException {
+        return doRetrieve(retriever, context, listener, prune, getOwner(), delayFetch);
+    }
+
+    @NonNull
+    private <T, C extends GitSCMSourceContext<C, R>, R extends GitSCMSourceRequest> T doRetrieve(Retriever<T> retriever,
+                                                                                                 @NonNull C context,
+                                                                                                 @NonNull TaskListener listener,
+                                                                                                 boolean prune,
+                                                                                                 @CheckForNull Item retrieveContext,
+                                                                                                 boolean delayFetch)
             throws IOException, InterruptedException {
         String cacheEntry = getCacheEntry();
         Lock cacheLock = getCacheLock(cacheEntry);
@@ -347,7 +369,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 git.using(tool.getGitExe());
             }
             GitClient client = git.getClient();
-            client.addDefaultCredentials(getCredentials());
+            client.addDefaultCredentials(getCredentials(retrieveContext));
             if (!client.hasGitRepo(false)) {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
@@ -971,7 +993,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   }
                               },
                     context,
-                    listener, pruneRefs);
+                    listener, pruneRefs, retrieveContext);
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
@@ -1017,7 +1039,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                               }
                           },
                 context,
-                listener, pruneRefs);
+                listener, pruneRefs, retrieveContext);
     }
 
     /**
