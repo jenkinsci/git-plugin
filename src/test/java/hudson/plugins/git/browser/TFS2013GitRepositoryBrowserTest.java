@@ -23,7 +23,7 @@ public class TFS2013GitRepositoryBrowserTest {
 
     private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
-    
+
     @BeforeClass
     public static void setUp() {
         GitSCM scm = new GitSCM(
@@ -31,10 +31,10 @@ public class TFS2013GitRepositoryBrowserTest {
                 new ArrayList<>(),
                 null, JGitTool.MAGIC_EXENAME,
                 Collections.<GitSCMExtension>emptyList());
-        
+
         AbstractProject project = mock(AbstractProject.class);
         AbstractBuild build = mock(AbstractBuild.class);
-        
+
         when(project.getScm()).thenReturn(scm);
         when(build.getProject()).thenReturn(project);
         when(build.getParent()).thenReturn(project);
