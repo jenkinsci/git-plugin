@@ -96,6 +96,7 @@ public abstract class GitRepositoryBrowser extends RepositoryBrowser<GitChangeSe
     /**
      * Determines the link to the given change set ID (SHA).
      *
+     * @param commitId commit identifier, usually a SHA-1 hash
      * @return the URL to the change set or {@code null} if this repository browser doesn't have any meaningful URL for
      *         a change set
      */
