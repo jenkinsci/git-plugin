@@ -77,7 +77,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -102,12 +101,10 @@ import static hudson.scm.PollingResult.*;
 import hudson.Util;
 import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
-import hudson.util.ReflectionUtils;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -922,14 +919,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
-                        listener.getLogger().println(format("using credential %s", credentials.getId()));
+                        listener.getLogger().printf("using credential %s%n", credentials.getId());
                     }
                     if (project != null && project.getLastBuild() != null) {
                         CredentialsProvider.track(project.getLastBuild(), credentials);
                     }
                 } else {
                     if(!isHideCredentials()) {
-                        listener.getLogger().println(format("Warning: CredentialId \"%s\" could not be found.", ucCredentialsId));
+                        listener.getLogger().printf("Warning: CredentialId \"%s\" could not be found.%n", ucCredentialsId);
                     }
                 }
             }
@@ -1632,6 +1629,21 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         @NonNull
         @Override
         public Permission getRequiredGlobalConfigPagePermission() {
+            return Jenkins.MANAGE;
+        }
+
+        /**
+         * Package protected method that was added for temporary use
+         * with the Manage permission until the plugin required a
+         * Jenkins core version that has Manage permission available.
+         * Unfortunately, because it is package protected, it is part
+         * of the class signature and needs to be retained for
+         * compatibility.  Method was removed in git plugin 4.8.0 and
+         * the removal seems to have exposed a bug elsewhere that is
+         * reported as https://issues.jenkins.io/browse/JENKINS-66296 ,
+         * Restoring this method seems to resolve that issue.
+         */
+        Permission getJenkinsManageOrAdmin() {
             return Jenkins.MANAGE;
         }
 

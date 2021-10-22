@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(Parameterized.class)
 public class GitUsernamePasswordBindingTest {
-    @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolName {2}: GitToolInstance {3}")
+    @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolInstance {2}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 {"randomName", "special%%_342@**", new GitTool("git", "git", null)},
@@ -92,7 +92,6 @@ public class GitUsernamePasswordBindingTest {
 
     @Before
     public void basicSetup() throws IOException {
-        Jenkins.get();
         //File init
         rootDir = tempFolder.getRoot();
         rootFilePath = new FilePath(rootDir.getAbsoluteFile());
@@ -140,17 +139,21 @@ public class GitUsernamePasswordBindingTest {
         }
 
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
-        r.assertLogNotContains(this.username, b);
+        if(credentials.isUsernameSecret()) {
+            r.assertLogNotContains(this.username, b);
+        }
         r.assertLogNotContains(this.password, b);
 
         //Assert Keys
         assertThat(binding.variables(b), hasItem("GIT_USERNAME"));
         assertThat(binding.variables(b), hasItem("GIT_PASSWORD"));
-        //Assert setKeyBindings method
+        //Assert credential values
         String fileContents = b.getWorkspace().child("auth.txt").readToString().trim();
-        assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        if(credentials.isUsernameSecret()) {
+            assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
-        //Assert Git specific env variables
+        //Assert Git specific env variables based on its version
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
@@ -184,13 +187,17 @@ public class GitUsernamePasswordBindingTest {
         WorkflowRun b = project.scheduleBuild2(0).waitForStart();
         r.waitForCompletion(b);
         r.assertBuildStatusSuccess(b);
-        r.assertLogNotContains(this.username, b);
+        if(credentials.isUsernameSecret()) {
+            r.assertLogNotContains(this.username, b);
+        }
         r.assertLogNotContains(this.password, b);
-        //Assert setKeyBindings method
+        //Assert credential values
         String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
-        assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        if(credentials.isUsernameSecret()) {
+            assertThat(fileContents, containsString("GIT_USERNAME=" + this.username));
+        }
         assertThat(fileContents, containsString("GIT_PASSWORD=" + this.password));
-        // Assert Git version specific env variables
+        // Assert Git specific env variables based on its version
         if (isCliGitTool()) {
             if (isWindows()) {
                 assertThat(fileContents, containsString("GCM_INTERACTIVE=false"));
@@ -198,6 +205,11 @@ public class GitUsernamePasswordBindingTest {
                 assertThat(fileContents, containsString("GIT_TERMINAL_PROMPT=false"));
             }
         }
+    }
+
+    @Test
+    public void test_isCurrentNodeOSUnix(){
+        assertThat(gitCredBind.isCurrentNodeOSUnix(r.createLocalLauncher()), not(equalTo(isWindows())));
     }
 
     @Test

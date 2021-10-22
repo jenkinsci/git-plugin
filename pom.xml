@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.24</version>
+    <version>4.29</version>
     <relativePath />
   </parent>
 
@@ -25,12 +25,12 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.8.2</revision>
+    <revision>4.9.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
-    <jenkins.version>2.263.1</jenkins.version>
+    <jenkins.version>2.289.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
@@ -58,7 +58,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.3.0</version>
+            <version>4.4.2</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -99,7 +99,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.9.0</version>
+      <version>3.10.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -159,7 +159,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.7</version>
+      <version>3.7.2</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -222,12 +222,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.xmlunit</groupId>
-      <artifactId>xmlunit-matchers</artifactId>
-      <version>2.8.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-tag-message</artifactId>
       <version>1.7.1</version>
@@ -236,7 +230,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.2</version>
       <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -267,23 +261,16 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.263.x</artifactId>
-        <version>918.vae501d2cdc99</version>
+        <artifactId>bom-2.289.x</artifactId>
+        <version>961.vf0c9f6f59827</version>
         <scope>import</scope>
         <type>pom</type>
-      </dependency>
-      <dependency>
-        <!-- Resolve Java 11 upper bounds error, remove when no longer needed -->
-        <groupId>jakarta.activation</groupId>
-        <artifactId>jakarta.activation-api</artifactId>
-        <version>2.0.1</version>
-        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
 
   <scm>
-    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>

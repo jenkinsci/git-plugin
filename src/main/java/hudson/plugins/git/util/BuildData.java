@@ -102,7 +102,7 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     @Override
     public String getIconFileName() {
-        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-32x32.png";
+        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-icon.svg";
     }
 
     @Override
@@ -388,7 +388,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
-        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+        if (!Objects.equals(this.lastBuild, that.lastBuild)) {
             return false;
         }
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());

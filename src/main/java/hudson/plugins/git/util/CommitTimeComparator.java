@@ -58,8 +58,6 @@ public class CommitTimeComparator implements Comparator<Revision> {
     }
 
     private int compare(int lhs, int rhs) {
-        if (lhs<rhs)    return -1;
-        if (lhs>rhs)    return 1;
-        return 0;
+        return Integer.compare(lhs, rhs);
     }
 }

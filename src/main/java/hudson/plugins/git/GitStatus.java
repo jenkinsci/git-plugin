@@ -18,6 +18,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -28,6 +29,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.triggers.SCMTriggerItem;
 import org.apache.commons.lang.StringUtils;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.*;
@@ -115,7 +117,10 @@ public class GitStatus implements UnprotectedRootAction {
                                        @QueryParameter(required=false) String sha1) throws ServletException, IOException {
         lastURL = url;
         lastBranches = branches;
-        lastSHA1 = sha1;
+        if(StringUtils.isNotBlank(sha1)&&!SHA1_PATTERN.matcher(sha1.trim()).matches()){
+            return HttpResponses.error(SC_BAD_REQUEST, new IllegalArgumentException("Illegal SHA1"));
+        }
+        lastSHA1 = cleanupSha1(sha1);
         lastBuildParameters = null;
         GitStatus.clearLastStaticBuildParameters();
         URIish uri;
@@ -316,6 +321,7 @@ public class GitStatus implements UnprotectedRootAction {
          */
         @Override
         public List<ResponseContributor> onNotifyCommit(String origin, URIish uri, String sha1, List<ParameterValue> buildParameters, String... branches) {
+            sha1 = cleanupSha1(sha1);
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, "Received notification from {0} for uri = {1} ; sha1 = {2} ; branches = {3}",
                            new Object[]{StringUtils.defaultIfBlank(origin, "?"), uri, sha1, Arrays.toString(branches)});
@@ -594,13 +600,25 @@ public class GitStatus implements UnprotectedRootAction {
         public final String sha1;
 
         public CommitHookCause(String sha1) {
-            this.sha1 = sha1;
+            this.sha1 = cleanupSha1(sha1);
         }
 
         @Override
         public String getShortDescription() {
-            return "commit notification " + sha1;
+            return "commit notification " + cleanupSha1(sha1);
         }
+    }
+
+    public static final Pattern SHA1_PATTERN = Pattern.compile("[a-fA-F0-9]++"); // we should have {40} but some compact sha1
+
+    public static final Pattern CLEANER_SHA1_PATTERN = Pattern.compile("[^a-fA-F0-9]");
+
+    /**
+     * @param sha1 the String to cleanup
+     * @return the String with all non hexa characters removed
+     */
+    private static String cleanupSha1(String sha1){
+        return sha1 == null?null:CLEANER_SHA1_PATTERN.matcher(sha1.trim()).replaceAll("");
     }
 
     private static final Logger LOGGER = Logger.getLogger(GitStatus.class.getName());
