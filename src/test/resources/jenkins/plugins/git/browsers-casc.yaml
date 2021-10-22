@@ -71,6 +71,20 @@ unclassified:
                 doGenerateSubmoduleConfigurations: false
                 userRemoteConfigs:
                   - url: "https://git.acmecorp/myGitLib.git"
+      - name: "withBitbucketServer"
+        retriever:
+          legacySCM:
+            scm:
+              git:
+                branches:
+                  - name: "*/master"
+                browser:
+                  bitbucketServer:
+                    repoUrl: "http://url.bitbucketserver"
+                buildChooser: "default"
+                doGenerateSubmoduleConfigurations: false
+                userRemoteConfigs:
+                  - url: "https://git.acmecorp/myGitLib.git"
       - name: "withCGit"
         retriever:
           legacySCM:

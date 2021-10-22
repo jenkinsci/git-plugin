@@ -52,7 +52,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      * Get a list of revisions that are candidates to be built.
      *
      * <p>
-     * This method is invoked on the node where the workspace exists, which may not be the master.
+     * This method is invoked on the node where the workspace exists, which may not be the controller.
      *
      * @param isPollCall true if this method is called from pollChanges.
      * @param singleBranch contains the name of a single branch to be built
@@ -272,7 +272,7 @@ public abstract class BuildChooser implements ExtensionPoint, Describable<BuildC
      *
      * @param git client to execute git commands on working tree
      * @param listener build log
-     * @param context back-channel to master so implementation can interact with Jenkins model
+     * @param context back-channel to controller so implementation can interact with Jenkins model
      * @throws IOException on input or output error
      * @throws InterruptedException when interrupted
      */

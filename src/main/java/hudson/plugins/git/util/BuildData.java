@@ -93,16 +93,19 @@ public class BuildData implements Action, Serializable, Cloneable {
      *
      * @return build data display name
      */
+    @Override
     public String getDisplayName() {
         if (scmName != null && !scmName.isEmpty())
             return "Git Build Data:" + scmName;
         return "Git Build Data";
     }
 
+    @Override
     public String getIconFileName() {
-        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-32x32.png";
+        return jenkins.model.Jenkins.RESOURCE_PATH+"/plugin/git/icons/git-icon.svg";
     }
 
+    @Override
     public String getUrlName() {
         return index == null ? "git" : "git-"+index;
     }
@@ -164,22 +167,65 @@ public class BuildData implements Action, Serializable, Cloneable {
     }
 
     public Build getLastBuild(ObjectId sha1) {
+        if (sha1 == null) {
+            LOGGER.log(Level.FINEST, "sha1 is null in getLastBuild, returning null");
+            return null;
+        }
         // fast check by first checking most recent build
-        if (lastBuild != null && (lastBuild.revision.getSha1().equals(sha1) || lastBuild.marked.getSha1().equals(sha1))) return lastBuild;
+        if (lastBuild != null) {
+            if (lastBuild.revision != null) {
+                ObjectId lastBuildRevisionSha1 = lastBuild.revision.getSha1();
+                if (lastBuildRevisionSha1 != null) {
+                    if (lastBuildRevisionSha1.equals(sha1)) {
+                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
+                        return lastBuild;
+                    } else {
+                        LOGGER.log(Level.FINEST, "lastBuildRevisionSha1: {0} does not match sha1:{1}, checking lastBuild.marked",
+                                new Object[]{lastBuildRevisionSha1.getName(), sha1.getName()});
+                    }
+                } else {
+                    LOGGER.log(Level.FINEST, "lastBuild.revision.getSha1() is null, checking lastBuild.marked");
+                }
+            } else {
+                LOGGER.log(Level.FINEST, "lastBuild.revision is null, checking lastBuild.marked");
+            }
+            if (lastBuild.marked != null) {
+                ObjectId lastBuildMarkedSha1 = lastBuild.marked.getSha1();
+                if (lastBuildMarkedSha1 != null) {
+                    if (lastBuildMarkedSha1.equals(sha1)) {
+                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1 matches sha1:{0}, returning lastBuild", sha1.getName());
+                        return lastBuild;
+                    } else {
+                        LOGGER.log(Level.FINEST, "lastBuildMarkedSha1: {0} does not match sha1:{1}",
+                                new Object[]{lastBuildMarkedSha1.getName(), sha1.getName()});
+                    }
+                } else {
+                    LOGGER.log(Level.FINEST, "lastBuild.marked.getSha1() is null");
+                }
+            } else {
+                LOGGER.log(Level.FINEST, "lastBuild.marked is null");
+            }
+        } else {
+            LOGGER.log(Level.FINEST, "lastBuild is null");
+        }
+
         for (Build b : buildsByBranchName.values()) {
             if (b == null || b.revision == null || b.revision.getSha1() == null) {
                 continue;
             }
             if (b.revision.getSha1().equals(sha1)) {
+                LOGGER.log(Level.FINEST, "b.lastBuildRevisionSha1 matches sha1:" + sha1.getName() + ", returning b");
                 return b;
             }
             if (b.marked == null || b.marked.getSha1() == null) {
                 continue;
             }
             if (b.marked.getSha1().equals(sha1)) {
+                LOGGER.log(Level.FINEST, "b.lastBuildMarkedSha1 matches sha1:" + sha1.getName() + ", returning b");
                 return b;
             }
         }
+        LOGGER.log(Level.FINEST, "No match found in getLastBuild for sha1:" + sha1.getName() + ", returning null");
         return null;
     }
 
@@ -342,7 +388,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
-        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+        if (!Objects.equals(this.lastBuild, that.lastBuild)) {
             return false;
         }
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());

@@ -45,7 +45,7 @@ public class CommitTimeComparatorTest extends AbstractGitRepository {
         for (int i=0; i<16; i++) {
             // shuffle, then sort.
             Collections.shuffle(revs);
-            Collections.sort(revs, new CommitTimeComparator(testRepo));
+            revs.sort(new CommitTimeComparator(testRepo));
 
             // it should be always branch1, branch2, branch3
             for (int j=0; j<3; j++)

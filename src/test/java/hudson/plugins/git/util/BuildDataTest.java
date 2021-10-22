@@ -65,7 +65,7 @@ public class BuildDataTest {
 
     @Test
     public void testGetIconFileName() {
-        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-32x32.png"));
+        assertThat(data.getIconFileName(), endsWith("/plugin/git/icons/git-icon.svg"));
     }
 
     @Test
@@ -92,11 +92,88 @@ public class BuildDataTest {
     }
 
     @Test
+    public void testGetLastBuildSingleBranch() {
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(sha1, branches);
+        Build build = new Build(revision, 13, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(build));
+
+        ObjectId newSha1 = ObjectId.fromString("31a987bc9fc0b08d1ad297cac8584d5871a21581");
+        Revision newRevision = new Revision(newSha1, branches);
+        Revision marked = revision;
+        Build newBuild = new Build(marked, newRevision, 17, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(newSha1), is(newBuild));
+
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
+    }
+
+    @Test
+    public void testGetLastBuildMultipleBranches() {
+
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(sha1, branches);
+        Build build = new Build(revision, 13, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(build));
+
+        ObjectId newSha1 = ObjectId.fromString("31a987bc9fc0b08d1ad297cac8584d5871a21581");
+        Branch newBranch = new Branch("origin/stable-3.x", newSha1);
+        branches.add(newBranch);
+        Revision newRevision = new Revision(newSha1, branches);
+        Revision marked = revision;
+        Build newBuild = new Build(marked, newRevision, 17, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(newSha1), is(newBuild));
+
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
+    }
+
+    @Test
+    public void testGetLastBuildWithNullSha1() {
+        assertThat(data.getLastBuild(null), is(nullValue()));
+
+        String branchName = "origin/master";
+        Collection<Branch> branches = new ArrayList<>();
+        Branch branch = new Branch(branchName, sha1);
+        branches.add(branch);
+        Revision revision = new Revision(null, branches); // A revision with a null sha1 (unexpected)
+        Build build = new Build(revision, 29, Result.FAILURE);
+        data.saveBuild(build);
+        assertThat(data.getLastBuild(sha1), is(nullValue()));
+
+        ObjectId unbuiltSha1 = ObjectId.fromString("da99ce34121292bc887e91fc0a9d60cf8a701662");
+        assertThat(data.getLastBuild(unbuiltSha1), is(nullValue()));
+    }
+
+    @Test
     public void testSaveBuild() {
         Revision revision = new Revision(sha1);
         Build build = new Build(revision, 1, Result.SUCCESS);
         data.saveBuild(build);
         assertThat(data.getLastBuild(sha1), is(build));
+
+        Revision nullRevision = new Revision(null);
+        Build newBuild = new Build(revision, nullRevision, 2, Result.SUCCESS);
+        data.saveBuild(newBuild);
+        assertThat(data.getLastBuild(sha1), is(newBuild));
+
+        Build anotherBuild = new Build(nullRevision, revision, 3, Result.SUCCESS);
+        data.saveBuild(anotherBuild);
+        assertThat(data.getLastBuild(sha1), is(anotherBuild));
     }
 
     @Test
@@ -222,7 +299,7 @@ public class BuildDataTest {
         assertEquals("Objects with same saved build not equal hashCodes", data2.hashCode(), data1.hashCode());
 
         // Add remote URL makes objects unequal
-        final String remoteUrl2 = "git://github.com/jenkinsci/git-plugin.git";
+        final String remoteUrl2 = "git@github.com:jenkinsci/git-plugin.git";
         data1.addRemoteUrl(remoteUrl2);
         assertFalse("Distinct objects shouldn't be equal", data.equals(data1));
         assertFalse("Distinct objects shouldn't be equal", data1.equals(data));
@@ -429,7 +506,7 @@ public class BuildDataTest {
         assertTrue("Objects with same saved build not similar (2)", dataClone.similarTo(data2));
 
         // Add remote URL makes objects dissimilar
-        final String remoteUrl = "git://github.com/jenkinsci/git-client-plugin.git";
+        final String remoteUrl = "https://github.com/jenkinsci/git-client-plugin.git";
         dataClone.addRemoteUrl(remoteUrl);
         assertFalse("Distinct objects shouldn't be similar (1)", data.similarTo(dataClone));
         assertFalse("Distinct objects shouldn't be similar (2)", dataClone.similarTo(data));
@@ -486,6 +563,11 @@ public class BuildDataTest {
         assertTrue(dataClone.similarTo(data2));
         data2.setScmName("scm 2");
         assertTrue(dataClone.similarTo(data2));
+    }
+
+    @Test
+    public void testHashCode() {
+        // Tested in testEquals
     }
 
     @Test

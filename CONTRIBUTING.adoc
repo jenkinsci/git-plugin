@@ -61,7 +61,7 @@ Steps to test a pull request build are:
 == Reviewing Bug Reports
 
 Git plugin bug reports are assigned to one of the maintainers by default.
-link:https://issues.jenkins-ci.org/issues/?jql=project%20%3D%20JENKINS%20AND%20status%20in%20(Open)%20AND%20component%20%3D%20git-plugin%20and%20assignee%20in%20(rsandell%2Cmarkewaite%2Cfcojfernandez)[Open bug reports] assigned to a maintainer are assumed to have not been reviewed.
+link:https://issues.jenkins.io/issues/?jql=project%20%3D%20JENKINS%20AND%20status%20in%20(Open)%20AND%20component%20%3D%20git-plugin%20and%20assignee%20in%20(rsandell%2Cmarkewaite%2Cfcojfernandez)[Open bug reports] assigned to a maintainer are assumed to have not been reviewed.
 When a maintainer completes review of an issue, they include a comment on the bug report and set the 'Assignee' to 'Unassigned'.
 
 Others are welcome to review bug reports, comment on the results of the review, and set the 'Assignee' to 'Unassigned'.

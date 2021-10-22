@@ -110,16 +110,16 @@ git changelog: false,
 </pre>
     </p>
 
-    <strong><a id="git-step-with-git-and-polling">Example: Git step with git protocol and polling disabled</a></strong>
+    <strong><a id="git-step-with-git-and-polling">Example: Git step with https protocol and polling disabled</a></strong>
     <p>
-    Checkout from the Jenkins platform labeler repository using git protocol, no credentials, the master branch, and no polling for changes.
+    Checkout from the Jenkins platform labeler repository using https protocol, no credentials, the master branch, and no polling for changes.
     If poll is <code>false</code>, then the remote repository will not be polled for changes.
     If poll is <code>true</code> or is not set, then the remote repository will be polled for changes.
     See the <a href="https://github.com/jenkinsci/workflow-scm-step-plugin/blob/master/README.md#polling">workflow scm step documentation</a> for more polling details.
     </p><p>The <a href="https://www.jenkins.io/redirect/pipeline-snippet-generator">Pipeline Syntax Snippet Generator</a> generates this example:
 <pre>
 git poll: false,
-    url: 'git://github.com/jenkinsci/platformlabeler-plugin.git'
+    url: 'https://github.com/jenkinsci/platformlabeler-plugin.git'
 </pre>
     </p>
 

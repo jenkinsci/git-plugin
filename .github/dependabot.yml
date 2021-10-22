@@ -68,3 +68,7 @@ updates:
   - dependency-name: org.jenkins-ci.plugins:promoted-builds
     versions:
     - ">= 3.5.a, < 3.6"
+  - dependency-name: com.github.ben-manes.caffeine:caffeine
+    # caffeine 3.0.0 and later requires JDK 11
+    versions:
+    - ">= 3.0.0"

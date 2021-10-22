@@ -55,6 +55,7 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
@@ -193,7 +194,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
     public boolean changesSince(@CheckForNull SCMRevision revision, @NonNull OutputStream changeLogStream)
             throws UnsupportedOperationException, IOException, InterruptedException {
         AbstractGitSCMSource.SCMRevisionImpl rev = getRevision();
-        if (rev == null ? revision == null : rev.equals(revision)) {
+        if (Objects.equals(rev, revision)) {
             // special case where somebody is asking one of two stupid questions:
             // 1. what has changed between the latest and the latest
             // 2. what has changed between the current revision and the current revision
