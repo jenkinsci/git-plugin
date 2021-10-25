@@ -101,10 +101,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -3128,7 +3126,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject project = setupSimpleProject("*/*");
         GitSCM scm = (GitSCM) project.getScm();
 
-        Map<String, String> env = new HashMap<String, String>();
+        Map<String, String> env = new HashMap<>();
         scm.buildEnvironment(build, env);
 
         assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));
@@ -3174,7 +3172,7 @@ public class GitSCMTest extends AbstractGitTestCase {
                 Collections.<GitSCMExtension>emptyList());
         project.setScm(scm);
 
-        Map<String, String> env = new HashMap<String, String>();
+        Map<String, String> env = new HashMap<>();
         scm.buildEnvironment(build, env);
 
         assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));

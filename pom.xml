@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.27</version>
+    <version>4.29</version>
     <relativePath />
   </parent>
 
@@ -25,7 +25,7 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>4.8.3</revision>
+    <revision>4.9.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,7 +58,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.4.1</version>
+            <version>4.4.2</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -99,7 +99,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>3.9.0</version>
+      <version>3.10.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -157,9 +157,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.7.1</version>
+      <version>3.7.2</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -241,7 +246,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>4.4.1</version>
+      <version>4.4.2</version>
       <exclusions> <!-- prevent inclusion in hpi as a transient dependency -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -272,7 +277,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.289.x</artifactId>
+        <artifactId>bom-2.263.x</artifactId>
         <version>950.v396cb834de1e</version>
         <scope>import</scope>
         <type>pom</type>

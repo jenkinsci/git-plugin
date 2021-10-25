@@ -52,6 +52,12 @@ public class GithubWebTest {
     public void testGetChangeSetLinkGitChangeSet() throws Exception {
         final URL changeSetLink = githubWeb.getChangeSetLink(createChangeSet("rawchangelog"));
         assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", changeSetLink.toString());
+
+        final URL commitLink = githubWeb.getChangeSetLink("396fc230a3db05c427737aa5c2eb7856ba72b05d");
+        assertEquals(GITHUB_URL + "/commit/396fc230a3db05c427737aa5c2eb7856ba72b05d", commitLink.toString());
+
+        final URL noLink = githubWeb.getChangeSetLink((String)null);
+        assertNull(noLink);
     }
 
     @Test
@@ -128,7 +134,7 @@ public class GithubWebTest {
     private String repoUrl(String baseUrl, boolean add_git_suffix, boolean add_slash_suffix) {
         return baseUrl + (add_git_suffix ? ".git" : "") + (add_slash_suffix ? "/" : "");
     }
-        
+
     @Test
     public void testGuessBrowser() {
         assertGuessURL("https://github.com/kohsuke/msv.git", "https://github.com/kohsuke/msv/");

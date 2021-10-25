@@ -388,7 +388,7 @@ public class BuildData implements Action, Serializable, Cloneable {
         if ((this.remoteUrls == null) ^ (that.remoteUrls == null)) {
             return false;
         }
-        if (this.lastBuild == null ? that.lastBuild != null : !this.lastBuild.equals(that.lastBuild)) {
+        if (!Objects.equals(this.lastBuild, that.lastBuild)) {
             return false;
         }
         Set<String> thisUrls = new HashSet<>(this.remoteUrls.size());

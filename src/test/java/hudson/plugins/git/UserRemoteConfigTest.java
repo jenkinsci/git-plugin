@@ -3,7 +3,6 @@ package hudson.plugins.git;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.google.common.collect.Sets;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.User;
@@ -59,7 +58,7 @@ public class UserRemoteConfigTest {
             }
         });
         assertEquals("expected completions on " + project + " as " + user + " starting with " + currentCredentialsId,
-                Sets.newTreeSet(Arrays.asList(expectedCredentialsIds)), actual);
+                new TreeSet<>(Arrays.asList(expectedCredentialsIds)), actual);
     }
 
 }
