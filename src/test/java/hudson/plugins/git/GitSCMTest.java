@@ -2361,18 +2361,25 @@ public class GitSCMTest extends AbstractGitTestCase {
         p.setDefinition(new CpsFlowDefinition(
             "node {\n" +
             "    def tokenBranch = ''\n" +
+            "    def tokenRevision = ''\n" +
             "    def checkout1 = checkout([$class: 'GitSCM', branches: [[name: 'git-1.1']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
             "    echo \"checkout1: ${checkout1}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n" +
+            "    tokenBranch = tm '${GIT_BRANCH}'\n" +
+            "    tokenRevision = tm '${GIT_REVISION}'\n" +
             "    echo \"token1: ${tokenBranch}\"\n" +
+            "    echo \"revision1: ${tokenRevision}\"\n" +
             "    def checkout2 = checkout([$class: 'GitSCM', branches: [[name: 'git-2.0.2']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
             "    echo \"checkout2: ${checkout2}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n" +
+            "    tokenBranch = tm '${GIT_BRANCH,all=true}'\n" +
+            "    tokenRevision = tm '${GIT_REVISION,length=8}'\n" +
             "    echo \"token2: ${tokenBranch}\"\n" +
+            "    echo \"revision2: ${tokenRevision}\"\n" +
             "    def checkout3 = checkout([$class: 'GitSCM', branches: [[name: 'git-3.0.0']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])\n" +
             "    echo \"checkout3: ${checkout3}\"\n" +
-            "    tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n" +
+            "    tokenBranch = tm '${GIT_BRANCH,fullName=true}'\n" +
+            "    tokenRevision = tm '${GIT_REVISION,length=6}'\n" +
             "    echo \"token3: ${tokenBranch}\"\n" +
+            "    echo \"revision3: ${tokenRevision}\"\n" +
             "}", true));
         WorkflowRun b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
         
@@ -2384,6 +2391,9 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertThat(getLineStartsWith(log, "token1:"), containsString("token1: git-1.1"));
         assertThat(getLineStartsWith(log, "token2:"), containsString("token2: git-1.1")); // Unexpected but current behavior
         assertThat(getLineStartsWith(log, "token3:"), containsString("token3: git-1.1")); // Unexpected but current behavior
+        assertThat(getLineStartsWith(log, "revision1:"), containsString("revision1: 82db9509c068f60c41d7a4572c0114cc6d23cd0d"));
+        assertThat(getLineStartsWith(log, "revision2:"), containsString("revision2: 82db9509")); // Unexpected but current behavior - should be 377a0fdb
+        assertThat(getLineStartsWith(log, "revision3:"), containsString("revision3: 82db95"));   // Unexpected but current behavior - should be 858dee
     }
 
     private String getLineStartsWith(String text, String startOfLine) {
