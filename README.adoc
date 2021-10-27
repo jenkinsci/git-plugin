@@ -1193,6 +1193,9 @@ GIT_BRANCH:: Expands to the name of the branch that was built.
 The most common use of token macros is in Freestyle projects.
 Jenkins Pipeline supports a rich set of string operations so that token macros are not generally used in Pipelines.
 
+When used with Pipeline, the token macro base values are generally assigned by the first checkout performed in a Pipeline.
+Subsequeny checkout operations do not modify the values of the token macros in the Pipeline.
+
 [#properties]
 == Properties
 
