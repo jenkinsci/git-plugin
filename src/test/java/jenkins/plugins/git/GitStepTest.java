@@ -120,10 +120,12 @@ public class GitStepTest {
             "node('remote') {\n" +
             "    ws {\n" +
             "        git($/" + sampleRepo + "/$)\n" +
+            "        def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n" +
+            "        echo \"token macro expanded branch is ${tokenBranch}\"\n" +
             "    }\n" +
             "}", true));
         WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        r.waitForMessage("Cloning the remote Git repository", b);
+        r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
         sampleRepo.write("nextfile", "");
         sampleRepo.git("add", "nextfile");
         sampleRepo.git("commit", "--message=next");
@@ -131,6 +133,7 @@ public class GitStepTest {
         b = p.getLastBuild();
         assertEquals(2, b.number);
         r.waitForMessage("Fetching changes from the remote Git repository", b);
+        r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = b.getChangeSets();
         assertEquals(1, changeSets.size());
         ChangeLogSet<? extends ChangeLogSet.Entry> changeSet = changeSets.get(0);
