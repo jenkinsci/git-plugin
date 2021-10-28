@@ -741,12 +741,15 @@ public class GitToolChooserTest {
                         + "  checkout(\n"
                         + "    [$class: 'GitSCM', \n"
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
-                        + "  )"
+                        + "  )\n"
+                        + "  def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
+                        + "  echo \"token macro expanded branch is ${tokenBranch}\"\n"
                         + "}", true));
         WorkflowRun b = jenkins.assertBuildStatusSuccess(p.scheduleBuild2(0));
         if (!noCredentials) {
             jenkins.waitForMessage("using credential github", b);
         }
+        jenkins.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
     }
 
     /* Attempt to perform a checkout without defining a remote repository. Expected to fail, but should not report NPE */

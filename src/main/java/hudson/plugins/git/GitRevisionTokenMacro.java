@@ -24,7 +24,9 @@
 package hudson.plugins.git;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
@@ -51,7 +53,7 @@ public class GitRevisionTokenMacro extends DataBoundTokenMacro {
     }
 
     @Override
-    public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName) throws MacroEvaluationException, IOException, InterruptedException {
+    public String evaluate(Run<?,?> context, FilePath workspace, TaskListener listener, String macroName) throws MacroEvaluationException {
         BuildData data = context.getAction(BuildData.class);
         if (data == null) {
             return "";  // shall we report an error more explicitly?
@@ -62,5 +64,10 @@ public class GitRevisionTokenMacro extends DataBoundTokenMacro {
 
         String s = lb.getSha1String();
         return s.substring(0,Math.min(length,s.length()));
+    }
+
+    @Override
+    public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName) throws MacroEvaluationException, IOException, InterruptedException {
+        return evaluate(context, context.getWorkspace(), listener, macroName);
     }
 }

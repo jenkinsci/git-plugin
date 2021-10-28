@@ -81,16 +81,20 @@ public class PruneStaleTagPipelineTest {
 
         job.setDefinition(new CpsFlowDefinition(""
                 + "  node {\n"
-                + "    checkout([$class: 'GitSCM',"
-                + "             branches: [[name: '*/master']],"
-                + "             extensions: [pruneTags(true)],"
-                + "             userRemoteConfigs: [[url: '" + remoteURL + "']]"
-                + "    ])"
+                + "    checkout([$class: 'GitSCM',\n"
+                + "             branches: [[name: '*/master']],\n"
+                + "             extensions: [pruneTags(true)],\n"
+                + "             userRemoteConfigs: [[url: '" + remoteURL + "']]\n"
+                + "    ])\n"
+                + "    def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
+                + "    echo \"token macro expanded branch is ${tokenBranch}\"\n"
                 + "  }\n", true));
 
         // first run clone the repository
         WorkflowRun r = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatus(Result.SUCCESS, j.waitForCompletion(r));
+        // Check JENKINS-66651 - token macro expansion in Pipeline
+        j.waitForMessage("token macro expanded branch is remotes/origin/master", r); // Unexpected but current behavior
 
         // remove tag on remote, tag remains on local cloned repository
         remoteClient.deleteTag(tagName);
