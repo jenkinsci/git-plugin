@@ -1228,6 +1228,29 @@ GIT_AUTHOR_NAME:: Author name that will be used for **new commits in this worksp
 GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace***
 GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this workspace**
 
+[#token-macro-variables]
+=== Token Macro Variables
+
+Some Jenkins plugins (like link:https://plugins.jenkins.io/email-ext/[email extension], link:https://plugins.jenkins.io/build-name-setter/[build name setter], and link:https://plugins.jenkins.io/description-setter/[description setter]) allow parameterized references to reformat the text of supported variables.
+Variables that support parameterized references to reformat their text are called "token macros".
+The git plugin provides token macros for:
+
+GIT_REVISION:: Expands to the Git SHA1 commit ID that points to the commit that was built.
+  length:: integer length of the commit ID that should be displayed.
+  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expoand to `a806ba77`.
+
+GIT_BRANCH:: Expands to the name of the branch that was built.
+  all:: boolean that expands to all branch names that point to the current commit when enabled.
+  By default, the token expands to just one of the branch names
+  fullName:: boolean that expands to the full branch name, such as `remotes/origin/master` or `origin/master`.
+  Otherwise, it expands to the short name, such as `master`.
+
+The most common use of token macros is in Freestyle projects.
+Jenkins Pipeline supports a rich set of string operations so that token macros are not generally used in Pipelines.
+
+When used with Pipeline, the token macro base values are generally assigned by the first checkout performed in a Pipeline.
+Subsequent checkout operations do not modify the values of the token macros in the Pipeline.
+
 [#properties]
 == Properties
 

@@ -11,64 +11,11 @@ updates:
   labels:
   - dependencies
   ignore:
-  - dependency-name: io.jenkins:configuration-as-code
-    versions:
-    - ">= 1.37.a, < 1.38"
-  - dependency-name: io.jenkins:configuration-as-code
-    versions:
-    - ">= 1.38.a, < 1.39"
-  - dependency-name: io.jenkins:configuration-as-code
-    versions:
-    - ">= 1.39.a, < 1.40"
-  - dependency-name: io.jenkins:configuration-as-code
-    versions:
-    - ">= 1.40.a, < 1.41"
-  - dependency-name: io.jenkins:configuration-as-code
-    versions:
-    - ">= 1.41.a, < 1.42"
-  - dependency-name: io.jenkins.configuration-as-code:test-harness
-    versions:
-    - ">= 1.37.a, < 1.38"
-  - dependency-name: io.jenkins.configuration-as-code:test-harness
-    versions:
-    - ">= 1.38.a, < 1.39"
-  - dependency-name: io.jenkins.configuration-as-code:test-harness
-    versions:
-    - ">= 1.39.a, < 1.40"
-  - dependency-name: io.jenkins.configuration-as-code:test-harness
-    versions:
-    - ">= 1.40.a, < 1.41"
-  - dependency-name: io.jenkins.configuration-as-code:test-harness
-    versions:
-    - ">= 1.41.a, < 1.42"
-  - dependency-name: io.jenkins.tools.bom:bom-2.190.x
-    versions:
-    - ">= 9.0.a, < 9.1"
-  - dependency-name: org.jenkins-ci.plugins:git-client
-    versions:
-    - ">= 3.1.a, < 3.2"
-  - dependency-name: org.jenkins-ci.plugins:git-client
-    versions:
-    - ">= 3.2.a, < 3.3"
-  - dependency-name: org.jenkins-ci.plugins:parameterized-trigger
-    versions:
-    - ">= 2.34.a, < 2.35"
-  - dependency-name: org.jenkins-ci.plugins:parameterized-trigger
-    versions:
-    - ">= 2.35.a, < 2.36"
-  - dependency-name: org.jenkins-ci.plugins:parameterized-trigger
-    versions:
-    - ">= 2.36.a, < 2.37"
-  - dependency-name: org.jenkins-ci.plugins:promoted-builds
-    versions:
-    - ">= 3.3.a, < 3.4"
-  - dependency-name: org.jenkins-ci.plugins:promoted-builds
-    versions:
-    - ">= 3.4.a, < 3.5"
-  - dependency-name: org.jenkins-ci.plugins:promoted-builds
-    versions:
-    - ">= 3.5.a, < 3.6"
   - dependency-name: com.github.ben-manes.caffeine:caffeine
     # caffeine 3.0.0 and later requires JDK 11
     versions:
     - ">= 3.0.0"
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: daily
