@@ -19,7 +19,7 @@
   <artifactId>git</artifactId>
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
-  <name>Jenkins Git plugin</name>
+  <name>Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
   <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
   <inceptionYear>2007</inceptionYear>
