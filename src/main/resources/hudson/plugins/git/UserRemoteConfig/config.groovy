@@ -27,8 +27,9 @@ f.advanced {
 }
 
 f.entry {
-    div(align:"right") {
-        input (type:"button", value:_("Add Repository"), class:"repeatable-add show-if-last")
-        input (type:"button", value:_("Delete Repository"), class:"repeatable-delete show-if-not-only")
+    div() {
+        input (type:"button", value:_("Delete"), class:"jenkins-button repeatable-delete show-if-not-only")
+        // TODO switch to repeatableDeleteButton once https://github.com/jenkinsci/jenkins/pull/5897 is merged
+        //f.repeatableDeleteButton(hideIfOnly: 'true')
     }
 }
