@@ -236,13 +236,13 @@ public class GitSCMFileSystemTest {
         SCMFileSystem fs = SCMFileSystem.of(source, new SCMHead("dev"), revision);
         long currentTime = System.currentTimeMillis();
         long lastModified = fs.lastModified();
-        assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
-        assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
+        assertThat(lastModified / 1000L, greaterThanOrEqualTo((currentTime - fileSystemAllowedOffset) / 1000L));
+        assertThat(lastModified / 1000L, lessThanOrEqualTo((currentTime + fileSystemAllowedOffset) / 1000L));
         SCMFile file = fs.getRoot().child("file");
         currentTime = System.currentTimeMillis();
         lastModified = file.lastModified();
-        assertThat(lastModified, greaterThanOrEqualTo(currentTime - fileSystemAllowedOffset));
-        assertThat(lastModified, lessThanOrEqualTo(currentTime + fileSystemAllowedOffset));
+        assertThat(lastModified / 1000L, greaterThanOrEqualTo((currentTime - fileSystemAllowedOffset) / 1000L));
+        assertThat(lastModified / 1000L, lessThanOrEqualTo((currentTime + fileSystemAllowedOffset) / 1000L));
     }
 
     @Test
