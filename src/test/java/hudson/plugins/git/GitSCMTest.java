@@ -2265,6 +2265,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-22604")
     @Test
     public void testConfigRoundtripURLPreserved() throws Exception {
+        /* Long running test of low value on Windows */
+        /* Only run on non-Windows and approximately 50% of test runs */
+        /* On Windows, it requires 24 seconds before test finishes */
+        if (isWindows() || random.nextBoolean()) {
+            return;
+        }
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/jenkins";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -2283,6 +2289,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-33695")
     @Test
     public void testConfigRoundtripExtensionsPreserved() throws Exception {
+        /* Long running test of low value on Windows */
+        /* Only run on non-Windows and approximately 50% of test runs */
+        /* On Windows, it requires 26 seconds before test finishes */
+        if (isWindows() || random.nextBoolean()) {
+            return;
+        }
         FreeStyleProject p = createFreeStyleProject();
         final String url = "https://github.com/jenkinsci/git-plugin.git";
         GitRepositoryBrowser browser = new GithubWeb(url);
@@ -2319,6 +2331,12 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     @Test
     public void testConfigRoundtrip() throws Exception {
+        /* Long running test of low value on Windows */
+        /* Only run on non-Windows and approximately 50% of test runs */
+        /* On Windows, it requires 20 seconds before test finishes */
+        if (isWindows() || random.nextBoolean()) {
+            return;
+        }
         FreeStyleProject p = createFreeStyleProject();
         GitSCM scm = new GitSCM("https://github.com/jenkinsci/jenkins");
         p.setScm(scm);
@@ -2410,6 +2428,12 @@ public class GitSCMTest extends AbstractGitTestCase {
     
     @Test
     public void testPleaseDontContinueAnyway() throws Exception {
+        /* Wastes time waiting for the build to fail */
+        /* Only run on non-Windows and approximately 50% of test runs */
+        /* On Windows, it requires 150 seconds before test finishes */
+        if (isWindows() || random.nextBoolean()) {
+            return;
+        }
         // create an empty repository with some commits
         testRepo.commit("a","foo",johnDoe, "added");
 
