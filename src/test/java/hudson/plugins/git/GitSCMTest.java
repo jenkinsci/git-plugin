@@ -1636,6 +1636,10 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Issue("JENKINS-10060")
     @Test
     public void testSubmoduleFixup() throws Exception {
+        /* Unreliable on Windows and not a platform specific test */
+        if (isWindows()) {
+            return;
+        }
         File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
