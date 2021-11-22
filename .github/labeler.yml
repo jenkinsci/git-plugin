@@ -1,0 +1,17 @@
+skip-changelog:
+- .github/**/*
+- .gitignore
+- Jenkinsfile
+- .mvn/**/*
+- .sonarcloud.properties
+
+dependencies:
+- pom.xml
+
+documentation:
+- **/*.adoc
+- **/*.png
+- MIT-LICENSE
+
+test:
+- src/test/**/*
