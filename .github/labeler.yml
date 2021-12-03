@@ -9,9 +9,12 @@ dependencies:
 - pom.xml
 
 documentation:
-- *.adoc
-- **/*.png
+- CHANGELOG.adoc
+- CONTRIBUTING.adoc
+- images/*.png
 - MIT-LICENSE
+- Priorities.adoc
+- README.adoc
 
 test:
 - src/test/**/*
