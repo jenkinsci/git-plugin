@@ -1,20 +1,11 @@
 skip-changelog:
-- .github/**/*
-- .gitignore
-- Jenkinsfile
-- .mvn/**/*
-- .sonarcloud.properties
+  - any: [ '.github/**/*', '.gitignore', 'Jenkinsfile', '.mvn/**/*', '.sonarcloud.properties' ]
 
 dependencies:
-- pom.xml
+  - any: [ 'pom.xml' ]
 
 documentation:
-- CHANGELOG.adoc
-- CONTRIBUTING.adoc
-- images/*.png
-- MIT-LICENSE
-- Priorities.adoc
-- README.adoc
+  - any: [ '*.adoc' ]
 
 test:
-- src/test/**/*
+  - any: [ ' src/test/**/*' ]
