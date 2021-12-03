@@ -9,7 +9,7 @@ dependencies:
 - pom.xml
 
 documentation:
-- **/*.adoc
+- *.adoc
 - **/*.png
 - MIT-LICENSE
 
