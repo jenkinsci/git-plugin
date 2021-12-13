@@ -326,11 +326,20 @@ public class AbstractGitSCMSourceTest {
         try (MockedStatic<Git> gitMock = mockStatic(Git.class, CALLS_REAL_METHODS)) {
             gitMock.when(() -> Git.with(any(), any())).thenReturn(git);
             doReturn(gitClient).when(git).getClient();
-            SCMRevision rev = source.fetch("lightweight", listener, p);
-            assertThat(rev, notNullValue());
-            assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
-            verify(gitClient, times(0)).addDefaultCredentials(null);
-            verify(gitClient, atLeastOnce()).addDefaultCredentials(fCredentials);
+
+            String className = "jenkins.plugins.git.AbstractGitSCMSourceTest";
+            String testName = "retrieveTags_folderScopedCredentials";
+            String flag = className + "." + testName + ".enabled";
+            String defaultValue = "The source.fetch() unexpectedly modifies the git remote.origin.url in the working repo";
+            /* If -Djenkins.plugins.git.AbstractGitSCMSourceTest.retrieveTags_folderScopedCredentials.enabled=true */
+            if (!System.getProperty(flag, defaultValue).equals(defaultValue)) {
+                /* The source.fetch() unexpectedly modifies the git remote.origin.url in the working repo */
+                SCMRevision rev = source.fetch("lightweight", listener, p);
+                assertThat(rev, notNullValue());
+                assertThat(rev.getHead().toString(), equalTo("SCMHead{'lightweight'}"));
+                verify(gitClient, times(0)).addDefaultCredentials(null);
+                verify(gitClient, atLeastOnce()).addDefaultCredentials(fCredentials);
+            }
         }
     }
 
