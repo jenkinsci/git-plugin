@@ -50,4 +50,3 @@ public class BuildChooserSetting extends FakeGitSCMExtension {
         }
     }
 }
-

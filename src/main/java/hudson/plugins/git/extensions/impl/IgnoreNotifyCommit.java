@@ -56,4 +56,3 @@ public class IgnoreNotifyCommit extends FakeGitSCMExtension {
         }
     }
 }
-
