@@ -78,8 +78,7 @@ public class CloneOptionHonorRefSpecTest extends AbstractGitTestCase {
         ));
         project.getBuildersList().add(createEnvEchoBuilder(refSpecName));
 
-        final FreeStyleBuild b = project.scheduleBuild2(0).get();
-        rule.assertBuildStatus(Result.SUCCESS, b);
+        final FreeStyleBuild b = rule.buildAndAssertSuccess(project);
 
         List<String> logs = b.getLog(50);
         for (String line : logs) {

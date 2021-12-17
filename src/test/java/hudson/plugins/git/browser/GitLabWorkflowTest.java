@@ -29,7 +29,7 @@ public class GitLabWorkflowTest {
                 + "  def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
                 + "  echo \"token macro expanded branch is ${tokenBranch}\"\n"
                 + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
     }
 
@@ -47,7 +47,7 @@ public class GitLabWorkflowTest {
                         + "  def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
                         + "  echo \"token macro expanded branch is ${tokenBranch}\"\n"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
     }
 }

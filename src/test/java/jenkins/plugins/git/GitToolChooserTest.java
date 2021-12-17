@@ -745,7 +745,7 @@ public class GitToolChooserTest {
                         + "  def tokenBranch = tm '${GIT_BRANCH,fullName=false}'\n"
                         + "  echo \"token macro expanded branch is ${tokenBranch}\"\n"
                         + "}", true));
-        WorkflowRun b = jenkins.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = jenkins.buildAndAssertSuccess(p);
         if (!noCredentials) {
             jenkins.waitForMessage("using credential github", b);
         }
@@ -760,7 +760,7 @@ public class GitToolChooserTest {
                                               + "    [$class: 'GitSCM']\n"
                                               + "  )\n"
                                               + "}", true));
-        WorkflowRun b = jenkins.assertBuildStatus(hudson.model.Result.FAILURE, p.scheduleBuild2(0));
+        WorkflowRun b = jenkins.buildAndAssertStatus(hudson.model.Result.FAILURE, p);
         jenkins.waitForMessage("Couldn't find any revision to build", b);
     }
 
