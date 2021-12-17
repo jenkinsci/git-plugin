@@ -29,7 +29,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
-import org.apache.tools.ant.taskdefs.Parallel;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 
@@ -92,4 +91,3 @@ public class GitBranchTokenMacro extends DataBoundTokenMacro {
         return n.substring(n.indexOf('/')+1); // trim off '/'
     }
 }
-
