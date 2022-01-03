@@ -58,7 +58,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("using credential github", b);
     }
 
@@ -77,7 +77,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -96,7 +96,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -113,7 +113,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[credentialsId: 'github', url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Warning: CredentialId \"github\" could not be found", b);
     }
 
@@ -130,7 +130,7 @@ public class CredentialsUserRemoteConfigTest {
                         + "      userRemoteConfigs: [[url: $/" + sampleRepo + "/$]]]\n"
                         + "  )"
                         + "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("No credentials specified", b);
     }
 
