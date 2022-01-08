@@ -457,7 +457,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");
                 if (emailParts.length > 0) {
-                    user = User.get(emailParts[0], true, Collections.emptyMap());
+                    try {
+                        user = User.get(emailParts[0], true, Collections.emptyMap());
+                    } catch (org.springframework.security.core.AuthenticationException authException) {
+                        // JENKINS-67491 - do not fail due to an authentication exception
+                        return User.getUnknown();
+                    }
                 } else {
                     return User.getUnknown();
                 }
