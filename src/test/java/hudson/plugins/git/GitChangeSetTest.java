@@ -104,7 +104,7 @@ public class GitChangeSetTest {
         final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
         final boolean createAccountBasedOnEmail = false;
         final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
-        final String csAuthor = "babbage-do-not-create-either";
+        final String csAuthor = "babbage-will-be-created";
         final String csAuthorEmail = csAuthor + "@";
         User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
         assertThat(user.getFullName(), is(csAuthor));
