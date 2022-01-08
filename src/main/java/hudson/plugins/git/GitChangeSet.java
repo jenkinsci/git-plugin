@@ -432,7 +432,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                     if (user == null) {
                         user = User.get(csAuthorEmail, true, Collections.emptyMap());
                     }
-                    if (setUserDetails) {
+                    if (user != null && setUserDetails) {
                         user.setFullName(csAuthor);
                         if (hasMailerPlugin())
                             setMail(user, csAuthorEmail);
