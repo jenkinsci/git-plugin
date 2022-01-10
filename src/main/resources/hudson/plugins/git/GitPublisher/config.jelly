@@ -1,21 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
-  <d:taglib uri="local">
-    <d:tag name="blockWrapper">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <table style="width:100%">
-            <d:invokeBody/>
-          </table>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-  </d:taglib>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:entry field="pushOnlyIfSuccess">
       <f:checkbox title="${%Push Only If Build Succeeds}" />
@@ -33,7 +17,7 @@
              description="${%Tags to push to remote repositories}">
       <f:repeatable field="tagsToPush"
                     add="${%Add Tag}">
-        <local:blockWrapper>
+        <div>
           <br/>
           <f:entry field="tagName"
                    title="${%Tag to push}">
@@ -54,10 +38,8 @@
             <f:textbox
                 checkUrl="'descriptorByName/GitPublisher/checkRemote?value='+escape(this.value)"/>
           </f:entry>
-        </local:blockWrapper>
-        <div align="right">
-          <input type="button" value="${%Delete Tag}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
+        <f:repeatableDeleteButton value="${%Delete Tag}" />
       </f:repeatable>
     </f:entry>
     <f:entry field="branchesToPush"
@@ -65,7 +47,7 @@
              description="${%Branches to push to remote repositories}">
       <f:repeatable field="branchesToPush"
                     add="${%Add Branch}">
-        <local:blockWrapper>
+        <div>
           <br/>
           <f:entry field="branchName"
                    title="${%Branch to push}">
@@ -79,10 +61,8 @@
           <f:entry field="rebaseBeforePush">
             <f:checkbox title="${%Rebase before push}" />
           </f:entry>
-        </local:blockWrapper>
-        <div align="right">
-          <input type="button" value="${%Delete Branch}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
+        <f:repeatableDeleteButton value="${%Delete Branch}" />
       </f:repeatable>
     </f:entry>
     
@@ -90,7 +70,7 @@
     
       <f:repeatable field="notesToPush"  add="${%Add Note}">
       
-        <local:blockWrapper>
+        <div>
           <br/>
           <f:entry title="${%Note to push}"    field="noteMsg" >
             <f:textarea checkUrl="'descriptorByName/GitPublisher/checkNoteMsg?value='+escape(this.value)" />
@@ -108,11 +88,8 @@
             <f:checkbox title="${%Abort if note exists}" />
           </f:entry>
           
-        </local:blockWrapper>
-        <div align="right">
-          <input type="button" value="${%Delete Note}" class="repeatable-delete" style="margin-left: 1em;" />
         </div>
-         
+        <f:repeatableDeleteButton value="${%Delete Note}" />
       </f:repeatable>
     </f:entry>
     

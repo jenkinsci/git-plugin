@@ -120,4 +120,3 @@ public class UserIdentity extends GitSCMExtension {
         }
     }
 }
-
