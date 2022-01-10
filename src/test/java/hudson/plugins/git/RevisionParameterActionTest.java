@@ -75,4 +75,3 @@ public class RevisionParameterActionTest extends AbstractGitProject {
                         .getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
     }
 }
-

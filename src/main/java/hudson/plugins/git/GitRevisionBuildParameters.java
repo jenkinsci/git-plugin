@@ -89,4 +89,3 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		}
 	}
 }
-

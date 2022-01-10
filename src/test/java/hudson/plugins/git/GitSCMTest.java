@@ -1666,7 +1666,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         rule.jenkins.rebuildDependencyGraph();
 
 
-        FreeStyleBuild ub = rule.assertBuildStatusSuccess(u.scheduleBuild2(0));
+        FreeStyleBuild ub = rule.buildAndAssertSuccess(u);
         for  (int i=0; (d.getLastBuild()==null || d.getLastBuild().isBuilding()) && i<100; i++) // wait only up to 10 sec to avoid infinite loop
             Thread.sleep(100);
 
@@ -1678,7 +1678,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testBuildChooserContext() throws Exception {
         final FreeStyleProject p = createFreeStyleProject();
-        final FreeStyleBuild b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        final FreeStyleBuild b = rule.buildAndAssertSuccess(p);
 
         BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
         c.actOnBuild(new ContextCallable<Run<?,?>, Object>() {
@@ -2109,8 +2109,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         commit(commitFile1, "other content", johnDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        final FreeStyleBuild build2 = build(project, Result.FAILURE);
-        rule.assertBuildStatus(Result.FAILURE, build2);
+        rule.buildAndAssertStatus(Result.FAILURE, project);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
     
@@ -2179,8 +2178,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         testRepo.git.checkout("master", "topic2");
         commit(commitFile1, "other content", johnDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        final FreeStyleBuild build2 = build(project, Result.FAILURE);
-        rule.assertBuildStatus(Result.FAILURE, build2);
+        rule.buildAndAssertStatus(Result.FAILURE, project);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
@@ -2403,7 +2401,7 @@ public class GitSCMTest extends AbstractGitTestCase {
             "    echo \"token3: ${tokenBranch}\"\n" +
             "    echo \"revision3: ${tokenRevision}\"\n" +
             "}", true));
-        WorkflowRun b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = rule.buildAndAssertSuccess(p);
         
         String log = b.getLog();
         // The getLineStartsWith is to ease reading the test failure, to avoid Hamcrest shows all the log
@@ -2444,11 +2442,11 @@ public class GitSCMTest extends AbstractGitTestCase {
         FreeStyleProject p = createFreeStyleProject();
         p.setScm(new GitSCM(testRepo.gitDir.getAbsolutePath()));
 
-        rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        rule.buildAndAssertSuccess(p);
 
         // this should fail as it fails to fetch
         p.setScm(new GitSCM("http://localhost:4321/no/such/repository.git"));
-        rule.assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get());
+        rule.buildAndAssertStatus(Result.FAILURE, p);
     }
 
     @Issue("JENKINS-19108")
@@ -2460,7 +2458,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         oldGit.getExtensions().add(new LocalBranch("master"));
         p.setScm(oldGit);
 
-        FreeStyleBuild b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        FreeStyleBuild b = rule.buildAndAssertSuccess(p);
         GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
         gc.withRepository(new RepositoryCallback<Void>() {
             public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {

@@ -27,9 +27,7 @@ f.advanced {
 }
 
 f.entry {
-    div() {
-        input (type:"button", value:_("Delete"), class:"jenkins-button repeatable-delete show-if-not-only")
-        // TODO switch to repeatableDeleteButton once https://github.com/jenkinsci/jenkins/pull/5897 is merged
-        //f.repeatableDeleteButton(hideIfOnly: 'true')
+    div(class: "show-if-not-only") {
+        f.repeatableDeleteButton()
     }
 }

@@ -124,7 +124,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
+        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
 
         assertTrue(existsTag("foo"));
 
@@ -223,7 +223,7 @@ public class GitPublisherTest extends AbstractGitProject {
             private Object writeReplace() { return new NullSCM(); }
         });
 
-        MatrixBuild b = jenkins.assertBuildStatusSuccess(mp.scheduleBuild2(0).get());
+        MatrixBuild b = jenkins.buildAndAssertSuccess(mp);
 
         /* I don't understand why the log reports pushing tag to repo origin but the tag is not pushed */
         assertThat(b.getLog(50),
