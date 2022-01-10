@@ -39,9 +39,7 @@
                 checkUrl="'descriptorByName/GitPublisher/checkRemote?value='+escape(this.value)"/>
           </f:entry>
         </div>
-        <div align="right">
-          <input type="button" value="${%Delete Tag}" class="repeatable-delete" style="margin-left: 1em;" />
-        </div>
+        <f:repeatableDeleteButton value="${%Delete Tag}" />
       </f:repeatable>
     </f:entry>
     <f:entry field="branchesToPush"
@@ -64,9 +62,7 @@
             <f:checkbox title="${%Rebase before push}" />
           </f:entry>
         </div>
-        <div align="right">
-          <input type="button" value="${%Delete Branch}" class="repeatable-delete" style="margin-left: 1em;" />
-        </div>
+        <f:repeatableDeleteButton value="${%Delete Branch}" />
       </f:repeatable>
     </f:entry>
     
@@ -93,10 +89,7 @@
           </f:entry>
           
         </div>
-        <div align="right">
-          <input type="button" value="${%Delete Note}" class="repeatable-delete" style="margin-left: 1em;" />
-        </div>
-         
+        <f:repeatableDeleteButton value="${%Delete Note}" />
       </f:repeatable>
     </f:entry>
     
