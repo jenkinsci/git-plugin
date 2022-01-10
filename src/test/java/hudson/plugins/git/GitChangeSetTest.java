@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+import java.util.Random;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -19,6 +20,8 @@ public class GitChangeSetTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    private final Random random = new Random();
 
     @Test
     public void testFindOrCreateUser() {
@@ -39,6 +42,119 @@ public class GitChangeSetTest {
 
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, email, false, useExistingAccountBasedOnEmail));
         assertEquals(User.getUnknown(), committerCS.findOrCreateUser(null, email, true, useExistingAccountBasedOnEmail));
+    }
+
+    @Test
+    public void testFindOrCreateUserNullAuthorEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "ada";
+        final String csAuthorEmail = null;
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(User.getUnknown()));
+    }
+
+    @Test
+    public void testFindOrCreateUserEmptyAuthorEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "babbage";
+        final String csAuthorEmail = "";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(User.getUnknown()));
+    }
+
+    @Test
+    public void testFindOrCreateUserEmptyAuthorEmailDoNotCreateAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "babbage-do-not-create";
+        final String csAuthorEmail = "";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(User.getUnknown()));
+    }
+
+    @Test
+    public void testFindOrCreateUserEmptyAuthorDoNotCreateAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "";
+        final String csAuthorEmail = "babbage-empty-author@example.com";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(User.getUnknown()));
+    }
+
+    @Test
+    public void testFindOrCreateUserBadAuthorEmailDoNotCreateAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "babbage-do-not-create";
+        final String csAuthorEmail = "@";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(User.getUnknown()));
+    }
+
+    @Test
+    public void testFindOrCreateUserOKAuthorEmailDoNotCreateAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = random.nextBoolean();
+        final String csAuthor = "babbage-will-be-created";
+        final String csAuthorEmail = csAuthor + "@";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user.getFullName(), is(csAuthor));
+    }
+
+    @Test
+    public void testFindOrCreateUserBlankAuthorEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = false;
+        final String csAuthor = "candide";
+        final String csAuthorEmail = " ";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user.getFullName(), is(csAuthor));
+    }
+
+    @Test
+    public void testFindOrCreateUserBlankAuthorEmailUseExistingAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = true;
+        final String csAuthor = "cosimo";
+        final String csAuthorEmail = " ";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user.getFullName(), is(csAuthor));
+    }
+
+    @Test
+    public void testFindOrCreateUserValidAuthorEmailUseExistingAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = true;
+        final String csAuthor = "dante";
+        final String csAuthorEmail = "alighieri@example.com";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user.getFullName(), is(csAuthor));
+    }
+
+    @Test
+    public void testFindOrCreateUserUseExistingAuthorEmailUseExistingAccountBasedOnEmail() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        final boolean createAccountBasedOnEmail = true;
+        final boolean useExistingAccountBasedOnEmail = true;
+        final String csAuthor = "ecco";
+        final String csAuthorEmail = "umberto@example.com";
+        User user = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user.getFullName(), is(csAuthor));
+        /* Confirm that second search returns user created by first search */
+        User existing = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(existing, is(user));
     }
 
     @Test
