@@ -63,7 +63,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     public void init() throws Exception {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
-        git("init");
+        git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
