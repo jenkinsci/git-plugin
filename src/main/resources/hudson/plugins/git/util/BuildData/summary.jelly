@@ -4,7 +4,7 @@
 	xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 	<t:summary icon="/plugin/git/icons/git-logo.svg">
 
-	<strong>${%Revision}</strong>: ${it.lastBuiltRevision.sha1.name()}
+	<strong>${%Revision}</strong>: ${it.lastBuiltDisplayRevision.sha1.name()}
 	<j:if test="${!empty(it.scmName)}"><br/><strong>${%SCM}</strong>: ${it.scmName}</j:if>
 	<j:if test="${!empty(it.remoteUrls)}">
 		<j:forEach var="remoteUrl" items="${it.remoteUrls}">
@@ -17,7 +17,7 @@
 		</j:forEach>
 	</j:if>
         <ul>
-        <j:forEach var="branch" items="${it.lastBuiltRevision.branches}">
+        <j:forEach var="branch" items="${it.lastBuiltDisplayRevision.branches}">
           <j:if test="${branch!=''}">
             <li>${branch.name}</li>
           </j:if>

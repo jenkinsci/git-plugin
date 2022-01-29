@@ -372,4 +372,9 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
     public GitSCMExtensionDescriptor getDescriptor() {
         return (GitSCMExtensionDescriptor) super.getDescriptor();
     }
+
+    //What should be API of this method?
+    public Revision decorateRevisionToDisplay(Revision revToDisplay, Revision marked) {
+        return revToDisplay;
+    }
 }

@@ -1163,7 +1163,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         for (GitSCMExtension ext : extensions) {
             rev = ext.decorateRevisionToBuild(this,build,git,listener,marked,rev);
         }
-        Build revToBuild = new Build(marked, rev, build.getNumber(), null);
+
+        Revision revToDisplay = rev;
+        for (GitSCMExtension ext : extensions) {
+            revToDisplay = ext.decorateRevisionToDisplay(revToDisplay, marked);
+        }
+
+        Build revToBuild = new Build(marked, rev, build.getNumber(), null, revToDisplay);
         buildData.saveBuild(revToBuild);
 
         if (buildData.getBuildsByBranchName().size() >= 100) {

@@ -28,6 +28,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
     private final String mergeTarget;
     private String mergeStrategy;
     private MergeCommand.GitPluginFastForwardMode fastForwardMode;
+    private DisplayRevision displayRevision;
 
     /**
      * @deprecated use the new constructor that allows to set the fast forward mode.
@@ -40,6 +41,11 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF);
     }
 
+    public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
+                            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+        this(mergeRemote, mergeTarget, mergeStrategy, MergeCommand.GitPluginFastForwardMode.FF, DisplayRevision.MERGED);
+    }
+
     /**
      * @param mergeRemote remote name used for merge
      * @param mergeTarget remote branch to be merged into current branch
@@ -47,11 +53,12 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
      * @param fastForwardMode fast forward mode
      */
     public UserMergeOptions(String mergeRemote, String mergeTarget, String mergeStrategy,
-            MergeCommand.GitPluginFastForwardMode fastForwardMode) {
+            MergeCommand.GitPluginFastForwardMode fastForwardMode, DisplayRevision displayRevision) {
         this.mergeRemote = mergeRemote;
         this.mergeTarget = mergeTarget;
         this.mergeStrategy = mergeStrategy;
         this.fastForwardMode = fastForwardMode;
+        this.displayRevision = displayRevision;
     }
 
     @DataBoundConstructor
@@ -124,6 +131,18 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         this.fastForwardMode = fastForwardMode;
     }
 
+    public DisplayRevision getDisplayRevision() {
+        for (DisplayRevision revision : DisplayRevision.values())
+            if (revision.equals(displayRevision))
+                return revision;
+        return DisplayRevision.MERGED;
+    }
+
+    @DataBoundSetter
+    public void setDisplayRevision(DisplayRevision displayRevision) {
+        this.displayRevision = displayRevision;
+    }
+
     @Override
     public String toString() {
         return "UserMergeOptions{" +
@@ -131,6 +150,7 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
                 ", mergeTarget='" + mergeTarget + '\'' +
                 ", mergeStrategy='" + getMergeStrategy().name() + '\'' +
                 ", fastForwardMode='" + getFastForwardMode().name() + '\'' +
+                ", displayRevision='" + getDisplayRevision().name() + '\'' +
                 '}';
     }
 
@@ -148,12 +168,13 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         return Objects.equals(mergeRemote, that.mergeRemote)
                 && Objects.equals(mergeTarget, that.mergeTarget)
                 && Objects.equals(mergeStrategy, that.mergeStrategy)
-                && Objects.equals(fastForwardMode, that.fastForwardMode);
+                && Objects.equals(fastForwardMode, that.fastForwardMode)
+                && Objects.equals(displayRevision, that.displayRevision);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode);
+        return Objects.hash(mergeRemote, mergeTarget, mergeStrategy, fastForwardMode, displayRevision);
     }
 
     @Extension
@@ -175,5 +196,15 @@ public class UserMergeOptions extends AbstractDescribableImpl<UserMergeOptions> 
         }
 
     }
+    public static enum DisplayRevision {
+        MERGED,
+        SOURCE_BRANCH;
 
+        private DisplayRevision() {
+        }
+
+        public String toString() {
+            return this.name().toLowerCase(Locale.ENGLISH);
+        }
+    }
 }

@@ -129,6 +129,12 @@ public class PreBuildMerge extends GitSCMExtension {
     }
 
     @Override
+    //What should be API of this method?
+    public Revision decorateRevisionToDisplay(Revision revToDisplay, Revision marked) {
+        return options.getDisplayRevision() == UserMergeOptions.DisplayRevision.SOURCE_BRANCH ? marked : revToDisplay;
+    }
+
+    @Override
     public void decorateMergeCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, MergeCommand cmd) throws IOException, InterruptedException, GitException {
         if (options.getMergeStrategy() != null) {
             cmd.setStrategy(options.getMergeStrategy());

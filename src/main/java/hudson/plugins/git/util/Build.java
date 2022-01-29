@@ -48,6 +48,8 @@ public class Build implements Serializable, Cloneable {
      */
     public Revision revision;
 
+    public Revision displayRevision;
+
     public int      hudsonBuildNumber;
     public Result   hudsonBuildResult;
 
@@ -56,6 +58,15 @@ public class Build implements Serializable, Cloneable {
     public Build(Revision marked, Revision revision, int buildNumber, Result result) {
         this.marked = marked;
         this.revision = revision;
+        this.displayRevision = revision;
+        this.hudsonBuildNumber = buildNumber;
+        this.hudsonBuildResult = result;
+    }
+
+    public Build(Revision marked, Revision revision, int buildNumber, Result result, Revision displayRevision) {
+        this.marked = marked;
+        this.revision = revision;
+        this.displayRevision = displayRevision;
         this.hudsonBuildNumber = buildNumber;
         this.hudsonBuildResult = result;
     }
@@ -138,5 +149,10 @@ public class Build implements Serializable, Cloneable {
         if (marked==null) // this field was introduced later than 'revision'
             marked = revision;
         return this;
+    }
+
+    @Exported
+    public Revision getDisplayRevision() {
+        return displayRevision;
     }
 }
