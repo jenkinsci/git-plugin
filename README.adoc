@@ -96,6 +96,31 @@ withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
   powershell 'git push'
 }
 ```
+
+===== Docker BuildKit secret mount
+
+To securely forward credentials to `docker.build` the link:https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md#run---mounttypesecret[`--mount=type=secret`] approach should be used. This avoids storing the credentials into the image like `ARG` or `ENV` would. When the optinal parameter `hostName` is specified, this binding also provides `GIT_CREDENTIAL_STORE` environment variable which contains path to link:https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage[git credentials store].
+
+.Docker BuildKit example
+```groovy
+# Jenkins pipeline
+withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',
+                                     hostName: 'github.com')]) {
+  withEnv(['DOCKER_BUILDKIT=1']) {
+    docker.build '', "--secret id=git_store,src=${GIT_CREDENTIAL_STORE} ."
+  }
+}
+```
+```dockerfile
+# Dockerfile
+RUN --mount=type=secret,id=git_store \
+    git config --global credential.helper 'store --file /run/secrets/git_store' && \
+    git clone https://github.com/private/repo
+```
+The above configuration is best used with the link:https://github.com/jenkinsci/github-branch-source-plugin/blob/master/docs/github-app.adoc[GitHub App authentication] provided by link:https://plugins.jenkins.io/github-branch-source/[GitHub Branch Source plugin]. This issues scoped temporary token valid for one hour, which is then used in HTTPS Basic Auth.
+
+This removes the need for _service accounts_ configured with static SSH keys or Personal Access Tokens and the management burden associated with these.
+
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
 
