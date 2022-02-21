@@ -71,6 +71,9 @@
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.failOnError>true</spotbugs.failOnError>
     <spotbugs.threshold>Medium</spotbugs.threshold>
+    <!-- Temporary property until https://issues.apache.org/jira/browse/MCOMPILER-485 is fixed -->
+    <!-- Issue first visible in maven compiler plugin 3.10.0 -->
+    <maven.compiler.createMissingPackageInfoClass>false</maven.compiler.createMissingPackageInfoClass>
   </properties>
 
   <dependencyManagement>
