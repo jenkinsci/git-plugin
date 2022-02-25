@@ -1612,6 +1612,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         private String gitExe;
         private String globalConfigName;
         private String globalConfigEmail;
+        private String globalUrlRegEx;
         private boolean createAccountBasedOnEmail;
         private boolean useExistingAccountWithSameEmail;
 //        private GitClientType defaultClientType = GitClientType.GITCLI;
@@ -1711,6 +1712,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
          */
         public String getGlobalConfigName() {
             return Util.fixEmptyAndTrim(globalConfigName);
+        }
+
+        /**
+         * Global setting for Regular Expression
+         * @return url regex
+         */
+        public String getGlobalUrlRegEx(){ return globalUrlRegEx; }
+
+        public void setGlobalUrlRegEx(String globalUrlRegEx){
+            this.globalUrlRegEx = globalUrlRegEx;
         }
 
         /**

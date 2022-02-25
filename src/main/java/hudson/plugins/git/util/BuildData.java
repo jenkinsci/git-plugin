@@ -6,16 +6,14 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.Array;
+import java.util.*;
+
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -29,6 +27,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Captures the Git related information for a build.
  *
@@ -282,6 +283,36 @@ public class BuildData implements Action, Serializable, Cloneable {
 
     public boolean hasBeenReferenced(String remoteUrl) {
         return remoteUrls.contains(remoteUrl);
+    }
+
+    public String getRepoName(String remoteUrl){
+        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
+        System.out.println(globalRegex);
+        if(globalRegex == null || globalRegex.isEmpty())
+            return "Set up global gitRepo Regex";
+        if(globalRegex.contains("?<repo>")){
+            Pattern p = Pattern.compile(globalRegex);
+            Matcher matcher = p.matcher(remoteUrl);
+            matcher.find();
+            System.out.println(matcher.group("repo"));
+            return matcher.group("repo");
+        }
+        return "Invalid Regex Format";
+    }
+
+    public String getOrganizationName(String remoteUrl){
+
+        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
+        if(globalRegex == null || globalRegex.isEmpty())
+            return "Set up global gitRepo Regex";
+        if(globalRegex.contains("?<group>")){
+            Pattern p = Pattern.compile(globalRegex);
+            Matcher matcher = p.matcher(remoteUrl);
+            matcher.find();
+            return matcher.group("group");
+        }
+        return "Invalid Regex Format";
+//        return p.matcher(remoteUrl).group("group");
     }
 
     @Override
