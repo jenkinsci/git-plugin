@@ -1170,7 +1170,7 @@ GIT_URL:: Remote URL of the first git repository in this workspace
 GIT_URL_n:: Remote URL of the additional git repositories in this workspace (if any)
 GIT_AUTHOR_EMAIL:: Author e-mail address that will be used for **new commits in this workspace**
 GIT_AUTHOR_NAME:: Author name that will be used for **new commits in this workspace**
-GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace***
+GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace**
 GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this workspace**
 
 [#token-macro-variables]
