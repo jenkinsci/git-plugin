@@ -228,19 +228,6 @@ public class BuildDataTest {
     }
 
     @Test
-    public void testGetRepoName(){
-        String regex = "^(\\w+(:\\/\\/|@))(\\w+.*(com|org)(:|\\/))(?<group>.*)\\/(?<repo>.*)\\/$";
-        String repoName = data.getRepoName(remoteUrl);
-        assertEquals("git-plugin",repoName);
-    }
-
-    @Test
-    public void testGetOrganizationName(){
-       String organizationName = data.getOrganizationName(remoteUrl);
-       assertEquals("jenkinsci",organizationName);
-    }
-
-    @Test
     public void testHasBeenReferenced() {
         assertFalse(data.hasBeenReferenced(remoteUrl));
         data.addRemoteUrl(remoteUrl);

@@ -285,24 +285,21 @@ public class BuildData implements Action, Serializable, Cloneable {
         return remoteUrls.contains(remoteUrl);
     }
 
-    public String getRepoName(String remoteUrl){
-        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
-        System.out.println(globalRegex);
+    public String getRepoName(String remoteUrl,String globalRegex){
+//        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
         if(globalRegex == null || globalRegex.isEmpty())
             return "Set up global gitRepo Regex";
         if(globalRegex.contains("?<repo>")){
             Pattern p = Pattern.compile(globalRegex);
             Matcher matcher = p.matcher(remoteUrl);
             matcher.find();
-            System.out.println(matcher.group("repo"));
             return matcher.group("repo");
         }
         return "Invalid Regex Format";
     }
 
-    public String getOrganizationName(String remoteUrl){
+    public String getOrganizationName(String remoteUrl,String globalRegex){
 
-        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
         if(globalRegex == null || globalRegex.isEmpty())
             return "Set up global gitRepo Regex";
         if(globalRegex.contains("?<group>")){
