@@ -6,14 +6,8 @@ import hudson.model.Action;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.*;
-
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -22,13 +16,17 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import static hudson.Util.fixNull;
+import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static hudson.Util.fixNull;
 
 /**
  * Captures the Git related information for a build.
@@ -285,31 +283,48 @@ public class BuildData implements Action, Serializable, Cloneable {
         return remoteUrls.contains(remoteUrl);
     }
 
-    public String getRepoName(String remoteUrl,String globalRegex){
-//        String globalRegex = new GitSCM.DescriptorImpl().getGlobalUrlRegEx();
-        if(globalRegex == null || globalRegex.isEmpty())
-            return "Set up global gitRepo Regex";
-        if(globalRegex.contains("?<repo>")){
-            Pattern p = Pattern.compile(globalRegex);
-            Matcher matcher = p.matcher(remoteUrl);
-            matcher.find();
-            return matcher.group("repo");
+    public String getRepoName(String remoteUrl,String globalRegex) throws MalformedURLException {
+        String[] regexps = globalRegex.split("&&&");
+
+        if(globalRegex.isEmpty())
+            return "Set up global Regex";
+
+        for(String regex : regexps){
+            if(remoteUrl.matches(regex)) {
+                if(!regex.contains("repo")){
+                    return null;
+                }
+                Pattern p = Pattern.compile(regex);
+                Matcher m = p.matcher(remoteUrl);
+                m.find();
+                String repoName = m.group("repo");
+                return repoName;
+            }
+
         }
         return "Invalid Regex Format";
     }
 
     public String getOrganizationName(String remoteUrl,String globalRegex){
+        String[] regexps = globalRegex.split("&&&");
 
-        if(globalRegex == null || globalRegex.isEmpty())
-            return "Set up global gitRepo Regex";
-        if(globalRegex.contains("?<group>")){
-            Pattern p = Pattern.compile(globalRegex);
-            Matcher matcher = p.matcher(remoteUrl);
-            matcher.find();
-            return matcher.group("group");
+        if(globalRegex.isEmpty())
+            return "Set up global Regex";
+
+        for(String regex : regexps){
+            if(remoteUrl.matches(regex)) {
+                if(!regex.contains("org")){
+                    return null;
+                }
+                Pattern p = Pattern.compile(regex);
+                Matcher m = p.matcher(remoteUrl);
+                m.find();
+                String orgName = m.group("org");
+                return orgName;
+            }
+
         }
         return "Invalid Regex Format";
-//        return p.matcher(remoteUrl).group("group");
     }
 
     @Override
