@@ -62,6 +62,7 @@ import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1637,9 +1638,7 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testSubmoduleFixup() throws Exception {
         /* Unreliable on Windows and not a platform specific test */
-        if (isWindows()) {
-            return;
-        }
+        Assume.assumeFalse(isWindows());
         File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
@@ -1672,6 +1671,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         FreeStyleBuild db = d.getLastBuild();
         assertNotNull("downstream build didn't happen",db);
+
+        db = rule.waitForCompletion(db);
         rule.assertBuildStatusSuccess(db);
     }
 
