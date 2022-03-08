@@ -1637,9 +1637,6 @@ public class GitSCMTest extends AbstractGitTestCase {
     @Test
     public void testSubmoduleFixup() throws Exception {
         /* Unreliable on Windows and not a platform specific test */
-        if (isWindows()) {
-            return;
-        }
         File repo = secondRepo.getRoot();
         FilePath moduleWs = new FilePath(repo);
         org.jenkinsci.plugins.gitclient.GitClient moduleRepo = Git.with(listener, new EnvVars()).in(repo).getClient();
@@ -1672,6 +1669,8 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         FreeStyleBuild db = d.getLastBuild();
         assertNotNull("downstream build didn't happen",db);
+
+        db = rule.waitForCompletion(db);
         rule.assertBuildStatusSuccess(db);
     }
 
