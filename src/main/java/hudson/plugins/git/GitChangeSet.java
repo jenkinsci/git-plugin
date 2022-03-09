@@ -12,6 +12,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+import org.springframework.security.core.AuthenticationException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -414,7 +415,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthorEmail, false, Collections.emptyMap());
+            try {
+                user = User.get(csAuthorEmail, false, Collections.emptyMap());
+            } catch (AuthenticationException authException) {
+                // JENKINS-67491 - do not fail due to an authentication exception
+                return User.getUnknown();
+            }
 
             if (user == null) {
                 try {
@@ -438,6 +444,9 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                             setMail(user, csAuthorEmail);
                         user.save();
                     }
+                } catch (AuthenticationException authException) {
+                    // JENKINS-67491 - do not fail due to an authentication exception
+                    return User.getUnknown();
                 } catch (IOException e) {
                     // add logging statement?
                 }
@@ -447,7 +456,12 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 // Avoid exception from User.get("", false)
                 return User.getUnknown();
             }
-            user = User.get(csAuthor, false, Collections.emptyMap());
+            try {
+                user = User.get(csAuthor, false, Collections.emptyMap());
+            } catch (AuthenticationException authException) {
+                // JENKINS-67491 - do not fail due to an authentication exception
+                return User.getUnknown();
+            }
 
             if (user == null) {
                 if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
@@ -459,7 +473,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 if (emailParts.length > 0) {
                     try {
                         user = User.get(emailParts[0], true, Collections.emptyMap());
-                    } catch (org.springframework.security.core.AuthenticationException authException) {
+                    } catch (AuthenticationException authException) {
                         // JENKINS-67491 - do not fail due to an authentication exception
                         return User.getUnknown();
                     }
