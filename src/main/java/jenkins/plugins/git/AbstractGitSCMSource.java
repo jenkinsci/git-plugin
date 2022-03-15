@@ -374,6 +374,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                 listener.getLogger().println("Creating git repository in " + cacheDir);
                 client.init();
             }
+            GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
+
             String remoteName = context.remoteName();
             listener.getLogger().println("Setting " + remoteName + " to " + getRemote());
             client.setRemoteUrl(remoteName, getRemote());
