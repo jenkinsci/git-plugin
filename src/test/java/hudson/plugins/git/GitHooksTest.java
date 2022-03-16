@@ -2,19 +2,13 @@ package hudson.plugins.git;
 
 import hudson.FilePath;
 import hudson.model.Label;
-import hudson.plugins.filesystem_scm.FSSCM;
 import hudson.slaves.DumbSlave;
 import hudson.tools.ToolProperty;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitHooksConfiguration;
-import jenkins.plugins.git.GitSCMFileSystem;
-import jenkins.scm.api.SCMFile;
-import jenkins.scm.api.SCMFileSystem;
-import jenkins.scm.impl.mock.AbstractSampleRepoRule;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
-import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.After;
@@ -23,7 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.LoggerRule;
 
 import java.io.File;
@@ -32,7 +25,6 @@ import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
