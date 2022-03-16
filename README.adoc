@@ -294,7 +294,7 @@ Git Hooks::
 Most git repositories do not use hooks in the repository and do not need repository hooks.
 In those rare cases where repository hooks are needed, it is highly recommended that they are **disabled** on the Jenkins controller and on Jenkins agents.
 +
-Client-side hooks are **not** copied when the repository is cloned.
+Client-side hooks are **not** copied when the repository is cloned by Jenkins using the inbuilt SCM methods.
 However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
 +
 If hook scripts are allowed, a client-side hook script installed in a repository will execute when the matching git operation is performed.
