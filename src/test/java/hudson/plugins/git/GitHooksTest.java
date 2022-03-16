@@ -155,7 +155,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     private void createHookScriptAt(final File postCheckoutOutput, final FilePath hook) throws IOException, InterruptedException {
         final String nl = System.lineSeparator();
-        StringBuilder scriptContent = new StringBuilder("#!/bin/bash").append(nl);
+        StringBuilder scriptContent = new StringBuilder("#!/bin/bash -v").append(nl);
         scriptContent.append("date +%s > \"")
                 .append(postCheckoutOutput.getAbsolutePath().replace("\\", "\\\\")) //Git bash does the bash escaping so need to do more escaping
                 .append('"').append(nl);
