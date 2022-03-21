@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.37</version>
+    <version>4.38</version>
     <relativePath />
   </parent>
 
@@ -156,6 +156,15 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <!-- newer version required by equalsverifier -->
+          <!-- needed by equalsverifier, not directly used by git client -->
+          <!-- Remove exclusion as soon as equalsverifier and mockito-core agree on byte buddy version -->
+          <groupId>net.bytebuddy</groupId>
+          <artifactId>byte-buddy</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -165,7 +174,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.8.3</version>
+      <version>3.9.1</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
