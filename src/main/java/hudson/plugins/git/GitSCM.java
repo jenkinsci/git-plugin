@@ -944,7 +944,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     StandardUsernameCredentials.class,
                     build,
                     URIRequirementBuilder.fromUri(url).build());
-            return GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
+            return c != null && GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
         }
     }
 
