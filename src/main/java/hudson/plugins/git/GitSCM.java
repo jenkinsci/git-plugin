@@ -712,7 +712,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.get(), null);
+            GitClient git = createClient(listener, environment, project, project.getLastBuild(), Jenkins.get(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -788,7 +788,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, node, workingDirectory);
+        GitClient git = createClient(listener, environment, project, project.getLastBuild(), node, workingDirectory);
 
         if (git.hasGitRepo(false)) {
             // Repo is there - do a fetch
@@ -835,7 +835,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, null);
+        return createClient(listener,environment, build.getParent(), build, GitUtils.workspaceToNode(workspace), ws, null);
     }
 
     /**
@@ -858,17 +858,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
+        return createClient(listener,environment, build.getParent(), build, GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
 
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
-        return createClient(listener, environment, project, n, ws, null);
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Run<?, ?> build, Node n, FilePath ws) throws IOException, InterruptedException {
+        return createClient(listener, environment, project, build, n, ws, null);
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
+    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Run<?, ?> build, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
 
         if (postBuildUnsupportedCommand == null) {
             /* UnsupportedCommand supports JGit by default */
@@ -915,7 +915,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
-                StandardUsernameCredentials credentials = lookupScanCredentials(project, url, ucCredentialsId);
+                StandardUsernameCredentials credentials = lookupScanCredentials(project, build, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
@@ -937,10 +937,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     private static StandardUsernameCredentials lookupScanCredentials(@CheckForNull Item project,
+                                                              @CheckForNull Run<?, ?> build,
                                                               @CheckForNull String url,
                                                               @CheckForNull String ucCredentialsId) {
         if (Util.fixEmpty(ucCredentialsId) == null) {
             return null;
+        } else if (build != null) { // preferred mode as it can call Credentials.forRun
+            return CredentialsProvider.findCredentialById(
+                    ucCredentialsId,
+                    StandardUsernameCredentials.class,
+                    build,
+                    URIRequirementBuilder.fromUri(url).build());
         } else {
             return CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
