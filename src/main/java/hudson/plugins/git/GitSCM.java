@@ -42,7 +42,6 @@ import hudson.scm.PollingResult;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
@@ -713,7 +712,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             final EnvVars environment = project instanceof AbstractProject ? GitUtils.getPollEnvironment((AbstractProject) project, workspace, launcher, listener, false) : new EnvVars();
 
-            GitClient git = createClient(listener, environment, project, Jenkins.get(), null);
+            GitClient git = createClient(listener, environment, lastBuild, Jenkins.get(), null);
 
             for (RemoteConfig remoteConfig : getParamExpandedRepos(lastBuild, listener)) {
                 String remote = remoteConfig.getName();
@@ -789,7 +788,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return BUILD_NOW;
         }
 
-        GitClient git = createClient(listener, environment, project, node, workingDirectory);
+        GitClient git = createClient(listener, environment, lastBuild, node, workingDirectory);
 
         if (git.hasGitRepo(false)) {
             GitHooksConfiguration.configure(git);
@@ -831,13 +830,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, null);
+        return createClient(listener,environment, build, GitUtils.workspaceToNode(workspace), ws, null);
     }
 
     /**
@@ -854,23 +853,23 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * @throws InterruptedException when interrupted
      */
     @NonNull
-    public GitClient createClient(TaskListener listener, EnvVars environment, Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
+    public GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?,?> build, FilePath workspace, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
         FilePath ws = workingDirectory(build.getParent(), workspace, environment, listener);
         /* ws will be null if the node which ran the build is offline */
         if (ws != null) {
             ws.mkdirs(); // ensure it exists
         }
-        return createClient(listener,environment, build.getParent(), GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
+        return createClient(listener,environment, build, GitUtils.workspaceToNode(workspace), ws, postBuildUnsupportedCommand);
 
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws) throws IOException, InterruptedException {
-        return createClient(listener, environment, project, n, ws, null);
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws) throws IOException, InterruptedException {
+        return createClient(listener, environment, build, n, ws, null);
     }
 
     @NonNull
-    /*package*/ GitClient createClient(TaskListener listener, EnvVars environment, Job project, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
+    private GitClient createClient(TaskListener listener, EnvVars environment, @NonNull Run<?, ?> build, Node n, FilePath ws, UnsupportedCommand postBuildUnsupportedCommand) throws IOException, InterruptedException {
 
         if (postBuildUnsupportedCommand == null) {
             /* UnsupportedCommand supports JGit by default */
@@ -892,7 +891,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 String url = getParameterString(uc.getUrl(), environment);
                 /* If any of the extensions do not support JGit, it should not be suggested */
                 /* If the post build action does not support JGit, it should not be suggested */
-                chooser = new GitToolChooser(url, project, ucCredentialsId, gitTool, n, listener,
+                chooser = new GitToolChooser(url, build.getParent(), ucCredentialsId, gitTool, n, listener,
                                              unsupportedCommand.determineSupportForJGit() && postBuildUnsupportedCommand.determineSupportForJGit());
             }
             if (chooser != null) {
@@ -917,15 +916,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 listener.getLogger().println("No credentials specified");
             } else {
                 String url = getParameterString(uc.getUrl(), environment);
-                StandardUsernameCredentials credentials = lookupScanCredentials(project, url, ucCredentialsId);
+                StandardUsernameCredentials credentials = lookupScanCredentials(build, url, ucCredentialsId);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
                     if(!isHideCredentials()) {
                         listener.getLogger().printf("using credential %s%n", credentials.getId());
                     }
-                    if (project != null && project.getLastBuild() != null) {
-                        CredentialsProvider.track(project.getLastBuild(), credentials);
-                    }
+                    CredentialsProvider.track(build, credentials); // TODO unclear if findCredentialById was meant to do this in all cases
                 } else {
                     if(!isHideCredentials()) {
                         listener.getLogger().printf("Warning: CredentialId \"%s\" could not be found.%n", ucCredentialsId);
@@ -938,23 +935,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return c;
     }
 
-    private static StandardUsernameCredentials lookupScanCredentials(@CheckForNull Item project,
+    private static StandardUsernameCredentials lookupScanCredentials(@NonNull Run<?, ?> build,
                                                               @CheckForNull String url,
                                                               @CheckForNull String ucCredentialsId) {
         if (Util.fixEmpty(ucCredentialsId) == null) {
             return null;
         } else {
-            return CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
-                            StandardUsernameCredentials.class,
-                            project,
-                            project instanceof Queue.Task
-                                    ? ((Queue.Task) project).getDefaultAuthentication()
-                                    : ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(url).build()
-                    ),
-                    CredentialsMatchers.allOf(CredentialsMatchers.withId(ucCredentialsId), GitClient.CREDENTIALS_MATCHER)
-            );
+            StandardUsernameCredentials c = CredentialsProvider.findCredentialById(
+                    ucCredentialsId,
+                    StandardUsernameCredentials.class,
+                    build,
+                    URIRequirementBuilder.fromUri(url).build());
+            return c != null && GitClient.CREDENTIALS_MATCHER.matches(c) ? c : null;
         }
     }
 

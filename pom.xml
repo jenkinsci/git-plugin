@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.38</version>
+    <version>4.39</version>
     <relativePath />
   </parent>
 
@@ -58,7 +58,7 @@
   </scm>
 
   <properties>
-    <revision>4.10.4</revision>
+    <revision>4.11.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -174,7 +174,7 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.9.1</version>
+      <version>3.10</version>
       <scope>test</scope>
     </dependency>
     <!--Credential Binding Plugin-->
@@ -293,7 +293,7 @@
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.21.0</version>
+          <version>2.22.0</version>
           <configuration>
             <!-- define a language-specific format -->
             <java>
