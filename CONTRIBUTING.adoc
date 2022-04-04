@@ -35,6 +35,12 @@ Try to maintain reasonable consistency with the existing files where feasible.
 Please don't perform wholesale reformatting of a file without discussing with the current maintainers.
 New code should follow the https://github.com/jenkinsci/scm-api-plugin/blob/master/CONTRIBUTING.md#code-style-guidelines[SCM API code style guidelines].
 
+**Beware:** when building locally, some global gitconfig settings can make tests fail. 
+Currently they expect the default branch to be called `master`.
+If the default branch has been set to another value than master, it should be temporarily disabled.
+This is done by adding **#** before `defaultBranch = main` in the `init` section 
+of the `.gitconfig` file (located in your home directory).
+
 [[pull-request-review]]
 == Reviewing Pull Requests
 
