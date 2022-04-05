@@ -65,8 +65,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineFromScm() throws Exception {
-        //Tested and is working on Windows, but for unknown reason is not working on the Win agents on ci.jenkins.io
-        assumeFalse("Not Windows", Functions.isWindows());
+        assumeNotJenkinsCiWindows();
         GitHooksConfiguration.get().setAllowedOnController(true);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         final DumbSlave agent = rule.createOnlineSlave(Label.get("somewhere"));
@@ -178,7 +177,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineCheckoutController() throws Exception {
-        //assumeFalse("Not Windows", Functions.isWindows());
+        assumeNotJenkinsCiWindows();
 
         final WorkflowJob job = setupAndRunPipelineCheckout("master");
         WorkflowRun run;
@@ -195,7 +194,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineCheckoutAgent() throws Exception {
-        //assumeFalse("Not Windows", Functions.isWindows());
+        assumeNotJenkinsCiWindows();
 
         rule.createOnlineSlave(Label.get("belsebob"));
         final WorkflowJob job = setupAndRunPipelineCheckout("belsebob");
@@ -251,5 +250,16 @@ public class GitHooksTest extends AbstractGitTestCase {
      */
     private static String lines(String... lines) {
         return String.join("\n", lines);
+    }
+
+    /**
+     * Assume that it is not running on a ci.jenkins.io Windows agent.
+     *
+     * The tests are tested and confirmed working on Windows,
+     * but for unknown reason is not working on the Win agents on ci.jenkins.io.
+     */
+    private void assumeNotJenkinsCiWindows() {
+        final String jenkinsUrl = System.getenv("JENKINS_URL");
+        assumeFalse(Functions.isWindows() && jenkinsUrl.contains("ci.jenkins.io"));
     }
 }
