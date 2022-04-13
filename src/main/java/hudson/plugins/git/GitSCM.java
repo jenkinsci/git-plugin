@@ -397,12 +397,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (webUrls.size() == 1) {
             String url = webUrls.iterator().next();
-            ExtensionList<BrowserGuesser> browserExtensions = BrowserGuesser.all();
-            Iterator<BrowserGuesser> itr = browserExtensions.iterator();
-            while(itr.hasNext()){
-                BrowserGuesser ext = itr.next();
-                return ext.guessBrowser(url);
-            }
+            return BrowserGuesser.getBrowser(url);
         }
         LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
         return null;
