@@ -205,7 +205,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this.userRemoteConfigs = userRemoteConfigs;
         updateFromUserData();
 
-        this.browser = browser;
+        if(browser == null){
+            this.browser = (GitRepositoryBrowser) guessBrowser();
+        }
 
         this.configVersion = 2L;
         this.gitTool = gitTool;
@@ -392,18 +394,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
         if (webUrls.size() == 1) {
-            // Todo, need to itrerate through all the extensions and find BrowserGuesser Extension.
-//            String url = webUrls.iterator().next();
-//            if (url.startsWith("https://bitbucket.org/")) {
-//                return new BitbucketWeb(url);
-//            }
-//            if (url.startsWith("https://gitlab.com/")) {
-//                return new GitLab(url);
-//            }
-//            if (url.startsWith("https://github.com/")) {
-//                return new GithubWeb(url);
-//            }
-//            return null;
+            String url = webUrls.iterator().next();
+            ExtensionList<BrowserGuesser> browserExtensions = BrowserGuesser.all();
+            Iterator<BrowserGuesser> itr = browserExtensions.iterator();
+            while(itr.hasNext()){
+                BrowserGuesser ext = itr.next();
+                return ext.guessBrowser(url);
+            }
         }
         LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
         return null;
