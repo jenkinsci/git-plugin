@@ -207,6 +207,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         if(browser == null){
             this.browser = (GitRepositoryBrowser) guessBrowser();
+        }else{
+            this.browser = browser;
         }
 
         this.configVersion = 2L;
