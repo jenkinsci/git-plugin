@@ -1,20 +1,16 @@
-package hudson.plugins.git.extensions.impl;
+package hudson.plugins.git.browser;
 
-import hudson.plugins.git.browser.BitbucketWeb;
-import hudson.plugins.git.browser.GitLab;
-import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.plugins.git.browser.GithubWeb;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class BrowserGuesserTest {
+public class BrowserGuesserImplTest {
 
     BrowserGuesser guesser;
     @Before
     public void setUp(){
-        guesser = new BrowserGuesser();
+        guesser = new BrowserGuesserImpl();
     }
 
     @Test

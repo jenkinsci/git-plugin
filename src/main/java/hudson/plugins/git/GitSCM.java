@@ -12,15 +12,11 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.init.Initializer;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.browser.*;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -94,11 +90,8 @@ import java.util.logging.Logger;
 import static com.google.common.collect.Lists.newArrayList;
 import static hudson.init.InitMilestone.JOB_LOADED;
 import static hudson.init.InitMilestone.PLUGINS_STARTED;
-import hudson.plugins.git.browser.BitbucketWeb;
-import hudson.plugins.git.browser.GitLab;
-import hudson.plugins.git.browser.GithubWeb;
 import static hudson.scm.PollingResult.*;
-import hudson.Util;
+
 import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
 import java.util.Map.Entry;
@@ -399,17 +392,18 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             return null;
         }
         if (webUrls.size() == 1) {
-            String url = webUrls.iterator().next();
-            if (url.startsWith("https://bitbucket.org/")) {
-                return new BitbucketWeb(url);
-            }
-            if (url.startsWith("https://gitlab.com/")) {
-                return new GitLab(url);
-            }
-            if (url.startsWith("https://github.com/")) {
-                return new GithubWeb(url);
-            }
-            return null;
+            // Todo, need to itrerate through all the extensions and find BrowserGuesser Extension.
+//            String url = webUrls.iterator().next();
+//            if (url.startsWith("https://bitbucket.org/")) {
+//                return new BitbucketWeb(url);
+//            }
+//            if (url.startsWith("https://gitlab.com/")) {
+//                return new GitLab(url);
+//            }
+//            if (url.startsWith("https://github.com/")) {
+//                return new GithubWeb(url);
+//            }
+//            return null;
         }
         LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
         return null;
