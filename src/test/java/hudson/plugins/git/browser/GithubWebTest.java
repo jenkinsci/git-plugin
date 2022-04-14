@@ -27,13 +27,19 @@ import jenkins.scm.api.SCMHead;
 import org.eclipse.jgit.transport.RefSpec;
 
 import static org.junit.Assert.*;
+
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * @author mirko
  */
 public class GithubWebTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private static final String GITHUB_URL = "http://github.com/USER/REPO";
     private final GithubWeb githubWeb = new GithubWeb(GITHUB_URL);

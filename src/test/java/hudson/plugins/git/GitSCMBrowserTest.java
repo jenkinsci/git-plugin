@@ -33,12 +33,18 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
+
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.JenkinsRule;
 
 @RunWith(Parameterized.class)
 public class GitSCMBrowserTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private final String gitURI;
     private final Class<? extends GitRepositoryBrowser> expectedClass;

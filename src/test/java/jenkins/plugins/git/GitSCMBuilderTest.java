@@ -12,7 +12,9 @@ import hudson.plugins.git.util.InverseBuildChooser;
 import java.util.Collections;
 import jenkins.scm.api.SCMHead;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -25,6 +27,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class GitSCMBuilderTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private GitSCMBuilder<?> instance = new GitSCMBuilder<>(
             new SCMHead("master"),
