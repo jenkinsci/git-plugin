@@ -1270,8 +1270,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @Override
     public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
-
-        listener.getLogger().println(browserGuessLog);
+        if(!browserGuessLog.isEmpty())
+            listener.getLogger().println(browserGuessLog);
         if (VERBOSE)
             listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
