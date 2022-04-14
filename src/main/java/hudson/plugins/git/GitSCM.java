@@ -133,6 +133,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
+    private String browserGuessLog;
     private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
@@ -345,6 +346,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public void setBrowser(GitRepositoryBrowser browser) {
+        this.browserGuessLog = "";
         this.browser = browser;
     }
 
@@ -397,7 +399,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (webUrls.size() == 1) {
             String url = webUrls.iterator().next();
-            return BrowserGuesser.getBrowser(url);
+            GitRepositoryBrowser browser = BrowserGuesser.getBrowser(url);
+            if(browser != null){
+                this.browserGuessLog = browser.getClass().getSimpleName() + " is autoConfigured as Repository Browser for url " + url;
+            }
+            return browser;
         }
         LOGGER.log(Level.INFO, "Multiple browser guess matches for {0}", remoteRepositories);
         return null;
@@ -1265,6 +1271,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
 
+        listener.getLogger().println(browserGuessLog);
         if (VERBOSE)
             listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
