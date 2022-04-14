@@ -16,9 +16,11 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.UnsupportedCommand;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.*;
@@ -27,6 +29,8 @@ import static org.junit.Assert.assertThrows;
 
 public class SubmoduleOptionTest {
 
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
     private SubmoduleOption submoduleOption;
 
     private static final boolean DISABLE_SUBMODULES_FALSE = false;

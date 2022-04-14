@@ -7,7 +7,9 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -21,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 public class TFS2013GitRepositoryBrowserTest {
 
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
     private static final String repoUrl = "http://tfs/tfs/project/_git/repo";
     private static final GitChangeSetSample sample = new GitChangeSetSample(false);
 

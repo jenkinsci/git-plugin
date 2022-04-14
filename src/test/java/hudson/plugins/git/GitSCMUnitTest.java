@@ -40,13 +40,19 @@ import java.util.List;
 import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
 public class GitSCMUnitTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
     private final String gitDir = ".";
     private final GitSCM gitSCM = new GitSCM(gitDir);
