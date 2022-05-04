@@ -28,6 +28,7 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,6 +48,16 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
     private static boolean initialized = false;
 
     private static final Logger LOGGER = Logger.getLogger(GitSampleRepoRule.class.getName());
+
+    protected void before() throws Throwable {
+        super.before();
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
+
+    protected void after() {
+        super.after();
+        GitSCM.ALLOW_LOCAL_CHECKOUT = false;
+    }
 
     public void git(String... cmds) throws Exception {
         run("git", cmds);

@@ -53,6 +53,7 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import jenkins.plugins.git.GitToolChooser;
+import jenkins.util.SystemProperties;
 import net.sf.json.JSONObject;
 
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -77,6 +78,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -86,6 +89,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -119,6 +123,11 @@ import static org.apache.commons.lang.StringUtils.isBlank;
  * ... and many others
  */
 public class GitSCM extends GitSCMBackwardCompatibility {
+
+    static final String ALLOW_LOCAL_CHECKOUT_PROPERTY = GitSCM.class.getName() + ".ALLOW_LOCAL_CHECKOUT";
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL")
+    public static /* not final */ boolean ALLOW_LOCAL_CHECKOUT =
+            SystemProperties.getBoolean(ALLOW_LOCAL_CHECKOUT_PROPERTY);
 
     /**
      * Store a config version so we're able to migrate config on various
@@ -1277,6 +1286,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public void checkout(Run<?, ?> build, Launcher launcher, FilePath workspace, TaskListener listener, File changelogFile, SCMRevisionState baseline)
             throws IOException, InterruptedException {
 
+        if (!ALLOW_LOCAL_CHECKOUT && !workspace.isRemote()) {
+            abortIfSourceIsLocal();
+        }
+
         if (VERBOSE)
             listener.getLogger().println("Using checkout strategy: " + getBuildChooser().getDisplayName());
 
@@ -1385,6 +1398,17 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (GitSCMExtension ext : extensions) {
             ext.onCheckoutCompleted(this, build, git,listener);
+        }
+    }
+
+    private void abortIfSourceIsLocal() throws AbortException {
+        for (UserRemoteConfig userRemoteConfig: getUserRemoteConfigs()) {
+            String remoteUrl = userRemoteConfig.getUrl();
+            if (remoteUrl != null && (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://") || Files.exists(Paths.get(remoteUrl)))) {
+                throw new AbortException("Checkout of Git remote '" + remoteUrl + "' aborted because it references a local directory, " +
+                        "which may be insecure. You can allow local checkouts anyway by setting the system property '" +
+                        ALLOW_LOCAL_CHECKOUT_PROPERTY + "' to true.");
+            }
         }
     }
 
