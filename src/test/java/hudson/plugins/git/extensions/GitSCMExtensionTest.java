@@ -5,6 +5,7 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.TestGitRepo;
 import hudson.util.StreamTaskListener;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -36,6 +37,16 @@ public abstract class GitSCMExtensionTest {
 	public void setUp() throws Exception {
 		listener = StreamTaskListener.fromStderr();
 		before();
+	}
+
+	@Before
+	public void allowNonRemoteCheckout() {
+		GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+	}
+
+	@After
+	public void disallowNonRemoteCheckout() {
+		GitSCM.ALLOW_LOCAL_CHECKOUT = false;
 	}
 
 	protected abstract void before() throws Exception;

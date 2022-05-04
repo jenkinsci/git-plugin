@@ -3,10 +3,12 @@ package org.jenkinsci.plugins.gittagmessage;
 import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.Run;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
 import jenkins.model.ParameterizedJobMixIn;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +48,16 @@ public abstract class AbstractGitTagMessageExtensionTest<J extends Job<J, R> & P
         // Set up a temporary git repository for each test case
         repo = Git.with(jenkins.createTaskListener(), null).in(repoDir.getRoot()).getClient();
         repo.init();
+    }
+
+    @Before
+    public void allowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
+
+    @After
+    public void disallowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
     @Test
