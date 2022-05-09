@@ -243,7 +243,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>4.6.0</version>
+      <version>4.7.0</version>
       <optional>true</optional>
       <exclusions>
         <!-- prevent inclusion in hpi as a transient dependency -->
