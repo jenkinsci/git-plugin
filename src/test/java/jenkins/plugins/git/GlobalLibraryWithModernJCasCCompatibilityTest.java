@@ -7,7 +7,6 @@ import hudson.plugins.git.extensions.impl.SubmoduleOption;
 import hudson.plugins.git.extensions.impl.UserIdentity;
 import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
 import jenkins.plugins.git.traits.AuthorInChangelogTrait;
-import jenkins.plugins.git.traits.BranchDiscoveryTrait;
 import jenkins.plugins.git.traits.CheckoutOptionTrait;
 import jenkins.plugins.git.traits.CleanAfterCheckoutTrait;
 import jenkins.plugins.git.traits.CleanBeforeCheckoutTrait;
@@ -21,12 +20,13 @@ import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
 import jenkins.plugins.git.traits.SubmoduleOptionTrait;
-import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.plugins.git.traits.UserIdentityTrait;
 import jenkins.plugins.git.traits.WipeWorkspaceTrait;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.impl.trait.RegexSCMHeadFilterTrait;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
+import org.hamcrest.Description;
+import org.hamcrest.DiagnosingMatcher;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
@@ -64,11 +64,13 @@ public class GlobalLibraryWithModernJCasCCompatibilityTest extends RoundTripAbst
         assertThat(gitSCMSource.getTraits(), containsInAnyOrder(
                 //Discover branches
                 allOf(
-                        instanceOf(BranchDiscoveryTrait.class)
+                        new SimpleNameMatcher("BranchDiscoveryTrait")
+                        // TODO after JENKINS-67309 instanceOf(BranchDiscoveryTrait.class)
                 ),
                 // Discover tags
                 allOf(
-                        instanceOf(TagDiscoveryTrait.class)
+                        new SimpleNameMatcher("TagDiscoveryTrait")
+                        // TODO after JENKINS-67309 instanceOf(TagDiscoveryTrait.class)
                 ),
                 // Check out to matching local branch
                 allOf(
@@ -187,5 +189,33 @@ public class GlobalLibraryWithModernJCasCCompatibilityTest extends RoundTripAbst
     @Override
     protected String configResource() {
         return "global-with-modern-casc.yaml";
+    }
+
+    private static final class SimpleNameMatcher extends DiagnosingMatcher<Object> {
+        private final String expectedSimpleName;
+
+        public SimpleNameMatcher(String expectedSimpleName) {
+            this.expectedSimpleName = expectedSimpleName;
+        }
+
+        @Override
+        protected boolean matches(Object item, Description mismatch) {
+            if (item == null) {
+                mismatch.appendText("null");
+                return false;
+            }
+
+            if (!item.getClass().getSimpleName().equals(expectedSimpleName)) {
+                mismatch.appendValue(item).appendText(" is a " + item.getClass().getName());
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("an instance of ").appendText(expectedSimpleName);
+        }
     }
 }

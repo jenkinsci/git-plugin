@@ -1170,7 +1170,7 @@ GIT_URL:: Remote URL of the first git repository in this workspace
 GIT_URL_n:: Remote URL of the additional git repositories in this workspace (if any)
 GIT_AUTHOR_EMAIL:: Author e-mail address that will be used for **new commits in this workspace**
 GIT_AUTHOR_NAME:: Author name that will be used for **new commits in this workspace**
-GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace***
+GIT_COMMITTER_EMAIL:: Committer e-mail address that will be used for **new commits in this workspace**
 GIT_COMMITTER_NAME:: Committer name that will be used for **new commits in this workspace**
 
 [#token-macro-variables]
@@ -1182,7 +1182,7 @@ The git plugin provides token macros for:
 
 GIT_REVISION:: Expands to the Git SHA1 commit ID that points to the commit that was built.
   length:: integer length of the commit ID that should be displayed.
-  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expoand to `a806ba77`.
+  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expand to `a806ba77`.
 
 GIT_BRANCH:: Expands to the name of the branch that was built.
   all:: boolean that expands to all branch names that point to the current commit when enabled.
