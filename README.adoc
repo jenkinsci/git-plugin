@@ -51,6 +51,57 @@ The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Mul
 
 image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 
+=== Pipeline examples
+
+The examples below were created with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator].
+Create your own checkout commands  with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
+
+==== Checkout with defaults
+
+Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
+
+[source,groovy]
+---
+checkout([$class: 'GitSCM',
+         branches: [[name: '*/master']],
+         userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])
+---
+
+==== Checkout with a specific branch
+
+Checkout from the git client plugin source repository using https protocol, no credentials, and a non-default branch.
+
+[source,groovy]
+---
+checkout([$class: 'GitSCM',
+          branches: [[name: 'stable-2.x']], 
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+---
+
+==== Checkout with ssh and a private key credential
+
+Insert example here
+
+==== Checkout with https and a username/password credential
+
+Insert example here
+
+==== Checkout with git large file support enabled
+
+Enable git lfs pull after checkout, create the snippet
+
+==== Add a repository browser for Bitbucket
+
+==== Checkout without fetching tags (advanced clone behavior)
+
+==== Checkout with a shallow clone to reduce data traffic
+
+==== Checkout with a narrow refspec (needs more reading)
+
+==== Checkout and prune stale remote branches
+
+See also the https://youtu.be/jBGFjFc6Jf8?t=6434 for performance tips that would be good for examples
+
 [#credential-binding]
 === Git Credentials Binding
 
