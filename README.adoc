@@ -87,7 +87,7 @@ The git plugin supports private key credentials provided by the link:https://plu
 ---
 checkout([$class: 'GitSCM',
           branches: [[name: 'master']],
-          userRemoteConfigs: [[credentialsId: 'e1476d45-b77d-4af6-a80f-e2fe95eca822', url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+          userRemoteConfigs: [[credentialsId: 'e1476d45-b77d-4af6-a80f-e2fe95eca822', url: 'https://github.com/jenkinsci/git-plugin.git']]])
 ---
 
 ==== Checkout with https and a username/password credential
@@ -98,7 +98,7 @@ Checkout from the git client plugin source repository using https protocol, user
 ---
 checkout([$class: 'GitSCM',
           branches: [[name: 'jenkinsfile']],
-          userRemoteConfigs: [[credentialsId: 'e1476d45-b77d-4af6-a80f-e2fe95eca822', url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+          userRemoteConfigs: [[credentialsId: 'e1476d45-b77d-4af6-a80f-e2fe95eca822', url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
 ---
 
 ==== Checkout with git large file support enabled
@@ -111,7 +111,7 @@ Checkout from the git client plugin source repository using https no credentials
 checkout([$class: 'GitSCM',
           branches: [[name: 'disposer']],
           extensions: [[$class: 'GitLFSPull']],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
 ---
 
 
@@ -124,14 +124,8 @@ Checkout from the git client plugin source repository using https no credentials
 checkout([$class: 'GitSCM',
           branches: [[name: '*/master']],
           extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: false]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
 ---
-
-==== Checkout with a shallow clone to reduce data traffic
-
-==== Checkout with a narrow refspec (needs more reading)
-
-==== Checkout and prune stale remote branches
 
 See also the https://youtu.be/jBGFjFc6Jf8?t=6434 for performance tips that would be good for examples
 
