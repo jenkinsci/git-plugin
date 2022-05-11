@@ -78,52 +78,6 @@ checkout([$class: 'GitSCM',
           userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
 ---
 
-==== Checkout with ssh and a private key credential
-
-Checkout from the git client plugin source repository using https protocol, ssh private credentials, and a non-default branch. The git plugin supports private key credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
-
-[source,groovy]
----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'disposer']],
-          userRemoteConfigs: [[credentialsId: '9de6b979-0777-4e6c-88ad-bf86a9ac4098', url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
----
-
-==== Checkout with https and a username/password credential
-
-Checkout from the git client plugin source repository using https protocol, username / password credentials, and a non-default branch. The git plugin supports username / password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
-
-[source,groovy]
----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'jenkisnfile']],
-          userRemoteConfigs: [[credentialsId: '9de6b979-0777-4e6c-88ad-bf86a9ac47e3', url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
----
-
-==== Checkout with git large file support enabled
-
-Checkout from the git client plugin source repository using https no credentials, a non-default branch, and git large file support extension. link:https://git-lfs.github.com[Enable git large file support] for the workspace by pulling large files after the checkout completes.
-
-[source,groovy]
----
-checkout([$class: 'GitSCM',
-          branches: [[name: 'disposer']],
-          extensions: [[$class: 'GitLFSPull']],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
----
-
-==== Checkout without fetching tags (advanced clone behavior)
-
-Checkout from the git client plugin source repository using https no credentials, a default branch, and without tags saving time and disk space when you want to access only what is specified by the refspec, without considering any repository tags.
-
-[source,groovy]
----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: false]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
----
-
 ==== Checkout with a shallow clone to reduce data traffic
 
 Checkout from the git client plugin source repository using https no credentials, a default branch, and with a shallow clone which  requests a limited number of commits from the tip of the requested branch(es) thereby saving time, data transfer and disk space.
@@ -136,7 +90,7 @@ checkout([$class: 'GitSCM',
           userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
 ---
 
-==== Checkout with a narrow refspec (needs more reading)
+==== Checkout with a narrow refspec
 
 Checkout from the git client plugin source repository using https no credentials, a default branch, and with refspec defined for the repository. This can save time, data transfer and disk space when you only need to access the references specified by the refspec.
 
