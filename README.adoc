@@ -80,13 +80,13 @@ checkout([$class: 'GitSCM',
 
 ==== Checkout with ssh and a private key credential
 
-Checkout from the git client plugin source repository using https protocol, ssh private credentials, and a non-default branch. 
+Checkout from the git client plugin source repository using ssh protocol, ssh private credentials, and a non-default branch. 
 The git plugin supports private key credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 
 [source,groovy]
 ---
 checkout([$class: 'GitSCM',
-          branches: [[name: 'master']],
+          branches: [[name: 'stable-2.x']],
           userRemoteConfigs: [[credentialsId:  'my-ssh-private-key-id', url: 'ssh://github.com/jenkinsci/git-plugin.git']]])
 ---
 
