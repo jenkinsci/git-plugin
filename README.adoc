@@ -92,7 +92,8 @@ checkout([$class: 'GitSCM',
 
 ==== Checkout with https and a username/password credential
 
-Checkout from the git client plugin source repository using https protocol, username/password credentials, and a non-default branch. The git plugin supports username/password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+Checkout from the git client plugin source repository using https protocol, username/password credentials, and a non-default branch.
+The git plugin supports username/password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 
 [source,groovy]
 ---
