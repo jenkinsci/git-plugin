@@ -58,7 +58,7 @@
   </scm>
 
   <properties>
-    <revision>4.11.2</revision>
+    <revision>4.11.3</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.289.1</jenkins.version>
