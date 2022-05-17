@@ -1402,7 +1402,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private void abortIfSourceIsLocal() throws AbortException {
+    /* Package protected for test access */
+    void abortIfSourceIsLocal() throws AbortException {
         for (UserRemoteConfig userRemoteConfig: getUserRemoteConfigs()) {
             String remoteUrl = userRemoteConfig.getUrl();
             if (!isRemoteUrlValid(remoteUrl)) {
