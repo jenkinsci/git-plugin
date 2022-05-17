@@ -79,6 +79,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.AbstractList;
@@ -105,7 +106,6 @@ import static hudson.scm.PollingResult.*;
 import hudson.Util;
 import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
-import java.nio.file.InvalidPathException;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1417,8 +1417,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private static boolean isRemoteUrlValid(String remoteUrl) {
         if (remoteUrl == null) {
             return true;
-        }
-        if (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://")) {
+        } else if (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://")) {
             return false;
         }
         try {
