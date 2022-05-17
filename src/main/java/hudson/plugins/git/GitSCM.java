@@ -104,6 +104,7 @@ import static hudson.scm.PollingResult.*;
 import hudson.Util;
 import hudson.plugins.git.extensions.impl.ScmName;
 import hudson.util.LogTaskListener;
+import java.nio.file.InvalidPathException;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1396,11 +1397,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private void abortIfSourceIsLocal() throws AbortException {
         for (UserRemoteConfig userRemoteConfig: getUserRemoteConfigs()) {
             String remoteUrl = userRemoteConfig.getUrl();
-            if (remoteUrl != null && (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://") || Files.exists(Paths.get(remoteUrl)))) {
+            if (!isRemoteUrlValid(remoteUrl)) {
                 throw new AbortException("Checkout of Git remote '" + remoteUrl + "' aborted because it references a local directory, " +
                         "which may be insecure. You can allow local checkouts anyway by setting the system property '" +
                         ALLOW_LOCAL_CHECKOUT_PROPERTY + "' to true.");
             }
+        }
+    }
+
+    private static boolean isRemoteUrlValid(String remoteUrl) {
+        if (remoteUrl == null) {
+            return true;
+        }
+        if (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://")) {
+            return false;
+        }
+        try {
+            // Check for local remotes with no protocol like /path/to/repo.git/
+            return !Files.exists(Paths.get(remoteUrl));
+        } catch (InvalidPathException e) {
+            return true;
         }
     }
 
