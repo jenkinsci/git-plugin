@@ -23,6 +23,7 @@
  */
 package hudson.plugins.git;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import static hudson.plugins.git.GitSCM.createRepoList;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -43,6 +44,8 @@ import org.eclipse.jgit.transport.URIish;
 import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import org.jvnet.hudson.test.Issue;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
@@ -337,5 +340,18 @@ public class GitSCMUnitTest {
         gitSCM.setDoGenerateSubmoduleConfigurations(true);
         /* Confirms the passed value `true` is ignored */
         assertFalse(gitSCM.getDoGenerateSubmoduleConfigurations());
+    }
+
+    @Issue("JENKINS-68562")
+    @Test
+    public void testAbortIfSourceIsLocal() {
+        GitSCM gitSCM = new GitSCM(createRepoList(repoURL, null),
+                Collections.singletonList(new BranchSpec("master")),
+                null, null, Collections.emptyList());
+        try {
+            gitSCM.abortIfSourceIsLocal();
+        } catch (AbortException e) {
+            fail("https remote URLs should always be valid");
+        }
     }
 }

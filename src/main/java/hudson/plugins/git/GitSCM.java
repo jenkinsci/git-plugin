@@ -78,6 +78,7 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.AbstractList;
@@ -1393,14 +1394,29 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    private void abortIfSourceIsLocal() throws AbortException {
+    /* Package protected for test access */
+    void abortIfSourceIsLocal() throws AbortException {
         for (UserRemoteConfig userRemoteConfig: getUserRemoteConfigs()) {
             String remoteUrl = userRemoteConfig.getUrl();
-            if (remoteUrl != null && (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://") || Files.exists(Paths.get(remoteUrl)))) {
+            if (!isRemoteUrlValid(remoteUrl)) {
                 throw new AbortException("Checkout of Git remote '" + remoteUrl + "' aborted because it references a local directory, " +
                         "which may be insecure. You can allow local checkouts anyway by setting the system property '" +
                         ALLOW_LOCAL_CHECKOUT_PROPERTY + "' to true.");
             }
+        }
+    }
+
+    private static boolean isRemoteUrlValid(String remoteUrl) {
+        if (remoteUrl == null) {
+            return true;
+        } else if (remoteUrl.toLowerCase(Locale.ENGLISH).startsWith("file://")) {
+            return false;
+        }
+        try {
+            // Check for local remotes with no protocol like /path/to/repo.git/
+            return !Files.exists(Paths.get(remoteUrl));
+        } catch (InvalidPathException e) {
+            return true;
         }
     }
 
