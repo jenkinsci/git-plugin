@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>4.11.3</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
@@ -53,12 +53,12 @@
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <tag>git-4.11.3</tag>
+    <tag>${scmTag}</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
   <properties>
-    <revision>4.11.3</revision>
+    <revision>4.11.4</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.289.1</jenkins.version>
