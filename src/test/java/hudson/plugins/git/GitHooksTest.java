@@ -15,9 +15,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.LoggerRule;
 
 import java.io.File;
@@ -42,6 +44,8 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Rule
     public LoggerRule lr = new LoggerRule();
+    @ClassRule
+    public static BuildWatcher watcher = new BuildWatcher();
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
@@ -50,10 +54,14 @@ public class GitHooksTest extends AbstractGitTestCase {
     }
 
     @Before
-    public void setGitTool() {
+    public void setGitTool() throws IOException {
         lr.record(GitHooksConfiguration.class.getName(), Level.ALL).capture(1024);
         GitTool tool = new GitTool("my-git", "git", Collections.<ToolProperty<?>>emptyList());
         rule.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
+        //Jenkins 2.308 changes the default label to "built-in" causing test failures when testing with newer core
+        // e.g. java 17 testing
+        rule.jenkins.setLabelString("master");
+        rule.jenkins.setNumExecutors(3); //In case this changes in the future as well.
     }
 
     @After
