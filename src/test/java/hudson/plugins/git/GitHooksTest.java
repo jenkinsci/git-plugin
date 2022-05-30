@@ -110,8 +110,8 @@ public class GitHooksTest extends AbstractGitTestCase {
         FilePath hook = workspace.child(".git/hooks/post-checkout");
         createHookScriptAt(postCheckoutOutput1, hook);
 
-        //TODO change when pom is updated to the related security fixes in "Pipeline: Groovy" > 2648.va9433432b33c
-        final FilePath scriptWorkspace = rule.jenkins.getWorkspaceFor(job).withSuffix("@script");
+        FilePath scriptWorkspace = rule.jenkins.getWorkspaceFor(job).withSuffix("@script");
+        scriptWorkspace = scriptWorkspace.listDirectories().stream().findFirst().get();
         createHookScriptAt(postCheckoutOutput2, scriptWorkspace.child(".git/hooks/post-checkout"));
 
         commit("test.txt", "Second", johnDoe, "Second");
