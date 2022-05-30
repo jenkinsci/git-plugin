@@ -25,6 +25,7 @@ import org.jvnet.hudson.test.LoggerRule;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -180,7 +181,7 @@ public class GitHooksTest extends AbstractGitTestCase {
         final String s = FileUtils.readFileToString(postCheckoutOutput, Charset.defaultCharset()).trim();
         final Instant when = Instant.ofEpochSecond(Integer.parseInt(s));
         assertTrue("Sometime else", when.isAfter(before) && when.isBefore(after));
-        assert postCheckoutOutput.delete();
+        Files.delete(postCheckoutOutput.toPath());
     }
 
     @Test
