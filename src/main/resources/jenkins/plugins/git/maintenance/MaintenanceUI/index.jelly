@@ -1,7 +1,28 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler"
+         xmlns:t="/lib/hudson">
     <l:layout norefresh="true" type="one-column" title="Git Plugin">
         <l:main-panel>
+            <div>
+                <h1 class="text-primary">Maintenace Tasks</h1>
+                <p>Enter cron syntax for periodic execution of maintenance tasks</p>
+                <f:form action="save" method="post" name="save">
+                <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
+                    <f:entry title="${taskObj.getTaskName()}" field="${taskObj.getTaskName()}">
+                        <f:textbox />
+                        <t:help href="https://git-scm.com/docs/git-maintenance#_tasks" tooltip="${taskObj.getTaskMessage()}" />
+                    </f:entry>
+                </j:forEach>
+                    <button type="submit" class="jenkins-button">Default</button>
+                </f:form>
+                <f:form method="post" action="execute" name="execute">
+                    <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
+                </f:form>
+
+                <f:form method="post" action="terminate" name="terminate">
+                    <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
+                </f:form>
+            </div>
         </l:main-panel>
     </l:layout>
 </j:jelly>
