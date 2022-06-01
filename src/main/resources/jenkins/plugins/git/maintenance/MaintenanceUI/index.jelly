@@ -10,11 +10,11 @@
                 <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
                     <f:entry title="${taskObj.getTaskName()}" field="${taskObj.getTaskName()}">
                         <f:textbox />
-                        <t:help href="https://git-scm.com/docs/git-maintenance#_tasks" tooltip="${taskObj.getTaskMessage()}" />
                     </f:entry>
                 </j:forEach>
                     <button type="submit" class="jenkins-button">Default</button>
                 </f:form>
+
                 <f:form method="post" action="execute" name="execute">
                     <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
                 </f:form>
