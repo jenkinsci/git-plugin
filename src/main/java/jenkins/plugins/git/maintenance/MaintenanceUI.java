@@ -13,7 +13,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Map;
 
 @Extension
 public class MaintenanceUI extends ManagementLink {
@@ -75,15 +75,11 @@ public class MaintenanceUI extends ManagementLink {
         res.sendRedirect("");
     }
 
-    public ArrayList<TaskData> getMaintenanceTask(){
+    public Map<TaskType,Task> getMaintenanceTask(){
         // Can check if git version doesn't support a maintenance task and remove that maintenance task form the UI.
-        ArrayList<TaskData> tasks = new ArrayList();
-        tasks.add(new TaskData("gc","Click to view gc"));
-        tasks.add(new TaskData("commit-graph","Click to view commit graph"));
-        tasks.add(new TaskData("incremental-repack","Click to view Incremental Repack"));
-        tasks.add(new TaskData("prefetch","Click to view prefetch"));
-        tasks.add(new TaskData("loose-objects","Click to view loose objects"));
-        return tasks;
+
+        // Use a descriptor to remove hardcoded dependency
+        return new MaintenanceTaskConfiguration().getMaintenanceTasks();
     }
 
     @NonNull
