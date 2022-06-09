@@ -6,19 +6,23 @@ import java.util.Map;
 public class MaintenanceTaskConfiguration {
 
     Map<TaskType,Task> maintenanceTasks;
+    boolean isGitMaintenanceRunning;
 
     public MaintenanceTaskConfiguration(){
+
+        // Load from Global configuration, if null, set default configuration.
         configureMaintenanceTasks();
+        isGitMaintenanceRunning = false;
     }
     private void configureMaintenanceTasks(){
        // check git version and based on git version, add the maintenance tasks to the list
         maintenanceTasks = new HashMap<>();
 
-        maintenanceTasks.put(TaskType.COMMIT_GRAPH,new Task(TaskType.COMMIT_GRAPH,"Commit Graph msg"));
-        maintenanceTasks.put(TaskType.PREFETCH,new Task(TaskType.PREFETCH,"Prefetch msg"));
-        maintenanceTasks.put(TaskType.GC,new Task(TaskType.GC,"Gc msg"));
-        maintenanceTasks.put(TaskType.LOOSE_OBJECTS,new Task(TaskType.LOOSE_OBJECTS,"Loose Objects msg"));
-        maintenanceTasks.put(TaskType.INCREMENTAL_REPACK,new Task(TaskType.INCREMENTAL_REPACK,"Incremental Repack msg"));
+        maintenanceTasks.put(TaskType.COMMIT_GRAPH,new Task(TaskType.COMMIT_GRAPH));
+        maintenanceTasks.put(TaskType.PREFETCH,new Task(TaskType.PREFETCH));
+        maintenanceTasks.put(TaskType.GC,new Task(TaskType.GC));
+        maintenanceTasks.put(TaskType.LOOSE_OBJECTS,new Task(TaskType.LOOSE_OBJECTS));
+        maintenanceTasks.put(TaskType.INCREMENTAL_REPACK,new Task(TaskType.INCREMENTAL_REPACK));
     }
 
     public Map<TaskType, Task> getMaintenanceTasks(){
@@ -31,5 +35,8 @@ public class MaintenanceTaskConfiguration {
         maintenanceTasks.put(taskType,updatedTask);
     }
 
+    public boolean getIsGitMaintenanceTaskRunning(){
+        return isGitMaintenanceRunning;
+    }
 
 }

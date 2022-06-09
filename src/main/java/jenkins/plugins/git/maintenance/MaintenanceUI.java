@@ -49,6 +49,9 @@ public class MaintenanceUI extends ManagementLink {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
+        // Responsible for saving the data internally inside jenkins...
+
         System.out.println("Saving");
         res.sendRedirect("");
     }
@@ -60,6 +63,11 @@ public class MaintenanceUI extends ManagementLink {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
+        // Change the status of execution to true...
+
+        // Save the status of execution internally inside jenkins...
+
         System.out.println("Executing...");
         res.sendRedirect("");
     }
@@ -71,6 +79,9 @@ public class MaintenanceUI extends ManagementLink {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
+        // Change the status of execution to false and save the data internally...
+
         System.out.println("Stopping...");
         res.sendRedirect("");
     }
@@ -80,6 +91,10 @@ public class MaintenanceUI extends ManagementLink {
 
         // Use a descriptor to remove hardcoded dependency
         return new MaintenanceTaskConfiguration().getMaintenanceTasks();
+    }
+
+    public boolean getIsMaintenanceTaskRunning(){
+        return new MaintenanceTaskConfiguration().getIsGitMaintenanceTaskRunning();
     }
 
     @NonNull

@@ -3,21 +3,16 @@ package jenkins.plugins.git.maintenance;
 public class Task {
 
     TaskType task;
-    String msg;
     String cronSyntax;
     boolean isConfigured;
 
-    public Task(TaskType task, String msg){
+    public Task(TaskType task){
+        // Can add default cron syntax recommended by git documentation
         this.task = task;
-        this.msg = msg;
     }
 
     public TaskType getTaskName(){
         return this.task;
-    }
-
-    public String getTaskMessage(){
-        return this.msg;
     }
 
     public String getCronSyntax(){ return this.cronSyntax; }

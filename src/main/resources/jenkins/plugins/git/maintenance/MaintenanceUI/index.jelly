@@ -12,16 +12,19 @@
                         <f:textbox />
                     </f:entry>
                 </j:forEach>
-                    <button type="submit" class="jenkins-button">Default</button>
+                    <button type="submit" class="jenkins-button">Save</button>
                 </f:form>
 
-                <f:form method="post" action="execute" name="execute">
-                    <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
-                </f:form>
-
-                <f:form method="post" action="terminate" name="terminate">
-                    <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
-                </f:form>
+                <j:if test="${it.getIsMaintenanceTaskRunning() == 'false'}">
+                    <f:form method="post" action="execute" name="execute">
+                        <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
+                    </f:form>
+                </j:if>
+                <j:if test="${it.getIsMaintenanceTaskRunning() == 'true'}">
+                    <f:form method="post" action="terminate" name="terminate">
+                        <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
+                    </f:form>
+                </j:if>
             </div>
         </l:main-panel>
     </l:layout>

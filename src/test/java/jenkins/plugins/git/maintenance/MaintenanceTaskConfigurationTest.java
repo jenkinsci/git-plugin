@@ -31,5 +31,16 @@ public class MaintenanceTaskConfigurationTest {
         }
     }
 
+    @Test
+    public void setIsMaintenanceTaskRunning(){
+        // When status is false.
+        boolean status = config.getIsGitMaintenanceTaskRunning();
+        assertEquals(false,status);
+
+        // When status is set to true
+        status = config.setIsGitMaintenanceTaskRunning();
+        assertEquals(true,status);
+
+    }
 
 }
