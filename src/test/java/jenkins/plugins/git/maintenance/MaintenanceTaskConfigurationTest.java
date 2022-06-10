@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +41,23 @@ public class MaintenanceTaskConfigurationTest {
         // When status is set to true
 //        status = config.setIsGitMaintenanceTaskRunning();
 //        assertEquals(true,status);
+    }
+
+    @Test
+    public void checkValidCronSyntax() throws ANTLRException {
+
+        // Doesn't throw any error
+        MaintenanceTaskConfiguration.checkSanity("* * * * *");
+        MaintenanceTaskConfiguration.checkSanity("1 * * * * ");
+        MaintenanceTaskConfiguration.checkSanity("H H(8-15)/2 * * 1-5");
+        MaintenanceTaskConfiguration.checkSanity("H H 1,15 1-11 *");
+    }
+
+    @Test(expected = ANTLRException.class)
+    public void checkInvalidCronSyntax() throws ANTLRException{
+        MaintenanceTaskConfiguration.checkSanity("");
+        MaintenanceTaskConfiguration.checkSanity("*****");
+        MaintenanceTaskConfiguration.checkSanity("a * * 1 *");
     }
 
 }

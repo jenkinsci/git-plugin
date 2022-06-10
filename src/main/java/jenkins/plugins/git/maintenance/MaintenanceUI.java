@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ManagementLink;
@@ -94,10 +95,21 @@ public class MaintenanceUI extends ManagementLink {
 
     @POST
     @Restricted(NoExternalUse.class)
-    public FormValidation doCheckCronSyntax(@QueryParameter String cronSyntax){
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-        System.out.println(cronSyntax);
-        return FormValidation.ok();
+    public FormValidation doCheckCronSyntax(@QueryParameter String cronSyntax) throws ANTLRException {
+        try {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            if (cronSyntax.isEmpty())
+                return FormValidation.ok();
+
+            String msg = MaintenanceTaskConfiguration.checkSanity(cronSyntax);
+
+            if (msg != null) {
+                return FormValidation.error(msg);
+            }
+            return FormValidation.ok();
+        }catch(ANTLRException e){
+            return FormValidation.error(e.getMessage());
+        }
     }
 
     public Map<TaskType,Task> getMaintenanceTask(){

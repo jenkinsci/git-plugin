@@ -1,5 +1,8 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
+import hudson.scheduler.CronTab;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,4 +42,18 @@ public class MaintenanceTaskConfiguration {
         return isGitMaintenanceRunning;
     }
 
+    public static String checkSanity(String cron) throws ANTLRException {
+       try {
+           CronTab cronTab = new CronTab(cron.trim());
+           String msg = cronTab.checkSanity();
+           if (msg != null) {
+               return msg;
+           }
+           return null;
+       }catch(ANTLRException e){
+           if(cron.contains("**"))
+               throw new ANTLRException("You appear to be missing whitespace between * and *.");
+           throw new ANTLRException(String.format("Invalid input: \"%s\": %s", cron, e), e);
+       }
+    }
 }

@@ -9,7 +9,7 @@
                 <f:form action="save" method="post" name="save">
                 <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
                     <f:entry title="${taskObj.value.getTaskName()}" field="cronSyntax">
-                        <f:textbox name="${taskObj.key}" />
+                        <f:textbox name="${taskObj.key}" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
                     </f:entry>
                 </j:forEach>
                     <button type="submit" class="jenkins-button">Save</button>
