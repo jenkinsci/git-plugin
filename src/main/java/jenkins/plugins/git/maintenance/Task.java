@@ -11,8 +11,12 @@ public class Task {
         this.task = task;
     }
 
-    public TaskType getTaskName(){
+    public TaskType getTaskType(){
         return this.task;
+    }
+
+    public String getTaskName(){
+        return this.task.getTaskName();
     }
 
     public String getCronSyntax(){ return this.cronSyntax; }

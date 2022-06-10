@@ -8,7 +8,7 @@
                 <p>Enter cron syntax for periodic execution of maintenance tasks</p>
                 <f:form action="save" method="post" name="save">
                 <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
-                    <f:entry title="${taskObj.key}" field="${taskObj.key}">
+                    <f:entry title="${taskObj.value.getTaskName()}" field="${taskObj.key}">
                         <f:textbox />
                     </f:entry>
                 </j:forEach>
