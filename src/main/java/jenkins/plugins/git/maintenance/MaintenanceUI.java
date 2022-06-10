@@ -4,13 +4,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ManagementLink;
 import hudson.security.Permission;
+import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import net.sf.json.JSON;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.kohsuke.stapler.verb.POST;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
@@ -44,14 +49,15 @@ public class MaintenanceUI extends ManagementLink {
 
     @RequirePOST
     @Restricted(NoExternalUse.class)
-    public void doSave(StaplerRequest req, StaplerResponse res) throws IOException {
+    public void doSave(StaplerRequest req, StaplerResponse res) throws IOException, ServletException {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
         // Responsible for saving the data internally inside jenkins...
-
+        JSON formData = req.getSubmittedForm();
+        System.out.println(formData);
         System.out.println("Saving");
         res.sendRedirect("");
     }
@@ -84,6 +90,14 @@ public class MaintenanceUI extends ManagementLink {
 
         System.out.println("Stopping...");
         res.sendRedirect("");
+    }
+
+    @POST
+    @Restricted(NoExternalUse.class)
+    public FormValidation doCheckCronSyntax(@QueryParameter String cronSyntax){
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        System.out.println(cronSyntax);
+        return FormValidation.ok();
     }
 
     public Map<TaskType,Task> getMaintenanceTask(){
