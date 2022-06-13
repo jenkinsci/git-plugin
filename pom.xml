@@ -231,7 +231,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>pipeline-groovy-lib</artifactId>
-      <version>591.v3a_7f422b_d058</version> <!-- TODO until in BOM -->
+      <version>593.va_a_fc25d520e9</version> <!-- TODO until in BOM -->
       <scope>test</scope>
     </dependency>
     <dependency>
