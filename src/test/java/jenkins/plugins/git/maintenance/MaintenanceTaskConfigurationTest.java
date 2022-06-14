@@ -33,9 +33,23 @@ public class MaintenanceTaskConfigurationTest {
     }
 
     @Test
+    public void setIsMaintenanceTaskConfigured(){
+        boolean isMaintenanceTaskConfigured = true;
+
+        for(TaskType taskType : TaskType.values()){
+            config.setIsTaskConfigured(taskType,isMaintenanceTaskConfigured);
+        }
+
+        for(TaskType taskType : TaskType.values()){
+            Task maintenanceTask = config.getMaintenanceTasks().get(taskType);
+            assertEquals(isMaintenanceTaskConfigured,maintenanceTask.getIsTaskConfigured());
+        }
+    }
+
+    @Test
     public void setIsMaintenanceTaskRunning(){
         // When status is false.
-        boolean status = config.getIsGitMaintenanceTaskRunning();
+        boolean status = config.getIsGitMaintenanceRunning();
         assertEquals(false,status);
 
         // When status is set to true

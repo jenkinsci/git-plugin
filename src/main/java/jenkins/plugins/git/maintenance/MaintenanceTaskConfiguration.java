@@ -8,8 +8,8 @@ import java.util.Map;
 
 public class MaintenanceTaskConfiguration {
 
-    Map<TaskType,Task> maintenanceTasks;
-    boolean isGitMaintenanceRunning;
+    private Map<TaskType,Task> maintenanceTasks;
+    private boolean isGitMaintenanceRunning;
 
     public MaintenanceTaskConfiguration(){
 
@@ -38,8 +38,13 @@ public class MaintenanceTaskConfiguration {
         maintenanceTasks.put(taskType,updatedTask);
     }
 
-    public boolean getIsGitMaintenanceTaskRunning(){
+    public boolean getIsGitMaintenanceRunning(){
         return isGitMaintenanceRunning;
+    }
+
+    public void setIsTaskConfigured(TaskType taskType, boolean isConfigured){
+        Task task = maintenanceTasks.get(taskType);
+        task.setIsTaskConfigured(isConfigured);
     }
 
     public static String checkSanity(String cron) throws ANTLRException {

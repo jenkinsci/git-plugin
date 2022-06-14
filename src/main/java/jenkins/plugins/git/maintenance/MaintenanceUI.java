@@ -113,14 +113,14 @@ public class MaintenanceUI extends ManagementLink {
     }
 
     public Map<TaskType,Task> getMaintenanceTask(){
-        // Can check if git version doesn't support a maintenance task and remove that maintenance task form the UI.
+        // Can check if git version doesn't support a maintenance task and remove that maintenance task from the UI.
 
         // Use a descriptor to remove hardcoded dependency
         return new MaintenanceTaskConfiguration().getMaintenanceTasks();
     }
 
-    public boolean getIsMaintenanceTaskRunning(){
-        return new MaintenanceTaskConfiguration().getIsGitMaintenanceTaskRunning();
+    public boolean getIsGitMaintenanceRunning(){
+        return new MaintenanceTaskConfiguration().getIsGitMaintenanceRunning();
     }
 
     @NonNull

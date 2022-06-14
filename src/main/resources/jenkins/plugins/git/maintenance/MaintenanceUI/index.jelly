@@ -8,19 +8,21 @@
                 <p>Enter cron syntax for periodic execution of maintenance tasks</p>
                 <f:form action="save" method="post" name="save">
                 <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
-                    <f:entry title="${taskObj.value.getTaskName()}" field="cronSyntax">
-                        <f:textbox name="${taskObj.key}" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
-                    </f:entry>
+                    <div name="${taskObj.key}">
+                        <f:entry title="${taskObj.value.getTaskName()}" field="cronSyntax">
+                            <f:checkbox name="my.isApplied"></f:checkbox>
+                            <f:textbox name="my.cronSyntax" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
+                        </f:entry>
+                    </div>
                 </j:forEach>
                     <button type="submit" class="jenkins-button">Save</button>
                 </f:form>
-
-                <j:if test="${it.getIsMaintenanceTaskRunning() == 'false'}">
+                <j:if test="${it.getIsGitMaintenanceRunning() == 'false'}">
                     <f:form method="post" action="execute" name="execute">
                         <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
                     </f:form>
                 </j:if>
-                <j:if test="${it.getIsMaintenanceTaskRunning() == 'true'}">
+                <j:if test="${it.getIsGitMaintenanceRunning() == 'true'}">
                     <f:form method="post" action="terminate" name="terminate">
                         <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
                     </f:form>

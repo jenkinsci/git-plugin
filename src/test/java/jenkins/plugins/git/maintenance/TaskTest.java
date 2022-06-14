@@ -45,6 +45,13 @@ public class TaskTest {
     }
 
     @Test
+    public void setIsConfigured(){
+        boolean isConfigured = true;
+        task.setIsTaskConfigured(isConfigured);
+        assertEquals(isConfigured,task.getIsTaskConfigured());
+    }
+
+    @Test
     public void checkCronSyntax(){
         String cronSyntax = "* * 1 * 1";
         task.setCronSyntax(cronSyntax);
