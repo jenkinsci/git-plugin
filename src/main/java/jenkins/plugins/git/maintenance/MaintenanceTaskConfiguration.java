@@ -1,5 +1,7 @@
 package jenkins.plugins.git.maintenance;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import antlr.ANTLRException;
 import hudson.scheduler.CronTab;
 
@@ -28,6 +30,8 @@ public class MaintenanceTaskConfiguration {
         maintenanceTasks.put(TaskType.INCREMENTAL_REPACK,new Task(TaskType.INCREMENTAL_REPACK));
     }
 
+    // FIXME: Don't ship with this suppressed - resolve the issue
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Map<TaskType, Task> getMaintenanceTasks(){
         return maintenanceTasks;
     }
