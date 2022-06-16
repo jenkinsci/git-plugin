@@ -7,9 +7,9 @@
                 <h1 class="text-primary">Maintenance Tasks</h1>
                 <p>Enter cron syntax for periodic execution of maintenance tasks</p>
                 <f:form action="save" method="post" name="save">
-                <j:forEach var="taskObj" items="${it.getMaintenanceTask()}">
-                    <div name="${taskObj.key}">
-                        <f:entry title="${taskObj.value.getTaskName()}" field="cronSyntax">
+                <j:forEach var="task" items="${it.getMaintenanceTasks()}">
+                    <div name="${task.getTaskType()}">
+                        <f:entry title="${task.getTaskName()}" field="cronSyntax">
                             <f:checkbox name="my.isApplied"></f:checkbox>
                             <f:textbox name="my.cronSyntax" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
                         </f:entry>

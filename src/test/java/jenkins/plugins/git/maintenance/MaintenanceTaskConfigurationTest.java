@@ -3,6 +3,8 @@ package jenkins.plugins.git.maintenance;
 import antlr.ANTLRException;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 public class MaintenanceTaskConfigurationTest {
@@ -27,8 +29,13 @@ public class MaintenanceTaskConfigurationTest {
         }
 
         for(TaskType taskType : TaskType.values()){
-            Task maintenanceTask = config.getMaintenanceTasks().get(taskType);
-            assertEquals(cronSyntax,maintenanceTask.getCronSyntax());
+            List<Task> maintenanceTasks = config.getMaintenanceTasks();
+            for(Task task : maintenanceTasks){
+                if(task.getTaskType().equals(taskType)){
+                    assertEquals(cronSyntax,task.getCronSyntax());
+                    break;
+                }
+            }
         }
     }
 
@@ -41,8 +48,13 @@ public class MaintenanceTaskConfigurationTest {
         }
 
         for(TaskType taskType : TaskType.values()){
-            Task maintenanceTask = config.getMaintenanceTasks().get(taskType);
-            assertEquals(isMaintenanceTaskConfigured,maintenanceTask.getIsTaskConfigured());
+            List<Task> maintenanceTasks = config.getMaintenanceTasks();
+            for(Task task : maintenanceTasks){
+                if(task.getTaskType().equals(taskType)){
+                    assertEquals(isMaintenanceTaskConfigured,task.getIsTaskConfigured());
+                    break;
+                }
+            }
         }
     }
 

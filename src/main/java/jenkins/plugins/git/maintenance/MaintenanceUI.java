@@ -20,7 +20,7 @@ import org.kohsuke.stapler.verb.POST;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 @Extension
 public class MaintenanceUI extends ManagementLink {
@@ -126,14 +126,23 @@ public class MaintenanceUI extends ManagementLink {
         }
     }
 
-    public Map<TaskType,Task> getMaintenanceTask(){
+    public List<Task> getMaintenanceTasks(){
         // Can check if git version doesn't support a maintenance task and remove that maintenance task from the UI.
+        MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+        if(config != null)
+            return config.getMaintenanceTasks();
 
-        return new MaintenanceTaskConfiguration().getMaintenanceTasks();
+        // need to throw error;
+        return null;
     }
 
     public boolean getIsGitMaintenanceRunning(){
-        return new MaintenanceTaskConfiguration().getIsGitMaintenanceRunning();
+        MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+        if(config != null)
+            return config.getIsGitMaintenanceRunning();
+
+        // need to throw error;
+        return false;
     }
 
     @NonNull

@@ -1,13 +1,14 @@
 package jenkins.plugins.git.maintenance;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import antlr.ANTLRException;
+import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.scheduler.CronTab;
 import jenkins.model.GlobalConfiguration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Extension
@@ -33,10 +34,12 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         maintenanceTasks.put(TaskType.INCREMENTAL_REPACK,new Task(TaskType.INCREMENTAL_REPACK));
     }
 
-    // FIXME: Don't ship with this suppressed - resolve the issue
-    @SuppressFBWarnings("EI_EXPOSE_REP")
-    public Map<TaskType, Task> getMaintenanceTasks(){
-        return maintenanceTasks;
+    public List<Task> getMaintenanceTasks(){
+        List<Task> maintenanceTasks = new ArrayList<>();
+        for(Map.Entry<TaskType,Task> entry : this.maintenanceTasks.entrySet()){
+           maintenanceTasks.add(entry.getValue());
+        }
+        return ImmutableList.copyOf(maintenanceTasks);
     }
 
     public void setCronSyntax(TaskType taskType, String cronSyntax){
