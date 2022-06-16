@@ -6,8 +6,9 @@ import hudson.Extension;
 import hudson.model.ManagementLink;
 import hudson.security.Permission;
 import hudson.util.FormValidation;
+import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
-import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.QueryParameter;
@@ -56,9 +57,22 @@ public class MaintenanceUI extends ManagementLink {
             return;
         }
 
-        // Responsible for saving the data internally inside jenkins...
-        JSON formData = req.getSubmittedForm();
-        System.out.println(formData);
+        JSONObject formData = req.getSubmittedForm();
+        MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+
+        if(config != null) {
+            for (TaskType taskType : TaskType.values()) {
+                JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
+                String cronSyntax = maintenanceData.getString("cronSyntax");
+                boolean isApplied = maintenanceData.getBoolean("isApplied");
+
+                // Need to perform form validation again to avoid incorrect save of data.
+                config.setCronSyntax(taskType, cronSyntax);
+                config.setIsTaskConfigured(taskType, isApplied);
+            }
+            config.save();
+        }
+
         System.out.println("Saving");
         res.sendRedirect("");
     }
@@ -115,7 +129,6 @@ public class MaintenanceUI extends ManagementLink {
     public Map<TaskType,Task> getMaintenanceTask(){
         // Can check if git version doesn't support a maintenance task and remove that maintenance task from the UI.
 
-        // Use a descriptor to remove hardcoded dependency
         return new MaintenanceTaskConfiguration().getMaintenanceTasks();
     }
 

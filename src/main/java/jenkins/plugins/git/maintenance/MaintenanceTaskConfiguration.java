@@ -3,12 +3,15 @@ package jenkins.plugins.git.maintenance;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import antlr.ANTLRException;
+import hudson.Extension;
 import hudson.scheduler.CronTab;
+import jenkins.model.GlobalConfiguration;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MaintenanceTaskConfiguration {
+@Extension
+public class MaintenanceTaskConfiguration extends GlobalConfiguration {
 
     private Map<TaskType,Task> maintenanceTasks;
     private boolean isGitMaintenanceRunning;
@@ -45,6 +48,8 @@ public class MaintenanceTaskConfiguration {
     public boolean getIsGitMaintenanceRunning(){
         return isGitMaintenanceRunning;
     }
+
+    public void setIsGitMaintenanceRunning(){isGitMaintenanceRunning = !isGitMaintenanceRunning;}
 
     public void setIsTaskConfigured(TaskType taskType, boolean isConfigured){
         Task task = maintenanceTasks.get(taskType);
