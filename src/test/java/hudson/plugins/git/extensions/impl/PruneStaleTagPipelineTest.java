@@ -28,12 +28,14 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import hudson.plugins.git.GitSCM;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.TestCliGitAPIImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,6 +63,16 @@ public class PruneStaleTagPipelineTest {
     @Before
     public void setup() throws Exception {
         listener = new LogTaskListener(Logger.getLogger("prune tags"), Level.FINEST);
+    }
+
+    @Before
+    public void allowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
+
+    @After
+    public void disallowNonRemoteCheckout() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = false;
     }
 
     @Issue("JENKINS-61869")

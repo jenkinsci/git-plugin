@@ -104,7 +104,7 @@ public abstract class GitSCMExtension extends AbstractDescribableImpl<GitSCMExte
      * the chosen revision and returning it) or manipulate the state of the working tree (such as
      * running git-clean.)
      *
-     * <h3>{@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision, Revision)} vs {@link BuildChooser}</h3>
+     * <strong>{@link #decorateRevisionToBuild(GitSCM, Run, GitClient, TaskListener, Revision, Revision)} vs {@link BuildChooser}</strong>
      * <p>
      * {@link BuildChooser} and this method are similar in the sense that they both participate in the process
      * of determining what commits to build. So when a plugin wants to control the commit to be built, you have

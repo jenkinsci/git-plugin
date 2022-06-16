@@ -1182,7 +1182,7 @@ The git plugin provides token macros for:
 
 GIT_REVISION:: Expands to the Git SHA1 commit ID that points to the commit that was built.
   length:: integer length of the commit ID that should be displayed.
-  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expoand to `a806ba77`.
+  `${GIT_REVISION}` might expand to `a806ba7701bcfc9f784ccb7854c26f03e045c1d2`, while `${GIT_REVISION,length=8}` would expand to `a806ba77`.
 
 GIT_BRANCH:: Expands to the name of the branch that was built.
   all:: boolean that expands to all branch names that point to the current commit when enabled.
@@ -1208,10 +1208,20 @@ The default git timeout value (in minutes) can be overridden by the `org.jenkins
 The property should be set on the controller and on all agents to have effect (see https://issues.jenkins.io/browse/JENKINS-22547[JENKINS-22547]).
 
 [[GitPlugin-WhyNotJGit]]
+=== Disable command line git
+
 Command line git is the reference git implementation in the git plugin and the git client plugin.
 Command line git provides the most functionality and is the most stable implementation.
 Some installations may not want to install command line git and may want to disable the command line git implementation.
 Administrators may disable command line git with the property `org.jenkinsci.plugins.gitclient.Git.useCLI=false`.
+
+[#allow-local-checkout]
+=== Allow local checkout
+
+Command line git and JGit can fetch a repository using a local URL (like `file:/my/repo.git`) or a path (like `/my/repo.git`).
+link:https://www.jenkins.io/security/advisory/2022-05-17/#SECURITY-2478[SECURITY-2478] notes that fetching from a local URL or a path creates a security vulnerability on the Jenkins controller.
+Current releases of the git plugin disallow fetch from a local URL and from a path.
+If a local URL or a path is required and administrators accept the risk of disabling this security safeguard, the Java property `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true` can be set from the command line that starts the Jenkins controller.
 
 [#git-publisher]
 == Git Publisher
