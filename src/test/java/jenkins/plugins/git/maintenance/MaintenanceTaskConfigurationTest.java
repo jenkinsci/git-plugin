@@ -1,7 +1,9 @@
 package jenkins.plugins.git.maintenance;
 
 import antlr.ANTLRException;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.List;
 
@@ -9,6 +11,8 @@ import static org.junit.Assert.assertEquals;
 
 public class MaintenanceTaskConfigurationTest {
 
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
     private final MaintenanceTaskConfiguration config = new MaintenanceTaskConfiguration();
 
 //    @Test
