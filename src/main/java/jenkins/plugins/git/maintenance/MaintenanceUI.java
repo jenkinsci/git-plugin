@@ -79,31 +79,19 @@ public class MaintenanceUI extends ManagementLink {
 
     @RequirePOST
     @Restricted(NoExternalUse.class)
-    public void doExecute(StaplerRequest req, StaplerResponse res) throws IOException {
+    public void doToggleExecutionState(StaplerRequest req, StaplerResponse res) throws IOException {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        // Change the status of execution to true...
-
-        // Save the status of execution internally inside jenkins...
+        MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+        if(config != null) {
+            config.setIsGitMaintenanceRunning();
+            config.save();
+        }
 
         System.out.println("Executing...");
-        res.sendRedirect("");
-    }
-
-    @RequirePOST
-    @Restricted(NoExternalUse.class)
-    public void doTerminate(StaplerRequest req, StaplerResponse res) throws IOException {
-        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-            res.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-
-        // Change the status of execution to false and save the data internally...
-
-        System.out.println("Stopping...");
         res.sendRedirect("");
     }
 

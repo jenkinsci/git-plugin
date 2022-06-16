@@ -10,23 +10,21 @@
                 <j:forEach var="task" items="${it.getMaintenanceTasks()}">
                     <div name="${task.getTaskType()}">
                         <f:entry title="${task.getTaskName()}" field="cronSyntax">
-                            <f:checkbox name="my.isApplied"></f:checkbox>
-                            <f:textbox name="my.cronSyntax" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
+                            <f:checkbox name="my.isApplied" checked="${task.getIsTaskConfigured()}"></f:checkbox>
+                            <f:textbox name="my.cronSyntax" default="${task.getCronSyntax()}" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
                         </f:entry>
                     </div>
                 </j:forEach>
                     <button type="submit" class="jenkins-button">Save</button>
                 </f:form>
-                <j:if test="${it.getIsGitMaintenanceRunning() == 'false'}">
-                    <f:form method="post" action="execute" name="execute">
-                        <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
+                    <f:form method="post" action="toggleExecutionState" name="toggleExecutionState">
+                        <j:if test="${it.getIsGitMaintenanceRunning() == 'false'}">
+                            <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
+                        </j:if>
+                        <j:if test="${it.getIsGitMaintenanceRunning() == 'true'}">
+                            <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
+                        </j:if>
                     </f:form>
-                </j:if>
-                <j:if test="${it.getIsGitMaintenanceRunning() == 'true'}">
-                    <f:form method="post" action="terminate" name="terminate">
-                        <button type="submit" class="jenkins-button jenkins-button--destructive">Terminate</button>
-                    </f:form>
-                </j:if>
             </div>
         </l:main-panel>
     </l:layout>

@@ -19,12 +19,15 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
 
     public MaintenanceTaskConfiguration(){
 
-        // Load from Global configuration, if null, set default configuration.
-        configureMaintenanceTasks();
-        isGitMaintenanceRunning = false;
+        load();
+        if(maintenanceTasks == null) {
+            configureMaintenanceTasks();
+            isGitMaintenanceRunning = false;
+        }
     }
     private void configureMaintenanceTasks(){
-       // check git version and based on git version, add the maintenance tasks to the list
+        // check git version and based on git version, add the maintenance tasks to the list
+        // Can add default cron syntax for maintenance tasks.
         maintenanceTasks = new HashMap<>();
 
         maintenanceTasks.put(TaskType.COMMIT_GRAPH,new Task(TaskType.COMMIT_GRAPH));
