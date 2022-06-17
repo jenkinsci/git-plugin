@@ -26,7 +26,7 @@ public class MaintenanceTaskConfigurationTest {
 //    }
 
     @Test
-    public void setCronSyntax(){
+    public void setCronSyntax() throws ANTLRException {
         String cronSyntax = "* * * 1 *";
         for(TaskType taskType : TaskType.values()){
             config.setCronSyntax(taskType,cronSyntax);

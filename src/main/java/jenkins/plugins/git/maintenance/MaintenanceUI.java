@@ -60,7 +60,8 @@ public class MaintenanceUI extends ManagementLink {
         JSONObject formData = req.getSubmittedForm();
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
 
-        if(config != null) {
+        try{
+            assert config != null;
             for (TaskType taskType : TaskType.values()) {
                 JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
                 String cronSyntax = maintenanceData.getString("cronSyntax");
@@ -71,10 +72,13 @@ public class MaintenanceUI extends ManagementLink {
                 config.setIsTaskConfigured(taskType, isApplied);
             }
             config.save();
+            System.out.println("Saving");
+            res.sendRedirect("");
+        }catch (ANTLRException e){
+            // Throw antlr exception and display error on UI.
+            System.out.println("Invalid cron syntax, will display error on screen");
         }
 
-        System.out.println("Saving");
-        res.sendRedirect("");
     }
 
     @RequirePOST

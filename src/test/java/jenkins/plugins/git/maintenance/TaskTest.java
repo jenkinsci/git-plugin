@@ -1,21 +1,26 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class TaskTest {
 
-    private Task task;
-    private TaskType taskType;
-    private String taskName;
+    private final Task task;
+    private final TaskType taskType;
+    private final String taskName;
 
     public TaskTest(Task task,TaskType taskType,String taskName){
         this.task = task;
@@ -52,9 +57,23 @@ public class TaskTest {
     }
 
     @Test
-    public void checkCronSyntax(){
+    public void checkCronSyntax() throws ANTLRException {
         String cronSyntax = "* * 1 * 1";
         task.setCronSyntax(cronSyntax);
         assertEquals(cronSyntax,task.getCronSyntax());
+    }
+
+    @Test
+    public void isTaskExecutable() throws ANTLRException {
+        Calendar cal = new GregorianCalendar();
+        String cronSyntax = "* * * * *";
+        task.setCronSyntax(cronSyntax);
+        boolean isTaskExecutable = task.checkIsTaskExecutable(cal);
+        assertTrue(isTaskExecutable);
+
+        cronSyntax = "H * * * *";
+        task.setCronSyntax(cronSyntax);
+        isTaskExecutable = task.checkIsTaskExecutable(cal);
+        assertFalse(isTaskExecutable);
     }
 }

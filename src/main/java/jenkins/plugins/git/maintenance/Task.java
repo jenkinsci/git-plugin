@@ -1,10 +1,19 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
+import hudson.scheduler.CronTab;
+import hudson.scheduler.CronTabList;
+
+import java.util.Calendar;
+import java.util.Collections;
+
 public class Task {
 
     private TaskType task;
     private String cronSyntax;
     private boolean isConfigured;
+
+    private CronTabList cronTabList;
 
     public Task(TaskType task){
         // Can add default cron syntax recommended by git documentation
@@ -29,7 +38,16 @@ public class Task {
         return this.isConfigured;
     }
 
-    public void setCronSyntax(String cronSyntax){
+    public void setCronSyntax(String cronSyntax) throws ANTLRException {
         this.cronSyntax = cronSyntax;
+        setCronTabList(cronSyntax);
+    }
+
+    private void setCronTabList(String cronSyntax) throws ANTLRException {
+        cronTabList = new CronTabList(Collections.singletonList(new CronTab(cronSyntax)));
+    }
+
+    public boolean checkIsTaskExecutable(Calendar cal){
+        return cronTabList.check(cal);
     }
 }

@@ -27,11 +27,22 @@ public class TaskScheduler {
 
         List<Task> configuredTasks = config.getMaintenanceTasks();
 
-        boolean isSchedulable = false;
-//        for(Task task : configuredTasks){
-//            isSchedulable = task.isTaskSchedulable(cal);
-//
-//
-//        }
+        boolean isTaskExecutable = false;
+        for(Task task : configuredTasks){
+            if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
+                continue;
+
+            isTaskExecutable = task.checkIsTaskExecutable(cal);
+            if(isTaskExecutable){
+                maintenanceQueue.add(task);
+            }
+        }
+
+        // Create a new thread and execute the tasks present in the queue
+        System.out.println(maintenanceQueue);
+    }
+
+    private boolean checkIsTaskInQueue(Task task){
+        return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
     }
 }
