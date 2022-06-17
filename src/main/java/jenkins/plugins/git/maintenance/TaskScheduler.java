@@ -13,6 +13,7 @@ public class TaskScheduler {
     MaintenanceTaskConfiguration config;
     Calendar cal;
     List<Task> maintenanceQueue;
+    Thread taskExecutor;
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
        this.cal = new GregorianCalendar();
@@ -27,7 +28,7 @@ public class TaskScheduler {
 
         List<Task> configuredTasks = config.getMaintenanceTasks();
 
-        boolean isTaskExecutable = false;
+        boolean isTaskExecutable;
         for(Task task : configuredTasks){
             if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
                 continue;
@@ -38,7 +39,14 @@ public class TaskScheduler {
             }
         }
 
-        // Create a new thread and execute the tasks present in the queue
+        // Create a new thread and execute the tasks present in the queue;
+        if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
+            System.out.println("Entered this statement");
+            taskExecutor = new Thread(new TaskExecutor(maintenanceQueue), "maintenance-task-executor");
+            taskExecutor.start();
+        }
+
+        System.out.println(taskExecutor.isAlive() + " Status of execution after");
         System.out.println(maintenanceQueue);
     }
 
