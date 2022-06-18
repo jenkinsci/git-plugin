@@ -1,23 +1,24 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler"
          xmlns:t="/lib/hudson">
-    <l:layout norefresh="true" type="one-column" title="Git Plugin">
+    <l:layout norefresh="true" type="one-column" title="Git Plugin" permission="${app.ADMINISTER}">
         <l:main-panel>
             <div>
                 <h1 class="text-primary">Maintenance Tasks</h1>
+                <p><b><u>Git Version</u>: </b>${it.getGitVersion()} (HardCoded Value)</p>
                 <p>Enter cron syntax for periodic execution of maintenance tasks</p>
                 <f:form action="save" method="post" name="save">
                 <j:forEach var="task" items="${it.getMaintenanceTasks()}">
                     <div name="${task.getTaskType()}">
                         <f:entry title="${task.getTaskName()}" field="cronSyntax">
-                            <f:checkbox name="my.isApplied" checked="${task.getIsTaskConfigured()}"></f:checkbox>
+                            <f:checkbox name="my.isApplied" checked="${task.getIsTaskConfigured()}"/>
                             <f:textbox name="my.cronSyntax" default="${task.getCronSyntax()}" checkUrl="'checkCronSyntax?cronSyntax='+escape(this.value)" checkMethod="post"/>
                         </f:entry>
                     </div>
                 </j:forEach>
                     <button type="submit" class="jenkins-button">Save</button>
                 </f:form>
-                    <f:form method="post" action="toggleExecutionState" name="toggleExecutionState">
+                    <f:form method="post" action="toggleExecutionState" name="toggleExecutionState" class="jenkins-!-margin-top-2">
                         <j:if test="${it.getIsGitMaintenanceRunning() == 'false'}">
                             <button type="submit" class="jenkins-button jenkins-button--primary">Execute</button>
                         </j:if>

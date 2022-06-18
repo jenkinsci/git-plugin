@@ -137,6 +137,10 @@ public class MaintenanceUI extends ManagementLink {
         return false;
     }
 
+    public String getGitVersion(){
+        return "2.36.1";
+    }
+
     @NonNull
     @Override
     public Permission getRequiredPermission() {
