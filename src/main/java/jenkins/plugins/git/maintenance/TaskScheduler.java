@@ -23,11 +23,31 @@ public class TaskScheduler {
     public void scheduleTasks(){
         assert config != null;
 
-        if(!config.getIsGitMaintenanceRunning())
+        if(!isGitMaintenanceTaskRunning(config))
             return;
 
         List<Task> configuredTasks = config.getMaintenanceTasks();
+        addTasksToQueue(configuredTasks);
+        createTaskExecutorThread();
 
+        System.out.println(taskExecutor.isAlive() + " Status of execution after");
+        System.out.println(maintenanceQueue);
+    }
+
+    boolean checkIsTaskInQueue(Task task){
+        return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
+    }
+
+    void createTaskExecutorThread(){
+        // Create a new thread and execute the tasks present in the queue;
+        if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
+            System.out.println("Entered this statement");
+            taskExecutor = new Thread(new TaskExecutor(maintenanceQueue), "maintenance-task-executor");
+            taskExecutor.start();
+        }
+    }
+
+    void addTasksToQueue(List<Task> configuredTasks){
         boolean isTaskExecutable;
         for(Task task : configuredTasks){
             if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
@@ -38,20 +58,9 @@ public class TaskScheduler {
                 maintenanceQueue.add(task);
             }
         }
-
-        // Create a new thread and execute the tasks present in the queue;
-        if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
-            System.out.println("Entered this statement");
-            taskExecutor = new Thread(new TaskExecutor(maintenanceQueue), "maintenance-task-executor");
-            taskExecutor.start();
-        }
-
-        System.out.println(taskExecutor.isAlive() + " Status of execution after");
-        System.out.println(maintenanceQueue);
     }
 
-    /* Package protected for use by tests */
-    boolean checkIsTaskInQueue(Task task){
-        return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
+    boolean isGitMaintenanceTaskRunning(MaintenanceTaskConfiguration config){
+        return config.getIsGitMaintenanceRunning();
     }
 }
