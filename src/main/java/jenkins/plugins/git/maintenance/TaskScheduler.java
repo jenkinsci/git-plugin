@@ -28,10 +28,10 @@ public class TaskScheduler {
 
         List<Task> configuredTasks = config.getMaintenanceTasks();
         addTasksToQueue(configuredTasks);
-        createTaskExecutorThread();
 
+        // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
+        createTaskExecutorThread();
         System.out.println(taskExecutor.isAlive() + " Status of execution after");
-        System.out.println(maintenanceQueue);
     }
 
     boolean checkIsTaskInQueue(Task task){
@@ -42,7 +42,7 @@ public class TaskScheduler {
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
             System.out.println("Entered this statement");
-            taskExecutor = new Thread(new TaskExecutor(maintenanceQueue), "maintenance-task-executor");
+            taskExecutor = new Thread(new TaskExecutor(maintenanceQueue.remove(0)), "maintenance-task-executor");
             taskExecutor.start();
         }
     }
