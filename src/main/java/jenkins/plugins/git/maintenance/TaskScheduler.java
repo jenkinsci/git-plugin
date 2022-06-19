@@ -50,7 +50,8 @@ public class TaskScheduler {
         System.out.println(maintenanceQueue);
     }
 
-    private boolean checkIsTaskInQueue(Task task){
+    /* Package protected for use by tests */
+    boolean checkIsTaskInQueue(Task task){
         return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
     }
 }
