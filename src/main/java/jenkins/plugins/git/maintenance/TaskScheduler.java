@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
+import com.google.gson.Gson;
 import jenkins.model.GlobalConfiguration;
 
 import java.util.Calendar;
@@ -42,8 +43,10 @@ public class TaskScheduler {
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
             Task currentTask = maintenanceQueue.remove(0);
-            // Need to guard the currentTask to prevent state change.
-            taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
+            Gson gson = new Gson();
+            // To avoid mutatbility
+            Task copyCurrentTask = gson.fromJson(gson.toJson(currentTask),Task.class);
+            taskExecutor = new Thread(new TaskExecutor(copyCurrentTask), "maintenance-task-executor");
             taskExecutor.start();
         }
     }
