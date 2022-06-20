@@ -1,6 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
-import com.google.gson.Gson;
+import antlr.ANTLRException;
 import jenkins.model.GlobalConfiguration;
 
 import java.util.Calendar;
@@ -21,7 +21,7 @@ public class TaskScheduler {
        this.maintenanceQueue = Collections.synchronizedList(new LinkedList<Task>());
     }
 
-    public void scheduleTasks(){
+    public void scheduleTasks() throws ANTLRException {
         assert config != null;
 
         if(!isGitMaintenanceTaskRunning(config))
@@ -39,14 +39,11 @@ public class TaskScheduler {
         return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
     }
 
-    void createTaskExecutorThread(){
+    void createTaskExecutorThread() throws ANTLRException {
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
             Task currentTask = maintenanceQueue.remove(0);
-            Gson gson = new Gson();
-            // To avoid mutatbility
-            Task copyCurrentTask = gson.fromJson(gson.toJson(currentTask),Task.class);
-            taskExecutor = new Thread(new TaskExecutor(copyCurrentTask), "maintenance-task-executor");
+            taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
             taskExecutor.start();
         }
     }

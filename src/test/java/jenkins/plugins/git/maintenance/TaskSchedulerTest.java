@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,7 +30,7 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    public void testScheduleTasks() {
+    public void testScheduleTasks() throws ANTLRException {
         taskScheduler.scheduleTasks();
     }
 

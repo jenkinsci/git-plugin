@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
+import antlr.ANTLRException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
@@ -15,8 +16,8 @@ public class TaskExecutor implements Runnable {
     Task maintenanceTask;
     File[] cachesDir;
 
-    public TaskExecutor(Task maintenanceTask){
-        this.maintenanceTask = maintenanceTask;
+    public TaskExecutor(Task maintenanceTask) throws ANTLRException {
+        this.maintenanceTask = new Task(maintenanceTask);
         cachesDir = getCachesDir();
     }
 
@@ -32,6 +33,7 @@ public class TaskExecutor implements Runnable {
         for(File file : cachesDir){
             try {
                 gitClient = getGitClient(file);
+                TaskType taskType = maintenanceTask.getTaskType();
 
                 // Need to add git maintenance command in git client plugin
 
