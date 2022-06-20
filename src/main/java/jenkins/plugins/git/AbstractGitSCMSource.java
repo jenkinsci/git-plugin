@@ -55,27 +55,6 @@ import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import hudson.scm.SCM;
 import hudson.security.ACL;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
@@ -121,6 +100,28 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.export.Exported;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Base class for {@link SCMSource} implementations that produce {@link GitSCM} implementations.
@@ -1241,6 +1242,13 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     protected String getCacheEntry() {
         return getCacheEntry(getRemote());
+    }
+
+    protected static File[] getCachesDir(){
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if(jenkins == null)
+            return null;
+        return new File(jenkins.getRootDir(),"caches").listFiles();
     }
 
     protected static File getCacheDir(String cacheEntry) {
