@@ -41,7 +41,6 @@ public class TaskScheduler {
     void createTaskExecutorThread(){
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
-            System.out.println("Entered this statement");
             Task currentTask = maintenanceQueue.remove(0);
             // Need to guard the currentTask to prevent state change.
             taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
