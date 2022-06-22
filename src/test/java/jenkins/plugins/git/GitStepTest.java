@@ -99,13 +99,13 @@ public class GitStepTest {
             "        archive '**'\n" +
             "    }\n" +
             "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Cloning the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("file").isFile());
         sampleRepo.write("nextfile", "");
         sampleRepo.git("add", "nextfile");
         sampleRepo.git("commit", "--message=next");
-        b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        b = r.buildAndAssertSuccess(p);
         r.waitForMessage("Fetching changes from the remote Git repository", b); // GitSCM.retrieveChanges
         assertTrue(b.getArtifactManager().root().child("nextfile").isFile());
     }
@@ -124,7 +124,7 @@ public class GitStepTest {
             "        echo \"token macro expanded branch is ${tokenBranch}\"\n" +
             "    }\n" +
             "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("token macro expanded branch is remotes/origin/master", b); // Unexpected but current behavior
         sampleRepo.write("nextfile", "");
         sampleRepo.git("add", "nextfile");
@@ -168,7 +168,7 @@ public class GitStepTest {
             "        archive '**'\n" +
             "    }\n" +
             "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         VirtualFile artifacts = b.getArtifactManager().root();
         assertTrue(artifacts.child("main/file").isFile());
         assertTrue(artifacts.child("other/otherfile").isFile());
@@ -227,7 +227,7 @@ public class GitStepTest {
             "        git($/" + otherRepo + "/$)\n" +
             "    }\n" +
             "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         assertEquals(1, b.getActions(BuildData.class).size());
         assertEquals(0, b.getActions(GitTagAction.class).size());
         assertEquals(0, b.getChangeSets().size());
@@ -236,7 +236,7 @@ public class GitStepTest {
         otherRepo.write("secondfile", "");
         otherRepo.git("add", "secondfile");
         otherRepo.git("commit", "--message=second");
-        WorkflowRun b2 = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b2 = r.buildAndAssertSuccess(p);
         assertEquals(1, b2.getActions(BuildData.class).size());
         assertEquals(0, b2.getActions(GitTagAction.class).size());
         assertEquals(1, b2.getChangeSets().size());
@@ -256,7 +256,7 @@ public class GitStepTest {
             "  rungit 'commit --all --message=edits'\n" +
             "  rungit 'show master'\n" +
             "}", true));
-        WorkflowRun b = r.assertBuildStatusSuccess(p.scheduleBuild2(0));
+        WorkflowRun b = r.buildAndAssertSuccess(p);
         r.waitForMessage("+edited by build", b);
     }
 

@@ -203,4 +203,3 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
     private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = Logger.getLogger(RevisionParameterAction.class.getName());
 }
-

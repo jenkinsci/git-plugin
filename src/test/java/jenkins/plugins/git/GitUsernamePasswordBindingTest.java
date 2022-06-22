@@ -51,13 +51,7 @@ import static org.hamcrest.Matchers.equalTo;
 public class GitUsernamePasswordBindingTest {
     @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolInstance {2}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                {"randomName", "special%%_342@**", new GitTool("git", "git", null)},
-                {"r-Name", "default=@#(*^!", new GitTool("Default", "git", null)},
-                {"adwesw-unique", "here's-a-quote", new JGitTool()},
-                {"bceas-unique", "He said \"Hello\", then left.", new JGitApacheTool()},
-                {"many-words-in-a-user-name-because-we-can", "&Ampersand&", new JGitApacheTool()},
-        });
+        return Arrays.asList(testData);
     }
 
     @Rule
@@ -82,7 +76,34 @@ public class GitUsernamePasswordBindingTest {
     private UsernamePasswordCredentialsImpl credentials = null;
     private GitUsernamePasswordBinding gitCredBind = null;
 
-    private final Random random = new Random();
+    private static final Random random = new Random();
+
+    private static String[] userNames = {
+        "adwesw-unique",
+        "bceas-unique",
+        "many-words-in-a-user-name-because-we-can",
+        "r-Name",
+        "randomName",
+    };
+    private static String[] passwords = {
+        "&Ampersand&",
+        "He said \"Hello\", then left.",
+        "default=@#(*^!",
+        "here's-a-quote",
+        "special%%_342@**",
+    };
+    private static GitTool[] gitTools = {
+        new GitTool("Default", "git", null),
+        new GitTool("git", "git", null),
+        new JGitApacheTool(),
+        new JGitTool(),
+    };
+
+    /* Create two test data items using random selections from the larger set of data */
+    private static Object[][] testData = new Object[][]{
+        {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
+        {userNames[random.nextInt(userNames.length)], passwords[random.nextInt(passwords.length)], gitTools[random.nextInt(gitTools.length)]},
+    };
 
     public GitUsernamePasswordBindingTest(String username, String password, GitTool gitToolInstance) {
         this.username = username;

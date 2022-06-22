@@ -57,7 +57,7 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		if (data == null && Jenkins.get().getPlugin("promoted-builds") != null) {
             if (build instanceof hudson.plugins.promoted_builds.Promotion) {
                 // We are running as a build promotion, so have to retrieve the git scm from target job
-                AbstractBuild<?,?> targetBuild = ((hudson.plugins.promoted_builds.Promotion) build).getTarget();
+                AbstractBuild<?,?> targetBuild = ((hudson.plugins.promoted_builds.Promotion) build).getTargetBuild();
                 if (targetBuild != null) {
                     data = targetBuild.getAction(BuildData.class);
                 }
@@ -89,4 +89,3 @@ public class GitRevisionBuildParameters extends AbstractBuildParameters {
 		}
 	}
 }
-

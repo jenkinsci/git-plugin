@@ -6,10 +6,6 @@
         <f:textbox name="path" value="${instance.path}" />
     </f:entry>
 
-    <f:entry>
-        <div align="right">
-            <input type="button" value="${%Delete Path}" class="repeatable-delete" style="margin-left: 1em;" />
-        </div>
-    </f:entry>
+    <f:repeatableDeleteButton value="${%Delete Path}" />
 
 </j:jelly>

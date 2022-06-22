@@ -37,104 +37,6 @@ THE SOFTWARE.
         </j:forEach>
       </ul>
     </d:tag>
-    <d:tag name="blockWrapper">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <table class="middle-align">
-            <d:invokeBody/>
-          </table>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="row">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div class="tr">
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <tr>
-            <d:invokeBody/>
-          </tr>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="heading">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <th>
-            <d:invokeBody/>
-          </th>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="td">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <td>
-            <d:invokeBody/>
-          </td>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="td-colspan-3">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <td colspan="3">
-            <d:invokeBody/>
-          </td>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="td-width-100">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div class="td">
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <td>
-            <d:invokeBody/>
-          </td>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
-    <d:tag name="td-nowrap">
-      <j:choose>
-        <j:when test="${divBasedFormLayout}">
-          <div>
-            <d:invokeBody/>
-          </div>
-        </j:when>
-        <j:otherwise>
-          <td style="white-space:nowrap;">
-            <d:invokeBody/>
-          </td>
-        </j:otherwise>
-      </j:choose>
-    </d:tag>
   </d:taglib>
 
   <l:layout norefresh="true" xmlns:local="local">
@@ -169,36 +71,36 @@ THE SOFTWARE.
           <h2>${%Create more tags}</h2>
         </j:if>
         <f:form action="submit" method="post" enctype="multipart/form-data" name="tag">
-          <local:blockWrapper>
-            <local:row>
-              <local:heading></local:heading>
-              <local:heading>${%Branch}</local:heading>
-              <local:heading>${%Tag}</local:heading>
-            </local:row>
+          <div>
+            <div class="tr">
+              <div></div>
+              <div>${%Branch}</div>
+              <div>${%Tag}</div>
+            </div>
             <j:forEach var="m" items="${tags.keySet()}" varStatus="loop">
-              <local:row>
-                <local:td><j:if test="${tags.size()!=1}">
+              <div class="tr">
+                <div><j:if test="${tags.size()!=1}">
                   <input type="checkbox" name="tag${loop.index}" checked="true"
                          id="tag${loop.index}" onchange="updateRow(this,${loop.index})" />
-                </j:if></local:td>
-                <local:td-nowrap><label for="tag${loop.index}">
+                </j:if></div>
+                <div><label for="tag${loop.index}">
                   ${m}
-                </label></local:td-nowrap>
-                <local:td-width-100>
+                </label></div>
+                <div class="td">
                   <input type="text" name="name${loop.index}"
                          value="${it.makeTagURL(m)}" style="width:100%" id="name${loop.index}" />
-                </local:td-width-100>
-              </local:row>
+                </div>
+              </div>
             </j:forEach>
-            <local:row>
-              <local:td-colspan-3>
+            <div class="tr">
+              <div>
                 ${%Commit comment:}
                 <textarea name="comment" rows="1" class="setting-input"><st:out
                  value="Tagged from ${it.run}"/></textarea>
                 <div class="textarea-handle"/>
-              </local:td-colspan-3>
-            </local:row>
-          </local:blockWrapper>
+              </div>
+            </div>
+          </div>
           <f:submit value="${%Tag}" />
           <script>
             <!-- update the visual feedback depending on the checkbox state -->
