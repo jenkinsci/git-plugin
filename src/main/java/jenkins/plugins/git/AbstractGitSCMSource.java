@@ -174,9 +174,11 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if(jenkins != null){
             File[] caches = new File(jenkins.getRootDir(),"caches").listFiles();
-            for(File cache : caches){
-                String cacheEntry = cache.getName();
-                cacheEntries.add(cacheEntry);
+            if(caches != null) {
+                for (File cache : caches) {
+                    String cacheEntry = cache.getName();
+                    cacheEntries.add(cacheEntry);
+                }
             }
         }
     }
