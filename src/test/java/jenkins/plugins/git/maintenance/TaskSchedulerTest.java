@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class TaskSchedulerTest {
@@ -29,6 +30,7 @@ public class TaskSchedulerTest {
 
     }
 
+    // Tested all the internal functions of this method
     @Test
     public void testScheduleTasks() throws ANTLRException {
         taskScheduler.scheduleTasks();
@@ -82,9 +84,27 @@ public class TaskSchedulerTest {
         assertFalse(isGitMaintenanceTaskRunning);
     }
 
+    @Test
+    public void testCreateNoExecutorThread() throws Exception{
+        config.setCronSyntax(TaskType.PREFETCH,"5 1 1 1 1");
+        config.setIsTaskConfigured(TaskType.PREFETCH,true);
 
-    // Need to think about this logic for testing. Issue while creating the thread
-    public void testCreateExecutorThread(){
+        List<Task> maintenanceTasks = config.getMaintenanceTasks();
+        taskScheduler.addTasksToQueue(maintenanceTasks);
+        taskScheduler.createTaskExecutorThread();
+        assertNull(taskScheduler.taskExecutor);
 
+    }
+
+    @Test
+    public void testCreateExecutionThread() throws Exception{
+
+        config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
+        config.setIsTaskConfigured(TaskType.PREFETCH,true);
+
+        List<Task> maintenanceTasks = config.getMaintenanceTasks();
+        taskScheduler.addTasksToQueue(maintenanceTasks);
+        taskScheduler.createTaskExecutorThread();
+        assertTrue(taskScheduler.taskExecutor.isAlive());
     }
 }
