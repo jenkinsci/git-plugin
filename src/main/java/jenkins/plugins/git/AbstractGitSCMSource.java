@@ -105,6 +105,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -167,6 +168,19 @@ public abstract class AbstractGitSCMSource extends SCMSource {
     private static final ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<>();
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
+
+    static Set<String> cacheEntries;
+
+    static {
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if(jenkins != null){
+            File[] caches = new File(jenkins.getRootDir(),"caches").listFiles();
+            for(File cache : caches){
+                String cacheEntry = cache.getName();
+                cacheEntries.add(cacheEntry);
+            }
+        }
+    }
 
     public AbstractGitSCMSource() {
     }
@@ -1244,11 +1258,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         return getCacheEntry(getRemote());
     }
 
-    protected static File[] getCachesDir(){
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
-        if(jenkins == null)
-            return null;
-        return new File(jenkins.getRootDir(),"caches").listFiles();
+    protected static Set<String> getCacheEntries(){
+        return cacheEntries;
     }
 
     protected static File getCacheDir(String cacheEntry) {
@@ -1265,6 +1276,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         if (!cacheDir.isDirectory()) {
             if (createDirectory) {
                 boolean ok = cacheDir.mkdirs();
+                cacheEntries.add(cacheEntry);
                 if (!ok) {
                     LOGGER.log(Level.WARNING, "Failed mkdirs of {0}", cacheDir);
                 }
