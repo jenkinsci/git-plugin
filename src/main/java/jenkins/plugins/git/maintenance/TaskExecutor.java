@@ -10,44 +10,54 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 public class TaskExecutor implements Runnable {
 
     Task maintenanceTask;
-    File[] cachesDir;
+    List<GitMaintenanceSCM.Cache> caches;
 
     public TaskExecutor(Task maintenanceTask) throws ANTLRException {
         this.maintenanceTask = new Task(maintenanceTask);
-        cachesDir = getCachesDir();
+        caches = getCaches();
     }
 
     @Override
     public void run() {
+
+        System.out.println("Entered the Thread");
         // Execute Maintenance Tasks in this class.
 
         // TODO
-        // Need to add locks while running maintenance tasks on caches and remove locks after the maintenance tasks.
 
         GitClient gitClient;
-        for(File file : cachesDir){
+        for(GitMaintenanceSCM.Cache cache : caches){
+
+            // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
+            Lock lock = cache.getLock();
             try {
-                System.out.println("entered the thread");
-                gitClient = getGitClient(file);
+                File cacheFile = cache.getCacheFile();
+                System.out.println("Executing maintenance task for " + cacheFile.getName());
+                gitClient = getGitClient(cacheFile);
                 TaskType taskType = maintenanceTask.getTaskType();
+
+                lock.lock();
+                System.out.println("Locked the cache");
+
                 executeMaintenanceTask(gitClient,taskType);
 
-            } catch (IOException e) {
-
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-
-                throw new RuntimeException(e);
+            } catch (IOException | InterruptedException e) {
+                System.out.println("Need to handle error");
+            }finally {
+                lock.unlock();
+                System.out.println("Unlocked the cache");
             }
         }
 
     }
 
-    void executeMaintenanceTask(GitClient gitClient,TaskType taskType){
+    void executeMaintenanceTask(GitClient gitClient,TaskType taskType) throws InterruptedException{
 
         if(taskType.equals(TaskType.GC)){
             gitClient.maintenance("gc");
@@ -65,8 +75,8 @@ public class TaskExecutor implements Runnable {
 
     }
 
-    File[] getCachesDir(){
-        return GitMaintenanceSCM.getCachesDirectory();
+    List<GitMaintenanceSCM.Cache> getCaches(){
+        return GitMaintenanceSCM.getCaches();
     }
 
     GitClient getGitClient(File file) throws IOException, InterruptedException {

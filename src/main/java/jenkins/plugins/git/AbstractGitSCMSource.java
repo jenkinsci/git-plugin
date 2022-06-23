@@ -105,7 +105,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -169,7 +168,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitSCMSource.class.getName());
 
-    static Set<String> cacheEntries;
+    static Set<String> cacheEntries = new HashSet<>();
 
     static {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
