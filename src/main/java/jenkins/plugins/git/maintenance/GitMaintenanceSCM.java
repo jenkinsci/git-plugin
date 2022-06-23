@@ -10,6 +10,11 @@ import java.util.concurrent.locks.Lock;
 
 public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
+    String remote;
+    protected GitMaintenanceSCM(String remote){
+        this.remote = remote;
+    }
+
     static class Cache {
 
         File cache;
@@ -35,7 +40,7 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
     @Override
     public String getRemote() {
-        return null;
+        return remote;
     }
 
     public static List<Cache> getCaches(){
@@ -53,5 +58,9 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             }
 
             return caches;
+    }
+
+    static File getCacheDirectory(String cacheEntry,boolean createDirectory){
+        return getCacheDir(cacheEntry,createDirectory);
     }
 }
