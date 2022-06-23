@@ -4,6 +4,7 @@ import antlr.ANTLRException;
 import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@RunWith(Parameterized.class)
 public class TaskExecutorTest {
 
     TaskExecutor taskExecutor;
