@@ -26,16 +26,15 @@ public class TaskExecutor implements Runnable {
         // Execute Maintenance Tasks in this class.
 
         // TODO
-        // Need to get the Git Client from the Git-Client-Plugin.
         // Need to add locks while running maintenance tasks on caches and remove locks after the maintenance tasks.
 
         GitClient gitClient;
         for(File file : cachesDir){
             try {
+                System.out.println("entered the thread");
                 gitClient = getGitClient(file);
                 TaskType taskType = maintenanceTask.getTaskType();
-
-                // Need to add git maintenance command in git client plugin
+                executeMaintenanceTask(gitClient,taskType);
 
             } catch (IOException e) {
 
@@ -44,6 +43,24 @@ public class TaskExecutor implements Runnable {
 
                 throw new RuntimeException(e);
             }
+        }
+
+    }
+
+    void executeMaintenanceTask(GitClient gitClient,TaskType taskType){
+
+        if(taskType.equals(TaskType.GC)){
+            gitClient.maintenance("gc");
+        }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
+            gitClient.maintenance("commit-graph");
+        }else if(taskType.equals(TaskType.PREFETCH)){
+            gitClient.maintenance("prefetch");
+        }else if(taskType.equals(TaskType.INCREMENTAL_REPACK)){
+            gitClient.maintenance("incremental-repack");
+        }else if(taskType.equals(TaskType.LOOSE_OBJECTS)){
+            gitClient.maintenance("loose-objects");
+        }else{
+            // Error
         }
 
     }
