@@ -18,7 +18,7 @@ public class TaskScheduler {
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
        this.cal = new GregorianCalendar();
-       this.maintenanceQueue = Collections.synchronizedList(new LinkedList<Task>());
+       this.maintenanceQueue = new LinkedList<Task>();
     }
 
     public void scheduleTasks() throws ANTLRException {

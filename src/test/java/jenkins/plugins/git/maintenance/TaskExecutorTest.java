@@ -3,9 +3,11 @@ package jenkins.plugins.git.maintenance;
 import antlr.ANTLRException;
 import jenkins.model.Jenkins;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.lang.reflect.Executable;
@@ -15,6 +17,9 @@ import java.util.List;
 
 @RunWith(Parameterized.class)
 public class TaskExecutorTest {
+
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     TaskExecutor taskExecutor;
 
@@ -35,13 +40,5 @@ public class TaskExecutorTest {
         }
 
         return tasksToBeExecuted;
-    }
-
-
-    @Test
-    public void testGetGitClient(){
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
-
-        // taskExecutor.getGitClient();
     }
 }
