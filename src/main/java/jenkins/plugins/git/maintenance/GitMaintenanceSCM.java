@@ -60,7 +60,7 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             return caches;
     }
 
-    static File getCacheDirectory(String cacheEntry,boolean createDirectory){
-        return getCacheDir(cacheEntry,createDirectory);
+    String getCacheEntryForTest(){
+        return getCacheEntry();
     }
 }
