@@ -5,9 +5,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.junit.Assert.assertFalse;
@@ -56,28 +54,10 @@ public class TaskTest {
     }
 
     @Test
-    public void checkCronSyntax() throws Exception {
+    public void checkCronSyntax(){
         String cronSyntax = "* * 1 * 1";
         task.setCronSyntax(cronSyntax);
         assertThat(task.getCronSyntax(), is(cronSyntax));
-    }
-
-    @Test
-    public void isTaskExecutable() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        String cronSyntax = "* * * * *";
-        task.setCronSyntax(cronSyntax);
-        boolean isTaskExecutable = task.checkIsTaskExecutable(cal);
-        assertTrue(isTaskExecutable);
-    }
-
-    @Test
-    public void isTaskExecutableWithHSyntax() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        String cronSyntax = "H * * * *";
-        task.setCronSyntax(cronSyntax);
-        boolean isTaskExecutable = task.checkIsTaskExecutable(cal);
-        assertFalse(isTaskExecutable);
     }
 
     @Test
@@ -91,7 +71,7 @@ public class TaskTest {
     }
 
     @Test
-    public void testGetCronSyntax() throws Exception {
+    public void testGetCronSyntax(){
         String cronSyntax = "* * 1 * 1";
         task.setCronSyntax(cronSyntax);
         assertThat(task.getCronSyntax(), is(cronSyntax));
@@ -113,31 +93,5 @@ public class TaskTest {
     public void testGetIsTaskConfiguredFalse() {
         task.setIsTaskConfigured(false);
         assertFalse(task.getIsTaskConfigured());
-    }
-
-    // Syntax not yet supported by this class
-    // Should parameterize test for cron syntax as well
-    // @Test
-    public void testSetCronSyntaxDaily() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        task.setCronSyntax("@daily");
-        assertTrue(task.checkIsTaskExecutable(cal));
-    }
-
-    // Should parameterize test for cron syntax as well
-    @Test
-    public void testCheckIsTaskExecutable() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        String cronSyntax = "* * * * *";
-        task.setCronSyntax(cronSyntax);
-        assertTrue(task.checkIsTaskExecutable(cal));
-    }
-
-    // Should parameterize test for cron syntax as well
-    @Test
-    public void testCheckIsTaskExecutableWithHSyntax() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        task.setCronSyntax("H * * * *");
-        assertFalse(task.checkIsTaskExecutable(cal));
     }
 }

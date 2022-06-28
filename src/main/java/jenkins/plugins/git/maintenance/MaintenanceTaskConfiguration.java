@@ -45,7 +45,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         return ImmutableList.copyOf(maintenanceTasks);
     }
 
-    public void setCronSyntax(TaskType taskType, String cronSyntax) throws ANTLRException {
+    public void setCronSyntax(TaskType taskType, String cronSyntax){
         Task updatedTask = maintenanceTasks.get(taskType);
         updatedTask.setCronSyntax(cronSyntax);
         maintenanceTasks.put(taskType,updatedTask);
