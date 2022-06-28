@@ -8,6 +8,7 @@ import jenkins.model.GlobalConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
     private void configureMaintenanceTasks(){
         // check git version and based on git version, add the maintenance tasks to the list
         // Can add default cron syntax for maintenance tasks.
-        maintenanceTasks = new HashMap<>();
+        maintenanceTasks = new LinkedHashMap<>();
 
         maintenanceTasks.put(TaskType.COMMIT_GRAPH,new Task(TaskType.COMMIT_GRAPH));
         maintenanceTasks.put(TaskType.PREFETCH,new Task(TaskType.PREFETCH));
