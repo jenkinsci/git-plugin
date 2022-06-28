@@ -1,6 +1,8 @@
 package jenkins.plugins.git.maintenance;
 
 import antlr.ANTLRException;
+import hudson.scheduler.CronTab;
+import hudson.scheduler.CronTabList;
 import jenkins.model.GlobalConfiguration;
 
 import java.util.Calendar;
@@ -21,17 +23,23 @@ public class TaskScheduler {
        this.maintenanceQueue = new LinkedList<Task>();
     }
 
-    public void scheduleTasks() throws ANTLRException {
+    public void scheduleTasks() {
         assert config != null;
 
         if(!isGitMaintenanceTaskRunning(config))
             return;
 
-        List<Task> configuredTasks = config.getMaintenanceTasks();
-        addTasksToQueue(configuredTasks);
+        try {
+            List<Task> configuredTasks = config.getMaintenanceTasks();
+            addTasksToQueue(configuredTasks);
 
-        // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
-        createTaskExecutorThread();
+            // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
+            createTaskExecutorThread();
+
+        }catch (ANTLRException e){
+            // Log the error to a log file...
+
+        }
         System.out.println(taskExecutor.isAlive() + " Status of execution after");
     }
 
@@ -45,16 +53,18 @@ public class TaskScheduler {
             Task currentTask = maintenanceQueue.remove(0);
             taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
             taskExecutor.start();
+            System.out.println("Executing maintenance task " + currentTask.getTaskName());
         }
     }
 
-    void addTasksToQueue(List<Task> configuredTasks){
+    void addTasksToQueue(List<Task> configuredTasks) throws ANTLRException {
         boolean isTaskExecutable;
         for(Task task : configuredTasks){
             if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
                 continue;
 
-            isTaskExecutable = task.checkIsTaskExecutable(cal);
+            CronTabList cronTabList = getCronTabList(task.getCronSyntax());
+            isTaskExecutable = checkIsTaskExecutable(cronTabList);
             if(isTaskExecutable){
                 maintenanceQueue.add(task);
             }
@@ -63,5 +73,19 @@ public class TaskScheduler {
 
     boolean isGitMaintenanceTaskRunning(MaintenanceTaskConfiguration config){
         return config.getIsGitMaintenanceRunning();
+    }
+
+    CronTabList getCronTabList(String cronSyntax) throws ANTLRException {
+        CronTab cronTab = new CronTab(cronSyntax.trim());
+        return new CronTabList(Collections.singletonList(cronTab));
+    }
+
+    boolean checkIsTaskExecutable(CronTabList cronTabList){
+        boolean isTaskExecutable = false;
+
+        isTaskExecutable = cronTabList.check(cal);
+        // Further validation such as not schedule a task every minute etc. can be added here.
+
+        return isTaskExecutable;
     }
 }

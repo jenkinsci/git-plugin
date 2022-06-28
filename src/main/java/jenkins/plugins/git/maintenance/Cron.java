@@ -1,6 +1,5 @@
 package jenkins.plugins.git.maintenance;
 
-import antlr.ANTLRException;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 
@@ -23,11 +22,11 @@ public class Cron extends PeriodicWork {
     }
 
     @Override
-    protected void doRun() throws Exception {
+    protected void doRun(){
         scheduleMaintenanceTask();
     }
 
-    private void scheduleMaintenanceTask() throws ANTLRException {
+    private void scheduleMaintenanceTask(){
         if(taskScheduler == null){
             taskScheduler = new TaskScheduler();
         }
