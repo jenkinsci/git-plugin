@@ -77,12 +77,12 @@ public class TaskSchedulerTest {
     @Test
     public void testIsGitMaintenanceTaskRunning(){
         // Setting value to true
-        config.setIsGitMaintenanceRunning();
+        config.setIsGitMaintenanceRunning(true);
         boolean isGitMaintenanceTaskRunning = taskScheduler.isGitMaintenanceTaskRunning(config);
         assertTrue(isGitMaintenanceTaskRunning);
 
         // set value to false
-        config.setIsGitMaintenanceRunning();
+        config.setIsGitMaintenanceRunning(false);
         isGitMaintenanceTaskRunning = taskScheduler.isGitMaintenanceTaskRunning(config);
         assertFalse(isGitMaintenanceTaskRunning);
     }

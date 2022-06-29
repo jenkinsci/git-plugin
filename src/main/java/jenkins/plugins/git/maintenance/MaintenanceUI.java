@@ -21,9 +21,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class MaintenanceUI extends ManagementLink {
+
+    private static final Logger LOGGER = Logger.getLogger(MaintenanceUI.class.getName());
 
     @Override
     public String getIconFileName() {
@@ -53,6 +57,7 @@ public class MaintenanceUI extends ManagementLink {
     @Restricted(NoExternalUse.class)
     public void doSave(StaplerRequest req, StaplerResponse res) throws IOException, ServletException {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+            LOGGER.log(Level.WARNING,"User doesn't have the required permission to access git-maintenance.");
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -60,37 +65,41 @@ public class MaintenanceUI extends ManagementLink {
         JSONObject formData = req.getSubmittedForm();
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
 
-            assert config != null;
-            for (TaskType taskType : TaskType.values()) {
-                JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
-                String cronSyntax = maintenanceData.getString("cronSyntax");
-                boolean isApplied = maintenanceData.getBoolean("isApplied");
+        // Need to check with mentors if I can use the below syntax.
+        assert config != null;
+        for (TaskType taskType : TaskType.values()) {
+            JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
+            String cronSyntax = maintenanceData.getString("cronSyntax");
+            boolean isApplied = maintenanceData.getBoolean("isApplied");
 
-                // Need to perform form validation again to avoid incorrect save of data.
-                config.setCronSyntax(taskType, cronSyntax);
-                config.setIsTaskConfigured(taskType, isApplied);
-            }
-            config.save();
-            System.out.println("Saving");
-            res.sendRedirect("");
-
+            config.setCronSyntax(taskType, cronSyntax);
+            config.setIsTaskConfigured(taskType, isApplied);
+        }
+        config.save();
+        LOGGER.log(Level.FINE,"Maintenance configuration data stored successfully on Jenkins.");
+        res.sendRedirect("");
     }
 
     @RequirePOST
     @Restricted(NoExternalUse.class)
     public void doToggleExecutionState(StaplerRequest req, StaplerResponse res) throws IOException {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+            LOGGER.log(Level.WARNING,"User doesn't have the required permission to access git-maintenance");
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-        if(config != null) {
-            config.setIsGitMaintenanceRunning();
-            config.save();
-        }
 
-        System.out.println("Executing...");
+        // Need to check with mentors if I can use the below syntax.
+        assert config != null;
+        boolean updatedGitMaintenanceExecutionStatus = !config.getIsGitMaintenanceRunning();
+        config.setIsGitMaintenanceRunning(updatedGitMaintenanceExecutionStatus);
+        config.save();
+        if(updatedGitMaintenanceExecutionStatus)
+            LOGGER.log(Level.FINE,"Git Maintenance tasks are scheduled for execution.");
+        else
+            LOGGER.log(Level.FINE,"Terminated scheduling of Git Maintenance tasks.");
         res.sendRedirect("");
     }
 
@@ -116,20 +125,16 @@ public class MaintenanceUI extends ManagementLink {
     public List<Task> getMaintenanceTasks(){
         // Can check if git version doesn't support a maintenance task and remove that maintenance task from the UI.
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-        if(config != null)
-            return config.getMaintenanceTasks();
-
-        // need to throw error;
-        return null;
+        // Need to check with mentors if I can use the below syntax.
+        assert config != null;
+        return config.getMaintenanceTasks();
     }
 
     public boolean getIsGitMaintenanceRunning(){
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-        if(config != null)
-            return config.getIsGitMaintenanceRunning();
-
-        // need to throw error;
-        return false;
+        // Need to check with mentors if I can use the below syntax.
+        assert config != null;
+        return config.getIsGitMaintenanceRunning();
     }
 
     public String getGitVersion(){

@@ -7,7 +7,6 @@ import hudson.scheduler.CronTab;
 import jenkins.model.GlobalConfiguration;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         return isGitMaintenanceRunning;
     }
 
-    public void setIsGitMaintenanceRunning(){isGitMaintenanceRunning = !isGitMaintenanceRunning;}
+    public void setIsGitMaintenanceRunning(boolean executionStatus){isGitMaintenanceRunning = executionStatus;}
 
     public void setIsTaskConfigured(TaskType taskType, boolean isConfigured){
         Task task = maintenanceTasks.get(taskType);
