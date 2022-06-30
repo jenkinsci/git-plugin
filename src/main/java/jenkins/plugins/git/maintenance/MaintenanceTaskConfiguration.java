@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class MaintenanceTaskConfiguration extends GlobalConfiguration {
@@ -17,12 +19,18 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
     private Map<TaskType,Task> maintenanceTasks;
     private boolean isGitMaintenanceRunning;
 
+    private static final Logger LOGGER = Logger.getLogger(MaintenanceTaskConfiguration.class.getName());
+
     public MaintenanceTaskConfiguration(){
 
+        LOGGER.log(Level.FINE,"Loading git-maintenance configuration if present on jenkins controller.");
         load();
         if(maintenanceTasks == null) {
+            LOGGER.log(Level.FINE,"Git maintenance configuration not present on Jenkins, creating a default configuration");
             configureMaintenanceTasks();
             isGitMaintenanceRunning = false;
+        }else{
+            LOGGER.log(Level.FINE,"Loaded git maintenance configuration successfully.");
         }
     }
     private void configureMaintenanceTasks(){
@@ -49,6 +57,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         Task updatedTask = maintenanceTasks.get(taskType);
         updatedTask.setCronSyntax(cronSyntax);
         maintenanceTasks.put(taskType,updatedTask);
+        LOGGER.log(Level.FINE,"Assigned " + cronSyntax + " to " + taskType.getTaskName());
     }
 
     public boolean getIsGitMaintenanceRunning(){
@@ -60,16 +69,14 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
     public void setIsTaskConfigured(TaskType taskType, boolean isConfigured){
         Task task = maintenanceTasks.get(taskType);
         task.setIsTaskConfigured(isConfigured);
+        LOGGER.log(Level.FINE,taskType.getTaskName() + " execution status: " + isConfigured);
     }
 
     public static String checkSanity(String cron) throws ANTLRException {
        try {
            CronTab cronTab = new CronTab(cron.trim());
            String msg = cronTab.checkSanity();
-           if (msg != null) {
-               return msg;
-           }
-           return null;
+           return msg;
        }catch(ANTLRException e){
            if(cron.contains("**"))
                throw new ANTLRException("You appear to be missing whitespace between * and *.");
