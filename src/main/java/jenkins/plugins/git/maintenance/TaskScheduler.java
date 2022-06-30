@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TaskScheduler {
 
@@ -17,6 +19,9 @@ public class TaskScheduler {
     Calendar cal;
     List<Task> maintenanceQueue;
     Thread taskExecutor;
+
+    private static final Logger LOGGER = Logger.getLogger(TaskScheduler.class.getName());
+
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
        this.cal = new GregorianCalendar();
@@ -26,47 +31,50 @@ public class TaskScheduler {
     public void scheduleTasks() {
         assert config != null;
 
-        if(!isGitMaintenanceTaskRunning(config))
+        if(!isGitMaintenanceTaskRunning(config)) {
+            // Logs ever 1 min. Need to check performance impact.
+            LOGGER.log(Level.FINER,"Maintenance Task execution not configured");
             return;
+        }
 
-        try {
             List<Task> configuredTasks = config.getMaintenanceTasks();
             addTasksToQueue(configuredTasks);
 
             // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
             createTaskExecutorThread();
-
-        }catch (ANTLRException e){
-            // Log the error to a log file...
-
-        }
-        System.out.println(taskExecutor.isAlive() + " Status of execution after");
     }
 
     boolean checkIsTaskInQueue(Task task){
         return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
     }
 
-    void createTaskExecutorThread() throws ANTLRException {
+    void createTaskExecutorThread(){
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
             Task currentTask = maintenanceQueue.remove(0);
             taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
             taskExecutor.start();
-            System.out.println("Executing maintenance task " + currentTask.getTaskName());
+            LOGGER.log(Level.FINE,"Thread created to execute " + currentTask.getTaskName() + " maintenance task.");
         }
     }
 
-    void addTasksToQueue(List<Task> configuredTasks) throws ANTLRException {
+    void addTasksToQueue(List<Task> configuredTasks){
+
         boolean isTaskExecutable;
         for(Task task : configuredTasks){
-            if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
-                continue;
+            try {
+                if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
+                    continue;
 
-            CronTabList cronTabList = getCronTabList(task.getCronSyntax());
-            isTaskExecutable = checkIsTaskExecutable(cronTabList);
-            if(isTaskExecutable){
-                maintenanceQueue.add(task);
+                CronTabList cronTabList = getCronTabList(task.getCronSyntax());
+                isTaskExecutable = checkIsTaskExecutable(cronTabList);
+                if(isTaskExecutable){
+                    maintenanceQueue.add(task);
+                    LOGGER.log(Level.FINE,task.getTaskName() + " added to maintenance queue.");
+                }
+            }catch (ANTLRException e){
+                // Logged every minute. Need to check performance.
+                LOGGER.log(Level.WARNING,"Invalid cron syntax:[ "+ task.getTaskName() + " ]" + ",msg: " + e.getMessage());
             }
         }
     }

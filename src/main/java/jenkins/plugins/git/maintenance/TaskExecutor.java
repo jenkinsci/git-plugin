@@ -18,7 +18,7 @@ public class TaskExecutor implements Runnable {
     Task maintenanceTask;
     List<GitMaintenanceSCM.Cache> caches;
 
-    public TaskExecutor(Task maintenanceTask) throws ANTLRException {
+    public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
         caches = getCaches();
     }

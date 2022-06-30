@@ -13,7 +13,7 @@ public class Task {
         this.task = task;
     }
 
-    public Task(Task copyTask) throws ANTLRException {
+    public Task(Task copyTask){
         // Used for copying the task;
         this(copyTask.getTaskType());
         setCronSyntax(copyTask.getCronSyntax());
