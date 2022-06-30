@@ -54,7 +54,7 @@ public class TaskScheduler {
             Task currentTask = maintenanceQueue.remove(0);
             taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
             taskExecutor.start();
-            LOGGER.log(Level.FINE,"Thread created to execute " + currentTask.getTaskName() + " maintenance task.");
+            LOGGER.log(Level.FINE,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " maintenance task.");
         }
     }
 

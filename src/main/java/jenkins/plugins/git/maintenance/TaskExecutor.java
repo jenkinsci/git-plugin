@@ -1,6 +1,5 @@
 package jenkins.plugins.git.maintenance;
 
-import antlr.ANTLRException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
@@ -12,11 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TaskExecutor implements Runnable {
 
     Task maintenanceTask;
     List<GitMaintenanceSCM.Cache> caches;
+
+    private static final Logger LOGGER = Logger.getLogger(TaskExecutor.class.getName());
 
     public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
@@ -26,32 +29,34 @@ public class TaskExecutor implements Runnable {
     @Override
     public void run() {
 
-        System.out.println("Entered the Thread");
-        // Execute Maintenance Tasks in this class.
-
-        // TODO
-
+        LOGGER.log(Level.FINE,"Running maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
         GitClient gitClient;
         for(GitMaintenanceSCM.Cache cache : caches){
 
             // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
             Lock lock = cache.getLock();
+            File cacheFile = cache.getCacheFile();
             try {
-                File cacheFile = cache.getCacheFile();
-                System.out.println("Executing maintenance task for " + cacheFile.getName());
                 gitClient = getGitClient(cacheFile);
+
+                if(gitClient == null) {
+                    LOGGER.log(Level.WARNING,"No GitTool found while running " + maintenanceTask.getTaskName());
+                    return;
+                }
+
                 TaskType taskType = maintenanceTask.getTaskType();
 
                 lock.lock();
-                System.out.println("Locked the cache");
+                LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " locked.");
 
                 executeMaintenanceTask(gitClient,taskType);
 
             } catch (IOException | InterruptedException e) {
-                System.out.println("Need to handle error");
+                // What is this error???
+                LOGGER.log(Level.WARNING,"Git Client couldn't be initialized.");
             }finally {
                 lock.unlock();
-                System.out.println("Unlocked the cache");
+                LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " unlocked.");
             }
         }
 
@@ -70,7 +75,7 @@ public class TaskExecutor implements Runnable {
         }else if(taskType.equals(TaskType.LOOSE_OBJECTS)){
             gitClient.maintenance("loose-objects");
         }else{
-            // Error
+            LOGGER.log(Level.WARNING,"Invalid maintenance task.");
         }
 
     }
