@@ -13,6 +13,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.springframework.security.core.AuthenticationException;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -417,7 +418,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             }
             try {
                 user = User.get(csAuthorEmail, false, Collections.emptyMap());
-            } catch (AuthenticationException authException) {
+            } catch (AuthenticationException | UncheckedExecutionException authException) {
                 // JENKINS-67491 - do not fail due to an authentication exception
                 return User.getUnknown();
             }
