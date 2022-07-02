@@ -5,8 +5,9 @@
         <l:main-panel>
             <div>
                 <h1 class="text-primary">Maintenance Tasks</h1>
-                <p><b><u>Git Version</u>: </b>${it.getGitVersion()} (HardCoded Value)</p>
-                <p>Enter cron syntax for periodic execution of maintenance tasks</p>
+                <p><b><u>Git Version</u>: </b>${it.getGitVersion()}</p>
+                <p style="color:red;">${it.updateGitVersionHelperText()}</p>
+                <p>Enter cron syntax to execute maintenance tasks periodically</p>
                 <f:form action="save" method="post" name="save">
                 <j:forEach var="task" items="${it.getMaintenanceTasks()}">
                     <div name="${task.getTaskType()}">

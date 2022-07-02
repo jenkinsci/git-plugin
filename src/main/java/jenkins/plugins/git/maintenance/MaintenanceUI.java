@@ -138,7 +138,19 @@ public class MaintenanceUI extends ManagementLink {
     }
 
     public String getGitVersion(){
-        return "2.36.1";
+        List<Integer> gitVersion = MaintenanceTaskConfiguration.getGitVersion();
+        return gitVersion.get(0) + "." + gitVersion.get(1) + "." + gitVersion.get(2);
+    }
+
+    public String updateGitVersionHelperText(){
+        List<Integer> gitVersion = MaintenanceTaskConfiguration.getGitVersion();
+        int gitMajor = gitVersion.get(0);
+        int gitMinor = gitVersion.get(1);
+
+        if((gitMajor == 2 && gitMinor >= 30) || (gitMajor > 2))
+            return "";
+
+        return "Use git version >= 2.30 to get full benefits of git maintenance.";
     }
 
     @NonNull

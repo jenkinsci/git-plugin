@@ -3,15 +3,22 @@ package jenkins.plugins.git.maintenance;
 import antlr.ANTLRException;
 import com.google.common.collect.ImmutableList;
 import hudson.Extension;
+import hudson.Launcher;
+import hudson.model.TaskListener;
 import hudson.scheduler.CronTab;
+import hudson.util.StreamTaskListener;
 import jenkins.model.GlobalConfiguration;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Extension
 public class MaintenanceTaskConfiguration extends GlobalConfiguration {
@@ -82,5 +89,26 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
                throw new ANTLRException("You appear to be missing whitespace between * and *.");
            throw new ANTLRException(String.format("Invalid input: \"%s\": %s", cron, e), e);
        }
+    }
+
+    public static List<Integer> getGitVersion(){
+
+        final TaskListener procListener = StreamTaskListener.fromStderr();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
+            if (returnCode != 0) {
+                LOGGER.log(Level.WARNING, "Command 'git --version' returned " + returnCode);
+            }
+        } catch (IOException | InterruptedException ex) {
+            LOGGER.log(Level.WARNING, "Exception checking git version " + ex);
+        }
+        final String versionOutput = out.toString().trim();
+        final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
+
+        // 0th index is Major Version.
+        // 1st index is Minor Version.
+        // 2nd index is Patch Version.
+        return Arrays.stream(fields).map(Integer::parseInt).collect(Collectors.toList());
     }
 }
