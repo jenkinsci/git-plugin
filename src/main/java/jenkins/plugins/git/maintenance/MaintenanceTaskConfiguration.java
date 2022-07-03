@@ -91,7 +91,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
        }
     }
 
-    public static List<Integer> getGitVersion(){
+    static List<Integer> getGitVersion(){
 
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -4,6 +4,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -80,6 +81,10 @@ public class TaskExecutor implements Runnable {
 
     }
 
+    private List<Integer> getGitVersion(){
+        return MaintenanceTaskConfiguration.getGitVersion();
+    }
+
     List<GitMaintenanceSCM.Cache> getCaches(){
         return GitMaintenanceSCM.getCaches();
     }
@@ -87,7 +92,9 @@ public class TaskExecutor implements Runnable {
     GitClient getGitClient(File file) throws IOException, InterruptedException {
         // What exactly is default tool here?
         TaskListener listener = TaskListener.NULL;
-        GitTool gitTool = GitUtils.resolveGitTool("Default", listener);
+        final Jenkins jenkins = Jenkins.getInstanceOrNull();
+        // How to get Jenkins controller as the node?
+        GitTool gitTool = GitUtils.resolveGitTool(null,jenkins,null, listener);
         if(gitTool == null)
             return null;
 
