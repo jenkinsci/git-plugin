@@ -5,6 +5,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -39,11 +40,8 @@ public class TaskExecutor implements Runnable {
             File cacheFile = cache.getCacheFile();
             try {
                 gitClient = getGitClient(cacheFile);
-
-                if(gitClient == null) {
-                    LOGGER.log(Level.WARNING,"No GitTool found while running " + maintenanceTask.getTaskName());
+                if(gitClient == null)
                     return;
-                }
 
                 TaskType taskType = maintenanceTask.getTaskType();
 
@@ -95,13 +93,20 @@ public class TaskExecutor implements Runnable {
         final Jenkins jenkins = Jenkins.getInstanceOrNull();
         // How to get Jenkins controller as the node?
         GitTool gitTool = GitUtils.resolveGitTool(null,jenkins,null, listener);
-        if(gitTool == null)
+        if(gitTool == null) {
+            LOGGER.log(Level.WARNING,"No GitTool found while running " + maintenanceTask.getTaskName());
             return null;
+        }
 
         String gitExe = gitTool.getGitExe();
         FilePath workspace = new FilePath(file);
         Git git = Git.with(listener,null).in(workspace).using(gitExe);
 
-        return git.getClient();
+        GitClient gitClient = git.getClient();
+        if(gitClient instanceof CliGitAPIImpl)
+            return gitClient;
+
+        LOGGER.log(Level.WARNING,"Cli Git is not being used to execute maintenance tasks");
+        return null;
     }
 }
