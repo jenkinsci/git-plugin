@@ -180,6 +180,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     cacheEntries.add(cacheEntry);
                 }
             }
+            LOGGER.log(Level.FINE,"Caches on Jenkins controller " + cacheEntries);
         }
     }
 

@@ -7,10 +7,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
     String remote;
+
+    private static Logger LOGGER = Logger.getLogger(GitMaintenanceSCM.class.getName());
     protected GitMaintenanceSCM(String remote){
         this.remote = remote;
     }
@@ -54,6 +58,7 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             for (String cacheEntry : getCacheEntries()) {
                 File cacheDir = getCacheDir(cacheEntry);
                 Lock cacheLock = getCacheLock(cacheEntry);
+                LOGGER.log(Level.FINE,"Cache Entry " + cacheEntry);
                 caches.add(new Cache(cacheDir,cacheLock));
             }
 
