@@ -26,6 +26,12 @@ public class Cron extends PeriodicWork {
         scheduleMaintenanceTask();
     }
 
+    void terminateMaintenanceTaskExecution(){
+        if(taskScheduler != null){
+            taskScheduler.terminateMaintenanceTaskExecution();
+        }
+    }
+
     private void scheduleMaintenanceTask(){
         if(taskScheduler == null){
             taskScheduler = new TaskScheduler();

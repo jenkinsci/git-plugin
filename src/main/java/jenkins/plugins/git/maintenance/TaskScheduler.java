@@ -39,7 +39,6 @@ public class TaskScheduler {
 
             List<Task> configuredTasks = config.getMaintenanceTasks();
             addTasksToQueue(configuredTasks);
-
             // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
             createTaskExecutorThread();
     }
@@ -95,5 +94,11 @@ public class TaskScheduler {
         // Further validation such as not schedule a task every minute etc. can be added here.
 
         return isTaskExecutable;
+    }
+
+    void terminateMaintenanceTaskExecution(){
+        this.maintenanceQueue = new LinkedList<>();
+        if(taskExecutor.isAlive())
+            taskExecutor.interrupt();
     }
 }

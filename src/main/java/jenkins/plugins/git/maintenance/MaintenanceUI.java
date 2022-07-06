@@ -4,6 +4,7 @@ import antlr.ANTLRException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ManagementLink;
+import hudson.model.PeriodicWork;
 import hudson.security.Permission;
 import hudson.util.FormValidation;
 import jenkins.model.GlobalConfiguration;
@@ -98,8 +99,13 @@ public class MaintenanceUI extends ManagementLink {
         config.save();
         if(updatedGitMaintenanceExecutionStatus)
             LOGGER.log(Level.FINE,"Git Maintenance tasks are scheduled for execution.");
-        else
-            LOGGER.log(Level.FINE,"Terminated scheduling of Git Maintenance tasks.");
+        else {
+            Cron cron = PeriodicWork.all().get(Cron.class);
+            assert cron != null;
+            cron.terminateMaintenanceTaskExecution();
+            cron.cancel();
+            LOGGER.log(Level.FINE, "Terminated scheduling of Git Maintenance tasks.");
+        }
         res.sendRedirect("");
     }
 
@@ -158,5 +164,4 @@ public class MaintenanceUI extends ManagementLink {
     public Permission getRequiredPermission() {
         return Jenkins.ADMINISTER;
     }
-
 }
