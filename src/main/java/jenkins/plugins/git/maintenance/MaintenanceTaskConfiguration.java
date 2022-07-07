@@ -97,10 +97,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         final TaskListener procListener = StreamTaskListener.fromStderr();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            int returnCode = new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
-            if (returnCode != 0) {
-                LOGGER.log(Level.WARNING, "Command 'git --version' returned " + returnCode);
-            }
+            new Launcher.LocalLauncher(procListener).launch().cmds("git", "--version").stdout(out).join();
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.WARNING, "Exception checking git version " + ex);
         }

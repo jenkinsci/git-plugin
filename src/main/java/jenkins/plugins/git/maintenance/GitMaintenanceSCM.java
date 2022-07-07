@@ -56,7 +56,7 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
             List<Cache> caches = new ArrayList<>();
             for (String cacheEntry : getCacheEntries()) {
-                File cacheDir = getCacheDir(cacheEntry);
+                File cacheDir = getCacheDir(cacheEntry,false);
                 Lock cacheLock = getCacheLock(cacheEntry);
                 LOGGER.log(Level.FINE,"Cache Entry " + cacheEntry);
                 caches.add(new Cache(cacheDir,cacheLock));
