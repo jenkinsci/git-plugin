@@ -142,7 +142,6 @@ public class TaskSchedulerTest {
             // Should throw an exception.
             taskScheduler.getCronTabList(cronSyntax);
         }
-
     }
 
 }

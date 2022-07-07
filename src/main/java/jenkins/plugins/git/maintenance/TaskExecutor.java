@@ -65,6 +65,15 @@ public class TaskExecutor implements Runnable {
 
     void executeMaintenanceTask(GitClient gitClient,TaskType taskType) throws InterruptedException{
 
+        if(gitVersionAtLeast(2,30,0)){
+            executeGitMaintenance(gitClient,taskType);
+        }else{
+            executeLegacyGitMaintenance(gitClient,taskType);
+        }
+    }
+
+    void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
+
         if(taskType.equals(TaskType.GC)){
             gitClient.maintenance("gc");
         }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
@@ -78,11 +87,13 @@ public class TaskExecutor implements Runnable {
         }else{
             LOGGER.log(Level.WARNING,"Invalid maintenance task.");
         }
+    }
+    void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType){
 
     }
 
-    private List<Integer> getGitVersion(){
-        return MaintenanceTaskConfiguration.getGitVersion();
+    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){
+        return MaintenanceTaskConfiguration.gitVersionAtLeast(neededMajor,neededMinor,neededPatch);
     }
 
     List<GitMaintenanceSCM.Cache> getCaches(){

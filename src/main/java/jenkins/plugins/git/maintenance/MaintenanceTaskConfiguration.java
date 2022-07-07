@@ -8,6 +8,7 @@ import hudson.model.TaskListener;
 import hudson.scheduler.CronTab;
 import hudson.util.StreamTaskListener;
 import jenkins.model.GlobalConfiguration;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -110,5 +111,28 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         // 1st index is Minor Version.
         // 2nd index is Patch Version.
         return Arrays.stream(fields).map(Integer::parseInt).collect(Collectors.toList());
+    }
+
+
+    public static boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
+        List<Integer> fields = getGitVersion();
+        final int gitMajor = fields.get(0);
+        final int gitMinor = fields.get(1);
+        final int gitPatch = fields.get(2);
+
+        final String versionOutput = StringUtils.join(fields,".");
+        if (gitMajor < 1 || gitMajor > 3) {
+            LOGGER.log(Level.WARNING, "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields.get(0) + "'");
+        }
+        if (gitMinor < 0 || gitMinor > 50) {
+            LOGGER.log(Level.WARNING, "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields.get(1) + "'");
+        }
+        if (gitPatch < 0 || gitPatch > 20) {
+            LOGGER.log(Level.WARNING, "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields.get(2) + "'");
+        }
+
+        return gitMajor >  neededMajor ||
+                (gitMajor == neededMajor && gitMinor >  neededMinor) ||
+                (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
     }
 }
