@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 public class TaskExecutor implements Runnable {
 
     Task maintenanceTask;
-    List<GitMaintenanceSCM.Cache> caches;
+    private List<GitMaintenanceSCM.Cache> caches;
 
     private static final Logger LOGGER = Logger.getLogger(TaskExecutor.class.getName());
 
@@ -73,7 +73,8 @@ public class TaskExecutor implements Runnable {
     }
 
     void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
-
+        // checking git version for every cache. Reason is because in the UI, the git version can be changed anytime.
+        LOGGER.log(Level.FINE,"Git version >= 2.30.0 detected. Using official git maintenance command.");
         if(taskType.equals(TaskType.GC)){
             gitClient.maintenance("gc");
         }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
@@ -89,7 +90,7 @@ public class TaskExecutor implements Runnable {
         }
     }
     void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType){
-
+        LOGGER.log(Level.FINE,"Git version < 2.30.0 detected. Using legacy git maintenance commands");
     }
 
     private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){

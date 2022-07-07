@@ -15,10 +15,10 @@ import java.util.logging.Logger;
 
 public class TaskScheduler {
 
-    MaintenanceTaskConfiguration config;
-    Calendar cal;
-    List<Task> maintenanceQueue;
-    Thread taskExecutor;
+    private MaintenanceTaskConfiguration config;
+    private Calendar cal;
+    private List<Task> maintenanceQueue;
+    private Thread taskExecutor;
 
     private static final Logger LOGGER = Logger.getLogger(TaskScheduler.class.getName());
 
@@ -103,9 +103,16 @@ public class TaskScheduler {
 
     void terminateMaintenanceTaskExecution(){
         this.maintenanceQueue = new LinkedList<>();
-        if(taskExecutor.isAlive())
+        if(taskExecutor != null && taskExecutor.isAlive())
             taskExecutor.interrupt();
 
         LOGGER.log(Level.FINE,"Terminated Execution of maintenance tasks");
+    }
+
+    List<Task> getMaintenanceQueue(){
+        return maintenanceQueue;
+    }
+    Thread getTaskExecutor(){
+        return taskExecutor;
     }
 }

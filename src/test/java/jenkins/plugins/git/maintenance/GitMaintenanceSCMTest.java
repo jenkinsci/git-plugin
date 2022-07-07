@@ -3,21 +3,20 @@ package jenkins.plugins.git.maintenance;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.GitSCMExtension;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.api.SCMFileSystem;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class GitMaintenanceSCMTest {
@@ -30,6 +29,15 @@ public class GitMaintenanceSCMTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void clearAllCaches() throws IOException {
+        File[] caches = new File(Jenkins.getInstanceOrNull().getRootDir(),"caches").listFiles();
+        if(caches != null)
+            for(File cache : caches){
+                FileUtils.deleteDirectory(cache);
+            }
+    }
 
     @Test
     public void testGetCaches() throws Exception{
@@ -63,13 +71,15 @@ public class GitMaintenanceSCMTest {
             assertTrue(cachesExists);
         }
     }
-//
+
+    // What happens to caches when deleted from jenkins controller. We need to delete the cache even from our HashSet present in AbstactGitSCM class
 //    @Test
 //    public void testNoCachesExistsOnJenkinsController(){
 //        List<GitMaintenanceSCM.Cache> caches = GitMaintenanceSCM.getCaches();
+////        System.out.println(caches);
 //        assertEquals(0,caches.size());
 //    }
-//
+
 //    @Test
 //    public void testGetLockAndCacheFile() throws Exception{
 //        sampleRepo1.init();

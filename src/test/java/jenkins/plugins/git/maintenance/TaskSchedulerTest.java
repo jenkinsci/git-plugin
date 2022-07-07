@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -71,7 +72,7 @@ public class TaskSchedulerTest {
         int length = 2;
 
         taskScheduler.addTasksToQueue(maintenanceTasks);
-        assertThat(taskScheduler.maintenanceQueue.size(),is(length));
+        assertThat(taskScheduler.getMaintenanceQueue().size(),is(length));
     }
 
     @Test
@@ -95,7 +96,7 @@ public class TaskSchedulerTest {
         List<Task> maintenanceTasks = config.getMaintenanceTasks();
         taskScheduler.addTasksToQueue(maintenanceTasks);
         taskScheduler.createTaskExecutorThread();
-        assertNull(taskScheduler.taskExecutor);
+        assertNull(taskScheduler.getTaskExecutor());
 
     }
 
@@ -108,7 +109,7 @@ public class TaskSchedulerTest {
         List<Task> maintenanceTasks = config.getMaintenanceTasks();
         taskScheduler.addTasksToQueue(maintenanceTasks);
         taskScheduler.createTaskExecutorThread();
-        assertTrue(taskScheduler.taskExecutor.isAlive());
+        assertTrue(taskScheduler.getTaskExecutor().isAlive());
     }
 
     @Test
@@ -142,6 +143,13 @@ public class TaskSchedulerTest {
             // Should throw an exception.
             taskScheduler.getCronTabList(cronSyntax);
         }
+    }
+
+    @Test
+    public void testTerminateMaintenanceTask(){
+        taskScheduler.terminateMaintenanceTaskExecution();
+        assertNull(taskScheduler.getTaskExecutor());
+        assertEquals(0,taskScheduler.getMaintenanceQueue().size());
     }
 
 }
