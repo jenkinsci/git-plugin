@@ -27,12 +27,13 @@ public class TaskExecutor implements Runnable {
     public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
         caches = getCaches();
+        LOGGER.log(Level.FINE,"New Thread created to execute " + maintenanceTask.getTaskName());
     }
 
     @Override
     public void run() {
 
-        LOGGER.log(Level.FINE,"Running maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
+        LOGGER.log(Level.FINE,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
         GitClient gitClient;
         for(GitMaintenanceSCM.Cache cache : caches){
 
@@ -85,7 +86,9 @@ public class TaskExecutor implements Runnable {
     }
 
     List<GitMaintenanceSCM.Cache> getCaches(){
-        return GitMaintenanceSCM.getCaches();
+        List<GitMaintenanceSCM.Cache> caches =  GitMaintenanceSCM.getCaches();
+        LOGGER.log(Level.FINE,"Fetched all caches present on Jenkins Controller.");
+        return caches;
     }
 
     GitClient getGitClient(File file) throws IOException, InterruptedException {

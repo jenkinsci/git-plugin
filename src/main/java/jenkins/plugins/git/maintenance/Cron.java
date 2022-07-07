@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 @Extension
 public class Cron extends PeriodicWork {
 
-    TaskScheduler taskScheduler;
+    private TaskScheduler taskScheduler;
 
     @Override
     public long getInitialDelay(){

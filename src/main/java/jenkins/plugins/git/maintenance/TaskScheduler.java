@@ -26,6 +26,7 @@ public class TaskScheduler {
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
        this.cal = new GregorianCalendar();
        this.maintenanceQueue = new LinkedList<Task>();
+       LOGGER.log(Level.FINE,"TaskScheduler class Initialized.");
     }
 
     public void scheduleTasks() {
@@ -33,7 +34,7 @@ public class TaskScheduler {
 
         if(!isGitMaintenanceTaskRunning(config)) {
             // Logs ever 1 min. Need to check performance impact.
-            LOGGER.log(Level.FINER,"Maintenance Task execution not configured");
+            LOGGER.log(Level.FINER,"Maintenance Task execution not configured in UI.");
             return;
         }
 
@@ -44,7 +45,11 @@ public class TaskScheduler {
     }
 
     boolean checkIsTaskInQueue(Task task){
-        return maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
+        boolean isTaskInQueue = maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
+        if(isTaskInQueue){
+            LOGGER.log(Level.FINE,task.getTaskName() + " is already present in maintenance queue.");
+        }
+        return isTaskInQueue;
     }
 
     void createTaskExecutorThread(){
@@ -53,7 +58,7 @@ public class TaskScheduler {
             Task currentTask = maintenanceQueue.remove(0);
             taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
             taskExecutor.start();
-            LOGGER.log(Level.FINE,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " maintenance task.");
+            LOGGER.log(Level.FINE,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " task.");
         }
     }
 
@@ -100,5 +105,7 @@ public class TaskScheduler {
         this.maintenanceQueue = new LinkedList<>();
         if(taskExecutor.isAlive())
             taskExecutor.interrupt();
+
+        LOGGER.log(Level.FINE,"Terminated Execution of maintenance tasks");
     }
 }
