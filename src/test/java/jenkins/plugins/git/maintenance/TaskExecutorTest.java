@@ -1,13 +1,12 @@
 package jenkins.plugins.git.maintenance;
 
-import antlr.ANTLRException;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.scm.api.SCMFileSystem;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -23,16 +22,16 @@ import static org.junit.Assert.assertNotNull;
 
 public class TaskExecutorTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
 
-    @Rule
-    public GitSampleRepoRule sampleRepo1 = new GitSampleRepoRule();
+    @ClassRule
+    public static GitSampleRepoRule sampleRepo1 = new GitSampleRepoRule();
 
-    TaskExecutor taskExecutor;
+    private static TaskExecutor taskExecutor;
 
-    @Before
-    public void setUp() throws Exception{
+    @BeforeClass
+    public static void setUp() throws Exception{
         // Tested for a single maintenance tasks. Do I have to test for all maintenance tasks?
         MaintenanceTaskConfiguration config = new MaintenanceTaskConfiguration();
         config.setIsTaskConfigured(TaskType.COMMIT_GRAPH,true);
@@ -59,13 +58,22 @@ public class TaskExecutorTest {
     }
 
     @Test
-    public void testExecuteMaintenanceTask(){
-        return;
+    public void testGitVersionAtLeast(){
+        // This test is dependent on users machine.
+        taskExecutor.gitVersionAtLeast(2,1,1);
     }
 
     @Test
-    public void testRun(){
-        return;
+    public void testGetCaches(){
+        assertNotNull(taskExecutor.getCaches());
     }
 
+    @Test
+    public void testExecuteMaintenanceTask() throws InterruptedException {
+        GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
+        File cacheFile = cache.getCacheFile();
+        GitClient gitClient = taskExecutor.getGitClient(cacheFile);
+        TaskType taskType = TaskType.COMMIT_GRAPH;
+        taskExecutor.executeMaintenanceTask(gitClient,taskType);
+    }
 }
