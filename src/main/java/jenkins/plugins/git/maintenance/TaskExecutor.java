@@ -35,8 +35,8 @@ public class TaskExecutor implements Runnable {
 
         LOGGER.log(Level.FINE,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
         GitClient gitClient;
+        TaskType taskType = maintenanceTask.getTaskType();
         for(GitMaintenanceSCM.Cache cache : caches){
-
             // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
             Lock lock = cache.getLock();
             File cacheFile = cache.getCacheFile();
@@ -45,16 +45,11 @@ public class TaskExecutor implements Runnable {
                 if(gitClient == null)
                     return;
 
-                TaskType taskType = maintenanceTask.getTaskType();
-
                 lock.lock();
                 LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " locked.");
-
                 executeMaintenanceTask(gitClient,taskType);
-
-            } catch (IOException | InterruptedException e) {
-                // What is this error???
-                LOGGER.log(Level.WARNING,"Git Client couldn't be initialized.");
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.FINE,"Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
             }finally {
                 lock.unlock();
                 LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " unlocked.");
@@ -89,11 +84,43 @@ public class TaskExecutor implements Runnable {
             LOGGER.log(Level.WARNING,"Invalid maintenance task.");
         }
     }
-    void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType){
+    void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException{
         LOGGER.log(Level.FINE,"Git version < 2.30.0 detected. Using legacy git maintenance commands");
+
+        // If git version < 2.18.0 =====> run only gc.
+        // If git version >= 2.18.0 && git version <=2.19.1 ======> run gc and commit-graph
+        // If git version >= 2.20.0 && git version < 2.30 ========> run gc , commit-graph && multi-pack-index
+
+        if(gitVersionAtLeast(2,20,0)){
+            // execute gc, commit-graph && multi-pack-index
+            if(taskType.equals(TaskType.GC)){
+                gitClient.maintenanceLegacy("gc");
+            }else if(taskType.equals(TaskType.INCREMENTAL_REPACK)){
+                gitClient.maintenanceLegacy("incremental-repack");
+            }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
+                gitClient.maintenanceLegacy("commit-graph");
+            }else{
+                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+            }
+        }else if(gitVersionAtLeast(2,18,0)){
+            // execute gc && commit-graph
+            if(taskType.equals(TaskType.GC))
+                gitClient.maintenanceLegacy("gc");
+            else if(taskType.equals(TaskType.COMMIT_GRAPH))
+                gitClient.maintenanceLegacy("commit-graph");
+            else
+                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+        }else {
+            // These are git versions less than 2.18.0
+            // execute gc only
+            if(taskType.equals(TaskType.GC))
+                gitClient.maintenanceLegacy("gc");
+            else
+                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+        }
     }
 
-    private boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){
+    boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){
         return MaintenanceTaskConfiguration.gitVersionAtLeast(neededMajor,neededMinor,neededPatch);
     }
 
@@ -103,26 +130,29 @@ public class TaskExecutor implements Runnable {
         return caches;
     }
 
-    GitClient getGitClient(File file) throws IOException, InterruptedException {
-        // What exactly is default tool here?
-        TaskListener listener = new LogTaskListener(LOGGER,Level.FINE);
-        final Jenkins jenkins = Jenkins.getInstanceOrNull();
-        // How to get Jenkins controller as the node?
-        GitTool gitTool = GitUtils.resolveGitTool(null,jenkins,null, listener);
-        if(gitTool == null) {
-            LOGGER.log(Level.WARNING,"No GitTool found while running " + maintenanceTask.getTaskName());
-            return null;
+    GitClient getGitClient(File file){
+        try {
+            TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
+            final Jenkins jenkins = Jenkins.getInstanceOrNull();
+            // How to get Jenkins controller as the node?
+            GitTool gitTool = GitUtils.resolveGitTool(null, jenkins, null, listener);
+            if (gitTool == null) {
+                LOGGER.log(Level.WARNING, "No GitTool found while running " + maintenanceTask.getTaskName());
+                return null;
+            }
+
+            String gitExe = gitTool.getGitExe();
+            FilePath workspace = new FilePath(file);
+            Git git = Git.with(listener, null).in(workspace).using(gitExe);
+
+            GitClient gitClient = git.getClient();
+            if (gitClient instanceof CliGitAPIImpl)
+                return gitClient;
+
+            LOGGER.log(Level.WARNING, "Cli Git is not being used to execute maintenance tasks");
+        }catch (InterruptedException | IOException e ){
+            LOGGER.log(Level.WARNING,"Git Client couldn't be initialized.");
         }
-
-        String gitExe = gitTool.getGitExe();
-        FilePath workspace = new FilePath(file);
-        Git git = Git.with(listener,null).in(workspace).using(gitExe);
-
-        GitClient gitClient = git.getClient();
-        if(gitClient instanceof CliGitAPIImpl)
-            return gitClient;
-
-        LOGGER.log(Level.WARNING,"Cli Git is not being used to execute maintenance tasks");
         return null;
     }
 }
