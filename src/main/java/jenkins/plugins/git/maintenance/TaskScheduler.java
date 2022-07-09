@@ -3,6 +3,7 @@ package jenkins.plugins.git.maintenance;
 import antlr.ANTLRException;
 import hudson.scheduler.CronTab;
 import hudson.scheduler.CronTabList;
+import hudson.scheduler.Hash;
 import jenkins.model.GlobalConfiguration;
 
 import java.util.Calendar;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,7 +90,10 @@ public class TaskScheduler {
     }
 
     CronTabList getCronTabList(String cronSyntax) throws ANTLRException {
-        CronTab cronTab = new CronTab(cronSyntax.trim());
+        Random random = new Random();
+        // Random number between 0 & 100000
+        String seed = String.valueOf((random.nextInt(100000)));
+        CronTab cronTab = new CronTab(cronSyntax.trim(), Hash.from(seed));
         return new CronTabList(Collections.singletonList(cronTab));
     }
 
