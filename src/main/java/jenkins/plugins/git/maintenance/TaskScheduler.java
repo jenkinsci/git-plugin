@@ -108,6 +108,7 @@ public class TaskScheduler {
 
     void terminateMaintenanceTaskExecution(){
         this.maintenanceQueue = new LinkedList<>();
+        // A better mechanism to kill thread will be implemented.
         if(taskExecutor != null && taskExecutor.isAlive())
             taskExecutor.interrupt();
 

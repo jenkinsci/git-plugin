@@ -16,7 +16,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class GitMaintenanceSCMTest {
@@ -64,6 +69,7 @@ public class GitMaintenanceSCMTest {
             boolean cachesExists = false;
             for(GitMaintenanceSCM gitMaintenanceSCM : gitMaintenanceSCMS){
                 cachesExists = gitMaintenanceSCM.getCacheEntryForTest().equals(cacheDir);
+                assertNull(gitMaintenanceSCM.getCredentialsId());
                 if(cachesExists)
                     break;
             }
@@ -96,4 +102,22 @@ public class GitMaintenanceSCMTest {
 //            assertThat(cache.getCacheFile(),instanceOf(File.class));
 //        });
 //    }
+
+
+    @Test
+    public void testGetCacheFile(){
+        File file = Jenkins.getInstanceOrNull().getRootDir();
+        Lock lock = new ReentrantLock();
+        GitMaintenanceSCM.Cache cache = new GitMaintenanceSCM.Cache(file,lock);
+        assertEquals(file.getAbsolutePath(),cache.getCacheFile().getAbsolutePath());
+    }
+
+    @Test
+    public void testGetLock(){
+        File file = Jenkins.getInstanceOrNull().getRootDir();
+        Lock lock = new ReentrantLock();
+        GitMaintenanceSCM.Cache cache = new GitMaintenanceSCM.Cache(file,lock);
+        assertNotNull(cache.getLock());
+    }
+
 }
