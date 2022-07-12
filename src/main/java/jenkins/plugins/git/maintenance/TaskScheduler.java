@@ -23,6 +23,7 @@ public class TaskScheduler {
     private Thread taskExecutor;
 
     private static final Logger LOGGER = Logger.getLogger(TaskScheduler.class.getName());
+    private static final Random random = new Random();
 
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
@@ -90,7 +91,6 @@ public class TaskScheduler {
     }
 
     CronTabList getCronTabList(String cronSyntax) throws ANTLRException {
-        Random random = new Random();
         // Random number between 0 & 100000
         String seed = String.valueOf((random.nextInt(100000)));
         CronTab cronTab = new CronTab(cronSyntax.trim(), Hash.from(seed));
