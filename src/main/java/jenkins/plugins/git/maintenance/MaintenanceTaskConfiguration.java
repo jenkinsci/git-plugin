@@ -12,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -101,7 +103,12 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.WARNING, "Exception checking git version " + ex);
         }
-        final String versionOutput = out.toString().trim();
+        String versionOutput = "";
+        try {
+            versionOutput = out.toString(StandardCharsets.UTF_8.toString()).trim();
+        } catch (UnsupportedEncodingException ue) {
+            LOGGER.log(Level.WARNING, "Unsupported encoding checking git version", ue);
+        }
         final String[] fields = versionOutput.split(" ")[2].replaceAll("msysgit.", "").replaceAll("windows.", "").split("\\.");
 
         // 0th index is Major Version.
