@@ -65,6 +65,9 @@ public class GitMaintenanceSCMTest {
         List<GitMaintenanceSCM.Cache> caches = GitMaintenanceSCM.getCaches();
 
         for(GitMaintenanceSCM.Cache cache : caches){
+            if (cache == null) {
+                continue;
+            }
             String cacheDir = cache.getCacheFile().getName();
             boolean cachesExists = false;
             for(GitMaintenanceSCM gitMaintenanceSCM : gitMaintenanceSCMS){
