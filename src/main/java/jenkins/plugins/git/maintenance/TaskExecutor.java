@@ -142,14 +142,18 @@ public class TaskExecutor implements Runnable {
             }
 
             String gitExe = gitTool.getGitExe();
-            FilePath workspace = new FilePath(file);
-            Git git = Git.with(listener, null).in(workspace).using(gitExe);
+            if (file != null) {
+                FilePath workspace = new FilePath(file);
+                Git git = Git.with(listener, null).in(workspace).using(gitExe);
 
-            GitClient gitClient = git.getClient();
-            if (gitClient instanceof CliGitAPIImpl)
-                return gitClient;
+                GitClient gitClient = git.getClient();
+                if (gitClient instanceof CliGitAPIImpl)
+                    return gitClient;
+                LOGGER.log(Level.WARNING, "JGit requested, but does not execute maintenance tasks");
+            } else {
+                LOGGER.log(Level.WARNING, "Cli Git will not execute maintenance tasks due to null file arg");
+            }
 
-            LOGGER.log(Level.WARNING, "Cli Git is not being used to execute maintenance tasks");
         }catch (InterruptedException | IOException e ){
             LOGGER.log(Level.WARNING,"Git Client couldn't be initialized.");
         }
