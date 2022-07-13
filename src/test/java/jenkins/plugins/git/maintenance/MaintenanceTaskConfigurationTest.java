@@ -89,9 +89,9 @@ public class MaintenanceTaskConfigurationTest {
         List<Integer> gitVersion = MaintenanceTaskConfiguration.getGitVersion();
         assertThat("Version list size error", gitVersion.size(), is(greaterThan(1)));
         assertThat("Major version out of range", gitVersion.get(0), is(both(greaterThan(0)).and(lessThan(99))));
-        assertThat("Minor version out of range", gitVersion.get(1), is(both(greaterThan(0)).and(lessThan(99))));
+        assertThat("Minor version out of range", gitVersion.get(1), is(both(greaterThan(-1)).and(lessThan(99))));
         if (gitVersion.size() > 2) {
-            assertThat("Patch version out of range", gitVersion.get(2), is(both(greaterThan(0)).and(lessThan(99))));
+            assertThat("Patch version out of range", gitVersion.get(2), is(both(greaterThan(-1)).and(lessThan(99))));
         }
     }
 
