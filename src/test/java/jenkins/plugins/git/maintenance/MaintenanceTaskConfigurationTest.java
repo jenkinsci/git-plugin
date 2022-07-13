@@ -7,6 +7,12 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.junit.Assert.assertEquals;
 
 public class MaintenanceTaskConfigurationTest {
@@ -82,7 +88,12 @@ public class MaintenanceTaskConfigurationTest {
     @Test
     public void testGetGitVersion(){
         List<Integer> gitVersion = MaintenanceTaskConfiguration.getGitVersion();
-        assertEquals(3,gitVersion.size());
+        assertThat("Version list size error", gitVersion.size(), is(greaterThan(1)));
+        assertThat("Major version out of range", gitVersion.get(0), is(both(greaterThan(0)).and(lessThan(99))));
+        assertThat("Minor version out of range", gitVersion.get(1), is(both(greaterThan(0)).and(lessThan(99))));
+        if (gitVersion.size() > 2) {
+            assertThat("Patch version out of range", gitVersion.get(2), is(both(greaterThan(0)).and(lessThan(99))));
+        }
     }
 
     // This test depends on the computers git version.
