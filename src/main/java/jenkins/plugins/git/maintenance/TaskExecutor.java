@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 public class TaskExecutor implements Runnable {
 
+    private volatile boolean isThreadAlive;
     Task maintenanceTask;
     private List<GitMaintenanceSCM.Cache> caches;
 
@@ -27,6 +28,7 @@ public class TaskExecutor implements Runnable {
     public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
         caches = getCaches();
+        isThreadAlive = true;
         LOGGER.log(Level.FINE,"New Thread created to execute " + maintenanceTask.getTaskName());
     }
 
@@ -36,24 +38,32 @@ public class TaskExecutor implements Runnable {
         LOGGER.log(Level.FINE,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
         GitClient gitClient;
         TaskType taskType = maintenanceTask.getTaskType();
-        for(GitMaintenanceSCM.Cache cache : caches){
-            // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
-            Lock lock = cache.getLock();
-            File cacheFile = cache.getCacheFile();
-            try {
-                gitClient = getGitClient(cacheFile);
-                if(gitClient == null)
-                    return;
+        try {
+            for (GitMaintenanceSCM.Cache cache : caches) {
+                if (isThreadAlive) {
+                    // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
+                    Lock lock = cache.getLock();
+                    File cacheFile = cache.getCacheFile();
+                    try {
+                        gitClient = getGitClient(cacheFile);
+                        if (gitClient == null)
+                            return;
 
-                lock.lock();
-                LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " locked.");
-                executeMaintenanceTask(gitClient,taskType);
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.FINE,"Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
-            }finally {
-                lock.unlock();
-                LOGGER.log(Level.FINE,"Cache " + cacheFile.getName() + " unlocked.");
+                        lock.lock();
+                        LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " locked.");
+                        executeMaintenanceTask(gitClient, taskType);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
+                    } finally {
+                        lock.unlock();
+                        LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " unlocked.");
+                    }
+                } else {
+                    throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
+                }
             }
+        }catch (InterruptedException e){
+            LOGGER.log(Level.WARNING,"Interrupted Exception. Msg: " + e.getMessage());
         }
 
     }
@@ -158,5 +168,9 @@ public class TaskExecutor implements Runnable {
             LOGGER.log(Level.WARNING,"Git Client couldn't be initialized.");
         }
         return null;
+    }
+
+    public void terminateThread(){
+        isThreadAlive = false;
     }
 }

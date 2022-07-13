@@ -21,6 +21,7 @@ public class TaskScheduler {
     private Calendar cal;
     private List<Task> maintenanceQueue;
     private Thread taskExecutor;
+    private TaskExecutor taskExecutorRunnable;
 
     private static final Logger LOGGER = Logger.getLogger(TaskScheduler.class.getName());
     private static final Random random = new Random();
@@ -59,7 +60,8 @@ public class TaskScheduler {
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
             Task currentTask = maintenanceQueue.remove(0);
-            taskExecutor = new Thread(new TaskExecutor(currentTask), "maintenance-task-executor");
+            taskExecutorRunnable = new TaskExecutor(currentTask);
+            taskExecutor = new Thread(taskExecutorRunnable, "maintenance-task-executor");
             taskExecutor.start();
             LOGGER.log(Level.FINE,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " task.");
         }
@@ -108,9 +110,8 @@ public class TaskScheduler {
 
     void terminateMaintenanceTaskExecution(){
         this.maintenanceQueue = new LinkedList<>();
-        // A better mechanism to kill thread will be implemented.
         if(taskExecutor != null && taskExecutor.isAlive())
-            taskExecutor.interrupt();
+            taskExecutorRunnable.terminateThread();
 
         LOGGER.log(Level.FINE,"Terminated Execution of maintenance tasks");
     }

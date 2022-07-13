@@ -1,11 +1,16 @@
 package jenkins.plugins.git.maintenance;
 
 import antlr.ANTLRException;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitSCM;
+import jenkins.plugins.git.GitSampleRepoRule;
+import jenkins.scm.api.SCMFileSystem;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +25,9 @@ public class TaskSchedulerTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @Rule
+    public GitSampleRepoRule sampleRepo1 = new GitSampleRepoRule();
 
     private TaskScheduler taskScheduler;
     private MaintenanceTaskConfiguration config;
@@ -117,16 +125,27 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    public void testTerminateMaintenanceTaskDuringThreadExecution() throws InterruptedException {
+    public void testTerminateMaintenanceTaskDuringThreadExecution() throws Exception {
         config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);
+        // Need to add few caches to test if the Thread is being terminated...
+
+        sampleRepo1.init();
+        sampleRepo1.git("checkout", "-b", "bug/JENKINS-42817");
+        sampleRepo1.write("file", "modified");
+        sampleRepo1.git("commit", "--all", "--message=dev");
+
+        SCMFileSystem.of(j.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo1.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.emptyList()));
+
         List<Task> tasks = config.getMaintenanceTasks();
         taskScheduler.addTasksToQueue(tasks);
         taskScheduler.createTaskExecutorThread();
 
         assertTrue(taskScheduler.getTaskExecutor().isAlive());
         taskScheduler.terminateMaintenanceTaskExecution();
-        assertTrue(taskScheduler.getTaskExecutor().isInterrupted());
+        // This test could depend on CPU speed. Faster execution can fail the test.
+        Thread.sleep(1);
+        assertFalse(taskScheduler.getTaskExecutor().isAlive());
     }
 
 }
