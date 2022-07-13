@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.hamcrest.number.OrderingComparison.lessThan;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class MaintenanceTaskConfigurationTest {
 
@@ -32,7 +32,7 @@ public class MaintenanceTaskConfigurationTest {
             List<Task> maintenanceTasks = config.getMaintenanceTasks();
             for(Task task : maintenanceTasks){
                 if(task.getTaskType().equals(taskType)){
-                    assertEquals(cronSyntax,task.getCronSyntax());
+                    assertThat(task.getCronSyntax(), is(cronSyntax));
                     break;
                 }
             }
@@ -51,7 +51,7 @@ public class MaintenanceTaskConfigurationTest {
             List<Task> maintenanceTasks = config.getMaintenanceTasks();
             for(Task task : maintenanceTasks){
                 if(task.getTaskType().equals(taskType)){
-                    assertEquals(isMaintenanceTaskConfigured,task.getIsTaskConfigured());
+                    assertThat(task.getIsTaskConfigured(), is(isMaintenanceTaskConfigured));
                     break;
                 }
             }
@@ -60,13 +60,12 @@ public class MaintenanceTaskConfigurationTest {
 
     @Test
     public void setIsMaintenanceTaskRunning(){
-        // When status is false.
-        boolean status = config.getIsGitMaintenanceRunning();
-        assertEquals(false,status);
+        // Default status
+        assertFalse(config.getIsGitMaintenanceRunning());
 
         // When status is set to true
-//        status = config.setIsGitMaintenanceTaskRunning();
-//        assertEquals(true,status);
+        // Maintenance needs to be running
+        // assertTrue(config.getIsGitMaintenanceRunning());
     }
 
     @Test
