@@ -34,18 +34,21 @@ public class TaskScheduler {
     }
 
     public void scheduleTasks() {
-        assert config != null;
-
-        if(!isGitMaintenanceTaskRunning(config)) {
-            // Logs ever 1 min. Need to check performance impact.
-            LOGGER.log(Level.FINER,"Maintenance Task execution not configured in UI.");
-            return;
-        }
+        if(config != null) {
+            if (!isGitMaintenanceTaskRunning(config)) {
+                // Logs ever 1 min. Need to check performance impact.
+                LOGGER.log(Level.FINER, "Maintenance Task execution not configured in UI.");
+                return;
+            }
 
             List<Task> configuredTasks = config.getMaintenanceTasks();
             addTasksToQueue(configuredTasks);
             // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
             createTaskExecutorThread();
+        }else{
+            LOGGER.log(Level.FINE,"Couldn't load Global git maintenance configuration. Internal Error.");
+        }
+
     }
 
     boolean checkIsTaskInQueue(Task task){

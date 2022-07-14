@@ -21,6 +21,7 @@ import org.kohsuke.stapler.verb.POST;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,19 +67,21 @@ public class MaintenanceUI extends ManagementLink {
         JSONObject formData = req.getSubmittedForm();
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
 
-        // Need to check with mentors if I can use the below syntax.
-        assert config != null;
-        for (TaskType taskType : TaskType.values()) {
-            JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
-            String cronSyntax = maintenanceData.getString("cronSyntax");
-            boolean isApplied = maintenanceData.getBoolean("isApplied");
+        if(config != null) {
+            for (TaskType taskType : TaskType.values()) {
+                JSONObject maintenanceData = formData.getJSONObject(taskType.toString());
+                String cronSyntax = maintenanceData.getString("cronSyntax");
+                boolean isApplied = maintenanceData.getBoolean("isApplied");
 
-            config.setCronSyntax(taskType, cronSyntax);
-            config.setIsTaskConfigured(taskType, isApplied);
+                config.setCronSyntax(taskType, cronSyntax);
+                config.setIsTaskConfigured(taskType, isApplied);
+            }
+            config.save();
+            LOGGER.log(Level.FINE, "Maintenance configuration data stored successfully on Jenkins.");
+            res.sendRedirect("");
+            return;
         }
-        config.save();
-        LOGGER.log(Level.FINE,"Maintenance configuration data stored successfully on Jenkins.");
-        res.sendRedirect("");
+        LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
     }
 
     @RequirePOST
@@ -92,21 +95,26 @@ public class MaintenanceUI extends ManagementLink {
 
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
 
-        // Need to check with mentors if I can use the below syntax.
-        assert config != null;
-        boolean updatedGitMaintenanceExecutionStatus = !config.getIsGitMaintenanceRunning();
-        config.setIsGitMaintenanceRunning(updatedGitMaintenanceExecutionStatus);
-        config.save();
-        if(updatedGitMaintenanceExecutionStatus)
-            LOGGER.log(Level.FINE,"Git Maintenance tasks are scheduled for execution.");
-        else {
-            Cron cron = PeriodicWork.all().get(Cron.class);
-            assert cron != null;
-            cron.terminateMaintenanceTaskExecution();
-            cron.cancel();
-            LOGGER.log(Level.FINE, "Terminated scheduling of Git Maintenance tasks.");
+        if(config != null) {
+            boolean updatedGitMaintenanceExecutionStatus = !config.getIsGitMaintenanceRunning();
+            config.setIsGitMaintenanceRunning(updatedGitMaintenanceExecutionStatus);
+            config.save();
+            if (updatedGitMaintenanceExecutionStatus)
+                LOGGER.log(Level.FINE, "Git Maintenance tasks are scheduled for execution.");
+            else {
+                Cron cron = PeriodicWork.all().get(Cron.class);
+                if (cron != null) {
+                    cron.terminateMaintenanceTaskExecution();
+                    cron.cancel();
+                    LOGGER.log(Level.FINE, "Terminated scheduling of Git Maintenance tasks.");
+                } else {
+                    LOGGER.log(Level.WARNING, "Couldn't Terminate Maintenance Task. Internal Error.");
+                }
+            }
+            res.sendRedirect("");
+            return;
         }
-        res.sendRedirect("");
+        LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
     }
 
     @POST
@@ -131,16 +139,18 @@ public class MaintenanceUI extends ManagementLink {
     public List<Task> getMaintenanceTasks(){
         // Can check if git version doesn't support a maintenance task and remove that maintenance task from the UI.
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-        // Need to check with mentors if I can use the below syntax.
-        assert config != null;
-        return config.getMaintenanceTasks();
+        if(config != null)
+            return config.getMaintenanceTasks();
+        LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
+        return new ArrayList<>();
     }
 
     public boolean getIsGitMaintenanceRunning(){
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-        // Need to check with mentors if I can use the below syntax.
-        assert config != null;
-        return config.getIsGitMaintenanceRunning();
+        if(config != null)
+            return config.getIsGitMaintenanceRunning();
+        LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
+        return false;
     }
 
     public String getGitVersion(){
