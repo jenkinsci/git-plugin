@@ -92,6 +92,7 @@ public class TaskExecutor implements Runnable {
             gitClient.maintenance("loose-objects");
         }else{
             LOGGER.log(Level.WARNING,"Invalid maintenance task.");
+            terminateThread();
         }
     }
     void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException{
@@ -111,6 +112,7 @@ public class TaskExecutor implements Runnable {
                 gitClient.maintenanceLegacy("commit-graph");
             }else{
                 LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                terminateThread();
             }
         }else if(gitVersionAtLeast(2,18,0)){
             // execute gc && commit-graph
@@ -118,15 +120,19 @@ public class TaskExecutor implements Runnable {
                 gitClient.maintenanceLegacy("gc");
             else if(taskType.equals(TaskType.COMMIT_GRAPH))
                 gitClient.maintenanceLegacy("commit-graph");
-            else
-                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+            else {
+                LOGGER.log(Level.FINE, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                terminateThread();
+            }
         }else {
             // These are git versions less than 2.18.0
             // execute gc only
             if(taskType.equals(TaskType.GC))
                 gitClient.maintenanceLegacy("gc");
-            else
-                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+            else {
+                LOGGER.log(Level.FINE, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                terminateThread();
+            }
         }
     }
 
