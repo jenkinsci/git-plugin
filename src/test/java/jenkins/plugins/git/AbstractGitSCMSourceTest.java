@@ -1081,6 +1081,33 @@ public class AbstractGitSCMSourceTest {
             sharedSampleRepo = null;
         }
     }
+
+    @Test
+    public void shouldReturnExactMatchOverRelativeMatchTest() throws Exception {
+        // TODO: The idea is that this code should now make sure that there isn't an exact match before sending something back
+        sampleRepo.init();
+        String masterHash = sampleRepo.head();
+        sampleRepo.git("checkout", "-b", "dev");
+        sampleRepo.write("file", "modified");
+        sampleRepo.git("commit", "--all", "--message=dev");
+        String v1Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified2");
+        sampleRepo.git("commit", "--all", "--message=dev2");
+        String v2Hash = sampleRepo.head();
+        sampleRepo.write("file", "modified3");
+        sampleRepo.git("commit", "--all", "--message=dev3");
+        String devHash = sampleRepo.head();
+        GitSCMSource source = new GitSCMSource(sampleRepo.toString());
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
+
+        TaskListener listener = StreamTaskListener.fromStderr();
+
+        listener.getLogger().println("\n=== fetch('master') ===\n");
+        SCMRevision rev = source.fetch(masterHash, listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(rev.getHead().getName(), is("master"));
+    }
+
     //Ugly but MockGitClient needs to be static and no good way to pass it on
     static GitSampleRepoRule sharedSampleRepo;
 
