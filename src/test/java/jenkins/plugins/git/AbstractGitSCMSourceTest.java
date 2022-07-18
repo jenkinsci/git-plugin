@@ -11,10 +11,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Action;
-import hudson.model.Actionable;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
@@ -33,11 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import jenkins.plugins.git.traits.BranchDiscoveryTrait;
-import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
-import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
-import jenkins.plugins.git.traits.PruneStaleBranchTrait;
-import jenkins.plugins.git.traits.TagDiscoveryTrait;
+
+import jenkins.plugins.git.traits.*;
 
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -1082,30 +1076,69 @@ public class AbstractGitSCMSourceTest {
         }
     }
 
+    @Issue("JENKINS-62592")
     @Test
-    public void shouldReturnExactMatchOverRelativeMatchTest() throws Exception {
-        // TODO: The idea is that this code should now make sure that there isn't an exact match before sending something back
+    public void exactBranchMatchShouldSupersedePartialBranchMatch() throws Exception {
         sampleRepo.init();
         String masterHash = sampleRepo.head();
         sampleRepo.git("checkout", "-b", "dev");
         sampleRepo.write("file", "modified");
         sampleRepo.git("commit", "--all", "--message=dev");
+        sampleRepo.git("tag", "v1");
         String v1Hash = sampleRepo.head();
         sampleRepo.write("file", "modified2");
         sampleRepo.git("commit", "--all", "--message=dev2");
+        sampleRepo.git("tag", "-a", "v2", "-m", "annotated");
         String v2Hash = sampleRepo.head();
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
+        // Grab the devHash, but lets try and generate a hash that we know will cause an issue in our test
+        ArrayList<String> hashFirstLetter = new ArrayList<>(Arrays.asList(masterHash.substring(0,1), v1Hash.substring(0,1), v2Hash.substring(0,1)));
         String devHash = sampleRepo.head();
+        int i = 4; // In order to name new files and create new commits
+        String newHash = null;
+        while (!hashFirstLetter.contains(devHash.substring(0,1))) {
+            // Generate a new commit and try again
+            sampleRepo.write("file", "modified" + i);
+            sampleRepo.git("commit", "--all", "--message=dev" + (i++));
+            newHash = sampleRepo.head();
+            hashFirstLetter.add(newHash.substring(0,1));
+        }
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
+        source.setTraits(new ArrayList<>());
 
         TaskListener listener = StreamTaskListener.fromStderr();
 
         listener.getLogger().println("\n=== fetch('master') ===\n");
-        SCMRevision rev = source.fetch(masterHash, listener, null);
+        SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        listener.getLogger().println("\n=== fetch('dev') ===\n");
+        rev = source.fetch("dev", listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
+        listener.getLogger().println("\n=== fetch('v1') ===\n");
+        rev = source.fetch("v1", listener, null);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
+        listener.getLogger().println("\n=== fetch('v2') ===\n");
+        rev = source.fetch("v2", listener, null);
+        assertThat(rev, instanceOf(GitTagSCMRevision.class));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
+
+        listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
+        rev = source.fetch(masterHash, listener, null);
+        assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
+
+        if (null != newHash) {
+            listener.getLogger().printf("%n=== fetch('%s') ===%n%n", newHash);
+            rev = source.fetch(newHash, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(newHash));
+            assertThat(rev.getHead().getName(), is("master"));
+        }
     }
 
     //Ugly but MockGitClient needs to be static and no good way to pass it on

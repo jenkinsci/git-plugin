@@ -924,15 +924,22 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             }
             if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
                 shortNameMatches.add(name);
+                listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
                 if (shortHashMatch == null) {
-                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
                     shortHashMatch = rev;
                 } else {
-                    listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
                     listener.getLogger().printf("Cannot resolve ambiguous short revision %s%n", revision);
-                    return null;
+                    if (fullTagMatches.isEmpty() && fullHashMatches.isEmpty() && fullHashMatch == null) {
+                        // We haven't found any matches, and we have ambiguous matches, cannot determine
+                        return null;
+                    }
                 }
             }
+        }
+        if (fullHashMatch != null) {
+            // JENKINS-62592, for predictability, if an exact match is found, that should be returned
+            //since this would have been skipped if this was a head or a tag we can just return whatever
+            return new GitRefSCMRevision(new GitRefSCMHead(fullHashMatch, fullHashMatches.iterator().next()), fullHashMatch);
         }
         if (!fullTagMatches.isEmpty()) {
             // we just want a tag so we can do a minimal fetch
@@ -942,34 +949,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             context.wantBranches(false);
             context.wantTags(true);
             context.withoutRefSpecs();
-        }
-        if (fullHashMatch != null) {
-            //since this would have been skipped if this was a head or a tag we can just return whatever
-            return new GitRefSCMRevision(new GitRefSCMHead(fullHashMatch, fullHashMatches.iterator().next()), fullHashMatch);
-        }
-        if (shortHashMatch != null) {
-            // woot this seems unambiguous
-            for (String name: shortNameMatches) {
-                if (name.startsWith(Constants.R_HEADS)) {
-                    listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
-                    // WIN it's also a branch
-                    return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
-                            shortHashMatch);
-                } else if (name.startsWith(Constants.R_TAGS)) {
-                    tagName = StringUtils.removeStart(name, Constants.R_TAGS);
-                    context.wantBranches(false);
-                    context.wantTags(true);
-                    context.withoutRefSpecs();
-                }
-            }
-            if (tagName != null) {
-                listener.getLogger().printf("Selected match: %s revision %s%n", tagName, shortHashMatch);
-            } else {
-                return new GitRefSCMRevision(new GitRefSCMHead(shortHashMatch, shortNameMatches.iterator().next()), shortHashMatch);
-            }
-        }
-        if (candidateOtherRef != null) {
-            return candidateOtherRef;
         }
         //if PruneStaleBranches it should take affect on the following retrievals
         boolean pruneRefs = context.pruneRefs();
@@ -997,6 +976,30 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     context,
                     listener, pruneRefs, retrieveContext);
         }
+        if (shortHashMatch != null) {
+            // woot this seems unambiguous
+            for (String name: shortNameMatches) {
+                if (name.startsWith(Constants.R_HEADS)) {
+                    listener.getLogger().printf("Selected match: %s revision %s%n", name, shortHashMatch);
+                    // WIN it's also a branch
+                    return new GitBranchSCMRevision(new GitBranchSCMHead(StringUtils.removeStart(name, Constants.R_HEADS)),
+                            shortHashMatch);
+                } else if (name.startsWith(Constants.R_TAGS)) {
+                    tagName = StringUtils.removeStart(name, Constants.R_TAGS);
+                    context.wantBranches(false);
+                    context.wantTags(true);
+                    context.withoutRefSpecs();
+                }
+            }
+            if (tagName != null) {
+                listener.getLogger().printf("Selected match: %s revision %s%n", tagName, shortHashMatch);
+            } else {
+                return new GitRefSCMRevision(new GitRefSCMHead(shortHashMatch, shortNameMatches.iterator().next()), shortHashMatch);
+            }
+        }
+        if (candidateOtherRef != null) {
+            return candidateOtherRef;
+        }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
                         + "Pulling heads to local for deep search...%n", revision);
@@ -1014,7 +1017,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                           //just to be safe
                                           listener.error("Could not resolve %s", revision);
                                           return null;
-
                                       }
                                       hash = objectId.name();
                                       String candidatePrefix = Constants.R_REMOTES.substring(Constants.R_REFS.length())

@@ -254,6 +254,12 @@
       <version>4.11.3</version>
       <scope>compile</scope>
     </dependency>
+      <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>git</artifactId>
+          <version>4.11.3</version>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
 
   <repositories>
