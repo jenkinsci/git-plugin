@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -88,7 +89,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     public void notifyCommit(JenkinsRule r) throws Exception {
         synchronousPolling(r);
-        WebResponse webResponse = r.createWebClient().goTo("git/notifyCommit?url=" + bareUrl(), "text/plain").getWebResponse();
+        String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
+        WebResponse webResponse = r.createWebClient()
+                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
         LOGGER.log(Level.FINE, webResponse.getContentAsString());
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {

@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
@@ -69,6 +70,10 @@ public class AbstractGitProject extends AbstractGitRepository {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    @Rule
+    public FlagRule<String> notifyCommitAccessControl =
+            new FlagRule<>(() -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL, x -> GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL = x);
 
     protected FreeStyleProject setupProject(List<BranchSpec> branches, boolean authorOrCommitter) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
