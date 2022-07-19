@@ -21,6 +21,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -469,7 +470,7 @@ public class AbstractGitSCMSourceTest {
         source.setOwner(owner);
         TaskListener listener = StreamTaskListener.fromStderr();
         Map<String, SCMHead> headByName = new TreeMap<>();
-        for (SCMHead h: source.fetch(listener)) {
+        for (SCMHead h : source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
         if (duplicatePrimary) {
@@ -479,7 +480,7 @@ public class AbstractGitSCMSourceTest {
         }
         List<Action> actions = source.fetchActions(null, listener);
         GitRemoteHeadRefAction refAction = null;
-        for (Action a: actions) {
+        for (Action a : actions) {
             if (a instanceof GitRemoteHeadRefAction) {
                 refAction = (GitRemoteHeadRefAction) a;
                 break;
@@ -497,7 +498,7 @@ public class AbstractGitSCMSourceTest {
         }
 
         PrimaryInstanceMetadataAction primary = null;
-        for (Action a: actions) {
+        for (Action a : actions) {
             if (a instanceof PrimaryInstanceMetadataAction) {
                 primary = (PrimaryInstanceMetadataAction) a;
                 break;
@@ -524,7 +525,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -589,7 +590,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -618,7 +619,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -653,7 +654,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v5");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -683,7 +684,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -713,7 +714,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("pull-requests/*/from")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -740,7 +741,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         //new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(),
@@ -751,7 +752,8 @@ public class AbstractGitSCMSourceTest {
     }
 
     private int wsCount;
-    private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
+
+    private String fileAt(String revision, Run<?, ?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener, null);
         if (rev == null) {
             return null;
@@ -781,7 +783,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -816,7 +818,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -1050,7 +1052,8 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("push", source.getRemote(), "v1.2");
     }
 
-    @Test @Issue("JENKINS-50394")
+    @Test
+    @Issue("JENKINS-50394")
     public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -1068,7 +1071,7 @@ public class AbstractGitSCMSourceTest {
                     hasProperty("name", equalTo("master")),
                     hasProperty("name", equalTo("dev"))
             ));
-        } catch(MissingObjectException me) {
+        } catch (MissingObjectException me) {
             fail("Not supposed to get MissingObjectException");
         } finally {
             System.clearProperty(Git.class.getName() + ".mockClient");
@@ -1093,20 +1096,22 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "modified3");
         sampleRepo.git("commit", "--all", "--message=dev3");
         // Grab the devHash, but lets try and generate a hash that we know will cause an issue in our test
-        ArrayList<String> hashFirstLetter = new ArrayList<>(Arrays.asList(masterHash.substring(0,1), v1Hash.substring(0,1), v2Hash.substring(0,1)));
+        ArrayList<String> hashFirstLetter = new ArrayList<>(
+                Arrays.asList(masterHash.substring(0, 1), v1Hash.substring(0, 1), v2Hash.substring(0, 1))
+        );
         sampleRepo.git("tag", "devTag");
         String devTagHash = sampleRepo.head();
-        int i = 4; // In order to name new files and create new commits
+        int devTagIteration = 4; // In order to name new files and create new commits
         String previousNewHash = null;
         String newHash = devTagHash;
-        while (!hashFirstLetter.contains(devTagHash.substring(0,1))) {
+        while (!hashFirstLetter.contains(devTagHash.substring(0, 1))) {
             // Generate a new commit and try again
-            sampleRepo.git("tag", "devTag"+i);
-            sampleRepo.write("file", "modified" + i);
-            sampleRepo.git("commit", "--all", "--message=dev" + (i++));
+            sampleRepo.git("tag", "devTag" + devTagIteration);
+            sampleRepo.write("file", "modified" + devTagIteration);
+            sampleRepo.git("commit", "--all", "--message=dev" + (devTagIteration++));
             previousNewHash = newHash;
             newHash = sampleRepo.head();
-            hashFirstLetter.add(newHash.substring(0,1));
+            hashFirstLetter.add(newHash.substring(0, 1));
         }
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(new ArrayList<>());
@@ -1117,15 +1122,15 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().println("\n=== fetch('master') ===\n");
         SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         listener.getLogger().println("\n=== fetch('v1') ===\n");
         rev = source.fetch("v1", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
+        assertThat(((GitTagSCMRevision) rev).getHash(), is(v1Hash));
         listener.getLogger().println("\n=== fetch('v2') ===\n");
         rev = source.fetch("v2", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
+        assertThat(((GitTagSCMRevision) rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
         rev = source.fetch(masterHash, listener, null);
@@ -1147,8 +1152,8 @@ public class AbstractGitSCMSourceTest {
             assertThat(rev.getHead().getName(), is("dev"));
 
 
-            int lastDevTag = i == 4 ? 4 : i - 1;
-            String headHash = i == 4 ? devTagHash : previousNewHash;
+            int lastDevTag = devTagIteration == 4 ? 4 : devTagIteration - 1;
+            String headHash = devTagIteration == 4 ? devTagHash : previousNewHash;
             listener.getLogger().printf("%n=== fetch(devTag%d) ===%n%n", lastDevTag);
             rev = source.fetch("devTag" + lastDevTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
