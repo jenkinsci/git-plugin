@@ -867,6 +867,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         Set<String> fullHashMatches = new TreeSet<>();
         String fullHashMatch = null;
         GitRefSCMRevision candidateOtherRef = null;
+        Boolean shortRevisionAmbiguity = false;
         for (Map.Entry<String,ObjectId> entry: remoteReferences.entrySet()) {
             String name = entry.getKey();
             String rev = entry.getValue().name();
@@ -927,9 +928,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     shortHashMatch = rev;
                 } else {
                     listener.getLogger().printf("Cannot resolve ambiguous short revision %s%n", revision);
-                    if (fullTagMatches.isEmpty() && fullHashMatches.isEmpty() && fullHashMatch == null) {
+                    if (fullTagMatches.isEmpty() && fullHashMatches.isEmpty() && fullHashMatch == null && candidateOtherRef == null) {
                         // We haven't found any matches, and we have ambiguous matches, cannot determine
-                        return null;
+                        // TODO we gotta make a variable that determines if we have gone throught he entire list before returning null
+                        shortRevisionAmbiguity = true;
                     }
                 }
             }
@@ -997,6 +999,10 @@ public abstract class AbstractGitSCMSource extends SCMSource {
         }
         if (candidateOtherRef != null) {
             return candidateOtherRef;
+        }
+        if (shortRevisionAmbiguity) {
+            // Check if we have any other matches first, if not, return null as we cannot determine a match
+            return null;
         }
         // Pokémon!... Got to catch them all
         listener.getLogger().printf("Could not find %s in remote references. "
