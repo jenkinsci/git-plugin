@@ -1141,6 +1141,7 @@ public class AbstractGitSCMSourceTest {
         TaskListener listener = StreamTaskListener.fromStderr();
         listener.getLogger().printf("ArrayList of first hash chars: %s", hashFirstLetter);
 
+        // Test existing functionality with additional revisions
         listener.getLogger().println("\n=== fetch('master') ===\n");
         SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
@@ -1160,6 +1161,7 @@ public class AbstractGitSCMSourceTest {
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
+        // Test new functionality and verify that we are able to grab what we expect (full match versus hazy short hash)
         if (!devTagHash.equals(newHash)) {
             listener.getLogger().printf("%n=== fetch('%s') ===%n%n", newHash);
             rev = source.fetch(newHash, listener, null);
@@ -1183,11 +1185,15 @@ public class AbstractGitSCMSourceTest {
             assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(headHash));
 
             String ambiguousTag = hashFirstLetter.get(hashFirstLetter.size() - 1);
+            String ambiguousHash = sampleRepo.head();
+            sampleRepo.git("tag", ambiguousTag);
+            sampleRepo.write("file", "modified and ambiguous");
+            sampleRepo.git("commit", "--all", "--message=ambiguousTagCommit");
             listener.getLogger().printf("%n=== fetch(%s) ===%n%n", ambiguousTag);
             rev = source.fetch(ambiguousTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-            assertThat(rev.getHead().getName(), is("dev"));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devTagHash));
+            assertThat(rev.getHead().getName(), is(ambiguousTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(ambiguousHash));
         }
     }
 
