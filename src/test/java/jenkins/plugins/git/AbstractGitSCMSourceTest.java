@@ -1121,12 +1121,14 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("tag", "devTag");
         String devTagHash = sampleRepo.head();
         int i = 4; // In order to name new files and create new commits
+        String previousNewHash = null;
         String newHash = devTagHash;
         while (!hashFirstLetter.contains(devTagHash.substring(0,1))) {
             // Generate a new commit and try again
             sampleRepo.git("tag", "devTag"+i);
             sampleRepo.write("file", "modified" + i);
             sampleRepo.git("commit", "--all", "--message=dev" + (i++));
+            previousNewHash = newHash;
             newHash = sampleRepo.head();
             hashFirstLetter.add(newHash.substring(0,1));
         }
@@ -1155,7 +1157,7 @@ public class AbstractGitSCMSourceTest {
         assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
-        if (null != newHash) {
+        if (!devTagHash.equals(newHash)) {
             listener.getLogger().printf("%n=== fetch('%s') ===%n%n", newHash);
             rev = source.fetch(newHash, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
@@ -1168,18 +1170,21 @@ public class AbstractGitSCMSourceTest {
             assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(newHash));
             assertThat(rev.getHead().getName(), is("dev"));
 
-            listener.getLogger().printf("%n=== fetch(devTag%d) ===%n%n", i - 1);
-            rev = source.fetch("devTag" + (i-1), listener, null);
+
+            int lastDevTag = i == 4 ? 4 : i - 1;
+            String headHash = i == 4 ? devTagHash : previousNewHash;
+            listener.getLogger().printf("%n=== fetch(devTag%d) ===%n%n", lastDevTag);
+            rev = source.fetch("devTag" + lastDevTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(newHash));
-            assertThat(rev.getHead().getName(), is("devTag" + (i - 1)));
+            assertThat(rev.getHead().getName(), is("devTag" + lastDevTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(headHash));
 
             String ambiguousTag = hashFirstLetter.get(hashFirstLetter.size() - 1);
             listener.getLogger().printf("%n=== fetch(%s) ===%n%n", ambiguousTag);
             rev = source.fetch(ambiguousTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(rev.getHead().getName(), is("dev"));
             assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devTagHash));
-            assertThat(rev.getHead().getName(), is("devTag" + (i - 1)));
         }
     }
 
