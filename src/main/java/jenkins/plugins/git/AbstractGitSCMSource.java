@@ -921,7 +921,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     break;
                 }
             }
-            if (rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
+            if (!revision.isEmpty() && rev.toLowerCase(Locale.ENGLISH).startsWith(revision.toLowerCase(Locale.ENGLISH))) {
                 shortNameMatches.add(name);
                 listener.getLogger().printf("Candidate partial match: %s revision %s%n", name, rev);
                 if (shortHashMatch == null) {
