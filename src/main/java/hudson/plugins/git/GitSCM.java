@@ -78,6 +78,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
@@ -1479,7 +1480,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
-        try (Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8")) {
+        try (Writer out = new OutputStreamWriter(changelogFile.write(), StandardCharsets.UTF_8)) {
             boolean exclusion = false;
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {
