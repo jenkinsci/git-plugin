@@ -7,7 +7,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.util.StreamTaskListener;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;

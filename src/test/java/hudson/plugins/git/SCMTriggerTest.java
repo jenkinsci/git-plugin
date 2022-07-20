@@ -1,6 +1,5 @@
 package hudson.plugins.git;
 
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;

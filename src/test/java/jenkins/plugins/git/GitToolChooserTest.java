@@ -13,7 +13,6 @@ import hudson.tools.*;
 import hudson.util.StreamTaskListener;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.BranchDiscoveryTrait;
-import jenkins.scm.api.trait.SCMSourceTrait;
 
 import org.jenkinsci.plugins.gitclient.JGitApacheTool;
 import org.jenkinsci.plugins.gitclient.JGitTool;

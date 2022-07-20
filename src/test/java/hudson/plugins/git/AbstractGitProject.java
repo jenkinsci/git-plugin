@@ -31,7 +31,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.Result;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.PathRestriction;

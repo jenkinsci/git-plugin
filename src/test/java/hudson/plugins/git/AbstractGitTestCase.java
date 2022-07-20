@@ -18,7 +18,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.EnforceGitClient;
 import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.extensions.impl.PathRestriction;

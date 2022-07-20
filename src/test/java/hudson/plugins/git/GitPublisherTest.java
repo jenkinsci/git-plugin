@@ -39,7 +39,6 @@ import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.scm.NullSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -69,7 +68,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.fail;
 
 import org.junit.BeforeClass;
 import org.junit.Rule;

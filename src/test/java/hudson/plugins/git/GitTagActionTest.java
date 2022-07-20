@@ -21,7 +21,6 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM.DescriptorImpl;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 
 import org.eclipse.jgit.lib.ObjectId;
