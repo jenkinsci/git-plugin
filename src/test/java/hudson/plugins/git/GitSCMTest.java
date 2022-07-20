@@ -1303,10 +1303,8 @@ public class GitSCMTest extends AbstractGitTestCase {
         final Set<User> culprits = build2.getCulprits();
         assertEquals("The build should have only one culprit", 1, culprits.size());
         assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
-        assertEquals("The workspace should have a 'subdir' subdirectory, but does not.", true,
-                     build2.getWorkspace().child("subdir").exists());
-        assertEquals("The 'subdir' subdirectory should contain commitFile2, but does not.", true,
-                build2.getWorkspace().child("subdir").child(commitFile2).exists());
+        assertTrue("The workspace should have a 'subdir' subdirectory, but does not.", build2.getWorkspace().child("subdir").exists());
+        assertTrue("The 'subdir' subdirectory should contain commitFile2, but does not.", build2.getWorkspace().child("subdir").child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
@@ -1681,17 +1679,13 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild b = rule.buildAndAssertSuccess(p);
 
         BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
-        c.actOnBuild(new ContextCallable<Run<?,?>, Object>() {
-            public Object invoke(Run param, VirtualChannel channel) throws IOException, InterruptedException {
-                assertSame(param,b);
-                return null;
-            }
+        c.actOnBuild((ContextCallable<Run<?, ?>, Object>) (param, channel) -> {
+            assertSame(param,b);
+            return null;
         });
-        c.actOnProject(new ContextCallable<Job<?,?>, Object>() {
-            public Object invoke(Job param, VirtualChannel channel) throws IOException, InterruptedException {
-                assertSame(param,p);
-                return null;
-            }
+        c.actOnProject((ContextCallable<Job<?, ?>, Object>) (param, channel) -> {
+            assertSame(param,p);
+            return null;
         });
         DumbSlave agent = rule.createOnlineSlave();
         assertEquals(p.toString(), agent.getChannel().call(new BuildChooserContextTestCallable(c)));
@@ -1706,12 +1700,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         public String call() throws IOException {
             try {
-                return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
-                    public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
-                        assertTrue(channel instanceof Channel);
-                        assertTrue(Jenkins.getInstanceOrNull()!=null);
-                        return param.toString();
-                    }
+                return c.actOnProject((ContextCallable<Job<?, ?>, String>) (param, channel) -> {
+                    assertTrue(channel instanceof Channel);
+                    assertNotNull(Jenkins.getInstanceOrNull());
+                    return param.toString();
                 });
             } catch (InterruptedException e) {
                 throw new IOException(e);
@@ -2460,15 +2452,13 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         FreeStyleBuild b = rule.buildAndAssertSuccess(p);
         GitClient gc = Git.with(StreamTaskListener.fromStdout(),null).in(b.getWorkspace()).getClient();
-        gc.withRepository(new RepositoryCallback<Void>() {
-            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                Ref head = repo.findRef("HEAD");
-                assertTrue("Detached HEAD",head.isSymbolic());
-                Ref t = head.getTarget();
-                assertEquals(t.getName(),"refs/heads/master");
+        gc.withRepository((RepositoryCallback<Void>) (repo, channel) -> {
+            Ref head = repo.findRef("HEAD");
+            assertTrue("Detached HEAD",head.isSymbolic());
+            Ref t = head.getTarget();
+            assertEquals(t.getName(),"refs/heads/master");
 
-                return null;
-            }
+            return null;
         });
     }
     
@@ -2533,7 +2523,7 @@ public class GitSCMTest extends AbstractGitTestCase {
        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
        assertEquals("GIT_BRANCH", "origin/master", getEnvVars(project).get(GitSCM.GIT_BRANCH));
-       assertEquals("GIT_LOCAL_BRANCH", null, getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
+        assertNull("GIT_LOCAL_BRANCH", getEnvVars(project).get(GitSCM.GIT_LOCAL_BRANCH));
     }
     
     /*
@@ -2565,7 +2555,7 @@ public class GitSCMTest extends AbstractGitTestCase {
        commit(commitFile1, johnDoe, "Commit number 1");
        FreeStyleBuild build1 = build(project, Result.SUCCESS, commitFile1);
 
-       assertEquals("GIT_CHECKOUT_DIR", null, getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
+        assertNull("GIT_CHECKOUT_DIR", getEnvVars(project).get(GitSCM.GIT_CHECKOUT_DIR));
     }
     @Test
     public void testCheckoutFailureIsRetryable() throws Exception {
@@ -2925,9 +2915,9 @@ public class GitSCMTest extends AbstractGitTestCase {
      */
     private int notifyAndCheckScmName(FreeStyleProject project, ObjectId commit,
             String expectedScmName, int ordinal, GitSCM git, ObjectId... priorCommits) throws Exception {
-        String priorCommitIDs = "";
+        StringBuilder priorCommitIDs = new StringBuilder();
         for (ObjectId priorCommit : priorCommits) {
-            priorCommitIDs = priorCommitIDs + " " + priorCommit;
+            priorCommitIDs.append(" ").append(priorCommit);
         }
         assertTrue("scm polling should detect commit " + ordinal, notifyCommit(project, commit));
 
@@ -3138,7 +3128,7 @@ public class GitSCMTest extends AbstractGitTestCase {
        scm.buildEnvVars(build, env); // NPE here before fix applied
        
        assertEquals("GIT_BRANCH", "origin/master", env.get("GIT_BRANCH"));
-       assertEquals("GIT_LOCAL_BRANCH", null, env.get("GIT_LOCAL_BRANCH"));
+        assertNull("GIT_LOCAL_BRANCH", env.get("GIT_LOCAL_BRANCH"));
 
        /* Verify mocks were called as expected */
        verify(buildData, times(1)).getLastBuiltRevision();
@@ -3176,7 +3166,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         scm.buildEnvironment(build, env);
 
         assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));
-        assertEquals("GIT_LOCAL_BRANCH is invalid", null, env.get("GIT_LOCAL_BRANCH"));
+        assertNull("GIT_LOCAL_BRANCH is invalid", env.get("GIT_LOCAL_BRANCH"));
         assertEquals("GIT_COMMIT is invalid", sha1.getName(), env.get("GIT_COMMIT"));
         assertEquals("GIT_URL is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL"));
         assertNull("GIT_URL_1 should not have been set", env.get("GIT_URL_1"));
@@ -3222,7 +3212,7 @@ public class GitSCMTest extends AbstractGitTestCase {
         scm.buildEnvironment(build, env);
 
         assertEquals("GIT_BRANCH is invalid", "origin/master", env.get("GIT_BRANCH"));
-        assertEquals("GIT_LOCAL_BRANCH is invalid", null, env.get("GIT_LOCAL_BRANCH"));
+        assertNull("GIT_LOCAL_BRANCH is invalid", env.get("GIT_LOCAL_BRANCH"));
         assertEquals("GIT_COMMIT is invalid", sha1.getName(), env.get("GIT_COMMIT"));
         assertEquals("GIT_URL is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL"));
         assertEquals("GIT_URL_1 is invalid", testRepo.gitDir.getAbsolutePath(), env.get("GIT_URL_1"));

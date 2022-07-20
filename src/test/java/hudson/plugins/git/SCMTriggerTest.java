@@ -234,7 +234,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         // Since the new branch has an additional commit, polling should report changes. Without the fix for
         // JENKINS-29796, this assertion fails.
         PollingResult poll = project.poll(listener);
-        assertEquals("Expected and actual polling results disagree", true, poll.hasChanges());
+        assertTrue("Expected and actual polling results disagree", poll.hasChanges());
     }
 
     public void check(ZipFile repoZip, Properties commits, String branchSpec,
@@ -254,7 +254,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
 
         TaskListener listener = StreamTaskListener.fromStderr();
         PollingResult poll = project.poll(listener);
-        assertEquals("Expected and actual polling results disagree", false, poll.hasChanges());
+        assertFalse("Expected and actual polling results disagree", poll.hasChanges());
         
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
