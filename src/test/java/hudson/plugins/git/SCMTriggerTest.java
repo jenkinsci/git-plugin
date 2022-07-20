@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -218,8 +219,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*", null);
         // First, build the master branch
         String branchSpec = "refs/heads/master";
-        FreeStyleProject project = setupProject(asList(remoteConfig),
-                asList(new BranchSpec(branchSpec)),
+        FreeStyleProject project = setupProject(Collections.singletonList(remoteConfig),
+                Collections.singletonList(new BranchSpec(branchSpec)),
                 //empty scmTriggerSpec, SCMTrigger triggered manually
                 "", isDisableRemotePoll(), getGitClient());
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
@@ -241,8 +242,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
             String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         String remote = prepareRepo(repoZip);
 
-        FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
-                    asList(new BranchSpec(branchSpec)),
+        FreeStyleProject project = setupProject(Collections.singletonList(new UserRemoteConfig(remote, null, null, null)),
+                Collections.singletonList(new BranchSpec(branchSpec)),
                     //empty scmTriggerSpec, SCMTrigger triggered manually
                     "", isDisableRemotePoll(), getGitClient()); 
         

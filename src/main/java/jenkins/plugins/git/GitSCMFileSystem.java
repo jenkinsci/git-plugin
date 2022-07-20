@@ -54,6 +54,7 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -362,10 +363,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         headName = branchSpec.getName();
                     }
                 }
-                client.fetch_().prune(true).from(remoteURI, Arrays
-                        .asList(new RefSpec(
-                                "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headName))).execute();
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
+                        "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headName))).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" +headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
