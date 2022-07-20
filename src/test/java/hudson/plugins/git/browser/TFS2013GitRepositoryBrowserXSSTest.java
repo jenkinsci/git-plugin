@@ -37,9 +37,7 @@ public class TFS2013GitRepositoryBrowserXSSTest {
 
         AtomicBoolean xss = new AtomicBoolean(false);
         JenkinsRule.WebClient wc = rule.createWebClient();
-        wc.setAlertHandler((page, s) -> {
-            xss.set(true);
-        });
+        wc.setAlertHandler((page, s) -> xss.set(true));
         HtmlPage page = wc.getPage(p, "configure");
         Assert.assertFalse(xss.get());
     }

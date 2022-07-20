@@ -65,9 +65,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.fail;
+
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -517,12 +520,7 @@ public class GitPublisherTest extends AbstractGitProject {
         assertTrue("commitFile2 should exist in the workspace",build2.getWorkspace().child("commitFile2").exists());
         revList = testGitClient.revList("branch2^1");
         assertEquals("branch2 should have master as a parent",revList.get(0),master);
-        try {
-          revList = testGitClient.revList("branch2^2");
-          assertTrue("branch2 should have no other parent than master",false);
-        } catch (java.lang.NullPointerException err) {
-          // expected
-        }
+        assertThrows("branch2 should have no other parent than master", NullPointerException.class, () -> testGitClient.revList("branch2^2"));
     }
 
     @Issue("JENKINS-24786")
@@ -760,7 +758,7 @@ public class GitPublisherTest extends AbstractGitProject {
          */
         String envName = "JENKINS_SERVER_COOKIE";
         String envValue = project.getCharacteristicEnvVars().get(envName, "NOT-SET");
-        assertFalse("Env " + envName + " not set", envValue.equals("NOT-SET"));
+        assertNotEquals("Env " + envName + " not set", "NOT-SET", envValue);
 
         checkEnvVar(project, envName, envValue);
     }

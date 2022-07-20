@@ -30,6 +30,7 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Mark Waite
@@ -72,6 +73,6 @@ public class GitBranchSpecifierColumnTest {
         List<String> branches = null;
         GitBranchSpecifierColumn branchSpecifier = new GitBranchSpecifierColumn();
         String result = branchSpecifier.breakOutString(branches);
-        assertEquals(null, result);
+        assertNull(result);
     }
 }

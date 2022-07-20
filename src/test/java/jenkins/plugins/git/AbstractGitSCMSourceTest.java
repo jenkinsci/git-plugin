@@ -77,6 +77,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -795,12 +796,7 @@ public class AbstractGitSCMSourceTest {
         StreamTaskListener listener = StreamTaskListener.fromStderr();
 
         final SCMHeadObserver.Collector collector =
-        source.fetch(new SCMSourceCriteria() {
-            @Override
-            public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
-                return true;
-            }
-        }, new SCMHeadObserver.Collector(), listener);
+        source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
         final Map<SCMHead, SCMRevision> result = collector.result();
         assertThat(result.entrySet(), hasSize(4));
@@ -986,14 +982,8 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        try {
-            source.fetch("v1.2", listener, null);
-        } catch (GitException e){
-            assertFalse(e.getMessage().contains("--prune"));
-            return;
-        }
-        //fail if ref lock does not occur
-        fail();
+        final GitException e = assertThrows(GitException.class, () -> source.fetch("v1.2", listener, null));
+        assertFalse(e.getMessage().contains("--prune"));
     }
 
     @Test
@@ -1004,14 +994,8 @@ public class AbstractGitSCMSourceTest {
 
         createRefLockEnvironment(listener, source);
 
-        try {
-            source.fetch("v1.2", listener, null);
-        } catch (GitException e){
-            assertFalse(e.getMessage().contains("--prune"));
-            return;
-        }
-        //fail if ref lock does not occur
-        fail();
+        final GitException e = assertThrows(GitException.class, () -> source.fetch("v1.2", listener, null));
+        assertFalse(e.getMessage().contains("--prune"));
     }
 
     @Test
@@ -1087,12 +1071,7 @@ public class AbstractGitSCMSourceTest {
             GitSCMSource source = new GitSCMSource(sampleRepo.toString());
             source.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait()));
             TaskListener listener = StreamTaskListener.fromStderr();
-            SCMHeadObserver.Collector c = source.fetch(new SCMSourceCriteria() {
-                @Override
-                public boolean isHead(@NonNull Probe probe, @NonNull TaskListener listener) throws IOException {
-                    return true;
-                }
-            }, new SCMHeadObserver.Collector(), listener);
+            SCMHeadObserver.Collector c = source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
             assertThat(c.result().keySet(), containsInAnyOrder(
                     hasProperty("name", equalTo("master")),
