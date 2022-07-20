@@ -104,8 +104,8 @@ public class GitPublisherTest extends AbstractGitProject {
         mp.setScm(new GitSCM(testGitDir.getAbsolutePath()));
         mp.getPublishersList().add(new GitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
-                Collections.<BranchToPush>emptyList(),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -139,7 +139,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @Test
     public void GitPublisherFreestylePushBranchWithJGit() throws Exception {
-        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList());
+        GitTool tool = new JGitTool(Collections.emptyList());
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         FreeStyleProject project = setupSimpleProject("master");
@@ -152,15 +152,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -193,18 +193,18 @@ public class GitPublisherTest extends AbstractGitProject {
         List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(testGitDir.getAbsolutePath(), null, null, null));
 
-        GitTool tool = new JGitTool(Collections.<ToolProperty<?>>emptyList()); //testGitDir.getAbsolutePath()
+        GitTool tool = new JGitTool(Collections.emptyList()); //testGitDir.getAbsolutePath()
         jenkins.jenkins.getDescriptorByType(GitTool.DescriptorImpl.class).setInstallations(tool);
 
         MatrixProject mp = jenkins.createProject(MatrixProject.class, "xyz");
         mp.setAxes(new AxisList(new Axis("VAR","a","b")));
         mp.setScm(new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("")),
-                null, tool.getName(), Collections.<GitSCMExtension>emptyList()));
+                null, tool.getName(), Collections.emptyList()));
         mp.getPublishersList().add(new GitPublisher(
                 Collections.singletonList(new TagToPush("origin","foo","message",true, false)),
-                Collections.<BranchToPush>emptyList(),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 true, true, false) {
             @Override
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -244,15 +244,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, null)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -280,15 +280,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -364,15 +364,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.NO_FF)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -452,15 +452,15 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("*")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new PreBuildMerge(new UserMergeOptions("origin", "integration", null, MergeCommand.GitPluginFastForwardMode.FF_ONLY)));
         scm.getExtensions().add(new LocalBranch("integration"));
         project.setScm(scm);
 
         project.getPublishersList().add(new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "integration")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false));
 
         // create initial commit and then run the build against it:
@@ -542,7 +542,7 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteRepositories,
                 Collections.singletonList(new BranchSpec("origin/master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
         // add parameters for remote repository configuration
@@ -581,13 +581,13 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
         GitPublisher forcedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, true);
         project.getPublishersList().add(forcedPublisher);
 
@@ -632,9 +632,9 @@ public class GitPublisherTest extends AbstractGitProject {
         // Remove forcedPublisher, add unforcedPublisher
         project.getPublishersList().remove(forcedPublisher);
         GitPublisher unforcedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(new BranchToPush("origin", "otherbranch")),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, false);
         project.getPublishersList().add(unforcedPublisher);
 
@@ -681,9 +681,9 @@ public class GitPublisherTest extends AbstractGitProject {
 
 
       project.getPublishersList().add(new GitPublisher(
-          Collections.<TagToPush>emptyList(),
+          Collections.emptyList(),
           Collections.singletonList(new BranchToPush("origin", "integration")),
-          Collections.<NoteToPush>emptyList(),
+          Collections.emptyList(),
           true, true, false));
 
       // create initial commit and then run the build against it:
@@ -709,16 +709,16 @@ public class GitPublisherTest extends AbstractGitProject {
                 remoteConfigs(),
                 Collections.singletonList(new BranchSpec("master")),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(scm);
 
         BranchToPush btp = new BranchToPush("origin", "master");
         btp.setRebaseBeforePush(true);
 
         GitPublisher rebasedPublisher = new GitPublisher(
-                Collections.<TagToPush>emptyList(),
+                Collections.emptyList(),
                 Collections.singletonList(btp),
-                Collections.<NoteToPush>emptyList(),
+                Collections.emptyList(),
                 true, true, true);
         project.getPublishersList().add(rebasedPublisher);
 

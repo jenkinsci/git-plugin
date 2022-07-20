@@ -123,13 +123,13 @@ public class GitTagActionTest {
                 Collections.singletonList(new BranchSpec("origin/master")),
                 null,
                 chooseGitImplementation(), // Both git implementations should work, choose randomly
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.getExtensions().add(new LocalBranch("master"));
         p = r.createFreeStyleProject();
         p.setScm(scm);
 
         /* Add git tag action to builds for this test */
-        gitSCMDescriptor = (DescriptorImpl) scm.getDescriptor();
+        gitSCMDescriptor = scm.getDescriptor();
         gitSCMDescriptor.setAddGitTagAction(true);
 
         /* Run with no tag action defined */

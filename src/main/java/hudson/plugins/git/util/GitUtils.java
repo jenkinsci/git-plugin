@@ -311,7 +311,7 @@ public class GitUtils implements Serializable {
                 if (lastComputer != null) {
                     env = lastComputer.getEnvironment().overrideAll(b.getCharacteristicEnvVars());
                     for (NodeProperty nodeProperty : lastBuiltOn.getNodeProperties()) {
-                        Environment environment = nodeProperty.setUp(b, launcher, (BuildListener) buildListener);
+                        Environment environment = nodeProperty.setUp(b, launcher, buildListener);
                         if (environment != null) {
                             environment.buildEnvVars(env);
                         }
@@ -349,7 +349,7 @@ public class GitUtils implements Serializable {
             env.put("WORKSPACE", ws.getRemote());
 
         for (NodeProperty nodeProperty: jenkinsInstance.getGlobalNodeProperties()) {
-            Environment environment = nodeProperty.setUp(b, launcher, (BuildListener)buildListener);
+            Environment environment = nodeProperty.setUp(b, launcher, buildListener);
             if (environment != null) {
                 environment.buildEnvVars(env);
             }

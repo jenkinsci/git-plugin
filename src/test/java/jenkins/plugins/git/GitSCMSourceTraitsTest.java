@@ -143,19 +143,19 @@ public class GitSCMSourceTraitsTest {
         assertThat(instance.getCredentialsId(), is("e4d8c11a-0d24-472f-b86b-4b017c160e9a"));
         assertThat(instance.getTraits(),
                 containsInAnyOrder(
-                        Matchers.<SCMSourceTrait>instanceOf(BranchDiscoveryTrait.class),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.instanceOf(BranchDiscoveryTrait.class),
+                        Matchers.allOf(
                                 instanceOf(WildcardSCMHeadFilterTrait.class),
                                 hasProperty("includes", is("foo/*")),
                                 hasProperty("excludes", is("bar/*"))
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(CheckoutOptionTrait.class),
                                 hasProperty("extension",
                                         hasProperty("timeout", is(5))
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(CloneOptionTrait.class),
                                 hasProperty("extension",
                                         allOf(
@@ -167,7 +167,7 @@ public class GitSCMSourceTraitsTest {
                                         )
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(SubmoduleOptionTrait.class),
                                 hasProperty("extension",
                                         allOf(
@@ -183,25 +183,25 @@ public class GitSCMSourceTraitsTest {
                                         )
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(LocalBranchTrait.class),
                                 hasProperty("extension",
                                         hasProperty("localBranch", is("**"))
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(CleanBeforeCheckoutTrait.class),
                                 hasProperty("extension",
                                         hasProperty("deleteUntrackedNestedRepositories", is(true))
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(CleanAfterCheckoutTrait.class),
                                 hasProperty("extension",
                                         hasProperty("deleteUntrackedNestedRepositories", is(true))
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(UserIdentityTrait.class),
                                 hasProperty("extension",
                                         allOf(
@@ -210,12 +210,12 @@ public class GitSCMSourceTraitsTest {
                                         )
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>instanceOf(GitLFSPullTrait.class),
-                        Matchers.<SCMSourceTrait>instanceOf(PruneStaleBranchTrait.class),
-                        Matchers.<SCMSourceTrait>instanceOf(IgnoreOnPushNotificationTrait.class),
-                        Matchers.<SCMSourceTrait>instanceOf(AuthorInChangelogTrait.class),
-                        Matchers.<SCMSourceTrait>instanceOf(WipeWorkspaceTrait.class),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.instanceOf(GitLFSPullTrait.class),
+                        Matchers.instanceOf(PruneStaleBranchTrait.class),
+                        Matchers.instanceOf(IgnoreOnPushNotificationTrait.class),
+                        Matchers.instanceOf(AuthorInChangelogTrait.class),
+                        Matchers.instanceOf(WipeWorkspaceTrait.class),
+                        Matchers.allOf(
                                 instanceOf(GitBrowserSCMSourceTrait.class),
                                 hasProperty("browser",
                                         allOf(
@@ -224,7 +224,7 @@ public class GitSCMSourceTraitsTest {
                                         )
                                 )
                         ),
-                        Matchers.<SCMSourceTrait>allOf(
+                        Matchers.allOf(
                                 instanceOf(SparseCheckoutPathsTrait.class),
                                 hasProperty("extension",
                                         allOf(
@@ -241,11 +241,11 @@ public class GitSCMSourceTraitsTest {
                 "We have trimmed the extension to only those that are supported on GitSCMSource",
                 instance.getExtensions(),
                 containsInAnyOrder(
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.allOf(
                                 instanceOf(CheckoutOption.class),
                                 hasProperty("timeout", is(5))
                         ),
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.allOf(
                                 instanceOf(CloneOption.class),
                                 hasProperty("shallow", is(true)),
                                 hasProperty("noTags", is(true)),
@@ -253,7 +253,7 @@ public class GitSCMSourceTraitsTest {
                                 hasProperty("timeout", is(3)),
                                 hasProperty("depth", is(3))
                         ),
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.allOf(
                                 instanceOf(SubmoduleOption.class),
                                 hasProperty("disableSubmodules", is(true)),
                                 hasProperty("recursiveSubmodules", is(true)),
@@ -262,22 +262,22 @@ public class GitSCMSourceTraitsTest {
                                 hasProperty("parentCredentials", is(true)),
                                 hasProperty("timeout", is(4))
                         ),
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.allOf(
                                 instanceOf(LocalBranch.class),
                                 hasProperty("localBranch", is("**"))
                         ),
-                        Matchers.<GitSCMExtension>instanceOf(CleanCheckout.class),
-                        Matchers.<GitSCMExtension>instanceOf(CleanBeforeCheckout.class),
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.instanceOf(CleanCheckout.class),
+                        Matchers.instanceOf(CleanBeforeCheckout.class),
+                        Matchers.allOf(
                                 instanceOf(UserIdentity.class),
                                 hasProperty("name", is("bob")),
                                 hasProperty("email", is("bob@example.com"))
                         ),
-                        Matchers.<GitSCMExtension>instanceOf(GitLFSPull.class),
-                        Matchers.<GitSCMExtension>instanceOf(PruneStaleBranch.class),
-                        Matchers.<GitSCMExtension>instanceOf(AuthorInChangelog.class),
-                        Matchers.<GitSCMExtension>instanceOf(WipeWorkspace.class),
-                        Matchers.<GitSCMExtension>allOf(
+                        Matchers.instanceOf(GitLFSPull.class),
+                        Matchers.instanceOf(PruneStaleBranch.class),
+                        Matchers.instanceOf(AuthorInChangelog.class),
+                        Matchers.instanceOf(WipeWorkspace.class),
+                        Matchers.allOf(
                                 instanceOf(SparseCheckoutPaths.class),
                                 hasProperty("sparseCheckoutPaths", hasSize(2))
                         )
