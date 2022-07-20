@@ -137,7 +137,7 @@ public class AbstractGitSCMSourceTest {
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
         assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
@@ -165,7 +165,7 @@ public class AbstractGitSCMSourceTest {
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
         // And reuse cache:
         assertEquals(GitBranchSCMHead_DEV_MASTER, source.fetch(listener).toString());
@@ -257,7 +257,7 @@ public class AbstractGitSCMSourceTest {
         TaskListener listener = StreamTaskListener.fromStderr();
         // SCMHeadObserver.Collector.result is a TreeMap so order is predictable:
         assertEquals("[]", source.fetch(listener).toString());
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
         // And reuse cache:
         assertEquals("[SCMHead{'annotated'}, SCMHead{'lightweight'}]", source.fetch(listener).toString());
@@ -280,9 +280,9 @@ public class AbstractGitSCMSourceTest {
         source.setTraits(new ArrayList<>());
         TaskListener listener = StreamTaskListener.fromStderr();
         assertThat(source.fetchRevisions(listener, null), hasSize(0));
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait()));
+        source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
         assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master"));
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new TagDiscoveryTrait()));
+        source.setTraits(Collections.singletonList(new TagDiscoveryTrait()));
         assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("annotated", "lightweight"));
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         assertThat(source.fetchRevisions(listener, null), containsInAnyOrder("dev", "master", "annotated", "lightweight"));
@@ -894,7 +894,7 @@ public class AbstractGitSCMSourceTest {
 
         /* Fetch from sampleRepo */
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-        source.setTraits(Collections.<SCMSourceTrait>singletonList(new IgnoreOnPushNotificationTrait()));
+        source.setTraits(Collections.singletonList(new IgnoreOnPushNotificationTrait()));
         List<GitSCMExtension> extensions = new ArrayList<>();
         assertThat(source.getExtensions(), is(empty()));
         LocalBranch localBranchExtension = new LocalBranch("**");
@@ -1069,7 +1069,7 @@ public class AbstractGitSCMSourceTest {
         sharedSampleRepo = sampleRepo;
         try {
             GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-            source.setTraits(Arrays.<SCMSourceTrait>asList(new BranchDiscoveryTrait()));
+            source.setTraits(Arrays.asList(new BranchDiscoveryTrait()));
             TaskListener listener = StreamTaskListener.fromStderr();
             SCMHeadObserver.Collector c = source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 

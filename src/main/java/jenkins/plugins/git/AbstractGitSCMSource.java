@@ -1213,7 +1213,7 @@ public abstract class AbstractGitSCMSource extends SCMSource {
             for (GitRemoteHeadRefAction a: ((Actionable) owner).getActions(GitRemoteHeadRefAction.class)) {
                 if (getRemote().equals(a.getRemote())) {
                     if (head.getName().equals(a.getName())) {
-                        return Collections.<Action>singletonList(new PrimaryInstanceMetadataAction());
+                        return Collections.singletonList(new PrimaryInstanceMetadataAction());
                     }
                 }
             }

@@ -29,7 +29,7 @@ public class TFS2013GitRepositoryBrowserXSSTest {
                 Collections.singletonList(new UserRemoteConfig("http://tfs/tfs/project/_git/repo", null, null, null)),
                 new ArrayList<>(),
                 null, JGitTool.MAGIC_EXENAME,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         scm.setBrowser(new TFS2013GitRepositoryBrowser("<img src=x onerror=alert(232)>"));
 
         FreeStyleProject p = rule.createFreeStyleProject();

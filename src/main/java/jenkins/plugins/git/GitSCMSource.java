@@ -536,7 +536,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
         }
 
         public List<SCMSourceTrait> getTraitsDefaults() {
-            return Collections.<SCMSourceTrait>singletonList(new BranchDiscoveryTrait());
+            return Collections.singletonList(new BranchDiscoveryTrait());
         }
 
         @NonNull
@@ -627,7 +627,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                                 return Collections.emptyMap();
                                             }
                                         }
-                                        return Collections.<SCMHead, SCMRevision>singletonMap(head,
+                                        return Collections.singletonMap(head,
                                                 sha1 != null ? new GitBranchSCMRevision(head, sha1) : null);
                                     }
                                 }

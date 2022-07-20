@@ -188,7 +188,7 @@ public abstract class AbstractGitTestCase {
                 createRemoteRepositories(credential),
                 branches,
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         if (credential != null) {
             project.getBuildersList().add(new HasCredentialBuilder(credential.getId()));
         }
@@ -224,7 +224,7 @@ public abstract class AbstractGitTestCase {
                     repos,
                     branchSpecs,
                     null, JGitTool.MAGIC_EXENAME,
-                    Collections.<GitSCMExtension>emptyList());
+                    Collections.emptyList());
         if(disableRemotePoll) scm.getExtensions().add(new DisableRemotePoll());
         if(enforceGitClient != null) scm.getExtensions().add(enforceGitClient);
         project.setScm(scm);

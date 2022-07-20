@@ -150,7 +150,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
-    private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
+    private Collection<SubmoduleConfig> submoduleCfg = Collections.emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
@@ -192,7 +192,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this(
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
     }
 
     @Deprecated

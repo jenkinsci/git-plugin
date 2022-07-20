@@ -30,7 +30,7 @@ public class TFS2013GitRepositoryBrowserTest {
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
                 null, JGitTool.MAGIC_EXENAME,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
 
         AbstractProject project = mock(AbstractProject.class);
         AbstractBuild build = mock(AbstractBuild.class);

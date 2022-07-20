@@ -83,7 +83,7 @@ public final class GitStep extends SCMStep {
 
     @Override
     public SCM createSCM() {
-        return new GitSCM(GitSCM.createRepoList(url, credentialsId), Collections.singletonList(new BranchSpec("*/" + branch)), null, null, Collections.<GitSCMExtension>singletonList(new LocalBranch(branch)));
+        return new GitSCM(GitSCM.createRepoList(url, credentialsId), Collections.singletonList(new BranchSpec("*/" + branch)), null, null, Collections.singletonList(new LocalBranch(branch)));
     }
 
     @Extension

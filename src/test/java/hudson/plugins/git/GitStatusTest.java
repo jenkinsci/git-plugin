@@ -408,7 +408,7 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);
     }
@@ -461,7 +461,7 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
                 Collections.singletonList(new BranchSpec(branch)),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(git);
         project.addTrigger(new SCMTrigger("")); // Required for GitStatus to see polling request
         return project;

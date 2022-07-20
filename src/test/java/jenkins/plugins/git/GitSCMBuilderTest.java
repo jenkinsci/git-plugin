@@ -439,7 +439,7 @@ public class GitSCMBuilderTest {
         ));
 
         // empty list is no-op
-        instance.withRefSpecs(Collections.<String>emptyList());
+        instance.withRefSpecs(Collections.emptyList());
         assertThat(instance.refSpecs(), contains(
                 "+refs/heads/master:refs/remotes/@{remote}/master",
                 "+refs/heads/feature:refs/remotes/@{remote}/feature"

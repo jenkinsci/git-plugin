@@ -33,7 +33,7 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
                 null, null,
-                Collections.<GitSCMExtension>singletonList(extension));
+                Collections.singletonList(extension));
 
         FreeStyleProject job = jenkins.createFreeStyleProject();
         job.getBuildersList().add(createEnvEchoBuilder("tag", ENV_VAR_NAME_TAG));
