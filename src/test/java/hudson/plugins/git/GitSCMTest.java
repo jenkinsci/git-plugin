@@ -2315,7 +2315,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         /* Save the configuration */
         rule.configRoundtrip(p);
-        List<GitSCMExtension> extensions = scm.getExtensions().toList();;
+        List<GitSCMExtension> extensions = scm.getExtensions().toList();
         assertTrue(extensions.contains(localBranchExtension));
         assertEquals("Wrong extension count before reload", 1, extensions.size());
 
