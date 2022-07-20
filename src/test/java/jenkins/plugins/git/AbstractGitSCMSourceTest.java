@@ -1069,7 +1069,7 @@ public class AbstractGitSCMSourceTest {
         sharedSampleRepo = sampleRepo;
         try {
             GitSCMSource source = new GitSCMSource(sampleRepo.toString());
-            source.setTraits(Arrays.asList(new BranchDiscoveryTrait()));
+            source.setTraits(Collections.singletonList(new BranchDiscoveryTrait()));
             TaskListener listener = StreamTaskListener.fromStderr();
             SCMHeadObserver.Collector c = source.fetch((SCMSourceCriteria) (probe, listener1) -> true, new SCMHeadObserver.Collector(), listener);
 
