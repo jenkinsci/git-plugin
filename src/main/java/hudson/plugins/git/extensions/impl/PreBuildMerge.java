@@ -172,7 +172,7 @@ public class PreBuildMerge extends GitSCMExtension {
     @Override
     public String toString() {
         return "PreBuildMerge{" +
-                "options=" + options.toString() +
+                "options=" + options +
                 '}';
     }
 

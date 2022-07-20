@@ -103,7 +103,7 @@ public class GitLab extends GitRepositoryBrowser {
                 filelink = "#" + path.getPath();
         } else
         {
-        	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
+        	filelink = "#diff-" + getIndexOfPath(path);
         }
         return new URL(getUrl(), calculatePrefix() + changeSet.getId() + filelink);
     }

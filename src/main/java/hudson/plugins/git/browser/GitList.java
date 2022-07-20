@@ -59,7 +59,7 @@ public class GitList extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	//GitList diff indices begin at 1
-        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + String.valueOf(getIndexOfPath(path) + 1)));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#" + (getIndexOfPath(path) + 1)));
     }
 
     /**

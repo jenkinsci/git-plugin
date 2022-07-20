@@ -57,9 +57,6 @@ public class GitRefSCMHead extends SCMHead implements GitSCMHeadMixin {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("GitRefSCMHead{");
-        sb.append("name='").append(getName()).append("'");
-        sb.append(", ref='").append(ref).append("'}");
-        return sb.toString();
+        return "GitRefSCMHead{" + "name='" + getName() + "'" + ", ref='" + ref + "'}";
     }
 }
