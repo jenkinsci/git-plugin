@@ -305,8 +305,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     {
         Properties properties = new Properties();
         Pattern pattern = Pattern.compile("([a-f0-9]{40})\\s*(.*)");
-        for(Object lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
-            String line = ((String)lineO).trim();
+        for(String lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
+            String line = lineO.trim();
             Matcher matcher = pattern.matcher(line);
             if(matcher.matches()) {
                 properties.setProperty(matcher.group(2), matcher.group(1));

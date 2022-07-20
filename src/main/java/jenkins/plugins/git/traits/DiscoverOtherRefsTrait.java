@@ -66,11 +66,7 @@ public class DiscoverOtherRefsTrait extends SCMSourceTrait {
     }
 
     String getFullRefSpec() {
-        return new StringBuilder("+")
-        .append(Constants.R_REFS).append(ref)
-        .append(':').append(Constants.R_REMOTES)
-        .append(REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR)
-        .append('/').append(ref).toString();
+        return "+" + Constants.R_REFS + ref + ':' + Constants.R_REMOTES + REF_SPEC_REMOTE_NAME_PLACEHOLDER_STR + '/' + ref;
     }
 
     public String getNameMapping() {

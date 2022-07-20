@@ -621,7 +621,7 @@ public class GitToolChooserTest {
     @Issue("JENKINS-63541")
     public void getCacheDirCreatesNoDirectory() throws Exception {
         // Generate a unique repository name and compute expected cache directory
-        String remoteName = "https://github.com/jenkinsci/git-plugin-" + java.util.UUID.randomUUID().toString() + ".git";
+        String remoteName = "https://github.com/jenkinsci/git-plugin-" + java.util.UUID.randomUUID() + ".git";
         String cacheEntry = AbstractGitSCMSource.getCacheEntry(remoteName);
         File expectedCacheDir = new File(new File(jenkins.jenkins.getRootDir(), "caches"), cacheEntry);
 

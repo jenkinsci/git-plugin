@@ -852,13 +852,13 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.init();
 
         /* Write a file to the master branch */
-        sampleRepo.write("master-file", "master-content-" + UUID.randomUUID().toString());
+        sampleRepo.write("master-file", "master-content-" + UUID.randomUUID());
         sampleRepo.git("add", "master-file");
         sampleRepo.git("commit", "--message=master-branch-commit-message");
 
         /* Write a file to the dev branch */
         sampleRepo.git("checkout", "-b", "dev");
-        sampleRepo.write("dev-file", "dev-content-" + UUID.randomUUID().toString());
+        sampleRepo.write("dev-file", "dev-content-" + UUID.randomUUID());
         sampleRepo.git("add", "dev-file");
         sampleRepo.git("commit", "--message=dev-branch-commit-message");
 
@@ -872,7 +872,7 @@ public class AbstractGitSCMSourceTest {
 
         /* Create dev2 branch and write a file to it */
         sampleRepo.git("checkout", "-b", "dev2", "master");
-        sampleRepo.write("dev2-file", "dev2-content-" + UUID.randomUUID().toString());
+        sampleRepo.write("dev2-file", "dev2-content-" + UUID.randomUUID());
         sampleRepo.git("add", "dev2-file");
         sampleRepo.git("commit", "--message=dev2-branch-commit-message");
 
@@ -892,7 +892,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.init();
 
         /* Write a file to the master branch */
-        sampleRepo.write("master-file", "master-content-" + UUID.randomUUID().toString());
+        sampleRepo.write("master-file", "master-content-" + UUID.randomUUID());
         sampleRepo.git("add", "master-file");
         sampleRepo.git("commit", "--message=master-branch-commit-message");
 
