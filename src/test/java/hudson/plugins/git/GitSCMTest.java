@@ -32,6 +32,7 @@ import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.parameterizedtrigger.BuildTrigger;
 import hudson.plugins.parameterizedtrigger.ResultCondition;
 import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.PollingResult;
 import hudson.scm.PollingResult.Change;
@@ -1675,13 +1676,17 @@ public class GitSCMTest extends AbstractGitTestCase {
         final FreeStyleBuild b = rule.buildAndAssertSuccess(p);
 
         BuildChooserContextImpl c = new BuildChooserContextImpl(p, b, null);
-        c.actOnBuild((ContextCallable<Run<?, ?>, Object>) (param, channel) -> {
-            assertSame(param,b);
-            return null;
+        c.actOnBuild(new ContextCallable<Run<?,?>, Object>() {
+            public Object invoke(Run param, VirtualChannel channel) throws IOException, InterruptedException {
+                assertSame(param,b);
+                return null;
+            }
         });
-        c.actOnProject((ContextCallable<Job<?, ?>, Object>) (param, channel) -> {
-            assertSame(param,p);
-            return null;
+        c.actOnProject(new ContextCallable<Job<?,?>, Object>() {
+            public Object invoke(Job param, VirtualChannel channel) throws IOException, InterruptedException {
+                assertSame(param,p);
+                return null;
+            }
         });
         DumbSlave agent = rule.createOnlineSlave();
         assertEquals(p.toString(), agent.getChannel().call(new BuildChooserContextTestCallable(c)));
@@ -1696,10 +1701,12 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         public String call() throws IOException {
             try {
-                return c.actOnProject((ContextCallable<Job<?, ?>, String>) (param, channel) -> {
-                    assertTrue(channel instanceof Channel);
-                    assertNotNull(Jenkins.getInstanceOrNull());
-                    return param.toString();
+                return c.actOnProject(new ContextCallable<Job<?,?>, String>() {
+                    public String invoke(Job<?,?> param, VirtualChannel channel) throws IOException, InterruptedException {
+                        assertTrue(channel instanceof Channel);
+                        assertNotNull(Jenkins.getInstanceOrNull());
+                        return param.toString();
+                    }
                 });
             } catch (InterruptedException e) {
                 throw new IOException(e);
