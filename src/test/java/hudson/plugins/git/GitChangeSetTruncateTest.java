@@ -164,7 +164,7 @@ public class GitChangeSetTruncateTest {
     @Test
     @Issue("JENKINS-29977") // CLI git truncates first line of commit message in Changes page, JGit doesn't
     public void summaryTruncatedAtLastWord72CharactersOrLess() throws Exception {
-        /**
+        /*
          * Before git plugin 4.0, calls to GitChangeSet(x, y) truncated CLI git, did not truncate JGit.
          * After git plugin 4.0, calls to GitChangeSet(x, y) truncates CLI git, truncates JGit.
          * Callers after git plugin 4.0 must use the GitChangeSet(x, y, z) call to specify truncation behavior.
