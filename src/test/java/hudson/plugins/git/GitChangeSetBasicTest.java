@@ -1,7 +1,6 @@
 package hudson.plugins.git;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static hudson.plugins.git.GitChangeSet.TRUNCATE_LIMIT;

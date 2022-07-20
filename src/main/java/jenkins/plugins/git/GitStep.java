@@ -31,7 +31,6 @@ import hudson.model.Item;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;

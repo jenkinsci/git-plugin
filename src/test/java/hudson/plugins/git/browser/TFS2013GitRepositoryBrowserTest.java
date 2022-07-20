@@ -2,7 +2,6 @@ package hudson.plugins.git.browser;
 
 import hudson.model.*;
 import hudson.plugins.git.*;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
 import org.jenkinsci.plugins.gitclient.JGitTool;

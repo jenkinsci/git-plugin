@@ -28,7 +28,6 @@ import hudson.EnvVars;
 import static hudson.plugins.git.GitSCM.createRepoList;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.AncestryBuildChooser;
 import hudson.plugins.git.util.BuildChooser;

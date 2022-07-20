@@ -1,7 +1,6 @@
 package jenkins.plugins.git;
 
 import hudson.plugins.git.browser.BitbucketWeb;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
 import hudson.plugins.git.extensions.impl.CheckoutOption;
 import hudson.plugins.git.extensions.impl.CleanBeforeCheckout;
