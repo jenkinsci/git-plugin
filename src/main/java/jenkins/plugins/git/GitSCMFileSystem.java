@@ -52,6 +52,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -205,7 +206,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
-            try (Writer out = new OutputStreamWriter(changeLogStream, "UTF-8")) {
+            try (Writer out = new OutputStreamWriter(changeLogStream, StandardCharsets.UTF_8)) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
                 if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
