@@ -1172,6 +1172,18 @@ public class AbstractGitSCMSourceTest {
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
             assertThat(rev.getHead().getName(), is(ambiguousTag));
             assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(ambiguousHash));
+
+            // Remove ambiguous tag from the repo and thne create a branch with the ambiguous search
+            sampleRepo.git("tag", "-d", ambiguousTag);
+            sampleRepo.git("checkout", "-b", ambiguousTag);
+            sampleRepo.write("file", "modified and ambiguous but a branch this time!");
+            sampleRepo.git("commit", "--all", "--message=ambiguousBranchCommit");
+            listener.getLogger().printf("%n=== fetch(%s) branch ===%n%n", ambiguousTag);
+            String ambiguousBranchHash = sampleRepo.head();
+            rev = source.fetch(ambiguousTag, listener, null);
+            assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
+            assertThat(rev.getHead().getName(), is(ambiguousTag));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(ambiguousBranchHash));
         }
     }
 

@@ -932,7 +932,6 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     listener.getLogger().printf("Cannot resolve ambiguous short revision %s%n", revision);
                     if (fullTagMatches.isEmpty() && fullHashMatches.isEmpty() && fullHashMatch == null && candidateOtherRef == null) {
                         // We haven't found any matches, and we have ambiguous matches, cannot determine
-                        // TODO we gotta make a variable that determines if we have gone throught he entire list before returning null
                         shortRevisionAmbiguity = true;
                     }
                 }
