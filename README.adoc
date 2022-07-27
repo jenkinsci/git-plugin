@@ -288,6 +288,32 @@ If the workspace is removed, the tag that was applied is lost.
 Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
 Applying a git tag in an agent workspace doesn't have many practical uses.
 
+[#security-configuration]
+=== Security Configuration
+
+image:/images/git-security-configuration.png[Security Configuration]
+
+In the `Configure Global Security` page, the Git Plugin provides the following option:
+
+[[global-security-git-hooks]]
+Git Hooks::
+
+  link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[Git hooks] allow scripts to be invoked when certain important git repository actions occur.
+  This configuration controls the execution of client-side hooks on the controller and on agents.
+  It is recommended that git hooks be **disabled** on the controller and on agents.
++
+Most git repositories do not use hooks in the repository and do not need repository hooks.
+In those rare cases where repository hooks are needed, it is highly recommended that they are **disabled** on the Jenkins controller and on Jenkins agents.
++
+Client-side hooks are **not** copied when the repository is cloned by Jenkins using the inbuilt SCM methods.
+However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
++
+If hook scripts are allowed, a client-side hook script installed in a repository will execute when the matching git operation is performed.
+For example, if hooks are allowed and a git repository includes a `post-checkout` hook, the hook script will run after any checkout in that repository.
+If hooks are allowed and a git repository includes a `pre-auto-gc` hook, the hook script will run before any automatic git garbage collection task.
++
+See link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks["Customizing Git - Git Hooks"] for more details about git repository hooks.
+
 [#repository-browser]
 === Repository Browser
 

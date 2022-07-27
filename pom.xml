@@ -68,6 +68,7 @@
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.failOnError>true</spotbugs.failOnError>
     <spotbugs.threshold>Medium</spotbugs.threshold>
+    <forkCount>0.8C</forkCount>
   </properties>
 
   <dependencyManagement>
@@ -339,13 +340,6 @@
             <version>4.7.1</version>
           </dependency>
         </dependencies>
-      </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkCount>0.8C</forkCount>
-          <reuseForks>true</reuseForks>
-        </configuration>
       </plugin>
     </plugins>
   </build>
