@@ -147,15 +147,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <!-- newer version required by equalsverifier -->
-          <!-- needed by equalsverifier, not directly used by git client -->
-          <!-- Remove exclusion as soon as equalsverifier and mockito-core agree on byte buddy version -->
-          <groupId>net.bytebuddy</groupId>
-          <artifactId>byte-buddy</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
