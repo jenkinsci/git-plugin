@@ -15,6 +15,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.verb.POST;
 
@@ -28,6 +29,10 @@ import java.util.logging.Logger;
 
 @Extension
 public class MaintenanceUI extends ManagementLink {
+
+    JSONObject notification = new JSONObject();
+    String OK = "OK";
+    String ERROR = "ERROR";
 
     private static final Logger LOGGER = Logger.getLogger(MaintenanceUI.class.getName());
 
@@ -78,15 +83,17 @@ public class MaintenanceUI extends ManagementLink {
             }
             config.save();
             LOGGER.log(Level.FINE, "Maintenance configuration data stored successfully on Jenkins.");
+            setNotification("Data saved on Jenkins.",OK);
             res.sendRedirect("");
             return;
         }
         LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
+        setNotification("Internal Error! Data not saved.",ERROR);
     }
 
     @RequirePOST
     @Restricted(NoExternalUse.class)
-    public void doToggleExecutionState(StaplerRequest req, StaplerResponse res) throws IOException {
+    public void doExecuteMaintenanceTask(StaplerRequest req, StaplerResponse res) throws IOException {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             LOGGER.log(Level.WARNING,"User doesn't have the required permission to access git-maintenance");
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -94,27 +101,55 @@ public class MaintenanceUI extends ManagementLink {
         }
 
         MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-
         if(config != null) {
-            boolean updatedGitMaintenanceExecutionStatus = !config.getIsGitMaintenanceRunning();
+
+            // Todo
+            // schedule maintenance tasks only if all cron syntax are valid.
+            // else can't schedule maintenance tasks.
+
+            boolean updatedGitMaintenanceExecutionStatus = true;
             config.setIsGitMaintenanceRunning(updatedGitMaintenanceExecutionStatus);
             config.save();
-            if (updatedGitMaintenanceExecutionStatus)
-                LOGGER.log(Level.FINE, "Git Maintenance tasks are scheduled for execution.");
-            else {
-                Cron cron = PeriodicWork.all().get(Cron.class);
-                if (cron != null) {
-                    cron.terminateMaintenanceTaskExecution();
-                    cron.cancel();
-                    LOGGER.log(Level.FINE, "Terminated scheduling of Git Maintenance tasks.");
-                } else {
-                    LOGGER.log(Level.WARNING, "Couldn't Terminate Maintenance Task. Internal Error.");
-                }
-            }
-            res.sendRedirect("");
+            LOGGER.log(Level.FINE, "Git Maintenance tasks are scheduled for execution.");
+            setNotification("Scheduled Maintenance Tasks.",OK);
+        }else{
+            setNotification("Internal Error! Tasks not scheduled.",ERROR);
+        }
+
+        res.sendRedirect("");
+        return;
+    }
+
+    @RequirePOST
+    @Restricted(NoExternalUse.class)
+    public void doTerminateMaintenanceTask(StaplerRequest req, StaplerResponse res) throws IOException {
+        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+            LOGGER.log(Level.WARNING,"User doesn't have the required permission to access git-maintenance");
+            res.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
-        LOGGER.log(Level.WARNING,"Couldn't load Global git maintenance configuration. Internal Error.");
+
+        MaintenanceTaskConfiguration config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
+        if(config != null) {
+            boolean updatedGitMaintenanceExecutionStatus = false;
+            config.setIsGitMaintenanceRunning(updatedGitMaintenanceExecutionStatus);
+            config.save();
+
+            Cron cron = PeriodicWork.all().get(Cron.class);
+            if (cron != null) {
+                cron.terminateMaintenanceTaskExecution();
+                cron.cancel();
+                LOGGER.log(Level.FINE, "Terminated scheduling of Git Maintenance tasks.");
+                setNotification("Terminated Maintenance Tasks.",OK);
+            } else {
+                LOGGER.log(Level.WARNING, "Couldn't Terminate Maintenance Task. Internal Error.");
+                setNotification("Internal Error! Couldn't Terminate Tasks.",ERROR);
+            }
+        }else{
+            setNotification("Internal Error! Couldn't Terminate Tasks.",ERROR);
+        }
+        res.sendRedirect("");
+        return;
     }
 
     @POST
@@ -174,4 +209,16 @@ public class MaintenanceUI extends ManagementLink {
     public Permission getRequiredPermission() {
         return Jenkins.ADMINISTER;
     }
+
+    @JavaScriptMethod
+    public void setNotification(String notification, String type){
+        this.notification.put("msg",notification);
+        this.notification.put("type",type);
+    }
+
+    @JavaScriptMethod
+    public JSONObject getNotification(){
+        return notification;
+    }
+
 }
