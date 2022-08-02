@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitException;
@@ -284,7 +285,8 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev,
+                                   @CheckForNull Run<?,?> _build)
                 throws IOException, InterruptedException {
             if (rev != null && !(rev instanceof AbstractGitSCMSource.SCMRevisionImpl)) {
                 return null;
@@ -292,6 +294,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (!(scm instanceof GitSCM)) {
                 return null; // Spotbugs warns about unchecked cast without this check
             }
+
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
@@ -301,6 +304,13 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 listener.getLogger().println("Git remote url is null");
                 return null;
             }
+
+            EnvVars env = null;
+            if (_build != null)
+            {
+                env = _build.getEnvironment(listener);
+            }
+
             String cacheEntry = AbstractGitSCMSource.getCacheEntry(remote);
             Lock cacheLock = AbstractGitSCMSource.getCacheLock(cacheEntry);
             cacheLock.lock();
@@ -353,12 +363,17 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 if (rev != null) {
                     headName = rev.getHead().getName();
                 } else {
-                    if (branchSpec.getName().startsWith(prefix)){
-                        headName = branchSpec.getName().substring(prefix.length()); 
-                    } else if (branchSpec.getName().startsWith("*/")) {
-                        headName = branchSpec.getName().substring(2);
+                    String branchSpecExpandedName = branchSpec.getName();
+                    if (env != null) {
+                        branchSpecExpandedName = env.expand(branchSpecExpandedName);
+                    }
+
+                    if (branchSpecExpandedName.startsWith(prefix)){
+                        headName = branchSpecExpandedName.substring(prefix.length());
+                    } else if (branchSpecExpandedName.startsWith("*/")) {
+                        headName = branchSpecExpandedName.substring(2);
                     } else {
-                        headName = branchSpec.getName();
+                        headName = branchSpecExpandedName;
                     }
                 }
                 client.fetch_().prune(true).from(remoteURI, Arrays

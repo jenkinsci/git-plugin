@@ -102,6 +102,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
+      <version>625.va_c59c48ce36f</version>  <!-- TODO: https://github.com/jenkinsci/scm-api-plugin/pull/160 -->
       <artifactId>scm-api</artifactId>
     </dependency>
     <dependency>
@@ -191,6 +192,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
+      <version>625.va_c59c48ce36f</version>  <!-- TODO: https://github.com/jenkinsci/scm-api-plugin/pull/160 -->
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -255,11 +257,19 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
+    <repository> <!-- TODO FOR DRAFT -->
+      <id>incrementals.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/incrementals/</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+    <pluginRepository><!-- TODO FOR DRAFT -->
+      <id>incrementals.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/incrementals/</url>
     </pluginRepository>
   </pluginRepositories>
 
