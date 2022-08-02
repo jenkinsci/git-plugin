@@ -40,17 +40,20 @@ public class TaskExecutor implements Runnable {
         TaskType taskType = maintenanceTask.getTaskType();
         try {
             for (GitMaintenanceSCM.Cache cache : caches) {
-                if (isThreadAlive) {
-                    // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
-                    Lock lock = cache.getLock();
-                    File cacheFile = cache.getCacheFile();
+                // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
+                Lock lock = cache.getLock();
+                File cacheFile = cache.getCacheFile();
+
+                // If lock is not available on the cache, skip maintenance on this cache.
+                if (isThreadAlive && lock.tryLock()) {
+
+                    LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " locked.");
+
                     try {
                         gitClient = getGitClient(cacheFile);
                         if (gitClient == null)
-                            return;
+                            throw new InterruptedException("Git Client couldn't be instantiated");
 
-                        lock.lock();
-                        LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " locked.");
                         executeMaintenanceTask(gitClient, taskType);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
@@ -58,8 +61,13 @@ public class TaskExecutor implements Runnable {
                         lock.unlock();
                         LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " unlocked.");
                     }
+
                 } else {
-                    throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
+
+                    if(!isThreadAlive)
+                        throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
+                    else
+                        LOGGER.log(Level.FINE,"Cache is already locked. Can't run maintenance on cache " + cacheFile.getName());
                 }
             }
         }catch (InterruptedException e){
