@@ -43,6 +43,8 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
+
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -425,6 +427,43 @@ public class GitSCMFileSystemTest {
     public void filesystem_supports_descriptor() throws Exception {
         SCMSourceDescriptor descriptor = r.jenkins.getDescriptorByType(GitSCMSource.DescriptorImpl.class);
         assertTrue(SCMFileSystem.supports(descriptor));
+    }
+
+    @Issue("JENKINS-42971")
+    @Test
+    public void calculate_head_name_with_env() throws Exception
+    {
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH","master"));
+        assertEquals(result1.getHeadName(),"master");
+        assertEquals(result1.getPrefix(), Constants.R_HEADS);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH","refs/heads/master"));
+        assertEquals("master", result2.getHeadName());
+        assertEquals(Constants.R_HEADS, result2.getPrefix());
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("refs/heads/${BRANCH}"), null,
+                new EnvVars("BRANCH","master"));
+        assertEquals("master", result3.getHeadName());
+        assertEquals(Constants.R_HEADS, result3.getPrefix());
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
+                null);
+        assertEquals(result4.getHeadName(),"${BRANCH}");
+        assertEquals(result4.getPrefix(), Constants.R_HEADS);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("*/${BRANCH}"), null,
+                new EnvVars("BRANCH","master"));
+        assertEquals("master", result5.getHeadName());
+        assertEquals(Constants.R_HEADS, result5.getPrefix());
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("*/master"), null,
+                new EnvVars("BRANCH","dummy"));
+        assertEquals("master", result6.getHeadName());
+        assertEquals(Constants.R_HEADS, result6.getPrefix());
+
+
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

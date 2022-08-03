@@ -284,6 +284,55 @@ public class GitSCMFileSystem extends SCMFileSystem {
             return AbstractGitSCMSource.class.isAssignableFrom(descriptor.clazz);
         }
 
+        public static class HeadNameResult
+        {
+            private final String headName;
+            private final String prefix;
+
+            public HeadNameResult(String headName, String prefix) {
+                this.headName = headName;
+                this.prefix = prefix;
+            }
+
+            public String getHeadName() {
+                return headName;
+            }
+
+            public String getPrefix() {
+                return prefix;
+            }
+        }
+
+        public static HeadNameResult calculateHeadName(@NonNull BranchSpec branchSpec,
+                                                       @CheckForNull SCMRevision rev,
+                                                       @CheckForNull EnvVars env)
+        {
+            String branchSpecExpandedName = branchSpec.getName();
+            if (env != null) {
+                branchSpecExpandedName = env.expand(branchSpecExpandedName);
+            }
+
+            String prefix = Constants.R_HEADS;
+            if(branchSpecExpandedName.startsWith(Constants.R_TAGS)){
+                prefix = Constants.R_TAGS;
+            }
+
+            String headName;
+            if (rev != null) {
+                headName = env.expand(rev.getHead().getName());
+            } else {
+                if (branchSpecExpandedName.startsWith(prefix)){
+                    headName = branchSpecExpandedName.substring(prefix.length());
+                } else if (branchSpecExpandedName.startsWith("*/")) {
+                    headName = branchSpecExpandedName.substring(2);
+                } else {
+                    headName = branchSpecExpandedName;
+                }
+            }
+
+            return new HeadNameResult(headName, prefix);
+        }
+
         @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev,
                                    @CheckForNull Run<?,?> _build)
@@ -355,33 +404,15 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 } catch (URISyntaxException ex) {
                     listener.getLogger().println("URI syntax exception for '" + remoteName + "' " + ex);
                 }
-                String prefix = Constants.R_HEADS; 
-                if(branchSpec.getName().startsWith(Constants.R_TAGS)){
-                    prefix = Constants.R_TAGS; 
-                }
-                String headName;
-                if (rev != null) {
-                    headName = rev.getHead().getName();
-                } else {
-                    String branchSpecExpandedName = branchSpec.getName();
-                    if (env != null) {
-                        branchSpecExpandedName = env.expand(branchSpecExpandedName);
-                    }
 
-                    if (branchSpecExpandedName.startsWith(prefix)){
-                        headName = branchSpecExpandedName.substring(prefix.length());
-                    } else if (branchSpecExpandedName.startsWith("*/")) {
-                        headName = branchSpecExpandedName.substring(2);
-                    } else {
-                        headName = branchSpecExpandedName;
-                    }
-                }
+                HeadNameResult headNameResult = calculateHeadName(branchSpec, rev, env);
+
                 client.fetch_().prune(true).from(remoteURI, Arrays
                         .asList(new RefSpec(
-                                "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headName))).execute();
+                                "+" + headNameResult.getPrefix() + headNameResult.getHeadName() + ":" + Constants.R_REMOTES + remoteName + "/"
+                                        + headNameResult.getHeadName()))).execute();
                 listener.getLogger().println("Done.");
-                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" +headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
+                return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.getHeadName(), (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
                 cacheLock.unlock();
             }
