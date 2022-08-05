@@ -461,11 +461,6 @@ public class GitSCMFileSystemTest {
                 new EnvVars("BRANCH", "dummy"));
         assertEquals("master", result6.headName);
         assertEquals(Constants.R_HEADS, result6.prefix);
-
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result7 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master"), null,
-                new EnvVars("BRANCH", "dummy"));
-        assertEquals("master", result6.headName);
-        assertEquals(Constants.R_HEADS, result6.prefix);
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
