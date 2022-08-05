@@ -431,37 +431,41 @@ public class GitSCMFileSystemTest {
 
     @Issue("JENKINS-42971")
     @Test
-    public void calculate_head_name_with_env() throws Exception
-    {
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH","master"));
-        assertEquals("master", result1.getHeadName());
-        assertEquals(Constants.R_HEADS, result1.getPrefix());
+    public void calculate_head_name_with_env() throws Exception {
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH", "master"));
+        assertEquals("master", result1.headName);
+        assertEquals(Constants.R_HEADS, result1.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
-                new EnvVars("BRANCH","refs/heads/master"));
-        assertEquals("master", result2.getHeadName());
-        assertEquals(Constants.R_HEADS, result2.getPrefix());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
+                new EnvVars("BRANCH", "refs/heads/master"));
+        assertEquals("master", result2.headName);
+        assertEquals(Constants.R_HEADS, result2.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("refs/heads/${BRANCH}"), null,
-                new EnvVars("BRANCH","master"));
-        assertEquals("master", result3.getHeadName());
-        assertEquals(Constants.R_HEADS, result3.getPrefix());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result3 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("refs/heads/${BRANCH}"), null,
+                new EnvVars("BRANCH", "master"));
+        assertEquals("master", result3.headName);
+        assertEquals(Constants.R_HEADS, result3.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("${BRANCH}"), null,
                 null);
-        assertEquals("${BRANCH}", result4.getHeadName());
-        assertEquals(Constants.R_HEADS, result4.getPrefix());
+        assertEquals("${BRANCH}", result4.headName);
+        assertEquals(Constants.R_HEADS, result4.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("*/${BRANCH}"), null,
-                new EnvVars("BRANCH","master"));
-        assertEquals("master", result5.getHeadName());
-        assertEquals(Constants.R_HEADS, result5.getPrefix());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/${BRANCH}"), null,
+                new EnvVars("BRANCH", "master"));
+        assertEquals("master", result5.headName);
+        assertEquals(Constants.R_HEADS, result5.prefix);
 
-        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("*/master"), null,
-                new EnvVars("BRANCH","dummy"));
-        assertEquals("master", result6.getHeadName());
-        assertEquals(Constants.R_HEADS, result6.getPrefix());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result6 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master"), null,
+                new EnvVars("BRANCH", "dummy"));
+        assertEquals("master", result6.headName);
+        assertEquals(Constants.R_HEADS, result6.prefix);
+
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result7 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("*/master"), null,
+                new EnvVars("BRANCH", "dummy"));
+        assertEquals("master", result6.headName);
+        assertEquals(Constants.R_HEADS, result6.prefix);
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
