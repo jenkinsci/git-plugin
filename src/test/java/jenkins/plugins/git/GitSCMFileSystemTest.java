@@ -435,8 +435,8 @@ public class GitSCMFileSystemTest {
     {
         GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
                 new EnvVars("BRANCH","master"));
-        assertEquals(result1.getHeadName(),"master");
-        assertEquals(result1.getPrefix(), Constants.R_HEADS);
+        assertEquals("master", result1.getHeadName());
+        assertEquals(Constants.R_HEADS, result1.getPrefix());
 
         GitSCMFileSystem.BuilderImpl.HeadNameResult result2 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
                 new EnvVars("BRANCH","refs/heads/master"));
@@ -450,8 +450,8 @@ public class GitSCMFileSystemTest {
 
         GitSCMFileSystem.BuilderImpl.HeadNameResult result4 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("${BRANCH}"), null,
                 null);
-        assertEquals(result4.getHeadName(),"${BRANCH}");
-        assertEquals(result4.getPrefix(), Constants.R_HEADS);
+        assertEquals("${BRANCH}", result4.getHeadName());
+        assertEquals(Constants.R_HEADS, result4.getPrefix());
 
         GitSCMFileSystem.BuilderImpl.HeadNameResult result5 = GitSCMFileSystem.BuilderImpl.calculateHeadName(new BranchSpec("*/${BRANCH}"), null,
                 new EnvVars("BRANCH","master"));
@@ -462,8 +462,6 @@ public class GitSCMFileSystemTest {
                 new EnvVars("BRANCH","dummy"));
         assertEquals("master", result6.getHeadName());
         assertEquals(Constants.R_HEADS, result6.getPrefix());
-
-
     }
 
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */

@@ -313,7 +313,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
 
             String prefix = Constants.R_HEADS;
-            if(branchSpecExpandedName.startsWith(Constants.R_TAGS)){
+            if (branchSpecExpandedName.startsWith(Constants.R_TAGS)){
                 prefix = Constants.R_TAGS;
             }
 
@@ -321,7 +321,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (rev != null) {
                 headName = env.expand(rev.getHead().getName());
             } else {
-                if (branchSpecExpandedName.startsWith(prefix)){
+                if (branchSpecExpandedName.startsWith(prefix)) {
                     headName = branchSpecExpandedName.substring(prefix.length());
                 } else if (branchSpecExpandedName.startsWith("*/")) {
                     headName = branchSpecExpandedName.substring(2);
@@ -343,7 +343,6 @@ public class GitSCMFileSystem extends SCMFileSystem {
             if (!(scm instanceof GitSCM)) {
                 return null; // Spotbugs warns about unchecked cast without this check
             }
-
             GitSCM gitSCM = (GitSCM) scm;
             UserRemoteConfig config = gitSCM.getUserRemoteConfigs().get(0);
             BranchSpec branchSpec = gitSCM.getBranches().get(0);
@@ -355,8 +354,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
 
             EnvVars env = null;
-            if (_build != null)
-            {
+            if (_build != null) {
                 env = _build.getEnvironment(listener);
             }
 
