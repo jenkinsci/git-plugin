@@ -170,19 +170,6 @@ checkout([$class: 'GitSCM',
           userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
 ----
 
-==== Clean after checkout and delete untracked nested repositories
-
-Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and clean checkout extension with delete untracked nested repositories enabled.
-Clean the workspace after every checkout by deleting all untracked files and directories, including those which are specified in the `.gitignore` file.
-
-[source,groovy]
-----
-checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          extensions: [[$class: 'CleanCheckout', deleteUntrackedNestedRepositories: true]],
-          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
-----
-
 ==== Wipe out repository before checkout
 
 Remove all files in the workspace before a checkout from the workspace cleanup plugin source repository using https without credentials, a default branch.
