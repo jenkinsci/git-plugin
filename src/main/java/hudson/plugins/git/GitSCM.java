@@ -21,6 +21,9 @@ import hudson.init.Initializer;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.plugins.git.extensions.GitClientConflictException;
+import hudson.plugins.git.extensions.GitClientType;
+import hudson.plugins.git.extensions.GitSCMChangelogExtension;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.AuthorInChangelog;
@@ -52,6 +55,7 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitHooksConfiguration;
 import jenkins.plugins.git.GitSCMMatrixUtil;
+import jenkins.plugins.git.LegacyGitSCMChangelogExtension;
 import jenkins.plugins.git.GitToolChooser;
 import jenkins.util.SystemProperties;
 import net.sf.json.JSONObject;
@@ -1388,7 +1392,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             if (changelogFile != null) {
                 computeChangeLog(git, revToBuild.revision, listener, previousBuildData, new FilePath(changelogFile),
-                        new BuildChooserContextImpl(build.getParent(), build, environment));
+                        build);
             }
         }
 
@@ -1433,6 +1437,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
+    // TODO update JavaDoc
     /**
      * Build up change log from all the branches that we've merged into {@code revToBuild}.
      *
@@ -1475,33 +1480,16 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *      Information that captures what we did during the last build. We need this for changelog,
      *      or else we won't know where to stop.
      */
-    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, BuildChooserContext context) throws IOException, InterruptedException {
+    private void computeChangeLog(GitClient git, Revision revToBuild, TaskListener listener, BuildData previousBuildData, FilePath changelogFile, Run<?, ?> build) throws IOException, InterruptedException {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
-        changelog.includes(revToBuild.getSha1());
+        changelog.max(MAX_CHANGELOG); // default to allow override by extensions
         try (Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8")) {
-            boolean exclusion = false;
-            ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
-            if (changelogToBranch != null) {
-                listener.getLogger().println("Using 'Changelog to branch' strategy.");
-                changelog.excludes(changelogToBranch.getOptions().getRef());
-                exclusion = true;
-            } else {
-                for (Branch b : revToBuild.getBranches()) {
-                    Build lastRevWas = getBuildChooser().prevBuildForChangelog(b.getName(), previousBuildData, git, context);
-                    if (lastRevWas != null && lastRevWas.revision != null && git.isCommitInRepo(lastRevWas.getSHA1())) {
-                        changelog.excludes(lastRevWas.getSHA1());
-                        exclusion = true;
-                    }
-                }
-            }
+            GitSCMChangelogExtension ext = getGitSCMChangelogExtension();
+            boolean decorated = ext.decorateChangelogCommand(this, build, git, listener, changelog, revToBuild);
 
-            if (!exclusion) {
-                // this is the first time we are building this branch, so there's no base line to compare against.
-                // if we force the changelog, it'll contain all the changes in the repo, which is not what we want.
-                listener.getLogger().println("First time build. Skipping changelog.");
-            } else {
-                changelog.to(out).max(MAX_CHANGELOG).execute();
+            if (decorated) {
+                changelog.to(out).execute();
                 executed = true;
             }
         } catch (GitException ge) {
@@ -1509,6 +1497,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } finally {
             if (!executed) changelog.abort();
         }
+    }
+
+    private GitSCMChangelogExtension getGitSCMChangelogExtension() {
+        GitSCMChangelogExtension ext = getExtensions().get(GitSCMChangelogExtension.class);
+        if (ext == null)
+            ext = new LegacyGitSCMChangelogExtension();
+        return ext;
     }
 
     @Override
