@@ -16,6 +16,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -39,6 +40,41 @@ public class MessageExclusion extends GitSCMExtension {
 	public boolean requiresWorkspaceForPolling() { return true; }
 
 	public String getExcludedMessage() { return excludedMessage; }
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		MessageExclusion that = (MessageExclusion) o;
+
+		return Objects.equals(excludedMessage, that.excludedMessage);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(excludedMessage);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString() {
+		return "MessageExclusion{" +
+				"excludedMessage='" + excludedMessage + '\'' +
+				'}';
+	}
 
 	@Override
 	@SuppressFBWarnings(value="NP_BOOLEAN_RETURN_NULL", justification="null used to indicate other extensions should decide")

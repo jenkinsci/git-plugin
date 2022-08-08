@@ -9,6 +9,7 @@ import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.plugins.git.extensions.impl.GitLFSPull;
 import hudson.plugins.git.extensions.impl.LocalBranch;
+import hudson.plugins.git.extensions.impl.MessageExclusion;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.SparseCheckoutPaths;
 import hudson.plugins.git.extensions.impl.SubmoduleOption;
@@ -28,6 +29,7 @@ import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.plugins.git.traits.GitLFSPullTrait;
 import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
 import jenkins.plugins.git.traits.LocalBranchTrait;
+import jenkins.plugins.git.traits.MessageExclusionTrait;
 import jenkins.plugins.git.traits.PruneStaleBranchTrait;
 import jenkins.plugins.git.traits.RefSpecsSCMSourceTrait;
 import jenkins.plugins.git.traits.RemoteNameSCMSourceTrait;
@@ -189,6 +191,13 @@ public class GitSCMSourceTraitsTest {
                                         hasProperty("localBranch", is("**"))
                                 )
                         ),
+                        Matchers.<SCMSourceTrait>instanceOf(CleanAfterCheckoutTrait.class),
+                        Matchers.<SCMSourceTrait>instanceOf(CleanBeforeCheckoutTrait.class),
+                        Matchers.allOf(
+                                instanceOf(MessageExclusionTrait.class),
+                                hasProperty("extension",
+                                        hasProperty("excludedMessage", is("does not work")))
+                        ),
                         Matchers.<SCMSourceTrait>allOf(
                                 instanceOf(CleanBeforeCheckoutTrait.class),
                                 hasProperty("extension",
@@ -272,6 +281,10 @@ public class GitSCMSourceTraitsTest {
                                 instanceOf(UserIdentity.class),
                                 hasProperty("name", is("bob")),
                                 hasProperty("email", is("bob@example.com"))
+                        ),
+                        Matchers.allOf(
+                                instanceOf(MessageExclusion.class),
+                                hasProperty("excludedMessage", is("does not work"))
                         ),
                         Matchers.<GitSCMExtension>instanceOf(GitLFSPull.class),
                         Matchers.<GitSCMExtension>instanceOf(PruneStaleBranch.class),
