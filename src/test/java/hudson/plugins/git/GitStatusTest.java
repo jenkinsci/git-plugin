@@ -734,7 +734,7 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", null, null);
         httpResponse.generateResponse(null, res, null);
 
-        Mockito.verify(res).sendError(401, "An access token is required. Please refer to Git plugin documentation for details.");
+        Mockito.verify(res).sendError(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
     }
 
     @Test
@@ -747,7 +747,7 @@ public class GitStatusTest extends AbstractGitProject {
         HttpResponse httpResponse = this.gitStatus.doNotifyCommit(requestWithNoParameter, "a", "master", sha1, null);
         httpResponse.generateResponse(null, res, null);
 
-        Mockito.verify(res).sendError(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation for details.");
+        Mockito.verify(res).sendError(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
     }
 
     @Test
