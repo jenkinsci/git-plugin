@@ -11,6 +11,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.plugins.git.GitStatus;
 import hudson.plugins.git.GitTool;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.scm.SCMDescriptor;
 import hudson.tools.CommandInstaller;
 import hudson.tools.InstallSourceProperty;
@@ -90,11 +91,12 @@ public class GitSCMSourceTest {
     @Test
     @Deprecated
     public void testSourceOwnerTriggeredByDoNotifyCommit() throws Exception {
+        String notifyCommitApiToken = ApiTokenPropertyConfiguration.get().generateApiToken("test").getString("value");
         GitSCMSource gitSCMSource = new GitSCMSource("id", REMOTE, "", "*", "", false);
         GitSCMSourceOwner scmSourceOwner = setupGitSCMSourceOwner(gitSCMSource);
         jenkins.getInstance().add(scmSourceOwner, "gitSourceOwner");
 
-        gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "");
+        gitStatus.doNotifyCommit(mock(HttpServletRequest.class), REMOTE, "master", "", notifyCommitApiToken);
 
         SCMHeadEvent event =
                 jenkins.getInstance().getExtensionList(SCMEventListener.class).get(SCMEventListenerImpl.class)

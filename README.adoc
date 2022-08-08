@@ -51,6 +51,138 @@ The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Mul
 
 image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 
+=== Pipeline examples
+
+The examples below were created with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator].
+Create your own checkout commands  with the link:https://www.jenkins.io/redirect/pipeline-snippet-generator[Pipeline Syntax Snippet Generator] configured for your needs.
+
+==== Checkout with defaults
+
+Checkout from the git plugin source repository using https protocol, no credentials, and the master branch.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+         branches: [[name: '*/master']],
+         userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-plugin.git']]])
+----
+
+==== Checkout with a specific branch
+
+Checkout from the git client plugin source repository using https protocol, no credentials, and a non-default branch.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: 'stable-2.x']],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+----
+
+==== Checkout with ssh and a private key credential
+
+Checkout from the git client plugin source repository using ssh protocol, ssh private credentials, and a non-default branch.
+The git plugin supports private key credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: 'stable-2.x']],
+          userRemoteConfigs: [[credentialsId:  'my-ssh-private-key-id',
+                               url: 'ssh://github.com/jenkinsci/git-plugin.git']]])
+----
+
+==== Checkout with https and a username/password credential
+
+Checkout from the git client plugin source repository using https protocol, username/password credentials, and a non-default branch.
+The git plugin supports username/password credentials provided by the link:https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: 'stable-2.x']],
+          userRemoteConfigs: [[credentialsId: 'my-username-password-id',
+                               url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+----
+
+==== Checkout with git large file support enabled
+
+Checkout from the git client plugin source repository using https protocol and a non-default branch.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: 'stable-2.x']],
+          extensions: [[$class: 'GitLFSPull']],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+----
+
+==== Checkout without fetching tags (advanced clone behavior)
+
+Checkout from the git client plugin source repository using https with no credentials, a default branch, and without tags.
+This can save time and disk space when you want to access the repository without considering tags.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'CloneOption', noTags: true]],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/git-client-plugin.git']]])
+----
+
+==== Checkout with a shallow clone to reduce data traffic
+
+Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and a shallow clone.
+Shallow clone requests a limited number of commits from the tip of the requested branch and may save time, data transfer, and disk space.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'CloneOption', shallow: true]],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+----
+
+==== Checkout with a narrow refspec
+
+Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and with refspec defined for the repository.
+This can save time, data transfer and disk space when you only need to access the references specified by the refspec.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[$class: 'CloneOption', honorRefspec: true]],
+          userRemoteConfigs: [[refspec: '+refs/heads/master:refs/remotes/origin/master',
+                               url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+
+----
+
+==== Checkout and prune stale remote branches
+
+Checkout from the workspace cleanup plugin source repository using https without credentials, a default branch, and with prune tags extension enabled.
+This removes remote tracking branches from the local workspace if they no longer exist on the remote.
+
+[source,groovy]
+----
+checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          extensions: [[pruneTags(true)]],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+----
+
+==== Wipe out repository before checkout
+
+Remove all files in the workspace before a checkout from the workspace cleanup plugin source repository using https without credentials, a default branch.
+Ensures a fully fresh workspace.
+
+[source,groovy]
+----
+deleteDir()
+checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          userRemoteConfigs: [[url: 'https://github.com/jenkinsci/ws-cleanup-plugin']]])
+----
+
 [#credential-binding]
 === Git Credentials Binding
 
@@ -173,12 +305,13 @@ Refer to webhook documentation for your repository:
 * link:https://plugins.jenkins.io/bitbucket[Bitbucket]
 * link:https://plugins.jenkins.io/gitlab-branch-source[GitLab]
 * link:https://github.com/jenkinsci/gitea-plugin/blob/master/docs/README.md[Gitea]
+* link:https://docs.tuleap.org/user-guide/code-versioning/git.html#jenkins-webhooks[Tuleap]
 
 Other git repositories can use a link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[post-receive hook] in the remote repository to notify Jenkins of changes.
-Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository.
+Add the following line in your `hooks/post-receive` file on the git server, replacing <URL of the Git repository> with the fully qualified URL you use when cloning the repository, and replacing <Access token> with a token generated by a Jenkins administrator using the "Git plugin notifyCommit access tokens" section of the "Configure Global Security" page.
 
 ....
-curl http://yourserver/git/notifyCommit?url=<URL of the Git repository>
+curl http://yourserver/git/notifyCommit?url=<URL of the Git repository>&token=<Access token>
 ....
 
 This will scan all the jobs that:
@@ -191,8 +324,19 @@ If polling finds a change worthy of a build, a build will be triggered.
 
 This allows a notify script to remain the same for all Jenkins jobs.
 Or if you have multiple repositories under a single repository host application (such as Gitosis), you can share a single post-receive hook script with all the repositories.
-Finally, this URL doesn't require authentication even for secured Jenkins, because the server doesn't directly use anything that the client is sending.
-It polls to verify that there is a change before it actually starts a build.
+
+The `token` parameter is required by default as a security measure, but can be disabled by the following link:https://www.jenkins.io/doc/book/managing/system-properties/[system property]:
+
+....
+hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL
+....
+
+It has two modes:
+
+* `disabled-for-polling` - Allows unauthenticated requests as long as they only request polling of the repository supplied in the `url` query parameter. Prohibits unauthenticated requests that attempt to schedule a build immediately by providing a
+`sha1` query parameter.
+* `disabled` - Fully disables the access token mechanism and allows all requests to `notifyCommit`
+to be unauthenticated. *This option is insecure and is not recommended.*
 
 When notifyCommit is successful, the list of triggered projects is returned.
 
@@ -276,6 +420,32 @@ The git plugin does *not* push the applied tag to any other location.
 If the workspace is removed, the tag that was applied is lost.
 Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
 Applying a git tag in an agent workspace doesn't have many practical uses.
+
+[#security-configuration]
+=== Security Configuration
+
+image:/images/git-security-configuration.png[Security Configuration]
+
+In the `Configure Global Security` page, the Git Plugin provides the following option:
+
+[[global-security-git-hooks]]
+Git Hooks::
+
+  link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks[Git hooks] allow scripts to be invoked when certain important git repository actions occur.
+  This configuration controls the execution of client-side hooks on the controller and on agents.
+  It is recommended that git hooks be **disabled** on the controller and on agents.
++
+Most git repositories do not use hooks in the repository and do not need repository hooks.
+In those rare cases where repository hooks are needed, it is highly recommended that they are **disabled** on the Jenkins controller and on Jenkins agents.
++
+Client-side hooks are **not** copied when the repository is cloned by Jenkins using the inbuilt SCM methods.
+However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
++
+If hook scripts are allowed, a client-side hook script installed in a repository will execute when the matching git operation is performed.
+For example, if hooks are allowed and a git repository includes a `post-checkout` hook, the hook script will run after any checkout in that repository.
+If hooks are allowed and a git repository includes a `pre-auto-gc` hook, the hook script will run before any automatic git garbage collection task.
++
+See link:https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks["Customizing Git - Git Hooks"] for more details about git repository hooks.
 
 [#repository-browser]
 === Repository Browser

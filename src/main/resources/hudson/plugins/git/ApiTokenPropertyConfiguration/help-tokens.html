@@ -1,0 +1,15 @@
+<div>
+    <p>These access tokens serve as a way of authenticating requests to the <code>notifyCommit</code> endpoint.
+    <p>By default, all requests to <code>notifyCommit</code> must include a valid token in the <code>token</code> query parameter. However, it is possible to disable
+        that requirement with the <a href="https://www.jenkins.io/doc/book/managing/system-properties/">system property</a>:
+    <pre><code>hudson.plugins.git.GitStatus.NOTIFY_COMMIT_ACCESS_CONTROL</code></pre>
+    <br/>
+    It has two modes:
+    <ul>
+        <li><code>disabled-for-polling</code> - Allows unauthenticated requests as long as they only request polling of the repository supplied in the
+            <code>url</code> query parameter. Prohibits unauthenticated requests that attempt to schedule a build immediately by providing a
+            <code>sha1</code> query parameter.</li>
+        <li><code>disabled</code> - Fully disables the access token mechanism and allows all requests to <code>notifyCommit</code>
+            to be unauthenticated. <b>This option is insecure and is not recommended.</b></li>
+    </ul>
+</div>

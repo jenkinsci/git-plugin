@@ -50,6 +50,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitHooksConfiguration;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import jenkins.plugins.git.GitToolChooser;
 import jenkins.util.SystemProperties;
@@ -801,6 +802,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitClient git = createClient(listener, environment, lastBuild, node, workingDirectory);
 
         if (git.hasGitRepo(false)) {
+            GitHooksConfiguration.configure(git);
             // Repo is there - do a fetch
             listener.getLogger().println("Fetching changes from the remote Git repositories");
 
@@ -1235,6 +1237,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
             }
         }
+        GitHooksConfiguration.configure(git);
 
         for (RemoteConfig remoteRepository : repos) {
             if (remoteRepository.equals(repos.get(0)) && removeSecondFetch){

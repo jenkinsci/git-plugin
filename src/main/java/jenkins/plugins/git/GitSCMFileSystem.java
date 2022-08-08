@@ -335,6 +335,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = StringUtils.defaultIfBlank(config.getName(), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
@@ -396,6 +397,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());
