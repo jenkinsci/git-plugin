@@ -120,7 +120,7 @@ public class GitStatus implements UnprotectedRootAction {
         if (!"disabled".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)
                 && !"disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL)) {
             if (StringUtils.isEmpty(token)) {
-                return HttpResponses.errorWithoutStack(401, "An access token is required. Please refer to Git plugin documentation for details.");
+                return HttpResponses.errorWithoutStack(401, "An access token is required. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
             }
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
                 return HttpResponses.errorWithoutStack(403, "Invalid access token");
@@ -128,7 +128,7 @@ public class GitStatus implements UnprotectedRootAction {
         }
         if ("disabled-for-polling".equalsIgnoreCase(NOTIFY_COMMIT_ACCESS_CONTROL) && StringUtils.isNotEmpty(sha1)) {
             if (StringUtils.isEmpty(token)) {
-                return HttpResponses.errorWithoutStack(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation for details.");
+                return HttpResponses.errorWithoutStack(401, "An access token is required when using the sha1 parameter. Please refer to Git plugin documentation (https://plugins.jenkins.io/git/#plugin-content-push-notification-from-repository) for details.");
             } 
             if (!ApiTokenPropertyConfiguration.get().isValidApiToken(token)) {
                 return HttpResponses.errorWithoutStack(403, "Invalid access token");
