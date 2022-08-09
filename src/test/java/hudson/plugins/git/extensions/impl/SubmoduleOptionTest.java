@@ -68,9 +68,7 @@ public class SubmoduleOptionTest {
         Mockito.when(client.hasGitModules()).thenReturn(true);
         Mockito.when(client.submoduleUpdate()).thenThrow(new GitException("a git exception"));
 
-        Exception e = assertThrows(IOException.class, () -> {
-            submoduleOption.onCheckoutCompleted(scm, build, client, listener);
-        });
+        Exception e = assertThrows(IOException.class, () -> submoduleOption.onCheckoutCompleted(scm, build, client, listener));
         assertThat(e.getMessage(), is("Could not perform submodule update"));
     }
 

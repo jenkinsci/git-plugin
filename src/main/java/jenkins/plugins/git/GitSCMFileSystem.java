@@ -53,7 +53,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -206,7 +207,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
-            try (Writer out = new OutputStreamWriter(changeLogStream, "UTF-8")) {
+            try (Writer out = new OutputStreamWriter(changeLogStream, StandardCharsets.UTF_8)) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
                 if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
@@ -394,10 +395,10 @@ public class GitSCMFileSystem extends SCMFileSystem {
 
                 HeadNameResult headNameResult = HeadNameResult.calculate(branchSpec, rev, env);
 
-                client.fetch_().prune(true).from(remoteURI, Arrays
-                        .asList(new RefSpec(
-                                "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headNameResult.headName))).execute();
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
+                        "+" + headNameResult.prefix + headNameResult.headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headNameResult.headName))).execute();
+
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" + headNameResult.headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {

@@ -10,7 +10,6 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
 import hudson.model.View;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
 import hudson.tasks.CommandInterpreter;
 import hudson.tasks.Shell;
@@ -142,7 +141,7 @@ public class GitStatusTest extends AbstractGitProject {
     @WithoutJenkins
     @Test
     public void testAllowNotifyCommitParametersDisabled() {
-        assertEquals("SECURITY-275: ignore arbitrary notifyCommit parameters", false, GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
+        assertFalse("SECURITY-275: ignore arbitrary notifyCommit parameters", GitStatus.ALLOW_NOTIFY_COMMIT_PARAMETERS);
     }
 
     @WithoutJenkins
@@ -412,7 +411,7 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.singletonList(new UserRemoteConfig(url, null, null, null)),
                 Collections.singletonList(new BranchSpec(branchString)),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(git);
         if (trigger != null) project.addTrigger(trigger);
     }
@@ -465,7 +464,7 @@ public class GitStatusTest extends AbstractGitProject {
                 Collections.singletonList(new UserRemoteConfig(repoURL, null, null, null)),
                 Collections.singletonList(new BranchSpec(branch)),
                 null, null,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
         project.setScm(git);
         project.addTrigger(new SCMTrigger("")); // Required for GitStatus to see polling request
         return project;

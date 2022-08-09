@@ -10,7 +10,7 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -167,8 +167,8 @@ public class GitChangeSetSimpleTest {
 
     @Test
     public void testEquals() {
-        assertTrue(changeSet.equals(changeSet));
-        assertFalse(changeSet.equals(new GitChangeSet(new ArrayList<>(), false)));
+        assertEquals(changeSet, changeSet);
+        assertNotEquals(changeSet, new GitChangeSet(new ArrayList<>(), false));
     }
 
     @Test
@@ -177,9 +177,7 @@ public class GitChangeSetSimpleTest {
         ArrayList<String> lines = new ArrayList<>();
         lines.add(expectedLineContent);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                                                  () -> {
-                                                      new GitChangeSet(lines, true);
-                                                  });
+                                                  () -> new GitChangeSet(lines, true));
         assertThat(e.getMessage(), containsString("Commit has no ID[" + expectedLineContent + "]"));
     }
 }

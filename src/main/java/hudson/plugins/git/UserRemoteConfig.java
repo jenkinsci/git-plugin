@@ -107,7 +107,7 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
                 /* Construct a fake project, suppress the deprecation warning because the
                  * replacement for the deprecated API isn't accessible in this context. */
                 @SuppressWarnings("deprecation")
-                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+                Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID());
                 project = fakeProject;
             }
             return new StandardListBoxModel()

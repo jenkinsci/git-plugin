@@ -1,6 +1,5 @@
 package hudson.plugins.git;
 
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -17,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -218,8 +218,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
                 "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/*:refs/remotes/origin/*", null);
         // First, build the master branch
         String branchSpec = "refs/heads/master";
-        FreeStyleProject project = setupProject(asList(remoteConfig),
-                asList(new BranchSpec(branchSpec)),
+        FreeStyleProject project = setupProject(Collections.singletonList(remoteConfig),
+                Collections.singletonList(new BranchSpec(branchSpec)),
                 //empty scmTriggerSpec, SCMTrigger triggered manually
                 "", isDisableRemotePoll(), getGitClient());
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
@@ -234,15 +234,15 @@ public abstract class SCMTriggerTest extends AbstractGitProject
         // Since the new branch has an additional commit, polling should report changes. Without the fix for
         // JENKINS-29796, this assertion fails.
         PollingResult poll = project.poll(listener);
-        assertEquals("Expected and actual polling results disagree", true, poll.hasChanges());
+        assertTrue("Expected and actual polling results disagree", poll.hasChanges());
     }
 
     public void check(ZipFile repoZip, Properties commits, String branchSpec,
             String expected_GIT_COMMIT, String expected_GIT_BRANCH) throws Exception {
         String remote = prepareRepo(repoZip);
 
-        FreeStyleProject project = setupProject(asList(new UserRemoteConfig(remote, null, null, null)),
-                    asList(new BranchSpec(branchSpec)),
+        FreeStyleProject project = setupProject(Collections.singletonList(new UserRemoteConfig(remote, null, null, null)),
+                Collections.singletonList(new BranchSpec(branchSpec)),
                     //empty scmTriggerSpec, SCMTrigger triggered manually
                     "", isDisableRemotePoll(), getGitClient()); 
         
@@ -254,7 +254,7 @@ public abstract class SCMTriggerTest extends AbstractGitProject
 
         TaskListener listener = StreamTaskListener.fromStderr();
         PollingResult poll = project.poll(listener);
-        assertEquals("Expected and actual polling results disagree", false, poll.hasChanges());
+        assertFalse("Expected and actual polling results disagree", poll.hasChanges());
         
         //Speedup test - avoid waiting 1 minute
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class)).get(20, SECONDS);
@@ -305,8 +305,8 @@ public abstract class SCMTriggerTest extends AbstractGitProject
     {
         Properties properties = new Properties();
         Pattern pattern = Pattern.compile("([a-f0-9]{40})\\s*(.*)");
-        for(Object lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
-            String line = ((String)lineO).trim();
+        for(String lineO : FileUtils.readLines(file, StandardCharsets.UTF_8)) {
+            String line = lineO.trim();
             Matcher matcher = pattern.matcher(line);
             if(matcher.matches()) {
                 properties.setProperty(matcher.group(2), matcher.group(1));

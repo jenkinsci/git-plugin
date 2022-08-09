@@ -82,7 +82,7 @@ public abstract class GitSCMExtensionTest {
 				repo.remoteConfigs(),
 				branches,
 				null, null,
-				Collections.<GitSCMExtension>emptyList());
+				Collections.emptyList());
 		scm.getExtensions().add(extension);
 		project.setScm(scm);
 		project.getBuildersList().add(new CaptureEnvironmentBuilder());

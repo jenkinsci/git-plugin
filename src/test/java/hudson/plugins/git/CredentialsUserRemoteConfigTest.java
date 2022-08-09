@@ -33,7 +33,7 @@ public class CredentialsUserRemoteConfigTest {
     @Before
     public void enableSystemCredentialsProvider() {
         SystemCredentialsProvider.getInstance().setDomainCredentialsMap(
-                Collections.singletonMap(Domain.global(), Collections.<Credentials>emptyList()));
+                Collections.singletonMap(Domain.global(), Collections.emptyList()));
         for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
             if (s.getProvider() instanceof SystemCredentialsProvider.ProviderImpl) {
                 store = s;

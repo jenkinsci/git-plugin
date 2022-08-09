@@ -36,7 +36,7 @@ public class GitWeb extends GitRepositoryBrowser {
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
 
-        return new URL(url, url.getPath()+param(url).add("a=commit").add("h=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath()+ param(url).add("a=commit").add("h=" + changeSet.getId()));
     }
 
     private QueryBuilder param(URL url) {

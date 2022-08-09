@@ -59,7 +59,7 @@ public class GithubWeb extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
     	// Github seems to sort the output alphabetically by the path.
-        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path)));
+        return new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + getIndexOfPath(path));
     }
 
     /**
