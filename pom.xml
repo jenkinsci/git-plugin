@@ -102,7 +102,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <version>625.va_c59c48ce36f</version>  <!-- TODO: https://github.com/jenkinsci/scm-api-plugin/pull/160 -->
+      <version>621.vda_a_b_055e58f7</version>  <!-- TODO until in BOM -->
       <artifactId>scm-api</artifactId>
     </dependency>
     <dependency>
@@ -192,7 +192,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>625.va_c59c48ce36f</version>  <!-- TODO: https://github.com/jenkinsci/scm-api-plugin/pull/160 -->
+      <version>621.vda_a_b_055e58f7</version>  <!-- TODO until in BOM -->
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
