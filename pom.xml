@@ -61,7 +61,7 @@
     <revision>4.12.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.332.4</jenkins.version>
+    <jenkins.version>2.346.1</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <linkXRef>false</linkXRef>
