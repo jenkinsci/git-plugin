@@ -10,10 +10,10 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class MaintenanceTaskConfigurationTest {
 
@@ -22,7 +22,7 @@ public class MaintenanceTaskConfigurationTest {
     private final MaintenanceTaskConfiguration config = new MaintenanceTaskConfiguration();
 
     @Test
-    public void setCronSyntax() throws ANTLRException {
+    public void setCronSyntax(){
         String cronSyntax = "* * * 1 *";
         for(TaskType taskType : TaskType.values()){
             config.setCronSyntax(taskType,cronSyntax);
@@ -63,6 +63,8 @@ public class MaintenanceTaskConfigurationTest {
         // Default status
         assertFalse(config.getIsGitMaintenanceRunning());
 
+        config.setIsGitMaintenanceRunning(true);
+        assertTrue(config.getIsGitMaintenanceRunning());
         // When status is set to true
         // Maintenance needs to be running
         // assertTrue(config.getIsGitMaintenanceRunning());

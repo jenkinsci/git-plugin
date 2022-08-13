@@ -1,6 +1,6 @@
 package jenkins.plugins.git.maintenance;
 
-import antlr.ANTLRException;
+import jenkins.model.GlobalConfiguration;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,18 +31,20 @@ public class TaskSchedulerTest {
     @Before
     public void setUp() throws Exception {
         taskScheduler = new TaskScheduler();
-        config = new MaintenanceTaskConfiguration();
-
+        config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
     }
 
     // Tested all the internal functions of this method
     @Test
-    public void testScheduleTasks() throws ANTLRException {
+    public void testScheduleTasks() {
+        config.setIsGitMaintenanceRunning(true);
+        config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
+        config.setIsTaskConfigured(TaskType.PREFETCH,true);
         taskScheduler.scheduleTasks();
     }
 
     @Test
-    public void testCheckIsTaskInQueue() throws Exception {
+    public void testCheckIsTaskInQueue(){
         config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);
 
@@ -58,7 +60,7 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    public void testAddTasksToQueue() throws Exception {
+    public void testAddTasksToQueue() {
         // Adding Maintenance tasks configuration;
         config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);
@@ -77,6 +79,15 @@ public class TaskSchedulerTest {
     }
 
     @Test
+    public void testInvalidAddTasksToQueue() {
+        config.setCronSyntax(TaskType.PREFETCH,"*****");
+        config.setIsTaskConfigured(TaskType.PREFETCH,true);
+        List<Task> maintenanceTasks = config.getMaintenanceTasks();
+        taskScheduler.addTasksToQueue(maintenanceTasks);
+        assertThat(taskScheduler.getMaintenanceQueue().size(),is(0));
+    }
+
+    @Test
     public void testIsGitMaintenanceTaskRunning(){
         // Setting value to true
         config.setIsGitMaintenanceRunning(true);
@@ -90,7 +101,7 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    public void testCreateNoExecutorThread() throws Exception{
+    public void testCreateNoExecutorThread(){
         config.setCronSyntax(TaskType.PREFETCH,"5 1 1 1 1");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);
 
@@ -102,7 +113,7 @@ public class TaskSchedulerTest {
     }
 
     @Test
-    public void testCreateExecutionThread() throws Exception{
+    public void testCreateExecutionThread(){
 
         config.setCronSyntax(TaskType.PREFETCH,"* * * * *");
         config.setIsTaskConfigured(TaskType.PREFETCH,true);

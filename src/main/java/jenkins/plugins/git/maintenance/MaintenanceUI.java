@@ -218,7 +218,8 @@ public class MaintenanceUI extends ManagementLink {
 
     @JavaScriptMethod
     public JSONObject getNotification(){
-        return notification;
+        // creating a copy...
+        return JSONObject.fromObject(notification.toString());
     }
 
 }
