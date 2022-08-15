@@ -79,6 +79,7 @@
     <!-- Do not run extra reporting for checkstyle or pmd -->
     <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
+    <jgit.version>5.13.1.202206130422-r</jgit.version>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Low</spotbugs.threshold>
   </properties>
@@ -142,6 +143,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>1.4.19</version>
     </dependency>
 
     <dependency>
