@@ -270,7 +270,6 @@ public class GitUsernamePasswordBindingTest {
     @Test
     public void test_GenerateGitScript_write() throws IOException, InterruptedException {
         GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(!isWindows());
-        assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
         FilePath tempScriptFile = tempGenScript.write(rootFilePath);
         if (!isWindows()) {
             assertThat(tempScriptFile.mode(), is(0500));
