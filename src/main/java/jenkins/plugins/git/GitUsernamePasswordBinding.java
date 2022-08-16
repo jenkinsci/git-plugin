@@ -73,11 +73,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             setUnixNodeType(isCurrentNodeOSUnix(launcher));
             setGitEnvironmentVariables(getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(),
                                                             new EnvVars(), taskListener), publicValues);
-            GenerateGitScript gitScript = new GenerateGitScript(
-                                                  credentials.getUsername(),
-                                                  credentials.getPassword().getPlainText(),
-                                                  credentials.getId(),
-                                                  this.unixNodeType);
+            GenerateGitScript gitScript = new GenerateGitScript(this.unixNodeType);
             FilePath gitTempFile = gitScript.write(credentials, unbindTempDir.getDirPath());
             secretValues.put("GIT_ASKPASS", gitTempFile.getRemote());
             return new MultiEnvironment(secretValues, publicValues, unbindTempDir.getUnbinder());
@@ -127,48 +123,37 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
         return gitInstance.getClient();
     }
 
-    protected static final class GenerateGitScript extends AbstractOnDiskBinding<StandardUsernamePasswordCredentials> {
+    protected static final class GenerateGitScript {
 
-        private final String userVariable;
-        private final String passVariable;
         private final boolean unixNodeType;
 
-        protected GenerateGitScript(String gitUsername, String gitPassword,
-                                       String credentialId, boolean unixNodeType) {
-            super(gitUsername + ":" + gitPassword, credentialId);
-            this.userVariable = gitUsername;
-            this.passVariable = gitPassword;
+        protected GenerateGitScript(boolean unixNodeType) {
             this.unixNodeType = unixNodeType;
         }
 
         @Override
-        protected FilePath write(StandardUsernamePasswordCredentials credentials, FilePath workspace)
+        protected FilePath write(FilePath workspace)
                 throws IOException, InterruptedException {
             FilePath gitEcho;
               //Hard Coded platform dependent newLine
             if (this.unixNodeType) {
-                gitEcho = workspace.createTempFile("auth", ".sh");
+                gitEcho = workspace.createTempFile("askpass", ".sh");
                 // [#!/usr/bin/env sh] to be used if required, could have some corner cases
-                gitEcho.write("case $1 in\n"
-                        + "        Username*) echo " + this.userVariable
+                gitEcho.write("case \"$1\" in\n"
+                        + "        Username*) echo \"$GIT_USERNAME\""
                         + "                ;;\n"
-                        + "        Password*) echo " + this.passVariable
+                        + "        Password*) echo \"$GIT_PASSWORD\""
                         + "                ;;\n"
                         + "        esac\n", null);
                 gitEcho.chmod(0500);
             } else {
-                gitEcho = workspace.createTempFile("auth", ".bat");
+                gitEcho = workspace.createTempFile("askpass", ".bat");
                 gitEcho.write("@ECHO OFF\r\n"
                         + "SET ARG=%~1\r\n"
-                        + "IF %ARG:~0,8%==Username (ECHO " + this.userVariable + ")\r\n"
-                        + "IF %ARG:~0,8%==Password (ECHO " + this.passVariable + ")", null);
+                        + "IF %ARG:~0,8%==Username (ECHO %GIT_USERNAME%)\r\n"
+                        + "IF %ARG:~0,8%==Password (ECHO %GIT_PASSWORD%)", null);
             }
             return gitEcho;
-        }
-
-        @Override
-        protected Class<StandardUsernamePasswordCredentials> type() {
-            return StandardUsernamePasswordCredentials.class;
         }
     }
 

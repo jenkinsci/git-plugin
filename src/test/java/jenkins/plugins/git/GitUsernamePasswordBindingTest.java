@@ -269,17 +269,17 @@ public class GitUsernamePasswordBindingTest {
 
     @Test
     public void test_GenerateGitScript_write() throws IOException, InterruptedException {
-        GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(this.username, this.password, credentials.getId(), !isWindows());
+        GitUsernamePasswordBinding.GenerateGitScript tempGenScript = new GitUsernamePasswordBinding.GenerateGitScript(!isWindows());
         assertThat(tempGenScript.type(), is(StandardUsernamePasswordCredentials.class));
-        FilePath tempScriptFile = tempGenScript.write(credentials, rootFilePath);
+        FilePath tempScriptFile = tempGenScript.write(rootFilePath);
         if (!isWindows()) {
             assertThat(tempScriptFile.mode(), is(0500));
             assertThat("File extension not sh", FilenameUtils.getExtension(tempScriptFile.getName()), is("sh"));
         } else {
             assertThat("File extension not bat", FilenameUtils.getExtension(tempScriptFile.getName()), is("bat"));
         }
-        assertThat(tempScriptFile.readToString(), containsString(this.username));
-        assertThat(tempScriptFile.readToString(), containsString(this.password));
+        assertThat(tempScriptFile.readToString(), containsString("GIT_USERNAME"));
+        assertThat(tempScriptFile.readToString(), containsString("GIT_PASSWORD"));
     }
 
     /**
