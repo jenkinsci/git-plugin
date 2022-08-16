@@ -131,7 +131,6 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             this.unixNodeType = unixNodeType;
         }
 
-        @Override
         protected FilePath write(FilePath workspace)
                 throws IOException, InterruptedException {
             FilePath gitEcho;
