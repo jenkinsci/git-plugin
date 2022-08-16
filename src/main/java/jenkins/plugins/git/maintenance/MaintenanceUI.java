@@ -9,6 +9,8 @@ import hudson.security.Permission;
 import hudson.util.FormValidation;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.maintenance.Logs.Record;
+import jenkins.plugins.git.maintenance.Logs.XmlSerialize;
 import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -222,4 +224,9 @@ public class MaintenanceUI extends ManagementLink {
         return JSONObject.fromObject(notification.toString());
     }
 
+    public List<Record> getMaintenanceRecords(){
+        // Currently on every refresh, parsing xml file from disk and then displaying it.
+        // Todo improve performance by creating an object which loads the data initially from xml file and UI consumes the data from this object.
+        return new XmlSerialize().getMaintenanceRecords();
+    }
 }

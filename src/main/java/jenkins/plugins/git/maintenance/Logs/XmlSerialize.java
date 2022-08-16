@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class XmlSerialize{
 
@@ -23,7 +24,7 @@ public class XmlSerialize{
         this.xStream.addPermission(AnyTypePermission.ANY);
     }
 
-    public RecordList fetchMaintenanceData(){
+    RecordList fetchMaintenanceData(){
         try {
             RecordList recordList;
             if (!new File(maintenanceRecordsFile).exists()) {
@@ -60,5 +61,9 @@ public class XmlSerialize{
             }
         }
         return false;
+    }
+
+    public List<Record> getMaintenanceRecords(){
+        return fetchMaintenanceData().getMaintenanceRecords();
     }
 }
