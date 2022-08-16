@@ -74,7 +74,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
             setGitEnvironmentVariables(getGitClientInstance(cliGitTool.getGitExe(), unbindTempDir.getDirPath(),
                                                             new EnvVars(), taskListener), publicValues);
             GenerateGitScript gitScript = new GenerateGitScript(this.unixNodeType);
-            FilePath gitTempFile = gitScript.write(credentials, unbindTempDir.getDirPath());
+            FilePath gitTempFile = gitScript.write(unbindTempDir.getDirPath());
             secretValues.put("GIT_ASKPASS", gitTempFile.getRemote());
             return new MultiEnvironment(secretValues, publicValues, unbindTempDir.getUnbinder());
         } else {
