@@ -227,6 +227,7 @@ public class MaintenanceUI extends ManagementLink {
     public List<Record> getMaintenanceRecords(){
         // Currently on every refresh, parsing xml file from disk and then displaying it.
         // Todo improve performance by creating an object which loads the data initially from xml file and UI consumes the data from this object.
+        // Need to plan a way to load data async. Not the entire data. Based on user requirements.
         return new XmlSerialize().getMaintenanceRecords();
     }
 }

@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler"
          xmlns:t="/lib/hudson">
-    <st:adjunct includes="io.jenkins.plugins.data-tables"/>
+    <!--    <st:adjunct includes="io.jenkins.plugins.data-tables"/>-->
     <l:layout norefresh="true" type="one-column" title="Git Plugin" permission="${app.ADMINISTER}">
         <l:main-panel>
             <div>
@@ -35,53 +35,15 @@
 
             <st:bind var="a" value="${it}"/>
 
-            <div class="fluid-container">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped display" id="fixed">
-                        <thead>
-                            <tr>
-                                <th>${%Repo Name}</th>
-                                <th>${%Repo Size}</th>
-                                <th>${%Task}</th>
-                                <th>${%Previous Execution}</th>
-                                <th>${%Status}</th>
-                                <th>${%Execution Time}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <j:forEach var="record" items="">
-                                <tr>
-                                    <td>
-                                        ${record.getRepoName()}
-                                    </td>
-                                    <td>
-                                        ${record.getRepoSize()}
-                                    </td>
-                                    <td>
-                                        ${record.getMaintenanceType()}
-                                    </td>
-                                    <td>
-                                        ${record.getPrevExecution()}
-                                    </td>
-<!--                                    <td>-->
-<!--                                        ${record.executionStatus()}-->
-<!--                                    </td>-->
-                                    <td>
-                                        ${record.getExecutionTime()}
-                                    </td>
-                                </tr>
-                            </j:forEach>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<!--            Importing Table from table.jelly file-->
+            <st:include page="table.jelly" it="${it}" optional="false" />
 
             <script>
-                // TO load the table in UI
-                jQuery3('#fixed').DataTable({
-                    pagingType: 'numbers', // Page number button only
-                    order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
-                });
+                // // TO load the table in UI
+                // jQuery3('#fixed').DataTable({
+                //     pagingType: 'numbers', // Page number button only
+                //     order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
+                // });
 
                 // To display notification after submitting data from form.
                 a.getNotification(function (t) {
