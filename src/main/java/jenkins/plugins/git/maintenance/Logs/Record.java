@@ -2,15 +2,16 @@ package jenkins.plugins.git.maintenance.Logs;
 
 public class Record {
     String repoName;
-    int repoSize;
+    long repoSize;
     String maintenanceType;
     int prevExecution;
-    String executionStatus;
-    int executionTime;
+    boolean executionStatus;
+    long executionTime;
 
-    public Record(String repoName,int repoSize, String maintenanceType){
+    // Can add space saved.
+
+    public Record(String repoName,String maintenanceType){
         this.repoName = repoName;
-        this.repoSize = repoSize;
         this.maintenanceType = maintenanceType;
     }
 
@@ -18,8 +19,11 @@ public class Record {
         return repoName;
     }
 
-    public int getRepoSize() {
+    public long getRepoSize() {
         return repoSize;
+    }
+    public void setRepoSize(long repoSize) {
+        this.repoSize = repoSize;
     }
 
     public String getMaintenanceType() {
@@ -34,19 +38,19 @@ public class Record {
         this.prevExecution = prevExecution;
     }
 
-    public String getExecutionStatus() {
+    public boolean getExecutionStatus() {
         return executionStatus;
     }
 
-    public void setExecutionStatus(String executionStatus) {
+    public void setExecutionStatus(boolean executionStatus) {
         this.executionStatus = executionStatus;
     }
 
-    public int getExecutionTime() {
+    public long getExecutionTime() {
         return executionTime;
     }
 
-    public void setExecutionTime(int executionTime) {
+    public void setExecutionTime(long executionTime) {
         this.executionTime = executionTime;
     }
 }

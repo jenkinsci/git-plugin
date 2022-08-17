@@ -6,6 +6,9 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.maintenance.Logs.Record;
+import jenkins.plugins.git.maintenance.Logs.XmlSerialize;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -23,12 +26,15 @@ public class TaskExecutor implements Runnable {
     Task maintenanceTask;
     private List<GitMaintenanceSCM.Cache> caches;
 
+    XmlSerialize xmlSerialize;
+
     private static final Logger LOGGER = Logger.getLogger(TaskExecutor.class.getName());
 
     public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
         caches = getCaches();
         isThreadAlive = true;
+        xmlSerialize = new XmlSerialize();
         LOGGER.log(Level.FINE,"New Thread created to execute " + maintenanceTask.getTaskName());
     }
 
@@ -43,6 +49,8 @@ public class TaskExecutor implements Runnable {
                 // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
                 Lock lock = cache.getLock();
                 File cacheFile = cache.getCacheFile();
+                long executionTime = 0;
+                boolean executionStatus = false;
 
                 // If lock is not available on the cache, skip maintenance on this cache.
                 if (isThreadAlive && lock.tryLock()) {
@@ -54,7 +62,10 @@ public class TaskExecutor implements Runnable {
                         if (gitClient == null)
                             throw new InterruptedException("Git Client couldn't be instantiated");
 
+                        executionTime -= System.currentTimeMillis();
                         executeMaintenanceTask(gitClient, taskType);
+                        executionTime += System.currentTimeMillis();
+                        executionStatus = true;
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
                     } finally {
@@ -63,12 +74,13 @@ public class TaskExecutor implements Runnable {
                     }
 
                 } else {
-
                     if(!isThreadAlive)
                         throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
                     else
                         LOGGER.log(Level.FINE,"Cache is already locked. Can't run maintenance on cache " + cacheFile.getName());
                 }
+
+                xmlSerialize.addRecord(createRecord(cacheFile,taskType,executionStatus,executionTime)); // Stores the record inside jenkins.
             }
         }catch (InterruptedException e){
             LOGGER.log(Level.WARNING,"Interrupted Exception. Msg: " + e.getMessage());
@@ -186,5 +198,17 @@ public class TaskExecutor implements Runnable {
 
     public void terminateThread(){
         isThreadAlive = false;
+    }
+
+    Record createRecord(File cacheFile, TaskType taskType,boolean executionStatus,long executionTime){
+       Record record = new Record(cacheFile.getName(),taskType.getTaskName());
+       long repoSize = FileUtils.sizeOfDirectory(cacheFile);
+       record.setRepoSize(repoSize);
+       record.setExecutionStatus(executionStatus);
+       if(!executionStatus)
+           record.setExecutionTime(-1);
+       else record.setExecutionTime(executionTime);
+       record.setPrevExecution(12412); // Will update. Just testing.
+       return record;
     }
 }

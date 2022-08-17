@@ -33,6 +33,7 @@ public class XmlSerialize{
                 byte[] parsedXmlByteArr = Files.readAllBytes(Paths.get(maintenanceRecordsFile));
                 String parsedXmlString = new String(parsedXmlByteArr, StandardCharsets.UTF_8);
 
+                xStream.setClassLoader(RecordList.class.getClassLoader());
                 recordList = (RecordList) xStream.fromXML(parsedXmlString);
             }
 
