@@ -11,7 +11,7 @@ public class RecordList {
     }
 
     public List<Record> getMaintenanceRecords(){
-        return maintenanceRecords;
+        return new LinkedList<>(maintenanceRecords);
     }
 
     public void addRecord(Record record){
