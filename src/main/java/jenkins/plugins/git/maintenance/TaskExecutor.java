@@ -42,45 +42,12 @@ public class TaskExecutor implements Runnable {
     public void run() {
 
         LOGGER.log(Level.FINE,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
-        GitClient gitClient;
-        TaskType taskType = maintenanceTask.getTaskType();
         try {
             for (GitMaintenanceSCM.Cache cache : caches) {
                 // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
                 Lock lock = cache.getLock();
                 File cacheFile = cache.getCacheFile();
-                long executionTime = 0;
-                boolean executionStatus = false;
-
-                // If lock is not available on the cache, skip maintenance on this cache.
-                if (isThreadAlive && lock.tryLock()) {
-
-                    LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " locked.");
-
-                    try {
-                        gitClient = getGitClient(cacheFile);
-                        if (gitClient == null)
-                            throw new InterruptedException("Git Client couldn't be instantiated");
-
-                        executionTime -= System.currentTimeMillis();
-                        executeMaintenanceTask(gitClient, taskType);
-                        executionTime += System.currentTimeMillis();
-                        executionStatus = true;
-                    } catch (InterruptedException e) {
-                        LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
-                    } finally {
-                        lock.unlock();
-                        LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " unlocked.");
-                    }
-
-                } else {
-                    if(!isThreadAlive)
-                        throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
-                    else
-                        LOGGER.log(Level.FINE,"Cache is already locked. Can't run maintenance on cache " + cacheFile.getName());
-                }
-
-                xmlSerialize.addRecord(createRecord(cacheFile,taskType,executionStatus,executionTime)); // Stores the record inside jenkins.
+                executeMaintenanceTask(cacheFile,lock);
             }
         }catch (InterruptedException e){
             LOGGER.log(Level.WARNING,"Interrupted Exception. Msg: " + e.getMessage());
@@ -88,13 +55,45 @@ public class TaskExecutor implements Runnable {
 
     }
 
-    void executeMaintenanceTask(GitClient gitClient,TaskType taskType) throws InterruptedException{
+    void executeMaintenanceTask(File cacheFile,Lock lock) throws InterruptedException{
 
-        if(gitVersionAtLeast(2,30,0)){
-            executeGitMaintenance(gitClient,taskType);
-        }else{
-            executeLegacyGitMaintenance(gitClient,taskType);
+        TaskType taskType = maintenanceTask.getTaskType();
+        long executionTime = 0;
+        boolean executionStatus = false;
+        GitClient gitClient;
+        // If lock is not available on the cache, skip maintenance on this cache.
+        if (isThreadAlive && lock.tryLock()) {
+
+            LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " locked.");
+
+            try {
+                gitClient = getGitClient(cacheFile);
+                if (gitClient == null)
+                    throw new InterruptedException("Git Client couldn't be instantiated");
+
+                executionTime -= System.currentTimeMillis();
+                if(gitVersionAtLeast(2,30,0)){
+                    executeGitMaintenance(gitClient,taskType);
+                }else{
+                    executeLegacyGitMaintenance(gitClient,taskType);
+                }
+                executionTime += System.currentTimeMillis();
+                executionStatus = true;
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
+            } finally {
+                lock.unlock();
+                LOGGER.log(Level.FINE, "Cache " + cacheFile.getName() + " unlocked.");
+            }
+
+        } else {
+            if(!isThreadAlive)
+                throw new InterruptedException("Maintenance thread has been interrupted. Terminating...");
+            else
+                LOGGER.log(Level.FINE,"Cache is already locked. Can't run maintenance on cache " + cacheFile.getName());
         }
+
+        xmlSerialize.addRecord(createRecord(cacheFile,taskType,executionStatus,executionTime)); // Stores the record inside jenkins.
     }
 
     void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
