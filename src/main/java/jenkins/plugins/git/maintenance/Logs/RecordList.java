@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RecordList {
-    List<Record> maintenanceRecords;
+    LinkedList<Record> maintenanceRecords;
 
     public RecordList(){
         maintenanceRecords = new LinkedList<>();
@@ -15,7 +15,7 @@ public class RecordList {
     }
 
     public void addRecord(Record record){
-        maintenanceRecords.add(record);
+        maintenanceRecords.addFirst(record);
     }
 
     // Todo need a way to clean the recordsList.
