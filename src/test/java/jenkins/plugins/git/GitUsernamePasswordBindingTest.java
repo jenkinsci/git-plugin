@@ -168,6 +168,8 @@ public class GitUsernamePasswordBindingTest {
         if(credentials.isUsernameSecret()) {
             r.assertLogNotContains(this.username, b);
             r.assertLogContains("GIT_USERNAME=****", b);
+        } else {
+            r.assertLogContains("GIT_USERNAME=" + this.username, b);
         }
         r.assertLogNotContains(this.password, b);
         r.assertLogContains("GIT_PASSWORD=****", b);
@@ -218,6 +220,8 @@ public class GitUsernamePasswordBindingTest {
         if(credentials.isUsernameSecret()) {
             r.assertLogNotContains(this.username, b);
             r.assertLogContains("GIT_USERNAME=****", b);
+        } else {
+            r.assertLogContains("GIT_USERNAME=" + this.username, b);
         }
         r.assertLogContains("GIT_PASSWORD=****", b);
         r.assertLogNotContains(this.password, b);
