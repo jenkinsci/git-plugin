@@ -2,7 +2,6 @@ package hudson.plugins.git.browser;
 
 import hudson.model.*;
 import hudson.plugins.git.*;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -30,7 +29,7 @@ public class TFS2013GitRepositoryBrowserTest {
                 Collections.singletonList(new UserRemoteConfig(repoUrl, null, null, null)),
                 new ArrayList<>(),
                 null, JGitTool.MAGIC_EXENAME,
-                Collections.<GitSCMExtension>emptyList());
+                Collections.emptyList());
 
         AbstractProject project = mock(AbstractProject.class);
         AbstractBuild build = mock(AbstractBuild.class);

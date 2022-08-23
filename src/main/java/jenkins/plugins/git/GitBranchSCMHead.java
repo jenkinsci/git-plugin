@@ -50,10 +50,7 @@ public class GitBranchSCMHead extends SCMHead implements GitSCMHeadMixin {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("GitBranchSCMHead{");
-        sb.append("name='").append(getName()).append("'");
-        sb.append(", ref='").append(getRef()).append("'}");
-        return sb.toString();
+        return "GitBranchSCMHead{" + "name='" + getName() + "'" + ", ref='" + getRef() + "'}";
     }
 
     @Restricted(NoExternalUse.class)

@@ -59,9 +59,9 @@ public class Stash extends GitRepositoryBrowser {
         URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).add("until=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).add("until=" + changeSet.getId()));
         } else {
-            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getId()).add("until=" + changeSet.getId()).toString());
+            return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("at=" + changeSet.getId()).add("until=" + changeSet.getId()));
         }
     }
 
@@ -79,9 +79,9 @@ public class Stash extends GitRepositoryBrowser {
         URL url = getUrl();
 
         if (path.getEditType() == EditType.DELETE) {
-            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getParentCommit())));
         } else {
-            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getId()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "browse/" + path.getPath() + param(url).add("at=" + changeSet.getId())));
         }
     }
 

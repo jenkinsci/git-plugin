@@ -41,7 +41,6 @@ import hudson.scm.SCM;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -276,11 +275,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
     public final B withExtension(@CheckForNull GitSCMExtension extension) {
         if (extension != null) {
             // the extensions only allow one of each type.
-            for (Iterator<GitSCMExtension> iterator = extensions.iterator(); iterator.hasNext(); ) {
-                if (extension.getClass().equals(iterator.next().getClass())) {
-                    iterator.remove();
-                }
-            }
+            extensions.removeIf(gitSCMExtension -> extension.getClass().equals(gitSCMExtension.getClass()));
             extensions.add(extension);
         }
         return (B) this;
@@ -505,11 +500,7 @@ public class GitSCMBuilder<B extends GitSCMBuilder<B>> extends SCMBuilder<B, Git
         SCMRevision revision = revision();
         if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
             // remove any conflicting BuildChooserSetting if present
-            for (Iterator<GitSCMExtension> iterator = extensions.iterator(); iterator.hasNext(); ) {
-                if (iterator.next() instanceof BuildChooserSetting) {
-                    iterator.remove();
-                }
-            }
+            extensions.removeIf(gitSCMExtension -> gitSCMExtension instanceof BuildChooserSetting);
             extensions.add(new BuildChooserSetting(new AbstractGitSCMSource.SpecificRevisionBuildChooser(
                     (AbstractGitSCMSource.SCMRevisionImpl) revision)));
         }

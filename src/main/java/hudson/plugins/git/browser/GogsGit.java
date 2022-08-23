@@ -67,7 +67,7 @@ public class GogsGit extends GitRepositoryBrowser {
      */
     private URL getDiffLinkRegardlessOfEditType(Path path) throws IOException {
         // Gogs diff indices begin at 1.
-        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + String.valueOf(getIndexOfPath(path) + 1)));
+        return encodeURL(new URL(getChangeSetLink(path.getChangeSet()), "#diff-" + (getIndexOfPath(path) + 1)));
     }
 
     /**

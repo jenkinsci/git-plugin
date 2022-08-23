@@ -99,11 +99,10 @@ public class GitLab extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
         String filelink;
-        if(getVersionDouble() < 8.0) {
-                filelink = "#" + path.getPath();
-        } else
-        {
-        	filelink = "#diff-" + String.valueOf(getIndexOfPath(path));
+        if (getVersionDouble() < 8.0) {
+            filelink = "#" + path.getPath();
+        } else {
+            filelink = "#diff-" + getIndexOfPath(path);
         }
         return new URL(getUrl(), calculatePrefix() + changeSet.getId() + filelink);
     }

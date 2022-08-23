@@ -50,6 +50,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.GitHooksConfiguration;
 import jenkins.plugins.git.GitSCMMatrixUtil;
 import jenkins.plugins.git.GitToolChooser;
 import jenkins.util.SystemProperties;
@@ -77,6 +78,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
@@ -149,7 +151,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
-    private Collection<SubmoduleConfig> submoduleCfg = Collections.<SubmoduleConfig>emptyList();
+    private Collection<SubmoduleConfig> submoduleCfg = Collections.emptyList();
     public static final String GIT_BRANCH = "GIT_BRANCH";
     public static final String GIT_LOCAL_BRANCH = "GIT_LOCAL_BRANCH";
     public static final String GIT_CHECKOUT_DIR = "GIT_CHECKOUT_DIR";
@@ -191,7 +193,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         this(
                 createRepoList(repositoryUrl, null),
                 Collections.singletonList(new BranchSpec("")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
     }
 
     @Deprecated
@@ -800,6 +802,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         GitClient git = createClient(listener, environment, lastBuild, node, workingDirectory);
 
         if (git.hasGitRepo(false)) {
+            GitHooksConfiguration.configure(git);
             // Repo is there - do a fetch
             listener.getLogger().println("Fetching changes from the remote Git repositories");
 
@@ -1234,6 +1237,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 throw new AbortException("Error cloning remote repo '" + rc.getName() + "'");
             }
         }
+        GitHooksConfiguration.configure(git);
 
         for (RemoteConfig remoteRepository : repos) {
             if (remoteRepository.equals(repos.get(0)) && removeSecondFetch){
@@ -1476,7 +1480,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         boolean executed = false;
         ChangelogCommand changelog = git.changelog();
         changelog.includes(revToBuild.getSha1());
-        try (Writer out = new OutputStreamWriter(changelogFile.write(),"UTF-8")) {
+        try (Writer out = new OutputStreamWriter(changelogFile.write(), StandardCharsets.UTF_8)) {
             boolean exclusion = false;
             ChangelogToBranch changelogToBranch = getExtensions().get(ChangelogToBranch.class);
             if (changelogToBranch != null) {

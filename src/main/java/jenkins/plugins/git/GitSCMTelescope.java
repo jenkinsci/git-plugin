@@ -382,6 +382,6 @@ public abstract class GitSCMTelescope extends SCMFileSystem.Builder {
         /**
          * A tag reference.
          */
-        TAG;
+        TAG
     }
 }

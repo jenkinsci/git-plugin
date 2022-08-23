@@ -11,7 +11,6 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Kanstantsin Shautsou
- * based on {@link hudson.plugins.git.MultipleSCMTest}
  */
 public class MessageExclusionTest extends GitSCMExtensionTest {
 	protected FreeStyleProject project;

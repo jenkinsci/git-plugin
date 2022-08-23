@@ -68,7 +68,7 @@ public class ViewGitWeb extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + param(url).add("p=" + projectName).add("a=commit").add("h=" + changeSet.getId()));
     }
 
     private QueryBuilder param(URL url) {
