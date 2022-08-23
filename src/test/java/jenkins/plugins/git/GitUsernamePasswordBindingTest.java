@@ -27,11 +27,13 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
@@ -48,6 +50,10 @@ import static org.hamcrest.Matchers.*;
 
 @RunWith(Parameterized.class)
 public class GitUsernamePasswordBindingTest {
+
+    @ClassRule
+    public static BuildWatcher bw = new BuildWatcher();
+
     @Parameterized.Parameters(name = "User {0}: Password {1}: GitToolInstance {2}")
     public static Collection<Object[]> data() {
         return Arrays.asList(testData);
@@ -131,12 +137,12 @@ public class GitUsernamePasswordBindingTest {
 
     private String batchCheck(boolean includeCliCheck) {
         return includeCliCheck
-                ? "set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt"
-                : "set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt";
+                ? "set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & set | findstr GCM_INTERACTIVE >> auth.txt & type auth.txt"
+                : "set | findstr GIT_USERNAME > auth.txt & set | findstr GIT_PASSWORD >> auth.txt & type auth.txt";
     }
 
     private String shellCheck() {
-        return "env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt";
+        return "env | grep -E \"GIT_USERNAME|GIT_PASSWORD|GIT_TERMINAL_PROMPT\" > auth.txt; cat auth.txt";
     }
 
     @Test
@@ -161,8 +167,12 @@ public class GitUsernamePasswordBindingTest {
         FreeStyleBuild b = r.buildAndAssertSuccess(prj);
         if(credentials.isUsernameSecret()) {
             r.assertLogNotContains(this.username, b);
+            r.assertLogContains("GIT_USERNAME=****", b);
+        } else {
+            r.assertLogContains("GIT_USERNAME=" + this.username, b);
         }
         r.assertLogNotContains(this.password, b);
+        r.assertLogContains("GIT_PASSWORD=****", b);
 
         //Assert Keys
         assertThat(binding.variables(b), hasItem("GIT_USERNAME"));
@@ -209,7 +219,11 @@ public class GitUsernamePasswordBindingTest {
         r.assertBuildStatusSuccess(b);
         if(credentials.isUsernameSecret()) {
             r.assertLogNotContains(this.username, b);
+            r.assertLogContains("GIT_USERNAME=****", b);
+        } else {
+            r.assertLogContains("GIT_USERNAME=" + this.username, b);
         }
+        r.assertLogContains("GIT_PASSWORD=****", b);
         r.assertLogNotContains(this.password, b);
         //Assert credential values
         String fileContents = r.jenkins.getWorkspaceFor(project).child("auth.txt").readToString().trim();
