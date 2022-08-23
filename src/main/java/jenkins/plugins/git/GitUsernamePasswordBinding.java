@@ -96,7 +96,7 @@ public class GitUsernamePasswordBinding extends MultiBinding<StandardUsernamePas
     }
 
     @Override
-    public void setCredentialPairBindings(@NonNull StandardCredentials credentials,Map<String,String> publicValues, Map<String,String> secretValues) {
+    public void setCredentialPairBindings(@NonNull StandardCredentials credentials, Map<String,String> secretValues, Map<String,String> publicValues) {
         StandardUsernamePasswordCredentials usernamePasswordCredentials = (StandardUsernamePasswordCredentials) credentials;
         if(usernamePasswordCredentials.isUsernameSecret()){
             secretValues.put(GIT_USERNAME_KEY, usernamePasswordCredentials.getUsername());

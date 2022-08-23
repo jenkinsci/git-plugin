@@ -52,7 +52,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -205,7 +206,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
             }
             boolean executed = false;
             ChangelogCommand changelog = client.changelog();
-            try (Writer out = new OutputStreamWriter(changeLogStream, "UTF-8")) {
+            try (Writer out = new OutputStreamWriter(changeLogStream, StandardCharsets.UTF_8)) {
                 changelog.includes(commitId);
                 ObjectId fromCommitId;
                 if (revision instanceof AbstractGitSCMSource.SCMRevisionImpl) {
@@ -334,6 +335,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = StringUtils.defaultIfBlank(config.getName(), Constants.DEFAULT_REMOTE_NAME);
                 listener.getLogger().println("Setting " + remoteName + " to " + remote);
                 client.setRemoteUrl(remoteName, remote);
@@ -360,10 +362,9 @@ public class GitSCMFileSystem extends SCMFileSystem {
                         headName = branchSpec.getName();
                     }
                 }
-                client.fetch_().prune(true).from(remoteURI, Arrays
-                        .asList(new RefSpec(
-                                "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
-                                        + headName))).execute();
+                client.fetch_().prune(true).from(remoteURI, Collections.singletonList(new RefSpec(
+                        "+" + prefix + headName + ":" + Constants.R_REMOTES + remoteName + "/"
+                                + headName))).execute();
                 listener.getLogger().println("Done.");
                 return new GitSCMFileSystem(client, remote, Constants.R_REMOTES + remoteName + "/" +headName, (AbstractGitSCMSource.SCMRevisionImpl) rev);
             } finally {
@@ -396,6 +397,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                     listener.getLogger().println("Creating git repository in " + cacheDir);
                     client.init();
                 }
+                GitHooksConfiguration.configure(client, GitHooksConfiguration.get().isAllowedOnController());
                 String remoteName = builder.remoteName();
                 listener.getLogger().println("Setting " + remoteName + " to " + gitSCMSource.getRemote());
                 client.setRemoteUrl(remoteName, gitSCMSource.getRemote());

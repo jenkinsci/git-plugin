@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.ApiTokenPropertyConfiguration;
 import hudson.util.StreamTaskListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -75,10 +76,12 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         run(true, tmp.getRoot(), "git", "version");
         checkGlobalConfig();
         git("init", "--template="); // initialize without copying the installation defaults to ensure a vanilla repo that behaves the same everywhere
+        git("branch", "-m", "master");
         write("file", "");
         git("add", "file");
         git("config", "user.name", "Git SampleRepoRule");
         git("config", "user.email", "gits@mplereporule");
+        git("config", "init.defaultbranch", "master");
         git("commit", "--message=init");
     }
 
@@ -88,7 +91,9 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
 
     public void notifyCommit(JenkinsRule r) throws Exception {
         synchronousPolling(r);
-        WebResponse webResponse = r.createWebClient().goTo("git/notifyCommit?url=" + bareUrl(), "text/plain").getWebResponse();
+        String notifyCommitToken = ApiTokenPropertyConfiguration.get().generateApiToken("notifyCommit").getString("value");
+        WebResponse webResponse = r.createWebClient()
+                .goTo("git/notifyCommit?url=" + bareUrl() + "&token=" + notifyCommitToken, "text/plain").getWebResponse();
         LOGGER.log(Level.FINE, webResponse.getContentAsString());
         for (NameValuePair pair : webResponse.getResponseHeaders()) {
             if (pair.getName().equals("Triggered")) {

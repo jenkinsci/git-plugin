@@ -28,7 +28,6 @@ import hudson.EnvVars;
 import static hudson.plugins.git.GitSCM.createRepoList;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.AncestryBuildChooser;
 import hudson.plugins.git.util.BuildChooser;
@@ -225,7 +224,7 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
 
@@ -234,7 +233,7 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("origin/master")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
 
@@ -243,7 +242,7 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("*/master")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling());
     }
 
@@ -252,7 +251,7 @@ public class GitSCMUnitTest {
         /* Force single-branch use case */
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master*")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertTrue(bigGitSCM.requiresWorkspaceForPolling());
     }
 
@@ -264,7 +263,7 @@ public class GitSCMUnitTest {
         branches.add(new BranchSpec("origin/master"));
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 branches,
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertTrue(bigGitSCM.requiresWorkspaceForPolling());
     }
 
@@ -275,7 +274,7 @@ public class GitSCMUnitTest {
         env.put("A", "");
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("${A}")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertFalse(bigGitSCM.requiresWorkspaceForPolling(env));
     }
 
@@ -295,7 +294,7 @@ public class GitSCMUnitTest {
     public void testIsDoGenerateSubmoduleConfigurationsTrue() {
         GitSCM bigGitSCM = new GitSCM(createRepoList(repoURL, null),
                 Collections.singletonList(new BranchSpec("master")),
-                null, null, Collections.<GitSCMExtension>emptyList());
+                null, null, Collections.emptyList());
         assertFalse(bigGitSCM.isDoGenerateSubmoduleConfigurations());
     }
 

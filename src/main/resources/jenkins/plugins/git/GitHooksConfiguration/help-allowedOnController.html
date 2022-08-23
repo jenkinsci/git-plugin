@@ -1,0 +1,25 @@
+<div>
+  <p>
+  <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">Git hooks</a> allow scripts to be invoked when certain important git repository actions occur.
+  This configuration controls the execution of client-side hooks on the <i>Jenkins controller</i>.
+  It is recommended that git hooks be <strong>disabled</strong> on the controller.
+  </p>
+  <p>
+  The Jenkins controller uses git repositories to checkout Pipeline definitions, to detect changes in remote repositories, and to cache Pipeline shared libraries.
+  Jenkins jobs that run on the controller may use git repositories in many other ways.
+  It is strongly recommended that jobs are not run on the Jenkins controller.
+  Refer to the <a href="https://www.jenkins.io/doc/book/security/controller-isolation/#not-building-on-the-built-in-node">controller isolation documentation</a> for more details.
+  </p>
+  <p>
+  Client-side hooks are <strong>not</strong> copied when the repository is cloned.
+  However, client-side hooks might be installed in a repository by build steps or by misconfiguration.
+  </p>
+  <p>
+  If hook scripts are allowed on the controller, a client-side hook script installed in a repository on the Jenkins controller will execute when the matching git operation is performed.
+  For example, if hooks are allowed on the controller and a git repository on the controller includes a <code>post-checkout</code> hook, the hook script will run on the controller after any checkout in that repository.
+  If hooks are allowed on the controller and a git repository on the controller includes a <code>pre-auto-gc</code> hook, the hook script will run on the controller before any automatic git garbage collection task.
+  </p>
+  <p>
+  See <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">"Customizing Git - Git Hooks"</a> for more details about git repository hooks.
+  </p>
+</div>

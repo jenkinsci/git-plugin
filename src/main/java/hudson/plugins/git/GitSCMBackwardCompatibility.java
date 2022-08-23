@@ -6,7 +6,6 @@ import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.extensions.impl.*;
-import hudson.plugins.git.extensions.impl.DisableRemotePoll;
 import hudson.plugins.git.opt.PreBuildMergeOptions;
 import hudson.plugins.git.util.BuildChooser;
 import hudson.plugins.git.util.DefaultBuildChooser;

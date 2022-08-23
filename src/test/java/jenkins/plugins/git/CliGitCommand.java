@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.lib.Repository;
@@ -106,12 +105,7 @@ public class CliGitCommand {
         boolean modified = notFound.addAll(Arrays.asList(expectedRegExes));
         Assert.assertTrue("Missing regular expressions in assertion", modified);
         for (String line : output) {
-            for (Iterator<String> iterator = notFound.iterator(); iterator.hasNext();) {
-                String regex = iterator.next();
-                if (line.matches(regex)) {
-                    iterator.remove();
-                }
-            }
+            notFound.removeIf(line::matches);
         }
         if (!notFound.isEmpty()) {
             Assert.fail(Arrays.toString(output) + " did not match all strings in notFound: " + Arrays.toString(expectedRegExes));

@@ -1,7 +1,7 @@
 package hudson.plugins.git;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -60,7 +60,7 @@ public class RevisionParameterActionRemoteUrlTest {
 
     private RemoteConfig remote(URIish remoteURL) {
         RemoteConfig result = mock(RemoteConfig.class);
-        when(result.getURIs()).thenReturn(Arrays.asList(remoteURL));
+        when(result.getURIs()).thenReturn(Collections.singletonList(remoteURL));
         return result;
     }
 }

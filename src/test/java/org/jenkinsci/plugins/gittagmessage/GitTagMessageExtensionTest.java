@@ -7,7 +7,6 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Builder;
 import hudson.tasks.Shell;
@@ -33,7 +32,7 @@ public class GitTagMessageExtensionTest extends AbstractGitTagMessageExtensionTe
                 Collections.singletonList(remote),
                 Collections.singletonList(new BranchSpec(branchSpec)),
                 null, null,
-                Collections.<GitSCMExtension>singletonList(extension));
+                Collections.singletonList(extension));
 
         FreeStyleProject job = jenkins.createFreeStyleProject();
         job.getBuildersList().add(createEnvEchoBuilder("tag", ENV_VAR_NAME_TAG));

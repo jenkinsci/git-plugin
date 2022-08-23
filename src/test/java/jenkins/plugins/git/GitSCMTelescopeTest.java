@@ -552,7 +552,7 @@ public class GitSCMTelescopeTest /* extends AbstractGitRepository */ {
         @NonNull
         @Override
         public List<SCMSourceTrait> getTraits() {
-            return Collections.<SCMSourceTrait>singletonList(new GitToolSCMSourceTrait("git-custom") {
+            return Collections.singletonList(new GitToolSCMSourceTrait("git-custom") {
                 @Override
                 public SCMSourceTraitDescriptor getDescriptor() {
                     return new GitBrowserSCMSourceTrait.DescriptorImpl();

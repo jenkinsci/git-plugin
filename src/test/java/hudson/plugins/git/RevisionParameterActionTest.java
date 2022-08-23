@@ -71,7 +71,7 @@ public class RevisionParameterActionTest extends AbstractGitProject {
         FreeStyleBuild b3 = build(p1, Result.SUCCESS, commitFile2);
 
         // Check revision built for b3 does not match r1 revision
-        assertFalse(b3.getAction(BuildData.class)
-                        .getLastBuiltRevision().getSha1String().equals(r1.getSha1String()));		
+        assertNotEquals(b3.getAction(BuildData.class)
+                .getLastBuiltRevision().getSha1String(), r1.getSha1String());
     }
 }

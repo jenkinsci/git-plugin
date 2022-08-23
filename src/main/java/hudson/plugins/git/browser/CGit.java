@@ -42,7 +42,7 @@ public class CGit extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         URL url = getUrl();
-        return new URL(url, url.getPath() + "commit/" + param(url).add("id=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + "commit/" + param(url).add("id=" + changeSet.getId()));
     }
 
     /**
@@ -57,7 +57,7 @@ public class CGit extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString());
+        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("id=" + changeSet.getId()));
     }
 
     /**
@@ -73,9 +73,9 @@ public class CGit extends GitRepositoryBrowser {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
         if (path.getEditType() == EditType.DELETE) {
-            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getParentCommit()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getParentCommit())));
         } else {
-            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getId()).toString()));
+            return encodeURL(new URL(url, url.getPath() + "tree/" + path.getPath() + param(url).add("id=" + changeSet.getId())));
         }
     }
 

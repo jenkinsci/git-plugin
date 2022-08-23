@@ -57,7 +57,7 @@ public class RhodeCode extends GitRepositoryBrowser {
     public URL getDiffLink(Path path) throws IOException {
         GitChangeSet changeSet = path.getChangeSet();
         URL url = getUrl();
-        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()).toString() + "&diff=diff+to+revision");
+        return new URL(url, url.getPath() + "diff/" + path.getPath() + param(url).add("diff2=" + changeSet.getParentCommit()).add("diff1=" + changeSet.getId()) + "&diff=diff+to+revision");
     }
 
     /**
