@@ -7,6 +7,7 @@
                         <table class="table table-hover table-striped display" id="fixed">
                             <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>${%Repo Name}</th>
                                     <th>${%Repo Size}</th>
                                     <th>${%Task}</th>
@@ -17,8 +18,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <j:forEach var="record" items="${it.getMaintenanceRecords()}">
+                                <j:forEach var="record" items="${it.getMaintenanceRecords()}" varStatus="loop">
                                     <tr>
+                                        <td>
+                                            ${loop.count}
+                                        </td>
                                         <td>
                                             ${record.getRepoName()}
                                         </td>
@@ -68,31 +72,33 @@
         // });
         //
         function format(maintenanceRecords) {
-        let tableData = "";
+            let tableData = "";
+            let index = 1;
+            for(let record of maintenanceRecords){
+                row = '<tr>';
+                row+= '<td>' + index++ + '</td>>'
 
-        for(let record of maintenanceRecords){
-            row = '<tr>';
-            for(let key in record){
-                  row+= '<td>' + record[key] + '</td>'
+                for(let key in record){
+                    row+= '<td>' + record[key] + '</td>'
+                }
+                row += '</tr>';
+                tableData += row;
             }
-            row += '</tr>';
-            tableData += row;
-        }
 
 
-        return (
-            '<table cellpadding="5" cellspacing="10" border="0" style="padding-left:50px;" id="allCacheRecords">' +
-            '<thead><th>Task</th><th>Time</th><th>Status</th><th>Duration (ms)</th><th>RepoSize</th></thead>' +
-                    tableData +
-            '</table>'
+            return (
+                '<table cellpadding="5" cellspacing="10" border="0" style="padding-left:50px;" id="allCacheRecords">' +
+                '<thead><th>#</th><th>Task</th><th>Time</th><th>Status</th><th>Duration (ms)</th><th>RepoSize</th></thead>' +
+                        tableData +
+                '</table>'
             );
         }
 
         jQuery(document).ready(function(){
 
             var table = jQuery('#fixed').DataTable({
-                pagingType: 'numbers', // Page number button only
-            });
+                pagingType: 'numbers', // Page number button only,
+        });
 
             jQuery('#fixed .expand').on('click',function(){
                 var tr = jQuery(this).closest('tr');
@@ -105,7 +111,7 @@
                     tr.find('svg').attr('data-icon', 'plus-circle');    // FontAwesome 5
                 } else {
                     // Open this row
-                    a.getRecordsForSingleCache(row.data()[0],function (t){
+                    a.getRecordsForSingleCache(row.data()[1],function (t){
                         var allMaintenanceRecords = t.responseObject()['maintenanceData']; // fetches all records when clicking expand button.
                         row.child(format(allMaintenanceRecords)).show();
                         tr.addClass('shown');
