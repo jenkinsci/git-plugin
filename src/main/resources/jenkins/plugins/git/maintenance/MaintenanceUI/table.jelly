@@ -64,13 +64,6 @@
 
 
     <script>
-        // TO load the table in UI
-        // var table = jQuery3('#fixed').DataTable({
-        // pagingType: 'numbers', // Page number button only
-        // order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
-        //     responsive:true
-        // });
-        //
         function format(maintenanceRecords) {
             let tableData = "";
             let index = 1;
@@ -103,24 +96,20 @@
             jQuery('#fixed .expand').on('click',function(){
                 var tr = jQuery(this).closest('tr');
                 var row = table.row(tr);
-                console.log(tr);
                 if (row.child.isShown()) {
                     // This row is already open - close it
                     row.child.hide();
                     tr.removeClass('shown');
-                    tr.find('svg').attr('data-icon', 'plus-circle');    // FontAwesome 5
                 } else {
                     // Open this row
-                    a.getRecordsForSingleCache(row.data()[1],function (t){
+                        a.getRecordsForSingleCache(row.data()[1],function (t){
                         var allMaintenanceRecords = t.responseObject()['maintenanceData']; // fetches all records when clicking expand button.
                         row.child(format(allMaintenanceRecords)).show();
                         tr.addClass('shown');
-                        tr.find('svg').attr('data-icon', 'minus-circle'); // FontAwesome 5
-                    });
+                     });
                 }
             })
         });
 
-        jQuery3('#allCacheRecords').DataTable();
     </script>
 </j:jelly>
