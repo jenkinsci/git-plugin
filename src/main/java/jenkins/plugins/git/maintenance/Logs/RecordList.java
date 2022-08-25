@@ -29,7 +29,12 @@ public class RecordList {
             while(itr.hasNext()){
                 record = itr.next();
                 if(record.getRepoName().equals(repoName)){
-                    itr.remove();
+
+                    // To not lose data of the first maintenance task
+                    if(record.getAllMaintenanceRecordsForSingleCache().size() == 0){
+                        CacheRecord oldCacheRecord = new CacheRecord(record);
+                        record.insertMaintenanceData(oldCacheRecord);
+                    }
                     CacheRecord childCacheRecord = new CacheRecord(cacheRecord);
 
                     record.insertMaintenanceData(childCacheRecord);
@@ -40,9 +45,6 @@ public class RecordList {
                     record.setRepoSize(childCacheRecord.getRepoSize());
                     record.setMaintenanceType(childCacheRecord.getMaintenanceType());
                     record.setExecutionDuration(childCacheRecord.executionDuration);
-
-                    // Adds the latest cache to the top of the list
-                    maintenanceRecords.addFirst(record);
 
                     break;
                 }

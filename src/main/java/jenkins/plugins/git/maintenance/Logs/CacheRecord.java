@@ -31,8 +31,6 @@ public class CacheRecord {
         for(TaskType taskType : TaskType.values()){
             maintenanceData.put(taskType.getTaskName(),new LinkedList<>());
         }
-
-        maintenanceData.get(maintenanceType).addFirst(this);
     }
 
     // This is to add maintenance data to existing Cache Record
