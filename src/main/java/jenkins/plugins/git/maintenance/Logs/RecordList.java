@@ -34,6 +34,13 @@ public class RecordList {
 
                     record.insertMaintenanceData(childCacheRecord);
 
+                    // Updates the Top most Cache with fresh data
+                    record.setTimeOfExecution(childCacheRecord.timeOfExecution);
+                    record.setExecutionStatus(childCacheRecord.getExecutionStatus());
+                    record.setRepoSize(childCacheRecord.getRepoSize());
+                    record.setMaintenanceType(childCacheRecord.getMaintenanceType());
+                    record.setExecutionDuration(childCacheRecord.executionDuration);
+
                     // Adds the latest cache to the top of the list
                     maintenanceRecords.addFirst(record);
 
