@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 public class TaskScheduler {
 
     private MaintenanceTaskConfiguration config;
-    private Calendar cal;
     private List<Task> maintenanceQueue;
     private Thread taskExecutor;
     private TaskExecutor taskExecutorRunnable;
@@ -28,7 +27,6 @@ public class TaskScheduler {
 
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-       this.cal = new GregorianCalendar();
        this.maintenanceQueue = new LinkedList<Task>();
        LOGGER.log(Level.FINE,"TaskScheduler class Initialized.");
     }
@@ -105,6 +103,7 @@ public class TaskScheduler {
     boolean checkIsTaskExecutable(CronTabList cronTabList){
         boolean isTaskExecutable = false;
 
+        Calendar cal = new GregorianCalendar();
         isTaskExecutable = cronTabList.check(cal);
         // Further validation such as not schedule a task every minute etc. can be added here.
 
