@@ -45,14 +45,12 @@ public class XmlSerialize{
         return null;
     }
 
-    public boolean addRecord(Record record){
+    public boolean addMaintenanceRecord(CacheRecord record){
         RecordList recordList = fetchMaintenanceData();
 
         if(recordList != null){
             try {
 
-                // Currently, loading the entire file into memory, appending the xml file and writing the xml file back into memory.
-                // Can improve by adding a BufferReader and appending the required record into required line no without loading the entire file into memory
                 recordList.addRecord(record);
                 String xmlData = xStream.toXML(recordList);
                 Files.write(Paths.get(maintenanceRecordsFile), xmlData.getBytes(StandardCharsets.UTF_8));
@@ -64,7 +62,7 @@ public class XmlSerialize{
         return false;
     }
 
-    public List<Record> getMaintenanceRecords(){
+    public List<CacheRecord> getMaintenanceRecords(){
         return fetchMaintenanceData().getMaintenanceRecords();
     }
 }

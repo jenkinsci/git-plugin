@@ -1,23 +1,51 @@
 package jenkins.plugins.git.maintenance.Logs;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class RecordList {
-    LinkedList<Record> maintenanceRecords;
+    LinkedList<CacheRecord> maintenanceRecords;
+    Set<String> cacheSet;
 
     public RecordList(){
         maintenanceRecords = new LinkedList<>();
+        cacheSet = new HashSet<>();
     }
 
-    public List<Record> getMaintenanceRecords(){
+    public List<CacheRecord> getMaintenanceRecords(){
         return new LinkedList<>(maintenanceRecords);
     }
 
-    public void addRecord(Record record){
-        maintenanceRecords.addFirst(record);
-    }
+    public void addRecord(CacheRecord cacheRecord){
+        String repoName = cacheRecord.getRepoName();
+        if(cacheSet.contains(repoName)){
+            // need to add cache to existing record
+            Iterator<CacheRecord> itr = maintenanceRecords.iterator();
 
-    // Todo need a way to clean the recordsList.
+            CacheRecord record;
+            while(itr.hasNext()){
+                record = itr.next();
+                if(record.getRepoName().equals(repoName)){
+                    itr.remove();
+                    CacheRecord childCacheRecord = new CacheRecord(cacheRecord);
+
+                    record.insertMaintenanceData(childCacheRecord);
+
+                    // Adds the latest cache to the top of the list
+                    maintenanceRecords.addFirst(record);
+
+                    break;
+                }
+            }
+            return;
+        }
+
+        // Creates a new Cache Entry and adds the data.
+        maintenanceRecords.addFirst(cacheRecord);
+        cacheSet.add(repoName);
+    }
 
 }

@@ -6,7 +6,7 @@ import hudson.plugins.git.GitTool;
 import hudson.plugins.git.util.GitUtils;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.maintenance.Logs.Record;
+import jenkins.plugins.git.maintenance.Logs.CacheRecord;
 import jenkins.plugins.git.maintenance.Logs.XmlSerialize;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
@@ -58,7 +58,7 @@ public class TaskExecutor implements Runnable {
     void executeMaintenanceTask(File cacheFile,Lock lock) throws InterruptedException{
 
         TaskType taskType = maintenanceTask.getTaskType();
-        long executionTime = 0;
+        long executionDuration = 0;
         boolean executionStatus = false;
         GitClient gitClient;
         // If lock is not available on the cache, skip maintenance on this cache.
@@ -71,13 +71,13 @@ public class TaskExecutor implements Runnable {
                 if (gitClient == null)
                     throw new InterruptedException("Git Client couldn't be instantiated");
 
-                executionTime -= System.currentTimeMillis();
+                executionDuration -= System.currentTimeMillis();
                 if(gitVersionAtLeast(2,30,0)){
                     executeGitMaintenance(gitClient,taskType);
                 }else{
                     executeLegacyGitMaintenance(gitClient,taskType);
                 }
-                executionTime += System.currentTimeMillis();
+                executionDuration += System.currentTimeMillis();
                 executionStatus = true;
             } catch (InterruptedException e) {
                 LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
@@ -93,7 +93,7 @@ public class TaskExecutor implements Runnable {
                 LOGGER.log(Level.FINE,"Cache is already locked. Can't run maintenance on cache " + cacheFile.getName());
         }
 
-        xmlSerialize.addRecord(createRecord(cacheFile,taskType,executionStatus,executionTime)); // Stores the record inside jenkins.
+        xmlSerialize.addMaintenanceRecord(createRecord(cacheFile,taskType,executionStatus,executionDuration)); // Stores the record in jenkins.
     }
 
     void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
@@ -199,15 +199,17 @@ public class TaskExecutor implements Runnable {
         isThreadAlive = false;
     }
 
-    Record createRecord(File cacheFile, TaskType taskType,boolean executionStatus,long executionTime){
-       Record record = new Record(cacheFile.getName(),taskType.getTaskName());
-       long repoSize = FileUtils.sizeOfDirectory(cacheFile);
-       record.setRepoSize(repoSize);
-       record.setExecutionStatus(executionStatus);
+    CacheRecord createRecord(File cacheFile, TaskType taskType,boolean executionStatus,long executionDuration){
+
+       CacheRecord cacheRecord = new CacheRecord(cacheFile.getName(),taskType.getTaskName());
+       long repoSizeInBytes = FileUtils.sizeOfDirectory(cacheFile);
+       String repoSize = FileUtils.byteCountToDisplaySize(repoSizeInBytes); // Converts the bytes to KB,MB,GB
+       cacheRecord.setRepoSize(repoSize);
+       cacheRecord.setExecutionStatus(executionStatus);
        if(!executionStatus)
-           record.setExecutionTime(-1);
-       else record.setExecutionTime(executionTime);
-       record.setPrevExecution(12412); // Will update. Just testing.
-       return record;
+           cacheRecord.setExecutionDuration(-1);
+       else cacheRecord.setExecutionDuration(executionDuration);
+       cacheRecord.setTimeOfExecution(System.currentTimeMillis()/1000); // Store the unix timestamp
+       return cacheRecord;
     }
 }
