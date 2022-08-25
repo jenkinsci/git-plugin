@@ -1,9 +1,15 @@
 package jenkins.plugins.git.maintenance.Logs;
 
+import jenkins.plugins.git.maintenance.TaskType;
+
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class CacheRecord {
     String repoName;
@@ -13,15 +19,20 @@ public class CacheRecord {
     boolean executionStatus;
     long executionDuration;
 
-    LinkedList<CacheRecord> maintenanceData;
+    Map<String,LinkedList<CacheRecord>> maintenanceData;
 
 
     // This is to create a new Cache Record when cache is not present.
     public CacheRecord(String repoName,String maintenanceType){
         this.repoName = repoName;
         this.maintenanceType = maintenanceType;
-        maintenanceData = new LinkedList<>();
-        maintenanceData.addFirst(this);
+        maintenanceData = new HashMap<>();
+
+        for(TaskType taskType : TaskType.values()){
+            maintenanceData.put(taskType.getTaskName(),new LinkedList<>());
+        }
+
+        maintenanceData.get(maintenanceType).addFirst(this);
     }
 
     // This is to add maintenance data to existing Cache Record
@@ -81,16 +92,24 @@ public class CacheRecord {
 
     public void insertMaintenanceData(CacheRecord record){
         if(record != null && maintenanceData != null) {
-            maintenanceData.addFirst(record);
-
+            LinkedList<CacheRecord> list = maintenanceData.get(record.getMaintenanceType());
+            list.addFirst(record);
             // Maximum storage of 5 Maintenance Records per Cache.
-            if(maintenanceData.size() > 5)
-                maintenanceData.removeLast();
+            if(list.size() > 5)
+                list.removeLast();
         }
     }
 
     public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(){
-        return new LinkedList<>(maintenanceData);
+        List<CacheRecord> maintenanceData = new ArrayList<>();
+
+        for(Map.Entry<String,LinkedList<CacheRecord>> entry : this.maintenanceData.entrySet()){
+            maintenanceData.addAll(entry.getValue());
+        }
+
+        Collections.sort(maintenanceData,(o1,o2) -> (int) (o2.timeOfExecution - o1.timeOfExecution));
+
+        return maintenanceData;
     }
 
 }
