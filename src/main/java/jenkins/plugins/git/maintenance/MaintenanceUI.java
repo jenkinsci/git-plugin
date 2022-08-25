@@ -11,6 +11,7 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.maintenance.Logs.CacheRecord;
 import jenkins.plugins.git.maintenance.Logs.XmlSerialize;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -230,4 +231,26 @@ public class MaintenanceUI extends ManagementLink {
         // Need to plan a way to load data async. Not the entire data. Based on user requirements.
         return new XmlSerialize().getMaintenanceRecords();
     }
+
+    @JavaScriptMethod
+    public JSONObject getRecordsForSingleCache(String cacheName){
+        List<CacheRecord> allMaintenanceRecordsOfCache = new XmlSerialize().getAllMaintenanceRecordsForSingleCache(cacheName);
+        JSONObject jsonObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+
+        // Converting List of records to Json.
+        for(CacheRecord cacheRecord : allMaintenanceRecordsOfCache){
+            JSONObject cacheObject = new JSONObject();
+            cacheObject.put("maintenanceType",cacheRecord.getMaintenanceType());
+            cacheObject.put("timeOfExecution",cacheRecord.getTimeOfExecution());
+            cacheObject.put("executionStatus",cacheRecord.getExecutionStatus());
+            cacheObject.put("executionDuration",cacheRecord.getExecutionDuration());
+            cacheObject.put("repoSize",cacheRecord.getRepoSize());
+            jsonArray.add(cacheObject);
+        }
+
+        jsonObject.put("maintenanceData",jsonArray);
+        return jsonObject;
+    }
+
 }

@@ -1,6 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:st="jelly:stapler"
-         xmlns:t="/lib/hudson">
+<j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:fa="/font-awesome">
         <st:adjunct includes="io.jenkins.plugins.data-tables"/>
 
                 <div class="fluid-container">
@@ -11,9 +10,10 @@
                                     <th>${%Repo Name}</th>
                                     <th>${%Repo Size}</th>
                                     <th>${%Task}</th>
-                                    <th>${%Previous Execution}</th>
+                                    <th>${%Time}</th>
                                     <th>${%Status}</th>
-                                    <th>${%Execution Time}</th>
+                                    <th>${%Execution Time} (ms)</th>
+                                    <th>Expand</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -29,17 +29,31 @@
                                             ${record.getMaintenanceType()}
                                         </td>
                                         <td>
-                                            ${record.getPrevExecution()}
+                                            ${record.getTimeOfExecution()}
                                         </td>
                                         <td>
                                             ${record.getExecutionStatus()}
                                         </td>
                                         <td>
-                                            ${record.getExecutionTime()}
+                                            ${record.getExecutionDuration()}
+                                        </td>
+                                        <td class="expand">
+                                            Expand
                                         </td>
                                     </tr>
                                 </j:forEach>
                             </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th>${%Repo Name}</th>
+                                    <th>${%Repo Size}</th>
+                                    <th>${%Task}</th>
+                                    <th>${%Previous Execution}</th>
+                                    <th>${%Status}</th>
+                                    <th>${%Execution Time}</th>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -47,9 +61,60 @@
 
     <script>
         // TO load the table in UI
-        jQuery3('#fixed').DataTable({
-        pagingType: 'numbers', // Page number button only
-        order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
+        // var table = jQuery3('#fixed').DataTable({
+        // pagingType: 'numbers', // Page number button only
+        // order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
+        //     responsive:true
+        // });
+        //
+        function format(maintenanceRecords) {
+        let tableData = "";
+
+        for(let record of maintenanceRecords){
+            row = '<tr>';
+            for(let key in record){
+                  row+= '<td>' + record[key] + '</td>'
+            }
+            row += '</tr>';
+            tableData += row;
+        }
+
+
+        return (
+            '<table cellpadding="5" cellspacing="10" border="0" style="padding-left:50px;" id="allCacheRecords">' +
+            '<thead><th>Task</th><th>Time</th><th>Status</th><th>Duration (ms)</th><th>RepoSize</th></thead>' +
+                    tableData +
+            '</table>'
+            );
+        }
+
+        jQuery(document).ready(function(){
+
+            var table = jQuery('#fixed').DataTable({
+                pagingType: 'numbers', // Page number button only
+            });
+
+            jQuery('#fixed .expand').on('click',function(){
+                var tr = jQuery(this).closest('tr');
+                var row = table.row(tr);
+                console.log(tr);
+                if (row.child.isShown()) {
+                    // This row is already open - close it
+                    row.child.hide();
+                    tr.removeClass('shown');
+                    tr.find('svg').attr('data-icon', 'plus-circle');    // FontAwesome 5
+                } else {
+                    // Open this row
+                    a.getRecordsForSingleCache(row.data()[0],function (t){
+                        var allMaintenanceRecords = t.responseObject()['maintenanceData']; // fetches all records when clicking expand button.
+                        row.child(format(allMaintenanceRecords)).show();
+                        tr.addClass('shown');
+                        tr.find('svg').attr('data-icon', 'minus-circle'); // FontAwesome 5
+                    });
+                }
+            })
         });
+
+        jQuery3('#allCacheRecords').DataTable();
     </script>
 </j:jelly>

@@ -3,6 +3,7 @@ package jenkins.plugins.git.maintenance.Logs;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 
 public class CacheRecord {
     String repoName;
@@ -87,4 +88,9 @@ public class CacheRecord {
                 maintenanceData.removeLast();
         }
     }
+
+    public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(){
+        return new LinkedList<>(maintenanceData);
+    }
+
 }

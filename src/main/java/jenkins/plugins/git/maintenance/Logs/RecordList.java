@@ -48,4 +48,20 @@ public class RecordList {
         cacheSet.add(repoName);
     }
 
+    public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(String cacheName) {
+        List<CacheRecord> allRecords = null;
+
+        Iterator<CacheRecord> itr = maintenanceRecords.iterator();
+
+        CacheRecord record;
+        while(itr.hasNext()){
+            record = itr.next();
+            if(record.getRepoName().equals(cacheName)){
+                allRecords = record.getAllMaintenanceRecordsForSingleCache();
+                break;
+            }
+        }
+
+        return allRecords;
+    }
 }

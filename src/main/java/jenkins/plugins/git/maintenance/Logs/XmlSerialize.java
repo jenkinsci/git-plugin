@@ -65,4 +65,8 @@ public class XmlSerialize{
     public List<CacheRecord> getMaintenanceRecords(){
         return fetchMaintenanceData().getMaintenanceRecords();
     }
+
+    public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(String cacheName) {
+       return fetchMaintenanceData().getAllMaintenanceRecordsForSingleCache(cacheName);
+    }
 }
