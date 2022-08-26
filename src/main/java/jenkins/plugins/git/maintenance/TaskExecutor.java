@@ -41,7 +41,7 @@ public class TaskExecutor implements Runnable {
     @Override
     public void run() {
 
-        LOGGER.log(Level.FINE,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
+        LOGGER.log(Level.INFO,"Executing maintenance task " + maintenanceTask.getTaskName() + " on git caches.");
         try {
             for (GitMaintenanceSCM.Cache cache : caches) {
                 // For now adding lock to all kinds of maintenance tasks. Need to study on which task needs a lock and which doesn't.
@@ -49,6 +49,8 @@ public class TaskExecutor implements Runnable {
                 File cacheFile = cache.getCacheFile();
                 executeMaintenanceTask(cacheFile,lock);
             }
+
+            LOGGER.log(Level.INFO,maintenanceTask.getTaskName() + " has been executed successfully.");
         }catch (InterruptedException e){
             LOGGER.log(Level.WARNING,"Interrupted Exception. Msg: " + e.getMessage());
         }
@@ -130,7 +132,7 @@ public class TaskExecutor implements Runnable {
             }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
                 gitClient.maintenanceLegacy("commit-graph");
             }else{
-                LOGGER.log(Level.FINE,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                LOGGER.log(Level.INFO,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
                 terminateThread();
             }
         }else if(gitVersionAtLeast(2,18,0)){
@@ -140,7 +142,7 @@ public class TaskExecutor implements Runnable {
             else if(taskType.equals(TaskType.COMMIT_GRAPH))
                 gitClient.maintenanceLegacy("commit-graph");
             else {
-                LOGGER.log(Level.FINE, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                LOGGER.log(Level.INFO, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
                 terminateThread();
             }
         }else {
@@ -149,7 +151,7 @@ public class TaskExecutor implements Runnable {
             if(taskType.equals(TaskType.GC))
                 gitClient.maintenanceLegacy("gc");
             else {
-                LOGGER.log(Level.FINE, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
+                LOGGER.log(Level.INFO, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
                 terminateThread();
             }
         }
@@ -161,7 +163,7 @@ public class TaskExecutor implements Runnable {
 
     List<GitMaintenanceSCM.Cache> getCaches(){
         List<GitMaintenanceSCM.Cache> caches =  GitMaintenanceSCM.getCaches();
-        LOGGER.log(Level.FINE,"Fetched all caches present on Jenkins Controller.");
+        LOGGER.log(Level.INFO,"Fetched all caches present on Jenkins Controller.");
         return caches;
     }
 
@@ -169,7 +171,6 @@ public class TaskExecutor implements Runnable {
         try {
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
             final Jenkins jenkins = Jenkins.getInstanceOrNull();
-            // How to get Jenkins controller as the node?
             GitTool gitTool = GitUtils.resolveGitTool(null, jenkins, null, listener);
             if (gitTool == null) {
                 LOGGER.log(Level.WARNING, "No GitTool found while running " + maintenanceTask.getTaskName());

@@ -27,7 +27,7 @@ public class TaskScheduler {
 
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
-       this.maintenanceQueue = new LinkedList<Task>();
+       this.maintenanceQueue = new LinkedList<>();
        LOGGER.log(Level.FINE,"TaskScheduler class Initialized.");
     }
 
@@ -64,7 +64,7 @@ public class TaskScheduler {
             taskExecutorRunnable = new TaskExecutor(currentTask);
             taskExecutor = new Thread(taskExecutorRunnable, "maintenance-task-executor");
             taskExecutor.start();
-            LOGGER.log(Level.FINE,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " task.");
+            LOGGER.log(Level.INFO,"Thread [" + taskExecutor.getName() +"] created to execute " + currentTask.getTaskName() + " task.");
         }
     }
 
@@ -80,7 +80,7 @@ public class TaskScheduler {
                 isTaskExecutable = checkIsTaskExecutable(cronTabList);
                 if(isTaskExecutable){
                     maintenanceQueue.add(task);
-                    LOGGER.log(Level.FINE,task.getTaskName() + " added to maintenance queue.");
+                    LOGGER.log(Level.INFO,task.getTaskName() + " added to maintenance queue.");
                 }
             }catch (ANTLRException e){
                 // Logged every minute. Need to check performance.
@@ -115,7 +115,7 @@ public class TaskScheduler {
         if(taskExecutor != null && taskExecutor.isAlive())
             taskExecutorRunnable.terminateThread();
 
-        LOGGER.log(Level.FINE,"Terminated Execution of maintenance tasks");
+        LOGGER.log(Level.INFO,"Terminated Execution of maintenance tasks");
     }
 
     List<Task> getMaintenanceQueue(){
