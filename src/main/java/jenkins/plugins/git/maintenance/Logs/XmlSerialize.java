@@ -3,6 +3,7 @@ package jenkins.plugins.git.maintenance.Logs;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.security.AnyTypePermission;
+import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,22 +16,23 @@ public class XmlSerialize{
 
     XStream xStream;
 
-    // Need to set the exact required path for storing the maintenance file.
-    String maintenanceRecordsFile = "maintenanceRecords.xml";
+    File maintenanceRecordsFile;
 
     public XmlSerialize(){
         this.xStream = new XStream(new DomDriver());
         // Need to change the Permission type. Todo need to read documentation and update security.
         this.xStream.addPermission(AnyTypePermission.ANY);
+        File rootDir = Jenkins.getInstanceOrNull().getRootDir();
+        this.maintenanceRecordsFile = new File(rootDir.getAbsolutePath(),"maintenanceRecords.xml");
     }
 
     RecordList fetchMaintenanceData(){
         try {
             RecordList recordList;
-            if (!new File(maintenanceRecordsFile).exists()) {
+            if (!maintenanceRecordsFile.exists()) {
                 recordList = new RecordList();
             } else {
-                byte[] parsedXmlByteArr = Files.readAllBytes(Paths.get(maintenanceRecordsFile));
+                byte[] parsedXmlByteArr = Files.readAllBytes(Paths.get(maintenanceRecordsFile.getAbsolutePath()));
                 String parsedXmlString = new String(parsedXmlByteArr, StandardCharsets.UTF_8);
 
                 xStream.setClassLoader(RecordList.class.getClassLoader());
@@ -53,7 +55,7 @@ public class XmlSerialize{
 
                 recordList.addRecord(record);
                 String xmlData = xStream.toXML(recordList);
-                Files.write(Paths.get(maintenanceRecordsFile), xmlData.getBytes(StandardCharsets.UTF_8));
+                Files.write(Paths.get(maintenanceRecordsFile.getAbsolutePath()), xmlData.getBytes(StandardCharsets.UTF_8));
                 return true;
             }catch (IOException e){
                 // Handle exception...
