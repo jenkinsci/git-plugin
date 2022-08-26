@@ -120,7 +120,6 @@ public class MaintenanceUI extends ManagementLink {
         }
 
         res.sendRedirect("");
-        return;
     }
 
     @RequirePOST
@@ -152,7 +151,6 @@ public class MaintenanceUI extends ManagementLink {
             setNotification("Internal Error! Couldn't Terminate Tasks.",ERROR);
         }
         res.sendRedirect("");
-        return;
     }
 
     @POST
