@@ -15,14 +15,15 @@ public class RecordList {
         cacheSet = new HashSet<>();
     }
 
-    public List<CacheRecord> getMaintenanceRecords(){
+    List<CacheRecord> getMaintenanceRecords(){
         return new LinkedList<>(maintenanceRecords);
     }
 
-    public void addRecord(CacheRecord cacheRecord){
+    void addRecord(CacheRecord cacheRecord){
         String repoName = cacheRecord.getRepoName();
+        Set<String> cacheSet = getCacheSet();
         if(cacheSet.contains(repoName)){
-            // need to add cache to existing record
+            // adding record to existing cache list
             Iterator<CacheRecord> itr = maintenanceRecords.iterator();
 
             CacheRecord record;
@@ -57,7 +58,7 @@ public class RecordList {
         cacheSet.add(repoName);
     }
 
-    public List<CacheRecord> getAllMaintenanceRecordsForSingleCache(String cacheName) {
+    List<CacheRecord> getAllMaintenanceRecordsForSingleCache(String cacheName) {
         List<CacheRecord> allRecords = null;
 
         Iterator<CacheRecord> itr = maintenanceRecords.iterator();
@@ -72,5 +73,9 @@ public class RecordList {
         }
 
         return allRecords;
+    }
+
+    Set<String> getCacheSet(){
+        return this.cacheSet;
     }
 }
