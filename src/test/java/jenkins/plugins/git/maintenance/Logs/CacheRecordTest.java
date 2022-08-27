@@ -4,6 +4,8 @@ import jenkins.plugins.git.maintenance.TaskType;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +42,12 @@ public class CacheRecordTest {
 
     @Test
     public void testSetTimeOfExecution(){
-        record.setTimeOfExecution(1661552520);
-        assertEquals(record.getTimeOfExecution(),"27-08-2022 03:52");
+        long timeOfExecution = 1661552520;
+        record.setTimeOfExecution(timeOfExecution);
+
+        Date date = new Date(timeOfExecution * 1000L);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        assertEquals(record.getTimeOfExecution(),sdf.format(date));
     }
 
     @Test
@@ -109,6 +115,7 @@ public class CacheRecordTest {
         for(int i=1;i<cacheRecords.size();i++){
             if(cacheRecords.get(i).timeOfExecution > cacheRecords.get(i-1).timeOfExecution) {
                 isSorted = false;
+                break;
             }
         }
 
@@ -118,17 +125,23 @@ public class CacheRecordTest {
     @Test
     public void copyCacheRecord(){
         long duration = System.currentTimeMillis();
+        long timeOfExecution = 1661552520;
+
         record.setExecutionDuration(duration);
         record.setExecutionStatus(true);
-        record.setTimeOfExecution(1661552520);
+        record.setTimeOfExecution(timeOfExecution);
         record.setRepoSize("5MB");
         CacheRecord copyCacheRecord = new CacheRecord(record);
 
         assertEquals(copyCacheRecord.getExecutionDuration(),duration);
         assertTrue(record.getExecutionStatus());
-        assertEquals(copyCacheRecord.getTimeOfExecution(),"27-08-2022 03:52");
         assertEquals(copyCacheRecord.getMaintenanceType(),TaskType.GC.getTaskName());
         assertEquals(copyCacheRecord.getRepoSize(),"5MB");
+
+
+        Date date = new Date(timeOfExecution * 1000L);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        assertEquals(copyCacheRecord.getTimeOfExecution(),sdf.format(date));
     }
 
 
