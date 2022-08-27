@@ -76,7 +76,7 @@ public class RecordListTest {
         CacheRecord prefetchRecord = new CacheRecord(cacheName,TaskType.PREFETCH.getTaskName());
         CacheRecord commitGraphRecord = new CacheRecord(cacheName,TaskType.COMMIT_GRAPH.getTaskName());
         CacheRecord incrementalRepackRecord = new CacheRecord(cacheName,TaskType.INCREMENTAL_REPACK.getTaskName());
-        CacheRecord looseObjectsRecord = new CacheRecord(cacheName,TaskType.LOOSE_OBJECTS.getTaskName());
+        CacheRecord looseObjectsRecord = new CacheRecord(cacheName,TaskType.LOOSE_OBJECTS.getTaskName()); // This is the latest cache record
 
         // set the TimeofExecution for each cache
         gcCacheRecord.setTimeOfExecution(1661552520);
@@ -98,7 +98,7 @@ public class RecordListTest {
         boolean isSorted = true;
 
         for(int i=1;i<allMaintenanceRecordsForSingleCache.size();i++){
-            if(allMaintenanceRecordsForSingleCache.get(i).timeOfExecution > allMaintenanceRecordsForSingleCache.get(i).timeOfExecution){
+            if(allMaintenanceRecordsForSingleCache.get(i).timeOfExecution > allMaintenanceRecordsForSingleCache.get(i-1).timeOfExecution){
                 isSorted = false;
                 break;
             }
