@@ -90,7 +90,7 @@ public class CacheRecord {
     }
 
     public void insertMaintenanceData(CacheRecord record){
-        if(record != null && maintenanceData != null && this.repoName.equals(record.getRepoName())) {
+        if(record != null && maintenanceData != null) {
             LinkedList<CacheRecord> list = maintenanceData.get(record.getMaintenanceType());
             list.addFirst(record);
             // Maximum storage of 5 Maintenance Records per Cache.
