@@ -29,7 +29,7 @@ public class CacheRecordTest {
     @Test
     public void testSetRepoSize(){
         record.setRepoSize("5MB");
-        assertEquals(record.getRepoSize(),"5MB");
+        assertEquals("5MB",record.getRepoSize());
     }
 
     @Test
@@ -37,7 +37,7 @@ public class CacheRecordTest {
         assertEquals(record.getMaintenanceType(),TaskType.GC.getTaskName());
 
         record.setMaintenanceType(TaskType.PREFETCH.getTaskName());
-        assertEquals(record.getMaintenanceType(),TaskType.PREFETCH.getTaskName());
+        assertEquals(TaskType.PREFETCH.getTaskName(),record.getMaintenanceType());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class CacheRecordTest {
 
         Date date = new Date(timeOfExecution * 1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-        assertEquals(record.getTimeOfExecution(),sdf.format(date));
+        assertEquals(sdf.format(date),record.getTimeOfExecution());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class CacheRecordTest {
     public void testSetExecutionDuration(){
         long duration = System.currentTimeMillis();
         record.setExecutionDuration(duration);
-        assertEquals(record.getExecutionDuration(),duration);
+        assertEquals(duration,record.getExecutionDuration());
     }
 
     @Test
@@ -82,7 +82,7 @@ public class CacheRecordTest {
         record.insertMaintenanceData(looseObjectsRecord);
 
         for(Map.Entry<String, LinkedList<CacheRecord>> entry : record.maintenanceData.entrySet()){
-            assertEquals(entry.getValue().size(),1);
+            assertEquals(1,entry.getValue().size());
         }
     }
 
@@ -133,15 +133,14 @@ public class CacheRecordTest {
         record.setRepoSize("5MB");
         CacheRecord copyCacheRecord = new CacheRecord(record);
 
-        assertEquals(copyCacheRecord.getExecutionDuration(),duration);
+        assertEquals(duration,copyCacheRecord.getExecutionDuration());
         assertTrue(record.getExecutionStatus());
-        assertEquals(copyCacheRecord.getMaintenanceType(),TaskType.GC.getTaskName());
-        assertEquals(copyCacheRecord.getRepoSize(),"5MB");
-
+        assertEquals(TaskType.GC.getTaskName(),copyCacheRecord.getMaintenanceType());
+        assertEquals("5MB",copyCacheRecord.getRepoSize());
 
         Date date = new Date(timeOfExecution * 1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-        assertEquals(copyCacheRecord.getTimeOfExecution(),sdf.format(date));
+        assertEquals(sdf.format(date),copyCacheRecord.getTimeOfExecution());
     }
 
 
