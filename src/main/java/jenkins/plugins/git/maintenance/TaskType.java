@@ -1,5 +1,15 @@
 package jenkins.plugins.git.maintenance;
 
+/**
+ * TaskType describes the type of maintenance task. There are 5 types of maintenance tasks. They are-
+ * <ul>
+ *     <li>Prefetch</li>
+ *     <li>Garbage Collection</li>
+ *     <li>Commit Graph</li>
+ *     <li>Loose Objects</li>
+ *     <li>Incremental Repack</li>
+ * </ul>
+ */
 public enum TaskType {
         GC("Gc"),
         PREFETCH("Prefetch"),
@@ -8,10 +18,19 @@ public enum TaskType {
         INCREMENTAL_REPACK("Incremental Repack");
 
         String taskName;
+
+        /**
+         *
+         * @param taskName Assign a name for maintenance task.
+         */
         TaskType(String taskName){
                 this.taskName = taskName;
         }
 
+        /**
+         *
+         * @return name of the maintenance task.
+         */
         public String getTaskName(){
                 return this.taskName;
         }
