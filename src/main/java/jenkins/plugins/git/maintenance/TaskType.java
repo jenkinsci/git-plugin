@@ -9,9 +9,11 @@ package jenkins.plugins.git.maintenance;
  *     <li>Loose Objects</li>
  *     <li>Incremental Repack</li>
  * </ul>
+ *
+ * @author Hrushikesh Rao
  */
 public enum TaskType {
-        GC("Gc"),
+        GC("Garbage Collection"),
         PREFETCH("Prefetch"),
         COMMIT_GRAPH("Commit Graph"),
         LOOSE_OBJECTS("Loose Objects"),
