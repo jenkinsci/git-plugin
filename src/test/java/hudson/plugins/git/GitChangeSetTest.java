@@ -6,8 +6,12 @@ import hudson.tasks.Mailer.UserProperty;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.MockedStatic;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.AuthenticationException;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Random;
 
 import static org.hamcrest.MatcherAssert.*;
@@ -15,6 +19,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class GitChangeSetTest {
 
@@ -156,6 +166,33 @@ public class GitChangeSetTest {
         User existing = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
         assertThat(existing, is(user));
     }
+
+	@Test
+	public void testFindOrCreateUserHandlesAuthenticationException() {
+        final GitChangeSet changeset = GitChangeSetUtil.genChangeSet(random.nextBoolean(), random.nextBoolean());
+        // TODO this only test one code path, there are several code paths using User.get()
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = true;
+        final String csAuthor = "disabled_user";
+		final String csAuthorEmail = "disabled_user@example.com";
+
+        try (MockedStatic<User> user = mockStatic(User.class)) {
+            user.when(() -> User.get("disabled_user", createAccountBasedOnEmail, Collections.emptyMap()))
+                .thenThrow(new DisabledException("The user \"disabled_user\" is administratively disabled"));
+
+            User actual = changeset.findOrCreateUser(csAuthor, csAuthorEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+            assertEquals(User.getUnknown(), actual);
+
+            user.verify(
+                () -> User.get("disabled_user", createAccountBasedOnEmail, Collections.emptyMap()),
+                times(1)
+            );
+            user.verify(
+                () -> User.getUnknown(),
+                times(2)
+            );
+        }
+	}
 
     @Test
     @Deprecated // Test deprecated User.get()
