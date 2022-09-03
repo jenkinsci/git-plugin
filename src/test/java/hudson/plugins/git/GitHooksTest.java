@@ -168,9 +168,9 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     private void createHookScriptAt(final File postCheckoutOutput, final FilePath hook) throws IOException, InterruptedException {
         final String nl = System.lineSeparator();
-        StringBuilder scriptContent = new StringBuilder("#!/bin/bash -v").append(nl);
+        StringBuilder scriptContent = new StringBuilder("#!/bin/sh -v").append(nl);
         scriptContent.append("date +%s > \"")
-                .append(postCheckoutOutput.getAbsolutePath().replace("\\", "\\\\")) //Git bash does the bash escaping so need to do more escaping
+                .append(postCheckoutOutput.getAbsolutePath().replace("\\", "\\\\")) // Git shell processes escapes, needs extra escapes
                 .append('"').append(nl);
         hook.write(scriptContent.toString(), Charset.defaultCharset().name());
         hook.chmod(0777);
@@ -229,7 +229,7 @@ public class GitHooksTest extends AbstractGitTestCase {
                 "node('" + node + "') {",
                 "  checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: '" + uri + "']]])",
                 "  if (!fileExists('.git/hooks/post-checkout')) {",
-                "    writeFile file: '.git/hooks/post-checkout', text: \"#!/bin/bash\\necho h4xor3d\"",
+                "    writeFile file: '.git/hooks/post-checkout', text: \"#!/bin/sh\\necho h4xor3d\"",
                 "    if (isUnix()) {",
                 "      sh 'chmod +x .git/hooks/post-checkout'",
                 "    }",
