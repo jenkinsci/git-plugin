@@ -15,23 +15,43 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * TaskScheduler is responsible for scheduling maintenance tasks. It validates if a task is configured & verifies cron syntax before scheduling.
+ * TaskScheduler acts as a producer by adding the appropriate task into a maintenance queue.
+ *
+ * @author Hrushikesh Rao
+ */
 public class TaskScheduler {
 
     private MaintenanceTaskConfiguration config;
+
+    /**
+     * Stores the order of execution of maintenance tasks.
+     */
     private List<Task> maintenanceQueue;
+
+    /**
+     * {@link TaskExecutor} executes the maintenance tasks on all the caches.
+     */
     private Thread taskExecutor;
     private TaskExecutor taskExecutorRunnable;
 
     private static final Logger LOGGER = Logger.getLogger(TaskScheduler.class.getName());
     private static final Random random = new Random();
 
+    /**
+     * Loads the maintenance configuration configured by the administrator. Also initializes an empty maintenance queue.
+     */
     public TaskScheduler(){
        this.config = GlobalConfiguration.all().get(MaintenanceTaskConfiguration.class);
        this.maintenanceQueue = new LinkedList<>();
        LOGGER.log(Level.FINE,"TaskScheduler class Initialized.");
     }
 
-    public void scheduleTasks() {
+    /**
+     * Schedules maintenance tasks on caches.
+     */
+    void scheduleTasks() {
         if(config != null) {
             if (!isGitMaintenanceTaskRunning(config)) {
                 // Logs ever 1 min. Need to check performance impact.
@@ -39,8 +59,8 @@ public class TaskScheduler {
                 return;
             }
 
-            List<Task> configuredTasks = config.getMaintenanceTasks();
-            addTasksToQueue(configuredTasks);
+            List<Task> maintenanceTasks = config.getMaintenanceTasks();
+            addTasksToQueue(maintenanceTasks);
             // Option of Using the same thread for executing more maintenance task, or create a new thread the next minute and execute the maintenance task.
             createTaskExecutorThread();
         }else{
@@ -49,6 +69,12 @@ public class TaskScheduler {
 
     }
 
+    /**
+     * Checks for duplication of maintenance task in the queue.
+     *
+     * @param task type of maintenance task ({@link Task}).
+     * @return a boolean to see if a task is already present in maintenance queue.
+     */
     boolean checkIsTaskInQueue(Task task){
         boolean isTaskInQueue = maintenanceQueue.stream().anyMatch(queuedTask -> queuedTask.getTaskType().equals(task.getTaskType()));
         if(isTaskInQueue){
@@ -57,6 +83,9 @@ public class TaskScheduler {
         return isTaskInQueue;
     }
 
+    /**
+     *  A new Thread {@link TaskExecutor} is created which executes the maintenance task on caches.
+     */
     void createTaskExecutorThread(){
         // Create a new thread and execute the tasks present in the queue;
         if(!maintenanceQueue.isEmpty() && (taskExecutor == null || !taskExecutor.isAlive())) {
@@ -68,10 +97,15 @@ public class TaskScheduler {
         }
     }
 
-    void addTasksToQueue(List<Task> configuredTasks){
+    /**
+     * Iterates through all the maintenance tasks and adds the task to queue if valid.
+     *
+     * @param maintenanceTasks List of maintenance tasks {@link Task}
+     */
+    void addTasksToQueue(List<Task> maintenanceTasks){
 
         boolean isTaskExecutable;
-        for(Task task : configuredTasks){
+        for(Task task : maintenanceTasks){
             try {
                 if(!task.getIsTaskConfigured() || checkIsTaskInQueue(task))
                     continue;
@@ -89,10 +123,22 @@ public class TaskScheduler {
         }
     }
 
+    /**
+     * Checks if global git maintenance is configured.
+     * @param config {@link MaintenanceTaskConfiguration}.
+     * @return Global git maintenance is configured or not.
+     */
     boolean isGitMaintenanceTaskRunning(MaintenanceTaskConfiguration config){
         return config.getIsGitMaintenanceRunning();
     }
 
+    /**
+     * Returns CronTabList for a cronSyntax.
+     *
+     * @param cronSyntax cron syntax for maintenance task.
+     * @return {@link CronTabList}
+     * @throws ANTLRException
+     */
     CronTabList getCronTabList(String cronSyntax) throws ANTLRException {
         // Random number between 0 & 100000
         String seed = String.valueOf((random.nextInt(100000)));
@@ -100,6 +146,12 @@ public class TaskScheduler {
         return new CronTabList(Collections.singletonList(cronTab));
     }
 
+    /**
+     * Checks if the cron syntax matches the current time. Returns true if valid.
+     *
+     * @param cronTabList {@link CronTabList}
+     * @return maintenance task should be scheduled or not.
+     */
     boolean checkIsTaskExecutable(CronTabList cronTabList){
         boolean isTaskExecutable = false;
 
@@ -110,6 +162,9 @@ public class TaskScheduler {
         return isTaskExecutable;
     }
 
+    /**
+     * Terminates the {@link TaskExecutor} thread to stop executing maintenance on caches. Also empties the maintenance queue.
+     */
     void terminateMaintenanceTaskExecution(){
         this.maintenanceQueue = new LinkedList<>();
         if(taskExecutor != null && taskExecutor.isAlive())
