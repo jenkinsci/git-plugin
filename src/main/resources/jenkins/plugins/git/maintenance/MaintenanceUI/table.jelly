@@ -50,6 +50,7 @@
 
                             <tfoot>
                                 <tr>
+                                    <th>#</th>
                                     <th>${%Repo Name}</th>
                                     <th>${%Repo Size}</th>
                                     <th>${%Task}</th>

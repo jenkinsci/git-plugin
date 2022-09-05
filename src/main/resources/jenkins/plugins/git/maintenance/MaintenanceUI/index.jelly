@@ -35,15 +35,14 @@
 
             <st:bind var="a" value="${it}"/>
 
-<!--            Importing Table from table.jelly file-->
-            <st:include page="table.jelly" it="${it}" optional="false" />
+            <hr/>
 
+            <div>
+                <h1>Maintenance Records</h1>
+<!--            Importing Table from table.jelly file-->
+               <st:include page="table.jelly" it="${it}" optional="false" />
+            </div>
             <script>
-                // // TO load the table in UI
-                // jQuery3('#fixed').DataTable({
-                //     pagingType: 'numbers', // Page number button only
-                //     order: [[0, 'asc'], [1, 'asc']] // Sort by file name and line number
-                // });
 
                 // To display notification after submitting data from form.
                 a.getNotification(function (t) {
