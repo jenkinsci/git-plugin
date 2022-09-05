@@ -20,16 +20,35 @@ import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ *
+ */
 public class TaskExecutor implements Runnable {
 
+    /**
+     * Boolean to toggle the state of execution of thread.
+     */
     private volatile boolean isThreadAlive;
+
+    /**
+     * Type of maintenance task being executed on caches.
+     */
     Task maintenanceTask;
+
+    /**
+     * List of caches present on Jenkins controller.
+     */
     private List<GitMaintenanceSCM.Cache> caches;
 
     XmlSerialize xmlSerialize;
 
     private static final Logger LOGGER = Logger.getLogger(TaskExecutor.class.getName());
 
+    /**
+     * Initializes the thread to execute a maintenance task.
+     *
+     * @param maintenanceTask Type of maintenance task required for execution.
+     */
     public TaskExecutor(Task maintenanceTask){
         this.maintenanceTask = new Task(maintenanceTask);
         caches = getCaches();
@@ -38,6 +57,9 @@ public class TaskExecutor implements Runnable {
         LOGGER.log(Level.FINE,"New Thread created to execute " + maintenanceTask.getTaskName());
     }
 
+    /**
+     * Executes the maintenance task by iterating through the all caches on Jenkins controller.
+     */
     @Override
     public void run() {
 
@@ -57,6 +79,13 @@ public class TaskExecutor implements Runnable {
 
     }
 
+    /**
+     * Executes maintenance task on a single cache. The cache is first locked and then undergoes git maintenance.
+     *
+     * @param cacheFile File of a single cache.
+     * @param lock Lock for a single cache.
+     * @throws InterruptedException When GitClient is interrupted during maintenance execution.
+     */
     void executeMaintenanceTask(File cacheFile,Lock lock) throws InterruptedException{
 
         TaskType taskType = maintenanceTask.getTaskType();
@@ -98,6 +127,13 @@ public class TaskExecutor implements Runnable {
         xmlSerialize.addMaintenanceRecord(createRecord(cacheFile,taskType,executionStatus,executionDuration)); // Stores the record in jenkins.
     }
 
+    /**
+     * Executes git maintenance on single cache for git versions >= 2.30 .{@link TaskType} defines the type of maintenance task.
+     *
+     * @param gitClient {@link GitClient} on a single cache.
+     * @param taskType Type of maintenance task.
+     * @throws InterruptedException When GitClient is interrupted during maintenance execution.
+     */
     void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
         // checking git version for every cache. Reason is because in the UI, the git version can be changed anytime.
         LOGGER.log(Level.FINE,"Git version >= 2.30.0 detected. Using official git maintenance command.");
@@ -116,6 +152,14 @@ public class TaskExecutor implements Runnable {
             terminateThread();
         }
     }
+
+    /**
+     * Executes git maintenance on single cache for git versions < 2.30 .{@link TaskType} defines the type of maintenance task.
+     *
+     * @param gitClient {@link GitClient} on single cache.
+     * @param taskType Type of maintenance task.
+     * @throws InterruptedException When GitClient is interrupted during maintenance execution.
+     */
     void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException{
         LOGGER.log(Level.FINE,"Git version < 2.30.0 detected. Using legacy git maintenance commands");
 
@@ -157,16 +201,35 @@ public class TaskExecutor implements Runnable {
         }
     }
 
+    /**
+     * Checks if the git version used for maintenance is matching the requirements passed by the method parameters.
+     *
+     * @param neededMajor Major git version.
+     * @param neededMinor Minor git version.
+     * @param neededPatch Patch git version.
+     * @return a boolean that checks the git version used for maintenance is greater than or equal to the required version.
+     */
     boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){
         return MaintenanceTaskConfiguration.gitVersionAtLeast(neededMajor,neededMinor,neededPatch);
     }
 
+    /**
+     * Returns a list of caches present on Jenkins controller. See {@link GitMaintenanceSCM#getCaches()}
+     *
+     * @return List of caches on Jenkins controller.
+     */
     List<GitMaintenanceSCM.Cache> getCaches(){
         List<GitMaintenanceSCM.Cache> caches =  GitMaintenanceSCM.getCaches();
         LOGGER.log(Level.INFO,"Fetched all caches present on Jenkins Controller.");
         return caches;
     }
 
+    /**
+     * Returns {@link GitClient} on a single cache.
+     *
+     * @param file File object of a single cache.
+     * @return GitClient on single cache.
+     */
     GitClient getGitClient(File file){
         try {
             TaskListener listener = new LogTaskListener(LOGGER, Level.FINE);
@@ -196,10 +259,22 @@ public class TaskExecutor implements Runnable {
         return null;
     }
 
+    /**
+     * Terminates this thread and stops further execution of maintenance tasks.
+     */
     public void terminateThread(){
         isThreadAlive = false;
     }
 
+    /**
+     * Returns a Record ({@link CacheRecord}) which contains the result of maintenance data on a single cache.
+     *
+     * @param cacheFile File object of a single cache.
+     * @param taskType Type of maintenance task.
+     * @param executionStatus Whether maintenance task has been executed successfully on a cache.
+     * @param executionDuration Amount of time taken to execute maintenance task in milliseconds.
+     * @return {@link CacheRecord} of a single cache.
+     */
     CacheRecord createRecord(File cacheFile, TaskType taskType,boolean executionStatus,long executionDuration){
 
        CacheRecord cacheRecord = new CacheRecord(cacheFile.getName(),taskType.getTaskName());
