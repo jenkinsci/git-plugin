@@ -92,10 +92,12 @@ public class CacheRecord {
     public void insertMaintenanceData(CacheRecord record){
         if(record != null && maintenanceData != null) {
             LinkedList<CacheRecord> list = maintenanceData.get(record.getMaintenanceType());
-            list.addFirst(record);
-            // Maximum storage of 5 Maintenance Records per Cache.
-            if(list.size() > 5)
-                list.removeLast();
+            if(list != null) {
+                list.addFirst(record);
+                // Maximum storage of 5 Maintenance Records per Cache.
+                if (list.size() > 5)
+                    list.removeLast();
+            }
         }
     }
 
