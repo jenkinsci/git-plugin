@@ -10,6 +10,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * GitMaintenanceSCM is responsible for fetching all caches along with locks on Jenkins controller. It extends {@link AbstractGitSCMSource}.
+ */
 public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
     String remote;
@@ -19,6 +22,9 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
         this.remote = remote;
     }
 
+    /**
+     * Stores the File object and lock for cache.
+     */
     static class Cache {
 
         File cache;
@@ -28,10 +34,19 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             this.lock = lock;
         }
 
+        /**
+         * Return the File object of a cache.
+         * @return File object of a cache.
+         */
         public File getCacheFile(){
             return cache;
         }
 
+        /**
+         * Returns the lock for a cache.
+         *
+         * @return lock for a cache.
+         */
         public Lock getLock(){
             return lock;
         }
@@ -47,14 +62,19 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
         return remote;
     }
 
+    /**
+     * Returns a list of {@link Cache}.
+     * @return A list of {@link Cache}.
+     */
     public static List<Cache> getCaches(){
             Jenkins jenkins = Jenkins.getInstanceOrNull();
 
+            List<Cache> caches = new ArrayList<>();
             if(jenkins == null){
-                // Throw error;
+                LOGGER.log(Level.WARNING,"Internal error. Couldn't get instance of Jenkins.");
+                return caches;
             }
 
-            List<Cache> caches = new ArrayList<>();
             for (String cacheEntry : getCacheEntries()) {
                 File cacheDir = getCacheDir(cacheEntry,false);
                 Lock cacheLock = getCacheLock(cacheEntry);
