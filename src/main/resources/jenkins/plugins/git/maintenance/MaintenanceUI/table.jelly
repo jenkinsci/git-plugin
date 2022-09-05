@@ -53,9 +53,10 @@
                                     <th>${%Repo Name}</th>
                                     <th>${%Repo Size}</th>
                                     <th>${%Task}</th>
-                                    <th>${%Previous Execution}</th>
+                                    <th>${%Time}</th>
                                     <th>${%Status}</th>
-                                    <th>${%Execution Time}</th>
+                                    <th>${%Execution Time} (ms)</th>
+                                    <th>Expand</th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -93,7 +94,7 @@
                 pagingType: 'numbers', // Page number button only,
         });
 
-            jQuery('#fixed .expand').on('click',function(){
+            jQuery('#fixed').on('click','.expand',function(){
                 var tr = jQuery(this).closest('tr');
                 var row = table.row(tr);
                 if (row.child.isShown()) {
