@@ -21,7 +21,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * TaskExecutor executes the maintenance tasks on all Caches on Jenkins controller. A lock is added to each cache before running maintenance on it.
+ * It is an independent thread. If a cache is already locked, it skips the maintenance task. {@link GitClient} manages the execution of maintenance.
  *
+ * @author Hrushikesh Rao
  */
 public class TaskExecutor implements Runnable {
 

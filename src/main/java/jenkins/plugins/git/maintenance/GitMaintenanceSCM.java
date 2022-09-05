@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 
 /**
  * GitMaintenanceSCM is responsible for fetching all caches along with locks on Jenkins controller. It extends {@link AbstractGitSCMSource}.
+ *
+ * @author Hrushikesh Rao
  */
 public class GitMaintenanceSCM extends AbstractGitSCMSource {
 
