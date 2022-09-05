@@ -1,6 +1,7 @@
 package jenkins.plugins.git.maintenance.Logs;
 
 import jenkins.plugins.git.maintenance.TaskType;
+import org.apache.commons.lang.time.DurationFormatUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,7 +11,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class CacheRecord {
     String repoName;
@@ -36,7 +36,7 @@ public class CacheRecord {
 
     // This is to add maintenance data to existing Cache Record
     public CacheRecord(CacheRecord cacheRecord){
-        setExecutionDuration(cacheRecord.getExecutionDuration());
+        setExecutionDuration(cacheRecord.executionDuration);
         setExecutionStatus(cacheRecord.getExecutionStatus());
         setRepoSize(cacheRecord.getRepoSize());
         setTimeOfExecution(cacheRecord.timeOfExecution);
@@ -81,8 +81,8 @@ public class CacheRecord {
         this.executionStatus = executionStatus;
     }
 
-    public long getExecutionDuration() {
-        return executionDuration;
+    public String getExecutionDuration() {
+        return DurationFormatUtils.formatDuration(executionDuration,"mmm:ss:SSS");
     }
 
     public void setExecutionDuration(long executionDuration) {

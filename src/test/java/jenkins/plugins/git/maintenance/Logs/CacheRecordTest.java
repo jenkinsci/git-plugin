@@ -1,5 +1,6 @@
 package jenkins.plugins.git.maintenance.Logs;
 
+import io.jenkins.cli.shaded.org.apache.commons.lang.time.DurationFormatUtils;
 import jenkins.plugins.git.maintenance.TaskType;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +64,7 @@ public class CacheRecordTest {
     public void testSetExecutionDuration(){
         long duration = System.currentTimeMillis();
         record.setExecutionDuration(duration);
-        assertEquals(duration,record.getExecutionDuration());
+        assertEquals(DurationFormatUtils.formatDuration(duration,"mmm:ss:SSS"),record.getExecutionDuration());
     }
 
     @Test
@@ -133,7 +134,7 @@ public class CacheRecordTest {
         record.setRepoSize("5MB");
         CacheRecord copyCacheRecord = new CacheRecord(record);
 
-        assertEquals(duration,copyCacheRecord.getExecutionDuration());
+        assertEquals(DurationFormatUtils.formatDuration(duration,"mmm:ss:SSS"),copyCacheRecord.getExecutionDuration());
         assertTrue(record.getExecutionStatus());
         assertEquals(TaskType.GC.getTaskName(),copyCacheRecord.getMaintenanceType());
         assertEquals("5MB",copyCacheRecord.getRepoSize());

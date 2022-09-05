@@ -13,7 +13,7 @@
                                     <th>${%Task}</th>
                                     <th>${%Time}</th>
                                     <th>${%Status}</th>
-                                    <th>${%Execution Time} (ms)</th>
+                                    <th>${%Execution Time} (mmm:ss:SSS)</th>
                                     <th>Expand</th>
                                 </tr>
                             </thead>
@@ -56,7 +56,7 @@
                                     <th>${%Task}</th>
                                     <th>${%Time}</th>
                                     <th>${%Status}</th>
-                                    <th>${%Execution Time} (ms)</th>
+                                    <th>${%Execution Time} (mmm:ss:SSS)</th>
                                     <th>Expand</th>
                                 </tr>
                             </tfoot>
@@ -92,8 +92,12 @@
         jQuery(document).ready(function(){
 
             var table = jQuery('#fixed').DataTable({
-                pagingType: 'numbers', // Page number button only,
-        });
+                pagingType: 'numbers',// Page number button only,
+                columnDefs: [
+                { "type": "repo-size", targets: [2] },
+                { "type": "execution-time",targets:[6]}
+                ]
+            });
 
             jQuery('#fixed').on('click','.expand',function(){
                 var tr = jQuery(this).closest('tr');
@@ -111,6 +115,41 @@
                      });
                 }
             })
+
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "repo-size-asc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            console.log("Need to sort Asc")
+        }
+        } );
+
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "repo-size-desc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            console.log("Ned to sort Desc")
+        }
+        } );
+
+        // Sorting execution time data in ascending order
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "execution-time-asc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            let time1 = Number.parseInt(val_1.split(":").join(""));
+            let time2 = Number.parseInt(val_2.split(":").join(""));
+            return time1 > time2 ? 1 : time1 === time2 ? 0 : -1;
+        }
+        } );
+
+        // Sorting execution time data in descending order
+        jQuery().extend( jQuery().dataTable.ext.type.order, {
+        "execution-time-desc": function (val_1, val_2) {
+        // your sorting code here - or a call to a function
+            let time1 = Number.parseInt(val_1.split(":").join(""));
+            let time2 = Number.parseInt(val_2.split(":").join(""));
+
+            return time1 > time2 ? -1 : time1 === time2 ? 0 : 1;
+        }
+        } );
         });
 
     </script>
