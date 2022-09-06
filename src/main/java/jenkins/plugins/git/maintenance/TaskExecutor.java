@@ -106,11 +106,9 @@ public class TaskExecutor implements Runnable {
                     throw new InterruptedException("Git Client couldn't be instantiated");
 
                 executionDuration -= System.currentTimeMillis();
-                if(gitVersionAtLeast(2,30,0)){
-                    executeGitMaintenance(gitClient,taskType);
-                }else{
-                    executeLegacyGitMaintenance(gitClient,taskType);
-                }
+
+                executeGitMaintenance(gitClient,taskType);
+
                 executionDuration += System.currentTimeMillis();
                 executionStatus = true;
             } catch (InterruptedException e) {
@@ -131,89 +129,33 @@ public class TaskExecutor implements Runnable {
     }
 
     /**
-     * Executes git maintenance on single cache for git versions >= 2.30 .{@link TaskType} defines the type of maintenance task.
+     * Executes git maintenance on single cache.{@link TaskType} defines the type of maintenance task.
      *
      * @param gitClient {@link GitClient} on a single cache.
      * @param taskType Type of maintenance task.
      * @throws InterruptedException When GitClient is interrupted during maintenance execution.
      */
     void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
-        // checking git version for every cache. Reason is because in the UI, the git version can be changed anytime.
-        LOGGER.log(Level.FINE,"Git version >= 2.30.0 detected. Using official git maintenance command.");
-        if(taskType.equals(TaskType.GC)){
-            gitClient.maintenance("gc");
-        }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
-            gitClient.maintenance("commit-graph");
-        }else if(taskType.equals(TaskType.PREFETCH)){
-            gitClient.maintenance("prefetch");
-        }else if(taskType.equals(TaskType.INCREMENTAL_REPACK)){
-            gitClient.maintenance("incremental-repack");
-        }else if(taskType.equals(TaskType.LOOSE_OBJECTS)){
-            gitClient.maintenance("loose-objects");
-        }else{
-            LOGGER.log(Level.WARNING,"Invalid maintenance task.");
-            terminateThread();
+        switch (taskType){
+            case GC:
+                gitClient.maintenance("gc");
+                break;
+            case COMMIT_GRAPH:
+                gitClient.maintenance("commit-graph");
+                break;
+            case PREFETCH:
+                gitClient.maintenance("prefetch");
+                break;
+            case INCREMENTAL_REPACK:
+                gitClient.maintenance("incremental-repack");
+                break;
+            case LOOSE_OBJECTS:
+                gitClient.maintenance("loose-objects");
+                break;
+            default:
+                LOGGER.log(Level.WARNING,"Invalid maintenance task.");
+                terminateThread();
         }
-    }
-
-    /**
-     * Executes git maintenance on single cache for git versions < 2.30 .{@link TaskType} defines the type of maintenance task.
-     *
-     * @param gitClient {@link GitClient} on single cache.
-     * @param taskType Type of maintenance task.
-     * @throws InterruptedException When GitClient is interrupted during maintenance execution.
-     */
-    void executeLegacyGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException{
-        LOGGER.log(Level.FINE,"Git version < 2.30.0 detected. Using legacy git maintenance commands");
-
-        // If git version < 2.18.0 =====> run only gc.
-        // If git version >= 2.18.0 && git version <=2.19.1 ======> run gc and commit-graph
-        // If git version >= 2.20.0 && git version < 2.30 ========> run gc , commit-graph && multi-pack-index
-
-        if(gitVersionAtLeast(2,20,0)){
-            // execute gc, commit-graph && multi-pack-index
-            if(taskType.equals(TaskType.GC)){
-                gitClient.maintenanceLegacy("gc");
-            }else if(taskType.equals(TaskType.INCREMENTAL_REPACK)){
-                gitClient.maintenanceLegacy("incremental-repack");
-            }else if(taskType.equals(TaskType.COMMIT_GRAPH)){
-                gitClient.maintenanceLegacy("commit-graph");
-            }else{
-                LOGGER.log(Level.INFO,"Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
-                terminateThread();
-            }
-        }else if(gitVersionAtLeast(2,18,0)){
-            // execute gc && commit-graph
-            if(taskType.equals(TaskType.GC))
-                gitClient.maintenanceLegacy("gc");
-            else if(taskType.equals(TaskType.COMMIT_GRAPH))
-                gitClient.maintenanceLegacy("commit-graph");
-            else {
-                LOGGER.log(Level.INFO, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
-                terminateThread();
-            }
-        }else {
-            // These are git versions less than 2.18.0
-            // execute gc only
-            if(taskType.equals(TaskType.GC))
-                gitClient.maintenanceLegacy("gc");
-            else {
-                LOGGER.log(Level.INFO, "Cannot execute " + taskType.getTaskName() + " maintenance task due to older git version");
-                terminateThread();
-            }
-        }
-    }
-
-    /**
-     * Checks if the git version used for maintenance is matching the requirements passed by the method parameters.
-     *
-     * @param neededMajor Major git version.
-     * @param neededMinor Minor git version.
-     * @param neededPatch Patch git version.
-     * @return a boolean that checks the git version used for maintenance is greater than or equal to the required version.
-     */
-    boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch){
-        return MaintenanceTaskConfiguration.gitVersionAtLeast(neededMajor,neededMinor,neededPatch);
     }
 
     /**

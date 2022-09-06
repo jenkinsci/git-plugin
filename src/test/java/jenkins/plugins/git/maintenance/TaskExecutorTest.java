@@ -91,12 +91,6 @@ public class TaskExecutorTest {
         assertNull(client);
     }
 
-    // This test is dependent on users machine.
-    @Test
-    public void testGitVersionAtLeast(){
-        taskExecutor.gitVersionAtLeast(2,1,1);
-    }
-
     @Test
     public void testGetCaches(){
         assertNotNull(taskExecutor.getCaches());
@@ -110,16 +104,6 @@ public class TaskExecutorTest {
         File cacheFile = cache.getCacheFile();
         GitClient client = taskExecutor.getGitClient(cacheFile);
         taskExecutor.executeGitMaintenance(client,taskType);
-    }
-
-    // Test doesn't returns any result
-    @Test
-    public void testExecuteLegacyGitMaintenance() throws InterruptedException {
-        GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
-        File cacheFile = cache.getCacheFile();
-        GitClient client = taskExecutor.getGitClient(cacheFile);
-
-        taskExecutor.executeLegacyGitMaintenance(client,taskType);
     }
 
     // Test doesn't returns any result
