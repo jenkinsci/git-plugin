@@ -180,34 +180,4 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
         // 2nd index is Patch Version.
         return Arrays.stream(fields).map(Integer::parseInt).collect(Collectors.toList());
     }
-
-    /**
-     * Checks if the git version used for maintenance is matching at least the requirements passed by the method parameters.
-     *
-     * @param neededMajor Major git version.
-     * @param neededMinor Minor git version.
-     * @param neededPatch Patch git version.
-     * @return a boolean that checks the git version used for maintenance is greater than or equal to the required version.
-     */
-    public static boolean gitVersionAtLeast(int neededMajor, int neededMinor, int neededPatch) {
-        List<Integer> fields = getGitVersion();
-        final int gitMajor = fields.get(0);
-        final int gitMinor = fields.get(1);
-        final int gitPatch = fields.get(2);
-
-        final String versionOutput = StringUtils.join(fields,".");
-        if (gitMajor < 1 || gitMajor > 3) {
-            LOGGER.log(Level.WARNING, "Unexpected git major version " + gitMajor + " parsed from '" + versionOutput + "', field:'" + fields.get(0) + "'");
-        }
-        if (gitMinor < 0 || gitMinor > 50) {
-            LOGGER.log(Level.WARNING, "Unexpected git minor version " + gitMinor + " parsed from '" + versionOutput + "', field:'" + fields.get(1) + "'");
-        }
-        if (gitPatch < 0 || gitPatch > 20) {
-            LOGGER.log(Level.WARNING, "Unexpected git patch version " + gitPatch + " parsed from '" + versionOutput + "', field:'" + fields.get(2) + "'");
-        }
-
-        return gitMajor >  neededMajor ||
-                (gitMajor == neededMajor && gitMinor >  neededMinor) ||
-                (gitMajor == neededMajor && gitMinor == neededMinor  && gitPatch >= neededPatch);
-    }
 }

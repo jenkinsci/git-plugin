@@ -96,13 +96,4 @@ public class MaintenanceTaskConfigurationTest {
             assertThat("Patch version out of range", gitVersion.get(2), is(both(greaterThan(-1)).and(lessThan(99))));
         }
     }
-
-    // This test depends on the computers git version.
-//    @Test
-//    public void testGitVersionAtLeast(){
-//        assertTrue(MaintenanceTaskConfiguration.gitVersionAtLeast());
-//        assertTrue(MaintenanceTaskConfiguration.gitVersionAtLeast());
-//        assertTrue(MaintenanceTaskConfiguration.gitVersionAtLeast());
-//        assertTrue(MaintenanceTaskConfiguration.gitVersionAtLeast());
-//    }
 }
