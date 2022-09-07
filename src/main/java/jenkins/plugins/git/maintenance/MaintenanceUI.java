@@ -56,7 +56,7 @@ public class MaintenanceUI extends ManagementLink {
 
     @Override
     public String getDescription() {
-        return "Maintain your Repositories to improve git command performance.";
+        return "Maintain your repositories to improve git performance.";
     }
 
     public @NonNull String getCategoryName() {
