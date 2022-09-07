@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -97,13 +98,16 @@ public class TaskExecutorTest {
     }
 
 
-    // Test doesn't returns any result
     @Test
     public void testExecuteGitMaintenance() throws InterruptedException {
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();
         GitClient client = taskExecutor.getGitClient(cacheFile);
-        taskExecutor.executeGitMaintenance(client,taskType);
+        boolean isExecuted = taskExecutor.executeGitMaintenance(client,taskType);
+
+        // based on the underlying git version it will work.
+        // If git version < 2.30, tests may fail.
+        assertThat(isExecuted,is(true));
     }
 
     // Test doesn't returns any result

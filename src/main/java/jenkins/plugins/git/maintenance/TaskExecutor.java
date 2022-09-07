@@ -107,10 +107,9 @@ public class TaskExecutor implements Runnable {
 
                 executionDuration -= System.currentTimeMillis();
 
-                executeGitMaintenance(gitClient,taskType);
+                executionStatus = executeGitMaintenance(gitClient,taskType);
 
                 executionDuration += System.currentTimeMillis();
-                executionStatus = true;
             } catch (InterruptedException e) {
                 LOGGER.log(Level.FINE, "Couldn't run " + taskType.getTaskName() + ".Msg: " + e.getMessage());
             } finally {
@@ -133,29 +132,32 @@ public class TaskExecutor implements Runnable {
      *
      * @param gitClient {@link GitClient} on a single cache.
      * @param taskType Type of maintenance task.
+     * @return Boolean if maintenance has been executed or not.
      * @throws InterruptedException When GitClient is interrupted during maintenance execution.
      */
-    void executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
+    boolean executeGitMaintenance(GitClient gitClient,TaskType taskType) throws InterruptedException {
+        boolean isExecuted = false;
         switch (taskType){
             case GC:
-                gitClient.maintenance("gc");
+                isExecuted = gitClient.maintenance("gc");
                 break;
             case COMMIT_GRAPH:
-                gitClient.maintenance("commit-graph");
+                isExecuted = gitClient.maintenance("commit-graph");
                 break;
             case PREFETCH:
-                gitClient.maintenance("prefetch");
+                isExecuted = gitClient.maintenance("prefetch");
                 break;
             case INCREMENTAL_REPACK:
-                gitClient.maintenance("incremental-repack");
+                isExecuted = gitClient.maintenance("incremental-repack");
                 break;
             case LOOSE_OBJECTS:
-                gitClient.maintenance("loose-objects");
+                isExecuted = gitClient.maintenance("loose-objects");
                 break;
             default:
                 LOGGER.log(Level.WARNING,"Invalid maintenance task.");
                 terminateThread();
         }
+        return isExecuted;
     }
 
     /**
