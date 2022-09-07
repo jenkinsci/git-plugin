@@ -1,5 +1,11 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:fa="/font-awesome">
+    <style>
+        .font-awesome-icon{
+            height:30px;
+            width: 30px;
+        }
+    </style>
         <st:adjunct includes="io.jenkins.plugins.data-tables"/>
 
                 <div class="fluid-container">
@@ -8,8 +14,8 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>${%Repo Name}</th>
-                                    <th>${%Repo Size}</th>
+                                    <th>${%Cache Name}</th>
+                                    <th>${%Cache Size} (MB)</th>
                                     <th>${%Task}</th>
                                     <th>${%Time}</th>
                                     <th>${%Status}</th>
@@ -27,7 +33,8 @@
                                             ${record.getRepoName()}
                                         </td>
                                         <td>
-                                            ${record.getRepoSize()}
+<!--                                            Converting Bytes to MB-->
+                                            ${record.getRepoSize()/1000000}
                                         </td>
                                         <td>
                                             ${record.getMaintenanceType()}
@@ -36,7 +43,12 @@
                                             ${record.getTimeOfExecution()}
                                         </td>
                                         <td>
-                                            ${record.getExecutionStatus()}
+                                            <j:if test="${record.getExecutionStatus()}">
+                                                <fa:svg-icon name="check" class="font-awesome-icon" ></fa:svg-icon>
+                                            </j:if>
+                                            <j:if test="${!record.getExecutionStatus()}">
+                                                <fa:svg-icon name="xmark" class="font-awesome-icon" ></fa:svg-icon>
+                                            </j:if>
                                         </td>
                                         <td>
                                             ${record.getExecutionDuration()}
@@ -51,8 +63,8 @@
                             <tfoot>
                                 <tr>
                                     <th>#</th>
-                                    <th>${%Repo Name}</th>
-                                    <th>${%Repo Size}</th>
+                                    <th>${%Cache Name}</th>
+                                    <th>${%Cache Size} (MB)</th>
                                     <th>${%Task}</th>
                                     <th>${%Time}</th>
                                     <th>${%Status}</th>
@@ -94,9 +106,8 @@
             var table = jQuery('#fixed').DataTable({
                 pagingType: 'numbers',// Page number button only,
                 columnDefs: [
-                { "type": "repo-size", targets: [2] },
                 { "type": "execution-time",targets:[6]}
-                ]
+                ],
             });
 
             jQuery('#fixed').on('click','.expand',function(){
@@ -115,20 +126,6 @@
                      });
                 }
             })
-
-        jQuery().extend( jQuery().dataTable.ext.type.order, {
-        "repo-size-asc": function (val_1, val_2) {
-        // your sorting code here - or a call to a function
-            console.log("Need to sort Asc")
-        }
-        } );
-
-        jQuery().extend( jQuery().dataTable.ext.type.order, {
-        "repo-size-desc": function (val_1, val_2) {
-        // your sorting code here - or a call to a function
-            console.log("Ned to sort Desc")
-        }
-        } );
 
         // Sorting execution time data in ascending order
         jQuery().extend( jQuery().dataTable.ext.type.order, {
