@@ -2,6 +2,7 @@ package jenkins.plugins.git.maintenance;
 
 import antlr.ANTLRException;
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.TaskListener;
@@ -140,7 +141,7 @@ public class MaintenanceTaskConfiguration extends GlobalConfiguration {
      * @return Empty string if no error, else a msg describing error in cron syntax.
      * @throws ANTLRException during incorrect cron input.
      */
-    public static String checkSanity(String cron) throws ANTLRException {
+    public static String checkSanity(@NonNull String cron) throws ANTLRException {
        try {
            CronTab cronTab = new CronTab(cron.trim());
            String msg = cronTab.checkSanity();
