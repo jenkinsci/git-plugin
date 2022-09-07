@@ -29,8 +29,8 @@ public class CacheRecordTest {
 
     @Test
     public void testSetRepoSize(){
-        record.setRepoSize("5MB");
-        assertEquals("5MB",record.getRepoSize());
+        record.setRepoSize(12343);
+        assertEquals(12343,record.getRepoSize());
     }
 
     @Test
@@ -131,13 +131,13 @@ public class CacheRecordTest {
         record.setExecutionDuration(duration);
         record.setExecutionStatus(true);
         record.setTimeOfExecution(timeOfExecution);
-        record.setRepoSize("5MB");
+        record.setRepoSize(12343);
         CacheRecord copyCacheRecord = new CacheRecord(record);
 
         assertEquals(DurationFormatUtils.formatDuration(duration,"mmm:ss:SSS"),copyCacheRecord.getExecutionDuration());
         assertTrue(record.getExecutionStatus());
         assertEquals(TaskType.GC.getTaskName(),copyCacheRecord.getMaintenanceType());
-        assertEquals("5MB",copyCacheRecord.getRepoSize());
+        assertEquals(12343,copyCacheRecord.getRepoSize());
 
         Date date = new Date(timeOfExecution * 1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");

@@ -226,8 +226,7 @@ public class TaskExecutor implements Runnable {
 
        CacheRecord cacheRecord = new CacheRecord(cacheFile.getName(),taskType.getTaskName());
        long repoSizeInBytes = FileUtils.sizeOfDirectory(cacheFile);
-       String repoSize = FileUtils.byteCountToDisplaySize(repoSizeInBytes); // Converts the bytes to KB,MB,GB
-       cacheRecord.setRepoSize(repoSize);
+       cacheRecord.setRepoSize(repoSizeInBytes);
        cacheRecord.setExecutionStatus(executionStatus);
        if(!executionStatus)
            cacheRecord.setExecutionDuration(-1);

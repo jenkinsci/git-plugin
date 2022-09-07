@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class CacheRecord {
     String repoName;
-    String repoSize;
+    long repoSize;
     String maintenanceType;
     long timeOfExecution;
     boolean executionStatus;
@@ -48,10 +48,10 @@ public class CacheRecord {
         return repoName;
     }
 
-    public String getRepoSize() {
+    public long getRepoSize() {
         return repoSize;
     }
-    public void setRepoSize(String repoSize) {
+    public void setRepoSize(long repoSize) {
         this.repoSize = repoSize;
     }
 
