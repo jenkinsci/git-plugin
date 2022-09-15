@@ -646,7 +646,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                                     continue;
                                 }
                                 if (GitStatus.looselyMatches(uri, remote)) {
-                                    LOGGER.info("Triggering the indexing of " + owner.getFullDisplayName()
+                                    LOGGER.fine("Triggering the indexing of " + owner.getFullDisplayName()
                                             + " as a result of event from " + origin);
                                     triggerIndexing(owner, source);
                                     result.add(new GitStatus.ResponseContributor() {
