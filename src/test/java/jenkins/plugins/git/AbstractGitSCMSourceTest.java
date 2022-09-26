@@ -35,8 +35,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import jenkins.plugins.git.traits.*;
-
+import jenkins.plugins.git.traits.BranchDiscoveryTrait;
+import jenkins.plugins.git.traits.DiscoverOtherRefsTrait;
+import jenkins.plugins.git.traits.IgnoreOnPushNotificationTrait;
+import jenkins.plugins.git.traits.PruneStaleBranchTrait;
+import jenkins.plugins.git.traits.TagDiscoveryTrait;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
@@ -381,13 +384,13 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
         rev = source.fetch(masterHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash.substring(0, 10));
         rev = source.fetch(masterHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash);
@@ -399,34 +402,34 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash.substring(0, 10));
         rev = source.fetch(devHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash);
         rev = source.fetch(v1Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v1Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash.substring(0, 10));
         rev = source.fetch(v1Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v1Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash);
         rev = source.fetch(v2Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash.substring(0, 10));
         rev = source.fetch(v2Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
         String v2Tag = "refs/tags/v2";
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
         rev = source.fetch(v2Tag, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
 
     }
 
