@@ -12,7 +12,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.Action;
+import hudson.model.Actionable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.IgnoreNotifyCommit;
@@ -22,7 +25,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.BuildChooserSetting;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.util.StreamTaskListener;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-
 import jenkins.plugins.git.traits.*;
 
 import jenkins.scm.api.SCMHead;
@@ -363,69 +364,69 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().println("\n=== fetch('master') ===\n");
         SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         listener.getLogger().println("\n=== fetch('dev') ===\n");
         rev = source.fetch("dev", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
         listener.getLogger().println("\n=== fetch('v1') ===\n");
         rev = source.fetch("v1", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision) rev).getHash(), is(v1Hash));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
         listener.getLogger().println("\n=== fetch('v2') ===\n");
         rev = source.fetch("v2", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision) rev).getHash(), is(v2Hash));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
         rev = source.fetch(masterHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash.substring(0, 10));
         rev = source.fetch(masterHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash);
         rev = source.fetch(devHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", devHash.substring(0, 10));
         rev = source.fetch(devHash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(devHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(devHash));
         assertThat(rev.getHead().getName(), is("dev"));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash);
         rev = source.fetch(v1Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v1Hash.substring(0, 10));
         rev = source.fetch(v1Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v1Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v1Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash);
         rev = source.fetch(v2Hash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Hash.substring(0, 10));
         rev = source.fetch(v2Hash.substring(0, 10), listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
 
         String v2Tag = "refs/tags/v2";
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", v2Tag);
         rev = source.fetch(v2Tag, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(v2Hash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(v2Hash));
 
     }
 
@@ -473,7 +474,7 @@ public class AbstractGitSCMSourceTest {
         source.setOwner(owner);
         TaskListener listener = StreamTaskListener.fromStderr();
         Map<String, SCMHead> headByName = new TreeMap<>();
-        for (SCMHead h : source.fetch(listener)) {
+        for (SCMHead h: source.fetch(listener)) {
             headByName.put(h.getName(), h);
         }
         if (duplicatePrimary) {
@@ -483,7 +484,7 @@ public class AbstractGitSCMSourceTest {
         }
         List<Action> actions = source.fetchActions(null, listener);
         GitRemoteHeadRefAction refAction = null;
-        for (Action a : actions) {
+        for (Action a: actions) {
             if (a instanceof GitRemoteHeadRefAction) {
                 refAction = (GitRemoteHeadRefAction) a;
                 break;
@@ -528,7 +529,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v3");
         sampleRepo.git("commit", "--all", "--message=v3"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -566,7 +567,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -593,7 +594,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait()));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -622,7 +623,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -657,7 +658,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v5");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -687,7 +688,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(
                 new BranchDiscoveryTrait(),
@@ -717,7 +718,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("pull-requests/*/from")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -744,7 +745,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         //new RefSpecsSCMSourceTrait("+refs/pull-requests/*/from:refs/remotes/@{remote}/pr/*")
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(),
@@ -755,8 +756,7 @@ public class AbstractGitSCMSourceTest {
     }
 
     private int wsCount;
-
-    private String fileAt(String revision, Run<?, ?> run, SCMSource source, TaskListener listener) throws Exception {
+    private String fileAt(String revision, Run<?,?> run, SCMSource source, TaskListener listener) throws Exception {
         SCMRevision rev = source.fetch(revision, listener, null);
         if (rev == null) {
             return null;
@@ -786,7 +786,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -821,7 +821,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.write("file", "v4");
         sampleRepo.git("commit", "--all", "--message=v4"); // dev
         // SCM.checkout does not permit a null build argument, unfortunately.
-        Run<?, ?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
+        Run<?,?> run = r.buildAndAssertSuccess(r.createFreeStyleProject());
         GitSCMSource source = new GitSCMSource(sampleRepo.toString());
         source.setTraits(Arrays.asList(new BranchDiscoveryTrait(), new TagDiscoveryTrait(), new DiscoverOtherRefsTrait("custom/*")));
         StreamTaskListener listener = StreamTaskListener.fromStderr();
@@ -1055,8 +1055,7 @@ public class AbstractGitSCMSourceTest {
         sampleRepo.git("push", source.getRemote(), "v1.2");
     }
 
-    @Test
-    @Issue("JENKINS-50394")
+    @Test @Issue("JENKINS-50394")
     public void when_commits_added_during_discovery_we_do_not_crash() throws Exception {
         sampleRepo.init();
         sampleRepo.git("checkout", "-b", "dev");
@@ -1074,7 +1073,7 @@ public class AbstractGitSCMSourceTest {
                     hasProperty("name", equalTo("master")),
                     hasProperty("name", equalTo("dev"))
             ));
-        } catch (MissingObjectException me) {
+        } catch(MissingObjectException me) {
             fail("Not supposed to get MissingObjectException");
         } finally {
             System.clearProperty(Git.class.getName() + ".mockClient");
@@ -1126,20 +1125,20 @@ public class AbstractGitSCMSourceTest {
         listener.getLogger().println("\n=== fetch('master') ===\n");
         SCMRevision rev = source.fetch("master", listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         listener.getLogger().println("\n=== fetch('v1') ===\n");
         rev = source.fetch("v1", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision) rev).getHash(), is(v1Hash));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v1Hash));
         listener.getLogger().println("\n=== fetch('v2') ===\n");
         rev = source.fetch("v2", listener, null);
         assertThat(rev, instanceOf(GitTagSCMRevision.class));
-        assertThat(((GitTagSCMRevision) rev).getHash(), is(v2Hash));
+        assertThat(((GitTagSCMRevision)rev).getHash(), is(v2Hash));
 
         listener.getLogger().printf("%n=== fetch('%s') ===%n%n", masterHash);
         rev = source.fetch(masterHash, listener, null);
         assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-        assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(masterHash));
+        assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(masterHash));
         assertThat(rev.getHead().getName(), is("master"));
 
         // Test new functionality and verify that we are able to grab what we expect (full match versus hazy short hash)
@@ -1147,13 +1146,13 @@ public class AbstractGitSCMSourceTest {
             listener.getLogger().printf("%n=== fetch('%s') ===%n%n", newHash);
             rev = source.fetch(newHash, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(newHash));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(newHash));
             assertThat(rev.getHead().getName(), is("dev"));
 
             listener.getLogger().printf("%n=== fetch('%s') short hash ===%n%n", newHash.substring(0, 6));
             rev = source.fetch(newHash.substring(0, 6), listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(newHash));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(newHash));
             assertThat(rev.getHead().getName(), is("dev"));
 
 
@@ -1163,7 +1162,7 @@ public class AbstractGitSCMSourceTest {
             rev = source.fetch("devTag" + lastDevTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
             assertThat(rev.getHead().getName(), is("devTag" + lastDevTag));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(headHash));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(headHash));
 
             String ambiguousTag = hashFirstLetter.get(hashFirstLetter.size() - 1);
             String ambiguousHash = sampleRepo.head();
@@ -1174,7 +1173,7 @@ public class AbstractGitSCMSourceTest {
             rev = source.fetch(ambiguousTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
             assertThat(rev.getHead().getName(), is(ambiguousTag));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(ambiguousHash));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(ambiguousHash));
 
             // Remove ambiguous tag from the repo and thne create a branch with the ambiguous search
             sampleRepo.git("tag", "-d", ambiguousTag);
@@ -1186,7 +1185,7 @@ public class AbstractGitSCMSourceTest {
             rev = source.fetch(ambiguousTag, listener, null);
             assertThat(rev, instanceOf(AbstractGitSCMSource.SCMRevisionImpl.class));
             assertThat(rev.getHead().getName(), is(ambiguousTag));
-            assertThat(((AbstractGitSCMSource.SCMRevisionImpl) rev).getHash(), is(ambiguousBranchHash));
+            assertThat(((AbstractGitSCMSource.SCMRevisionImpl)rev).getHash(), is(ambiguousBranchHash));
         }
     }
 
