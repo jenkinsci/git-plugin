@@ -2,6 +2,7 @@ package jenkins.plugins.git.maintenance;
 
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,6 +81,9 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             for (String cacheEntry : getCacheEntries()) {
                 File cacheDir = getCacheDir(cacheEntry,false);
                 Lock cacheLock = getCacheLock(cacheEntry);
+
+                // skip caches size less than 10 mb
+                if(FileUtils.sizeOfDirectory(cacheDir) < 10000000)continue;
                 LOGGER.log(Level.FINE,"Cache Entry " + cacheEntry);
                 caches.add(new Cache(cacheDir,cacheLock));
             }
