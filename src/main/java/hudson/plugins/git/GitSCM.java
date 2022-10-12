@@ -1145,6 +1145,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                     candidates = Collections.singleton(rpa.toRevision(git));
                 } else {
                     log.println("skipping resolution of commit " + rpa.commit + ", since it originates from another repository");
+                    log.println(rpa);
                 }
             }
         }
