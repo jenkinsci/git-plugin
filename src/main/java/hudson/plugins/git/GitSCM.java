@@ -562,6 +562,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (remoteRepositories == null) {
             return new ArrayList<>();
         }
+        log.println(remoteRepositories);
         return remoteRepositories;
     }
 
@@ -1146,6 +1147,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 } else {
                     log.println("skipping resolution of commit " + rpa.commit + ", since it originates from another repository");
                     log.println(rpa);
+                    log.println(rpa.repoURL);
+                    log.println(rpa.revision);
+                    log.println(rpa.combineCommits);
                 }
             }
         }
