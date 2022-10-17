@@ -226,19 +226,6 @@
       <version>1.7.1</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.github.spotbugs</groupId>
-      <artifactId>spotbugs-annotations</artifactId>
-      <version>4.7.3</version>
-      <optional>true</optional>
-      <exclusions>
-        <!-- prevent inclusion in hpi as a transient dependency -->
-        <exclusion>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>jsr305</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
@@ -314,17 +301,6 @@
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs</artifactId>
-            <version>4.7.3</version>
-          </dependency>
-        </dependencies>
       </plugin>
     </plugins>
   </build>
