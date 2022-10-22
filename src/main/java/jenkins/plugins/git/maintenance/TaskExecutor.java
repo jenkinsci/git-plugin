@@ -167,7 +167,7 @@ public class TaskExecutor implements Runnable {
      */
     List<GitMaintenanceSCM.Cache> getCaches(){
         List<GitMaintenanceSCM.Cache> caches =  GitMaintenanceSCM.getCaches();
-        LOGGER.log(Level.INFO,"Fetched all caches present on Jenkins Controller.");
+        LOGGER.log(Level.FINE,"Fetched all caches present on Jenkins Controller.");
         return caches;
     }
 
