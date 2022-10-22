@@ -61,6 +61,7 @@ public class TaskExecutorTest {
         SCMFileSystem.of(j.createFreeStyleProject(), new GitSCM(GitSCM.createRepoList(sampleRepo1.toString(), null), Collections.singletonList(new BranchSpec("*/bug/JENKINS-42817")), null, null, Collections.emptyList()));
 
     }
+
     @Parameterized.Parameters(name = "{0}")
     public static Collection permuteMaintenanceTasks(){
 

@@ -73,8 +73,8 @@ public class GitMaintenanceSCM extends AbstractGitSCMSource {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
 
             List<Cache> caches = new ArrayList<>();
-            if(jenkins == null){
-                LOGGER.log(Level.WARNING,"Internal error. Couldn't get instance of Jenkins.");
+            if (jenkins == null){
+                LOGGER.log(Level.WARNING,"Internal error. Couldn't get Jenkins instance.");
                 return caches;
             }
 
