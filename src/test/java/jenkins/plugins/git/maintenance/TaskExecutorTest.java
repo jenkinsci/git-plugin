@@ -78,7 +78,6 @@ public class TaskExecutorTest {
     @Test
     public void testGitClient(){
        // Get directory of a single cache.
-        System.out.println(taskExecutor.getCaches());
         assertTrue(taskExecutor.getCaches().size() > 0);
         GitMaintenanceSCM.Cache cache = taskExecutor.getCaches().get(0);
         File cacheFile = cache.getCacheFile();

@@ -85,7 +85,6 @@ public class GitMaintenanceSCMTest {
 //    @Test
 //    public void testNoCachesExistsOnJenkinsController(){
 //        List<GitMaintenanceSCM.Cache> caches = GitMaintenanceSCM.getCaches();
-////        System.out.println(caches);
 //        assertEquals(0,caches.size());
 //    }
 
