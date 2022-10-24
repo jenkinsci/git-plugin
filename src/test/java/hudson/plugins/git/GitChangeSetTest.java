@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.MockedStatic;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.core.AuthenticationException;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -19,12 +18,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class GitChangeSetTest {
 
