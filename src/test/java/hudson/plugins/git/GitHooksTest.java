@@ -1,7 +1,6 @@
 package hudson.plugins.git;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
 import hudson.tools.ToolProperty;
@@ -40,7 +39,6 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
 
 public class GitHooksTest extends AbstractGitTestCase {
 
@@ -50,6 +48,10 @@ public class GitHooksTest extends AbstractGitTestCase {
     public static BuildWatcher watcher = new BuildWatcher();
     @ClassRule
     public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
+    private static final String JENKINS_URL = System.getenv("JENKINS_URL") != null
+            ? System.getenv("JENKINS_URL")
+            : "http://localhost:8080/";
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
@@ -77,7 +79,13 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineFromScm() throws Exception {
-        assumeNotJenkinsCiWindows();
+        if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
+            /*
+             * The test works on Windows, but for unknown reason does not work
+             * on the Windows agents of ci.jenkins.io.
+             */
+            return;
+        }
         GitHooksConfiguration.get().setAllowedOnController(true);
         GitHooksConfiguration.get().setAllowedOnAgents(true);
         final DumbSlave agent = rule.createOnlineSlave(Label.get("somewhere"));
@@ -194,7 +202,13 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineCheckoutController() throws Exception {
-        assumeNotJenkinsCiWindows();
+        if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
+            /*
+             * The test works on Windows, but for unknown reason does not work
+             * on the Windows agents of ci.jenkins.io.
+             */
+            return;
+        }
 
         final WorkflowJob job = setupAndRunPipelineCheckout("master");
         WorkflowRun run;
@@ -219,7 +233,13 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @Test
     public void testPipelineCheckoutAgent() throws Exception {
-        assumeNotJenkinsCiWindows();
+        if (isWindows() && JENKINS_URL.contains("ci.jenkins.io")) {
+            /*
+             * The test works on Windows, but for unknown reason does not work
+             * on the Windows agents of ci.jenkins.io.
+             */
+            return;
+        }
 
         rule.createOnlineSlave(Label.get("belsebob"));
         final WorkflowJob job = setupAndRunPipelineCheckout("belsebob");
@@ -289,14 +309,8 @@ public class GitHooksTest extends AbstractGitTestCase {
         return String.join("\n", lines);
     }
 
-    /**
-     * Assume that it is not running on a ci.jenkins.io Windows agent.
-     *
-     * The tests are tested and confirmed working on Windows,
-     * but for unknown reason is not working on the Win agents on ci.jenkins.io.
-     */
-    private void assumeNotJenkinsCiWindows() {
-        final String jenkinsUrl = System.getenv("JENKINS_URL");
-        assumeFalse(Functions.isWindows() && jenkinsUrl.contains("ci.jenkins.io"));
+    /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
+    private boolean isWindows() {
+        return java.io.File.pathSeparatorChar==';';
     }
 }
