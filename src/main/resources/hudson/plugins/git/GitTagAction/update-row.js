@@ -3,7 +3,7 @@ function updateRow(e, i) {
     $("name"+i).disabled = !e.checked;
 }
 
-// Adding an onclick listener to the link in UI
+// Adding an onchange listener to the tag checkboxes in UI
 // DEV MEMO:
 // We are doing it after DOM content is loaded as a good practice to ensure we are not slowing down
 // the page rendering. In that particular situation the addition of the onclick handler shouldn't
