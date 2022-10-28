@@ -30,8 +30,6 @@ THE SOFTWARE.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
 
-  <st:adjunct includes="hudson.plugins.git.GitTagAction.update-row" />
-
   <d:taglib uri="local">
     <d:tag name="listTags">
       <ul>
@@ -80,6 +78,9 @@ THE SOFTWARE.
               <div>${%Branch}</div>
               <div>${%Tag}</div>
             </div>
+
+            <st:adjunct includes="hudson.plugins.git.GitTagAction.update-row" />
+
             <j:forEach var="m" items="${tags.keySet()}" varStatus="loop">
               <div class="tr">
                 <div>
