@@ -107,15 +107,15 @@ public class GitHooksTest extends AbstractGitTestCase {
         WorkflowRun run = rule.buildAndAssertSuccess(job);
         rule.assertLogContains("Hello Pipeline", run);
 
-        final FilePath workspace = agent.getWorkspaceFor(job);
-        assertNotNull(workspace);
+        final FilePath jobWorkspace = agent.getWorkspaceFor(job);
+        assertNotNull(jobWorkspace);
         TemporaryFolder tf = new TemporaryFolder();
         tf.create();
         final File postCheckoutOutput1 = new File(tf.newFolder(), "svn-git-fun-post-checkout-1");
         final File postCheckoutOutput2 = new File(tf.newFolder(), "svn-git-fun-post-checkout-2");
 
         //Add hook on agent workspace
-        FilePath hook = workspace.child(".git/hooks/post-checkout");
+        FilePath hook = jobWorkspace.child(".git/hooks/post-checkout");
         createHookScriptAt(postCheckoutOutput1, hook);
 
         FilePath scriptWorkspace = rule.jenkins.getWorkspaceFor(job).withSuffix("@script");
