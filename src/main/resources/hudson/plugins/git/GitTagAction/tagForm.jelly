@@ -109,13 +109,6 @@ THE SOFTWARE.
             </div>
           </div>
           <f:submit value="${%Tag}" />
-          <script>
-            <!-- update the visual feedback depending on the checkbox state -->
-            function updateRow(e,i) {
-              e.parentNode.parentNode.style.color = e.checked ? "inherit" : "grey";
-              $("name"+i).disabled = !e.checked;
-            }
-          </script>
         </f:form>
       </j:if>
     </l:main-panel>
