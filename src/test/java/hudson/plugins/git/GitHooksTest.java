@@ -5,7 +5,6 @@ import hudson.model.Label;
 import hudson.slaves.DumbSlave;
 import hudson.tools.ToolProperty;
 import jenkins.plugins.git.CliGitCommand;
-import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitHooksConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -46,8 +45,6 @@ public class GitHooksTest extends AbstractGitTestCase {
     public LoggerRule lr = new LoggerRule();
     @ClassRule
     public static BuildWatcher watcher = new BuildWatcher();
-    @ClassRule
-    public static GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     private static final String JENKINS_URL = System.getenv("JENKINS_URL") != null
             ? System.getenv("JENKINS_URL")
