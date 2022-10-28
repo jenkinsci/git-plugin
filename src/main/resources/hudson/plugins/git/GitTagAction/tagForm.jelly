@@ -29,6 +29,7 @@ THE SOFTWARE.
   This belongs to a build view.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
+
   <d:taglib uri="local">
     <d:tag name="listTags">
       <ul>
@@ -77,15 +78,22 @@ THE SOFTWARE.
               <div>${%Branch}</div>
               <div>${%Tag}</div>
             </div>
+
+            <st:adjunct includes="hudson.plugins.git.GitTagAction.update-row" />
+
             <j:forEach var="m" items="${tags.keySet()}" varStatus="loop">
               <div class="tr">
-                <div><j:if test="${tags.size()!=1}">
-                  <input type="checkbox" name="tag${loop.index}" checked="true"
-                         id="tag${loop.index}" onchange="updateRow(this,${loop.index})" />
-                </j:if></div>
-                <div><label for="tag${loop.index}">
-                  ${m}
-                </label></div>
+                <div>
+                  <j:if test="${tags.size()!=1}">
+                    <input type="checkbox" name="tag${loop.index}" checked="true"
+                           id="tag${loop.index}" />
+                  </j:if>
+                </div>
+                <div>
+                  <label for="tag${loop.index}">
+                    ${m}
+                  </label>
+                </div>
                 <div class="td">
                   <input type="text" name="name${loop.index}"
                          value="${it.makeTagURL(m)}" style="width:100%" id="name${loop.index}" />
@@ -102,13 +110,6 @@ THE SOFTWARE.
             </div>
           </div>
           <f:submit value="${%Tag}" />
-          <script>
-            <!-- update the visual feedback depending on the checkbox state -->
-            function updateRow(e,i) {
-              e.parentNode.parentNode.style.color = e.checked ? "inherit" : "grey";
-              $("name"+i).disabled = !e.checked;
-            }
-          </script>
         </f:form>
       </j:if>
     </l:main-panel>
