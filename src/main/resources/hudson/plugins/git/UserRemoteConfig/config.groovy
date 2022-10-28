@@ -26,8 +26,4 @@ f.advanced {
     }
 }
 
-f.entry {
-    div(class: "show-if-not-only") {
-        f.repeatableDeleteButton()
-    }
-}
+f.repeatableDeleteButton()
