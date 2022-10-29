@@ -61,7 +61,7 @@
     <revision>4.12.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.version>2.332.4</jenkins.version>
+    <jenkins.version>2.346.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
     <linkXRef>false</linkXRef>
@@ -75,8 +75,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.332.x</artifactId>
-        <version>1643.v1cffef51df73</version>
+        <artifactId>bom-2.346.x</artifactId>
+        <version>1654.vcb_69d035fa_20</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -217,7 +217,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>pipeline-groovy-lib</artifactId>
-      <version>612.v84da_9c54906d</version> <!-- TODO until in BOM -->
       <scope>test</scope>
     </dependency>
     <dependency>
