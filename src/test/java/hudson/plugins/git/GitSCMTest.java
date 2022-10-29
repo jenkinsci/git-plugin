@@ -30,7 +30,6 @@ import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 import hudson.tools.ToolLocationNodeProperty;
 import hudson.triggers.SCMTrigger;
 import hudson.util.LogTaskListener;
@@ -146,6 +145,10 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @Test
     public void testAddGitTagAction() throws Exception {
+        /* Low value test of low value feature, never run on Windows, run 50% on others */
+        if (isWindows() || random.nextBoolean()) {
+            return;
+        }
         FreeStyleProject project = setupSimpleProject("master");
         List<UserRemoteConfig> remoteConfigs = GitSCM.createRepoList("https://github.com/jenkinsci/git-plugin", "github");
         project.setScm(new GitSCM(remoteConfigs,
@@ -1294,31 +1297,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
     }
 
-    @Test
-    public void testBasicWithAgent() throws Exception {
-        FreeStyleProject project = setupSimpleProject("master");
-        project.setAssignedLabel(rule.createSlave().getSelfLabel());
-
-        // create initial commit and then run the build against it:
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, Result.SUCCESS, commitFile1);
-
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-
-        final String commitFile2 = "commitFile2";
-        commit(commitFile2, janeDoe, "Commit number 2");
-        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
-        //... and build it...
-        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
-        final Set<User> culprits = build2.getCulprits();
-        assertEquals("The build should have only one culprit", 1, culprits.size());
-        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
-        assertTrue(build2.getWorkspace().child(commitFile2).exists());
-        rule.assertBuildStatusSuccess(build2);
-        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
-    }
-
     @Issue("HUDSON-7547")
     @Test
     public void testBasicWithAgentNoExecutorsOnMaster() throws Exception {
@@ -1446,20 +1424,6 @@ public class GitSCMTest extends AbstractGitTestCase {
 
         rule.assertLogNotContains(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build2);
         rule.waitForMessage(checkoutString(project, GitSCM.GIT_PREVIOUS_SUCCESSFUL_COMMIT), build1);
-    }
-
-    @Issue("HUDSON-7411")
-    @Test
-    public void testNodeEnvVarsAvailable() throws Exception {
-        FreeStyleProject project = setupSimpleProject("master");
-        DumbSlave agent = rule.createSlave();
-        setVariables(agent, new Entry("TESTKEY", "agent value"));
-        project.setAssignedLabel(agent.getSelfLabel());
-        final String commitFile1 = "commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        build(project, Result.SUCCESS, commitFile1);
-
-        assertEquals("agent value", getEnvVars(project).get("TESTKEY"));
     }
 
     @Test
@@ -2315,48 +2279,6 @@ public class GitSCMTest extends AbstractGitTestCase {
     }
 
     @Test
-    public void testInitSparseCheckout() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
-        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
-
-        // run build first to create workspace
-        final String commitFile1 = "toto/commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        final String commitFile2 = "titi/commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-
-        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
-        assertTrue(build1.getWorkspace().child("toto").exists());
-        assertTrue(build1.getWorkspace().child(commitFile1).exists());
-        assertFalse(build1.getWorkspace().child("titi").exists());
-        assertFalse(build1.getWorkspace().child(commitFile2).exists());
-    }
-
-    @Test
-    public void testInitSparseCheckoutBis() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
-        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
-
-        // run build first to create workspace
-        final String commitFile1 = "toto/commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        final String commitFile2 = "titi/commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-
-        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
-        assertTrue(build1.getWorkspace().child("titi").exists());
-        assertTrue(build1.getWorkspace().child(commitFile2).exists());
-        assertFalse(build1.getWorkspace().child("toto").exists());
-        assertFalse(build1.getWorkspace().child(commitFile1).exists());
-    }
-
-    @Test
     public void testSparseCheckoutAfterNormalCheckout() throws Exception {
         if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
             /* Older git versions have unexpected behaviors with sparse checkout */
@@ -2413,28 +2335,6 @@ public class GitSCMTest extends AbstractGitTestCase {
         assertTrue(build1.getWorkspace().child("toto").exists());
         assertTrue(build1.getWorkspace().child(commitFile1).exists());
 
-    }
-
-    @Test
-    public void testInitSparseCheckoutOverAgent() throws Exception {
-        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
-            /* Older git versions have unexpected behaviors with sparse checkout */
-            return;
-        }
-        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
-        project.setAssignedLabel(rule.createSlave().getSelfLabel());
-
-        // run build first to create workspace
-        final String commitFile1 = "toto/commitFile1";
-        commit(commitFile1, johnDoe, "Commit number 1");
-        final String commitFile2 = "titi/commitFile2";
-        commit(commitFile2, johnDoe, "Commit number 2");
-
-        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
-        assertTrue(build1.getWorkspace().child("titi").exists());
-        assertTrue(build1.getWorkspace().child(commitFile2).exists());
-        assertFalse(build1.getWorkspace().child("toto").exists());
-        assertFalse(build1.getWorkspace().child(commitFile1).exists());
     }
 
     @Test

@@ -9,21 +9,25 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.User;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.browser.GithubWeb;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.ChangelogToBranch;
 import hudson.plugins.git.extensions.impl.LocalBranch;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
+import hudson.plugins.git.extensions.impl.SparseCheckoutPath;
 import hudson.plugins.git.util.BuildChooserContext;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.security.MasterToSlaveCallable;
@@ -315,6 +319,109 @@ public class GitSCMSlowTest extends AbstractGitTestCase {
         commit(commitFile2, johnDoe, "Commit number 2");
         assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
         final MatrixBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        assertTrue(build2.getWorkspace().child(commitFile2).exists());
+        rule.assertBuildStatusSuccess(build2);
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+    }
+
+    @Test
+    public void testInitSparseCheckout() throws Exception {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("toto")));
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("toto").exists());
+        assertTrue(build1.getWorkspace().child(commitFile1).exists());
+        assertFalse(build1.getWorkspace().child("titi").exists());
+        assertFalse(build1.getWorkspace().child(commitFile2).exists());
+    }
+
+    @Test
+    public void testInitSparseCheckoutBis() throws Exception {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertFalse(build1.getWorkspace().child("toto").exists());
+        assertFalse(build1.getWorkspace().child(commitFile1).exists());
+    }
+
+    @Test
+    public void testInitSparseCheckoutOverAgent() throws Exception {
+        if (!sampleRepo.gitVersionAtLeast(1, 7, 10)) {
+            /* Older git versions have unexpected behaviors with sparse checkout */
+            return;
+        }
+        FreeStyleProject project = setupProject("master", Collections.singletonList(new SparseCheckoutPath("titi")));
+        project.setAssignedLabel(rule.createSlave().getSelfLabel());
+
+        // run build first to create workspace
+        final String commitFile1 = "toto/commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        final String commitFile2 = "titi/commitFile2";
+        commit(commitFile2, johnDoe, "Commit number 2");
+
+        final FreeStyleBuild build1 = build(project, Result.SUCCESS);
+        assertTrue(build1.getWorkspace().child("titi").exists());
+        assertTrue(build1.getWorkspace().child(commitFile2).exists());
+        assertFalse(build1.getWorkspace().child("toto").exists());
+        assertFalse(build1.getWorkspace().child(commitFile1).exists());
+    }
+
+    @Issue("HUDSON-7411")
+    @Test
+    public void testNodeEnvVarsAvailable() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        DumbSlave agent = rule.createSlave();
+        setVariables(agent, new EnvironmentVariablesNodeProperty.Entry("TESTKEY", "agent value"));
+        project.setAssignedLabel(agent.getSelfLabel());
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertEquals("agent value", getEnvVars(project).get("TESTKEY"));
+    }
+
+    @Test
+    public void testBasicWithAgent() throws Exception {
+        FreeStyleProject project = setupSimpleProject("master");
+        project.setAssignedLabel(rule.createSlave().getSelfLabel());
+
+        // create initial commit and then run the build against it:
+        final String commitFile1 = "commitFile1";
+        commit(commitFile1, johnDoe, "Commit number 1");
+        build(project, Result.SUCCESS, commitFile1);
+
+        assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
+
+        final String commitFile2 = "commitFile2";
+        commit(commitFile2, janeDoe, "Commit number 2");
+        assertTrue("scm polling did not detect commit2 change", project.poll(listener).hasChanges());
+        //... and build it...
+        final FreeStyleBuild build2 = build(project, Result.SUCCESS, commitFile2);
+        final Set<User> culprits = build2.getCulprits();
+        assertEquals("The build should have only one culprit", 1, culprits.size());
+        assertEquals("", janeDoe.getName(), culprits.iterator().next().getFullName());
         assertTrue(build2.getWorkspace().child(commitFile2).exists());
         rule.assertBuildStatusSuccess(build2);
         assertFalse("scm polling should not detect any more changes after build", project.poll(listener).hasChanges());
