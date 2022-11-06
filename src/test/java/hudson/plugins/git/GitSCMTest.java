@@ -42,6 +42,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -110,6 +111,7 @@ public class GitSCMTest extends AbstractGitTestCase {
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }

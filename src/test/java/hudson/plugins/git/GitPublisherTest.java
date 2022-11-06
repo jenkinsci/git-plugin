@@ -42,6 +42,7 @@ import hudson.tasks.Builder;
 import hudson.util.StreamTaskListener;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.JGitTool;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jvnet.hudson.test.Issue;
@@ -86,6 +87,7 @@ public class GitPublisherTest extends AbstractGitProject {
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }

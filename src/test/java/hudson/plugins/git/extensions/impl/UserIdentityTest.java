@@ -7,6 +7,7 @@ import hudson.model.Result;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
+import hudson.plugins.git.util.GitUtilsTest;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -34,7 +35,7 @@ public class UserIdentityTest extends GitSCMExtensionTest  {
     @Test
     public void testUserIdentity() throws Exception {
         repo = new TestGitRepo("repo", tmp.newFolder(), listener);
-        git = Git.with(listener, new EnvVars()).in(repo.gitDir).getClient();
+        git = Git.with(listener, GitUtilsTest.getConfigNoSystemEnvsVars()).in(repo.gitDir).getClient();
 
         FreeStyleProject projectWithMaster = setupBasicProject(repo);
         git.commit("First commit");

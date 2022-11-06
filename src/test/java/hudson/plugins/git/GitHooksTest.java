@@ -7,6 +7,7 @@ import hudson.tools.ToolProperty;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitHooksConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -52,6 +53,7 @@ public class GitHooksTest extends AbstractGitTestCase {
 
     @BeforeClass
     public static void setGitDefaults() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         CliGitCommand gitCmd = new CliGitCommand(null);
         gitCmd.setDefaults();
     }

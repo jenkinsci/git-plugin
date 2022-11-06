@@ -40,6 +40,7 @@ import java.util.List;
 import jenkins.MasterToSlaveFileCallable;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.JGitTool;
@@ -79,6 +80,7 @@ public abstract class AbstractGitTestCase {
 
     @Before
     public void setUp() throws Exception {
+        SystemReader.getInstance().getUserConfig().clear();
         listener = StreamTaskListener.fromStderr();
 
         testRepo = new TestGitRepo("unnamed", sampleRepo.getRoot(), listener);

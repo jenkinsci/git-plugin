@@ -6,6 +6,7 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.plugins.git.util.GitUtilsTest;
 import hudson.tasks.Mailer;
 
 import java.io.File;
@@ -34,9 +35,9 @@ public class TestGitRepo {
     public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
-		
-		EnvVars envVars = new EnvVars();
-		
+
+        EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
+
 		gitDir = tmpDir;
 		User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
 		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
