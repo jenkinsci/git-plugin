@@ -296,7 +296,6 @@
     </plugins>
   </build>
 
-
   <profiles>
     <profile>
       <id>continuous-integration</id>

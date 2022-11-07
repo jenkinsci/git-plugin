@@ -26,6 +26,7 @@ package jenkins.plugins.git;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.plugins.git.util.GitUtilsTest;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.StreamTaskListener;
 import hudson.plugins.git.GitException;
@@ -59,11 +60,15 @@ public class CliGitCommand {
     private ArgumentListBuilder args;
 
     public CliGitCommand(GitClient client, String... arguments) {
+        this(client, GitUtilsTest.getConfigNoSystemEnvsVars(), arguments);
+    }
+
+    public CliGitCommand(GitClient client, EnvVars envVars, String... arguments) {
         args = new ArgumentListBuilder("git");
         args.add(arguments);
         listener = StreamTaskListener.NULL;
         launcher = new Launcher.LocalLauncher(listener);
-        env = new EnvVars();
+        env = envVars;
         if (client != null) {
             try (@SuppressWarnings("deprecation") // Local repository reference
                  Repository repo = client.getRepository()) {
@@ -149,4 +154,16 @@ public class CliGitCommand {
 	    setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
 	}
     }
+
+    /**
+     * This will add env value to the process running the command line
+     * @param key env var name
+     * @param value env var value
+     * @return the current {@link CliGitCommand}
+     */
+    public CliGitCommand env(String key, String value) {
+        env.put(key, value);
+        return this;
+    }
+
 }

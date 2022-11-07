@@ -87,6 +87,7 @@ public final class GitSampleRepoRule extends AbstractSampleDVCSRepoRule {
         git("config", "user.name", "Git SampleRepoRule");
         git("config", "user.email", "gits@mplereporule");
         git("config", "init.defaultbranch", "master");
+        git("config", "commit.gpgsign", "false");
         git("commit", "--message=init");
     }
 
