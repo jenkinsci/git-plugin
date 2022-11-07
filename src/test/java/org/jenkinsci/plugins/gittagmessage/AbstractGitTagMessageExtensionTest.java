@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.gittagmessage;
 import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.Run;
-import hudson.plugins.git.GitChangeSetTruncateTest;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtilsTest;

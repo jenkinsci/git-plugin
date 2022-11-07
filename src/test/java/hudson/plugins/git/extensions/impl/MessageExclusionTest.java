@@ -4,7 +4,6 @@ import hudson.model.*;
 import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
-import org.eclipse.jgit.util.SystemReader;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

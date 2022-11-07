@@ -11,7 +11,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.util.BuildData;
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.junit.Test;
 

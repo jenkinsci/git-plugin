@@ -17,7 +17,6 @@ import hudson.plugins.git.util.GitUtilsTest;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 
-import hudson.EnvVars;
 import hudson.model.TaskListener;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;

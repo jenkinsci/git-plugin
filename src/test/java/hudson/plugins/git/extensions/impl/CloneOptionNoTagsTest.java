@@ -12,7 +12,6 @@ import hudson.plugins.git.TestGitRepo;
 import hudson.plugins.git.extensions.GitSCMExtensionTest;
 import hudson.plugins.git.extensions.GitSCMExtension;
 
-import org.eclipse.jgit.util.SystemReader;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.Test;
