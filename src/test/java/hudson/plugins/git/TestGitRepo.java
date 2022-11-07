@@ -35,9 +35,9 @@ public class TestGitRepo {
     public TestGitRepo(String name, File tmpDir, TaskListener listener) throws IOException, InterruptedException {
 		this.name = name;
 		this.listener = listener;
-
-        EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
-
+		
+		EnvVars envVars = GitUtilsTest.getConfigNoSystemEnvsVars();
+		
 		gitDir = tmpDir;
 		User john = User.getOrCreateByIdOrFullName(johnDoe.getName());
 		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
