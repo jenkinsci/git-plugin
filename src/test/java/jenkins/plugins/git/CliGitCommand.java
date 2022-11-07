@@ -150,9 +150,9 @@ public class CliGitCommand {
     public void setDefaults() throws Exception {
         if (System.getenv("JENKINS_URL") != null && System.getenv("BUILD_NUMBER") != null) {
             /* We're in a Jenkins agent environment */
-	        setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
-	        setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
-	    }
+	    setConfigIfEmpty("user.name", "Name From Git-Plugin-Test");
+	    setConfigIfEmpty("user.email", "email.from.git.plugin.test@example.com");
+	}
     }
 
     /**
