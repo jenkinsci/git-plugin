@@ -5,6 +5,7 @@ import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.TestGitRepo;
 import hudson.util.StreamTaskListener;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -35,6 +36,7 @@ public abstract class GitSCMExtensionTest {
 
 	@Before
 	public void setUp() throws Exception {
+		SystemReader.getInstance().getUserConfig().clear();
 		listener = StreamTaskListener.fromStderr();
 		before();
 	}

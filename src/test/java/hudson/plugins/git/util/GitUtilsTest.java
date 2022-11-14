@@ -360,4 +360,14 @@ public class GitUtilsTest {
         Set<String> actualNames = getActualNames(allRevisions);
         assertThat(actualNames, is(expectedNames));
     }
+
+    /**
+     *
+     * @return EnvVars including GIT_CONFIG_NOSYSTEM set to
+     */
+    public static EnvVars getConfigNoSystemEnvsVars() {
+        EnvVars envVars = new EnvVars();
+        envVars.put("GIT_CONFIG_NOSYSTEM", "1");
+        return envVars;
+    }
 }

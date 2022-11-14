@@ -1,3 +1,16 @@
+/**
+* Registering the onclick handler on all the "Revoke" buttons for API Token.
+*/
+Behaviour.specify(".api-token-revoke-button", 'ApiTokenPropertyConfiguration', 0, function(button) {
+    // DEV MEMO:
+    // While un-inlining the onclick handler, we are trying to avoid modifying the existing source code and functions.
+    // In order to keep consistency with the existing code, we share the api-token-revoke-button with the revokeApiToken method
+    // which is then navigating the DOM in order to retrieve a the token to revoke.
+    // While this could be done setting additional data on the button itself and retrieving it without DOM navigation,
+    // this would need to be done in another contribution.
+    button.onclick = (_) => revokeApiToken(button);
+})
+
 function revokeApiToken(anchorRevoke) {
     const repeatedChunk = anchorRevoke.up('.repeated-chunk');
     const apiTokenList = repeatedChunk.up('.api-token-list');
@@ -19,6 +32,19 @@ function revokeApiToken(anchorRevoke) {
 
     return false;
 }
+
+/**
+* Registering the onclick handler on all the "Generate" buttons for API Token.
+*/
+Behaviour.specify(".api-token-save-button", 'ApiTokenPropertyConfiguration', 0, function(buttonContainer) {
+    // DEV MEMO:
+    // While un-inlining the onclick handler, we are trying to avoid modifying the existing source code and functions.
+    // In order to keep consistency with the existing code, we add our onclick handler on the button element which is contained in the
+    // api-token-save-button that we identify. While this could be refactored to directly identify the button, this would need to be done in an other
+    // contribution.
+    const button = buttonContainer.getElementsByTagName('button')[0];
+    button.onclick = (_) => saveApiToken(button);
+})
 
 function saveApiToken(button){
     if (button.hasClassName('request-pending')) {
