@@ -101,7 +101,6 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <version>621.vda_a_b_055e58f7</version>  <!-- TODO until in BOM -->
       <artifactId>scm-api</artifactId>
     </dependency>
     <dependency>
@@ -184,7 +183,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>621.vda_a_b_055e58f7</version>  <!-- TODO until in BOM -->
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
