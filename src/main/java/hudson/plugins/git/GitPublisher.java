@@ -35,8 +35,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 public class GitPublisher extends Recorder implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -57,7 +55,6 @@ public class GitPublisher extends Recorder implements Serializable {
     private List<NoteToPush> notesToPush;
     
     @DataBoundConstructor
-    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitPublisher(List<TagToPush> tagsToPush,
                         List<BranchToPush> branchesToPush,
                         List<NoteToPush> notesToPush,
@@ -106,7 +103,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return !notesToPush.isEmpty();
     }
     
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<TagToPush> getTagsToPush() {
         if (tagsToPush == null) {
             tagsToPush = new ArrayList<>();
@@ -115,7 +111,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return tagsToPush;
     }
 
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<BranchToPush> getBranchesToPush() {
         if (branchesToPush == null) {
             branchesToPush = new ArrayList<>();
@@ -124,7 +119,6 @@ public class GitPublisher extends Recorder implements Serializable {
         return branchesToPush;
     }
     
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<NoteToPush> getNotesToPush() {
         if (notesToPush == null) {
             notesToPush = new ArrayList<>();
