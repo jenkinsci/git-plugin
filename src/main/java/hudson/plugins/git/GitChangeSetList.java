@@ -9,8 +9,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * List of changeset that went into a particular build.
  * @author Nigel Magnay
@@ -34,7 +32,6 @@ public class GitChangeSetList extends ChangeLogSet<GitChangeSet> {
         return changeSets.iterator();
     }
 
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public List<GitChangeSet> getLogs() {
         return changeSets;
     }

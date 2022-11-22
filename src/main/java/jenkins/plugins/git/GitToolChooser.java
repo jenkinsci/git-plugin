@@ -1,7 +1,6 @@
 package jenkins.plugins.git;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -62,7 +61,6 @@ public class GitToolChooser {
      * @throws IOException on error
      * @throws InterruptedException on error
      */
-    @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
     public GitToolChooser(String remoteName, Item projectContext, String credentialsId,
                           GitTool gitExe, Node n, TaskListener listener, Boolean useJGit) throws IOException, InterruptedException {
         boolean useCache = false;

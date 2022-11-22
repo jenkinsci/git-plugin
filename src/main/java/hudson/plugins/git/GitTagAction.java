@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /**
  * @author Nicolas de Loof
  */
@@ -190,7 +188,6 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
     public final class TagWorkerThread extends TaskThread {
         private final Map<String, String> tagSet;
 
-        @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification="Low risk")
         public TagWorkerThread(Map<String, String> tagSet,String ignoredComment) {
             super(GitTagAction.this, ListenerAndText.forMemory(null));
             this.tagSet = tagSet;
