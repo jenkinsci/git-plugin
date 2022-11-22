@@ -16,7 +16,6 @@ import org.springframework.security.core.AuthenticationException;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -371,13 +370,11 @@ public class GitChangeSet extends ChangeLogSet.Entry {
      *      can be empty but never null.
      */
     @Exported
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public Collection<Path> getPaths() {
         return paths;
     }
 
     @Override
-    @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
     public Collection<Path> getAffectedFiles() {
         return this.paths;
     }
@@ -669,7 +666,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return path;
         }
 
-        @SuppressFBWarnings(value="EI_EXPOSE_REP", justification="Low risk")
         public GitChangeSet getChangeSet() {
             return changeSet;
         }
