@@ -324,6 +324,12 @@ public class GitSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev)
+                throws IOException, InterruptedException {
+            return build(owner, scm, rev, null);
+        }
+
+        @Override
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev,
                                    @CheckForNull Run<?,?> _build)
                 throws IOException, InterruptedException {
