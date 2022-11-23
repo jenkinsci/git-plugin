@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>git</artifactId>
-  <version>4.14.0</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
@@ -58,7 +58,7 @@
   </scm>
 
   <properties>
-    <revision>4.13.1</revision>
+    <revision>4.14.1</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.346.3</jenkins.version>
