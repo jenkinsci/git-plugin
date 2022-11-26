@@ -308,7 +308,7 @@ public class GitSCMFileSystem extends SCMFileSystem {
                 }
 
                 String headName;
-                if (rev != null) {
+                if (rev != null && env != null) {
                     headName = env.expand(rev.getHead().getName());
                 } else {
                     if (branchSpecExpandedName.startsWith(prefix)) {

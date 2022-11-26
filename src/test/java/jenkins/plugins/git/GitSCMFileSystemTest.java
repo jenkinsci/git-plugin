@@ -462,6 +462,21 @@ public class GitSCMFileSystemTest {
         assertEquals(Constants.R_HEADS, result6.prefix);
     }
 
+    /* GitSCMFileSystem in git plugin 4.14.0 reported a null pointer
+     * exception when the rev was non-null and the env was null. */
+    @Issue("JENKINS-70158")
+    @Test
+    public void null_pointer_exception() throws Exception {
+        File gitDir = new File(".");
+        GitClient client = Git.with(TaskListener.NULL, new EnvVars()).in(gitDir).using("git").getClient();
+        ObjectId git260 = client.revParse(GIT_2_6_0_TAG);
+        AbstractGitSCMSource.SCMRevisionImpl rev260 =
+                new AbstractGitSCMSource.SCMRevisionImpl(new SCMHead("origin"), git260.getName());
+        GitSCMFileSystem.BuilderImpl.HeadNameResult result1 = GitSCMFileSystem.BuilderImpl.HeadNameResult.calculate(new BranchSpec("master-f"), rev260, null);
+        assertEquals("master-f", result1.headName);
+        assertEquals(Constants.R_HEADS, result1.prefix);
+    }
+
     /** inline ${@link hudson.Functions#isWindows()} to prevent a transient remote classloader issue */
     private boolean isWindows() {
         return java.io.File.pathSeparatorChar==';';
