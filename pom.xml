@@ -63,10 +63,12 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.346.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
+    <!-- Jenkins.MANAGE is still in Beta -->
     <useBeta>true</useBeta>
+    <!-- Do not run extra reporting for checkstyle or pmd -->
+    <!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <linkXRef>false</linkXRef>
     <spotbugs.effort>Max</spotbugs.effort>
-    <spotbugs.failOnError>true</spotbugs.failOnError>
     <spotbugs.threshold>Medium</spotbugs.threshold>
   </properties>
 
