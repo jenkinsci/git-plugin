@@ -13,7 +13,7 @@
   <packaging>hpi</packaging>
   <name>Git plugin</name>
   <description>Integrates Jenkins with Git SCM</description>
-  <url>https://github.com/jenkinsci/git-plugin/blob/master/README.adoc</url>
+  <url>https://github.com/${gitHubRepo}</url>
   <inceptionYear>2007</inceptionYear>
 
   <licenses>
