@@ -66,8 +66,7 @@ Steps to test a pull request build are:
 
 . *Find the pull request on link:https://github.com/jenkinsci/git-plugin/pulls[GitHub]* - for example, link:https://github.com/jenkinsci/git-plugin/pull/676[pull request 676]
 . *Find the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/view/change-requests/[ci.jenkins.io] artifacts for that pull request* from the link to the link:https://ci.jenkins.io/job/Plugins/job/git-plugin/job/PR-676/lastSuccessfulBuild/[artifacts in the Jenkins job] in "*Show all checks*"
-. *Download the `hpi` file* (like `git-4.0.1-rc3444.b3d767e3d46a.hpi`) to your computer
-. *Upload the `hpi` file* to Jenkins from the Jenkins Plugin Manager
+. *Copy the URL of the `hpi` file* into the "Advanced settings of the Plugin Manager
 . *Restart your Jenkins* and you're ready to test
 
 [[bug-triage]]
