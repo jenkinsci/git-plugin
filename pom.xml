@@ -171,7 +171,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>3.11</version>
+      <version>876.v99d29788b_36b_</version>
       <optional>true</optional>
     </dependency>
     <dependency>
