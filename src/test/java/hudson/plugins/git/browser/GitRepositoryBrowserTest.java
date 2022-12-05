@@ -138,8 +138,8 @@ public class GitRepositoryBrowserTest {
             assertThat("Location " + location +
                        " for path " + path.getPath() + " seen before," +
                        " with useAuthorName: " + useAuthorName +
-                       " and git implementation " + gitImplementation +
-                       " at sha1 " + sha1,
+                       " and implementation " + gitImplementation +
+                       " at sha1 " + ObjectId.toString(sha1),
                        foundLocations, not(hasItem(location)));
             foundLocations.add(location);
         }
