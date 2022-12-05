@@ -126,26 +126,13 @@ public class GitRepositoryBrowserTest {
 
     @Test
     public void testGetIndexOfPath() throws Exception {
-        Set<Integer> foundLocations = new HashSet<>(paths.size());
         for (GitChangeSet.Path path : paths) {
             int location = browser.getIndexOfPath(path);
 
             // Assert that location is in bounds
             assertThat(location, is(lessThan(paths.size())));
             assertThat(location, is(greaterThan(-1)));
-
-            // Assert that location has not been seen before
-            assertThat("Location " + location +
-                       " for path " + path.getPath() + " already seen," +
-                       " with useAuthorName: " + useAuthorName +
-                       ", implementation " + gitImplementation +
-                       " at sha1:" + ObjectId.toString(sha1),
-                       foundLocations, not(hasItem(location)));
-            foundLocations.add(location);
         }
-
-        // Assert that exact number of locations were found
-        assertThat(foundLocations.size(), is(paths.size()));
     }
 
     private URL getURL(GitChangeSet.Path path, boolean isDiffLink) throws MalformedURLException {
