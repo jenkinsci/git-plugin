@@ -135,7 +135,12 @@ public class GitRepositoryBrowserTest {
             assertThat(location, is(greaterThan(-1)));
 
             // Assert that location has not been seen before
-            assertThat(foundLocations, not(hasItem(location)));
+            assertThat("Location " + location +
+                       " for path " + path.getPath() + " seen before," +
+                       " with useAuthorName: " + useAuthorName +
+                       " and git implementation " + gitImplementation +
+                       " at sha1 " + sha1,
+                       foundLocations, not(hasItem(location)));
             foundLocations.add(location);
         }
 
