@@ -8,13 +8,7 @@ f.entry(title:_("Repository URL"), field:"url") {
 }
 
 f.entry(title:_("Credentials"), field:"credentialsId") {
-    c.select(onchange="""{
-            var self = this.targetElement ? this.targetElement : this;
-            var r = findPreviousFormItem(self,'url');
-            r.onchange(r);
-            self = null;
-            r = null;
-    }""" /* workaround for JENKINS-19124 */)
+    c.select()
 }
 
 f.advanced {
