@@ -164,6 +164,17 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <!-- BOM automated tests fail without conditional-buildstep plugin -->
+      <!-- TODO: Remove this dependency when parameterized trigger plugin dependency fix is released -->
+      <!-- https://github.com/jenkinsci/bom/pull/1623#issuecomment-1339989438 -->
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>conditional-buildstep</artifactId>
+      <version>1.4.2</version>
+      <optional>true</optional>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
       <optional>true</optional>
