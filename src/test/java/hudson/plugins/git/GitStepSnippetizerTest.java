@@ -78,7 +78,7 @@ public class GitStepSnippetizerTest {
         String credentialsId = "my-credential";
         gitStep.setCredentialsId(credentialsId);
         addRandomDefaultValues(gitStep, "credentialsId");
-        tester.assertParseStep(gitStep, "git credentialsId: '" + credentialsId + "', url: '" + url + "'");
+        tester.assertRoundTrip(gitStep, "git credentialsId: '" + credentialsId + "', url: '" + url + "'");
     }
 
     @Test
@@ -86,20 +86,20 @@ public class GitStepSnippetizerTest {
         String branch = "4.10.x";
         gitStep.setBranch(branch);
         addRandomDefaultValues(gitStep, "branch");
-        tester.assertParseStep(gitStep, "git branch: '" + branch + "', url: '" + url + "'");
+        tester.assertRoundTrip(gitStep, "git branch: '" + branch + "', url: '" + url + "'");
     }
 
     @Test
     public void gitNoPoll() throws Exception {
         gitStep.setPoll(false);
         addRandomDefaultValues(gitStep, "poll");
-        tester.assertParseStep(gitStep, "git poll: false, url: '" + url + "'");
+        tester.assertRoundTrip(gitStep, "git poll: false, url: '" + url + "'");
     }
 
     @Test
     public void gitNoChangelog() throws Exception {
         gitStep.setChangelog(false);
         addRandomDefaultValues(gitStep, "changelog");
-        tester.assertParseStep(gitStep, "git changelog: false, url: '" + url + "'");
+        tester.assertRoundTrip(gitStep, "git changelog: false, url: '" + url + "'");
     }
 }
