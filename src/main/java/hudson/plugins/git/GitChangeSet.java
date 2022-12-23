@@ -55,6 +55,8 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
 
+    private static final Pattern GITHUB_PRIVATE_EMAIL = Pattern.compile("^[0-9]+\\+(.*)@users\\.noreply\\.github\\.com$");
+
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private static final String ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String ISO_8601_WITH_TZ = "yyyy-MM-dd'T'HH:mm:ssX";
@@ -494,6 +496,15 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 if (csAuthorEmail == null || csAuthorEmail.isEmpty()) {
                     return User.getUnknown();
                 }
+
+                Matcher githubMatcher = GITHUB_PRIVATE_EMAIL.matcher(csAuthorEmail);
+                if (githubMatcher.matches()) {
+                    user = getUser(githubMatcher.group(1), false);
+                    if (user != null) {
+                        return user;
+                    }
+                }
+
                 // Ensure that malformed email addresses (in this case, just '@')
                 // don't mess us up.
                 String[] emailParts = csAuthorEmail.split("@");

@@ -231,4 +231,23 @@ public class GitChangeSetTest {
         user.addProperty(new Mailer.UserProperty(GitChangeSetUtil.COMMITTER_EMAIL));
         assertEquals(user, cs.getAuthor());
     }
+
+    @Test
+    public void testFindOrCreateUserUnderstandGitHubPrivateEmail() throws IOException {
+        final String existingUserId = "github_user";
+        final String githubPrivateEmail = "1234567+" + existingUserId + "@users.noreply.github.com";
+        final GitChangeSet committerCS = GitChangeSetUtil.genChangeSet(true, false);
+        final String existingUserFullName = "Some FullName";
+        final String email = "some.email@nospam.com";
+        final boolean createAccountBasedOnEmail = false;
+        final boolean useExistingAccountBasedOnEmail = false;
+
+        assertNull(User.get(existingUserId, false));
+
+        User existingUser = User.get(existingUserId, true);
+        assertThat(existingUser, is(not(nullValue())));
+
+        User user = committerCS.findOrCreateUser(GitChangeSetUtil.COMMITTER_NAME, githubPrivateEmail, createAccountBasedOnEmail, useExistingAccountBasedOnEmail);
+        assertThat(user, is(existingUser));
+    }
 }
